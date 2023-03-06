@@ -1,0 +1,20 @@
+{
+  "name": "flickvibe-crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "author": "Alper Ortac <alportac@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@types/cheerio": "^0.22.31",
+    "axios": "^1.3.4",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
