@@ -5,6 +5,9 @@
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/build" />
+      <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/.vercel" />
+      <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/.cache" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

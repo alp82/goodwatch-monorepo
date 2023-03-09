@@ -1,4 +1,4 @@
-import { OMDB_API_KEY } from '~/config/settings'
+import { createClient } from '@supabase/supabase-js'
 import { IMDbRatings, IMDbScraper } from '~/server/ratings/imdb-scraper'
 import { MetacriticRatings, MetacriticScraper } from '~/server/ratings/metacritic-scraper'
 import { RottenTomatoesRatings, RottenTomatoesScraper } from '~/server/ratings/rottentomatoes-scraper'
@@ -6,17 +6,11 @@ import { VibeRatings, VibesCalculator } from '~/server/ratings/vibes-calculator'
 import { titleToDashed } from '~/utils/helpers'
 import { MovieDetails, TVDetails } from '~/server/details.server'
 
+const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
+
 export enum Type {
   MOVIE = 'movie',
   TV = 'tv',
-}
-
-export interface TitleResult {
-  Title: string
-  Year: string
-  imdbID: string
-  Type: Type
-  Poster: string
 }
 
 export interface Ratings {
@@ -27,6 +21,14 @@ export interface Ratings {
 }
 
 export async function getRatingsForMovie(movieDetails: MovieDetails): Promise<Ratings> {
+  const cachedData = await supabase
+    .from('cached-ratings-movie')
+    .select()
+    .eq('id', movieDetails.id)
+  if (cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
+    return cachedData.data[0].ratings as unknown as Ratings
+  }
+
   const imdbID = movieDetails.imdb_id
   const title = movieDetails.title
   const year = movieDetails.release_date.split('-')[0]
@@ -48,15 +50,29 @@ export async function getRatingsForMovie(movieDetails: MovieDetails): Promise<Ra
     rottenTomatoesRatings,
   })
 
-  return {
+  const ratings = {
     vibeRatings,
     imdbRatings,
     metacriticRatings,
     rottenTomatoesRatings,
   }
+  const lastUpdated = (new Date()).toISOString()
+  const { data, error} = await supabase
+    .from('cached-ratings-movie')
+    .upsert({ id: movieDetails.id, lastUpdated, ratings })
+    .select()
+  return ratings
 }
 
 export async function getRatingsForTV(tvDetails: TVDetails): Promise<Ratings> {
+  const cachedData = await supabase
+    .from('cached-ratings-tv')
+    .select()
+    .eq('id', tvDetails.id)
+  if (cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
+    return cachedData.data[0].ratings as unknown as Ratings
+  }
+
   const imdbID = tvDetails.external_ids.imdb_id
   const title = tvDetails.name
   const year = tvDetails.first_air_date.split('-')[0]
@@ -78,10 +94,16 @@ export async function getRatingsForTV(tvDetails: TVDetails): Promise<Ratings> {
     rottenTomatoesRatings,
   })
 
-  return {
+  const ratings = {
     vibeRatings,
     imdbRatings,
     metacriticRatings,
     rottenTomatoesRatings,
   }
+  const lastUpdated = (new Date()).toISOString()
+  const { data, error} = await supabase
+    .from('cached-ratings-tv')
+    .upsert({ id: tvDetails.id, lastUpdated, ratings })
+    .select()
+  return ratings
 }
