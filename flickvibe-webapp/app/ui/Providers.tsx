@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { WatchProviders } from '~/server/details.server'
+import InfoBox from '~/ui/InfoBox'
 
 export interface ProvidersProps {
   providers: WatchProviders
@@ -17,18 +18,24 @@ export default function Providers({ providers }: ProvidersProps) {
   const hasFlatrate = locationProviders.flatrate?.length
   const hasBuy = locationProviders.buy?.length
   const hasRent = locationProviders.rent?.length
+  const hasNothing = !hasFlatrate && !hasBuy
 
   return (
     <>
+      {hasNothing && (
+        <div className="mt-6">
+          <InfoBox text="No streaming provider available yet" />
+        </div>
+      )}
       {hasFlatrate && (
         <div>
           <div className="mt-6 mb-2 text-lg font-bold">Stream</div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {locationProviders.flatrate.map(provider => {
               return (
                 <div key={provider.provider_id}>
                   <img
-                    className="w-16 h-16 rounded-lg"
+                    className="w-20 h-20 rounded-lg"
                     src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`}
                     alt={provider.provider_name}
                     title={provider.provider_name}
@@ -42,7 +49,7 @@ export default function Providers({ providers }: ProvidersProps) {
       {hasBuy && (
         <div>
           <div className="mt-2 mb-2 text-lg font-bold">Buy</div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {locationProviders.buy.map(provider => {
               return (
                 <div key={provider.provider_id}>
@@ -58,20 +65,20 @@ export default function Providers({ providers }: ProvidersProps) {
           </div>
         </div>
       )}
-      {hasRent && (
-        <div>
-          <div className="mt-2 mb-2 text-lg font-bold">Rent</div>
-          <div className="flex gap-4">
-            {locationProviders.buy.map(provider => {
-              return (
-                <div key={provider.provider_id}>
-                  <img className="w-10 h-10 rounded-lg" src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`} alt={provider.provider_name} />
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/*{hasRent && (*/}
+      {/*  <div>*/}
+      {/*    <div className="mt-2 mb-2 text-lg font-bold">Rent</div>*/}
+      {/*    <div className="flex flex-wrap gap-4">*/}
+      {/*      {locationProviders.buy.map(provider => {*/}
+      {/*        return (*/}
+      {/*          <div key={provider.provider_id}>*/}
+      {/*            <img className="w-10 h-10 rounded-lg" src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`} alt={provider.provider_name} />*/}
+      {/*          </div>*/}
+      {/*        )*/}
+      {/*      })}*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
+      {/*)}*/}
     </>
   )
 }
