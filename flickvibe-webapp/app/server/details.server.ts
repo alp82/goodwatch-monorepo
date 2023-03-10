@@ -1,6 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
+import { cached } from '~/utils/api'
 
 export interface Flatrate {
   logo_path: string
@@ -175,44 +173,42 @@ export interface TVDetails {
   ['watch/providers']: WatchProviders
 }
 
-export async function getDetailsForMovie(movieId: string): Promise<MovieDetails> {
-  const cachedData = await supabase
-    .from('cached-details-movie')
-    .select()
-    .eq('id', movieId)
-  if (false && cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
-    return cachedData.data[0].details as unknown as MovieDetails
-  }
-
-  const details = await fetch(
-    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=videos,watch/providers`
-  ).then((res) => res.json())
-
-  const lastUpdated = (new Date()).toISOString()
-  const { data, error} = await supabase
-    .from('cached-details-movie')
-    .upsert({ id: movieId, lastUpdated, details })
-    .select()
-  return details
+export interface DetailsMovieParams {
+  movieId: string
+  language: string
 }
 
-export async function getDetailsForTV(tvId: string): Promise<TVDetails> {
-  const cachedData = await supabase
-    .from('cached-details-tv')
-    .select()
-    .eq('id', tvId)
-  if (false && cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
-    return cachedData.data[0].details as unknown as TVDetails
-  }
+export interface DetailsTVParams {
+  tvId: string
+  language: string
+}
 
-  const details = await fetch(
+export const getDetailsForMovie = async (params: DetailsMovieParams) => {
+  return await cached<DetailsMovieParams, MovieDetails>({
+    name: 'details-movie',
+    target: _getDetailsForMovie,
+    params,
+    ttlMinutes: 60 * 12,
+  })
+}
+
+export async function _getDetailsForMovie({ movieId, language }: DetailsMovieParams): Promise<MovieDetails> {
+  return await fetch(
+    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=videos,watch/providers`
+  ).then((res) => res.json())
+}
+
+export const getDetailsForTV = async (params: DetailsTVParams) => {
+  return await cached<DetailsTVParams, TVDetails>({
+    name: 'details-tv',
+    target: _getDetailsForTV,
+    params,
+    ttlMinutes: 60 * 12,
+  })
+}
+
+export async function _getDetailsForTV({ tvId, language }: DetailsTVParams): Promise<TVDetails> {
+  return await fetch(
     `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=external_ids,videos,watch/providers`
   ).then((res) => res.json())
-
-  const lastUpdated = (new Date()).toISOString()
-  const { data, error} = await supabase
-    .from('cached-details-tv')
-    .upsert({ id: tvId, lastUpdated, details })
-    .select()
-  return details
 }

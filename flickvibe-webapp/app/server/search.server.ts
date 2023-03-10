@@ -1,7 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-import { Ratings } from '~/server/ratings.server'
-
-const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
+import { cached } from '~/utils/api'
 
 export enum MediaType {
   MOVIE = 'movie',
@@ -54,25 +51,24 @@ export interface SearchResult {
 
 export type SearchResults = SearchResult[]
 
-export async function getSearchResults(query: string, language: string = 'en'): Promise<SearchResults> {
-  const cachedData = await supabase
-    .from('cached-search')
-    .select()
-    .eq('query', query)
-    .eq('language', language)
-  if (cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 2) {
-    return cachedData.data[0].relevantResults as unknown as SearchResults
-  }
+export interface SearchParams {
+  query: string
+  language: string
+}
 
+export const getSearchResults = async (params: SearchParams) => {
+  return await cached<SearchParams, SearchResults>({
+    name: 'search',
+    target: _getSearchResults,
+    params,
+    ttlMinutes: 60 * 2,
+  })
+}
+
+async function _getSearchResults({ query, language }: SearchParams): Promise<SearchResults> {
   const response = await fetch(
     `https://api.themoviedb.org/3/search/multi?api_key=${process.env.TMDB_API_KEY}&language=${language}&query=${query}`
   ).then((res) => res.json())
 
-  const relevantResults = response.results.filter((result: SearchResult) => ['movie', 'tv'].includes(result.media_type))
-  const lastUpdated = (new Date()).toISOString()
-  const { data, error} = await supabase
-    .from('cached-search')
-    .upsert({ query, language, lastUpdated, relevantResults })
-    .select()
-  return relevantResults
+  return response.results.filter((result: SearchResult) => ['movie', 'tv'].includes(result.media_type))
 }

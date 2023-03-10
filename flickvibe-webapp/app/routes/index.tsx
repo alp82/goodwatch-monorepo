@@ -15,19 +15,25 @@ export const meta: MetaFunction = () => {
 }
 
 export default function Index() {
+  const language = 'en'
+
   const fetcherMovie = useFetcher()
   const fetcherTV = useFetcher()
 
   useEffect(() => {
     fetcherMovie.submit(
-      {},
+      {
+        language,
+      },
       {
         method: 'get',
         action: '/api/popular/movie',
       }
     )
     fetcherTV.submit(
-      {},
+      {
+        language,
+      },
       {
         method: 'get',
         action: '/api/popular/tv',
@@ -37,7 +43,6 @@ export default function Index() {
 
   const popularMovieResults = fetcherMovie.data?.popular?.results || []
   const popularTVResults = fetcherTV.data?.popular?.results || []
-  console.log({ popularTVResults })
 
   return (
     <div>

@@ -10,8 +10,14 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
   const tvId = url.searchParams.get('tvId') || ''
-  const details = await getDetailsForTV(tvId)
-  const ratings = await getRatingsForTV(details)
+  const language = url.searchParams.get('language') || 'en'
+  const details = await getDetailsForTV({
+    tvId,
+    language,
+  })
+  const ratings = await getRatingsForTV({
+    tvId,
+  })
 
   return json<LoaderData>({
     details,

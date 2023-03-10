@@ -1,7 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-import { Ratings } from '~/server/ratings.server'
-
-const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
+import { cached } from '~/utils/api'
 
 export interface PopularMovie {
   adult: boolean
@@ -35,48 +32,42 @@ export interface PopularTV {
   vote_average: number
   vote_count: number
 }
-
 export type PopularMovieResults = PopularMovie[]
 export type PopularTVResults = PopularTV[]
 
-export async function getPopularMovie(language: string = 'en'): Promise<PopularMovieResults> {
-  const cachedData = await supabase
-    .from('cached-popular-movie')
-    .select()
-    .eq('language', language)
-  if (cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 1) {
-    return cachedData.data[0].popular as unknown as PopularMovieResults
-  }
-
-  const popular = await fetch(
-    `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}&language=${language}`
-  ).then((res) => res.json())
-
-  const lastUpdated = (new Date()).toISOString()
-  const { data, error} = await supabase
-    .from('cached-popular-movie')
-    .upsert({ language, lastUpdated, popular })
-    .select()
-  return popular
+export interface PopularMovieParams {
+  language: string
+}
+export interface PopularTVParams {
+  language: string
 }
 
-export async function getPopularTV(language: string = 'en'): Promise<PopularTVResults> {
-  const cachedData = await supabase
-    .from('cached-popular-tv')
-    .select()
-    .eq('language', language)
-  if (cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 1) {
-    return cachedData.data[0].popular as unknown as PopularTVResults
-  }
+export const getPopularMovie = async (params: PopularMovieParams) => {
+  return await cached<PopularMovieParams, PopularMovieResults>({
+    name: 'popular-movie',
+    target: _getPopularMovie,
+    params,
+    ttlMinutes: 30,
+  })
+}
 
-  const popular = await fetch(
+export async function _getPopularMovie({ language }: PopularMovieParams): Promise<PopularMovieResults> {
+  return await fetch(
+    `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}&language=${language}`
+  ).then((res) => res.json())
+}
+
+export const getPopularTV = async (params: PopularTVParams) => {
+  return await cached<PopularTVParams, PopularTVResults>({
+    name: 'popular-tv',
+    target: _getPopularTV,
+    params,
+    ttlMinutes: 30,
+  })
+}
+
+export async function _getPopularTV({ language }: PopularTVParams): Promise<PopularTVResults> {
+  return await fetch(
     `https://api.themoviedb.org/3/tv/popular?api_key=${process.env.TMDB_API_KEY}&language=${language}`
   ).then((res) => res.json())
-
-  const lastUpdated = (new Date()).toISOString()
-  const { data, error} = await supabase
-    .from('cached-popular-tv')
-    .upsert({ language, lastUpdated, popular })
-    .select()
-  return popular
 }

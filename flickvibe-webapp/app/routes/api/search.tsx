@@ -8,10 +8,15 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
   const query = url.searchParams.get('query') || ''
-  const rawResults = await getSearchResults(query)
+  const language = url.searchParams.get('language') || 'en'
+  const rawResults = await getSearchResults({
+    query,
+    language,
+  })
   const sortedResults = rawResults.sort((a, b) => {
     return (a.popularity < b.popularity) ? 1 : -1
   })
+
   return json<LoaderData>({
     searchResults: sortedResults,
   })
