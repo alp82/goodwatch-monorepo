@@ -28,7 +28,7 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
       )}
       <div className="mt-2 mb-2 text-lg font-bold">Ratings</div>
       <ul className="underline-offset-2 flex gap-4 flex-wrap">
-        <dl className="w-20 p-3 rounded-lg bg-green-700 shadow overflow-hidden text-center">
+        <dl className="w-28 p-3 rounded-lg bg-green-700 shadow overflow-hidden text-center">
           <dd className="mt-1 text-5xl font-semibold tracking-tight text-gray-100">{vibeRatings?.vibes || '--'}</dd>
           <dt className="mt-2 truncate text-lg font-medium text-gray-300">Vibes</dt>
         </dl>
