@@ -48,7 +48,7 @@ export default function Providers({ providers }: ProvidersProps) {
       )}
       {hasBuy && (
         <div>
-          <div className="mt-2 mb-2 text-lg font-bold">Buy</div>
+          <div className="mt-10 mb-2 text-lg font-bold">Buy</div>
           <div className="flex flex-wrap gap-4">
             {locationProviders.buy.map(provider => {
               return (
@@ -79,6 +79,7 @@ export default function Providers({ providers }: ProvidersProps) {
       {/*    </div>*/}
       {/*  </div>*/}
       {/*)}*/}
+
     </>
   )
 }

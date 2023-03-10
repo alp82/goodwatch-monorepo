@@ -180,12 +180,12 @@ export async function getDetailsForMovie(movieId: string): Promise<MovieDetails>
     .from('cached-details-movie')
     .select()
     .eq('id', movieId)
-  if (cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
+  if (false && cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
     return cachedData.data[0].details as unknown as MovieDetails
   }
 
   const details = await fetch(
-    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=watch/providers`
+    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=videos,watch/providers`
   ).then((res) => res.json())
 
   const lastUpdated = (new Date()).toISOString()
@@ -201,12 +201,12 @@ export async function getDetailsForTV(tvId: string): Promise<TVDetails> {
     .from('cached-details-tv')
     .select()
     .eq('id', tvId)
-  if (cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
+  if (false && cachedData.data?.length && (Date.now() - new Date(cachedData.data[0].lastUpdated)) < 1000 * 60 * 60 * 12) {
     return cachedData.data[0].details as unknown as TVDetails
   }
 
   const details = await fetch(
-    `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=external_ids,watch/providers`
+    `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=external_ids,videos,watch/providers`
   ).then((res) => res.json())
 
   const lastUpdated = (new Date()).toISOString()
