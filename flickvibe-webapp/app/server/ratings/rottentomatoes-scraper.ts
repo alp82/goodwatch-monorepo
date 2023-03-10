@@ -5,6 +5,7 @@ import cheerio from 'cheerio'
 import { userAgentHeader } from './user-agent'
 
 export interface RottenTomatoesRatings {
+  url?: string
   tomatometer?: number
   audienceScore?: number
 }
@@ -15,9 +16,10 @@ export class RottenTomatoesScraper {
   readonly mainUrl = 'https://www.rottentomatoes.com'
 
   async getRatings(partPath: RottenTomatoesPartPath, name: string): Promise<RottenTomatoesRatings> {
+    const url = `${this.mainUrl}/${partPath}/${name}`
     let response
     try {
-      response = await axios.get(`${this.mainUrl}/${partPath}/${name}`, userAgentHeader)
+      response = await axios.get(url, userAgentHeader)
     } catch (err) {
       return {}
     }
@@ -35,6 +37,7 @@ export class RottenTomatoesScraper {
     const audienceScore = scoreAudience ? parseInt(scoreAudience) : undefined
 
     return {
+      url,
       tomatometer,
       audienceScore,
     }

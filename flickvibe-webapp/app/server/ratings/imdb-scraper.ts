@@ -5,6 +5,7 @@ import cheerio from 'cheerio'
 import { userAgentHeader } from './user-agent'
 
 export interface IMDbRatings {
+  url?: string
   score?: number
 }
 
@@ -12,9 +13,11 @@ export class IMDbScraper {
   readonly mainUrl = 'https://www.imdb.com/title'
 
   async getRatings(id: string): Promise<IMDbRatings> {
+    const url = `${this.mainUrl}/${id}/`
+
     let response
     try {
-      response = await axios.get(`${this.mainUrl}/${id}/`, userAgentHeader)
+      response = await axios.get(url, userAgentHeader)
     } catch (err) {
       return {}
     }
@@ -25,6 +28,7 @@ export class IMDbScraper {
     const score = scoreElement ? parseFloat(scoreElement.text()) : undefined
 
     return {
+      url,
       score,
     }
   }

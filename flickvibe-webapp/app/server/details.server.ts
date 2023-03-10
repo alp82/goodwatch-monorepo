@@ -1,5 +1,15 @@
 import { cached } from '~/utils/api'
 
+export enum StreamingProvider {
+  apple_tv = 2,
+}
+
+export interface StreamingUrls {
+  netflix?: string
+  prime?: string
+  disney_plus?: string
+}
+
 export interface Flatrate {
   logo_path: string
   provider_id: number
@@ -82,6 +92,7 @@ export interface MovieDetails {
   vote_average: number
   vote_count: number
   ['watch/providers']: WatchProviders
+  streaming_urls: StreamingUrls
 }
 
 export interface CreatedBy {
@@ -171,6 +182,7 @@ export interface TVDetails {
   vote_count: number
   external_ids: ExternalIds
   ['watch/providers']: WatchProviders
+  streaming_urls: StreamingUrls
 }
 
 export interface DetailsMovieParams {
@@ -193,9 +205,16 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 }
 
 export async function _getDetailsForMovie({ movieId, language }: DetailsMovieParams): Promise<MovieDetails> {
-  return await fetch(
+  const details = await fetch(
     `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=videos,watch/providers`
   ).then((res) => res.json())
+
+  return {
+    ...details,
+    streaming_urls: {
+
+    }
+  }
 }
 
 export const getDetailsForTV = async (params: DetailsTVParams) => {
@@ -208,7 +227,14 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
 }
 
 export async function _getDetailsForTV({ tvId, language }: DetailsTVParams): Promise<TVDetails> {
-  return await fetch(
+  const details = await fetch(
     `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=external_ids,videos,watch/providers`
   ).then((res) => res.json())
+
+  return {
+    ...details,
+    streaming_urls: {
+
+    }
+  }
 }

@@ -5,6 +5,7 @@ import cheerio from 'cheerio'
 import { userAgentHeader } from './user-agent'
 
 export interface MetacriticRatings {
+  url?: string
   metaScore?: number
   userScore?: number
 }
@@ -15,15 +16,18 @@ export class MetacriticScraper {
   readonly mainUrl = 'https://www.metacritic.com'
 
   async getRatings(partPath: MetacriticPartPath, name: string, year: string): Promise<MetacriticRatings> {
+    let url
     let response
     try {
       // first try with the year attached to find more recent result if there are duplicates
-      response = await axios.get(`${this.mainUrl}/${partPath}/${name}-${year}`, userAgentHeader)
+      url = `${this.mainUrl}/${partPath}/${name}-${year}`
+      response = await axios.get(url, userAgentHeader)
     } catch (err) {
       // at this point we might have a 404 if the url above is not correct
       try {
         // use without year to get the normal url (no duplicate or older result)
-        response = await axios.get(`${this.mainUrl}/${partPath}/${name}`, userAgentHeader)
+        url = `${this.mainUrl}/${partPath}/${name}`
+        response = await axios.get(url, userAgentHeader)
       } catch (err) {
         return {}
       }
@@ -37,6 +41,7 @@ export class MetacriticScraper {
     const userScore = distributionScores[1].data ? parseFloat(distributionScores[1].data) : undefined
 
     return {
+      url,
       metaScore,
       userScore,
     }
