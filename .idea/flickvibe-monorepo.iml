@@ -8,6 +8,7 @@
       <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/build" />
       <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/.vercel" />
       <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/.cache" />
+      <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/public/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

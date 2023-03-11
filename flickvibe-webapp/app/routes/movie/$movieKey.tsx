@@ -5,6 +5,10 @@ import { useFetcher, useParams } from '@remix-run/react'
 import Providers from '~/ui/Providers'
 import { MetaFunction } from '@remix-run/node'
 import YouTube from 'react-youtube'
+import { Genre, ReleaseDatesResult } from '~/server/details.server'
+import Keywords from '~/ui/Keywords'
+import Genres from '~/ui/Genres'
+import AgeRating from '~/ui/AgeRating'
 
 export const meta: MetaFunction = () => {
   return {
@@ -33,8 +37,10 @@ export default function MovieDetails() {
   const ratings: RatingsProps = fetcher.data?.ratings || {}
   const providers = details['watch/providers'] || {}
 
-  const { title, backdrop_path, poster_path, release_date, videos } = details
-  const year = release_date?.split('-')?.[0]
+  const { title, backdrop_path, keywords, genres = [], poster_path, release_dates, videos, year } = details
+  const countryCode = 'DE'
+  const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
+  const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates[0] : null
 
   const videoId = videos?.results?.length ? videos.results[0].key : null
   const videoOpts = {
@@ -56,6 +62,7 @@ export default function MovieDetails() {
           <YouTube videoId={videoId} opts={videoOpts} />
         </div>
       )}
+      <Keywords keywords={keywords} />
     </>
   )
 
@@ -73,9 +80,13 @@ export default function MovieDetails() {
               />
             </div>
             <div className="relative flex-1 pl-4">
-              <h2 className="mb-6 text-2xl">
+              <h2 className="mb-2 text-2xl">
                 <span className="text-3xl font-bold pr-2">{title}</span> ({year})
               </h2>
+              <div className="flex gap-4">
+                <AgeRating ageRating={ageRating} />
+                <Genres genres={genres} />
+              </div>
               <div className="hidden md:block">
                 {mainInfo}
               </div>

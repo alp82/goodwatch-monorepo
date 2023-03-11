@@ -1,13 +1,10 @@
 import { cached } from '~/utils/api'
+import { titleToDashed } from '~/utils/helpers'
 
-export enum StreamingProvider {
-  apple_tv = 2,
-}
-
-export interface StreamingUrls {
-  netflix?: string
-  prime?: string
-  disney_plus?: string
+export interface BaseDetails {
+  title_dashed: string
+  title_underscored: string
+  year: string
 }
 
 export interface Flatrate {
@@ -65,7 +62,86 @@ export interface SpokenLanguage {
   name: string
 }
 
-export interface MovieDetails {
+export interface ContentRatingResult {
+  descriptors: any[]
+  iso_3166_1: string
+  rating: string
+}
+
+export interface ContentRatings {
+  results: ContentRatingResult[]
+}
+
+export interface KeywordResult {
+  name: string
+  id: number
+}
+
+export interface Keywords {
+  results: KeywordResult[]
+}
+
+export interface RecommendationResult {
+  adult: boolean
+  backdrop_path: string
+  id: number
+  name: string
+  original_language: string
+  original_name: string
+  overview: string
+  poster_path: string
+  media_type: string
+  genre_ids: number[]
+  popularity: number
+  first_air_date: string
+  vote_average: number
+  vote_count: number
+  origin_country: string[]
+}
+
+export interface Recommendations {
+  page: number
+  results: RecommendationResult[]
+  total_pages: number
+  total_results: number
+}
+
+export interface ReleaseDate {
+  certification: string
+  descriptors: any[]
+  iso_639_1: string
+  note: string
+  release_date: Date
+  type: number
+}
+
+export interface ReleaseDatesResult {
+  iso_3166_1: string
+  release_dates: ReleaseDate[]
+}
+
+export interface ReleaseDates {
+  results: ReleaseDatesResult[]
+}
+
+export interface VideoResult {
+  iso_639_1: string
+  iso_3166_1: string
+  name: string
+  key: string
+  published_at: Date
+  site: string
+  size: number
+  type: string
+  official: boolean
+  id: string
+}
+
+export interface Videos {
+  results: VideoResult[]
+}
+
+export interface MovieDetails extends BaseDetails {
   adult: boolean
   backdrop_path: string
   belongs_to_collection?: any
@@ -91,8 +167,11 @@ export interface MovieDetails {
   video: boolean
   vote_average: number
   vote_count: number
+  keywords: Keywords
+  recommendations: Recommendations
+  release_dates: ReleaseDates
+  videos: Videos
   ['watch/providers']: WatchProviders
-  streaming_urls: StreamingUrls
 }
 
 export interface CreatedBy {
@@ -147,7 +226,7 @@ export interface ExternalIds {
   twitter_id: string
 }
 
-export interface TVDetails {
+export interface TVDetails extends BaseDetails {
   adult: boolean
   backdrop_path: string
   created_by: CreatedBy[]
@@ -180,9 +259,12 @@ export interface TVDetails {
   type: string
   vote_average: number
   vote_count: number
+  content_ratings: ContentRatings
   external_ids: ExternalIds
+  keywords: Keywords
+  recommendations: Recommendations
+  videos: Videos
   ['watch/providers']: WatchProviders
-  streaming_urls: StreamingUrls
 }
 
 export interface DetailsMovieParams {
@@ -206,14 +288,21 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 
 export async function _getDetailsForMovie({ movieId, language }: DetailsMovieParams): Promise<MovieDetails> {
   const details = await fetch(
-    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=videos,watch/providers`
+    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=keywords,recommendations,release_dates,videos,watch/providers`
   ).then((res) => res.json())
+
+  const title_dashed = titleToDashed(details.title)
+  const title_underscored = title_dashed.replace(/-/g, '_')
+  const year = details?.release_date?.split('-')?.[0] || '0'
 
   return {
     ...details,
-    streaming_urls: {
-
-    }
+    keywords: {
+      results: details.keywords.keywords,
+    },
+    title_dashed,
+    title_underscored,
+    year,
   }
 }
 
@@ -228,13 +317,17 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
 
 export async function _getDetailsForTV({ tvId, language }: DetailsTVParams): Promise<TVDetails> {
   const details = await fetch(
-    `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=external_ids,videos,watch/providers`
+    `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=content_ratings,external_ids,keywords,recommendations,videos,watch/providers`
   ).then((res) => res.json())
+
+  const title_dashed = titleToDashed(details.name)
+  const title_underscored = title_dashed.replace(/-/g, '_')
+  const year = details?.first_air_date?.split('-')?.[0] || '0'
 
   return {
     ...details,
-    streaming_urls: {
-
-    }
+    title_dashed,
+    title_underscored,
+    year,
   }
 }
