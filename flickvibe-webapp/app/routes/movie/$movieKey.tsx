@@ -5,7 +5,7 @@ import { useFetcher, useParams } from '@remix-run/react'
 import Providers from '~/ui/Providers'
 import { MetaFunction } from '@remix-run/node'
 import YouTube from 'react-youtube'
-import { Genre, ReleaseDatesResult } from '~/server/details.server'
+import { Genre, ReleaseDate, ReleaseDatesResult } from '~/server/details.server'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
 import AgeRating from '~/ui/AgeRating'
@@ -40,7 +40,7 @@ export default function MovieDetails() {
   const { title, backdrop_path, keywords, genres = [], poster_path, release_dates, videos, year } = details
   const countryCode = 'DE'
   const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
-  const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release) => release.certification) : null
+  const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release: ReleaseDate) => release.certification) : null
 
   const videoId = videos?.results?.length ? videos.results[0].key : null
   const videoOpts = {
