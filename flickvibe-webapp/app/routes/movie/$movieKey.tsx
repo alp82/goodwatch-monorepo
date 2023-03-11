@@ -40,7 +40,7 @@ export default function MovieDetails() {
   const { title, backdrop_path, keywords, genres = [], poster_path, release_dates, videos, year } = details
   const countryCode = 'DE'
   const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
-  const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates[0] : null
+  const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release) => release.certification) : null
 
   const videoId = videos?.results?.length ? videos.results[0].key : null
   const videoOpts = {

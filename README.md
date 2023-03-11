@@ -4,6 +4,8 @@ See it running here: https://www.flickvibe.com/
 
 # TODO
 
+discover
+
 subscribe to data updates for quicker loading
 
 vibes explanation

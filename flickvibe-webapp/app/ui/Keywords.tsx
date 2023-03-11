@@ -10,7 +10,7 @@ export default function Keywords({ keywords }: KeywordsProps) {
   return (
     <>
       {keywords?.results && <>
-        <div className="mt-2 mb-2 text-lg font-bold">Keywords</div>
+        <div className="mt-6 mb-2 text-lg font-bold">Keywords</div>
         {keywords.results.map((keyword) => (
           <span key={keyword.id} className="mr-2 inline-flex items-center rounded bg-sky-800 px-2 py-0.5 text-xs font-medium text-sky-100">
             {keyword.name}
