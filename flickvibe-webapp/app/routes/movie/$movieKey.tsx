@@ -70,8 +70,8 @@ export default function MovieDetails() {
     <div className="mt-8">
       {fetcher.state === 'idle' ?
         <>
-          <div className="relative p-3 flex h-32 md:h-96 bg-cover before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
-            <div className="relative flex-none w-16 md:w-60">
+          <div className="relative p-3 flex h-32 lg:h-96 bg-cover before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+            <div className="relative flex-none w-16 lg:w-60">
               <img
                 className="block rounded-md"
                 src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
@@ -87,12 +87,12 @@ export default function MovieDetails() {
                 <AgeRating ageRating={ageRating} />
                 <Genres genres={genres} />
               </div>
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 {mainInfo}
               </div>
             </div>
           </div>
-          <div className="block md:hidden">
+          <div className="block lg:hidden">
             {mainInfo}
           </div>
         </>
