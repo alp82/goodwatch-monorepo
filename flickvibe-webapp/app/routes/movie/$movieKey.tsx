@@ -70,7 +70,7 @@ export default function MovieDetails() {
     <div className="mt-8">
       {fetcher.state === 'idle' ?
         <>
-          <div className="relative p-3 flex h-32 lg:h-96 bg-cover before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+          <div className="relative p-3 flex lg:h-96 bg-cover before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
             <div className="relative flex-none w-16 lg:w-60">
               <img
                 className="block rounded-md"
