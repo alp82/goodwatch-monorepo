@@ -37,9 +37,11 @@ export type PopularTVResults = PopularTV[]
 
 export interface PopularMovieParams {
   language: string
+  region: string
 }
 export interface PopularTVParams {
   language: string
+  region: string
 }
 
 export const getPopularMovie = async (params: PopularMovieParams) => {
@@ -51,9 +53,9 @@ export const getPopularMovie = async (params: PopularMovieParams) => {
   })
 }
 
-export async function _getPopularMovie({ language }: PopularMovieParams): Promise<PopularMovieResults> {
+export async function _getPopularMovie({ language, region }: PopularMovieParams): Promise<PopularMovieResults> {
   return await fetch(
-    `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}&language=${language}`
+    `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}&language=${language}&region=${region}`
   ).then((res) => res.json())
 }
 
@@ -66,8 +68,8 @@ export const getPopularTV = async (params: PopularTVParams) => {
   })
 }
 
-export async function _getPopularTV({ language }: PopularTVParams): Promise<PopularTVResults> {
+export async function _getPopularTV({ language, region }: PopularTVParams): Promise<PopularTVResults> {
   return await fetch(
-    `https://api.themoviedb.org/3/tv/popular?api_key=${process.env.TMDB_API_KEY}&language=${language}`
+    `https://api.themoviedb.org/3/tv/popular?api_key=${process.env.TMDB_API_KEY}&language=${language}&region=${region}`
   ).then((res) => res.json())
 }

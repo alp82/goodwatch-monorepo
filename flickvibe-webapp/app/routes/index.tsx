@@ -27,7 +27,7 @@ export default function Index() {
       },
       {
         method: 'get',
-        action: '/api/popular/movie',
+        action: '/api/trending/movie',
       }
     )
     fetcherTV.submit(
@@ -36,22 +36,22 @@ export default function Index() {
       },
       {
         method: 'get',
-        action: '/api/popular/tv',
+        action: '/api/trending/tv',
       }
     )
   }, [])
 
-  const popularMovieResults = fetcherMovie.data?.popular?.results || []
-  const popularTVResults = fetcherTV.data?.popular?.results || []
+  const trendingMovieResults = fetcherMovie.data?.trending?.results || []
+  const trendingTVResults = fetcherTV.data?.trending?.results || []
 
   return (
     <div>
       <div>
         <div className="">Welcome. Search above and select a movie or tv show. You can then check ratings and streaming providers on one page.</div>
       </div>
-      <h2 className="my-4 text-3xl font-bold">Popular Movies</h2>
+      <h2 className="my-4 text-3xl font-bold">Trending Movies</h2>
       <div className="flex flex-wrap gap-4">
-        {popularMovieResults.map((movie: PopularMovie) => {
+        {trendingMovieResults.map((movie: PopularMovie) => {
           return (
             <a key={movie.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/movie/${movie.id}-${titleToDashed(movie.title)}`}>
               <div>
@@ -69,10 +69,10 @@ export default function Index() {
           )
         })}
       </div>
-      <h2 className="my-4 text-3xl font-bold">Popular TV Shows</h2>
+      <h2 className="my-4 text-3xl font-bold">Trending TV Shows</h2>
       <div>
         <div className="flex flex-wrap gap-4">
-          {popularTVResults.map((tv: PopularTV) => {
+          {trendingTVResults.map((tv: PopularTV) => {
             return (
               <a key={tv.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/tv/${tv.id}-${titleToDashed(tv.name)}`}>
                 <div>

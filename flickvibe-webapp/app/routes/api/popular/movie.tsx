@@ -8,8 +8,10 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
   const language = url.searchParams.get('language') || 'en'
+  const region = url.searchParams.get('region') || 'DE'
   const popular = await getPopularMovie({
     language,
+    region,
   })
 
   return json<LoaderData>({
