@@ -103,7 +103,7 @@ export default function Discover() {
     key: params.type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc',
     label: 'Most recent',
     icon: ClockIcon,
-    current: params.sort_by === 'tv',
+    current: params.sort_by === (params.type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc'),
   }]
 
   const handleSortBySelect = (tab: Tab) => {
