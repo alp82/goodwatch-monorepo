@@ -4,12 +4,6 @@ See it running here: https://www.flickvibe.com/
 
 # TODO
 
-/genre/movie/list
-/genre/tv/list
-
-/search/keyword
-&query=alien
-
 /discover/movie
 &certification.lte=0&certification_country=DE
 &primary_release_date.gte=2000&primary_release_date.lte=2010
@@ -36,8 +30,6 @@ Documentary: 0, News: 1, Miniseries: 2, Reality: 3, Scripted: 4, Talk Show: 5, V
 popularity.asc, popularity.desc, release_date.asc, release_date.desc, revenue.asc, revenue.desc,
 primary_release_date.asc, primary_release_date.desc, original_title.asc, original_title.desc,
 vote_average.a
-
-trailer width on mobile: https://github.com/iiroj/use-breakpoint
 
 subscribe to data updates for quicker loading
 

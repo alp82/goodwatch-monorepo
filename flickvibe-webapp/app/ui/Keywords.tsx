@@ -11,11 +11,13 @@ export default function Keywords({ keywords }: KeywordsProps) {
     <>
       {keywords?.results && <>
         <div className="mt-6 mb-2 text-lg font-bold">Keywords</div>
-        {keywords.results.map((keyword) => (
-          <span key={keyword.id} className="mr-2 inline-flex items-center rounded bg-sky-800 px-2 py-0.5 text-xs font-medium text-sky-100">
-            {keyword.name}
-          </span>
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {keywords.results.map((keyword) => (
+            <a key={keyword.id} href={`/discover?with_keywords=${keyword.id}`} className="px-2 py-0.5 inline-flex items-center rounded text-xs font-medium border-2 border-sky-600 text-sky-100 bg-sky-800 hover:text-white hover:bg-sky-900">
+              {keyword.name}
+            </a>
+          ))}
+        </div>
       </>}
     </>
   )

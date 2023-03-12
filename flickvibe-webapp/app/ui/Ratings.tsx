@@ -35,7 +35,7 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
 
         <a className="" href={imdbRatings?.url} target="_blank">
           <dl className={`${imdbRatings?.url ? 'hover:border-white/[.9] active:border-white/[.9]' : 'opacity-60'} rounded-lg border-4 border-white/[.5] w-24 p-3 bg-imdb shadow overflow-hidden text-center flex flex-col justify-center`}>
-            <img className="h-6 object-contain" src={imdbLogo} />
+            <img className="h-6 object-contain" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" />
             <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{imdbRatings?.score || '--'}</dd>
             <dt className={`truncate text-xs font-medium text-gray-700 ${imdbRatings?.url && 'underline'}`}>Score</dt>
           </dl>
@@ -43,7 +43,7 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
 
         <a className="" href={metacriticRatings?.url} target="_blank">
           <dl className={`${metacriticRatings?.url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-white/[.2] w-56 p-3 bg-metacritic shadow overflow-hidden text-center flex flex-col justify-center`}>
-            <img className="h-6 object-contain" src={metacriticLogo} />
+            <img className="h-6 object-contain" src={metacriticLogo} alt="Metacritic Logo" title="Metacritic Logo" />
             <div className="flex justify-center gap-8">
               <div>
                 <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-100">{metacriticRatings?.metaScore || '--'}</dd>
@@ -59,7 +59,7 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
 
         <a className="" href={rottenTomatoesRatings?.url} target="_blank">
           <dl className={`${rottenTomatoesRatings?.url ? 'hover:border-white/[.9] active:border-white/[.9]' : 'opacity-60'} rounded-lg border-4 border-white/[.5] w-56 p-3 bg-rotten shadow overflow-hidden text-center flex flex-col align-middle`}>
-            <img className="h-6 object-contain" src={rottenLogo} />
+            <img className="h-6 object-contain" src={rottenLogo} alt="Rotten Tomatoes Logo" title="Rotten Tomatoes Logo" />
             <div className="flex justify-center gap-8">
               <div>
                 <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-50">{rottenTomatoesRatings?.tomatometer || '--'}</dd>

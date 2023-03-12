@@ -1,34 +1,39 @@
 import React, { ReactNode, useEffect, useState } from 'react'
-import { ArrowPathIcon, CheckIcon, ChevronUpDownIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import { Combobox } from '@headlessui/react'
 import { classNames } from '~/utils/helpers'
-import { MediaType } from '~/server/search.server'
 
 export interface AutocompleteItem {
   key: string
-  mediaType: MediaType
   label: string
-  year: string
-  imageUrl: string
 }
 
-export interface AutocompleteProps<T> {
+export interface RenderItemParams<RenderItem extends AutocompleteItem> {
+  item: RenderItem
+  active: boolean
+  selected: boolean
+  disabled: boolean
+}
+
+export interface AutocompleteProps<RenderItem extends AutocompleteItem> {
   name: string
   placeholder: string
   icon: ReactNode
-  autocompleteItems: AutocompleteItem[]
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onSelect: (selectedItem: AutocompleteItem) => void
+  autocompleteItems: RenderItem[]
+  renderItem: (renderItemParams: RenderItemParams<RenderItem>) => ReactNode
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
+  onSelect: (selectedItem: RenderItem) => void
 }
 
-export default function Autocomplete<T>({
+export default function Autocomplete<RenderItem extends AutocompleteItem>({
   name,
   placeholder,
   icon,
   autocompleteItems,
+  renderItem,
   onChange,
   onSelect,
-}: AutocompleteProps<T>) {
+}: AutocompleteProps<RenderItem>) {
   const [selectedItem, setSelectedItem] = useState(null)
 
   useEffect(() => {
@@ -43,7 +48,7 @@ export default function Autocomplete<T>({
           {icon}
         </div>
         <Combobox.Input
-          className="block w-full rounded-md border border-transparent bg-gray-700 py-2 pl-10 pr-3 leading-5 text-gray-300 placeholder-gray-400 focus:border-white focus:bg-white focus:text-gray-900 focus:outline-none focus:ring-white sm:text-sm"
+          className="block w-full rounded-md border border-transparent bg-gray-700 py-2 pl-10 pr-3 leading-5 text-gray-300 placeholder-gray-400 focus:border-gray-400 focus:bg-slate-700 focus:text-gray-100 focus:outline-none focus:ring-gray-400 sm:text-sm"
           name={name}
           placeholder={placeholder}
           displayValue={(item: AutocompleteItem) => item?.label}
@@ -66,14 +71,10 @@ export default function Autocomplete<T>({
                   )
                 }
               >
-                {({ active, selected }) => (
+                {({ active, selected, disabled }) => (
                   <>
                     <div className="flex items-center">
-                      <img src={item.imageUrl} alt="" className="h-16 w-12 flex-shrink-0" />
-                      <div>
-                        <div className={classNames('ml-3 text-lg truncate font-bold')}>{item.label}</div>
-                        <div className={classNames('ml-3 truncate', selected ? 'font-semibold' : '')}>{item.mediaType} ({item.year})</div>
-                      </div>
+                      {renderItem({ item, active, selected, disabled })}
                     </div>
 
                     {selected && (

@@ -11,7 +11,7 @@ export interface CachedParams<Params, Return> {
   ttlMinutes: number
 }
 
-export const cached = async <Params extends Record<keyof Params, unknown>, Return>({
+export const cached = async <Params extends Partial<Record<keyof Params, unknown>>, Return>({
   target,
   params,
   name,

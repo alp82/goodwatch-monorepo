@@ -29,13 +29,18 @@ export default function Providers({ providers }: ProvidersProps) {
       )}
       {hasFlatrate && (
         <div>
-          <div className="mt-6 mb-2 text-lg font-bold">Stream</div>
+          <div className="mt-6 mb-2 text-lg font-bold flex items-center">
+            Stream
+            <span className="ml-3 inline-flex items-center rounded bg-lime-700 px-2 h-4 text-xs font-medium text-yellow-100">
+              Flatrate
+            </span>
+          </div>
           <div className="flex flex-wrap gap-4">
             {locationProviders.flatrate.map(provider => {
               return (
                 <div key={provider.provider_id}>
                   <img
-                    className="w-20 h-20 rounded-lg"
+                    className="w-28 h-28 rounded-lg"
                     src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`}
                     alt={provider.provider_name}
                     title={provider.provider_name}

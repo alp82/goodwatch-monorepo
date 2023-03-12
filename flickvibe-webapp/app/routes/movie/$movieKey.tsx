@@ -9,6 +9,7 @@ import { Genre, ReleaseDate, ReleaseDatesResult } from '~/server/details.server'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
 import AgeRating from '~/ui/AgeRating'
+import Description from '~/ui/Description'
 
 export const meta: MetaFunction = () => {
   return {
@@ -37,15 +38,15 @@ export default function MovieDetails() {
   const ratings: RatingsProps = fetcher.data?.ratings || {}
   const providers = details['watch/providers'] || {}
 
-  const { title, backdrop_path, keywords, genres = [], poster_path, release_dates, videos, year } = details
+  const { backdrop_path, keywords, genres = [], overview, poster_path, release_dates, title, videos, year } = details
   const countryCode = 'DE'
   const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
   const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release: ReleaseDate) => release.certification) : null
 
   const videoId = videos?.results?.length ? videos.results[0].key : null
   const videoOpts = {
-    height: '390',
-    width: '640',
+    height: '100%',
+    width: '100%',
     playerVars: {
       // https://developers.google.com/youtube/player_parameters
       autoplay: 0,
@@ -59,7 +60,9 @@ export default function MovieDetails() {
       {videoId && (
         <div className="mt-8">
           <div className="mb-2 text-lg font-bold">Trailer</div>
-          <YouTube videoId={videoId} opts={videoOpts} />
+          <div className="aspect-w-16 aspect-h-9">
+            <YouTube videoId={videoId} opts={videoOpts} />
+          </div>
         </div>
       )}
       <Keywords keywords={keywords} />
@@ -71,7 +74,7 @@ export default function MovieDetails() {
       {fetcher.state === 'idle' ?
         <>
           <div className="relative p-3 flex lg:h-96 bg-cover before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
-            <div className="relative flex-none w-16 lg:w-60">
+            <div className="relative flex-none w-32 lg:w-60">
               <img
                 className="block rounded-md"
                 src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
@@ -87,6 +90,7 @@ export default function MovieDetails() {
                 <AgeRating ageRating={ageRating} />
                 <Genres genres={genres} />
               </div>
+              <Description description={overview} />
               <div className="hidden lg:block">
                 {mainInfo}
               </div>

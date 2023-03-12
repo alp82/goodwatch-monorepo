@@ -11,9 +11,9 @@ export default function Genres({ genres }: GenresProps) {
       {genres && <>
         <div className="mb-4">
           {genres.map((genre: Genre) => (
-            <span className="ml-2 inline-flex items-center rounded-md bg-slate-800 px-2.5 py-0.5 font-medium text-slate-100" key={genre.id}>
+            <a key={genre.id} href={`/discover?with_genres=${genre.id}`} className="ml-2 px-2.5 py-0.5 inline-flex items-center rounded-md font-medium border-2 border-slate-600 text-slate-100 bg-slate-800 hover:text-white hover:bg-slate-900">
                {genre.name}
-            </span>
+            </a>
           ))}
         </div>
       </>}

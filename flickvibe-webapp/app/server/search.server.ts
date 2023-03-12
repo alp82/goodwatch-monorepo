@@ -1,9 +1,6 @@
 import { cached } from '~/utils/api'
 
-export enum MediaType {
-  MOVIE = 'movie',
-  TV = 'tv',
-}
+export type MediaType = 'movie' | 'tv'
 
 export interface KnownFor {
   adult: boolean
@@ -52,8 +49,8 @@ export interface SearchResult {
 export type SearchResults = SearchResult[]
 
 export interface SearchParams {
-  query: string
   language: string
+  query: string
 }
 
 export const getSearchResults = async (params: SearchParams) => {
@@ -65,7 +62,7 @@ export const getSearchResults = async (params: SearchParams) => {
   })
 }
 
-async function _getSearchResults({ query, language }: SearchParams): Promise<SearchResults> {
+async function _getSearchResults({ language, query }: SearchParams): Promise<SearchResults> {
   const response = await fetch(
     `https://api.themoviedb.org/3/search/multi?api_key=${process.env.TMDB_API_KEY}&language=${language}&query=${query}`
   ).then((res) => res.json())

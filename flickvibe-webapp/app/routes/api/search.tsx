@@ -3,15 +3,15 @@ import { getSearchResults, SearchResults } from '~/server/search.server'
 
 type LoaderData = {
   searchResults: Awaited<SearchResults>
-};
+}
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
+  const language = url.searchParams.get('language') || 'en_US'
   const query = url.searchParams.get('query') || ''
-  const language = url.searchParams.get('language') || 'en'
   const rawResults = await getSearchResults({
-    query,
     language,
+    query,
   })
   const sortedResults = rawResults.sort((a, b) => {
     return (a.popularity < b.popularity) ? 1 : -1
