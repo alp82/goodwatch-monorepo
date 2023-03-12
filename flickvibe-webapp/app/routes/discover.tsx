@@ -156,10 +156,10 @@ export default function Discover() {
             <NumberInput name="max_year" placeholder="Max Year" onChange={handleChange} />
           </div>
         </div>
-        {params.type === 'movie' && <div>
+        <div>
           <span className="text-sm font-bold">Genres:</span>
           <FilterGenres type={params.type} withGenres={params.with_genres} withoutGenres={params.without_genres} onChange={handleGenresChange} />
-        </div>}
+        </div>
         <div>
           <span className="text-sm font-bold">Tags:</span>
           <FilterKeywords withKeywords={params.with_keywords} withoutKeywords={params.without_keywords} onChange={handleKeywordsChange} />

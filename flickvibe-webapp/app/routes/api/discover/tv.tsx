@@ -12,6 +12,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const max_year = url.searchParams.get('max_year') || ''
   const with_keywords = url.searchParams.get('with_keywords') || ''
   const without_keywords = url.searchParams.get('without_keywords') || ''
+  const with_genres = url.searchParams.get('with_genres') || ''
+  const without_genres = url.searchParams.get('without_genres') || ''
   const sort_by = (url.searchParams.get('sort_by') || 'popularity.desc') as DiscoverTVSortBy
 
   const discoverTVResults = await getDiscoverTVResults({
@@ -20,6 +22,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
     max_year,
     with_keywords,
     without_keywords,
+    with_genres,
+    without_genres,
     sort_by,
   })
 

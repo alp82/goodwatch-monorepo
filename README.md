@@ -6,18 +6,10 @@ See it running here: https://www.flickvibe.com/
 
 /discover/movie
 &certification.lte=0&certification_country=DE
-&primary_release_date.gte=2000&primary_release_date.lte=2010
-&with_genres=
-&with_keywords=
 &without_genres=
 &without_keywords=
-&sort_by=
-popularity.asc, popularity.desc, release_date.asc, release_date.desc, revenue.asc, revenue.desc,
-primary_release_date.asc, primary_release_date.desc, original_title.asc, original_title.desc,
-vote_average.asc, vote_average.desc, vote_count.asc, vote_count.desc
 
 /discover/tv
-&first_air_date.gte=2022
 &with_genres=
 &with_keywords=
 &without_genres=

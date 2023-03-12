@@ -81,6 +81,8 @@ export interface DiscoverTVParams {
   max_year: string
   with_keywords: string
   without_keywords: string
+  with_genres: string
+  without_genres: string
   sort_by: DiscoverTVSortBy
 }
 
@@ -113,9 +115,10 @@ export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
   })
 }
 
-async function _getDiscoverTVResults({ language, min_year, max_year, with_keywords, without_keywords, sort_by }: DiscoverTVParams): Promise<DiscoverTVResults> {
+async function _getDiscoverTVResults({ language, min_year, max_year, with_keywords, without_keywords, with_genres, without_genres, sort_by }: DiscoverTVParams): Promise<DiscoverTVResults> {
   const url = `https://api.themoviedb.org/3/discover/tv?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
     `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
+    `&with_genres=${with_genres}&without_genres=${without_genres}` +
     `&first_air_date.gte=${min_year}&first_air_date.lte=${max_year}` +
     `&sort_by=${sort_by}`
   return await fetch(url).then((res) => res.json())
