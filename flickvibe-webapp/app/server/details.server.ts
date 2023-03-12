@@ -294,6 +294,7 @@ export async function _getDetailsForMovie({ movieId, language }: DetailsMoviePar
     `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=keywords,recommendations,release_dates,videos,watch/providers`
   ).then((res) => res.json())
 
+  console.log({ details })
   const title_dashed = titleToDashed(details.title)
   const title_underscored = title_dashed.replace(/-/g, '_')
   const year = details?.release_date?.split('-')?.[0] || '0'

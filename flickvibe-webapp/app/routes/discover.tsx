@@ -187,7 +187,7 @@ export default function Discover() {
           )
         }) : tvResults.length > 0 ? tvResults.map((tv: DiscoverTVResult) => {
           return (
-            <a key={tv.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/movie/${tv.id}-${titleToDashed(tv.name)}`}>
+            <a key={tv.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/tv/${tv.id}-${titleToDashed(tv.name)}`}>
               <div>
                 <img
                   className="block rounded-md"
