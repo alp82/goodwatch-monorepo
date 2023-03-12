@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react'
-import { ArrowPathIcon, HashtagIcon, TagIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import { useFetcher, useLoaderData } from '@remix-run/react'
+import { ArrowPathIcon, HashtagIcon, TagIcon, XCircleIcon } from '@heroicons/react/20/solid'
+import { useFetcher } from '@remix-run/react'
 import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/Autocomplete'
 import { Keyword } from '~/server/keywords.server'
-import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
 
 export interface FilterKeywordsProps {
   withKeywords: string
@@ -57,7 +56,7 @@ export default function FilterKeywords({ withKeywords, withoutKeywords, onChange
     onChange(updatedKeywordsToInclude, keywordsToExclude)
   }
 
-  const renderItem = ({ item }: RenderItemParams) => {
+  const renderItem = ({ item }: RenderItemParams<AutocompleteItem>) => {
     return (
       <div className="flex gap-2">
         <HashtagIcon className="h-4 w-4 text-gray-800" aria-hidden="true" />

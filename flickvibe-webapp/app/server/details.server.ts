@@ -1,5 +1,8 @@
 import { cached } from '~/utils/api'
 import { titleToDashed } from '~/utils/helpers'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
 
 export interface BaseDetails {
   title_dashed: string
@@ -295,6 +298,14 @@ export async function _getDetailsForMovie({ movieId, language }: DetailsMoviePar
   const title_underscored = title_dashed.replace(/-/g, '_')
   const year = details?.release_date?.split('-')?.[0] || '0'
 
+  const { data, error } = await supabase
+    .from('keywords')
+    .upsert(details.keywords.keywords)
+    .select()
+  if (error) {
+    console.error({ data, error })
+  }
+
   return {
     ...details,
     keywords: {
@@ -323,6 +334,14 @@ export async function _getDetailsForTV({ tvId, language }: DetailsTVParams): Pro
   const title_dashed = titleToDashed(details.name)
   const title_underscored = title_dashed.replace(/-/g, '_')
   const year = details?.first_air_date?.split('-')?.[0] || '0'
+
+  const { data, error } = await supabase
+    .from('keywords')
+    .upsert(details.keywords.results)
+    .select()
+  if (error) {
+    console.error({ data, error })
+  }
 
   return {
     ...details,
