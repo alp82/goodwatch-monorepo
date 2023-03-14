@@ -1,31 +1,65 @@
-# flickvibe-monorepo
+# flickvibe
 
 See it running here: https://www.flickvibe.com/
 
-# TODO
+## Getting started
+
+1. Checkout this repository
+2. Register for [TMDB API Key](https://developers.themoviedb.org/3/getting-started/introduction)
+3. Create [supabase account](https://app.supabase.com/)
+
+Copy `.env.example` to `.env` and fill out the required secrets.
+
+You are now ready to run it locally:
+```shell
+cd flickvibe-webapp
+npm install
+npm run dev
+```
+
+## Deployment
+
+1. Create [Vercel project](https://vercel.com/dashboard)
+2. Install the [Vercel CLI](https://vercel.com/docs/cli)
+
+Every time you want to deploy run:
+```shell
+vercel deploy --prod
+```
+
+
+## TODO's
 ```
 /discover/movie
+&with_rating.gte
+&with_rating.lte
 &with_streaming_providers
 &certification.lte=0&certification_country=DE
 &without_genres=
 &without_keywords=
 
 /discover/tv
+&with_rating.gte
+&with_rating.lte
 &with_streaming_providers
 &with_status=Returning Series: 0, Planned: 1, In Production: 2, Ended: 3, Cancelled: 4, Pilot: 5
 &with_type=Documentary: 0, News: 1, Miniseries: 2, Reality: 3, Scripted: 4, Talk Show: 5, Video: 6
 &without_genres=
 &without_keywords=
 
-fix dropdown for tabs on mobile
+fix dropdown for tabs on mobile: dark style, icons, selection does not do anything, pre-selection doesn't work
 
 age box style: https://www.themoviedb.org/movie/16869-inglourious-basterds
+
+autocomplete dark style
 
 description full text toggle
 
 share button
 
 vibes explanation
+
+show other trailers and empty message if none exists
 
 subscribe to data updates for quicker loading
 
@@ -39,9 +73,9 @@ issue: breaking bad streaming missing -> justwatch streaming data
 
 issue: tmdb imagery redundant -> justwatch imagery
 
-issue: videos not available or not trailer (ip man: kung fu master, plane 2023)
+issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
 
-show recommendations
+show generic recommendations
 
 director + cast
 
@@ -55,6 +89,6 @@ authentication and user profiles
 
 connect accounts
 
-recommendation engine:
+personalized recommendation engine:
 * criticker
 ```
