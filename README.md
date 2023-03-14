@@ -7,8 +7,7 @@ See it running here: https://www.flickvibe.com/
 1. Checkout this repository
 2. Register for [TMDB API Key](https://developers.themoviedb.org/3/getting-started/introduction)
 3. Create [supabase account](https://app.supabase.com/)
-
-Copy `.env.example` to `.env` and fill out the required secrets.
+4. Copy `.env.example` to `.env` and fill out the required secrets.
 
 You are now ready to run it locally:
 ```shell
