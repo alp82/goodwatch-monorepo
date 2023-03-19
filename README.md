@@ -30,6 +30,7 @@ vercel deploy --prod
 ## TODO's
 ```
 /discover/movie
+&region
 &with_rating.gte
 &with_rating.lte
 &with_streaming_providers
@@ -38,6 +39,7 @@ vercel deploy --prod
 &without_keywords=
 
 /discover/tv
+&region
 &with_rating.gte
 &with_rating.lte
 &with_streaming_providers
@@ -46,15 +48,15 @@ vercel deploy --prod
 &without_genres=
 &without_keywords=
 
-fix dropdown for tabs on mobile: dark style, icons, selection does not do anything, pre-selection doesn't work
+tv shows discover use  wrong region
 
-age box style: https://www.themoviedb.org/movie/16869-inglourious-basterds
-
-autocomplete dark style
+discover as menu item & remove mobile profile menu items
 
 description full text toggle
 
 share button
+
+image=null handling with placeholder image
 
 vibes explanation
 
@@ -65,6 +67,12 @@ subscribe to data updates for quicker loading
 tv seasons
 
 movie predecessors and successors
+
+fix dropdown for tabs on mobile: icons, pre-selection doesn't work
+
+age box style: https://www.themoviedb.org/movie/16869-inglourious-basterds
+
+autocomplete dark style
 
 preloading search results and popular on start page
 
@@ -90,4 +98,5 @@ connect accounts
 
 personalized recommendation engine:
 * criticker
+* movielens
 ```

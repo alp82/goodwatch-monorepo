@@ -6,7 +6,9 @@ type LoaderData = {
 };
 
 export const loader: LoaderFunction = async () => {
-  const trending = await getTrendingTV({})
+  const trending = await getTrendingTV({
+    type: 'default',
+  })
 
   return json<LoaderData>({
     trending,

@@ -36,8 +36,10 @@ export type TrendingMovieResults = TrendingMovie[]
 export type TrendingTVResults = TrendingTV[]
 
 export interface TrendingMovieParams {
+  type: string
 }
 export interface TrendingTVParams {
+  type: string
 }
 
 export const getTrendingMovie = async (params: TrendingMovieParams) => {

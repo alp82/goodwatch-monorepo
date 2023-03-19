@@ -1,8 +1,8 @@
 import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
-import { DiscoverTVResults, DiscoverTVSortBy, getDiscoverTVResults } from '~/server/discover.server'
+import { DiscoverTVResult, DiscoverTVSortBy, getDiscoverTVResults } from '~/server/discover.server'
 
 type LoaderData = {
-  discoverTVResults: Awaited<DiscoverTVResults>
+  discoverTVResults: Awaited<DiscoverTVResult[]>
 };
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
@@ -14,6 +14,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const without_keywords = url.searchParams.get('without_keywords') || ''
   const with_genres = url.searchParams.get('with_genres') || ''
   const without_genres = url.searchParams.get('without_genres') || ''
+  const with_watch_providers = url.searchParams.get('with_watch_providers') || ''
+  const watch_region = url.searchParams.get('watch_region') || 'DE'
   const sort_by = (url.searchParams.get('sort_by') || 'popularity.desc') as DiscoverTVSortBy
 
   const discoverTVResults = await getDiscoverTVResults({
@@ -24,6 +26,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
     without_keywords,
     with_genres,
     without_genres,
+    with_watch_providers,
+    watch_region,
     sort_by,
   })
 

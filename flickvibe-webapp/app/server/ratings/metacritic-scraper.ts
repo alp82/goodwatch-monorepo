@@ -37,8 +37,8 @@ export class MetacriticScraper {
     const $ = cheerio.load(html)
 
     const distributionScores = $('.distribution .metascore_w').contents()
-    const metaScore = distributionScores[0].data ? parseInt(distributionScores[0].data) : undefined
-    const userScore = distributionScores[1].data ? parseFloat(distributionScores[1].data) : undefined
+    const metaScore = distributionScores[0]?.data ? parseInt(distributionScores[0]?.data) : undefined
+    const userScore = distributionScores[1]?.data ? parseFloat(distributionScores[1]?.data) : undefined
 
     return {
       url,

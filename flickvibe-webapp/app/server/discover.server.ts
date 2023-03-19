@@ -67,6 +67,8 @@ export interface DiscoverMovieParams {
   without_keywords: string
   with_genres: string
   without_genres: string
+  with_watch_providers: string
+  watch_region: string
   sort_by: DiscoverMovieSortBy
 }
 
@@ -83,11 +85,13 @@ export interface DiscoverTVParams {
   without_keywords: string
   with_genres: string
   without_genres: string
+  with_watch_providers: string
+  watch_region: string
   sort_by: DiscoverTVSortBy
 }
 
 export const getDiscoverMovieResults = async (params: DiscoverMovieParams) => {
-  return await cached<DiscoverMovieParams, DiscoverMovieResults>({
+  return await cached<DiscoverMovieParams, DiscoverMovieResult[]>({
     name: 'discover-movie',
     target: _getDiscoverMovieResults,
     params,
@@ -95,19 +99,23 @@ export const getDiscoverMovieResults = async (params: DiscoverMovieParams) => {
   })
 }
 
-async function _getDiscoverMovieResults({ language, age_rating_country, min_age_rating, max_age_rating, min_year, max_year, with_keywords, without_keywords, with_genres, without_genres, sort_by }: DiscoverMovieParams): Promise<DiscoverMovieResults> {
-  const url = `https://api.themoviedb.org/3/discover/movie?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
-    `&certification_country=${age_rating_country.toUpperCase()}` +
-    `&certification.gte=${min_age_rating}&certification.lte=${max_age_rating}` +
-    `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
-    `&with_genres=${with_genres}&without_genres=${without_genres}` +
-    `&primary_release_date.gte=${min_year}&primary_release_date.lte=${max_year}` +
-    `&sort_by=${sort_by}`
-  return await fetch(url).then((res) => res.json())
+async function _getDiscoverMovieResults({ language, age_rating_country, min_age_rating, max_age_rating, min_year, max_year, with_keywords, without_keywords, with_genres, without_genres, with_watch_providers, watch_region, sort_by }: DiscoverMovieParams): Promise<DiscoverMovieResult[]> {
+  const watchProviderIds = with_watch_providers.split(',')
+  const urls = watchProviderIds.map((providerId) => {
+    return `https://api.themoviedb.org/3/discover/movie?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
+      `&certification_country=${age_rating_country.toUpperCase()}` +
+      `&certification.gte=${min_age_rating}&certification.lte=${max_age_rating}` +
+      `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
+      `&with_genres=${with_genres}&without_genres=${without_genres}` +
+      `&primary_release_date.gte=${min_year}&primary_release_date.lte=${max_year}` +
+      `&with_watch_providers=${providerId}&watch_region=${watch_region}` +
+      `&sort_by=${sort_by}`
+  })
+  return await _combineResults<DiscoverMovieResult>(urls)
 }
 
 export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
-  return await cached<DiscoverTVParams, DiscoverTVResults>({
+  return await cached<DiscoverTVParams, DiscoverTVResult[]>({
     name: 'discover-tv',
     target: _getDiscoverTVResults,
     params,
@@ -115,11 +123,34 @@ export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
   })
 }
 
-async function _getDiscoverTVResults({ language, min_year, max_year, with_keywords, without_keywords, with_genres, without_genres, sort_by }: DiscoverTVParams): Promise<DiscoverTVResults> {
-  const url = `https://api.themoviedb.org/3/discover/tv?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
-    `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
-    `&with_genres=${with_genres}&without_genres=${without_genres}` +
-    `&first_air_date.gte=${min_year}&first_air_date.lte=${max_year}` +
-    `&sort_by=${sort_by}`
-  return await fetch(url).then((res) => res.json())
+async function _getDiscoverTVResults({ language, min_year, max_year, with_keywords, without_keywords, with_genres, without_genres, with_watch_providers, watch_region, sort_by }: DiscoverTVParams): Promise<DiscoverTVResult[]> {
+  const watchProviderIds = with_watch_providers.split(',')
+  const urls = watchProviderIds.map((providerId) => {
+    return `https://api.themoviedb.org/3/discover/tv?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
+      `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
+      `&with_genres=${with_genres}&without_genres=${without_genres}` +
+      `&first_air_date.gte=${min_year}&first_air_date.lte=${max_year}` +
+      `&with_watch_providers=${providerId}&watch_region=${watch_region}&with_watch_monetization_types=flatrate` +
+      `&sort_by=${sort_by}`
+  })
+  return await _combineResults<DiscoverTVResult>(urls)
+}
+
+async function _combineResults<T extends DiscoverMovieResult | DiscoverTVResult>(urls: string[]): Promise<T[]> {
+  return Promise.all(urls.map((url) => fetch(url)))
+    .then((responses) => Promise.all(responses.map(res => res.json())))
+    .then((results) => {
+      const mergedResults = results.reduce((combination, result) => {
+        return [
+          ...combination,
+          ...result.results,
+        ]
+      }, [])
+      const filteredResults = mergedResults.filter((value: T, index: number, self: T[]) =>
+          index === self.findIndex((t) => (
+            t.id === value.id
+          ))
+      )
+      return filteredResults.sort((a: T, b: T) => a.popularity > b.popularity ? -1 : 1)
+    })
 }

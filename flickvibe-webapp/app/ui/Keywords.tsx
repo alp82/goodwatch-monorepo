@@ -8,7 +8,7 @@ export interface KeywordsProps {
 export default function Keywords({ keywords }: KeywordsProps) {
 
   return (
-    <>
+    <div className="mb-4">
       {keywords?.results && <>
         <div className="mt-6 mb-2 text-lg font-bold">Keywords</div>
         <div className="flex flex-wrap gap-2">
@@ -19,6 +19,6 @@ export default function Keywords({ keywords }: KeywordsProps) {
           ))}
         </div>
       </>}
-    </>
+    </div>
   )
 }

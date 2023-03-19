@@ -53,15 +53,22 @@ export default function Tabs({ tabs, pills, onSelect }: TabsProps) {
         <label htmlFor="tabs" className="sr-only">
           Select a tab
         </label>
-        {/* Use an "onChange" listener to redirect the user to the selected tab URL. */}
         <select
           id="tabs"
           name="tabs"
-          className="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+          className="block w-full rounded-md border-gray-300 bg-gray-700 py-2 px-3 leading-5 text-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
           defaultValue={tabs.find((tab) => tab.current)?.key}
+          onChange={(e) => {
+            const tab = tabs.find(tab => tab.key === e.target.value)
+            if (tab) {
+              onSelect(tab)
+            }
+          }}
         >
           {tabs.map((tab) => (
-            <option key={tab.key}>{tab.label}</option>
+            <option key={tab.key} value={tab.key}>
+              {tab.label}
+            </option>
           ))}
         </select>
       </div>

@@ -1,6 +1,6 @@
 import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { useFetcher, useLoaderData, useNavigate } from '@remix-run/react'
-import React, { ChangeEventHandler, useEffect, useState } from 'react'
+import React, { ChangeEventHandler, useEffect } from 'react'
 import { titleToDashed } from '~/utils/helpers'
 import {
   DiscoverMovieParams,
@@ -8,7 +8,6 @@ import {
   DiscoverMovieSortBy,
   DiscoverTVResult,
 } from '~/server/discover.server'
-import Dropdown from '~/ui/Dropdown'
 import FilterKeywords from '~/ui/filter/FilterKeywords'
 import NumberInput from '~/ui/input/NumberInput'
 import { Keyword } from '~/server/keywords.server'
@@ -16,8 +15,8 @@ import { Genre } from '~/server/genres.server'
 import FilterGenres from '~/ui/filter/FilterGenres'
 import { MediaType } from '~/server/search.server'
 import Tabs, { Tab } from '~/ui/Tabs'
-import { handle } from 'mdast-util-to-markdown/lib/handle'
-import { ClockIcon, FilmIcon, FireIcon, TvIcon } from '@heroicons/react/20/solid'
+import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
+import { WatchProvider } from '~/server/watchProviders.server'
 
 export const meta: MetaFunction = () => {
   return {
@@ -25,6 +24,8 @@ export const meta: MetaFunction = () => {
     description: 'All movie and tv show ratings and streaming providers on the same page',
   }
 }
+
+export type DiscoverUrlParams = DiscoverMovieParams & { type: MediaType }
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -39,9 +40,11 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const without_keywords = url.searchParams.get('without_keywords') || ''
   const with_genres = url.searchParams.get('with_genres') || ''
   const without_genres = url.searchParams.get('without_genres') || ''
+  const with_watch_providers = url.searchParams.get('with_watch_providers') || '8,9,337'
+  const watch_region = url.searchParams.get('watch_region') || 'DE'
   const sort_by = (url.searchParams.get('sort_by') || 'popularity.desc') as DiscoverMovieSortBy
 
-  return json<DiscoverMovieParams & { type: MediaType }>({
+  return json<DiscoverUrlParams>({
     type,
     language,
     age_rating_country,
@@ -53,26 +56,47 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
     without_keywords,
     with_genres,
     without_genres,
+    with_watch_providers,
+    watch_region,
     sort_by,
   })
 }
 
 export default function Discover() {
   const params = useLoaderData()
-  const fetcher = useFetcher()
   const navigate = useNavigate()
 
+  const watchProvidersFetcher = useFetcher()
   useEffect(() => {
-    fetcher.submit(
+    watchProvidersFetcher.submit(
       params,
+      {
+        method: 'get',
+        action: `/api/watch-providers/${params.type}`,
+      }
+    )
+  }, [params.type])
+  const watchProviders = watchProvidersFetcher.data?.watchProviders || []
+  const availableWatchProviders = watchProviders.filter((watchProvider: WatchProvider) => '8,9,337,2,3'.split(',').includes(watchProvider.provider_id.toString()))
+
+  const fetcher = useFetcher()
+  useEffect(() => {
+    if (!watchProviders) return
+    // const watchProviderIds = watchProviders.map((watchProvider: WatchProvider) => watchProvider.provider_id)
+
+    fetcher.submit(
+      {
+        ...params,
+        // with_watch_providers: watchProviderIds.join(',')
+      },
       {
         method: 'get',
         action: `/api/discover/${params.type}`,
       }
     )
-  }, [params])
-  const movieResults = fetcher.data?.discoverMovieResults?.results || []
-  const tvResults = fetcher.data?.discoverTVResults?.results || []
+  }, [params, Boolean(watchProviders)])
+  const movieResults = fetcher.data?.discoverMovieResults || []
+  const tvResults = fetcher.data?.discoverTVResults || []
 
   const discoverTypeTabs: Tab[] = [{
     key: 'movie',
@@ -99,6 +123,11 @@ export default function Discover() {
     label: 'Most popular',
     icon: FireIcon,
     current: params.sort_by === 'popularity.desc',
+  // }, {
+  //   key: 'vote_average.desc',
+  //   label: 'Highest rating',
+  //   icon: StarIcon,
+  //   current: params.sort_by === 'vote_average.desc',
   }, {
     key: params.type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc',
     label: 'Most recent',
@@ -106,12 +135,37 @@ export default function Discover() {
     current: params.sort_by === (params.type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc'),
   }]
 
+  const updateParams = (newParams: Record<string, string>) => {
+    const nonEmptyNewParams = Object.keys(newParams).reduce((result, key) => {
+      const value = newParams[key]
+      if (!value) return result
+      return {
+        ...result,
+        [key]: value,
+      }
+    }, {})
+    navigate(`/discover?${new URLSearchParams(nonEmptyNewParams).toString()}`)
+  }
+
   const handleSortBySelect = (tab: Tab) => {
     const newParams = {
       ...params,
       sort_by: tab.key,
     }
-    navigate(`/discover?${new URLSearchParams(newParams).toString()}`)
+    updateParams(newParams)
+  }
+
+  const handleProviderToggle = (provider: WatchProvider) => {
+    const currentIds = params.with_watch_providers.split(',')
+    const with_watch_providers = Array.from(new Set(currentIds.includes(provider.provider_id.toString())
+      ? currentIds.filter((id: string) => id !== provider.provider_id.toString())
+      : [...currentIds, provider.provider_id])).join(',')
+    console.log({currentIds, with_watch_providers})
+    const newParams = {
+      ...params,
+      with_watch_providers,
+    }
+    updateParams(newParams)
   }
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -120,7 +174,7 @@ export default function Discover() {
       ...params,
       [target.name]: target.value,
     }
-    navigate(`/discover?${new URLSearchParams(newParams).toString()}`)
+    updateParams(newParams)
   }
 
   const handleGenresChange = (genresToInclude: Genre[], genresToExclude: Genre[]) => {
@@ -129,7 +183,7 @@ export default function Discover() {
       with_genres: genresToInclude.map((genre) => genre.id),
       without_genres: genresToExclude.map((genre) => genre.id),
     }
-    navigate(`/discover?${new URLSearchParams(newParams).toString()}`)
+    updateParams(newParams)
   }
 
   const handleKeywordsChange = (keywordsToInclude: Keyword[], keywordsToExclude: Keyword[]) => {
@@ -138,7 +192,7 @@ export default function Discover() {
       with_keywords: keywordsToInclude.map((keyword) => keyword.id),
       without_keywords: keywordsToExclude.map((keyword) => keyword.id),
     }
-    navigate(`/discover?${new URLSearchParams(newParams).toString()}`)
+    updateParams(newParams)
   }
 
   return (
@@ -147,10 +201,29 @@ export default function Discover() {
       <div>
         <Tabs tabs={discoverTypeTabs} pills={false} onSelect={handleTabSelect} />
       </div>
+      <div className="my-4 flex flex-col gap-1">
+        <span className="text-sm font-bold">Streaming:</span>
+        <div className="flex flex-wrap gap-4">
+        {availableWatchProviders.map((provider: WatchProvider) => {
+          const isSelected = params.with_watch_providers.split(',').includes(provider.provider_id.toString())
+          return (
+            <div key={provider.provider_id}>
+              <img
+                className={`w-10 h-10 rounded-lg border-2 ${isSelected ? 'border-gray-300 hover:border-gray-500 hover:opacity-75' : 'border-gray-500 opacity-25 hover:opacity-50'}`}
+                src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`}
+                alt={provider.provider_name}
+                title={provider.provider_name}
+                onClick={() => handleProviderToggle(provider)}
+              />
+            </div>
+          )
+        })}
+        </div>
+      </div>
       <div className="my-4 flex flex-col flex-wrap gap-4">
         <div>
           <span className="text-sm font-bold">Release Year:</span>
-          <div className="flex gap-3 items-center">
+          <div className="mt-1 flex gap-3 items-center">
             <NumberInput name="min_year" placeholder="Min Year" onChange={handleChange} />
             <span className="italic">to</span>
             <NumberInput name="max_year" placeholder="Max Year" onChange={handleChange} />
