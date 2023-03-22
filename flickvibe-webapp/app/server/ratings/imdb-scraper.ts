@@ -26,7 +26,7 @@ export class IMDbScraper {
     const $ = cheerio.load(html)
 
     const scoreElement = $('[data-testid=hero-rating-bar__aggregate-rating__score] span:nth-child(1)').contents()
-    const score = scoreElement ? parseFloat(scoreElement.text()).toFixed(1) : undefined
+    const score = scoreElement && !isNaN(parseFloat(scoreElement.text())) ? parseFloat(scoreElement.text()).toFixed(1) : undefined
 
     return {
       url,

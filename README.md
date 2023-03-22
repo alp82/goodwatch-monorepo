@@ -40,17 +40,13 @@ description full text toggle
 
 share button
 
+autocomplete x to clear text 
+
 image=null handling with placeholder image
 
 vibes explanation
 
-subscribe to data updates for quicker loading
-
-tv seasons
-
-fix dropdown for tabs on mobile: icons, pre-selection doesn't work
-
-age box style: https://www.themoviedb.org/movie/16869-inglourious-basterds
+fix dropdown for tabs on mobile: icons
 
 autocomplete dark style
 
