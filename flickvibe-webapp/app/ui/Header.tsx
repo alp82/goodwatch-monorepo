@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import logo from '~/img/logo-64.png'
+import logo from '~/img/logo-250.png'
 import Search from '~/ui/Search'
 import {useLocation} from "react-router";
 
