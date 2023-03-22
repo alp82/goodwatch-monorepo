@@ -20,14 +20,14 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
   const vibeColorIndex = vibeRatings?.vibes ? Math.floor(vibeRatings.vibes / 10) * 10 : null
 
   return (
-    <>
+    <div className="relative">
       {!isComplete && (
-        <div className="mb-4">
+        <div className="absolute top-16 left-6 z-10">
           <InfoBox text="Ratings are currently calculated..." />
         </div>
       )}
       <div className="mt-2 mb-2 text-lg font-bold">Ratings</div>
-      <ul className="underline-offset-2 flex gap-4 flex-wrap">
+      <ul className={`underline-offset-2 flex gap-4 flex-wrap ${isComplete ? '' : 'opacity-50'}`}>
         <dl className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} w-28 p-3 rounded-lg shadow overflow-hidden text-center`}>
           <dd className={`${vibeColorIndex == null ? 'text-gray-300' : (vibeColorIndex < 90 ? 'text-gray-900' : 'text-gray-100')} mt-1 text-5xl font-semibold tracking-tight`}>{vibeRatings?.vibes || '--'}</dd>
           <dt className={`${vibeColorIndex == null ? 'text-gray-400' : (vibeColorIndex < 90 ? 'text-gray-800' : 'text-gray-300')} mt-2 truncate text-lg font-medium`}>Vibes</dt>
@@ -73,6 +73,6 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
           </dl>
         </a>
       </ul>
-    </>
+    </div>
   )
 }

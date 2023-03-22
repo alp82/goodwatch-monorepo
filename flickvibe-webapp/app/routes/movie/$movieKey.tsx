@@ -21,10 +21,18 @@ export const meta: MetaFunction = () => {
 export default function MovieDetails() {
   const { movieKey = '' } = useParams()
   const movieId = movieKey.split('-')[0]
-  const fetcher = useFetcher()
+  const detailsFetcher = useFetcher()
+  const ratingsFetcher = useFetcher()
 
   useEffect(() => {
-    fetcher.submit(
+    detailsFetcher.submit(
+      { movieId },
+      {
+        method: 'get',
+        action: '/api/details/movie',
+      }
+    )
+    ratingsFetcher.submit(
       { movieId },
       {
         method: 'get',
@@ -32,10 +40,9 @@ export default function MovieDetails() {
       }
     )
   }, [movieId])
-  console.log(fetcher.data)
 
-  const details = fetcher.data?.details || {}
-  const ratings: RatingsProps = fetcher.data?.ratings || {}
+  const details = detailsFetcher.data?.details || {}
+  const ratings: RatingsProps = ratingsFetcher.data?.ratings || {}
   const providers = details['watch/providers'] || {}
 
   const { backdrop_path, keywords, genres = [], overview, poster_path, release_dates, title, videos, year } = details
@@ -71,7 +78,7 @@ export default function MovieDetails() {
 
   return (
     <div className="mt-8">
-      {fetcher.state === 'idle' ?
+      {detailsFetcher.state === 'idle' ?
         <>
           <div className="relative p-3 flex lg:h-96 bg-cover before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
             <div className="relative flex-none w-32 lg:w-60">

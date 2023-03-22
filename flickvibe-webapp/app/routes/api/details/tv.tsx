@@ -1,19 +1,21 @@
 import {json, LoaderArgs, LoaderFunction} from '@remix-run/node'
-import {getRatingsForTV, Ratings} from '~/server/ratings.server'
+import {getDetailsForTV, TVDetails} from '~/server/details.server'
 
 type LoaderData = {
-  ratings: Awaited<Ratings>
+  details: Awaited<TVDetails>
 };
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
   const tvId = url.searchParams.get('tvId') || ''
-  const ratings = await getRatingsForTV({
+  const language = url.searchParams.get('language') || 'en'
+  const details = await getDetailsForTV({
     tvId,
+    language,
   })
 
   return json<LoaderData>({
-    ratings,
+    details,
   })
 }
 
