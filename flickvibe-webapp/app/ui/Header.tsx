@@ -3,12 +3,15 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import logo from '~/img/logo-64.png'
 import Search from '~/ui/Search'
+import {useLocation} from "react-router";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
 export default function Header() {
+  const location = useLocation()
+  const isDiscover = location.pathname == '/discover'
   return (
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
@@ -30,20 +33,13 @@ export default function Header() {
                     />
                   </a>
                 </div>
-                {/*<div className="hidden lg:ml-6 lg:block">*/}
-                {/*  <div className="flex space-x-4">*/}
-                {/*    /!* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" *!/*/}
-                {/*    <a href="#" className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white">*/}
-                {/*      Movies*/}
-                {/*    </a>*/}
-                {/*    <a*/}
-                {/*      href="#"*/}
-                {/*      className="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"*/}
-                {/*    >*/}
-                {/*      TV Shows*/}
-                {/*    </a>*/}
-                {/*  </div>*/}
-                {/*</div>*/}
+                <div className="hidden lg:ml-6 lg:block">
+                  <div className="flex space-x-4">
+                    <a href="/discover" className={`rounded-md px-3 py-2 text-sm font-medium ${isDiscover ? 'text-white bg-gray-900' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>
+                      Discover
+                    </a>
+                  </div>
+                </div>
               </div>
               <div className="flex flex-1 justify-center px-2 lg:ml-6 lg:justify-end">
                 <div className="w-full max-w-lg lg:max-w-xl">
@@ -136,24 +132,16 @@ export default function Header() {
           </div>
 
           <Disclosure.Panel className="lg:hidden">
-            {/*<div className="space-y-1 px-2 pt-2 pb-3">*/}
-            {/*  /!* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" *!/*/}
-            {/*  <Disclosure.Button*/}
-            {/*    as="a"*/}
-            {/*    href="#"*/}
-            {/*    className="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"*/}
-            {/*  >*/}
-            {/*    Movies*/}
-            {/*  </Disclosure.Button>*/}
-            {/*  <Disclosure.Button*/}
-            {/*    as="a"*/}
-            {/*    href="#"*/}
-            {/*    className="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"*/}
-            {/*  >*/}
-            {/*    TV Shows*/}
-            {/*  </Disclosure.Button>*/}
-            {/*</div>*/}
-            <div className="border-t border-gray-700 pt-4 pb-3">
+            <div className="space-y-1 px-2 pt-2 pb-3">
+              <Disclosure.Button
+                as="a"
+                href="/discover"
+                className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+              >
+                Discover
+              </Disclosure.Button>
+            </div>
+            {/*<div className="border-t border-gray-700 pt-4 pb-3">*/}
               {/*<div className="flex items-center px-5">*/}
               {/*  <div className="flex-shrink-0">*/}
               {/*    <img*/}
@@ -167,30 +155,30 @@ export default function Header() {
               {/*    <div className="text-sm font-medium text-gray-400">User Title</div>*/}
               {/*  </div>*/}
               {/*</div>*/}
-              <div className="mt-3 space-y-1 px-2">
-                <Disclosure.Button
-                  as="a"
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                >
-                  Your Profile
-                </Disclosure.Button>
-                <Disclosure.Button
-                  as="a"
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                >
-                  Settings
-                </Disclosure.Button>
-                <Disclosure.Button
-                  as="a"
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                >
-                  Sign out
-                </Disclosure.Button>
-              </div>
-            </div>
+              {/*<div className="mt-3 space-y-1 px-2">*/}
+              {/*  <Disclosure.Button*/}
+              {/*    as="a"*/}
+              {/*    href="#"*/}
+              {/*    className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
+              {/*  >*/}
+              {/*    Your Profile*/}
+              {/*  </Disclosure.Button>*/}
+              {/*  <Disclosure.Button*/}
+              {/*    as="a"*/}
+              {/*    href="#"*/}
+              {/*    className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
+              {/*  >*/}
+              {/*    Settings*/}
+              {/*  </Disclosure.Button>*/}
+              {/*  <Disclosure.Button*/}
+              {/*    as="a"*/}
+              {/*    href="#"*/}
+              {/*    className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
+              {/*  >*/}
+              {/*    Sign out*/}
+              {/*  </Disclosure.Button>*/}
+              {/*</div>*/}
+            {/*</div>*/}
           </Disclosure.Panel>
         </>
       )}

@@ -30,27 +30,11 @@ vercel deploy --prod
 ## TODO's
 ```
 /discover/movie
-&region
-&with_rating.gte
-&with_rating.lte
-&with_streaming_providers
 &certification.lte=0&certification_country=DE
-&without_genres=
-&without_keywords=
 
 /discover/tv
-&region
-&with_rating.gte
-&with_rating.lte
-&with_streaming_providers
 &with_status=Returning Series: 0, Planned: 1, In Production: 2, Ended: 3, Cancelled: 4, Pilot: 5
 &with_type=Documentary: 0, News: 1, Miniseries: 2, Reality: 3, Scripted: 4, Talk Show: 5, Video: 6
-&without_genres=
-&without_keywords=
-
-tv shows discover use  wrong region
-
-discover as menu item & remove mobile profile menu items
 
 description full text toggle
 

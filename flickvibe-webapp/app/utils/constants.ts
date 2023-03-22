@@ -1,2 +1,2 @@
 export const PAGES_TO_DISCOVER = 4
-export const VOTE_COUNT_THRESHOLD = 5000
+export const VOTE_COUNT_THRESHOLD = 1000
