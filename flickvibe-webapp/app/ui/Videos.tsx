@@ -2,6 +2,7 @@ import React, {useState} from 'react'
 import Tabs, {Tab} from "~/ui/Tabs";
 import YouTube from "react-youtube";
 import {VideoResult} from "~/server/details.server";
+import InfoBox from "~/ui/InfoBox";
 
 export interface VideosProps {
   results: VideoResult[]
@@ -59,10 +60,10 @@ export default function Videos({ results }: VideosProps) {
   }
 
   return (
-    <>
-      {videos.length > 0 && (
-        <div className="mt-8">
-          <div className="mb-2 text-lg font-bold">Videos</div>
+    <div className="mt-8">
+      <div className="mb-2 text-lg font-bold">Videos</div>
+      {videos.length ? (
+        <>
           <div className="mb-2">
             <Tabs tabs={typeTabs} pills={true} onSelect={handleTypeSelection} />
           </div>
@@ -72,8 +73,10 @@ export default function Videos({ results }: VideosProps) {
           <div className="aspect-w-16 aspect-h-9">
             <YouTube videoId={selectedVideos[selectedNumber].key} opts={videoOpts} />
           </div>
-        </div>
+        </>
+      ) : (
+        <InfoBox text="No videos available" />
       )}
-    </>
+    </div>
   )
 }
