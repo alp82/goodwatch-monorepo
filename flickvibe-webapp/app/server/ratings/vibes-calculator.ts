@@ -19,19 +19,19 @@ export class VibesCalculator {
   }: getVibesProps): VibeRatings {
     const scores = []
     if (imdbRatings.score) {
-      scores.push(imdbRatings.score * 10)
+      scores.push(parseFloat(imdbRatings.score) * 10)
     }
     if (metacriticRatings.metaScore) {
-      scores.push(metacriticRatings.metaScore)
+      scores.push(parseFloat(metacriticRatings.metaScore))
     }
     if (metacriticRatings.userScore) {
-      scores.push(metacriticRatings.userScore * 10)
+      scores.push(parseFloat(metacriticRatings.userScore) * 10)
     }
     if (rottenTomatoesRatings.tomatometer) {
-      scores.push(rottenTomatoesRatings.tomatometer)
+      scores.push(parseFloat(rottenTomatoesRatings.tomatometer))
     }
     if (rottenTomatoesRatings.audienceScore) {
-      scores.push(rottenTomatoesRatings.audienceScore)
+      scores.push(parseFloat(rottenTomatoesRatings.audienceScore))
     }
     const vibes = Math.round(
       scores.reduce((sum, score) => {

@@ -6,8 +6,8 @@ import { userAgentHeader } from './user-agent'
 
 export interface RottenTomatoesRatings {
   url?: string
-  tomatometer?: number
-  audienceScore?: number
+  tomatometer?: string
+  audienceScore?: string
 }
 
 export type RottenTomatoesPartPath = 'm' | 'tv'
@@ -33,8 +33,8 @@ export class RottenTomatoesScraper {
     const scoreTomatometer = scoreTomatometerMovie || scoreTomatometerTV
     const scoreAudience = scoreAudienceMovie || scoreAudienceTV
 
-    const tomatometer = scoreTomatometer ? parseInt(scoreTomatometer) : undefined
-    const audienceScore = scoreAudience ? parseInt(scoreAudience) : undefined
+    const tomatometer = scoreTomatometer ? parseInt(scoreTomatometer).toFixed(0) : undefined
+    const audienceScore = scoreAudience ? parseInt(scoreAudience).toFixed(0) : undefined
 
     return {
       url,

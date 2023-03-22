@@ -43,9 +43,11 @@ export async function _getRatingsForMovie({ movieId }: RatingsMovieParams): Prom
   const rottenTomatoesScraper = new RottenTomatoesScraper()
   const vibesCalculator = new VibesCalculator()
 
-  const imdbRatings = await imdbScraper.getRatings(imdb_id)
-  const metacriticRatings = await metacriticScraper.getMovieRatings(title_dashed, year)
-  const rottenTomatoesRatings = await rottenTomatoesScraper.getMovieRatings(title_underscored)
+  const [imdbRatings, metacriticRatings, rottenTomatoesRatings] = await Promise.all([
+    imdbScraper.getRatings(imdb_id),
+    metacriticScraper.getMovieRatings(title_dashed, year),
+    rottenTomatoesScraper.getMovieRatings(title_underscored),
+  ])
   const vibeRatings = vibesCalculator.getVibes({
     imdbRatings,
     metacriticRatings,
@@ -79,9 +81,11 @@ export async function _getRatingsForTV({ tvId }: RatingsTVParams): Promise<Ratin
   const rottenTomatoesScraper = new RottenTomatoesScraper()
   const vibesCalculator = new VibesCalculator()
 
-  const imdbRatings = await imdbScraper.getRatings(imdb_id)
-  const metacriticRatings = await metacriticScraper.getTvShowRatings(title_dashed, year)
-  const rottenTomatoesRatings = await rottenTomatoesScraper.getTvShowRatings(title_underscored)
+  const [imdbRatings, metacriticRatings, rottenTomatoesRatings] = await Promise.all([
+    imdbScraper.getRatings(imdb_id),
+    metacriticScraper.getTvShowRatings(title_dashed, year),
+    rottenTomatoesScraper.getTvShowRatings(title_underscored),
+  ])
   const vibeRatings = vibesCalculator.getVibes({
     imdbRatings,
     metacriticRatings,

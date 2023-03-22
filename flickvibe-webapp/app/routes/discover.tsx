@@ -123,11 +123,11 @@ export default function Discover() {
     label: 'Most popular',
     icon: FireIcon,
     current: params.sort_by === 'popularity.desc',
-  // }, {
-  //   key: 'vote_average.desc',
-  //   label: 'Highest rating',
-  //   icon: StarIcon,
-  //   current: params.sort_by === 'vote_average.desc',
+  }, {
+    key: 'vote_average.desc',
+    label: 'Highest rating',
+    icon: StarIcon,
+    current: params.sort_by === 'vote_average.desc',
   }, {
     key: params.type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc',
     label: 'Most recent',
@@ -274,11 +274,15 @@ export default function Discover() {
               </div>
             </a>
           )
-        }) : (
+        }) : (fetcher.state !== 'idle' ? (
+          <div className="my-6 text-lg italic">
+            Discovering...
+          </div>
+        ) : (
           <div className="my-6 text-lg italic">
             No results. Try to change your search filters.
           </div>
-        )}
+        ))}
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import { userAgentHeader } from './user-agent'
 
 export interface IMDbRatings {
   url?: string
-  score?: number
+  score?: string
 }
 
 export class IMDbScraper {
@@ -25,7 +25,7 @@ export class IMDbScraper {
     const $ = cheerio.load(html)
 
     const scoreElement = $('[data-testid=hero-rating-bar__aggregate-rating__score] span:nth-child(1)').contents()
-    const score = scoreElement ? parseFloat(scoreElement.text()) : undefined
+    const score = scoreElement ? parseFloat(scoreElement.text()).toFixed(1) : undefined
 
     return {
       url,

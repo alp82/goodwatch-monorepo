@@ -6,8 +6,8 @@ import { userAgentHeader } from './user-agent'
 
 export interface MetacriticRatings {
   url?: string
-  metaScore?: number
-  userScore?: number
+  metaScore?: string
+  userScore?: string
 }
 
 export type MetacriticPartPath = 'movie' | 'tv'
@@ -37,8 +37,8 @@ export class MetacriticScraper {
     const $ = cheerio.load(html)
 
     const distributionScores = $('.distribution .metascore_w').contents()
-    const metaScore = distributionScores[0]?.data ? parseInt(distributionScores[0]?.data) : undefined
-    const userScore = distributionScores[1]?.data ? parseFloat(distributionScores[1]?.data) : undefined
+    const metaScore = distributionScores[0]?.data ? parseInt(distributionScores[0]?.data).toFixed(0) : undefined
+    const userScore = distributionScores[1]?.data && !isNaN(parseFloat(distributionScores[1]?.data)) ? parseFloat(distributionScores[1]?.data).toFixed(1) : undefined
 
     return {
       url,

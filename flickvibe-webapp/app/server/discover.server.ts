@@ -1,4 +1,5 @@
 import { cached } from '~/utils/api'
+import {PAGES_TO_DISCOVER, VOTE_COUNT_THRESHOLD} from "~/utils/constants";
 
 export interface DiscoverMovieResult {
   adult: boolean
@@ -101,17 +102,20 @@ export const getDiscoverMovieResults = async (params: DiscoverMovieParams) => {
 
 async function _getDiscoverMovieResults({ language, age_rating_country, min_age_rating, max_age_rating, min_year, max_year, with_keywords, without_keywords, with_genres, without_genres, with_watch_providers, watch_region, sort_by }: DiscoverMovieParams): Promise<DiscoverMovieResult[]> {
   const watchProviderIds = with_watch_providers.split(',')
-  const urls = watchProviderIds.map((providerId) => {
-    return `https://api.themoviedb.org/3/discover/movie?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
-      `&certification_country=${age_rating_country.toUpperCase()}` +
-      `&certification.gte=${min_age_rating}&certification.lte=${max_age_rating}` +
-      `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
-      `&with_genres=${with_genres}&without_genres=${without_genres}` +
-      `&primary_release_date.gte=${min_year}&primary_release_date.lte=${max_year}` +
-      `&with_watch_providers=${providerId}&watch_region=${watch_region}` +
-      `&sort_by=${sort_by}`
+  const urls: string[] = []
+  watchProviderIds.forEach((providerId) => {
+    for (let page = 1; page <= PAGES_TO_DISCOVER; page++) {
+      urls.push(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
+        `&certification_country=${age_rating_country.toUpperCase()}` +
+        `&certification.gte=${min_age_rating}&certification.lte=${max_age_rating}` +
+        `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
+        `&with_genres=${with_genres}&without_genres=${without_genres}` +
+        `&primary_release_date.gte=${min_year}&primary_release_date.lte=${max_year}` +
+        `&with_watch_providers=${providerId}&watch_region=${watch_region}` +
+        `&sort_by=${sort_by}&page=${page}`)
+    }
   })
-  return await _combineResults<DiscoverMovieResult>(urls)
+  return await _combineResults<DiscoverMovieResult>(urls, sort_by)
 }
 
 export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
@@ -125,18 +129,21 @@ export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
 
 async function _getDiscoverTVResults({ language, min_year, max_year, with_keywords, without_keywords, with_genres, without_genres, with_watch_providers, watch_region, sort_by }: DiscoverTVParams): Promise<DiscoverTVResult[]> {
   const watchProviderIds = with_watch_providers.split(',')
-  const urls = watchProviderIds.map((providerId) => {
-    return `https://api.themoviedb.org/3/discover/tv?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
-      `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
-      `&with_genres=${with_genres}&without_genres=${without_genres}` +
-      `&first_air_date.gte=${min_year}&first_air_date.lte=${max_year}` +
-      `&with_watch_providers=${providerId}&watch_region=${watch_region}&with_watch_monetization_types=flatrate` +
-      `&sort_by=${sort_by}`
+  const urls: string[] = []
+  watchProviderIds.forEach((providerId) => {
+    for (let page = 1; page <= PAGES_TO_DISCOVER; page++) {
+      urls.push(`https://api.themoviedb.org/3/discover/tv?api_key=${process.env.TMDB_API_KEY}&language=${language}` +
+        `&with_keywords=${with_keywords}&without_keywords=${without_keywords}` +
+        `&with_genres=${with_genres}&without_genres=${without_genres}` +
+        `&first_air_date.gte=${min_year}&first_air_date.lte=${max_year}` +
+        `&with_watch_providers=${providerId}&watch_region=${watch_region}&with_watch_monetization_types=flatrate` +
+        `&sort_by=${sort_by}&page=${page}`)
+    }
   })
-  return await _combineResults<DiscoverTVResult>(urls)
+  return await _combineResults<DiscoverTVResult>(urls, sort_by)
 }
 
-async function _combineResults<T extends DiscoverMovieResult | DiscoverTVResult>(urls: string[]): Promise<T[]> {
+async function _combineResults<T extends DiscoverMovieResult | DiscoverTVResult>(urls: string[], sort_by: DiscoverMovieSortBy | DiscoverTVSortBy): Promise<T[]> {
   return Promise.all(urls.map((url) => fetch(url)))
     .then((responses) => Promise.all(responses.map(res => res.json())))
     .then((results) => {
@@ -146,11 +153,25 @@ async function _combineResults<T extends DiscoverMovieResult | DiscoverTVResult>
           ...result.results,
         ]
       }, [])
-      const filteredResults = mergedResults.filter((value: T, index: number, self: T[]) =>
+      const uniqueResults = mergedResults.filter((value: T, index: number, self: T[]) =>
           index === self.findIndex((t) => (
             t.id === value.id
           ))
       )
+      const filteredResults = uniqueResults.filter((result: T) => {
+          const isSortByVote = sort_by === 'vote_average.desc'
+          return !isSortByVote || result.vote_count > VOTE_COUNT_THRESHOLD
+      }
+      )
+      if (sort_by === 'vote_average.desc') {
+        return filteredResults.sort((a: T, b: T) => a.vote_average > b.vote_average ? -1 : 1)
+      }
+      else if (sort_by === 'primary_release_date.desc') {
+        return filteredResults.sort((a: DiscoverMovieResult, b: DiscoverMovieResult) => a.release_date > b.release_date ? -1 : 1)
+      }
+      else if (sort_by === 'first_air_date.desc') {
+        return filteredResults.sort((a: DiscoverTVResult, b: DiscoverTVResult) => a.first_air_date > b.first_air_date ? -1 : 1)
+      }
       return filteredResults.sort((a: T, b: T) => a.popularity > b.popularity ? -1 : 1)
     })
 }
