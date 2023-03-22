@@ -8,8 +8,9 @@ import YouTube from 'react-youtube'
 import Genres from '~/ui/Genres'
 import Keywords from '~/ui/Keywords'
 import AgeRating from '~/ui/AgeRating'
-import { ReleaseDatesResult } from '~/server/details.server'
+import {ReleaseDatesResult, VideoResult} from '~/server/details.server'
 import Description from '~/ui/Description'
+import Videos from "~/ui/Videos";
 
 export const meta: MetaFunction = () => {
   return {
@@ -44,34 +45,18 @@ export default function TVDetails() {
   const details = detailsFetcher.data?.details || {}
   const ratings: RatingsProps = ratingsFetcher.data?.ratings || {}
   const providers = details['watch/providers'] || {}
+  console.log({ details })
 
   const { backdrop_path, content_ratings, genres, keywords, name, overview, poster_path, videos, year } = details
   const countryCode = 'DE'
   const ageRating = (content_ratings?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
 
-  const videoId = videos?.results?.length ? videos.results[0].key : null
-  const videoOpts = {
-    height: '100%',
-    width: '100%',
-    playerVars: {
-      // https://developers.google.com/youtube/player_parameters
-      autoplay: 0,
-    },
-  }
-
   const mainInfo = (
     <>
       <Ratings {...ratings} />
       <Providers providers={providers} />
-      {videoId && (
-        <div className="mt-8">
-          <div className="mb-2 text-lg font-bold">Trailer</div>
-          <div className="aspect-w-16 aspect-h-9">
-            <YouTube videoId={videoId} opts={videoOpts} />
-          </div>
-        </div>
-      )}
-      <Keywords keywords={keywords} />
+      <Videos results={videos?.results || []} />
+      <Keywords keywords={keywords} type="tv" />
     </>
   )
 
@@ -94,7 +79,7 @@ export default function TVDetails() {
               </h2>
               <div className="flex gap-4">
                 <AgeRating ageRating={ageRating} />
-                <Genres genres={genres} />
+                <Genres genres={genres} type="tv" />
               </div>
               <Description description={overview} />
               <div className="hidden lg:block">

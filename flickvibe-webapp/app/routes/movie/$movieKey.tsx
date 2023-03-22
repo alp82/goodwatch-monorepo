@@ -5,11 +5,13 @@ import { useFetcher, useParams } from '@remix-run/react'
 import Providers from '~/ui/Providers'
 import { MetaFunction } from '@remix-run/node'
 import YouTube from 'react-youtube'
-import { Genre, ReleaseDate, ReleaseDatesResult } from '~/server/details.server'
+import {Genre, ReleaseDate, ReleaseDatesResult, VideoResult} from '~/server/details.server'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
 import AgeRating from '~/ui/AgeRating'
 import Description from '~/ui/Description'
+import Tabs from "~/ui/Tabs";
+import Videos from "~/ui/Videos";
 
 export const meta: MetaFunction = () => {
   return {
@@ -44,35 +46,19 @@ export default function MovieDetails() {
   const details = detailsFetcher.data?.details || {}
   const ratings: RatingsProps = ratingsFetcher.data?.ratings || {}
   const providers = details['watch/providers'] || {}
+  console.log({ details })
 
   const { backdrop_path, keywords, genres = [], overview, poster_path, release_dates, title, videos, year } = details
   const countryCode = 'DE'
   const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
   const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release: ReleaseDate) => release.certification) : null
 
-  const videoId = videos?.results?.length ? videos.results[0].key : null
-  const videoOpts = {
-    height: '100%',
-    width: '100%',
-    playerVars: {
-      // https://developers.google.com/youtube/player_parameters
-      autoplay: 0,
-    },
-  }
-
   const mainInfo = (
     <>
       <Ratings {...ratings} />
       <Providers providers={providers} />
-      {videoId && (
-        <div className="mt-8">
-          <div className="mb-2 text-lg font-bold">Trailer</div>
-          <div className="aspect-w-16 aspect-h-9">
-            <YouTube videoId={videoId} opts={videoOpts} />
-          </div>
-        </div>
-      )}
-      <Keywords keywords={keywords} />
+      <Videos results={videos?.results || []} />
+      <Keywords keywords={keywords} type="movie" />
     </>
   )
 
@@ -95,7 +81,7 @@ export default function MovieDetails() {
               </h2>
               <div className="flex gap-4">
                 <AgeRating ageRating={ageRating} />
-                <Genres genres={genres} />
+                <Genres genres={genres} type="movie" />
               </div>
               <Description description={overview} />
               <div className="hidden lg:block">
