@@ -4,6 +4,33 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
 
+export interface Part {
+  adult:             boolean
+  backdrop_path:     string
+  id:                string
+  title:             string
+  original_language: string
+  original_title:    string
+  overview:          string
+  poster_path:       string
+  media_type:        string
+  genre_ids:         number[]
+  popularity:        number
+  release_date:      Date
+  video:             boolean
+  vote_average:      number
+  vote_count:        number
+}
+
+export interface BelongsToCollection {
+  id:            number
+  name:          string
+  overview:      string
+  poster_path:   string
+  backdrop_path: string
+  parts:         Part[]
+}
+
 export interface BaseDetails {
   title_dashed: string
   title_underscored: string
@@ -147,7 +174,7 @@ export interface Videos {
 export interface MovieDetails extends BaseDetails {
   adult: boolean
   backdrop_path: string
-  belongs_to_collection?: any
+  belongs_to_collection?: BelongsToCollection
   budget: number
   genres: Genre[]
   homepage: string
@@ -293,6 +320,12 @@ export async function _getDetailsForMovie({ movieId, language }: DetailsMoviePar
   const details = await fetch(
     `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=keywords,recommendations,release_dates,videos,watch/providers`
   ).then((res) => res.json())
+
+  if (details.belongs_to_collection) {
+    details.belongs_to_collection = await fetch(
+      `https://api.themoviedb.org/3/collection/${details.belongs_to_collection.id}?api_key=${process.env.TMDB_API_KEY}`
+    ).then((res) => res.json())
+  }
 
   const title_dashed = titleToDashed(details.title)
   const title_underscored = title_dashed.replace(/-/g, '_')

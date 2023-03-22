@@ -12,6 +12,8 @@ import AgeRating from '~/ui/AgeRating'
 import Description from '~/ui/Description'
 import Tabs from "~/ui/Tabs";
 import Videos from "~/ui/Videos";
+import {titleToDashed} from "~/utils/helpers";
+import Collection from "~/ui/Collection";
 
 export const meta: MetaFunction = () => {
   return {
@@ -48,7 +50,7 @@ export default function MovieDetails() {
   const providers = details['watch/providers'] || {}
   console.log({ details })
 
-  const { backdrop_path, keywords, genres = [], overview, poster_path, release_dates, tagline, title, videos, year } = details
+  const { backdrop_path, belongs_to_collection, keywords, genres = [], overview, poster_path, release_dates, tagline, title, videos, year } = details
   const countryCode = 'DE'
   const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
   const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release: ReleaseDate) => release.certification) : null
@@ -57,6 +59,7 @@ export default function MovieDetails() {
     <>
       <Ratings {...ratings} />
       <Providers providers={providers} />
+      <Collection collection={belongs_to_collection} movieId={details.id} />
       <Videos results={videos?.results || []} />
       <Keywords keywords={keywords} type="movie" />
     </>
