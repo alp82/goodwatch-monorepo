@@ -48,8 +48,6 @@ subscribe to data updates for quicker loading
 
 tv seasons
 
-movie predecessors and successors
-
 fix dropdown for tabs on mobile: icons, pre-selection doesn't work
 
 age box style: https://www.themoviedb.org/movie/16869-inglourious-basterds

@@ -15,20 +15,21 @@ export type MetacriticPartPath = 'movie' | 'tv'
 export class MetacriticScraper {
   readonly mainUrl = 'https://www.metacritic.com'
 
-  async getRatings(partPath: MetacriticPartPath, name: string, year: string): Promise<MetacriticRatings> {
+  async getRatings(partPath: MetacriticPartPath, name: string, year: string, season?: number): Promise<MetacriticRatings> {
     let url
     let response
     try {
       // first try with the year attached to find more recent result if there are duplicates
-      url = `${this.mainUrl}/${partPath}/${name}-${year}`
+      url = `${this.mainUrl}/${partPath}/${name}-${year}${season ? `/season-${season}`: ''}`
       response = await axios.get(url, userAgentHeader)
     } catch (err) {
       // at this point we might have a 404 if the url above is not correct
       try {
         // use without year to get the normal url (no duplicate or older result)
-        url = `${this.mainUrl}/${partPath}/${name}`
+        url = `${this.mainUrl}/${partPath}/${name}${season ? `/season-${season}`: ''}`
         response = await axios.get(url, userAgentHeader)
       } catch (err) {
+        console.error(err)
         return {}
       }
     }
@@ -48,10 +49,18 @@ export class MetacriticScraper {
   }
 
   async getMovieRatings(movieName: string, year: string): Promise<MetacriticRatings> {
-    return this.getRatings('movie', movieName, year)
+    return await this.getRatings('movie', movieName, year)
   }
 
   async getTvShowRatings(tvShowName: string, year: string): Promise<MetacriticRatings> {
-    return this.getRatings('tv', tvShowName, year)
+    return await this.getRatings('tv', tvShowName, year)
+  }
+
+  async getTvShowSeasonsRatings(tvShowName: string, year: string, seasons: number): Promise<MetacriticRatings[]> {
+    const getRatingsCalls = []
+    for (let season=1; season<=seasons; season++) {
+      getRatingsCalls.push(this.getRatings('tv', tvShowName, year, season))
+    }
+    return await Promise.all(getRatingsCalls)
   }
 }

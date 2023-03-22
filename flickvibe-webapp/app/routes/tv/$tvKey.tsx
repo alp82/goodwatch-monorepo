@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, {useEffect, useState} from 'react'
 import Ratings, { RatingsProps } from '~/ui/Ratings'
 import InfoBox from '~/ui/InfoBox'
 import { useFetcher, useParams } from '@remix-run/react'
@@ -24,6 +24,7 @@ export default function TVDetails() {
   const tvId = tvKey.split('-')[0]
   const detailsFetcher = useFetcher()
   const ratingsFetcher = useFetcher()
+  const ratingsSeasonsFetcher = useFetcher()
 
   useEffect(() => {
     detailsFetcher.submit(
@@ -40,12 +41,26 @@ export default function TVDetails() {
         action: '/api/ratings/tv',
       }
     )
+    ratingsSeasonsFetcher.submit(
+      { tvId },
+      {
+        method: 'get',
+        action: '/api/ratings/tv-seasons',
+      }
+    )
   }, [tvId])
 
   const details = detailsFetcher.data?.details || {}
   const ratings: RatingsProps = ratingsFetcher.data?.ratings || {}
+  const ratingsSeasons: RatingsProps[] = ratingsSeasonsFetcher.data?.ratings
   const providers = details['watch/providers'] || {}
   console.log({ details })
+  console.log({ ratingsSeasons })
+
+  const [showSeasonRatings, setShowSeasonRatings] = useState(false)
+  const handleToggleShowSeasonRatings = () => {
+    setShowSeasonRatings(value => !value)
+  }
 
   const { backdrop_path, content_ratings, genres, keywords, name, overview, poster_path, tagline, videos, year } = details
   const countryCode = 'DE'
@@ -54,6 +69,12 @@ export default function TVDetails() {
   const mainInfo = (
     <>
       <Ratings {...ratings} />
+      {ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-1">
+        <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer">Toggle Ratings for {ratingsSeasons.length} Seasons</a>
+        {showSeasonRatings && ratingsSeasons.map((ratingsSeason, index) => (
+          <Ratings key={index} {...ratingsSeason} title={`Season ${index+1}`} />
+        ))}
+      </div>}
       <Providers providers={providers} />
       <Videos results={videos?.results || []} />
       <Keywords keywords={keywords} type="tv" />

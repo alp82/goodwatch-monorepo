@@ -99,3 +99,51 @@ export async function _getRatingsForTV({ tvId }: RatingsTVParams): Promise<Ratin
     rottenTomatoesRatings,
   }
 }
+
+export const getRatingsForTVSeasons = async (params: RatingsTVParams) => {
+  return await cached<RatingsTVParams, Ratings[]>({
+    name: 'ratings-tv-seasons',
+    target: _getRatingsForTVSeasons,
+    params,
+    ttlMinutes: 60 * 12,
+  })
+}
+
+export async function _getRatingsForTVSeasons({ tvId }: RatingsTVParams): Promise<Ratings[]> {
+  const tvDetails = await getDetailsForTV({ tvId, language: 'en' })
+  const seasons = tvDetails.seasons.filter((season) => season.season_number > 0).length
+
+  const imdb_id = tvDetails.external_ids.imdb_id
+  const { title_dashed, title_underscored, year } = tvDetails
+
+  const imdbScraper = new IMDbScraper()
+  const metacriticScraper = new MetacriticScraper()
+  const rottenTomatoesScraper = new RottenTomatoesScraper()
+  const vibesCalculator = new VibesCalculator()
+
+  const [imdbRatingsSeason, metacriticRatingsSeason, rottenTomatoesRatingsSeason] = await Promise.all([
+    imdbScraper.getTvShowSeasonsRatings(imdb_id, seasons),
+    metacriticScraper.getTvShowSeasonsRatings(title_dashed, year, seasons),
+    rottenTomatoesScraper.getTvShowSeasonsRatings(title_underscored, seasons),
+  ])
+
+  const ratings: Ratings[] = []
+  for (let season=0; season<seasons; season++) {
+    const imdbRatings = imdbRatingsSeason[season]
+    const metacriticRatings = metacriticRatingsSeason[season]
+    const rottenTomatoesRatings = rottenTomatoesRatingsSeason[season]
+    const vibeRatings = vibesCalculator.getVibes({
+      imdbRatings,
+      metacriticRatings,
+      rottenTomatoesRatings,
+    })
+    ratings.push({
+      vibeRatings,
+      imdbRatings,
+      metacriticRatings,
+      rottenTomatoesRatings,
+    })
+  }
+
+  return ratings
+}

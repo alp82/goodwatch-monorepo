@@ -3,6 +3,7 @@
 import axios from 'axios'
 import cheerio from 'cheerio'
 import { userAgentHeader } from './user-agent'
+import {MetacriticRatings} from "~/server/ratings/metacritic-scraper";
 
 export interface RottenTomatoesRatings {
   url?: string
@@ -15,12 +16,13 @@ export type RottenTomatoesPartPath = 'm' | 'tv'
 export class RottenTomatoesScraper {
   readonly mainUrl = 'https://www.rottentomatoes.com'
 
-  async getRatings(partPath: RottenTomatoesPartPath, name: string): Promise<RottenTomatoesRatings> {
-    const url = `${this.mainUrl}/${partPath}/${name}`
+  async getRatings(partPath: RottenTomatoesPartPath, name: string, season?: number): Promise<RottenTomatoesRatings> {
+    const url = `${this.mainUrl}/${partPath}/${name}${season ? `/s${String(season).padStart(2, '0')}`: ''}`
     let response
     try {
       response = await axios.get(url, userAgentHeader)
     } catch (err) {
+      console.error(err)
       return {}
     }
     const html = response.data
@@ -49,6 +51,14 @@ export class RottenTomatoesScraper {
 
   async getTvShowRatings(tvShowName: string): Promise<RottenTomatoesRatings> {
     return this.getRatings('tv', tvShowName)
+  }
+
+  async getTvShowSeasonsRatings(tvShowName: string, seasons: number): Promise<RottenTomatoesRatings[]> {
+    const getRatingsCalls = []
+    for (let season=1; season<=seasons; season++) {
+      getRatingsCalls.push(this.getRatings('tv', tvShowName, season))
+    }
+    return await Promise.all(getRatingsCalls)
   }
 
 }
