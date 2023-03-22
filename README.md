@@ -44,8 +44,6 @@ image=null handling with placeholder image
 
 vibes explanation
 
-show other trailers and empty message if none exists
-
 subscribe to data updates for quicker loading
 
 tv seasons

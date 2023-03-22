@@ -48,7 +48,7 @@ export default function MovieDetails() {
   const providers = details['watch/providers'] || {}
   console.log({ details })
 
-  const { backdrop_path, keywords, genres = [], overview, poster_path, release_dates, title, videos, year } = details
+  const { backdrop_path, keywords, genres = [], overview, poster_path, release_dates, tagline, title, videos, year } = details
   const countryCode = 'DE'
   const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
   const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release: ReleaseDate) => release.certification) : null
@@ -83,6 +83,13 @@ export default function MovieDetails() {
                 <AgeRating ageRating={ageRating} />
                 <Genres genres={genres} type="movie" />
               </div>
+              {tagline && <div className="mb-4">
+                <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
+                  <p className="text-white italic sm:text-xl">
+                    {tagline}
+                  </p>
+                </blockquote>
+              </div>}
               <Description description={overview} />
               <div className="hidden lg:block">
                 {mainInfo}

@@ -47,7 +47,7 @@ export default function TVDetails() {
   const providers = details['watch/providers'] || {}
   console.log({ details })
 
-  const { backdrop_path, content_ratings, genres, keywords, name, overview, poster_path, videos, year } = details
+  const { backdrop_path, content_ratings, genres, keywords, name, overview, poster_path, tagline, videos, year } = details
   const countryCode = 'DE'
   const ageRating = (content_ratings?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
 
@@ -81,6 +81,13 @@ export default function TVDetails() {
                 <AgeRating ageRating={ageRating} />
                 <Genres genres={genres} type="tv" />
               </div>
+              {tagline && <div className="mb-4">
+                  <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
+                      <p className="text-white italic sm:text-xl">
+                        {tagline}
+                      </p>
+                  </blockquote>
+              </div>}
               <Description description={overview} />
               <div className="hidden lg:block">
                 {mainInfo}
