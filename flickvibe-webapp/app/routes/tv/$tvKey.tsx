@@ -69,10 +69,12 @@ export default function TVDetails() {
   const mainInfo = (
     <>
       <Ratings {...ratings} />
-      {ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-1">
-        <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer">Toggle Ratings for {ratingsSeasons.length} Seasons</a>
+      {ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">
+        <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer hover:text-indigo-100 hover:bg-indigo-900">
+          {showSeasonRatings ? 'Hide' : 'Show'} Ratings for {ratingsSeasons.length} Seasons
+        </a>
         {showSeasonRatings && ratingsSeasons.map((ratingsSeason, index) => (
-          <Ratings key={index} {...ratingsSeason} title={`Season ${index+1}`} />
+          <Ratings key={index} {...ratingsSeason} title={`Season ${index+1}`} compact={true} />
         ))}
       </div>}
       <Providers providers={providers} />

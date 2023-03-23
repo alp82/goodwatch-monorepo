@@ -22,15 +22,24 @@ export default function Providers({ providers }: ProvidersProps) {
 
   return (
     <>
-      {hasNothing && (
+      {hasNothing ? (
         <div className="mt-6">
           <InfoBox text="No streaming provider available yet" />
         </div>
+      ) : (
+        <>
+          <div className="mt-6 text-xl font-bold flex items-center">
+            Streaming
+          </div>
+          <div className="mb-2 text-sm italic">
+            powered by <a href="https://justwatch.com" className="accent-yellow-400">Justwatch</a>
+          </div>
+        </>
       )}
       {hasFlatrate && (
         <div>
           <div className="mt-6 mb-2 text-lg font-bold flex items-center">
-            Stream
+            Watch now
             <span className="ml-3 inline-flex items-center rounded bg-lime-700 px-2 h-4 text-xs font-medium text-yellow-100">
               Flatrate
             </span>

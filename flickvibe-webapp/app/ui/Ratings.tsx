@@ -14,9 +14,10 @@ export interface RatingsProps {
   metacriticRatings?: MetacriticRatings
   rottenTomatoesRatings?: RottenTomatoesRatings
   title?: string
+  compact?: boolean
 }
 
-export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, rottenTomatoesRatings, title = 'Ratings' }: RatingsProps) {
+export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, rottenTomatoesRatings, title = 'Ratings', compact = false }: RatingsProps) {
   const isComplete = vibeRatings && imdbRatings && metacriticRatings && rottenTomatoesRatings
   const vibeColorIndex = vibeRatings?.vibes ? Math.floor(vibeRatings.vibes / 10) * 10 : null
 
@@ -27,7 +28,7 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
           <InfoBox text="Ratings are currently calculated..." />
         </div>
       )}
-      <div className="mt-2 mb-2 text-lg font-bold">{title}</div>
+      <div className={`mt-2 mb-2 font-bold ${compact ? 'text-lg' : 'text-xl'}`}>{title}</div>
       <ul className={`underline-offset-2 flex gap-4 flex-wrap ${isComplete ? '' : 'opacity-50'}`}>
         <dl className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} w-28 p-3 rounded-lg shadow overflow-hidden text-center`}>
           <dd className={`${vibeColorIndex == null ? 'text-gray-300' : (vibeColorIndex < 90 ? 'text-gray-900' : 'text-gray-100')} mt-1 text-5xl font-semibold tracking-tight`}>{vibeRatings?.vibes || '--'}</dd>
