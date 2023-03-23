@@ -14,6 +14,7 @@ import Tabs from "~/ui/Tabs";
 import Videos from "~/ui/Videos";
 import {titleToDashed} from "~/utils/helpers";
 import Collection from "~/ui/Collection";
+import Runtime from "~/ui/Runtime";
 
 export const meta: MetaFunction = () => {
   return {
@@ -50,7 +51,7 @@ export default function MovieDetails() {
   const providers = details['watch/providers'] || {}
   console.log({ details })
 
-  const { backdrop_path, belongs_to_collection, keywords, genres = [], overview, poster_path, release_dates, tagline, title, videos, year } = details
+  const { backdrop_path, belongs_to_collection, keywords, genres = [], overview, poster_path, release_dates, runtime, tagline, title, videos, year } = details
   const countryCode = 'DE'
   const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
   const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release: ReleaseDate) => release.certification) : null
@@ -85,6 +86,9 @@ export default function MovieDetails() {
               <div className="flex gap-4">
                 <AgeRating ageRating={ageRating} />
                 <Genres genres={genres} type="movie" />
+                <div className="ml-1 mt-1">
+                  <Runtime minutes={runtime} />
+                </div>
               </div>
               {tagline && <div className="mb-4">
                 <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">

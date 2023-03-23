@@ -36,8 +36,6 @@ vercel deploy --prod
 &with_status=Returning Series: 0, Planned: 1, In Production: 2, Ended: 3, Cancelled: 4, Pilot: 5
 &with_type=Documentary: 0, News: 1, Miniseries: 2, Reality: 3, Scripted: 4, Talk Show: 5, Video: 6
 
-after genres: show length / number of seasons
-
 description full text toggle
 
 share button

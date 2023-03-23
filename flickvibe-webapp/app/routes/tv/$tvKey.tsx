@@ -55,7 +55,6 @@ export default function TVDetails() {
   const ratingsSeasons: RatingsProps[] = ratingsSeasonsFetcher.data?.ratings
   const providers = details['watch/providers'] || {}
   console.log({ details })
-  console.log({ ratingsSeasons })
 
   const [showSeasonRatings, setShowSeasonRatings] = useState(false)
   const handleToggleShowSeasonRatings = () => {
@@ -71,7 +70,7 @@ export default function TVDetails() {
       <Ratings {...ratings} />
       {ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">
         <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer hover:text-indigo-100 hover:bg-indigo-900">
-          {showSeasonRatings ? 'Hide' : 'Show'} Ratings for {ratingsSeasons.length} Seasons
+          {showSeasonRatings ? 'Hide' : 'Show'} Ratings per Season
         </a>
         {showSeasonRatings && ratingsSeasons.map((ratingsSeason, index) => (
           <Ratings key={index} {...ratingsSeason} title={`Season ${index+1}`} compact={true} />
@@ -103,6 +102,9 @@ export default function TVDetails() {
               <div className="flex gap-4">
                 <AgeRating ageRating={ageRating} />
                 <Genres genres={genres} type="tv" />
+                <div className="ml-1 mt-1">
+                  {ratingsSeasons?.length} Season{ratingsSeasons?.length === 1 ? '' : 's'}
+                </div>
               </div>
               {tagline && <div className="mb-4">
                   <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
