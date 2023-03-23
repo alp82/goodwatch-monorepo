@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useState } from 'react'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+import {CheckIcon, ChevronUpDownIcon, XMarkIcon} from '@heroicons/react/20/solid'
 import { Combobox } from '@headlessui/react'
 import { classNames } from '~/utils/helpers'
 
@@ -34,12 +34,28 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
   onChange,
   onSelect,
 }: AutocompleteProps<RenderItem>) {
+  const [query, setQuery] = useState('')
+  const [isDirty, setIsDirty] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
 
   useEffect(() => {
     if (!selectedItem) return
     onSelect(selectedItem)
+    handleReset()
   }, [selectedItem])
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(event.target.value || '')
+    setIsDirty(event.target.value.length > 0)
+    if (onChange) {
+      onChange(event)
+    }
+  }
+
+  const handleReset = () => {
+    setQuery('')
+    setIsDirty(false)
+  }
 
   return (
     <Combobox as="div" value={selectedItem} onChange={setSelectedItem}>
@@ -51,11 +67,16 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
           className="block w-full rounded-md border border-transparent bg-gray-700 py-2 pl-10 pr-3 leading-5 text-gray-300 placeholder-gray-400 focus:border-gray-400 focus:bg-slate-700 focus:text-gray-100 focus:outline-none focus:ring-gray-400 sm:text-sm"
           name={name}
           placeholder={placeholder}
+          autoComplete="off"
+          value={query}
           displayValue={(item: AutocompleteItem) => item?.label}
-          onChange={onChange}
+          onChange={handleChange}
         />
+        {isDirty && <Combobox.Button className="absolute inset-y-0 right-6 flex items-center px-2" onClickCapture={handleReset}>
+          <XMarkIcon className="h-5 w-5 text-gray-400 hover:text-gray-200" aria-hidden="true" />
+        </Combobox.Button>}
         <Combobox.Button className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
-          <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          <ChevronUpDownIcon className="h-5 w-5 text-gray-400 hover:text-gray-200" aria-hidden="true" />
         </Combobox.Button>
 
         {autocompleteItems?.length > 0 && (

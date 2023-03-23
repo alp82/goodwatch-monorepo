@@ -40,8 +40,6 @@ description full text toggle
 
 share button
 
-autocomplete x to clear text 
-
 image=null handling with placeholder image
 
 vibes explanation
