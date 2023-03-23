@@ -32,7 +32,7 @@ export default function Providers({ providers }: ProvidersProps) {
             Streaming
           </div>
           <div className="mb-2 text-sm italic">
-            powered by <a href="https://justwatch.com" className="accent-yellow-400">Justwatch</a>
+            powered by <a href="https://justwatch.com" className="text-yellow-500 hover:text-yellow-300">Justwatch</a>
           </div>
         </>
       )}
