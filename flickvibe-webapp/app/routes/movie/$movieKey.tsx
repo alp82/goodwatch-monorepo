@@ -98,10 +98,10 @@ export default function MovieDetails() {
                 </blockquote>
               </div>}
               <Description description={overview} />
-              <div className="hidden lg:block">
-                {mainInfo}
-              </div>
             </div>
+          </div>
+          <div className="hidden lg:block">
+            {mainInfo}
           </div>
           <div className="block lg:hidden">
             {mainInfo}
