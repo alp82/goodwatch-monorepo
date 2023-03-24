@@ -40,13 +40,13 @@ description full text toggle
 
 share button
 
-image=null handling with placeholder image
-
 vibes explanation
 
-fix dropdown for tabs on mobile: icons
+show generic recommendations
 
-autocomplete dark style
+director + cast
+
+region selection
 
 preloading search results and popular on start page
 
@@ -56,11 +56,11 @@ issue: tmdb imagery redundant -> justwatch imagery
 
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
 
-show generic recommendations
+fix dropdown for tabs on mobile: icons
 
-director + cast
+image=null handling with placeholder image
 
-region selection
+autocomplete dark style
 
 additional ratings and links:
 * letterboxd
