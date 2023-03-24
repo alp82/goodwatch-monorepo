@@ -12,6 +12,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        gray: {
+          950: '#060606',
+        },
         vibe: {
           0: '#D61F1F',
           10: '#D61F1F',

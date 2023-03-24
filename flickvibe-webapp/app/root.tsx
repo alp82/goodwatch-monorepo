@@ -10,6 +10,7 @@ import {
 } from "@remix-run/react";
 import stylesheet from "~/tailwind.css";
 import Header from '~/ui/Header'
+import Footer from "~/ui/Footer";
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
@@ -29,11 +30,12 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-900">
+      <body className="flex flex-col h-screen bg-gray-900">
         <Header />
-        <div className="mx-auto mt-2 max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+        <div className="flex-grow mx-auto mt-2 max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
           <Outlet />
         </div>
+        <Footer />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
