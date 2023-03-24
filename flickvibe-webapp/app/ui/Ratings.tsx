@@ -36,7 +36,7 @@ export default function Ratings({ vibeRatings, imdbRatings, metacriticRatings, r
         </dl>
 
         <a className="" href={imdbRatings?.url} target="_blank">
-          <dl className={`${imdbRatings?.url ? 'hover:border-white/[.9] active:border-white/[.9]' : 'opacity-60'} rounded-lg border-4 border-white/[.5] w-24 p-3 bg-imdb shadow overflow-hidden text-center flex flex-col justify-center`}>
+          <dl className={`${imdbRatings?.url ? 'hover:border-black/[.45] active:border-black/[.45]' : 'opacity-60'} rounded-lg border-4 border-white/[.5] w-24 p-3 bg-imdb shadow overflow-hidden text-center flex flex-col justify-center`}>
             <img className="h-6 object-contain" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" />
             <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{imdbRatings?.score || '--'}</dd>
             <dt className={`truncate text-xs font-medium text-gray-700 ${imdbRatings?.url && 'underline'}`}>Score</dt>
