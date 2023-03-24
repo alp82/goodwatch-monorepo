@@ -76,7 +76,7 @@ export interface FooterProps {
 
 export default function Footer({}: FooterProps) {
   return (
-    <footer className="mt-4 bg-gray-950">
+    <footer className="mt-8 bg-gray-950">
       <div className="mx-auto max-w-7xl overflow-hidden py-20 px-6 sm:py-24 lg:px-8">
         <nav className="-mb-6 columns-2 sm:flex sm:justify-center sm:space-x-12" aria-label="Footer">
           {navigation.main.map((item) => (
