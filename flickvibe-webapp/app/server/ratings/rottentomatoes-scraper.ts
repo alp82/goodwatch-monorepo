@@ -35,8 +35,8 @@ export class RottenTomatoesScraper {
     const scoreTomatometer = scoreTomatometerMovie || scoreTomatometerTV
     const scoreAudience = scoreAudienceMovie || scoreAudienceTV
 
-    const tomatometer = scoreTomatometer ? parseInt(scoreTomatometer).toFixed(0) : undefined
-    const audienceScore = scoreAudience ? parseInt(scoreAudience).toFixed(0) : undefined
+    const tomatometer = scoreTomatometer && !isNaN(parseInt(scoreTomatometer)) ? parseInt(scoreTomatometer).toFixed(0) : undefined
+    const audienceScore = scoreAudience && !isNaN(parseInt(scoreAudience)) ? parseInt(scoreAudience).toFixed(0) : undefined
 
     return {
       url,
