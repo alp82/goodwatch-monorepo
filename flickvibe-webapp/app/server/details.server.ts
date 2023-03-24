@@ -102,6 +102,41 @@ export interface ContentRatings {
   results: ContentRatingResult[]
 }
 
+export enum Department {
+  Acting = "Acting",
+  Art = "Art",
+  Camera = "Camera",
+  CostumeMakeUp = "Costume & Make-Up",
+  Directing = "Directing",
+  Editing = "Editing",
+  Lighting = "Lighting",
+  Production = "Production",
+  Sound = "Sound",
+  Writing = "Writing",
+}
+
+export interface Cast {
+  adult:                boolean
+  gender:               number
+  id:                   number
+  known_for_department: Department
+  name:                 string
+  original_name:        string
+  popularity:           number
+  profile_path:         null | string
+  cast_id?:             number
+  character?:           string
+  credit_id:            string
+  order?:               number
+  department?:          Department
+  job?:                 string
+}
+
+export interface Credits {
+  cast: Cast[]
+  crew: Cast[]
+}
+
 export interface KeywordResult {
   name: string
   id: number
@@ -197,6 +232,7 @@ export interface MovieDetails extends BaseDetails {
   video: boolean
   vote_average: number
   vote_count: number
+  credits: Credits
   keywords: Keywords
   recommendations: Recommendations
   release_dates: ReleaseDates
@@ -290,6 +326,7 @@ export interface TVDetails extends BaseDetails {
   vote_average: number
   vote_count: number
   content_ratings: ContentRatings
+  credits: Credits
   external_ids: ExternalIds
   keywords: Keywords
   recommendations: Recommendations
@@ -318,7 +355,7 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 
 export async function _getDetailsForMovie({ movieId, language }: DetailsMovieParams): Promise<MovieDetails> {
   const details = await fetch(
-    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=keywords,recommendations,release_dates,videos,watch/providers`
+    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=credits,keywords,recommendations,release_dates,videos,watch/providers`
   ).then((res) => res.json())
 
   if (details.belongs_to_collection) {
@@ -361,7 +398,7 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
 
 export async function _getDetailsForTV({ tvId, language }: DetailsTVParams): Promise<TVDetails> {
   const details = await fetch(
-    `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=content_ratings,external_ids,keywords,recommendations,videos,watch/providers`
+    `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=content_ratings,credits,external_ids,keywords,recommendations,videos,watch/providers`
   ).then((res) => res.json())
 
   const title_dashed = titleToDashed(details.name)
