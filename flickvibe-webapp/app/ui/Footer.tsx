@@ -2,7 +2,6 @@ import React from 'react'
 
 const navigation = {
   main: [
-    { name: 'Home', href: '/' },
     { name: 'Discover Movies', href: '/discover?type=movie' },
     { name: 'Discover TV Shows', href: '/discover?type=tv' },
   ],
@@ -77,7 +76,7 @@ export interface FooterProps {
 export default function Footer({}: FooterProps) {
   return (
     <footer className="mt-8 bg-gray-950">
-      <div className="mx-auto max-w-7xl overflow-hidden py-20 px-6 sm:py-24 lg:px-8">
+      <div className="mx-auto max-w-7xl overflow-hidden py-12 px-6 sm:py-16 lg:px-8">
         <nav className="-mb-6 columns-2 sm:flex sm:justify-center sm:space-x-12" aria-label="Footer">
           {navigation.main.map((item) => (
             <div key={item.name} className="pb-6">
@@ -94,6 +93,11 @@ export default function Footer({}: FooterProps) {
               <item.icon className="h-12 w-12" aria-hidden="true" />
             </a>
           ))}
+        </div>
+        <div className="mt-10 text-center text-xs leading-5 text-gray-400">
+          powered by
+          <a className="px-2 text-teal-600 hover:text-teal-400" href="https://www.themoviedb.org/">TMDB</a>and
+          <a className="px-2 text-yellow-600 hover:text-yellow-400" href="https://www.justwatch.com/">JustWatch</a>
         </div>
         <p className="mt-10 text-center text-xs leading-5 text-gray-400">
           Made with ❤️ by Alper Ortac
