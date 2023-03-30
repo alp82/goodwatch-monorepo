@@ -105,3 +105,6 @@ dist
 
 # Database data
 *.tsv
+
+# temp folder
+tmp

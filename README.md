@@ -29,6 +29,52 @@ vercel deploy --prod
 
 ## TODO's
 ```
+https://leandronsp.com/a-powerful-full-text-search-in-postgresql-in-less-than-20-lines
+https://rachbelaid.com/postgres-full-text-search-is-good-enough/
+https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-HEADLINE
+
+CREATE EXTENSION pg_trgm
+(similarity)
+
+CREATE EXTENSION unaccent
+(unaccent(...))
+
+CREATE INDEX movie_details_search_idx ON movie_details USING GIN (to_tsvector(movie_details.original_title || movie_details.tagline || movie_details.overview))
+
+SELECT
+	movie_details.*,
+	rank_title,
+    rank_tagline,
+    rank_description,
+    similarity,
+	(
+		COALESCE(rank_title, 0) * 100 * popularity + 
+		COALESCE(rank_tagline, 0) * 20 * popularity + 
+		COALESCE(rank_description, 0) * 10 * popularity + 
+		COALESCE(similarity, 0) * ln(cbrt(popularity))
+	) weighted_rank
+FROM
+	movie_details,
+	to_tsvector(
+		unaccent(movie_details.original_title) || 
+		unaccent(movie_details.tagline) || 
+		unaccent(movie_details.overview)
+	) document,
+    to_tsquery('ava') query,
+	NULLIF(ts_rank_cd(to_tsvector(movie_details.original_title), query), 0) rank_title,
+	NULLIF(ts_rank_cd(to_tsvector(movie_details.tagline), query), 0) rank_tagline,
+	NULLIF(ts_rank_cd(to_tsvector(movie_details.overview), query), 0) rank_description,
+	word_similarity('ava', movie_details.original_title) similarity
+WHERE query @@ document OR similarity > 0
+ORDER BY weighted_rank DESC NULLS LAST
+LIMIT 20
+```
+
+```
+SELECT * FROM movie_details WHERE (ratings->'imdbRatings'->>'score')::float > 0 ORDER BY ratings->'imdbRatings'->>'score' DESC
+
+SELECT * FROM movie_details WHERE (tvtropes->>'url') is null ORDER BY id ASC
+
 /discover/movie
 &certification.lte=0&certification_country=DE
 

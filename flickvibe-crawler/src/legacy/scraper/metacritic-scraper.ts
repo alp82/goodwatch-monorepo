@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 import cheerio from 'cheerio'
-import { userAgentHeader } from './user-agent'
+import { userAgentHeader } from '../utils/user-agent'
 
 export interface MetacriticRatings {
   metaScore?: number
