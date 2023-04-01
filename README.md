@@ -33,41 +33,51 @@ https://leandronsp.com/a-powerful-full-text-search-in-postgresql-in-less-than-20
 https://rachbelaid.com/postgres-full-text-search-is-good-enough/
 https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-HEADLINE
 
-CREATE EXTENSION pg_trgm
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 (similarity)
 
-CREATE EXTENSION unaccent
+CREATE EXTENSION IF NOT EXISTS unaccent;
 (unaccent(...))
 
 CREATE INDEX movie_details_search_idx ON movie_details USING GIN (to_tsvector(movie_details.original_title || movie_details.tagline || movie_details.overview))
 
-SELECT
-	movie_details.*,
-	rank_title,
-    rank_tagline,
-    rank_description,
-    similarity,
-	(
-		COALESCE(rank_title, 0) * 100 * popularity + 
-		COALESCE(rank_tagline, 0) * 20 * popularity + 
-		COALESCE(rank_description, 0) * 10 * popularity + 
-		COALESCE(similarity, 0) * ln(cbrt(popularity))
-	) weighted_rank
-FROM
-	movie_details,
-	to_tsvector(
-		unaccent(movie_details.original_title) || 
-		unaccent(movie_details.tagline) || 
-		unaccent(movie_details.overview)
-	) document,
-    to_tsquery('ava') query,
-	NULLIF(ts_rank_cd(to_tsvector(movie_details.original_title), query), 0) rank_title,
-	NULLIF(ts_rank_cd(to_tsvector(movie_details.tagline), query), 0) rank_tagline,
-	NULLIF(ts_rank_cd(to_tsvector(movie_details.overview), query), 0) rank_description,
-	word_similarity('ava', movie_details.original_title) similarity
-WHERE query @@ document OR similarity > 0
-ORDER BY weighted_rank DESC NULLS LAST
-LIMIT 20
+WITH search_query AS (
+  SELECT 'carnage' AS query
+)
+SELECT 
+  movie_details.*, 
+  (
+	COALESCE(rank_title, 0) * 10 + 
+	COALESCE(rank_alternative_titles, 5) +
+	COALESCE(rank_tagline, 0) * 4 + 
+	COALESCE(rank_description, 0) * 2 +
+	1 / (1 + exp(-10*(COALESCE(similarity, 0)-0.5))) * log10(popularity + 1)
+  ) weighted_rank
+FROM 
+  movie_details
+LEFT JOIN (
+  SELECT 
+    id, 
+    ts_rank_cd(to_tsvector('english', unaccent(original_title)), plainto_tsquery('english', query)) as rank_title, 
+    ts_rank_cd(to_tsvector('english', unaccent(tagline)), plainto_tsquery('english', query)) as rank_tagline, 
+    ts_rank_cd(to_tsvector('english', unaccent(overview)), plainto_tsquery('english', query)) as rank_description,
+	ts_rank_cd(to_tsvector('english', unaccent(string_agg(DISTINCT alternative_titles.alternative_title::text, ' '))), plainto_tsquery('english', query)) as rank_alternative_titles,
+    word_similarity(query, original_title) as similarity
+  FROM 
+    movie_details,
+	search_query,
+	LATERAL (SELECT jsonb_array_elements(alternative_titles->'titles')->>'title'::text AS alternative_title) AS alternative_titles
+  GROUP BY id, query
+) as ranks ON movie_details.id = ranks.id
+WHERE 
+  ranks.rank_title > 0 OR 
+  ranks.rank_alternative_titles > 0 OR
+  ranks.rank_tagline > 0 OR 
+  ranks.rank_description > 0 OR 
+  similarity > 0
+ORDER BY 
+  weighted_rank DESC NULLS LAST 
+LIMIT 20;
 ```
 
 ```
