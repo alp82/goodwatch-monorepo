@@ -19,10 +19,24 @@ export function clearAndUpper(text: string): string {
   return text.replace(/-/, "").toUpperCase();
 }
 
+export const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key: string, value: unknown) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return;
+      }
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
 export interface RequestResult {
   url?: string
   response?: AxiosResponse
 }
+
 
 export const tryRequests = async (urls: string[], options: AxiosRequestConfig): Promise<RequestResult> => {
   const [url, ...nextUrls] = urls
@@ -32,7 +46,11 @@ export const tryRequests = async (urls: string[], options: AxiosRequestConfig): 
     return { url, response }
   } catch (err) {
     if (nextUrls.length > 0) {
-      return tryRequests(nextUrls, options)
+      try {
+        return tryRequests(nextUrls, options)
+      } catch (err2) {
+        return { url: undefined, response: undefined }
+      }
     } else {
       // console.error(err)
       return { url: undefined, response: undefined }

@@ -1,8 +1,9 @@
 import axios from 'axios'
 
 import { upsertJson } from '../db/db'
-import { toDashed, toPascalCase } from '../utils/helpers'
-import { AlternativeTitle, MovieDetails, TvDetails } from '../types/details.types'
+import {toDashed, toPascalCase, tryRequests} from '../utils/helpers'
+import {AlternativeTitle, BelongsToCollection, MovieDetails, TvDetails} from '../types/details.types'
+import {userAgentHeader} from "../utils/user-agent";
 
 interface ExtractedTitles {
   titles_dashed: string[]
@@ -68,12 +69,17 @@ export const getTMDBMovieDetails = async (movieId: number): Promise<MovieDetails
   }
 
   if (details.belongs_to_collection) {
-    const collection = await fetch(
+    const urls = [
       `https://api.themoviedb.org/3/collection/${details.belongs_to_collection.id}?api_key=${process.env.TMDB_API_KEY}`
-    ).then((res) => res.json())
-    details.belongs_to_collection = collection
+    ]
+    const result = await tryRequests(urls, userAgentHeader)
+    if (result.response) {
+      const collection = result.response as unknown as BelongsToCollection
+      // TODO we can remove this and then use joins instead
+      details.belongs_to_collection = collection
+      upsertJson('collection', collection)
+    }
 
-    upsertJson('collection', collection)
   }
 
   return details

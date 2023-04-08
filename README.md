@@ -33,11 +33,10 @@ https://leandronsp.com/a-powerful-full-text-search-in-postgresql-in-less-than-20
 https://rachbelaid.com/postgres-full-text-search-is-good-enough/
 https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-HEADLINE
 
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
 (similarity)
-
-CREATE EXTENSION IF NOT EXISTS unaccent;
 (unaccent(...))
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS unaccent;
 
 CREATE INDEX movie_details_search_idx ON movie_details USING GIN (to_tsvector(movie_details.original_title || movie_details.tagline || movie_details.overview))
 
@@ -91,6 +90,10 @@ SELECT * FROM movie_details WHERE (tvtropes->>'url') is null ORDER BY id ASC
 /discover/tv
 &with_status=Returning Series: 0, Planned: 1, In Production: 2, Ended: 3, Cancelled: 4, Pilot: 5
 &with_type=Documentary: 0, News: 1, Miniseries: 2, Reality: 3, Scripted: 4, Talk Show: 5, Video: 6
+
+rotten tomatoes matching (id datasets)
+
+report missing ratings
 
 description full text toggle
 

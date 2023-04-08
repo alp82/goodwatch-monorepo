@@ -13,8 +13,8 @@ const scrapeMovie = async (movieId: number) => {
   const details = await getTMDBMovieDetails(movieId)
   console.log(`Movie ${details.title} (${details.year})`)
   const ratings = await getRatingsForMovie(details)
-  // const tvtropes = await getTropesForMovie(details)
-  const tvtropes = {}
+  const tvtropes = await getTropesForMovie(details)
+  // const tvtropes = {}
   const movieDetails = {
     ...details,
     ratings,
@@ -27,8 +27,8 @@ const scrapeTv = async (tvId: number) => {
   const details = await getTMDBTvDetails(tvId)
   console.log(`TV Show ${details.name} (${details.year})`)
   const ratings = await getRatingsForTv(details)
-  // const tvtropes = await getTropesForTv(details)
-  const tvtropes = {}
+  const tvtropes = await getTropesForTv(details)
+  // const tvtropes = {}
   const tvDetails = {
     ...details,
     ratings,
@@ -40,7 +40,7 @@ const scrapeTv = async (tvId: number) => {
 const runMovieScraper = async () => {
   console.log('fetching daily updated movies...')
   const { rows } = await pool.query<TMDBDailyMovie>(
-    'SELECT id FROM tmdb_daily_movie ORDER BY popularity DESC LIMIT 10000'
+    'SELECT id FROM tmdb_daily_movie ORDER BY popularity DESC LIMIT 10000 OFFSET 1058'
   )
 
   for (const row of rows) {
@@ -52,7 +52,7 @@ const runMovieScraper = async () => {
 const runTvScraper = async () => {
   console.log('fetching daily updated tv shows...')
   const { rows } = await pool.query<TMDBDailyTv>(
-    'SELECT id FROM tmdb_daily_tv ORDER BY popularity DESC LIMIT 10000'
+    'SELECT id FROM tmdb_daily_tv ORDER BY popularity DESC LIMIT 10000 OFFSET 406'
   )
 
   for (const row of rows) {

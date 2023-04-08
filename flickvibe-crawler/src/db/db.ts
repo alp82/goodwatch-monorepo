@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv'
 import { Pool, QueryResult } from 'pg'
+import {getCircularReplacer} from "../utils/helpers";
 
 dotenv.config()
 
@@ -59,7 +60,7 @@ export const upsertJson = async (tableName: string, json: any, additionalColumnD
   `
 
   try {
-    return await pool.query(query, [JSON.stringify(json)])
+    return await pool.query(query, [JSON.stringify(json, getCircularReplacer)])
   } catch (error) {
     const tableDoesNotExist = (error as Record<string, unknown>).code === '42P01'
     if (tableDoesNotExist) {
