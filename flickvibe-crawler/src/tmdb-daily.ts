@@ -14,17 +14,15 @@ export interface TMDBDailyMovie {
   popularity: number
   video: boolean
   adult: boolean
-  processed?: boolean
 }
 
 export interface TMDBDailyTv {
   id: number
   original_name: string
   popularity: number
-  processed?: boolean
 }
 
-const formatDate = (date: Date) => {
+const formatDate = (date: Date): string => {
   const month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1
   const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate()
   const year = date.getFullYear()
@@ -32,24 +30,27 @@ const formatDate = (date: Date) => {
   return `${month}_${day}_${year}`
 }
 
-const downloadAndExtract = async (exportType: ExportType): Promise<void> => {
+const downloadAndExtract = async (exportType: ExportType): Promise<Date> => {
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)
 
   let response
+  let timestamp: Date
   try {
-    const formattedDate = formatDate(today)
+    timestamp = today
+    const formattedDate = formatDate(timestamp)
     response = await axios.get(`${baseUrl}/${exportType}_${formattedDate}.json.gz`, { responseType: 'stream' })
   } catch (error: unknown) {
     if ((error as AxiosError)?.response?.status === 403) {
-      const formattedDate = formatDate(yesterday)
+      timestamp = yesterday
+      const formattedDate = formatDate(timestamp)
       response = await axios.get(`${baseUrl}/${exportType}_${formattedDate}.json.gz`, { responseType: 'stream' })
     }
   }
 
   if (!response) {
-    return
+    throw new Error('could not fetch daily TMDB data')
   }
 
   const unzip = zlib.createGunzip()
@@ -58,12 +59,12 @@ const downloadAndExtract = async (exportType: ExportType): Promise<void> => {
   response.data.pipe(unzip).pipe(writeStream)
 
   return new Promise((resolve, reject) => {
-    writeStream.on('finish', resolve)
+    writeStream.on('finish', () => resolve(timestamp))
     writeStream.on('error', reject)
   })
 }
 
-const readLinesFromFile = async (exportType: ExportType): Promise<TMDBDailyMovie[] & TMDBDailyTv[]> => {
+const readLinesFromFile = async (exportType: ExportType, timestamp: Date): Promise<TMDBDailyMovie[] & TMDBDailyTv[]> => {
   const fileStream = fs.createReadStream(`${filePath}/${exportType}.txt`)
   const entries = []
 
@@ -75,6 +76,7 @@ const readLinesFromFile = async (exportType: ExportType): Promise<TMDBDailyMovie
   for await (const line of rl) {
     const entry = {
       ...JSON.parse(line),
+      timestamp,
     }
     if (entry.original_title || entry.original_name) {
       entries.push(entry)
@@ -101,7 +103,7 @@ const createTableIfNotExists = async (tableName: string, columns: string[]) => {
 }
 
 const insertRowsInChunks = async (exportType: ExportType, entries: TMDBDailyMovie[] & TMDBDailyTv[], batchSize = 10000) => {
-  const table_suffix = exportType === 'movie_ids' ? 'movie' : 'tv'
+  const media_type = exportType === 'movie_ids' ? 'movie' : 'tv'
 
   const columns = Object.keys(entries[0])
   const values = entries.reduce<(string | number | boolean | undefined)[][]>((acc, entry) => {
@@ -115,7 +117,7 @@ const insertRowsInChunks = async (exportType: ExportType, entries: TMDBDailyMovi
     const end = start + batchSize > values.length ? values.length : start + batchSize
     const chunk = values.slice(start, end)
     const query = `
-      INSERT INTO tmdb_daily_${table_suffix} (${columns.join(', ')})
+      INSERT INTO daily_media (${columns.join(', ')})
       VALUES ${chunk.map(
         (entry, row_index) => 
           `(${entry.map((_, column_index) => `$${row_index * columns.length + column_index + 1}`).join(', ')})`
@@ -125,29 +127,18 @@ const insertRowsInChunks = async (exportType: ExportType, entries: TMDBDailyMovi
     `
     console.log(`Writing batch from ${start} to ${end}`)
     await pool.query(query.trim(), chunk.flat())
+    console.log({start, end})
     start = end
   }
+  console.log("FINISH")
 }
 
 export const importDailyTMDBEntries = async () => {
-  await createTableIfNotExists('tmdb_daily_movie', [
-    'id INTEGER PRIMARY KEY',
-    'original_title VARCHAR(255) NOT NULL',
-    'popularity NUMERIC NOT NULL',
-    'video BOOLEAN NOT NULL DEFAULT false',
-    'adult BOOLEAN NOT NULL DEFAULT false',
-    'processed BOOLEAN NOT NULL DEFAULT false',
-  ]);
-  await createTableIfNotExists('tmdb_daily_tv', [
-    'id INTEGER PRIMARY KEY',
-    'original_name VARCHAR(255) NOT NULL',
-    'popularity NUMERIC NOT NULL',
-    'processed BOOLEAN NOT NULL DEFAULT false',
-  ]);
-
   (['movie_ids', 'tv_series_ids'] as ExportType[]).map(async (exportType) => {
-    await downloadAndExtract(exportType)
-    const entries = await readLinesFromFile(exportType)
+    const timestamp = await downloadAndExtract(exportType)
+    console.log(timestamp)
+    const entries = await readLinesFromFile(exportType, timestamp)
+    console.log(entries.length)
     await insertRowsInChunks(exportType, entries)
   })
 }

@@ -1,0 +1,1 @@
+export type DataStatus = 'new' | 'running' | 'failed' | 'skipping' | 'success'
