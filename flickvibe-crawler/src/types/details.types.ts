@@ -5,14 +5,12 @@ export interface BaseDetails {
   titles_underscored: string[]
   titles_pascal_cased: string[]
   year: string
-  ratings: Ratings
-  tvtropes: Record<string, unknown>
 }
 
-export interface MovieDetails extends BaseDetails {
+export interface TMDBMovieDetails extends BaseDetails {
   adult: boolean
   backdrop_path: string
-  belongs_to_collection?: BelongsToCollection
+  belongs_to_collection?: TMDBCollection
   budget: number
   genres: Genre[]
   homepage: string
@@ -37,6 +35,7 @@ export interface MovieDetails extends BaseDetails {
   vote_count: number
   alternative_titles: AlternativeTitlesMovie
   credits: Credits
+  external_ids: ExternalIds
   images: Images
   keywords: Keywords
   recommendations: Recommendations
@@ -47,7 +46,7 @@ export interface MovieDetails extends BaseDetails {
   ['watch/providers']: WatchProviders
 }
 
-export interface TvDetails extends BaseDetails {
+export interface TMDBTvDetails extends BaseDetails {
   adult: boolean
   backdrop_path: string
   created_by: CreatedBy[]
@@ -108,7 +107,7 @@ export interface AlternativeTitle {
   type:       string
 }
 
-export interface BelongsToCollection {
+export interface TMDBCollection {
   id:            number
   name:          string
   overview:      string

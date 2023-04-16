@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv'
 
-import { pool, upsertJson } from './db/db'
-import { TMDBDailyMovie, TMDBDailyTv } from './tmdb-daily'
-import { getTMDBMovieDetails, getTMDBTvDetails } from './scraper/tmdb'
+import { pool, upsertData } from './db/db'
+import { TMDBDailyMovie, TMDBDailyTv } from './dataSources/tmdb-daily/tmdb-daily-handler'
+import { getTMDBMovieDetails, getTMDBTvDetails } from './dataSources/tmdb-details/tmdb-details-handler'
 import { getRatingsForMovie, getRatingsForTv } from './scraper/ratings'
 import { getTropesForMovie, getTropesForTv } from './scraper/tropes'
 import { sleep } from './utils/helpers'
@@ -20,7 +20,7 @@ const scrapeMovie = async (movieId: number) => {
     ratings,
     tvtropes,
   }
-  upsertJson('movie_details', movieDetails)
+  upsertData('movie_details', movieDetails)
 }
 
 const scrapeTv = async (tvId: number) => {
@@ -34,7 +34,7 @@ const scrapeTv = async (tvId: number) => {
     ratings,
     tvtropes,
   }
-  upsertJson('tv_details', tvDetails)
+  upsertData('tv_details', tvDetails)
 }
 
 const runMovieScraper = async () => {

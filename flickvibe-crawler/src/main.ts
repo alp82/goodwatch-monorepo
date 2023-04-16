@@ -1,28 +1,11 @@
-import {
-  IntervalDataSourceConfig,
-  MediaDataSourceConfig,
-  processIntervalDataSource,
-  processMediaDataSource
-} from "./dataSources/process"
-
-const dataSourceTMDBDaily: IntervalDataSourceConfig = {
-  name: "tmdb_daily",
-  updateIntervalMinutes: 60 * 24,
-  retryIntervalSeconds: 60,
-}
-
-const dataSourceTMDBDetails: MediaDataSourceConfig = {
-  name: "tmdb_details",
-  updateIntervalMinutes: 60 * 24,
-  retryIntervalSeconds: 10,
-  batchSize: 10,
-  batchDelaySeconds: 1,
-  rateLimitDelaySeconds: 60,
-}
+import {processDataSource} from "./dataSources/process"
+import {DataSourceTMDBDaily} from "./dataSources/tmdb-daily/dataSourceTMDBDaily";
+import {DataSourceForMedia} from "./dataSources/dataSource";
+import {DataSourceTMDBDetails} from "./dataSources/tmdb-details/dataSourceTMDBDetails";
 
 export const runMainDataFetchingLoop = async () => {
   await Promise.all([
-    processIntervalDataSource(dataSourceTMDBDaily),
-    processMediaDataSource(dataSourceTMDBDetails),
+    // processDataSource(new DataSourceTMDBDaily()),
+    processDataSource(new DataSourceTMDBDetails()),
   ])
 }

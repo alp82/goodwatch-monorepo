@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv'
 import { Pool, QueryResult } from 'pg'
 import {getCircularReplacer} from "../utils/helpers";
+import fs from "fs";
 
 dotenv.config()
 
@@ -33,41 +34,34 @@ function getDataType(value: any): DataType {
   return 'TEXT'
 }
 
-async function createTableIfNotExists(tableName: string, jsonData: any, additionalColumnDefs: string[] = []): Promise<void> {
-  const columnDefs = Object.entries(jsonData).map(([columnName, value]) => {
-    const dataType = columnName === 'id' ? 'INTEGER PRIMARY KEY' : getDataType(value)
-    return `"${columnName}" ${dataType}`
-  })
-
-  const query = `
-    CREATE TABLE IF NOT EXISTS ${tableName} (
-      ${columnDefs.concat(additionalColumnDefs).join(',\n')}
-    )
-  `
-  await pool.query(query)
+export async function executeSqlFromFile(filename: string): Promise<void> {
+  const sql = fs.readFileSync(filename, 'utf8');
+  try {
+    await pool.query(sql);
+  } catch (error) {
+    console.error(error)
+  }
 }
 
-export const upsertJson = async (tableName: string, json: any, additionalColumnDefs: string[] = [], conflictColumns: string[] = ['id']): Promise<QueryResult | undefined> => {
-  const columns = Object.keys(json)
+export const upsertData = async (tableName: string, data: Record<string, unknown>, conflictColumns: string[], returnColumns: string[]): Promise<QueryResult | undefined> => {
+  const columns = Object.keys(data)
+  const placeholders = columns.map((_, index) => `$${index + 1}`)
 
-  const setColumns = columns.map((c) => `"${c}" = EXCLUDED."${c}"`).join(', ')
+  const setColumns = columns
+    .filter((c) => !conflictColumns.includes(c))
+    .map((c) => `"${c}" = EXCLUDED."${c}"`).join(', ')
   const conflictClause = conflictColumns.length > 0 ? `ON CONFLICT (${conflictColumns.join(', ')}) DO UPDATE SET ${setColumns}` : ''
 
   const query = `
     INSERT INTO ${tableName} (${columns.map((c) => `"${c}"`).join(', ')})
-    SELECT * FROM jsonb_populate_record(null::${tableName}, $1::jsonb)
+    VALUES (${placeholders})
     ${conflictClause}
+    RETURNING ${returnColumns.join(', ')}
   `
 
   try {
-    return await pool.query(query, [JSON.stringify(json, getCircularReplacer)])
+    return await pool.query(query, Object.values(data))
   } catch (error) {
-    const tableDoesNotExist = (error as Record<string, unknown>).code === '42P01'
-    if (tableDoesNotExist) {
-      await createTableIfNotExists(tableName, json, additionalColumnDefs)
-      return await upsertJson(tableName, json, conflictColumns)
-    } else {
-      console.error(error)
-    }
+    console.error(error)
   }
 }

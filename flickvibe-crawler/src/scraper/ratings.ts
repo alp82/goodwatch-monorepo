@@ -2,7 +2,7 @@ import { VibeRatings, VibesCalculator } from './ratings/vibes-calculator'
 import { IMDbRatings, IMDbScraper } from './ratings/imdb-scraper'
 import { MetacriticRatings, MetacriticScraper } from './ratings/metacritic-scraper'
 import { RottenTomatoesRatings, RottenTomatoesScraper } from './ratings/rottentomatoes-scraper'
-import { MovieDetails, TvDetails } from '../types/details.types'
+import { TMDBMovieDetails, TMDBTvDetails } from '../types/details.types'
 
 export interface Ratings {
   vibeRatings: VibeRatings,
@@ -12,7 +12,7 @@ export interface Ratings {
   seasons?: Ratings[]
 }
 
-export const getRatingsForMovie = async (movieDetails: MovieDetails): Promise<Ratings> => {
+export const getRatingsForMovie = async (movieDetails: TMDBMovieDetails): Promise<Ratings> => {
   // TODO titles
   const { imdb_id, titles_dashed, titles_underscored, year } = movieDetails
 
@@ -40,7 +40,7 @@ export const getRatingsForMovie = async (movieDetails: MovieDetails): Promise<Ra
   }
 }
 
-export async function getRatingsForTv(tvDetails: TvDetails): Promise<Ratings> {
+export async function getRatingsForTv(tvDetails: TMDBTvDetails): Promise<Ratings> {
   const imdb_id = tvDetails.external_ids.imdb_id
   // TODO titles
   const { titles_dashed, titles_underscored, year } = tvDetails
@@ -72,7 +72,7 @@ export async function getRatingsForTv(tvDetails: TvDetails): Promise<Ratings> {
   }
 }
 
-export async function getRatingsForTVSeasons(tvDetails: TvDetails): Promise<Ratings[]> {
+export async function getRatingsForTVSeasons(tvDetails: TMDBTvDetails): Promise<Ratings[]> {
   const seasons = tvDetails.seasons.filter((season) => season.season_number > 0).length
 
   const imdb_id = tvDetails.external_ids.imdb_id

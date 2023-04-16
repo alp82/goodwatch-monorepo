@@ -1,4 +1,4 @@
-import { MovieDetails, TvDetails } from '../types/details.types'
+import { TMDBMovieDetails, TMDBTvDetails } from '../types/details.types'
 import axios from 'axios'
 import { userAgentHeader } from '../utils/user-agent'
 import cheerio from 'cheerio'
@@ -63,13 +63,13 @@ const getTropes = async (type: Type, titles: string[], year: string): Promise<Tr
   }
 }
 
-export const getTropesForMovie = async (movieDetails: MovieDetails): Promise<Tropes> => {
+export const getTropesForMovie = async (movieDetails: TMDBMovieDetails): Promise<Tropes> => {
   const { titles_pascal_cased, year } = movieDetails
   return {}
   // return getTropes('Film', titles_pascal_cased, year)
 }
 
-export const getTropesForTv = async (tvDetails: TvDetails): Promise<Tropes> => {
+export const getTropesForTv = async (tvDetails: TMDBTvDetails): Promise<Tropes> => {
   const { titles_pascal_cased, year } = tvDetails
   return {}
   // return getTropes('Series', titles_pascal_cased, year)

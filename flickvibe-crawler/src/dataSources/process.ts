@@ -1,92 +1,82 @@
-import {importDailyTMDBEntries} from "../tmdb-daily";
 import {sleep} from "../utils/helpers";
+import {pool} from "../db/db";
+import {DataSource, DataSourceConfig, DataSourceForImport, DataSourceForMedia} from "./dataSource";
+import {AxiosError} from "axios";
 
-export interface IntervalDataSourceConfig {
-  name: string
-  updateIntervalMinutes: number
-  retryIntervalSeconds: number
-}
-
-export const processIntervalDataSource = async (
-  intervalDataSourceConfig: IntervalDataSourceConfig,
+export const processDataSource = async (
+  dataSource: DataSource,
 ) => {
+  const dataSourceConfig = dataSource.getConfig()
   while (true) {
     try {
-      await importDailyTMDBEntries()
-      await sleep(1000 * 60 * 60);
-    } catch (error) {
+      if (dataSource instanceof DataSourceForMedia) {
+        // Get the next batch of entries that need to be processed for this data source
+        const batchSize = dataSourceConfig.batchSize;
+        const query = `
+          SELECT daily_media.tmdb_id, daily_media.media_type_id
+          FROM daily_media
+          LEFT JOIN media ON media.tmdb_id = daily_media.tmdb_id
+          LEFT JOIN data_sources_for_media
+            ON data_sources_for_media.tmdb_id = media.tmdb_id
+            AND data_sources_for_media.media_type_id = media.media_type_id
+            AND data_sources_for_media.data_source_id = (SELECT id FROM data_sources WHERE name = '${dataSourceConfig.name}')
+          WHERE (
+            media.id IS NULL
+            OR data_sources_for_media.last_successful_attempt_at IS NULL
+            OR now() - data_sources_for_media.last_successful_attempt_at >= '60 minutes'::interval
+          ) AND (
+            data_sources_for_media.data_status IS NULL
+            OR data_sources_for_media.data_status NOT IN ('ignore')
+          )			  
+          ORDER BY daily_media.popularity DESC, data_sources_for_media.last_successful_attempt_at ASC, data_sources_for_media.last_attempt_at ASC
+          LIMIT $1;
+        `
+        const { rows } = await pool.query(query.trim(), [batchSize]);
 
-    }
-  }
-}
+        // If there are no entries to process, wait and try again later
+        if (rows.length === 0) {
+          await sleep(dataSourceConfig.retryIntervalSeconds * 1000);
+          continue;
+        }
 
-export interface MediaDataSourceConfig {
-  name: string
-  updateIntervalMinutes: number
-  retryIntervalSeconds: number
-  batchSize: number
-  batchDelaySeconds: number
-  rateLimitDelaySeconds: number
-}
+        // Process each entry in parallel
+        await Promise.all(
+          rows.map(async (dataSourceRow: { tmdb_id: number, media_type_id: number }) => {
+            const tmdbId = dataSourceRow.tmdb_id
+            const mediaTypeId = dataSourceRow.media_type_id
+            try {
+              await dataSource.process(tmdbId, mediaTypeId);
+            } catch (error) {
+              dataSource.updateStatus({ tmdbId, mediaTypeId, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
+              throw error
+            }
+          })
+        );
 
-export const processMediaDataSource = async (
-  mediaDataSourceConfig: MediaDataSourceConfig,
-) => {
-  while (true) {
-    try {
-      // Get the next batch of entries that need to be processed for this data source
-      const batchSize = mediaDataSourceConfig.batchSize;
-      const results = await db.any(`
-        SELECT md.id, md.${mediaDataSourceConfig.lastUpdateField}
-        FROM movie_data md
-        INNER JOIN movie_data_status mds ON mds.movie_data_id = md.id
-        WHERE mds.${mediaDataSourceConfig.statusField} = 'pending'
-        AND (mds.${mediaDataSourceConfig.lastUpdateField} IS NULL
-          OR now() - mds.${mediaDataSourceConfig.lastUpdateField} >= '${mediaDataSourceConfig.updateIntervalMinutes} minutes'::interval)
-        ORDER BY mds.${mediaDataSourceConfig.priorityField} ASC, mds.${mediaDataSourceConfig.lastUpdateField} ASC
-        LIMIT $1
-        FOR UPDATE SKIP LOCKED
-      `, batchSize);
-
-      // If there are no entries to process, wait and try again later
-      if (results.length === 0) {
-        await sleep(mediaDataSourceConfig.retryIntervalSeconds * 1000);
-        continue;
-      }
-
-      // Process each entry in parallel
-      await Promise.all(
-        results.map(async (result) => {
-          const movieId = result.id;
-          const lastUpdate = result[mediaDataSourceConfig.lastUpdateField];
-
-          // Fetch the data from the data source
-          const data = await fetchDataSourceData(movieId, lastUpdate, mediaDataSourceConfig);
-
-          // If there is no data, update the status to 'not found' and continue
-          if (!data) {
-            await updateMovieDataStatus(movieId, dataSourceName, 'not found', db);
-            return;
-          }
-
-          // Save the data in the database
-          await saveDataSourceData(movieId, data, mediaDataSourceConfig, db);
-
-          // Update the status to 'done'
-          await updateMovieDataStatus(movieId, dataSourceName, 'done', db);
-
-          // Wait for the configured delay between requests
-          await wait(mediaDataSourceConfig.delay);
-        })
-      );
-
-    } catch (err) {
-      // Handle rate limit errors by waiting for a configured time
-      if (err.response && err.response.status === 403) {
-        console.log(`Rate limit reached for ${dataSourceName}, waiting for ${mediaDataSourceConfig.rateLimitRetry} seconds`);
-        await sleep(mediaDataSourceConfig.rateLimitDelaySeconds * 1000);
+        await sleep(dataSourceConfig.batchDelaySeconds * 1000);
       } else {
-        console.error(`Error processing data source ${dataSourceName}: ${err.message}`);
+        try {
+          await dataSource.process()
+        } catch (error) {
+          dataSource.updateStatus({ newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false })
+          throw error
+        }
+
+        await sleep(dataSourceConfig.batchDelaySeconds * 1000);
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response && error.response.status === 403) {
+          // handle rate limit errors by waiting for a configured time
+          console.log(`Rate limit reached for ${dataSourceConfig.name}, waiting for ${dataSourceConfig.rateLimitDelaySeconds} seconds`);
+          await sleep(dataSourceConfig.rateLimitDelaySeconds * 1000);
+        } else {
+          // handle connectivity errors by waiting for a configured time
+          console.error(`Error processing data source ${dataSourceConfig.name}: ${error.message}`);
+          await sleep(dataSourceConfig.batchDelaySeconds * 1000);
+        }
+      } else {
+        await sleep(dataSourceConfig.batchDelaySeconds * 1000);
       }
     }
   }

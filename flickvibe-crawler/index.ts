@@ -1,11 +1,10 @@
-import { importDailyTMDBEntries } from './src/tmdb-daily'
-import { runScraper } from './src/scraper'
 import {runMainDataFetchingLoop} from "./src/main";
+import {executeSqlFromFile} from "./src/db/db";
 
 async function run() {
-  // await importDailyTMDBEntries()
+  await executeSqlFromFile('src/db/init/mediaTables.sql')
+  await runMainDataFetchingLoop()
   // await runScraper()
-  runMainDataFetchingLoop()
 }
 
 run()
