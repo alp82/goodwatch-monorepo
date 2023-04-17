@@ -222,11 +222,11 @@ CREATE TABLE IF NOT EXISTS media_tags (
 -- media genres
 CREATE TABLE IF NOT EXISTS genres (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS media_genres (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     genre_id INTEGER NOT NULL REFERENCES genres (id),
     PRIMARY KEY (media_id, genre_id)
 );
@@ -234,15 +234,16 @@ CREATE TABLE IF NOT EXISTS media_genres (
 -- media alternative titles
 CREATE TABLE IF NOT EXISTS media_alternative_titles (
     id SERIAL PRIMARY KEY,
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     title VARCHAR(255) NOT NULL,
     type VARCHAR(255),
-    language_code CHAR(2)
+    language_code CHAR(2),
+    UNIQUE (media_id, title, type, language_code)
 );
 
 -- media people
 CREATE TABLE IF NOT EXISTS media_cast (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
     character_name VARCHAR(255) NOT NULL,
     display_priority INTEGER NOT NULL,
@@ -250,7 +251,7 @@ CREATE TABLE IF NOT EXISTS media_cast (
 );
 
 CREATE TABLE IF NOT EXISTS media_crew (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
     department VARCHAR(255) NOT NULL,
     job VARCHAR(255) NOT NULL,
@@ -261,13 +262,13 @@ CREATE TABLE IF NOT EXISTS media_crew (
 -- media networks
 CREATE TABLE IF NOT EXISTS networks (
     id INTEGER PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     origin_country_code CHAR(2) NOT NULL,
     logo_path VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS media_networks (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     network_id INTEGER REFERENCES networks (id),
     PRIMARY KEY (media_id, network_id)
 );
@@ -275,13 +276,13 @@ CREATE TABLE IF NOT EXISTS media_networks (
 -- media production companies
 CREATE TABLE IF NOT EXISTS production_companies (
     id INTEGER PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     origin_country_code CHAR(2) NOT NULL,
     logo_path VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS media_production_companies (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     production_company_id INTEGER REFERENCES production_companies (id),
     PRIMARY KEY (media_id, production_company_id)
 );
@@ -289,12 +290,12 @@ CREATE TABLE IF NOT EXISTS media_production_companies (
 -- media production countries
 CREATE TABLE IF NOT EXISTS production_countries (
     id INTEGER PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     country_code CHAR(2) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS media_production_countries (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     production_country_id INTEGER REFERENCES production_countries (id),
     PRIMARY KEY (media_id, production_country_id)
 );
@@ -302,13 +303,13 @@ CREATE TABLE IF NOT EXISTS media_production_countries (
 -- media spoken languages
 CREATE TABLE IF NOT EXISTS spoken_languages (
     id INTEGER PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     english_name VARCHAR(255) NOT NULL,
     language_code CHAR(2) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS media_spoken_languages (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     spoken_language_id INTEGER REFERENCES spoken_languages (id),
     PRIMARY KEY (media_id, spoken_language_id)
 );
@@ -331,7 +332,7 @@ CREATE TABLE IF NOT EXISTS images (
 );
 
 CREATE TABLE IF NOT EXISTS media_images (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     image_path VARCHAR(255) REFERENCES images (image_path) ON DELETE CASCADE,
     PRIMARY KEY (media_id, image_path)
 );
@@ -344,7 +345,7 @@ CREATE TABLE IF NOT EXISTS people_images (
 );
 
 CREATE TABLE IF NOT EXISTS media_people_images (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
     image_path VARCHAR(255) REFERENCES images (image_path) ON DELETE CASCADE,
     PRIMARY KEY (media_id, person_id, image_path)
@@ -363,7 +364,7 @@ CREATE TABLE IF NOT EXISTS video_sites (
 
 CREATE TABLE IF NOT EXISTS media_videos (
     id SERIAL PRIMARY KEY,
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     video_type_id INTEGER NOT NULL REFERENCES video_types (id),
     video_site_id INTEGER NOT NULL REFERENCES video_sites (id),
     country_code VARCHAR(2) NOT NULL,
@@ -382,7 +383,7 @@ CREATE TABLE IF NOT EXISTS relation_type (
 );
 
 CREATE TABLE IF NOT EXISTS media_relations (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     related_media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
     relation_type_id INTEGER NOT NULL REFERENCES relation_type (id),
     PRIMARY KEY (media_id, related_media_id, relation_type_id)
@@ -396,7 +397,7 @@ CREATE TABLE IF NOT EXISTS release_type (
 
 CREATE TABLE IF NOT EXISTS media_releases_and_certifications (
     id SERIAL PRIMARY KEY,
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     release_type_id INTEGER NOT NULL REFERENCES release_type (id),
     certification VARCHAR(50) NOT NULL,
     country_code CHAR(2) NOT NULL,
@@ -407,7 +408,7 @@ CREATE TABLE IF NOT EXISTS media_releases_and_certifications (
 -- media translations
 CREATE TABLE IF NOT EXISTS media_translations (
     id SERIAL PRIMARY KEY,
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     country_code CHAR(2) NOT NULL,
     language_code CHAR(2) NOT NULL,
     language_name TEXT NOT NULL,
@@ -419,7 +420,7 @@ CREATE TABLE IF NOT EXISTS media_translations (
     runtime INTEGER,
     UNIQUE (media_id, country_code, language_code)
 );
-  
+
 -- people translations
 CREATE TABLE IF NOT EXISTS people_translations (
     id SERIAL PRIMARY KEY,

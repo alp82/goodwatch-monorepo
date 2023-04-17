@@ -2,7 +2,7 @@ import {DataSourceConfigForMedia, DataSourceForMedia} from "../dataSource";
 import {
   getTMDBMovieCollection,
   getTMDBMovieDetails,
-  getTMDBTvDetails, saveTMDBCollection, saveTMDBGenres,
+  getTMDBTvDetails, saveTMDBAlternativeTitles, saveTMDBCollection, saveTMDBGenres,
   saveTMDBMovie,
   saveTMDBTv
 } from "./tmdb-details-handler";
@@ -55,28 +55,20 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
 
   async storeMovieData(data: FetchedMovieData): Promise<void> {
     const mediaId = await saveTMDBMovie(data.details);
-    console.log(`Movie: ${data.details.title} (ID: ${mediaId})`)
     const promises = [
       saveTMDBCollection(mediaId, data.collection),
       saveTMDBGenres(mediaId, data.details.genres),
+      saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles)
     ]
     const results = await Promise.all(promises)
-    const resultCollection = results[0] as unknown as Awaited<ReturnType<typeof saveTMDBCollection>>
-    if (resultCollection?.collection && (resultCollection.rows || []).length > 0) {
-      const { collection, rows } = resultCollection
-      console.log(`\tCollection '${collection.name}' added with ${rows.length} movies`)
-    }
-    const resultGenres = results[1] as unknown as Awaited<ReturnType<typeof saveTMDBGenres>>
-    if (resultGenres?.length) {
-      console.log(`\tGenres added: ${resultGenres.join(', ')}`)
-    }
   }
 
   async storeTvData(data: FetchedTvData): Promise<void> {
     const mediaId = await saveTMDBTv(data.details)
-    console.log(`TV: ${data.details.name} (ID: ${mediaId})`)
     const promises: Promise<unknown>[] = [
-      // created_by -> people
+      // TODO created_by -> people
+      saveTMDBGenres(mediaId, data.details.genres),
+      saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results)
     ]
     const results = await Promise.all(promises)
   }
