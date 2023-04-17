@@ -257,9 +257,8 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
           RETURNING media_id, genre_id;
         `
         const mediaGenresResult = await pool.query(queryMediaGenres, [mediaId, genreIds])
-        // TODO use actual results instead of passed genre names
         if (genreNames.length) {
-          console.log(`\tGenres added: ${genreNames.join(', ')}`)
+          // console.log(`\tGenres added: ${genreNames.join(', ')}`)
         }
         return genreNames
       } catch (error) {
@@ -283,7 +282,7 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
     `
     const titles = alternativeTitles.map((alternativeTitle) => alternativeTitle.title)
     const types = alternativeTitles.map((alternativeTitle) => alternativeTitle.type)
-    const languageCodes = alternativeTitles.map((alternativeTitle) => alternativeTitle.iso_3166_1)
+    const languageCodes = alternativeTitles.map((alternativeTitle) => alternativeTitle.iso_3166_1.replace('Magyarország', 'HU'))
     const result = await pool.query(query, [mediaId, titles, types, languageCodes])
     return result.rows || []
   } catch (error) {
