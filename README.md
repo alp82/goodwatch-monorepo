@@ -104,16 +104,11 @@ SELECT * FROM movie_details WHERE (ratings->'imdbRatings'->>'score')::float > 0 
 
 SELECT * FROM movie_details WHERE (tvtropes->>'url') is null ORDER BY id ASC
 
-/discover/movie
-&certification.lte=0&certification_country=DE
-
-/discover/tv
-&with_status=Returning Series: 0, Planned: 1, In Production: 2, Ended: 3, Cancelled: 4, Pilot: 5
-&with_type=Documentary: 0, News: 1, Miniseries: 2, Reality: 3, Scripted: 4, Talk Show: 5, Video: 6
-
-rotten tomatoes matching (id datasets)
+rotten tomatoes matching (imdb to rt id datasets)
 
 report missing ratings
+
+start page: https://tailwindui.com/components/marketing/sections/heroes#component-d63f5b5552a3f3d936c6ab970a47899b
 
 description full text toggle
 

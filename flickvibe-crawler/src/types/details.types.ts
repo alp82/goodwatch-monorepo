@@ -1,4 +1,4 @@
-import { Ratings } from '../scraper/ratings'
+import {Ratings} from '../scraper/ratings'
 
 export interface BaseDetails {
   titles_dashed: string[]
@@ -34,7 +34,7 @@ export interface TMDBMovieDetails extends BaseDetails {
   vote_average: number
   vote_count: number
   alternative_titles: AlternativeTitlesMovie
-  credits: Credits
+  credits: CreditsMovie
   external_ids: ExternalIds
   images: Images
   keywords: Keywords
@@ -79,10 +79,9 @@ export interface TMDBTvDetails extends BaseDetails {
   type: string
   vote_average: number
   vote_count: number
-  aggregate_credits: Credits
+  aggregate_credits: CreditsTv
   alternative_titles: AlternativeTitlesTV
   content_ratings: ContentRatings
-  credits: Credits
   external_ids: ExternalIds
   images: Images
   keywords: Keywords
@@ -103,35 +102,35 @@ export interface AlternativeTitlesTV {
 
 export interface AlternativeTitle {
   iso_3166_1: string
-  title:      string
-  type:       string
+  title: string
+  type: string
 }
 
 export interface TMDBCollection {
-  id:            number
-  name:          string
-  overview:      string
-  poster_path:   string
+  id: number
+  name: string
+  overview: string
+  poster_path: string
   backdrop_path: string
-  parts:         Part[]
+  parts: Part[]
 }
 
 export interface Part {
-  adult:             boolean
-  backdrop_path:     string
-  id:                string
-  title:             string
+  adult: boolean
+  backdrop_path: string
+  id: string
+  title: string
   original_language: string
-  original_title:    string
-  overview:          string
-  poster_path:       string
-  media_type:        string
-  genre_ids:         number[]
-  popularity:        number
-  release_date:      Date
-  video:             boolean
-  vote_average:      number
-  vote_count:        number
+  original_title: string
+  overview: string
+  poster_path: string
+  media_type: string
+  genre_ids: number[]
+  popularity: number
+  release_date: Date
+  video: boolean
+  vote_average: number
+  vote_count: number
 }
 
 export interface WatchProviders {
@@ -199,42 +198,87 @@ export interface ContentRatings {
   results: ContentRatingResult[]
 }
 
-export interface Credits {
-  cast: Cast[]
-  crew: Cast[]
+export interface CreditsMovie {
+  cast: CastMovie[]
+  crew: CastMovie[]
 }
 
-export interface Cast {
-  adult:                boolean
-  gender:               number
-  id:                   number
+export interface CreditsTv {
+  cast: CastTv[]
+  crew: CrewTv[]
+}
+
+export interface CastMovie {
+  adult: boolean
+  gender: number
+  id: number
   known_for_department: string
-  name:                 string
-  original_name:        string
-  popularity:           number
-  profile_path:         null | string
-  cast_id?:             number
-  character?:           string
-  credit_id:            string
-  order?:               number
-  department?:          string
-  job?:                 string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path: null | string
+  cast_id?: number
+  credit_id: string
+  character?: string
+  order?: number
+  department?: string
+  job?: string
+}
+
+export interface CastTv {
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path: null | string
+  roles: Role[]
+  total_episode_count: number
+  order?: number
+}
+
+export interface CrewTv {
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path: null | string
+  jobs: Job[]
+  department: number
+  total_episode_count: number
+}
+
+export interface Role {
+  credit_id: string
+  character: string
+  episode_count: number
+}
+
+export interface Job {
+  credit_id: string
+  job: string
+  episode_count: number
 }
 
 export interface Images {
   backdrops: Backdrop[]
-  logos:     Backdrop[]
-  posters:   Backdrop[]
+  logos: Backdrop[]
+  posters: Backdrop[]
 }
 
 export interface Backdrop {
   aspect_ratio: number
-  height:       number
-  iso_639_1:    null | string
-  file_path:    string
+  height: number
+  iso_639_1: null | string
+  file_path: string
   vote_average: number
-  vote_count:   number
-  width:        number
+  vote_count: number
+  width: number
 }
 
 export interface KeywordResult {
@@ -294,20 +338,20 @@ export interface Translations {
 }
 
 export interface Translation {
-  iso_3166_1:   string
-  iso_639_1:    string
-  name:         string
+  iso_3166_1: string
+  iso_639_1: string
+  name: string
   english_name: string
-  data:         TranslationData
+  data: TranslationData
 }
 
 export interface TranslationData {
   homepage?: string
   overview: string
-  runtime:  number
-  tagline:  string
-  title?:    string
-  name?:    string
+  runtime: number
+  tagline: string
+  title?: string
+  name?: string
 }
 
 export interface VideoResult {

@@ -20,11 +20,11 @@ CREATE TABLE IF NOT EXISTS daily_media (
 CREATE TABLE IF NOT EXISTS people (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    also_known_as VARCHAR(255)[] NOT NULL,
-    biography TEXT NOT NULL,
-    popularity NUMERIC NOT NULL,
+    also_known_as VARCHAR(255)[],
+    biography TEXT,
+    popularity NUMERIC,
 
-    gender INTEGER NOT NULL,
+    gender INTEGER,
     place_of_birth VARCHAR(255),
     birthday DATE,
     deathday DATE,
@@ -246,6 +246,7 @@ CREATE TABLE IF NOT EXISTS media_cast (
     media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
     character_name VARCHAR(255) NOT NULL,
+    episode_count INTEGER,
     display_priority INTEGER NOT NULL,
     PRIMARY KEY (media_id, person_id)
 );
@@ -253,8 +254,9 @@ CREATE TABLE IF NOT EXISTS media_cast (
 CREATE TABLE IF NOT EXISTS media_crew (
     media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
+    jobs VARCHAR(255)[] NOT NULL,
     department VARCHAR(255) NOT NULL,
-    job VARCHAR(255) NOT NULL,
+    episode_count INTEGER,
     display_priority INTEGER NOT NULL,
     PRIMARY KEY (media_id, person_id)
 );

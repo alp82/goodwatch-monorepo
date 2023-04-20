@@ -4,7 +4,7 @@ import {pool, upsertData} from '../../db/db'
 import {toDashed, toPascalCase, tryRequests} from '../../utils/helpers'
 import {
   AlternativeTitle,
-  AlternativeTitlesMovie,
+  AlternativeTitlesMovie, CastMovie, CastTv, CreditsMovie, CreditsTv,
   Genre,
   Part,
   TMDBCollection,
@@ -82,7 +82,7 @@ export const getTMDBMovieDetails = async (movieId: number): Promise<TMDBMovieDet
 
 export const getTMDBTvDetails = async (tvId: number): Promise<TMDBTvDetails> => {
     const url = `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}` +
-        `&append_to_response=aggregate_credits,alternative_titles,content_ratings,credits,external_ids,images,keywords,recommendations,similar,translations,videos,watch/providers`
+        `&append_to_response=aggregate_credits,alternative_titles,content_ratings,external_ids,images,keywords,recommendations,similar,translations,videos,watch/providers`
     const result = await axios.get(url)
     const { data } = result
 
@@ -282,10 +282,92 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
     `
     const titles = alternativeTitles.map((alternativeTitle) => alternativeTitle.title)
     const types = alternativeTitles.map((alternativeTitle) => alternativeTitle.type)
-    const languageCodes = alternativeTitles.map((alternativeTitle) => alternativeTitle.iso_3166_1.replace('Magyarország', 'HU'))
+    const languageCodes = alternativeTitles.map((alternativeTitle) => alternativeTitle.iso_3166_1
+      .replace('Magyarország', 'HU')
+      .replace('France ', 'FR')
+    )
     const result = await pool.query(query, [mediaId, titles, types, languageCodes])
     return result.rows || []
   } catch (error) {
     console.error(error)
   }
 }
+
+export const saveTMDBCast = async (mediaId?: number, cast?: CastMovie[] | CastTv[]): Promise<string[] | undefined> => {
+  if (!mediaId || !cast?.length) return
+
+  try {
+    //   id SERIAL PRIMARY KEY,
+    //   name VARCHAR(255) NOT NULL,
+    //   also_known_as VARCHAR(255)[],
+    //   biography TEXT NOT NULL,
+    //   popularity NUMERIC NOT NULL,
+    //
+    //   gender INTEGER NOT NULL,
+    //   place_of_birth VARCHAR(255),
+    //   birthday DATE,
+    //   deathday DATE,
+    //   known_for_department VARCHAR(255),
+    //
+    //   profile_path VARCHAR(255),
+    //   homepage VARCHAR(255),
+    //   adult BOOLEAN NOT NULL DEFAULT FALSE,
+    const columns = ['name', 'popularity', 'gender', 'known_for_department', 'profile_path', 'adult']
+    const queryPeople = `
+      INSERT INTO people (${columns.join(',')})
+      SELECT ${columns.join(',')}
+      FROM unnest(
+        $1::text[],
+        $2::integer[],
+        $3::text[],
+        $4::text[],
+        $5::text[],
+        $6::boolean[],
+      ) AS person(${columns.join(',')})
+      ON CONFLICT (name) DO UPDATE SET
+        name = EXCLUDED.name
+      RETURNING id, name
+    `
+    const names = cast.map((person) => person.name)
+    const popularities = cast.map((person) => person.popularity)
+    const genders  = cast.map((person) => convertTMDBGenreId(person.gender))
+    const departments  = cast.map((person) => person.known_for_department)
+    const profilePaths  = cast.map((person) => person.profile_path)
+    const adults  = cast.map((person) => person.adult)
+
+    const peopleResult = await pool.query(queryPeople, [
+      names,
+      popularities,
+      genders,
+      departments,
+      profilePaths,
+      adults,
+    ])
+    const peopleIds = (peopleResult?.rows || []).map((row) => row.id)
+    const peopleNames = (peopleResult?.rows || []).map((row) => row.name)
+
+    try {
+      const queryMediaPeople = `
+        INSERT INTO media_people (media_id, person_id)
+        SELECT $1, id
+        FROM unnest($2::integer[]) AS parts(id)
+        ON CONFLICT (media_id, genre_id) DO NOTHING
+        RETURNING media_id, genre_id;
+      `
+        // character_name VARCHAR(255) NOT NULL,
+        // episode_count INTEGER,
+        // display_priority INTEGER NOT NULL,
+      const mediaGenresResult = await pool.query(queryMediaGenres, [mediaId, genreIds])
+      if (genreNames.length) {
+        // console.log(`\tGenres added: ${genreNames.join(', ')}`)
+      }
+      return genreNames
+    } catch (error) {
+      console.error(error)
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const convertTMDBGenderId = (genderId)

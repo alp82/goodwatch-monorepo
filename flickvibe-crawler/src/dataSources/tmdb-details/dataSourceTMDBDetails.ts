@@ -58,7 +58,19 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     const promises = [
       saveTMDBCollection(mediaId, data.collection),
       saveTMDBGenres(mediaId, data.details.genres),
-      saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles)
+      saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
+      // TODO credits
+      // TODO images
+      // TODO videos
+      // TODO keywords
+      // TODO production compoanies
+      // TODO production countries
+      // TODO recommendations
+      // TODO similar
+      // TODO spoken languages
+      // TODO translations
+      // TODO releae dates
+      // TODO watch providers
     ]
     const results = await Promise.all(promises)
   }
@@ -68,7 +80,21 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     const promises: Promise<unknown>[] = [
       // TODO created_by -> people
       saveTMDBGenres(mediaId, data.details.genres),
-      saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results)
+      saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
+      // data.details.aggregate_credits
+      // data.details.content_ratings
+      // data.details.languages
+      // data.details.networks
+      // data.details.images
+      // data.details.videos
+      // data.details.keywords
+      // data.details.seasons
+      // data.details.spoken_languages
+      // data.details.translations
+      // TODO production compoanies
+      // TODO production countries
+      // TODO recommendations
+      // TODO similar
     ]
     const results = await Promise.all(promises)
   }
