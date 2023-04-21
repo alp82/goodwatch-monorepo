@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS people (
     known_for_department VARCHAR(255),
 
     profile_path VARCHAR(255),
-    homepage VARCHAR(255),
+    homepage TEXT,
     adult BOOLEAN NOT NULL DEFAULT FALSE,
 
     imdb_id VARCHAR(255),
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS media (
     status VARCHAR(255),
     original_title VARCHAR(255),
     original_language_code CHAR(2),
-    homepage VARCHAR(255),
+    homepage TEXT,
     adult BOOLEAN NOT NULL,
 
     imdb_id VARCHAR(255),
@@ -418,7 +418,7 @@ CREATE TABLE IF NOT EXISTS media_translations (
     title VARCHAR(255),
     tagline VARCHAR(255),
     synopsis TEXT,
-    homepage VARCHAR(255),
+    homepage TEXT,
     runtime INTEGER,
     UNIQUE (media_id, country_code, language_code)
 );

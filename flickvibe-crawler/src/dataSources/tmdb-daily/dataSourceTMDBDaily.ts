@@ -30,6 +30,7 @@ export class DataSourceTMDBDaily extends DataSourceForImport {
   }
 
   async fetchData(): Promise<FetchedData> {
+    console.log('Downloading daily TMDB data...')
     const exportTypes = ['movie_ids', 'tv_series_ids'] as ExportType[];
     const promises = exportTypes.map(async (exportType) => {
       const timestamp = await downloadAndExtract(exportType);

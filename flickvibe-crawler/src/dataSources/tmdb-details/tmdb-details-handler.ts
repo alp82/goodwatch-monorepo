@@ -1,17 +1,18 @@
 import axios from 'axios'
 
-import {pool, upsertData} from '../../db/db'
-import {toDashed, toPascalCase, tryRequests} from '../../utils/helpers'
+import { bulkUpsertData, BulkUpsertResult, performTransaction, pool, upsertData } from '../../db/db'
+import { toDashed, toPascalCase, tryRequests } from '../../utils/helpers'
 import {
   AlternativeTitle,
-  AlternativeTitlesMovie, CastMovie, CastTv, CreditsMovie, CreditsTv,
+  CastMovie,
+  CastTv,
   Genre,
-  Part,
   TMDBCollection,
   TMDBMovieDetails,
-  TMDBTvDetails
+  TMDBTvDetails,
 } from '../../types/details.types'
-import {userAgentHeader} from "../../utils/user-agent";
+import { userAgentHeader } from '../../utils/user-agent'
+import { QueryResult } from 'pg'
 
 interface ExtractedTitles {
     titles_dashed: string[]
@@ -146,7 +147,7 @@ export const saveTMDBMovie = async (details: TMDBMovieDetails): Promise<number |
     try {
         const result = await upsertData(tableName, data, ['tmdb_id', 'media_type_id'], ['id'])
         const mediaId = result?.rows?.[0]?.id
-        console.log(`Movie: ${details.title} (ID: ${mediaId})`)
+        console.log(`Movie: ${details.title} (${details.year})`)
         return mediaId
     } catch (error) {
         console.error(error)
@@ -195,7 +196,7 @@ export const saveTMDBTv = async (details: TMDBTvDetails): Promise<number | undef
     try {
       const result = await upsertData(tableName, data, ['tmdb_id', 'media_type_id'], ['id'])
       const mediaId = result?.rows?.[0]?.id
-      console.log(`TV: ${details.name} (ID: ${mediaId})`)
+      console.log(`TV: ${details.name} (${details.year})`)
       return mediaId
     } catch (error) {
       console.error(error)
@@ -233,34 +234,36 @@ export const saveTMDBCollection = async (mediaId?: number, collection?: TMDBColl
     }
 }
 
-export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promise<string[] | undefined> => {
+export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promise<BulkUpsertResult | undefined> => {
     if (!mediaId || !genres?.length) return
 
     try {
-      const queryGenres = `
-        INSERT INTO genres (name)
-        SELECT name
-        FROM unnest($1::text[]) AS genreNames(name)
-        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-        RETURNING id, name
-      `
-      const genresResult = await pool.query(queryGenres, [genres.map((genre) => genre.name)])
-      const genreIds = (genresResult?.rows || []).map((row) => row.id)
-      const genreNames = (genresResult?.rows || []).map((row) => row.name)
+      const genresData = {
+        name: genres.map((genre) => genre.name)
+      }
+      const genresResult = await bulkUpsertData(
+        'genres',
+        genresData,
+        ['name'],
+        ['id', 'name'],
+      )
+      const genreIds = (genresResult?.all || []).map((row) => row.id)
+      const newGenreNames = (genresResult?.inserted || []).map((row) => row.name)
+      if (newGenreNames.length) {
+        console.log(`\tNew Genres added: ${newGenreNames.join(', ')}`)
+      }
 
+      const mediaGenresData = {
+        media_id: new Array(genreIds.length).fill(mediaId),
+        genre_id: genreIds,
+      }
       try {
-        const queryMediaGenres = `
-          INSERT INTO media_genres (media_id, genre_id)
-          SELECT $1, id
-          FROM unnest($2::integer[]) AS parts(id)
-          ON CONFLICT (media_id, genre_id) DO NOTHING
-          RETURNING media_id, genre_id;
-        `
-        const mediaGenresResult = await pool.query(queryMediaGenres, [mediaId, genreIds])
-        if (genreNames.length) {
-          // console.log(`\tGenres added: ${genreNames.join(', ')}`)
-        }
-        return genreNames
+        return await bulkUpsertData(
+          'media_genres',
+          mediaGenresData,
+          ['media_id', 'genre_id'],
+          ['media_id', 'genre_id'],
+        )
       } catch (error) {
         console.error(error)
       }
@@ -269,99 +272,91 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
     }
 }
 
-export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTitles?: AlternativeTitle[]): Promise<string[] | undefined> => {
+export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTitles?: AlternativeTitle[]): Promise<BulkUpsertResult | undefined> => {
   if (!mediaId || !alternativeTitles?.length) return
 
   try {
-    const query = `
-      INSERT INTO media_alternative_titles (media_id, title, type, language_code)
-      SELECT $1, title, type, language_code
-      FROM unnest($2::text[], $3::text[], $4::text[]) AS alt(title, type, language_code)
-      ON CONFLICT (media_id, title, type, language_code) DO NOTHING
-      RETURNING media_id, title, type, language_code
-    `
-    const titles = alternativeTitles.map((alternativeTitle) => alternativeTitle.title)
-    const types = alternativeTitles.map((alternativeTitle) => alternativeTitle.type)
-    const languageCodes = alternativeTitles.map((alternativeTitle) => alternativeTitle.iso_3166_1
-      .replace('Magyarország', 'HU')
-      .replace('France ', 'FR')
+    const languageCodes = alternativeTitles
+      .filter((alternativeTitle) => {
+        return ![
+          'South America',
+        ].includes(alternativeTitle.iso_3166_1)
+      })
+      .map((alternativeTitle) => {
+        return alternativeTitle.iso_3166_1
+          .replace('United Arab Emirates', 'AE')
+          .replace('Bulgaria', 'BG')
+          .replace('Česko', 'CZ')
+          .replace('Deutschland', 'DE')
+          .replace('España', 'ES')
+          .replace('ኢትዮጵያ', 'ET')
+          .replace('Suomi', 'FI')
+          .replace('France', 'FR')
+          .replace('ישראל', 'IL')
+          .replace('Magyarország', 'HU')
+          .replace('japan', 'JP')
+          .replace('Japan', 'JP')
+          .replace('Latvia', 'LV')
+          .replace('Thailand', 'TH')
+          .replace('Türkei', 'TR')
+          .replace('United States', 'US')
+          .replace('Oʻzbekiston', 'UZ')
+      })
+    const mediaAlternativeTitlesData = {
+      media_id: new Array(alternativeTitles.length).fill(mediaId),
+      title: alternativeTitles.map((alternativeTitle) => alternativeTitle.title),
+      type: alternativeTitles.map((alternativeTitle) => alternativeTitle.type),
+      language_code: languageCodes,
+    }
+    return await bulkUpsertData(
+      'media_alternative_titles',
+      mediaAlternativeTitlesData,
+      ['media_id', 'title', 'type', 'language_code'],
+      ['media_id', 'title', 'type', 'language_code'],
     )
-    const result = await pool.query(query, [mediaId, titles, types, languageCodes])
-    return result.rows || []
   } catch (error) {
     console.error(error)
   }
 }
 
-export const saveTMDBCast = async (mediaId?: number, cast?: CastMovie[] | CastTv[]): Promise<string[] | undefined> => {
+export const saveTMDBCast = async (mediaId?: number, cast?: CastMovie[] | CastTv[]): Promise<BulkUpsertResult | undefined> => {
   if (!mediaId || !cast?.length) return
 
   try {
-    //   id SERIAL PRIMARY KEY,
-    //   name VARCHAR(255) NOT NULL,
-    //   also_known_as VARCHAR(255)[],
-    //   biography TEXT NOT NULL,
-    //   popularity NUMERIC NOT NULL,
-    //
-    //   gender INTEGER NOT NULL,
-    //   place_of_birth VARCHAR(255),
-    //   birthday DATE,
-    //   deathday DATE,
-    //   known_for_department VARCHAR(255),
-    //
-    //   profile_path VARCHAR(255),
-    //   homepage VARCHAR(255),
-    //   adult BOOLEAN NOT NULL DEFAULT FALSE,
-    const columns = ['name', 'popularity', 'gender', 'known_for_department', 'profile_path', 'adult']
-    const queryPeople = `
-      INSERT INTO people (${columns.join(',')})
-      SELECT ${columns.join(',')}
-      FROM unnest(
-        $1::text[],
-        $2::integer[],
-        $3::text[],
-        $4::text[],
-        $5::text[],
-        $6::boolean[],
-      ) AS person(${columns.join(',')})
-      ON CONFLICT (name) DO UPDATE SET
-        name = EXCLUDED.name
-      RETURNING id, name
-    `
-    const names = cast.map((person) => person.name)
-    const popularities = cast.map((person) => person.popularity)
-    const genders  = cast.map((person) => convertTMDBGenreId(person.gender))
-    const departments  = cast.map((person) => person.known_for_department)
-    const profilePaths  = cast.map((person) => person.profile_path)
-    const adults  = cast.map((person) => person.adult)
-
-    const peopleResult = await pool.query(queryPeople, [
-      names,
-      popularities,
-      genders,
-      departments,
-      profilePaths,
-      adults,
-    ])
-    const peopleIds = (peopleResult?.rows || []).map((row) => row.id)
-    const peopleNames = (peopleResult?.rows || []).map((row) => row.name)
+    const peopleData = {
+      name: cast.map((person) => person.name),
+      popularity: cast.map((person) => person.popularity),
+      gender: cast.map((person) => convertTMDBGenderId(person.gender)),
+      known_for_department: cast.map((person) => person.known_for_department),
+      profile_path: cast.map((person) => person.profile_path),
+      adult: cast.map((person) => person.adult),
+    }
+    const peopleResult = await bulkUpsertData(
+      'people',
+      peopleData,
+      ['name'],
+      ['id', 'name'],
+    )
+    const peopleIds = (peopleResult?.all || []).map((row) => row.id)
+    const newPeopleNames = (peopleResult?.inserted || []).map((row) => row.name)
+    if (newPeopleNames.length) {
+      console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
+    }
 
     try {
-      const queryMediaPeople = `
-        INSERT INTO media_people (media_id, person_id)
-        SELECT $1, id
-        FROM unnest($2::integer[]) AS parts(id)
-        ON CONFLICT (media_id, genre_id) DO NOTHING
-        RETURNING media_id, genre_id;
-      `
-        // character_name VARCHAR(255) NOT NULL,
-        // episode_count INTEGER,
-        // display_priority INTEGER NOT NULL,
-      const mediaGenresResult = await pool.query(queryMediaGenres, [mediaId, genreIds])
-      if (genreNames.length) {
-        // console.log(`\tGenres added: ${genreNames.join(', ')}`)
+      const mediaPeopleData = {
+        media_id: new Array(peopleIds.length).fill(mediaId),
+        person_id: peopleIds,
+        character_name: cast.map((person) => (person as CastMovie).character || (person as CastTv).roles[0].character),
+        episode_count: cast.map((person) => (person as CastTv).total_episode_count),
+        display_priority: cast.map((person) => person.order),
       }
-      return genreNames
+      return await bulkUpsertData(
+        'media_people',
+        mediaPeopleData,
+        ['media_id', 'person_id'],
+        ['media_id', 'person_id'],
+      )
     } catch (error) {
       console.error(error)
     }
@@ -370,4 +365,14 @@ export const saveTMDBCast = async (mediaId?: number, cast?: CastMovie[] | CastTv
   }
 }
 
-const convertTMDBGenderId = (genderId)
+const convertTMDBGenderId = (genderId: number): string => {
+  if (genderId === 1) {
+    return 'Female'
+  } else if (genderId === 2) {
+    return 'Male'
+  } else if (genderId === 3) {
+    return 'Non-binary'
+  } else {
+    return 'Not specified'
+  }
+}
