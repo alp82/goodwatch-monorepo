@@ -254,7 +254,7 @@ CREATE TABLE IF NOT EXISTS media_cast (
 CREATE TABLE IF NOT EXISTS media_crew (
     media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
-    jobs VARCHAR(255)[] NOT NULL,
+    job VARCHAR(255) NOT NULL,
     department VARCHAR(255) NOT NULL,
     episode_count INTEGER,
     display_priority INTEGER NOT NULL,

@@ -5,7 +5,7 @@ import { toDashed, toPascalCase, tryRequests } from '../../utils/helpers'
 import {
   AlternativeTitle,
   CastMovie,
-  CastTv,
+  CastTv, CrewMovie, CrewTv,
   Genre,
   TMDBCollection,
   TMDBMovieDetails,
@@ -174,8 +174,8 @@ export const saveTMDBTv = async (details: TMDBTvDetails): Promise<number | undef
       homepage: details.homepage,
       adult: details.adult,
 
-      number_of_seasons: details.number_of_seasons,
-      number_of_episodes: details.number_of_episodes,
+      number_of_seasons: details.number_of_seasons || 1,
+      number_of_episodes: details.number_of_episodes || 1,
       episode_runtime: details.episode_run_time,
       in_production: details.in_production,
       tv_type: details.type,
@@ -347,28 +347,87 @@ export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)
       'people',
       peopleData,
       ['tmdb_id'],
-      ['id', 'name'],
+      ['id', 'tmdb_id', 'name'],
     )
     const peopleIds = (peopleResult?.all || []).map((row) => row.id)
+    const peopleTmdbIds = (peopleResult?.all || []).map((row) => row.tmdb_id)
     const newPeopleNames = (peopleResult?.inserted || []).map((row) => row.name)
     if (newPeopleNames.length) {
       console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
     }
 
+    const filteredCast = castWithoutDuplicates.filter((person) => peopleTmdbIds.includes(person.id))
     const mediaCastData = {
       media_id: new Array(peopleIds.length).fill(mediaId),
       person_id: peopleIds,
       // TODO save all roles:
       //  movie: duplicate tmdb_id's in cast with different character names
       //  tv: multiple roles in cast
-      character_name: castWithoutDuplicates.map((person) => (person as CastMovie).character || (person as CastTv).roles?.[0]?.character),
-      episode_count: castWithoutDuplicates.map((person) => (person as CastTv).total_episode_count || 0),
-      display_priority: castWithoutDuplicates.map((person) => person.order),
+      character_name: filteredCast.map((person) => (person as CastMovie).character || (person as CastTv).roles?.[0]?.character),
+      episode_count: filteredCast.map((person) => (person as CastTv).total_episode_count || 0),
+      display_priority: filteredCast.map((person) => person.order),
     }
     try {
       return await bulkUpsertData(
         'media_cast',
         mediaCastData,
+        ['media_id', 'person_id'],
+        ['media_id', 'person_id'],
+      )
+    } catch (error) {
+      console.error(error)
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export const saveTMDBCrew = async (mediaId?: number, crew?: (CrewMovie | CrewTv)[]): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !crew?.length) return
+
+  const crewWithoutDuplicates = crew.filter((person, index, self) => {
+    return index === self.findIndex((p) => p.id === person.id)
+  })
+
+  const peopleData = {
+    tmdb_id: crewWithoutDuplicates.map((person) => person.id),
+    name: crewWithoutDuplicates.map((person) => person.name),
+    popularity: crewWithoutDuplicates.map((person) => person.popularity),
+    gender: crewWithoutDuplicates.map((person) => convertTMDBGenderId(person.gender)),
+    known_for_department: crewWithoutDuplicates.map((person) => person.known_for_department),
+    profile_path: crewWithoutDuplicates.map((person) => person.profile_path),
+    adult: crewWithoutDuplicates.map((person) => person.adult),
+  }
+  try {
+    const peopleResult = await bulkUpsertData(
+      'people',
+      peopleData,
+      ['tmdb_id'],
+      ['id', 'tmdb_id', 'name'],
+    )
+    const peopleIds = (peopleResult?.all || []).map((row) => row.id)
+    const peopleTmdbIds = (peopleResult?.all || []).map((row) => row.tmdb_id)
+    const newPeopleNames = (peopleResult?.inserted || []).map((row) => row.name)
+    if (newPeopleNames.length) {
+      console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
+    }
+
+    const filteredCrew = crewWithoutDuplicates.filter((person) => peopleTmdbIds.includes(person.id))
+    const mediaCrewData = {
+      media_id: new Array(peopleIds.length).fill(mediaId),
+      person_id: peopleIds,
+      // TODO save all jobs:
+      //  movie: duplicate tmdb_id's in crew with different jobs
+      //  tv: multiple jobs in crew
+      job: filteredCrew.map((person) => (person as CrewMovie).job || (person as CrewTv).jobs?.[0]?.job),
+      department: filteredCrew.map((person) => person.department),
+      episode_count: filteredCrew.map((person) => (person as CrewTv).total_episode_count || 0),
+      display_priority: filteredCrew.map((person) => person.popularity),
+    }
+    try {
+      return await bulkUpsertData(
+        'media_crew',
+        mediaCrewData,
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )

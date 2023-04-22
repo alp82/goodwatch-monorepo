@@ -2,7 +2,7 @@ import {DataSourceConfigForMedia, DataSourceForMedia} from "../dataSource";
 import {
   getTMDBMovieCollection,
   getTMDBMovieDetails,
-  getTMDBTvDetails, saveTMDBAlternativeTitles, saveTMDBCast, saveTMDBCollection, saveTMDBGenres,
+  getTMDBTvDetails, saveTMDBAlternativeTitles, saveTMDBCast, saveTMDBCollection, saveTMDBCrew, saveTMDBGenres,
   saveTMDBMovie,
   saveTMDBTv,
 } from './tmdb-details-handler'
@@ -60,7 +60,8 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
       saveTMDBCast(mediaId, data.details.credits.cast),
-      // TODO credits
+      saveTMDBCrew(mediaId, data.details.credits.crew),
+      // TODO release dates
       // TODO images
       // TODO videos
       // TODO keywords
@@ -70,7 +71,6 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       // TODO similar
       // TODO spoken languages
       // TODO translations
-      // TODO releae dates
       // TODO watch providers
     ]
     const results = await Promise.all(promises)
@@ -82,21 +82,21 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
       saveTMDBCast(mediaId, data.details.aggregate_credits.cast),
-      // TODO created_by -> people
-      // data.details.aggregate_credits
+      saveTMDBCrew(mediaId, data.details.aggregate_credits.crew),
       // data.details.content_ratings
-      // data.details.languages
-      // data.details.networks
       // data.details.images
       // data.details.videos
       // data.details.keywords
-      // data.details.seasons
-      // data.details.spoken_languages
-      // data.details.translations
       // TODO production companies
       // TODO production countries
       // TODO recommendations
       // TODO similar
+      // data.details.spoken_languages
+      // data.details.translations
+      // data.details.languages
+      // data.details.networks
+      // data.details.seasons
+      // TODO created_by -> people
     ]
     const results = await Promise.all(promises)
   }

@@ -104,6 +104,8 @@ SELECT * FROM movie_details WHERE (ratings->'imdbRatings'->>'score')::float > 0 
 
 SELECT * FROM movie_details WHERE (tvtropes->>'url') is null ORDER BY id ASC
 
+sort by random
+
 rotten tomatoes matching (imdb to rt id datasets)
 
 report missing ratings
@@ -139,6 +141,8 @@ autocomplete dark style
 additional ratings and links:
 * letterboxd
 * tmdb
+
+explore map
 
 authentication and user profiles
 

@@ -27,8 +27,15 @@ export const processDataSource = async (
           ) AND (
             data_sources_for_media.data_status IS NULL
             OR data_sources_for_media.data_status NOT IN ('ignore')
-          )			  
-          ORDER BY daily_media.popularity DESC, data_sources_for_media.last_successful_attempt_at ASC, data_sources_for_media.last_attempt_at ASC
+          )
+          ORDER BY 
+            CASE 
+                WHEN media.id IS NULL THEN 0 
+                ELSE 1 
+            END, 
+            daily_media.popularity DESC, 
+            COALESCE(data_sources_for_media.last_successful_attempt_at, '1970-01-01'::timestamp) ASC, 
+            COALESCE(data_sources_for_media.last_attempt_at, '1970-01-01'::timestamp) ASC
           LIMIT $1;
         `
         const { rows } = await pool.query(query.trim(), [batchSize]);

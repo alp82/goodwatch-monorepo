@@ -92,7 +92,19 @@ export const bulkUpsertData = async (
   const columnNames = columns.map((c) => `"${c}"`).join(', ')
   const conflictColumnNames = conflictColumns.map((c) => `"${c}"`).join(', ')
   const returnColumnNames = returnColumns.map((c) => `"${c}"`).join(', ')
+  const groupByColumnNames = columns.filter((column) => {
+    const value = data[column][0]
+    const dataType = getDataType(value)
+    return dataType !== 'json'
+  }).map((c) => `"${c}"`).join(', ')
 
+  const insertSelectColumns = columns.map((column, index) => {
+    const value = data[column][0]
+    const dataType = getDataType(value)
+    // TODO does not account for objects
+    // TODO does not work with feeding values via params
+    return dataType === 'json' ? `array_agg(${column}::text)` : `"${column}"`
+  })
   const placeholders = columns.map((column, index) => {
     const value = data[column][0]
     const dataType = getDataType(value)
@@ -129,8 +141,9 @@ export const bulkUpsertData = async (
 
   const upsertQuery = `
     INSERT INTO ${tableName} (${columnNames})
-    SELECT ${columnNames}
+    SELECT ${insertSelectColumns.join(', ')}
     ${fromWhereClause}
+    GROUP BY ${groupByColumnNames}
     ON CONFLICT (${conflictColumnNames}) DO ${conflictClause}
     RETURNING ${returnColumnNames}
   `

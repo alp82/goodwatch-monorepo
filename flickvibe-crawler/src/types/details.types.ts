@@ -200,7 +200,7 @@ export interface ContentRatings {
 
 export interface CreditsMovie {
   cast: CastMovie[]
-  crew: CastMovie[]
+  crew: CrewMovie[]
 }
 
 export interface CreditsTv {
@@ -221,8 +221,22 @@ export interface CastMovie {
   credit_id: string
   character?: string
   order?: number
+}
+
+export interface CrewMovie {
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path: null | string
+  crew_id?: number
+  credit_id: string
   department?: string
   job?: string
+  order?: number
 }
 
 export interface CastTv {
