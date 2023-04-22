@@ -8,6 +8,8 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import { Analytics } from '@vercel/analytics/react'
+
 import stylesheet from "~/tailwind.css";
 import Header from '~/ui/Header'
 import Footer from "~/ui/Footer";
@@ -31,6 +33,7 @@ export default function App() {
         <Links />
       </head>
       <body className="flex flex-col h-screen bg-gray-900">
+        <Analytics />
         <Header />
         <div className="flex-grow mx-auto mt-2 max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
           <Outlet />
