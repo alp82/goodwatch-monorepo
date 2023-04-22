@@ -19,17 +19,17 @@ CREATE TABLE IF NOT EXISTS daily_media (
 -- people
 CREATE TABLE IF NOT EXISTS people (
     id SERIAL PRIMARY KEY,
+    tmdb_id INTEGER NOT NULL UNIQUE,
+
     name VARCHAR(255) NOT NULL,
     also_known_as VARCHAR(255)[],
     biography TEXT,
     popularity NUMERIC,
-
-    gender INTEGER,
+    gender VARCHAR(255),
     place_of_birth VARCHAR(255),
     birthday DATE,
     deathday DATE,
     known_for_department VARCHAR(255),
-
     profile_path VARCHAR(255),
     homepage TEXT,
     adult BOOLEAN NOT NULL DEFAULT FALSE,
@@ -245,7 +245,7 @@ CREATE TABLE IF NOT EXISTS media_alternative_titles (
 CREATE TABLE IF NOT EXISTS media_cast (
     media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
-    character_name VARCHAR(255) NOT NULL,
+    character_name VARCHAR(255),
     episode_count INTEGER,
     display_priority INTEGER NOT NULL,
     PRIMARY KEY (media_id, person_id)

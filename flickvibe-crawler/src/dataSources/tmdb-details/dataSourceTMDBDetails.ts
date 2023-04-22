@@ -2,10 +2,10 @@ import {DataSourceConfigForMedia, DataSourceForMedia} from "../dataSource";
 import {
   getTMDBMovieCollection,
   getTMDBMovieDetails,
-  getTMDBTvDetails, saveTMDBAlternativeTitles, saveTMDBCollection, saveTMDBGenres,
+  getTMDBTvDetails, saveTMDBAlternativeTitles, saveTMDBCast, saveTMDBCollection, saveTMDBGenres,
   saveTMDBMovie,
-  saveTMDBTv
-} from "./tmdb-details-handler";
+  saveTMDBTv,
+} from './tmdb-details-handler'
 import {TMDBCollection, TMDBMovieDetails, TMDBTvDetails} from "../../types/details.types";
 
 export interface FetchedMovieData {
@@ -59,11 +59,12 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBCollection(mediaId, data.collection),
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
+      saveTMDBCast(mediaId, data.details.credits.cast),
       // TODO credits
       // TODO images
       // TODO videos
       // TODO keywords
-      // TODO production compoanies
+      // TODO production companies
       // TODO production countries
       // TODO recommendations
       // TODO similar
@@ -78,9 +79,10 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
   async storeTvData(data: FetchedTvData): Promise<void> {
     const mediaId = await saveTMDBTv(data.details)
     const promises: Promise<unknown>[] = [
-      // TODO created_by -> people
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
+      saveTMDBCast(mediaId, data.details.aggregate_credits.cast),
+      // TODO created_by -> people
       // data.details.aggregate_credits
       // data.details.content_ratings
       // data.details.languages
@@ -91,7 +93,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       // data.details.seasons
       // data.details.spoken_languages
       // data.details.translations
-      // TODO production compoanies
+      // TODO production companies
       // TODO production countries
       // TODO recommendations
       // TODO similar

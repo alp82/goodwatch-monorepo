@@ -224,11 +224,15 @@ export const saveTMDBCollection = async (mediaId?: number, collection?: TMDBColl
         RETURNING media_id, collection_id
       `
       const mediaIds = collection.parts.map((part) => part.id)
-      const partsResult = await pool.query(query, [collectionId, mediaIds])
-      if (partsResult?.rows.length) {
-        console.log(`\tCollection '${collection.name}' added with ${partsResult?.rows.length} movies`)
+      try {
+        const partsResult = await pool.query(query, [collectionId, mediaIds])
+        if (partsResult?.rows.length) {
+          console.log(`\tCollection '${collection.name}' added with ${partsResult?.rows.length} movies`)
+        }
+        return { rows: partsResult?.rows, collection }
+      } catch (error) {
+        console.error(error)
       }
-      return { rows: partsResult?.rows, collection }
     } catch (error) {
         console.error(error)
     }
@@ -237,10 +241,10 @@ export const saveTMDBCollection = async (mediaId?: number, collection?: TMDBColl
 export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promise<BulkUpsertResult | undefined> => {
     if (!mediaId || !genres?.length) return
 
+    const genresData = {
+      name: genres.map((genre) => genre.name)
+    }
     try {
-      const genresData = {
-        name: genres.map((genre) => genre.name)
-      }
       const genresResult = await bulkUpsertData(
         'genres',
         genresData,
@@ -275,39 +279,42 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
 export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTitles?: AlternativeTitle[]): Promise<BulkUpsertResult | undefined> => {
   if (!mediaId || !alternativeTitles?.length) return
 
+  const languageCodes = alternativeTitles
+    .filter((alternativeTitle) => {
+      return ![
+        'South America',
+      ].includes(alternativeTitle.iso_3166_1)
+    })
+    .map((alternativeTitle) => {
+      return alternativeTitle.iso_3166_1
+        .replace('United Arab Emirates', 'AE')
+        .replace('Bulgaria', 'BG')
+        .replace('Česko', 'CZ')
+        .replace('Deutschland', 'DE')
+        .replace('España', 'ES')
+        .replace('ኢትዮጵያ', 'ET')
+        .replace('Suomi', 'FI')
+        .replace('France', 'FR')
+        .replace('ישראל', 'IL')
+        .replace('Magyarország', 'HU')
+        .replace('japan', 'JP')
+        .replace('Japan', 'JP')
+        .replace('Latvia', 'LV')
+        .replace('Thailand', 'TH')
+        .replace('Türkei', 'TR')
+        .replace('United States', 'US')
+        .replace('Oʻzbekiston', 'UZ')
+    })
+    .filter((alternativeTitle, index, all) => {
+      return all.indexOf(alternativeTitle) === index
+    })
+  const mediaAlternativeTitlesData = {
+    media_id: new Array(alternativeTitles.length).fill(mediaId),
+    title: alternativeTitles.map((alternativeTitle) => alternativeTitle.title),
+    type: alternativeTitles.map((alternativeTitle) => alternativeTitle.type),
+    language_code: languageCodes,
+  }
   try {
-    const languageCodes = alternativeTitles
-      .filter((alternativeTitle) => {
-        return ![
-          'South America',
-        ].includes(alternativeTitle.iso_3166_1)
-      })
-      .map((alternativeTitle) => {
-        return alternativeTitle.iso_3166_1
-          .replace('United Arab Emirates', 'AE')
-          .replace('Bulgaria', 'BG')
-          .replace('Česko', 'CZ')
-          .replace('Deutschland', 'DE')
-          .replace('España', 'ES')
-          .replace('ኢትዮጵያ', 'ET')
-          .replace('Suomi', 'FI')
-          .replace('France', 'FR')
-          .replace('ישראל', 'IL')
-          .replace('Magyarország', 'HU')
-          .replace('japan', 'JP')
-          .replace('Japan', 'JP')
-          .replace('Latvia', 'LV')
-          .replace('Thailand', 'TH')
-          .replace('Türkei', 'TR')
-          .replace('United States', 'US')
-          .replace('Oʻzbekiston', 'UZ')
-      })
-    const mediaAlternativeTitlesData = {
-      media_id: new Array(alternativeTitles.length).fill(mediaId),
-      title: alternativeTitles.map((alternativeTitle) => alternativeTitle.title),
-      type: alternativeTitles.map((alternativeTitle) => alternativeTitle.type),
-      language_code: languageCodes,
-    }
     return await bulkUpsertData(
       'media_alternative_titles',
       mediaAlternativeTitlesData,
@@ -319,22 +326,27 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
   }
 }
 
-export const saveTMDBCast = async (mediaId?: number, cast?: CastMovie[] | CastTv[]): Promise<BulkUpsertResult | undefined> => {
+export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)[]): Promise<BulkUpsertResult | undefined> => {
   if (!mediaId || !cast?.length) return
 
+  const castWithoutDuplicates = cast.filter((person, index, self) => {
+    return index === self.findIndex((p) => p.id === person.id)
+  })
+
+  const peopleData = {
+    tmdb_id: castWithoutDuplicates.map((person) => person.id),
+    name: castWithoutDuplicates.map((person) => person.name),
+    popularity: castWithoutDuplicates.map((person) => person.popularity),
+    gender: castWithoutDuplicates.map((person) => convertTMDBGenderId(person.gender)),
+    known_for_department: castWithoutDuplicates.map((person) => person.known_for_department),
+    profile_path: castWithoutDuplicates.map((person) => person.profile_path),
+    adult: castWithoutDuplicates.map((person) => person.adult),
+  }
   try {
-    const peopleData = {
-      name: cast.map((person) => person.name),
-      popularity: cast.map((person) => person.popularity),
-      gender: cast.map((person) => convertTMDBGenderId(person.gender)),
-      known_for_department: cast.map((person) => person.known_for_department),
-      profile_path: cast.map((person) => person.profile_path),
-      adult: cast.map((person) => person.adult),
-    }
     const peopleResult = await bulkUpsertData(
       'people',
       peopleData,
-      ['name'],
+      ['tmdb_id'],
       ['id', 'name'],
     )
     const peopleIds = (peopleResult?.all || []).map((row) => row.id)
@@ -343,17 +355,20 @@ export const saveTMDBCast = async (mediaId?: number, cast?: CastMovie[] | CastTv
       console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
     }
 
+    const mediaCastData = {
+      media_id: new Array(peopleIds.length).fill(mediaId),
+      person_id: peopleIds,
+      // TODO save all roles:
+      //  movie: duplicate tmdb_id's in cast with different character names
+      //  tv: multiple roles in cast
+      character_name: castWithoutDuplicates.map((person) => (person as CastMovie).character || (person as CastTv).roles?.[0]?.character),
+      episode_count: castWithoutDuplicates.map((person) => (person as CastTv).total_episode_count || 0),
+      display_priority: castWithoutDuplicates.map((person) => person.order),
+    }
     try {
-      const mediaPeopleData = {
-        media_id: new Array(peopleIds.length).fill(mediaId),
-        person_id: peopleIds,
-        character_name: cast.map((person) => (person as CastMovie).character || (person as CastTv).roles[0].character),
-        episode_count: cast.map((person) => (person as CastTv).total_episode_count),
-        display_priority: cast.map((person) => person.order),
-      }
       return await bulkUpsertData(
-        'media_people',
-        mediaPeopleData,
+        'media_cast',
+        mediaCastData,
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )

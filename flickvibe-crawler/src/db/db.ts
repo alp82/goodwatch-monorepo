@@ -98,12 +98,12 @@ export const bulkUpsertData = async (
     const dataType = getDataType(value)
     return `$${index + 1}::${dataType}[]`
   })
-  const inConditions = columns.map((column, index) => {
+  const inConditions = conflictColumns.map((column, index) => {
     const value = data[column][0]
     const dataType = getDataType(value)
     return `"${column}" = ANY($${index + 1}::${dataType}[])`
   })
-  const notInConditions = columns.map((column, index) => {
+  const notInConditions = conflictColumns.map((column, index) => {
     const value = data[column][0]
     const dataType = getDataType(value)
     return `"${column}" NOT IN (SELECT ${column} FROM ${tableName} WHERE "${column}" = ANY($${index + 1}::${dataType}[]))`
@@ -123,6 +123,7 @@ export const bulkUpsertData = async (
     SELECT ${returnColumnNames}
     FROM ${tableName}
     WHERE ${inConditions.join(' AND ')}
+    ORDER BY ${returnColumnNames}
     FOR UPDATE;
   `
 
@@ -134,14 +135,17 @@ export const bulkUpsertData = async (
     RETURNING ${returnColumnNames}
   `
 
+  const selectParams = conflictColumns.map((column) => data[column])
+  const upsertParams = Object.values(data)
   const results = await performTransaction([
-    { text: selectQuery, params: Object.values(data) },
-    { text: upsertQuery, params: Object.values(data) },
+    { text: selectQuery, params: selectParams },
+    { text: upsertQuery, params: upsertParams },
   ])
   const selectResult = results?.[0]
   const upsertResult = results?.[1]
 
   // return results
+  // TODO update would duplicate id's
   const existing = selectResult?.rows || []
   const inserted = upsertResult?.rows || []
   const all = [
@@ -162,10 +166,8 @@ export interface Query {
 }
 
 const getDataType = (value: any): string => {
-  if (typeof value === 'number' && Number.isInteger(value)) {
-    return 'integer'
-  } else if (typeof value === 'number' && !Number.isInteger(value)) {
-    return 'float'
+  if (typeof value === 'number') {
+    return 'numeric'
   } else if (typeof value === 'boolean') {
     return 'boolean'
   } else if (typeof value === 'string') {
