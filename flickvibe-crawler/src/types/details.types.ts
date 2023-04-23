@@ -183,9 +183,11 @@ export interface ProductionCountry {
 }
 
 export interface SpokenLanguage {
-  english_name: string
   iso_639_1: string
-  name: string
+  english_name: string
+  name?: string
+  native_name?: string
+  folded_name?: string
 }
 
 export interface ContentRatingResult {
@@ -332,7 +334,7 @@ export interface Recommendations {
 export interface ReleaseDate {
   certification: string
   descriptors: any[]
-  iso_639_1: string
+  iso_639_1: SpokenLanguage
   note: string
   release_date: Date
   type: number

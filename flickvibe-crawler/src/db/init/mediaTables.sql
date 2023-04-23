@@ -379,7 +379,7 @@ CREATE TABLE IF NOT EXISTS media_videos (
 );
 
 -- media relations
-CREATE TABLE IF NOT EXISTS relation_type (
+CREATE TABLE IF NOT EXISTS relation_types (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE
 );
@@ -387,24 +387,20 @@ CREATE TABLE IF NOT EXISTS relation_type (
 CREATE TABLE IF NOT EXISTS media_relations (
     media_id INTEGER NOT NULL,
     related_media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
-    relation_type_id INTEGER NOT NULL REFERENCES relation_type (id),
+    relation_type_id INTEGER NOT NULL REFERENCES relation_types (id),
     PRIMARY KEY (media_id, related_media_id, relation_type_id)
 );
 
 -- media releases and certifications
-CREATE TABLE IF NOT EXISTS release_type (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS media_releases_and_certifications (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS media_certifications (
     media_id INTEGER NOT NULL,
-    release_type_id INTEGER NOT NULL REFERENCES release_type (id),
-    certification VARCHAR(50) NOT NULL,
+    certification VARCHAR(50),
     country_code CHAR(2) NOT NULL,
-    release_date DATE NOT NULL,
-    note TEXT
+    language_code CHAR(2),
+    release_type VARCHAR(50),
+    release_date DATE,
+    note TEXT,
+    UNIQUE (media_id, certification, country_code, language_code, release_type)
 );
 
 -- media translations

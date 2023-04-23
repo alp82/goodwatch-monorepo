@@ -84,6 +84,7 @@ export interface BulkUpsertResult {
 export const bulkUpsertData = async (
   tableName: string,
   data: Record<string, unknown[]>,
+  columnTypes: Record<string, string>,
   conflictColumns: string[],
   returnColumns: string[]
 ): Promise<BulkUpsertResult | undefined> => {
@@ -94,30 +95,30 @@ export const bulkUpsertData = async (
   const returnColumnNames = returnColumns.map((c) => `"${c}"`).join(', ')
   const groupByColumnNames = columns.filter((column) => {
     const value = data[column][0]
-    const dataType = getDataType(value)
+    const dataType = columnTypes[column] || getDataType(value)
     return dataType !== 'json'
   }).map((c) => `"${c}"`).join(', ')
 
   const insertSelectColumns = columns.map((column, index) => {
     const value = data[column][0]
-    const dataType = getDataType(value)
+    const dataType = columnTypes[column] || getDataType(value)
     // TODO does not account for objects
     // TODO does not work with feeding values via params
     return dataType === 'json' ? `array_agg(${column}::text)` : `"${column}"`
   })
   const placeholders = columns.map((column, index) => {
     const value = data[column][0]
-    const dataType = getDataType(value)
+    const dataType = columnTypes[column] || getDataType(value)
     return `$${index + 1}::${dataType}[]`
   })
   const inConditions = conflictColumns.map((column, index) => {
     const value = data[column][0]
-    const dataType = getDataType(value)
+    const dataType = columnTypes[column] || getDataType(value)
     return `"${column}" = ANY($${index + 1}::${dataType}[])`
   })
   const notInConditions = conflictColumns.map((column, index) => {
     const value = data[column][0]
-    const dataType = getDataType(value)
+    const dataType = columnTypes[column] || getDataType(value)
     return `"${column}" NOT IN (SELECT ${column} FROM ${tableName} WHERE "${column}" = ANY($${index + 1}::${dataType}[]))`
   })
   const fromWhereClause = `
@@ -150,26 +151,30 @@ export const bulkUpsertData = async (
 
   const selectParams = conflictColumns.map((column) => data[column])
   const upsertParams = Object.values(data)
-  const results = await performTransaction([
-    { text: selectQuery, params: selectParams },
-    { text: upsertQuery, params: upsertParams },
-  ])
-  const selectResult = results?.[0]
-  const upsertResult = results?.[1]
+  try {
+    const results = await performTransaction([
+      { text: selectQuery, params: selectParams },
+      { text: upsertQuery, params: upsertParams },
+    ])
+    const selectResult = results?.[0]
+    const upsertResult = results?.[1]
 
-  // return results
-  // TODO update would duplicate id's
-  const existing = selectResult?.rows || []
-  const inserted = upsertResult?.rows || []
-  const all = [
-    ...existing,
-    ...inserted,
-  ]
+    // return results
+    // TODO update would duplicate id's
+    const existing = selectResult?.rows || []
+    const inserted = upsertResult?.rows || []
+    const all = [
+      ...existing,
+      ...inserted,
+    ]
 
-  return {
-    all,
-    existing,
-    inserted,
+    return {
+      all,
+      existing,
+      inserted,
+    }
+  } catch (error) {
+    throw error
   }
 }
 
@@ -199,16 +204,16 @@ const getDataType = (value: any): string => {
 }
 
 export const performTransaction = async (queries: Query[]): Promise<QueryResult[] | undefined> => {
-  const client = await pool.connect();
+  const client = await pool.connect()
   try {
-    await client.query('BEGIN');
+    await client.query('BEGIN')
     const results = await Promise.all(queries.map((query) => client.query(query.text, query.params || [])))
-    await client.query('COMMIT');
+    await client.query('COMMIT')
     return results
-  } catch (e) {
-    await client.query('ROLLBACK');
-    throw e;
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
   } finally {
-    client.release();
+    client.release()
   }
 }

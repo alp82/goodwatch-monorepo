@@ -5,8 +5,8 @@ import { toDashed, toPascalCase, tryRequests } from '../../utils/helpers'
 import {
   AlternativeTitle,
   CastMovie,
-  CastTv, CrewMovie, CrewTv,
-  Genre,
+  CastTv, ContentRatingResult, CrewMovie, CrewTv,
+  Genre, ReleaseDatesResult,
   TMDBCollection,
   TMDBMovieDetails,
   TMDBTvDetails,
@@ -248,6 +248,7 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
       const genresResult = await bulkUpsertData(
         'genres',
         genresData,
+        {},
         ['name'],
         ['id', 'name'],
       )
@@ -265,6 +266,7 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
         return await bulkUpsertData(
           'media_genres',
           mediaGenresData,
+          {},
           ['media_id', 'genre_id'],
           ['media_id', 'genre_id'],
         )
@@ -289,6 +291,7 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
       return alternativeTitle.iso_3166_1
         .replace('United Arab Emirates', 'AE')
         .replace('Bulgaria', 'BG')
+        .replace('Brazil', 'BR')
         .replace('Česko', 'CZ')
         .replace('Deutschland', 'DE')
         .replace('España', 'ES')
@@ -318,6 +321,7 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
     return await bulkUpsertData(
       'media_alternative_titles',
       mediaAlternativeTitlesData,
+      {},
       ['media_id', 'title', 'type', 'language_code'],
       ['media_id', 'title', 'type', 'language_code'],
     )
@@ -346,6 +350,7 @@ export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)
     const peopleResult = await bulkUpsertData(
       'people',
       peopleData,
+      {},
       ['tmdb_id'],
       ['id', 'tmdb_id', 'name'],
     )
@@ -371,6 +376,7 @@ export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)
       return await bulkUpsertData(
         'media_cast',
         mediaCastData,
+        {},
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )
@@ -402,6 +408,7 @@ export const saveTMDBCrew = async (mediaId?: number, crew?: (CrewMovie | CrewTv)
     const peopleResult = await bulkUpsertData(
       'people',
       peopleData,
+      {},
       ['tmdb_id'],
       ['id', 'tmdb_id', 'name'],
     )
@@ -428,6 +435,7 @@ export const saveTMDBCrew = async (mediaId?: number, crew?: (CrewMovie | CrewTv)
       return await bulkUpsertData(
         'media_crew',
         mediaCrewData,
+        {},
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )
@@ -446,6 +454,79 @@ const convertTMDBGenderId = (genderId: number): string => {
     return 'Male'
   } else if (genderId === 3) {
     return 'Non-binary'
+  } else {
+    return 'Not specified'
+  }
+}
+
+export interface CertificationData {
+  certification?: string
+  country_code: string
+  language_code?: string
+  release_type?: string
+  release_date?: Date
+  note?: string
+}
+
+export const saveTMDBCertifications = async (mediaId?: number, certifications?: (ReleaseDatesResult | ContentRatingResult)[]): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !certifications?.length) return
+
+  const certificationData = certifications.reduce<CertificationData[]>((result, certification) => {
+    if ((certification as ReleaseDatesResult).release_dates?.length) {
+      const c = (certification as ReleaseDatesResult)
+      return [...result, ...c.release_dates.map(releaseDate => ({
+        certification: releaseDate.certification,
+        country_code: c.iso_3166_1,
+        language_code: releaseDate.iso_639_1.iso_639_1,
+        release_type: convertTMDBReleaseTypeId(releaseDate.type),
+        release_date: releaseDate.release_date || null,
+        note: releaseDate.note,
+      }))]
+    } else if ((certification as ContentRatingResult).rating) {
+      const c = (certification as ContentRatingResult)
+      return [...result, {
+        certification: c.rating,
+        country_code: c.iso_3166_1,
+      }]
+    }
+    return [...result]
+  }, [])
+
+  const mediaCertificationsData = {
+    media_id: new Array(certificationData.length).fill(mediaId),
+    certification: certificationData.map((certification) => certification.certification),
+    country_code: certificationData.map((certification) => certification.country_code),
+    language_code: certificationData.map((certification) => certification.language_code),
+    release_type: certificationData.map((certification) => certification.release_type),
+    release_date: certificationData.map((certification) => certification.release_date),
+    note: certificationData.map((certification) => certification.note),
+  }
+  try {
+    return await bulkUpsertData(
+      'media_certifications',
+      mediaCertificationsData,
+      { release_date: 'date' },
+      ['media_id', 'certification', 'country_code', 'language_code', 'release_type'],
+      ['media_id', 'certification', 'country_code', 'language_code', 'release_type'],
+    )
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const convertTMDBReleaseTypeId = (releaseTypeId: number): string => {
+  if (releaseTypeId === 1) {
+    return 'Premiere'
+  } else if (releaseTypeId === 2) {
+    return 'Theatrical (limited)'
+  } else if (releaseTypeId === 3) {
+    return 'Theatrical'
+  } else if (releaseTypeId === 4) {
+    return 'Digital'
+  } else if (releaseTypeId === 5) {
+    return 'Physical'
+  } else if (releaseTypeId === 6) {
+    return 'TV'
   } else {
     return 'Not specified'
   }

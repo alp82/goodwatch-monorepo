@@ -2,7 +2,13 @@ import {DataSourceConfigForMedia, DataSourceForMedia} from "../dataSource";
 import {
   getTMDBMovieCollection,
   getTMDBMovieDetails,
-  getTMDBTvDetails, saveTMDBAlternativeTitles, saveTMDBCast, saveTMDBCollection, saveTMDBCrew, saveTMDBGenres,
+  getTMDBTvDetails,
+  saveTMDBAlternativeTitles,
+  saveTMDBCast,
+  saveTMDBCertifications,
+  saveTMDBCollection,
+  saveTMDBCrew,
+  saveTMDBGenres,
   saveTMDBMovie,
   saveTMDBTv,
 } from './tmdb-details-handler'
@@ -61,7 +67,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
       saveTMDBCast(mediaId, data.details.credits.cast),
       saveTMDBCrew(mediaId, data.details.credits.crew),
-      // TODO release dates
+      saveTMDBCertifications(mediaId, data.details.release_dates.results)
       // TODO images
       // TODO videos
       // TODO keywords
@@ -83,7 +89,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
       saveTMDBCast(mediaId, data.details.aggregate_credits.cast),
       saveTMDBCrew(mediaId, data.details.aggregate_credits.crew),
-      // data.details.content_ratings
+      saveTMDBCertifications(mediaId, data.details.content_ratings.results)
       // data.details.images
       // data.details.videos
       // data.details.keywords
