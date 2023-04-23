@@ -116,14 +116,9 @@ export const bulkUpsertData = async (
     const dataType = columnTypes[column] || getDataType(value)
     return `"${column}" = ANY($${index + 1}::${dataType}[])`
   })
-  const notInConditions = conflictColumns.map((column, index) => {
-    const value = data[column][0]
-    const dataType = columnTypes[column] || getDataType(value)
-    return `"${column}" NOT IN (SELECT ${column} FROM ${tableName} WHERE "${column}" = ANY($${index + 1}::${dataType}[]))`
-  })
   const fromWhereClause = `
     FROM unnest(${placeholders}) AS data(${columnNames})
-    WHERE ${notInConditions.join(' AND ')}
+    WHERE (${conflictColumnNames}) NOT IN (SELECT ${conflictColumnNames} FROM ${tableName})
   `
 
   const setColumns = columns
