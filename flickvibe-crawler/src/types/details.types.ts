@@ -139,26 +139,13 @@ export interface WatchProviders {
 
 export interface ProviderData {
   link: string
-  flatrate: Flatrate[]
-  buy: Buy[]
-  rent: Rent[]
+  flatrate: Provider[]
+  buy: Provider[]
+  rent: Provider[]
+  ads: Provider[]
 }
 
-export interface Flatrate {
-  logo_path: string
-  provider_id: number
-  provider_name: string
-  display_priority: number
-}
-
-export interface Buy {
-  logo_path: string
-  provider_id: number
-  provider_name: string
-  display_priority: number
-}
-
-export interface Rent {
+export interface Provider {
   logo_path: string
   provider_id: number
   provider_name: string

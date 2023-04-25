@@ -9,7 +9,7 @@ import {
   saveTMDBCollection,
   saveTMDBCrew,
   saveTMDBGenres,
-  saveTMDBMovie,
+  saveTMDBMovie, saveTMDBStreamingProviders,
   saveTMDBTv,
 } from './tmdb-details-handler'
 import {TMDBCollection, TMDBMovieDetails, TMDBTvDetails} from "../../types/details.types";
@@ -67,8 +67,8 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
       saveTMDBCast(mediaId, data.details.credits.cast),
       saveTMDBCrew(mediaId, data.details.credits.crew),
-      saveTMDBCertifications(mediaId, data.details.release_dates.results)
-      // TODO watch providers
+      saveTMDBCertifications(mediaId, data.details.release_dates.results),
+      saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
       // TODO images
       // TODO videos
       // TODO keywords
@@ -89,8 +89,9 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
       saveTMDBCast(mediaId, data.details.aggregate_credits.cast),
       saveTMDBCrew(mediaId, data.details.aggregate_credits.crew),
-      saveTMDBCertifications(mediaId, data.details.content_ratings.results)
-      // TODO watch providers
+      // TODO creator / created_by
+      saveTMDBCertifications(mediaId, data.details.content_ratings.results),
+      saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
       // data.details.images
       // data.details.videos
       // data.details.keywords
@@ -103,7 +104,6 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       // data.details.seasons
       // TODO recommendations
       // TODO similar
-      // TODO created_by -> people
     ]
     await Promise.all(promises)
   }

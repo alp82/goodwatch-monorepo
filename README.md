@@ -33,19 +33,13 @@ data sources:
 
 tmdb_daily
 tmdb_details
-tmdb_collections
 tmdb_people
 
 imdb_ratings
 metacritic_ratings
 rotten_tomatoes_ratings
 
-tvtropes_tags
-```
-
-```
-people query
-https://api.themoviedb.org/3/person/1331163?api_key=df95f1bae98baaf28e1c06d7a2762e27&append_to_response=external_ids,%20images,tagged_images,translations
+tvtropes_tags ??? 
 ```
 
 ```

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getAlpha2Code, getSupportedLanguages } from 'i18n-iso-countries'
 
 import { bulkUpsertData, BulkUpsertResult, performTransaction, pool, upsertData } from '../../db/db'
 import { toDashed, toPascalCase, tryRequests } from '../../utils/helpers'
@@ -6,10 +7,10 @@ import {
   AlternativeTitle,
   CastMovie,
   CastTv, ContentRatingResult, CrewMovie, CrewTv,
-  Genre, ReleaseDatesResult,
+  Genre, ProviderData, ReleaseDatesResult,
   TMDBCollection,
   TMDBMovieDetails,
-  TMDBTvDetails,
+  TMDBTvDetails, WatchProviders,
 } from '../../types/details.types'
 import { userAgentHeader } from '../../utils/user-agent'
 import { QueryResult } from 'pg'
@@ -282,34 +283,11 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
   if (!mediaId || !alternativeTitles?.length) return
 
   const languageCodes = alternativeTitles
-    .filter((alternativeTitle) => {
-      return ![
-        'South America',
-      ].includes(alternativeTitle.iso_3166_1)
-    })
     .map((alternativeTitle) => {
-      return alternativeTitle.iso_3166_1
-        .replace('United Arab Emirates', 'AE')
-        .replace('Bulgaria', 'BG')
-        .replace('Brazil', 'BR')
-        .replace('Česko', 'CZ')
-        .replace('Deutschland', 'DE')
-        .replace('España', 'ES')
-        .replace('ኢትዮጵያ', 'ET')
-        .replace('Suomi', 'FI')
-        .replace('France', 'FR')
-        .replace('ישראל', 'IL')
-        .replace('Magyarország', 'HU')
-        .replace('japan', 'JP')
-        .replace('Japan', 'JP')
-        .replace('Latvia', 'LV')
-        .replace('Thailand', 'TH')
-        .replace('Türkei', 'TR')
-        .replace('United States', 'US')
-        .replace('Oʻzbekiston', 'UZ')
+      return convertCountryNameToCode(alternativeTitle.iso_3166_1)
     })
     .filter((alternativeTitle, index, all) => {
-      return all.indexOf(alternativeTitle) === index
+      return all.indexOf(alternativeTitle) === index && alternativeTitle && alternativeTitle.length == 2
     })
   const mediaAlternativeTitlesData = {
     media_id: new Array(alternativeTitles.length).fill(mediaId),
@@ -327,6 +305,18 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
     )
   } catch (error) {
     console.error(error)
+  }
+}
+
+export const convertCountryNameToCode = (country: string) => {
+  if (country.length == 2) return country
+
+  const languages = getSupportedLanguages()
+  for (const language of languages) {
+    const countryCode = getAlpha2Code(country, language)
+    if (countryCode) {
+      return countryCode
+    }
   }
 }
 
@@ -529,5 +519,101 @@ const convertTMDBReleaseTypeId = (releaseTypeId: number): string => {
     return 'TV'
   } else {
     return 'Not specified'
+  }
+}
+
+export interface FlattenedProviderData {
+  name: string
+  type: string
+  logo_path: string
+  country_code: string
+  display_priority: number
+}
+
+export const saveTMDBStreamingProviders = async (mediaId?: number, watchProviders?: WatchProviders): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !watchProviders?.results || !Object.keys(watchProviders.results).length) return
+
+  const countryCodes = Object.keys(watchProviders.results)
+  const flattenedProviders = countryCodes.reduce<FlattenedProviderData[]>((result, countryCode) => {
+    return [
+      ...result,
+      ...(watchProviders.results[countryCode].flatrate || []).map((provider) => ({
+        name: provider.provider_name,
+        type: 'flatrate',
+        logo_path: provider.logo_path,
+        country_code: countryCode,
+        display_priority: provider.display_priority,
+      })),
+      ...(watchProviders.results[countryCode].buy || []).map((provider) => ({
+        name: provider.provider_name,
+        type: 'buy',
+        logo_path: provider.logo_path,
+        country_code: countryCode,
+        display_priority: provider.display_priority,
+      })),
+      ...(watchProviders.results[countryCode].rent || []).map((provider) => ({
+        name: provider.provider_name,
+        type: 'rent',
+        logo_path: provider.logo_path,
+        country_code: countryCode,
+        display_priority: provider.display_priority,
+      })),
+      ...(watchProviders.results[countryCode].ads || []).map((provider) => ({
+        name: provider.provider_name,
+        type: 'ads',
+        logo_path: provider.logo_path,
+        country_code: countryCode,
+        display_priority: provider.display_priority,
+      })),
+
+    ]
+  }, [])
+
+  const uniqueProviders = flattenedProviders.filter((provider, index, providers) => {
+    const providerName = provider.name;
+    return providers.findIndex(p => p.name === providerName) === index;
+  });
+
+  const providersData = {
+    name: uniqueProviders.map((provider) => provider.name),
+    logo_path: uniqueProviders.map((provider) => provider.logo_path),
+    display_priority: uniqueProviders.map((provider) => provider.display_priority),
+  }
+
+  try {
+    const providersResult = await bulkUpsertData(
+      'streaming_providers',
+      providersData,
+      {},
+      ['name'],
+      ['id', 'name'],
+    )
+    const providerNameToId = (providersResult?.all || []).reduce((result, row) => {
+      return {
+        ...result,
+        [row.name as string]: row.id,
+      }
+    }, {})
+
+    const mediaProvidersData = {
+      media_id:  new Array(flattenedProviders.length).fill(mediaId),
+      streaming_provider_id: flattenedProviders.map((provider) => providerNameToId[provider.name]),
+      streaming_type: flattenedProviders.map((provider) => provider.type),
+      country_code: flattenedProviders.map((provider) => provider.country_code),
+    }
+
+    try {
+      return await bulkUpsertData(
+        'media_streaming_providers',
+        mediaProvidersData,
+        {},
+        ['media_id', 'streaming_provider_id', 'streaming_type', 'country_code'],
+        ['media_id', 'streaming_provider_id', 'streaming_type', 'country_code'],
+      )
+    } catch (error) {
+      console.error(error)
+    }
+  } catch (error) {
+    console.error(error)
   }
 }

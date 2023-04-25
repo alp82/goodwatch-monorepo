@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS media_collections (
 -- tv seasons
 CREATE TABLE IF NOT EXISTS media_seasons (
     id SERIAL PRIMARY KEY,
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
     overview TEXT,
     air_date DATE,
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS media_seasons (
 
 -- media ratings
 CREATE TABLE IF NOT EXISTS media_ratings (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     data_source_id INTEGER NOT NULL REFERENCES data_sources (id),
     score DECIMAL(5,2) NOT NULL,
     original_score DECIMAL(5,2) NOT NULL,
@@ -185,23 +185,17 @@ CREATE TABLE IF NOT EXISTS media_season_ratings (
 -- streaming providers
 CREATE TABLE IF NOT EXISTS streaming_providers (
   id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
   logo_path VARCHAR(255) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  display_priority INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS streaming_types (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
   display_priority INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS media_streaming_providers (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     streaming_provider_id INTEGER NOT NULL REFERENCES streaming_providers (id),
-    streaming_type_id INTEGER NOT NULL REFERENCES streaming_types (id),
+    streaming_type VARCHAR(50),
     country_code CHAR(2) NOT NULL,
-    PRIMARY KEY (media_id, streaming_provider_id, streaming_type_id, country_code)
+    PRIMARY KEY (media_id, streaming_provider_id, streaming_type, country_code)
 );
 
 -- media tags
@@ -214,7 +208,7 @@ CREATE TABLE IF NOT EXISTS tags (
 );
 
 CREATE TABLE IF NOT EXISTS media_tags (
-    media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    media_id INTEGER NOT NULL,
     tag_id INTEGER NOT NULL REFERENCES tags (id),
     PRIMARY KEY (media_id, tag_id)
 );
@@ -245,7 +239,7 @@ CREATE TABLE IF NOT EXISTS media_alternative_titles (
 CREATE TABLE IF NOT EXISTS media_cast (
     media_id INTEGER NOT NULL,
     person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
-    character_name VARCHAR(255),
+    character_name TEXT,
     episode_count INTEGER,
     display_priority INTEGER NOT NULL,
     PRIMARY KEY (media_id, person_id)
@@ -386,7 +380,7 @@ CREATE TABLE IF NOT EXISTS relation_types (
 
 CREATE TABLE IF NOT EXISTS media_relations (
     media_id INTEGER NOT NULL,
-    related_media_id INTEGER NOT NULL REFERENCES media (id) ON DELETE CASCADE,
+    related_media_id INTEGER NOT NULL REFERENCES media (id),
     relation_type_id INTEGER NOT NULL REFERENCES relation_types (id),
     PRIMARY KEY (media_id, related_media_id, relation_type_id)
 );
