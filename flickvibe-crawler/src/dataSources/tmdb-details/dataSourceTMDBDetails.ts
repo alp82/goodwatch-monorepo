@@ -1,4 +1,4 @@
-import {DataSourceConfigForMedia, DataSourceForMedia} from "../dataSource";
+import { DataSourceConfigForMedia, DataSourceForMedia, MediaData } from '../dataSource'
 import {
   getTMDBMovieCollection,
   getTMDBMovieDetails,
@@ -34,11 +34,12 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       batchSize: 100,
       batchDelaySeconds: 1,
       rateLimitDelaySeconds: 60,
+      usesExistingMedia: false,
     }
   }
 
-  async fetchMovieData(tmdbId: number): Promise<FetchedMovieData> {
-    const details = await getTMDBMovieDetails(tmdbId)
+  async fetchMovieData({ tmdb_id }: MediaData): Promise<FetchedMovieData> {
+    const details = await getTMDBMovieDetails(tmdb_id)
 
     let collection: TMDBCollection | undefined
     if (details.belongs_to_collection) {
@@ -51,8 +52,8 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     }
   }
 
-  async fetchTvData(tmdbId: number): Promise<FetchedTvData> {
-    const details = await getTMDBTvDetails(tmdbId)
+  async fetchTvData({ tmdb_id }: MediaData): Promise<FetchedTvData> {
+    const details = await getTMDBTvDetails(tmdb_id)
 
     return {
       details,

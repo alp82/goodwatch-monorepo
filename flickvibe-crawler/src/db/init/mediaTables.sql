@@ -58,15 +58,19 @@ CREATE TABLE IF NOT EXISTS media (
     release_date DATE,
     release_year INTEGER,
     popularity NUMERIC NOT NULL,
+    status VARCHAR(255),
 
     poster_path VARCHAR(255),
     backdrop_path VARCHAR(255),
 
-    status VARCHAR(255),
+    titles_dashed VARCHAR(255)[],
+    titles_underscored VARCHAR(255)[],
+    titles_pascal_cased VARCHAR(255)[],
     original_title VARCHAR(255),
     original_language_code CHAR(2),
     homepage TEXT,
     adult BOOLEAN NOT NULL,
+
 
     imdb_id VARCHAR(255),
     UNIQUE (tmdb_id, media_type_id)
@@ -165,21 +169,30 @@ CREATE TABLE IF NOT EXISTS media_seasons (
 -- media ratings
 CREATE TABLE IF NOT EXISTS media_ratings (
     media_id INTEGER NOT NULL,
-    data_source_id INTEGER NOT NULL REFERENCES data_sources (id),
-    score DECIMAL(5,2) NOT NULL,
-    original_score DECIMAL(5,2) NOT NULL,
-    vote_count INTEGER,
-    PRIMARY KEY (media_id, data_source_id)
+    rating_provider VARCHAR(50) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    critic_score DECIMAL(5,2),
+    critic_score_original DECIMAL(5,2),
+    critic_rating_count INTEGER,
+    user_score DECIMAL(5,2),
+    user_score_original DECIMAL(5,2),
+    user_rating_count INTEGER,
+    PRIMARY KEY (media_id, rating_provider)
 );
 
 -- season ratings
 CREATE TABLE IF NOT EXISTS media_season_ratings (
-    media_season_id INTEGER NOT NULL REFERENCES media_seasons (id) ON DELETE CASCADE,
-    data_source_id INTEGER NOT NULL REFERENCES data_sources (id),
-    score DECIMAL(5,2) NOT NULL,
-    original_score DECIMAL(5,2) NOT NULL,
-    vote_count INTEGER,
-    PRIMARY KEY (media_season_id, data_source_id)
+    media_id INTEGER NOT NULL,
+    rating_provider VARCHAR(50) NOT NULL,
+    season_number INTEGER NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    critic_score DECIMAL(5,2),
+    critic_score_original DECIMAL(5,2),
+    critic_rating_count INTEGER,
+    user_score DECIMAL(5,2),
+    user_score_original DECIMAL(5,2),
+    user_rating_count INTEGER,
+    PRIMARY KEY (media_id, rating_provider, season_number)
 );
 
 -- streaming providers
@@ -437,7 +450,7 @@ CREATE INDEX IF NOT EXISTS tv_filter_idx ON tv (in_production, tv_type);
 CREATE INDEX IF NOT EXISTS media_collections_media_id_idx ON media_collections (media_id);
 CREATE INDEX IF NOT EXISTS media_seasons_media_id_idx ON media_seasons (media_id);
 CREATE INDEX IF NOT EXISTS media_ratings_media_id_idx ON media_ratings (media_id);
-CREATE INDEX IF NOT EXISTS media_season_ratings_media_season_id_idx ON media_season_ratings (media_season_id);
+CREATE INDEX IF NOT EXISTS media_season_ratings_media_id_idx ON media_season_ratings (media_id);
 CREATE INDEX IF NOT EXISTS media_streaming_providers_media_id_idx ON media_streaming_providers (media_id);
 
 -- initial data
@@ -450,5 +463,9 @@ ON CONFLICT (name) DO NOTHING;
 INSERT INTO data_sources (id, name)
 VALUES
     (1, 'tmdb_daily'),
-    (2, 'tmdb_details')
+    (2, 'tmdb_details'),
+    (3, 'tv_tropes_tags'),
+    (4, 'imdb_ratings'),
+    (5, 'metacritic_ratings'),
+    (6, 'rotten_tomatoes_ratings')
 ON CONFLICT (name) DO NOTHING;

@@ -1,7 +1,7 @@
-import {sleep} from "../utils/helpers";
-import {pool} from "../db/db";
-import {DataSource, DataSourceConfig, DataSourceForImport, DataSourceForMedia} from "./dataSource";
-import {AxiosError} from "axios";
+import { sleep } from '../utils/helpers'
+import { pool } from '../db/db'
+import { DataSource, DataSourceConfigForMedia, DataSourceForMedia, MediaData } from './dataSource'
+import { AxiosError } from 'axios'
 
 export const processDataSource = async (
   dataSource: DataSource,
@@ -11,26 +11,36 @@ export const processDataSource = async (
     try {
       if (dataSource instanceof DataSourceForMedia) {
         // Get the next batch of entries that need to be processed for this data source
-        const batchSize = dataSourceConfig.batchSize;
+        const { batchSize, usesExistingMedia } = dataSourceConfig as DataSourceConfigForMedia
         const query = `
-          SELECT daily_media.tmdb_id, daily_media.media_type_id
+          SELECT
+            daily_media.tmdb_id,
+            daily_media.media_type_id,
+            media.id,
+            media.imdb_id,
+            media.release_year,
+            media.titles_dashed,
+            media.titles_underscored,
+            media.titles_pascal_cased,
+            tv.number_of_seasons
           FROM daily_media
           LEFT JOIN media ON media.tmdb_id = daily_media.tmdb_id
+          LEFT JOIN tv ON tv.id = media.id
           LEFT JOIN data_sources_for_media
             ON data_sources_for_media.tmdb_id = media.tmdb_id
             AND data_sources_for_media.media_type_id = media.media_type_id
             AND data_sources_for_media.data_source_id = (SELECT id FROM data_sources WHERE name = '${dataSourceConfig.name}')
           WHERE (
-            media.id IS NULL
-            OR data_sources_for_media.last_successful_attempt_at IS NULL
+            data_sources_for_media.last_successful_attempt_at IS NULL
             OR now() - data_sources_for_media.last_successful_attempt_at >= '60 minutes'::interval
           ) AND (
-            data_sources_for_media.data_status IS NULL
+            media.id IS ${usesExistingMedia ? 'NOT NULL' : 'NULL'}
+            OR data_sources_for_media.data_status IS NULL
             OR data_sources_for_media.data_status NOT IN ('ignore')
           )
           ORDER BY 
             CASE 
-                WHEN media.id IS NULL THEN 0 
+                WHEN media.id IS ${usesExistingMedia ? 'NOT NULL' : 'NULL'} THEN 0 
                 ELSE 1 
             END, 
             daily_media.popularity DESC, 
@@ -48,13 +58,11 @@ export const processDataSource = async (
 
         // Process each entry in parallel
         await Promise.all(
-          rows.map(async (dataSourceRow: { tmdb_id: number, media_type_id: number }) => {
-            const tmdbId = dataSourceRow.tmdb_id
-            const mediaTypeId = dataSourceRow.media_type_id
+          rows.map(async (dataSourceRow: MediaData) => {
             try {
-              await dataSource.process(tmdbId, mediaTypeId);
+              await dataSource.process(dataSourceRow)
             } catch (error) {
-              dataSource.updateStatus({ tmdbId, mediaTypeId, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
+              dataSource.updateStatus({ tmdbId: dataSourceRow.tmdb_id, mediaTypeId: dataSourceRow.media_type_id, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
               throw error
             }
           })
@@ -73,7 +81,7 @@ export const processDataSource = async (
       }
     } catch (error) {
       if (error instanceof AxiosError) {
-        if (error.response && error.response.status === 403) {
+        if (error.response && [403, 503].includes(error.response.status)) {
           // handle rate limit errors by waiting for a configured time
           console.log(`Rate limit reached for ${dataSourceConfig.name}, waiting for ${dataSourceConfig.rateLimitDelaySeconds} seconds`);
           await sleep(dataSourceConfig.rateLimitDelaySeconds * 1000);

@@ -28,7 +28,7 @@ const filterAlternativeTitles = (titles: AlternativeTitle[]): string[] => {
 }
 
 export const extractTitles = (titles: string[]): ExtractedTitles => {
-    return titles.reduce<ExtractedTitles>((result, title) => {
+    const extractedTitles = titles.reduce<ExtractedTitles>((result, title) => {
         const title_dashed = toDashed(title)
         const title_underscored = title_dashed.replace(/-/g, '_')
         const title_pascal_cased = toPascalCase(title_dashed)
@@ -52,6 +52,11 @@ export const extractTitles = (titles: string[]): ExtractedTitles => {
         titles_underscored: [],
         titles_pascal_cased: [],
     })
+    return {
+      titles_dashed: [...new Set(extractedTitles.titles_dashed)],
+      titles_underscored: [...new Set(extractedTitles.titles_underscored)],
+      titles_pascal_cased: [...new Set(extractedTitles.titles_pascal_cased)],
+    }
 }
 
 export const getTMDBMovieDetails = async (movieId: number): Promise<TMDBMovieDetails> => {
@@ -129,16 +134,21 @@ export const saveTMDBMovie = async (details: TMDBMovieDetails): Promise<number |
         release_date: details.release_date,
         release_year: details.year,
         popularity: details.popularity,
+        status: details.status,
         poster_path: details.poster_path,
         backdrop_path: details.backdrop_path,
-        status: details.status,
+
+        titles_dashed: details.titles_dashed,
+        titles_underscored: details.titles_underscored,
+        titles_pascal_cased: details.titles_pascal_cased,
         original_title: details.original_title,
         original_language_code: details.original_language,
         homepage: details.homepage,
-        adult: details.adult,
+        adult: details.adult || false,
         runtime: details.runtime,
         budget: details.budget,
         revenue: details.revenue,
+
         imdb_id: details.imdb_id,
         wikidata_id: details.external_ids?.wikidata_id,
         facebook_id: details.external_ids?.facebook_id,
@@ -173,7 +183,7 @@ export const saveTMDBTv = async (details: TMDBTvDetails): Promise<number | undef
       original_title: details.original_name,
       original_language_code: details.original_language,
       homepage: details.homepage,
-      adult: details.adult,
+      adult: details.adult || false,
 
       number_of_seasons: details.number_of_seasons || 1,
       number_of_episodes: details.number_of_episodes || 1,
@@ -565,7 +575,13 @@ export const saveTMDBStreamingProviders = async (mediaId?: number, watchProvider
         country_code: countryCode,
         display_priority: provider.display_priority,
       })),
-
+      ...(watchProviders.results[countryCode].free || []).map((provider) => ({
+        name: provider.provider_name,
+        type: 'free',
+        logo_path: provider.logo_path,
+        country_code: countryCode,
+        display_priority: provider.display_priority,
+      })),
     ]
   }, [])
 

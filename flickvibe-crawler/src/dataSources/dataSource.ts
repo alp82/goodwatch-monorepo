@@ -19,6 +19,7 @@ export interface DataSourceConfigForImport extends BaseDataSourceConfig {
 
 export interface DataSourceConfigForMedia extends BaseDataSourceConfig {
   classDefinition: new () => DataSourceForMedia
+  usesExistingMedia: boolean
 }
 
 export type DataSourceConfig = DataSourceConfigForImport | DataSourceConfigForMedia
@@ -103,29 +104,42 @@ export abstract class DataSourceForImport {
 
 }
 
+export interface MediaData {
+  tmdb_id: number
+  media_type_id: number
+  id?: number
+  imdb_id?: string
+  titles_dashed?: string[]
+  titles_underscored?: string[]
+  titles_pascal_cased?: string[]
+  release_year?: number
+  number_of_seasons?: number
+}
+
 export abstract class DataSourceForMedia {
-  async process(tmdbId: number, mediaTypeId: number) {
+  async process(mediaData: MediaData) {
+    const { tmdb_id, media_type_id } = mediaData
     const config = this.getConfig()
-    await this.updateStatus({ tmdbId, mediaTypeId, newStatus: 'running', retryCount: 0, timestamp: new Date(), success: false})
+    await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'running', retryCount: 0, timestamp: new Date(), success: false})
 
     // Fetch the data from the data source
-    if (mediaTypeId === 1) {
-      const data = await this.fetchMovieData(tmdbId);
+    if (media_type_id === 1) {
+      const data = await this.fetchMovieData(mediaData);
 
       // If there is no data, update the status to 'failed' and continue
       if (!data) {
-        await this.updateStatus({ tmdbId, mediaTypeId, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
+        await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
         return;
       }
 
       // Save the data in the database
       await this.storeMovieData(data);
     } else {
-      const data = await this.fetchTvData(tmdbId);
+      const data = await this.fetchTvData(mediaData);
 
       // If there is no data, update the status to 'failed' and continue
       if (!data) {
-        await this.updateStatus({ tmdbId, mediaTypeId, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
+        await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
         return;
       }
 
@@ -134,7 +148,7 @@ export abstract class DataSourceForMedia {
     }
 
     // Update the status to 'success'
-    await this.updateStatus({ tmdbId, mediaTypeId, newStatus: 'success', retryCount: 0, timestamp: new Date(), success: true})
+    await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'success', retryCount: 0, timestamp: new Date(), success: true})
 
     // Wait for the configured delay between requests
     await sleep(config.batchDelaySeconds * 1000);
@@ -189,8 +203,8 @@ export abstract class DataSourceForMedia {
   }
 
   abstract getConfig(): DataSourceConfigForMedia
-  abstract fetchMovieData(tmdbId: number): Promise<unknown>
-  abstract fetchTvData(tmdbId: number): Promise<unknown>
+  abstract fetchMovieData(mediaData: MediaData): Promise<unknown>
+  abstract fetchTvData(mediaData: MediaData): Promise<unknown>
   abstract storeMovieData(data: unknown): Promise<void>
   abstract storeTvData(data: unknown): Promise<void>
 

@@ -143,6 +143,7 @@ export interface ProviderData {
   buy: Provider[]
   rent: Provider[]
   ads: Provider[]
+  free: Provider[]
 }
 
 export interface Provider {
