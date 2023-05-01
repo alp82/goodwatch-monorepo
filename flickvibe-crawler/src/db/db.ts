@@ -1,7 +1,8 @@
 import * as dotenv from 'dotenv'
-import { Pool, QueryResult } from 'pg'
+import { DatabaseError, Pool, QueryResult } from 'pg'
 import {getCircularReplacer} from "../utils/helpers";
 import fs from "fs";
+import { AxiosError } from 'axios'
 
 dotenv.config()
 
@@ -199,16 +200,28 @@ const getDataType = (value: any): string => {
 }
 
 export const performTransaction = async (queries: Query[]): Promise<QueryResult[] | undefined> => {
-  const client = await pool.connect()
-  try {
-    await client.query('BEGIN')
-    const results = await Promise.all(queries.map((query) => client.query(query.text, query.params || [])))
-    await client.query('COMMIT')
-    return results
-  } catch (error) {
-    await client.query('ROLLBACK')
-    throw error
-  } finally {
-    client.release()
+  const maxRetries = 3
+  let retries = 0
+
+  while (true) {
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      const results = await Promise.all(queries.map((query) => client.query(query.text, query.params || [])))
+      await client.query('COMMIT')
+      return results
+    } catch (error) {
+      await client.query('ROLLBACK')
+      if (error instanceof DatabaseError && error.code === '40P01' && retries < maxRetries) {
+        const sleepTime = Math.pow(2, retries) * 1000;
+        console.warn(`Deadlock detected: retrying after ${sleepTime}ms`);
+        await new Promise(resolve => setTimeout(resolve, sleepTime));
+        retries++;
+      } else {
+        throw error;
+      }
+    } finally {
+      client.release()
+    }
   }
 }

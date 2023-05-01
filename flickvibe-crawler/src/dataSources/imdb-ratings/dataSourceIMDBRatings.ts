@@ -32,7 +32,7 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
       classDefinition: DataSourceIMDBRatings,
       updateIntervalMinutes: 60 * 48,
       retryIntervalSeconds: 10,
-      batchSize: 10,
+      batchSize: 20,
       batchDelaySeconds: 5,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
@@ -150,6 +150,12 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
         return {}
       }
     }
+
+    if (!url || !response?.data) {
+      console.log(`\tno imdb URL found for: ${id}`)
+      return {}
+    }
+
     const html = response?.data
     const $ = cheerio.load(html)
 
@@ -187,6 +193,12 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
         return {}
       }
     }
+
+    if (!response?.data) {
+      console.log(`\tno IMDb URL found for: ${id} (Season: ${season})`)
+      return {}
+    }
+
     const html = response?.data
     const $ = cheerio.load(html)
 

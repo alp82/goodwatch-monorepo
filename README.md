@@ -31,14 +31,7 @@ vercel deploy --prod
 ```
 data sources:
 
-tmdb_daily
-tmdb_details
 tmdb_people
-
-imdb_ratings
-metacritic_ratings
-rotten_tomatoes_ratings
-
 tvtropes_tags ??? 
 ```
 

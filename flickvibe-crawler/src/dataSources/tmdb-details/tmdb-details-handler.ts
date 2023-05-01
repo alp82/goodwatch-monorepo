@@ -7,7 +7,7 @@ import {
   AlternativeTitle,
   CastMovie,
   CastTv, ContentRatingResult, CrewMovie, CrewTv,
-  Genre, ProviderData, ReleaseDatesResult,
+  Genre, Provider, ProviderData, ReleaseDatesResult,
   TMDBCollection,
   TMDBMovieDetails,
   TMDBTvDetails, WatchProviders,
@@ -180,6 +180,10 @@ export const saveTMDBTv = async (details: TMDBTvDetails): Promise<number | undef
       poster_path: details.poster_path,
       backdrop_path: details.backdrop_path,
       status: details.status,
+
+      titles_dashed: details.titles_dashed,
+      titles_underscored: details.titles_underscored,
+      titles_pascal_cased: details.titles_pascal_cased,
       original_title: details.original_name,
       original_language_code: details.original_language,
       homepage: details.homepage,
@@ -358,7 +362,7 @@ export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)
     const peopleTmdbIds = (peopleResult?.all || []).map((row) => row.tmdb_id)
     const newPeopleNames = (peopleResult?.inserted || []).map((row) => row.name)
     if (newPeopleNames.length) {
-      console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
+      // console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
     }
 
     const filteredCast = castWithoutDuplicates.filter((person) => peopleTmdbIds.includes(person.id))
@@ -416,7 +420,7 @@ export const saveTMDBCrew = async (mediaId?: number, crew?: (CrewMovie | CrewTv)
     const peopleTmdbIds = (peopleResult?.all || []).map((row) => row.tmdb_id)
     const newPeopleNames = (peopleResult?.inserted || []).map((row) => row.name)
     if (newPeopleNames.length) {
-      console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
+      // console.log(`\tNew People added: ${newPeopleNames.join(', ')}`)
     }
 
     const filteredCrew = crewWithoutDuplicates.filter((person) => peopleTmdbIds.includes(person.id))
@@ -545,44 +549,24 @@ export const saveTMDBStreamingProviders = async (mediaId?: number, watchProvider
 
   const countryCodes = Object.keys(watchProviders.results)
   const flattenedProviders = countryCodes.reduce<FlattenedProviderData[]>((result, countryCode) => {
-    return [
-      ...result,
-      ...(watchProviders.results[countryCode].flatrate || []).map((provider) => ({
-        name: provider.provider_name,
-        type: 'flatrate',
-        logo_path: provider.logo_path,
-        country_code: countryCode,
-        display_priority: provider.display_priority,
-      })),
-      ...(watchProviders.results[countryCode].buy || []).map((provider) => ({
-        name: provider.provider_name,
-        type: 'buy',
-        logo_path: provider.logo_path,
-        country_code: countryCode,
-        display_priority: provider.display_priority,
-      })),
-      ...(watchProviders.results[countryCode].rent || []).map((provider) => ({
-        name: provider.provider_name,
-        type: 'rent',
-        logo_path: provider.logo_path,
-        country_code: countryCode,
-        display_priority: provider.display_priority,
-      })),
-      ...(watchProviders.results[countryCode].ads || []).map((provider) => ({
-        name: provider.provider_name,
-        type: 'ads',
-        logo_path: provider.logo_path,
-        country_code: countryCode,
-        display_priority: provider.display_priority,
-      })),
-      ...(watchProviders.results[countryCode].free || []).map((provider) => ({
-        name: provider.provider_name,
-        type: 'free',
-        logo_path: provider.logo_path,
-        country_code: countryCode,
-        display_priority: provider.display_priority,
-      })),
-    ]
+    const providerTypes = Object.keys(watchProviders.results[countryCode]);
+
+    return result.concat(
+      providerTypes.reduce((providers, type) => {
+        if (Array.isArray(watchProviders.results[countryCode][type as keyof ProviderData])) {
+          return providers.concat(
+            (watchProviders.results[countryCode][type as keyof ProviderData] as Provider[]).map((provider) => ({
+              name: provider.provider_name,
+              type: type,
+              logo_path: provider.logo_path,
+              country_code: countryCode,
+              display_priority: provider.display_priority,
+            })) as []
+          )
+        }
+        return providers
+      }, [])
+    )
   }, [])
 
   const uniqueProviders = flattenedProviders.filter((provider, index, providers) => {

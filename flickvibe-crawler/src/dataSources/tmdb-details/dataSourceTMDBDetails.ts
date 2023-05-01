@@ -30,7 +30,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       name: "tmdb_details",
       classDefinition: DataSourceTMDBDetails,
       updateIntervalMinutes: 60 * 24,
-      retryIntervalSeconds: 60,
+      retryIntervalSeconds: 30,
       batchSize: 100,
       batchDelaySeconds: 1,
       rateLimitDelaySeconds: 60,
