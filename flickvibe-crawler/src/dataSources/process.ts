@@ -31,12 +31,32 @@ export const processDataSource = async (
             AND data_sources_for_media.media_type_id = media.media_type_id
             AND data_sources_for_media.data_source_id = (SELECT id FROM data_sources WHERE name = '${dataSourceConfig.name}')
           WHERE (
-            data_sources_for_media.last_successful_attempt_at IS NULL
-            OR now() - data_sources_for_media.last_successful_attempt_at >= '60 minutes'::interval
+            -- Condition 1: select only rows that have a media row if "usesExistingMedia" is true
+            (${usesExistingMedia} AND media.id IS NOT NULL) OR
+            
+            -- Condition 2: prefer rows that do not exist in media if "usesExistingMedia" is false,
+            -- but use those in media if there is nothing new left in daily_media
+            (NOT ${usesExistingMedia} AND media.id IS NULL) OR
+            (
+              NOT ${usesExistingMedia} AND media.id IS NOT NULL AND
+              NOT EXISTS (
+                SELECT 1 FROM daily_media
+                WHERE daily_media.tmdb_id = media.tmdb_id AND
+                      daily_media.media_type_id = media.media_type_id
+              )
+            )
           ) AND (
-            media.id IS ${usesExistingMedia ? 'NOT NULL' : 'NULL'}
-            OR data_sources_for_media.data_status IS NULL
-            OR data_sources_for_media.data_status NOT IN ('ignore')
+            -- Condition 3: select all entries with last successful entry is too long in the past
+            data_sources_for_media.last_successful_attempt_at IS NULL OR
+            now() - data_sources_for_media.last_successful_attempt_at >= '${dataSourceConfig.updateIntervalMinutes} minutes'::interval
+          ) AND (
+            -- Condition 4: deprioritize entries the closer their last error has happened
+            data_sources_for_media.data_status NOT IN ('failed') OR
+            data_sources_for_media.last_attempt_at IS NULL OR
+            now() - data_sources_for_media.last_attempt_at >= '${dataSourceConfig.updateIntervalMinutes} minutes'::interval
+          ) AND (
+            data_sources_for_media.data_status IS NULL OR
+            data_sources_for_media.data_status NOT IN ('ignore')
           )
           ORDER BY 
             CASE 
@@ -83,7 +103,9 @@ export const processDataSource = async (
       if (error instanceof AxiosError) {
         if (isRateLimited(error)) {
           // handle rate limit errors by waiting for a configured time
-          console.log(`Rate limit reached for ${dataSourceConfig.name}, waiting for ${dataSourceConfig.rateLimitDelaySeconds} seconds`);
+          console.log(`----------------------------------------------------------------------------------------------------------------------`);
+          console.log(`!!! Rate limit reached for ${dataSourceConfig.name}, waiting for ${dataSourceConfig.rateLimitDelaySeconds} seconds !!!`);
+          console.log(`----------------------------------------------------------------------------------------------------------------------`);
           await sleep(dataSourceConfig.rateLimitDelaySeconds * 1000);
         } else {
           // handle connectivity errors by waiting for a configured time

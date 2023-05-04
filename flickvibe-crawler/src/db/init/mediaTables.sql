@@ -71,7 +71,6 @@ CREATE TABLE IF NOT EXISTS media (
     homepage TEXT,
     adult BOOLEAN NOT NULL,
 
-
     imdb_id VARCHAR(255),
     UNIQUE (tmdb_id, media_type_id)
 );

@@ -37,7 +37,7 @@ export class DataSourceMetacriticRatings extends DataSourceForMedia {
       updateIntervalMinutes: 60 * 48,
       retryIntervalSeconds: 10,
       batchSize: 20,
-      batchDelaySeconds: 5,
+      batchDelaySeconds: 3,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
     }

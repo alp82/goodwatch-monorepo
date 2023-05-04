@@ -60,7 +60,7 @@ export class DataSourceTMDBDaily extends DataSourceForImport {
   }
 
   async storeData(data: FetchedData): Promise<void> {
-    if (!data.movies && !data.tvShows) {
+    if (!data.movies.length && !data.tvShows.length) {
       return
     }
 
