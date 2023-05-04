@@ -3,7 +3,7 @@
 import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 import { userAgentHeader } from '../../utils/user-agent'
-import { sleep, tryRequests } from '../../utils/helpers'
+import { isRateLimited, sleep, tryRequests } from '../../utils/helpers'
 import { DataSourceConfigForMedia, DataSourceForMedia, MediaData } from '../dataSource'
 import { bulkUpsertData, upsertData } from '../../db/db'
 
@@ -140,10 +140,8 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
     try {
       response = await axios.get(url, userAgentHeader)
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response && [403, 503].includes(error.response.status)) {
-          throw error
-        }
+      if (isRateLimited(error)) {
+        throw error
       } else {
         console.error(error)
         console.log(`\tno IMDb URL found for: ${id}`)
@@ -183,10 +181,8 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
     try {
       response = await axios.get(url, userAgentHeader)
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response && [403, 503].includes(error.response.status)) {
-          throw error
-        }
+      if (isRateLimited(error)) {
+        throw error
       } else {
         console.error(error)
         console.log(`\tno IMDb URL found for: ${id} (Season: ${season})`)

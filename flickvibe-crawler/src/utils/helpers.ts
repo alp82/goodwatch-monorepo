@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 
 export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -44,7 +44,10 @@ export const tryRequests = async (urls: string[], options: AxiosRequestConfig): 
   try {
     response = await axios.get(url, options)
     return { url, response }
-  } catch (err) {
+  } catch (error) {
+    if (isRateLimited(error)) {
+      throw error
+    }
     if (nextUrls.length > 0) {
       try {
         return tryRequests(nextUrls, options)
@@ -56,4 +59,8 @@ export const tryRequests = async (urls: string[], options: AxiosRequestConfig): 
       return { url: undefined, response: undefined }
     }
   }
+}
+
+export const isRateLimited = (error: unknown): boolean => {
+  return !!(error instanceof AxiosError && error.response && [403, 429, 503].includes(error.response.status))
 }

@@ -1,9 +1,8 @@
 // inspired by https://github.com/uiii/web-scraper-with-nodejs-and-typescript/blob/article-2-the-crawler-part/index.ts
 
-import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 import { userAgentHeader } from '../../utils/user-agent'
-import { sleep, tryRequests } from '../../utils/helpers'
+import { tryRequests } from '../../utils/helpers'
 import { DataSourceConfigForMedia, DataSourceForMedia, MediaData } from '../dataSource'
 import { bulkUpsertData, upsertData } from '../../db/db'
 
@@ -13,6 +12,7 @@ export interface RottenTomatoesRatings {
   url?: string
   tomatometer?: string
   audienceScore?: string
+  seasonNumber?: number
 }
 
 export interface RottenTomatoesMovieRatings {
@@ -35,7 +35,7 @@ export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
       classDefinition: DataSourceRottenTomatoesRatings,
       updateIntervalMinutes: 60 * 48,
       retryIntervalSeconds: 10,
-      batchSize: 20,
+      batchSize: 30,
       batchDelaySeconds: 5,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
@@ -60,7 +60,10 @@ export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
       return {}
     }
     const ratings = await this.getTvShowRatings(titles_underscored)
-    const seasonRatings = await this.getTvShowSeasonsRatings(titles_underscored, number_of_seasons)
+    let seasonRatings: RottenTomatoesRatings[] = []
+    if (ratings.url) {
+      seasonRatings = await this.getTvShowSeasonsRatings(titles_underscored, number_of_seasons)
+    }
     return {
       mediaData,
       tv: ratings,
@@ -119,16 +122,19 @@ export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
   async storeTvSeasonsData(data: RottenTomatoesTvRatings): Promise<void> {
     if (!data.mediaData || !data.seasons?.[0]?.url) return
 
+    const seasonsWithData = data.seasons.filter((season) => season.url)
+    if (seasonsWithData.length === 0) return
+
     const tableName = 'media_season_ratings'
     const tableData = {
-      media_id: new Array(data.seasons.length).fill(data.mediaData.id),
-      rating_provider: new Array(data.seasons.length).fill('rotten-tomatoes'),
-      season_number: Array.from(data.seasons).map((season, index) => index + 1),
-      url: data.seasons.map((seasonRating, index) => seasonRating.url),
-      critic_score: data.seasons.map((seasonRating, index) => seasonRating.tomatometer ? parseFloat(seasonRating.tomatometer) : null),
-      critic_score_original: data.seasons.map((seasonRating, index) => seasonRating.tomatometer ? parseFloat(seasonRating.tomatometer) : null),
-      user_score: data.seasons.map((seasonRating, index) => seasonRating.audienceScore ? parseFloat(seasonRating.audienceScore) : null),
-      user_score_original: data.seasons.map((seasonRating, index) => seasonRating.audienceScore ? parseFloat(seasonRating.audienceScore) : null),
+      media_id: new Array(seasonsWithData.length).fill(data.mediaData.id),
+      rating_provider: new Array(seasonsWithData.length).fill('rotten-tomatoes'),
+      season_number: Array.from(seasonsWithData).map((seasonRating) => seasonRating.seasonNumber),
+      url: seasonsWithData.map((seasonRating, index) => seasonRating.url),
+      critic_score: seasonsWithData.map((seasonRating, index) => seasonRating.tomatometer ? parseFloat(seasonRating.tomatometer) : null),
+      critic_score_original: seasonsWithData.map((seasonRating, index) => seasonRating.tomatometer ? parseFloat(seasonRating.tomatometer) : null),
+      user_score: seasonsWithData.map((seasonRating, index) => seasonRating.audienceScore ? parseFloat(seasonRating.audienceScore) : null),
+      user_score_original: seasonsWithData.map((seasonRating, index) => seasonRating.audienceScore ? parseFloat(seasonRating.audienceScore) : null),
     }
     try {
       const result = await bulkUpsertData(
@@ -175,6 +181,7 @@ export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
       url,
       tomatometer,
       audienceScore,
+      seasonNumber: season,
     }
   }
 

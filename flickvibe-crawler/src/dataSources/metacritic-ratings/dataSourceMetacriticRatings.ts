@@ -13,6 +13,7 @@ export interface MetacriticRatings {
   url?: string
   metaScore?: string
   userScore?: string
+  seasonNumber?: number
 }
 
 export interface MetacriticMovieRatings {
@@ -60,11 +61,14 @@ export class DataSourceMetacriticRatings extends DataSourceForMedia {
       return {}
     }
     const ratings = await this.getTvShowRatings(titles_dashed, release_year)
-    const seasonRatings = await this.getTvShowSeasonsRatings(titles_dashed, release_year, number_of_seasons)
+    let seasonRatings: MetacriticRatings[] = []
+    if (ratings.url) {
+      seasonRatings = await this.getTvShowSeasonsRatings(titles_dashed, release_year, number_of_seasons)
+    }
     return {
       mediaData,
       tv: ratings,
-      seasons: seasonRatings,
+      seasons: seasonRatings || [],
     }
   }
 
@@ -117,18 +121,21 @@ export class DataSourceMetacriticRatings extends DataSourceForMedia {
   }
 
   async storeTvSeasonsData(data: MetacriticTvRatings): Promise<void> {
-    if (!data.mediaData || !data.seasons?.[0]?.url) return
+    if (!data.mediaData || !data.seasons?.length) return
+
+    const seasonsWithData = data.seasons.filter((season) => season.url)
+    if (seasonsWithData.length === 0) return
 
     const tableName = 'media_season_ratings'
     const tableData = {
-      media_id: new Array(data.seasons.length).fill(data.mediaData.id),
-      rating_provider: new Array(data.seasons.length).fill('metacritic'),
-      season_number: Array.from(data.seasons).map((season, index) => index + 1),
-      url: data.seasons.map((seasonRating, index) => seasonRating.url),
-      critic_score: data.seasons.map((seasonRating, index) => seasonRating.metaScore ? parseFloat(seasonRating.metaScore) : null),
-      critic_score_original: data.seasons.map((seasonRating, index) => seasonRating.metaScore ? parseFloat(seasonRating.metaScore) : null),
-      user_score: data.seasons.map((seasonRating, index) => seasonRating.userScore ? parseFloat(seasonRating.userScore) * 10 : null),
-      user_score_original: data.seasons.map((seasonRating, index) => seasonRating.userScore ? parseFloat(seasonRating.userScore) : null),
+      media_id: new Array(seasonsWithData.length).fill(data.mediaData.id),
+      rating_provider: new Array(seasonsWithData.length).fill('metacritic'),
+      season_number: Array.from(seasonsWithData).map((seasonRating) => seasonRating.seasonNumber),
+      url: seasonsWithData.map((seasonRating, index) => seasonRating.url),
+      critic_score: seasonsWithData.map((seasonRating, index) => seasonRating.metaScore ? parseFloat(seasonRating.metaScore) : null),
+      critic_score_original: seasonsWithData.map((seasonRating, index) => seasonRating.metaScore ? parseFloat(seasonRating.metaScore) : null),
+      user_score: seasonsWithData.map((seasonRating, index) => seasonRating.userScore ? parseFloat(seasonRating.userScore) * 10 : null),
+      user_score_original: seasonsWithData.map((seasonRating, index) => seasonRating.userScore ? parseFloat(seasonRating.userScore) : null),
     }
     try {
       const result = await bulkUpsertData(
@@ -169,6 +176,7 @@ export class DataSourceMetacriticRatings extends DataSourceForMedia {
       url,
       metaScore,
       userScore,
+      seasonNumber: season,
     }
   }
 

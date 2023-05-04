@@ -1,4 +1,4 @@
-import { sleep } from '../utils/helpers'
+import { isRateLimited, sleep } from '../utils/helpers'
 import { pool } from '../db/db'
 import { DataSource, DataSourceConfigForMedia, DataSourceForMedia, MediaData } from './dataSource'
 import { AxiosError } from 'axios'
@@ -81,7 +81,7 @@ export const processDataSource = async (
       }
     } catch (error) {
       if (error instanceof AxiosError) {
-        if (error.response && [403, 503].includes(error.response.status)) {
+        if (isRateLimited(error)) {
           // handle rate limit errors by waiting for a configured time
           console.log(`Rate limit reached for ${dataSourceConfig.name}, waiting for ${dataSourceConfig.rateLimitDelaySeconds} seconds`);
           await sleep(dataSourceConfig.rateLimitDelaySeconds * 1000);
