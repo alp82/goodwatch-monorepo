@@ -35,8 +35,8 @@ export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
       classDefinition: DataSourceRottenTomatoesRatings,
       updateIntervalMinutes: 60 * 48,
       retryIntervalSeconds: 10,
-      batchSize: 20,
-      batchDelaySeconds: 3,
+      batchSize: 1,
+      batchDelaySeconds: 1,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
     }

@@ -31,7 +31,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       classDefinition: DataSourceTMDBDetails,
       updateIntervalMinutes: 60 * 24,
       retryIntervalSeconds: 30,
-      batchSize: 100,
+      batchSize: 1,
       batchDelaySeconds: 1,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: false,
@@ -66,8 +66,10 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBCollection(mediaId, data.collection),
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
-      saveTMDBCast(mediaId, data.details.credits.cast),
-      saveTMDBCrew(mediaId, data.details.credits.crew),
+      (async () => {
+        await saveTMDBCast(mediaId, data.details.credits.cast)
+        await saveTMDBCrew(mediaId, data.details.credits.crew)
+      })(),
       saveTMDBCertifications(mediaId, data.details.release_dates.results),
       saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
       // TODO images
@@ -88,9 +90,11 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     const promises: Promise<unknown>[] = [
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
-      saveTMDBCast(mediaId, data.details.aggregate_credits.cast),
-      saveTMDBCrew(mediaId, data.details.aggregate_credits.crew),
-      // TODO creator / created_by
+      (async () => {
+        await saveTMDBCast(mediaId, data.details.aggregate_credits.cast)
+        await saveTMDBCrew(mediaId, data.details.aggregate_credits.crew)
+        // TODO creator / created_by
+      })(),
       saveTMDBCertifications(mediaId, data.details.content_ratings.results),
       saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
       // data.details.images

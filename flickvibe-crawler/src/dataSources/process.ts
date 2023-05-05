@@ -63,9 +63,13 @@ export const processDataSource = async (
                 WHEN media.id IS ${usesExistingMedia ? 'NOT NULL' : 'NULL'} THEN 0 
                 ELSE 1 
             END, 
-            daily_media.popularity DESC, 
+            CASE 
+                WHEN data_sources_for_media.data_status NOT IN ('failed', 'ignore') THEN 0 
+                ELSE 1 
+            END, 
             COALESCE(data_sources_for_media.last_successful_attempt_at, '1970-01-01'::timestamp) ASC, 
-            COALESCE(data_sources_for_media.last_attempt_at, '1970-01-01'::timestamp) ASC
+            COALESCE(data_sources_for_media.last_attempt_at, '1970-01-01'::timestamp) ASC,
+            daily_media.popularity DESC
           LIMIT $1;
         `
         const { rows } = await pool.query(query.trim(), [batchSize]);
@@ -78,7 +82,7 @@ export const processDataSource = async (
 
         // Process each entry in parallel
         await Promise.all(
-          rows.map(async (dataSourceRow: MediaData) => {
+          rows.map(async (dataSourceRow: MediaData, index) => {
             try {
               await dataSource.process(dataSourceRow)
             } catch (error) {

@@ -32,8 +32,8 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
       classDefinition: DataSourceIMDBRatings,
       updateIntervalMinutes: 60 * 48,
       retryIntervalSeconds: 10,
-      batchSize: 20,
-      batchDelaySeconds: 5,
+      batchSize: 1,
+      batchDelaySeconds: 1,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
     }

@@ -51,35 +51,35 @@ WITH search_query AS (
   SELECT 'carnage' AS query
 )
 SELECT 
-  movie_details.*, 
+  media.*, 
   (
 	COALESCE(rank_title, 0) * 10 + 
 	COALESCE(rank_alternative_titles, 5) +
 	COALESCE(rank_tagline, 0) * 4 + 
-	COALESCE(rank_description, 0) * 2 +
+	COALESCE(rank_synopsis, 0) * 2 +
 	1 / (1 + exp(-10*(COALESCE(similarity, 0)-0.5))) * log10(popularity + 1)
   ) weighted_rank
 FROM 
-  movie_details
+  media
 LEFT JOIN (
   SELECT 
-    id, 
+    media.id, 
     ts_rank_cd(to_tsvector('english', unaccent(original_title)), plainto_tsquery('english', query)) as rank_title, 
     ts_rank_cd(to_tsvector('english', unaccent(tagline)), plainto_tsquery('english', query)) as rank_tagline, 
-    ts_rank_cd(to_tsvector('english', unaccent(overview)), plainto_tsquery('english', query)) as rank_description,
-	ts_rank_cd(to_tsvector('english', unaccent(string_agg(DISTINCT alternative_titles.alternative_title::text, ' '))), plainto_tsquery('english', query)) as rank_alternative_titles,
+    ts_rank_cd(to_tsvector('english', unaccent(synopsis)), plainto_tsquery('english', query)) as rank_synopsis,
+    ts_rank_cd(to_tsvector('english', unaccent(string_agg(DISTINCT alternative_titles.title::text, ' '))), plainto_tsquery('english', query)) as rank_alternative_titles,
     word_similarity(query, original_title) as similarity
   FROM 
-    movie_details,
-	search_query,
-	LATERAL (SELECT jsonb_array_elements(alternative_titles->'titles')->>'title'::text AS alternative_title) AS alternative_titles
-  GROUP BY id, query
-) as ranks ON movie_details.id = ranks.id
+    media
+    LEFT JOIN media_alternative_titles AS alternative_titles ON alternative_titles.media_id = media.id,
+	search_query
+  GROUP BY media.id, query
+) as ranks ON media.id = ranks.id
 WHERE 
   ranks.rank_title > 0 OR 
   ranks.rank_alternative_titles > 0 OR
   ranks.rank_tagline > 0 OR 
-  ranks.rank_description > 0 OR 
+  ranks.rank_synopsis > 0 OR 
   similarity > 0
 ORDER BY 
   weighted_rank DESC NULLS LAST 

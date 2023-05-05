@@ -244,6 +244,7 @@ export const saveTMDBCollection = async (mediaId?: number, collection?: TMDBColl
         if (partsResult?.rows.length) {
           console.log(`\tCollection '${collection.name}' added with ${partsResult?.rows.length} movies`)
         }
+        console.log('\tCOLLECTION')
         return { rows: partsResult?.rows, collection }
       } catch (error) {
         console.error(error)
@@ -278,13 +279,15 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
         genre_id: genreIds,
       }
       try {
-        return await bulkUpsertData(
+        const result = await bulkUpsertData(
           'media_genres',
           mediaGenresData,
           {},
           ['media_id', 'genre_id'],
           ['media_id', 'genre_id'],
         )
+        console.log('\tGENRES')
+        return result
       } catch (error) {
         console.error(error)
       }
@@ -310,13 +313,15 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
     language_code: languageCodes,
   }
   try {
-    return await bulkUpsertData(
+    const result = await bulkUpsertData(
       'media_alternative_titles',
       mediaAlternativeTitlesData,
       {},
       ['media_id', 'title', 'type', 'language_code'],
       ['media_id', 'title', 'type', 'language_code'],
     )
+    console.log('\tALT TITLES')
+    return result
   } catch (error) {
     console.error(error)
   }
@@ -377,13 +382,15 @@ export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)
       display_priority: filteredCast.map((person) => person.order),
     }
     try {
-      return await bulkUpsertData(
+      const result = await bulkUpsertData(
         'media_cast',
         mediaCastData,
         {},
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )
+      console.log('\tCAST')
+      return result
     } catch (error) {
       console.error(error)
     }
@@ -436,13 +443,15 @@ export const saveTMDBCrew = async (mediaId?: number, crew?: (CrewMovie | CrewTv)
       display_priority: filteredCrew.map((person) => person.popularity),
     }
     try {
-      return await bulkUpsertData(
+      const result = await bulkUpsertData(
         'media_crew',
         mediaCrewData,
         {},
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )
+      console.log('\tCREW')
+      return result
     } catch (error) {
       console.error(error)
     }
@@ -506,13 +515,15 @@ export const saveTMDBCertifications = async (mediaId?: number, certifications?: 
     note: certificationData.map((certification) => certification.note),
   }
   try {
-    return await bulkUpsertData(
+    const result = await bulkUpsertData(
       'media_certifications',
       mediaCertificationsData,
       { release_date: 'date' },
       ['media_id', 'certification', 'country_code', 'language_code', 'release_type'],
       ['media_id', 'certification', 'country_code', 'language_code', 'release_type'],
     )
+    console.log('\tCERTIFICATIONS')
+    return result
   } catch (error) {
     console.error(error)
   }
@@ -603,13 +614,15 @@ export const saveTMDBStreamingProviders = async (mediaId?: number, watchProvider
     }
 
     try {
-      return await bulkUpsertData(
+      const result = await bulkUpsertData(
         'media_streaming_providers',
         mediaProvidersData,
         {},
         ['media_id', 'streaming_provider_id', 'streaming_type', 'country_code'],
         ['media_id', 'streaming_provider_id', 'streaming_type', 'country_code'],
       )
+      console.log('\tSTREAMING')
+      return result
     } catch (error) {
       console.error(error)
     }

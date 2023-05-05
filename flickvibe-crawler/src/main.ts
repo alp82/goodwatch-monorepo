@@ -7,7 +7,7 @@ import { DataSourceRottenTomatoesRatings } from './dataSources/rotten-tomatoes-r
 
 export const runMainDataFetchingLoop = async () => {
   await Promise.all([
-    processDataSource(new DataSourceTMDBDaily()),
+    // processDataSource(new DataSourceTMDBDaily()),
     processDataSource(new DataSourceTMDBDetails()),
     processDataSource(new DataSourceIMDBRatings()),
     processDataSource(new DataSourceMetacriticRatings()),
