@@ -7,7 +7,7 @@ See it running here: https://www.flickvibe.com/
 1. Checkout this repository
 2. Register for [TMDB API Key](https://developers.themoviedb.org/3/getting-started/introduction)
 3. Create [supabase account](https://app.supabase.com/)
-4. Copy `.env.example` to `.env` and fill out the required secrets.
+4. Copy `.env.example` to `.env` from `/flickvibe-webapp` and fill out the required secrets.
 
 You are now ready to run it locally:
 ```shell
@@ -32,7 +32,7 @@ vercel deploy --prod
 data sources:
 
 tmdb_people
-tvtropes_tags ??? 
+tvtropes_tags ???
 ```
 
 ```
@@ -50,39 +50,39 @@ CREATE INDEX movie_details_search_idx ON movie_details USING GIN (to_tsvector(mo
 WITH search_query AS (
   SELECT 'carnage' AS query
 )
-SELECT 
-  media.*, 
+SELECT
+  media.*,
   (
-	COALESCE(rank_title, 0) * 10 + 
+	COALESCE(rank_title, 0) * 10 +
 	COALESCE(rank_alternative_titles, 5) +
-	COALESCE(rank_tagline, 0) * 4 + 
+	COALESCE(rank_tagline, 0) * 4 +
 	COALESCE(rank_synopsis, 0) * 2 +
 	1 / (1 + exp(-10*(COALESCE(similarity, 0)-0.5))) * log10(popularity + 1)
   ) weighted_rank
-FROM 
+FROM
   media
 LEFT JOIN (
-  SELECT 
-    media.id, 
-    ts_rank_cd(to_tsvector('english', unaccent(original_title)), plainto_tsquery('english', query)) as rank_title, 
-    ts_rank_cd(to_tsvector('english', unaccent(tagline)), plainto_tsquery('english', query)) as rank_tagline, 
+  SELECT
+    media.id,
+    ts_rank_cd(to_tsvector('english', unaccent(original_title)), plainto_tsquery('english', query)) as rank_title,
+    ts_rank_cd(to_tsvector('english', unaccent(tagline)), plainto_tsquery('english', query)) as rank_tagline,
     ts_rank_cd(to_tsvector('english', unaccent(synopsis)), plainto_tsquery('english', query)) as rank_synopsis,
     ts_rank_cd(to_tsvector('english', unaccent(string_agg(DISTINCT alternative_titles.title::text, ' '))), plainto_tsquery('english', query)) as rank_alternative_titles,
     word_similarity(query, original_title) as similarity
-  FROM 
+  FROM
     media
     LEFT JOIN media_alternative_titles AS alternative_titles ON alternative_titles.media_id = media.id,
 	search_query
   GROUP BY media.id, query
 ) as ranks ON media.id = ranks.id
-WHERE 
-  ranks.rank_title > 0 OR 
+WHERE
+  ranks.rank_title > 0 OR
   ranks.rank_alternative_titles > 0 OR
-  ranks.rank_tagline > 0 OR 
-  ranks.rank_synopsis > 0 OR 
+  ranks.rank_tagline > 0 OR
+  ranks.rank_synopsis > 0 OR
   similarity > 0
-ORDER BY 
-  weighted_rank DESC NULLS LAST 
+ORDER BY
+  weighted_rank DESC NULLS LAST
 LIMIT 20;
 ```
 
