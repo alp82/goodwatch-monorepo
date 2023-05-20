@@ -87,6 +87,8 @@ LIMIT 20;
 ```
 
 ```
+fix certification longer than 50 chars: 12 éven aluliak számára a megtekintése nagykorú felügyelete mellett ajánlott
+
 SELECT * FROM movie_details WHERE (ratings->'imdbRatings'->>'score')::float > 0 ORDER BY ratings->'imdbRatings'->>'score' DESC
 
 SELECT * FROM movie_details WHERE (tvtropes->>'url') is null ORDER BY id ASC
@@ -134,6 +136,10 @@ explore map
 authentication and user profiles
 
 connect accounts
+
+notification when streaming is available
+
+alerts for new search results
 
 personalized recommendation engine:
 * criticker
