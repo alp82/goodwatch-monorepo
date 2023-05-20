@@ -70,10 +70,11 @@ export default function Index() {
         </div>
       </div>
       <h2 className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
+      {/* Set a height so page doesn't jumps when card heights change */}
+      <div className='lg:h-64'>
       {isTrendingMovieLoading ? <CardLoader /> :
       trendingMovieResults.length > 0 && <div className="flex flex-wrap gap-4">
-        {trendingMovieResults.slice(0, numberOfItemsToShow).map((movie: PopularMovie) => {
-          return (
+        {trendingMovieResults.slice(0, numberOfItemsToShow).map((movie: PopularMovie) => 
             <a key={movie.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/movie/${movie.id}-${titleToDashed(movie.title)}`}>
               <div>
                 <img
@@ -87,21 +88,21 @@ export default function Index() {
                 <span className="text-sm font-bold">{movie.title}</span>
               </div>
             </a>
-          )
-        })}
+        )}
         <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=movie">
           <FilmIcon className="w-16 h-16" />
           <div className="my-2 px-2">
             <span className="font-bold text-indigo-400">Discover more Movies</span>
           </div>
         </a>
-      </div>}
+      </div>
+      }
+      </div>
       <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
       {isTrendingTVLoading ? <CardLoader /> :
       trendingTVResults.length > 0 && <div>
         <div className="flex flex-wrap gap-4">
-          {trendingTVResults.slice(0, numberOfItemsToShow).map((tv: PopularTV) => {
-            return (
+          {trendingTVResults.slice(0, numberOfItemsToShow).map((tv: PopularTV) =>
               <a key={tv.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/tv/${tv.id}-${titleToDashed(tv.name)}`}>
                 <div>
                   <img
@@ -116,7 +117,7 @@ export default function Index() {
                 </div>
               </a>
             )
-          })}
+          }
           <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=tv">
             <TvIcon className="w-16 h-16" />
             <div className="my-2 px-2">
@@ -124,7 +125,8 @@ export default function Index() {
             </div>
           </a>
         </div>
-      </div>}
+      </div>
+      }
     </div>
   );
 }
