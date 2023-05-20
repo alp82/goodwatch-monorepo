@@ -1,12 +1,13 @@
-import { MetaFunction } from '@remix-run/node'
+import type { MetaFunction } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
-import React, { useEffect } from 'react'
-import { PopularMovie, PopularTV } from '~/server/popular.server'
+import { useEffect } from 'react'
+import type { PopularMovie, PopularTV } from '~/server/popular.server'
 import { titleToDashed } from '~/utils/helpers'
 import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
-import { FilmIcon, RocketLaunchIcon, TvIcon } from '@heroicons/react/24/solid'
+import { FilmIcon, TvIcon } from '@heroicons/react/24/solid'
+import { CardLoader } from '~/ui/CardLoader'
 
 export const meta: MetaFunction = () => {
   return {
@@ -43,7 +44,9 @@ export default function Index() {
     )
   }, [])
 
+  const isTrendingMovieLoading = fetcherMovie.state === 'submitting';
   const trendingMovieResults = fetcherMovie.data?.trending?.results || []
+  const isTrendingTVLoading = fetcherTV.state === 'submitting';
   const trendingTVResults = fetcherTV.data?.trending?.results || []
 
   return (
@@ -67,7 +70,8 @@ export default function Index() {
         </div>
       </div>
       <h2 className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
-      {trendingMovieResults.length > 0 && <div className="flex flex-wrap gap-4">
+      {isTrendingMovieLoading ? <CardLoader /> :
+      trendingMovieResults.length > 0 && <div className="flex flex-wrap gap-4">
         {trendingMovieResults.slice(0, numberOfItemsToShow).map((movie: PopularMovie) => {
           return (
             <a key={movie.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/movie/${movie.id}-${titleToDashed(movie.title)}`}>
@@ -93,7 +97,8 @@ export default function Index() {
         </a>
       </div>}
       <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
-      {trendingTVResults.length > 0 && <div>
+      {isTrendingTVLoading ? <CardLoader /> :
+      trendingTVResults.length > 0 && <div>
         <div className="flex flex-wrap gap-4">
           {trendingTVResults.slice(0, numberOfItemsToShow).map((tv: PopularTV) => {
             return (
