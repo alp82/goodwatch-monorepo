@@ -14,6 +14,7 @@ import {
 } from '../../types/details.types'
 import { userAgentHeader } from '../../utils/user-agent'
 import { QueryResult } from 'pg'
+import fs from 'fs'
 
 interface ExtractedTitles {
     titles_dashed: string[]
@@ -244,7 +245,7 @@ export const saveTMDBCollection = async (mediaId?: number, collection?: TMDBColl
         if (partsResult?.rows.length) {
           console.log(`\tCollection '${collection.name}' added with ${partsResult?.rows.length} movies`)
         }
-        console.log('\tCOLLECTION')
+        // console.log('\tCOLLECTION')
         return { rows: partsResult?.rows, collection }
       } catch (error) {
         console.error(error)
@@ -286,7 +287,7 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
           ['media_id', 'genre_id'],
           ['media_id', 'genre_id'],
         )
-        console.log('\tGENRES')
+        // console.log('\tGENRES')
         return result
       } catch (error) {
         console.error(error)
@@ -320,7 +321,7 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
       ['media_id', 'title', 'type', 'language_code'],
       ['media_id', 'title', 'type', 'language_code'],
     )
-    console.log('\tALT TITLES')
+    // console.log('\tALT TITLES')
     return result
   } catch (error) {
     console.error(error)
@@ -389,7 +390,7 @@ export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )
-      console.log('\tCAST')
+      // console.log('\tCAST')
       return result
     } catch (error) {
       console.error(error)
@@ -450,7 +451,7 @@ export const saveTMDBCrew = async (mediaId?: number, crew?: (CrewMovie | CrewTv)
         ['media_id', 'person_id'],
         ['media_id', 'person_id'],
       )
-      console.log('\tCREW')
+      // console.log('\tCREW')
       return result
     } catch (error) {
       console.error(error)
@@ -507,7 +508,7 @@ export const saveTMDBCertifications = async (mediaId?: number, certifications?: 
 
   const mediaCertificationsData = {
     media_id: new Array(certificationData.length).fill(mediaId),
-    certification: certificationData.map((certification) => certification.certification),
+    certification: certificationData.map((certification) => convertCertificationRating(certification.certification)),
     country_code: certificationData.map((certification) => certification.country_code),
     language_code: certificationData.map((certification) => certification.language_code),
     release_type: certificationData.map((certification) => certification.release_type),
@@ -522,7 +523,7 @@ export const saveTMDBCertifications = async (mediaId?: number, certifications?: 
       ['media_id', 'certification', 'country_code', 'language_code', 'release_type'],
       ['media_id', 'certification', 'country_code', 'language_code', 'release_type'],
     )
-    console.log('\tCERTIFICATIONS')
+    // console.log('\tCERTIFICATIONS')
     return result
   } catch (error) {
     console.error(error)
@@ -545,6 +546,81 @@ const convertTMDBReleaseTypeId = (releaseTypeId: number): string => {
   } else {
     return 'Not specified'
   }
+}
+
+const convertCertificationRating = (tmdbInput: string | undefined) => {
+  /**
+   * TMDb certification ratings need some cleaning because they can contain non-standardized values
+   */
+  if (!tmdbInput) return 'GA'
+
+  const letters = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
+  const conversionMap = [
+    // general audience / unrestricted
+    { input: ' ', output: 'GA' },
+    { input: 'Genel İzleyici', output: 'GA' },
+    { input: 'Mládeži přistupný', output: 'GA' },
+    { input: '전체관람가', output: 'GA' },
+    { input: '普遍級', output: 'GA' },
+    { input: '전체', output: 'GA' },
+    { input: ' ท ทั่วไป ', output: 'GA' },
+    { input: 'ท', output: 'GA' },
+    { input: 'הותר לכל הגילאים', output: 'GA' },
+    { input: 'Unrestricted', output: 'GA' },
+
+    // invalid data
+    { input: 'Vertical Entertainment', output: '' },
+    { input: 'How to train your dragon: homecoming', output: '' },
+
+    // restricted
+    { input: '保護級', output: 'PG' },
+
+    // wrong case
+    ...[...Array(22).keys()].map((num => ( { input: `pg-${num.toString()}`, output: `PG-${num.toString()}` }))),
+
+    // prefixes or suffixes
+    ...letters.map((letter => ( { input: `เรท ${letter}`, output: letter }))),
+    ...[...Array(22).keys()].map((num => ( { input: `輔${num.toString()}`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `ฉ${num.toString()}`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `น ${num.toString()}`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `SAM ${num.toString()}`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `Category ${num.toString()}`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `I.M. - ${num.toString()}`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `${num.toString()} anos`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `${num.toString()}세 이상 관람가`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `${num.toString()}세관람가(청소년관람불가)`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `${num.toString()} éven aluliak számára nem ajánlott`, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `od ${num.toString()} lat `, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: `Från ${num.toString()} år `, output: num.toString() }))),
+    ...[...Array(22).keys()].map((num => ( { input: ` ומעלה${num.toString()}הותר לבני `, output: num.toString() }))),
+
+    // correct syntax
+    // { input: 'PG', output: 'PG' },
+    // { input: 'TV-PG', output: 'TV-PG' },
+    // ...letters.map((letter => ( { input: letter, output: letter }))),
+    // ...[...Array(22).keys()].map((num => ( { input: num.toString(), output: num.toString() }))),
+    // ...[...Array(22).keys()].map((num => ( { input: `${num.toString()}A`, output: `${num.toString()}A` }))),
+    // ...[...Array(22).keys()].map((num => ( { input: `${num.toString()}+`, output: `${num.toString()}+` }))),
+    // ...[...Array(22).keys()].map((num => ( { input: `+${num.toString()}`, output: `+${num.toString()}` }))),
+    // ...[...Array(22).keys()].map((num => ( { input: `B${num.toString()}`, output: `B${num.toString()}` }))),
+    // ...[...Array(22).keys()].map((num => ( { input: `K-${num.toString()}`, output: `K-${num.toString()}` }))),
+    // ...[...Array(22).keys()].map((num => ( { input: `PG-${num.toString()}`, output: `PG-${num.toString()}` }))),
+    // ...[...Array(22).keys()].map((num => ( { input: `R-${num.toString()}`, output: `R-${num.toString()}` }))),
+
+    // multiple ratings
+    // { input: 'NC16 (uncut) PG13 (edited)', output: 'NC16 (uncut) PG13 (edited)' },
+  ]
+
+  const standardizedInput = tmdbInput.trim().toLowerCase();
+
+  for (const data of conversionMap) {
+    const regex = new RegExp(`^${data.input.trim()}$`, 'i');
+    if (regex.test(standardizedInput)) {
+      return data.output;
+    }
+  }
+
+  return tmdbInput.substring(0, 50)
 }
 
 export interface FlattenedProviderData {
@@ -621,7 +697,7 @@ export const saveTMDBStreamingProviders = async (mediaId?: number, watchProvider
         ['media_id', 'streaming_provider_id', 'streaming_type', 'country_code'],
         ['media_id', 'streaming_provider_id', 'streaming_type', 'country_code'],
       )
-      console.log('\tSTREAMING')
+      // console.log('\tSTREAMING')
       return result
     } catch (error) {
       console.error(error)

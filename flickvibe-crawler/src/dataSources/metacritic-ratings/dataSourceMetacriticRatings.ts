@@ -34,10 +34,10 @@ export class DataSourceMetacriticRatings extends DataSourceForMedia {
     return {
       name: "metacritic_ratings",
       classDefinition: DataSourceMetacriticRatings,
-      updateIntervalMinutes: 60 * 48,
+      updateIntervalMinutes: 60 * 24 * 7,
       retryIntervalSeconds: 10,
-      batchSize: 1,
-      batchDelaySeconds: 1,
+      batchSize: 5,
+      batchDelaySeconds: 2,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
     }
@@ -123,7 +123,7 @@ export class DataSourceMetacriticRatings extends DataSourceForMedia {
   async storeTvSeasonsData(data: MetacriticTvRatings): Promise<void> {
     if (!data.mediaData || !data.seasons?.length) return
 
-    const seasonsWithData = data.seasons.filter((season) => season.url)
+    const seasonsWithData = data.seasons.filter((seasonRating) => seasonRating.url)
     if (seasonsWithData.length === 0) return
 
     const tableName = 'media_season_ratings'

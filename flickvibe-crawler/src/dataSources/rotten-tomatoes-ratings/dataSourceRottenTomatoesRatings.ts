@@ -33,10 +33,10 @@ export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
     return {
       name: "rotten_tomatoes_ratings",
       classDefinition: DataSourceRottenTomatoesRatings,
-      updateIntervalMinutes: 60 * 48,
+      updateIntervalMinutes: 60 * 24 * 7,
       retryIntervalSeconds: 10,
-      batchSize: 1,
-      batchDelaySeconds: 1,
+      batchSize: 5,
+      batchDelaySeconds: 2,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
     }
@@ -122,7 +122,7 @@ export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
   async storeTvSeasonsData(data: RottenTomatoesTvRatings): Promise<void> {
     if (!data.mediaData || !data.seasons?.[0]?.url) return
 
-    const seasonsWithData = data.seasons.filter((season) => season.url)
+    const seasonsWithData = data.seasons.filter((seasonRating) => seasonRating.url)
     if (seasonsWithData.length === 0) return
 
     const tableName = 'media_season_ratings'

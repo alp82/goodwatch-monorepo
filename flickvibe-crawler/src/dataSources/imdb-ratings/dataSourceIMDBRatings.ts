@@ -30,10 +30,10 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
     return {
       name: "imdb_ratings",
       classDefinition: DataSourceIMDBRatings,
-      updateIntervalMinutes: 60 * 48,
+      updateIntervalMinutes: 60 * 24 * 7,
       retryIntervalSeconds: 10,
-      batchSize: 1,
-      batchDelaySeconds: 1,
+      batchSize: 5,
+      batchDelaySeconds: 2,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: true,
     }
@@ -108,16 +108,19 @@ export class DataSourceIMDBRatings extends DataSourceForMedia {
   }
 
   async storeTvSeasonsData(data: IMDbTvRatings): Promise<void> {
-    if (!data.mediaData || !data.seasons?.[0]?.url) return
+    if (!data.mediaData || !data.seasons?.length) return
+
+    const seasonsWithData = data.seasons.filter((seasonRating) => seasonRating.url)
+    if (seasonsWithData.length === 0) return
 
     const tableName = 'media_season_ratings'
     const tableData = {
-      media_id: new Array(data.seasons.length).fill(data.mediaData.id),
-      rating_provider: new Array(data.seasons.length).fill('imdb'),
-      season_number: Array.from(data.seasons).map((season, index) => index + 1),
-      url: data.seasons.map((seasonRating, index) => seasonRating.url),
-      user_score: data.seasons.map((seasonRating, index) => seasonRating.score ? parseFloat(seasonRating.score) * 10 : null),
-      user_score_original: data.seasons.map((seasonRating, index) => seasonRating.score ? parseFloat(seasonRating.score) : null),
+      media_id: new Array(seasonsWithData.length).fill(data.mediaData.id),
+      rating_provider: new Array(seasonsWithData.length).fill('imdb'),
+      season_number: Array.from(seasonsWithData).map((season, index) => index + 1),
+      url: seasonsWithData.map((seasonRating, index) => seasonRating.url),
+      user_score: seasonsWithData.map((seasonRating, index) => seasonRating.score ? parseFloat(seasonRating.score) * 10 : null),
+      user_score_original: seasonsWithData.map((seasonRating, index) => seasonRating.score ? parseFloat(seasonRating.score) : null),
     }
     try {
       const result = await bulkUpsertData(
