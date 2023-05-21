@@ -7,10 +7,10 @@ import {
   AlternativeTitle,
   CastMovie,
   CastTv, ContentRatingResult, CrewMovie, CrewTv,
-  Genre, Provider, ProviderData, ReleaseDatesResult,
+  Genre, Image, Images, Provider, ProviderData, ReleaseDatesResult,
   TMDBCollection,
   TMDBMovieDetails,
-  TMDBTvDetails, WatchProviders,
+  TMDBTvDetails, Videos, WatchProviders,
 } from '../../types/details.types'
 import { userAgentHeader } from '../../utils/user-agent'
 import { QueryResult } from 'pg'
@@ -328,7 +328,8 @@ export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTit
   }
 }
 
-export const convertCountryNameToCode = (country: string) => {
+export const convertCountryNameToCode = (country: string | null): string => {
+  if (!country) return ''
   if (country.length == 2) return country
 
   const languages = getSupportedLanguages()
@@ -338,6 +339,8 @@ export const convertCountryNameToCode = (country: string) => {
       return countryCode
     }
   }
+
+  return ''
 }
 
 export const saveTMDBCast = async (mediaId?: number, cast?: (CastMovie | CastTv)[]): Promise<BulkUpsertResult | undefined> => {
@@ -490,7 +493,7 @@ export const saveTMDBCertifications = async (mediaId?: number, certifications?: 
       const c = (certification as ReleaseDatesResult)
       return [...result, ...c.release_dates.map(releaseDate => ({
         certification: releaseDate.certification,
-        country_code: c.iso_3166_1,
+        country_code: convertCountryNameToCode(c.iso_3166_1),
         language_code: releaseDate.iso_639_1.iso_639_1,
         release_type: convertTMDBReleaseTypeId(releaseDate.type),
         release_date: releaseDate.release_date || null,
@@ -500,7 +503,7 @@ export const saveTMDBCertifications = async (mediaId?: number, certifications?: 
       const c = (certification as ContentRatingResult)
       return [...result, {
         certification: c.rating,
-        country_code: c.iso_3166_1,
+        country_code: convertCountryNameToCode(c.iso_3166_1),
       }]
     }
     return [...result]
@@ -702,6 +705,86 @@ export const saveTMDBStreamingProviders = async (mediaId?: number, watchProvider
     } catch (error) {
       console.error(error)
     }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export const saveTMDBMediaImages = async (mediaId?: number, images?: Images): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !images) return
+
+  const imagesData: Record<string, unknown>[] = []
+  Object.entries(images).forEach(([imageType, imageList]) => {
+    imageList.forEach((image: Image) => {
+      imagesData.push({
+        media_id: mediaId,
+        image_path: image.file_path,
+        image_type: imageType,
+        aspect_ratio: image.aspect_ratio,
+        width: image.width,
+        height: image.height,
+        vote_average: image.vote_average,
+        vote_count: image.vote_count,
+        language_code: image.iso_639_1,
+      })
+    })
+  })
+  const mediaImagesData = Object.fromEntries(
+    Object.keys(imagesData[0]).map((key) => [
+      key,
+      imagesData.map((imageData) => imageData[key]),
+    ])
+  );
+
+  try {
+    const result = await bulkUpsertData(
+      'media_images',
+      mediaImagesData,
+      {},
+      ['media_id', 'image_path'],
+      ['media_id', 'image_path'],
+    )
+    // console.log('\tMEDIA IMAGES')
+    return result
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export const saveTMDBMediaVideos = async (mediaId?: number, videos?: Videos): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !videos) return
+
+  const videosData = videos.results.map((video) => {
+    return {
+      media_id: mediaId,
+      video_site_key: video.key,
+      video_site: video.site,
+      video_type: video.type,
+      country_code: convertCountryNameToCode(video.iso_3166_1),
+      language_code: video.iso_639_1,
+      name: video.name,
+      size: video.size,
+      official: video.official,
+      published_at: video.published_at,
+    }
+  })
+  const mediaVideosData = Object.fromEntries(
+    Object.keys(videosData[0]).map((key) => [
+      key,
+      videosData.map((videoData) => videoData[key as keyof typeof videoData]),
+    ])
+  );
+
+  try {
+    const result = await bulkUpsertData(
+      'media_videos',
+      mediaVideosData,
+      {},
+      ['media_id', 'video_site_key', 'video_site'],
+      ['media_id', 'video_site_key', 'video_site'],
+    )
+    // console.log('\tMEDIA IMAGES')
+    return result
   } catch (error) {
     console.error(error)
   }

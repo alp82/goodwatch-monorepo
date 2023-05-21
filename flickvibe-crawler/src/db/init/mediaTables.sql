@@ -325,65 +325,46 @@ CREATE TABLE IF NOT EXISTS media_spoken_languages (
 );
 
 -- media images
-CREATE TABLE IF NOT EXISTS image_types (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS images (
-    image_path VARCHAR(255) PRIMARY KEY,
-    image_type_id INTEGER NOT NULL REFERENCES image_types (id),
+CREATE TABLE IF NOT EXISTS media_images (
+    media_id INTEGER NOT NULL,
+    image_path VARCHAR(255) NOT NULL,
+    image_type VARCHAR(50) NOT NULL,
     aspect_ratio NUMERIC(5,3) NOT NULL,
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
     vote_average NUMERIC(5,2) NOT NULL,
     vote_count INTEGER NOT NULL,
-    language_code CHAR(2)
-);
-
-CREATE TABLE IF NOT EXISTS media_images (
-    media_id INTEGER NOT NULL,
-    image_path VARCHAR(255) REFERENCES images (image_path) ON DELETE CASCADE,
+    language_code CHAR(2),
     PRIMARY KEY (media_id, image_path)
 );
 
 -- people images
-CREATE TABLE IF NOT EXISTS people_images (
-    person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
-    image_path VARCHAR(255) REFERENCES images (image_path) ON DELETE CASCADE,
-    PRIMARY KEY (person_id, image_path)
-);
-
-CREATE TABLE IF NOT EXISTS media_people_images (
-    media_id INTEGER NOT NULL,
-    person_id INTEGER NOT NULL REFERENCES people (id) ON DELETE CASCADE,
-    image_path VARCHAR(255) REFERENCES images (image_path) ON DELETE CASCADE,
-    PRIMARY KEY (media_id, person_id, image_path)
-);
+-- CREATE TABLE IF NOT EXISTS people_images (
+--     person_id INTEGER NOT NULL,
+--     image_path VARCHAR(255) PRIMARY KEY,
+--     image_type VARCHAR(50) NOT NULL,
+--     aspect_ratio NUMERIC(5,3) NOT NULL,
+--     width INTEGER NOT NULL,
+--     height INTEGER NOT NULL,
+--     vote_average NUMERIC(5,2) NOT NULL,
+--     vote_count INTEGER NOT NULL,
+--     language_code CHAR(2),
+--     PRIMARY KEY (person_id, image_path)
+-- );
 
 -- media videos
-CREATE TABLE IF NOT EXISTS video_types (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS video_sites (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
 CREATE TABLE IF NOT EXISTS media_videos (
-    id SERIAL PRIMARY KEY,
     media_id INTEGER NOT NULL,
-    video_type_id INTEGER NOT NULL REFERENCES video_types (id),
-    video_site_id INTEGER NOT NULL REFERENCES video_sites (id),
+    video_site_key VARCHAR(255) NOT NULL,
+    video_site VARCHAR(50) NOT NULL,
+    video_type VARCHAR(50) NOT NULL,
     country_code VARCHAR(2) NOT NULL,
     language_code VARCHAR(2) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    site_key VARCHAR(255) NOT NULL,
     size INTEGER NOT NULL,
     official BOOLEAN NOT NULL,
-    published_at TIMESTAMP NOT NULL
+    published_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (media_id, video_site_key, video_site)
 );
 
 -- media relations

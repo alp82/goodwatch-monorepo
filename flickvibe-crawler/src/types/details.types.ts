@@ -1,5 +1,3 @@
-import {Ratings} from '../scraper/ratings'
-
 export interface BaseDetails {
   titles_dashed: string[]
   titles_underscored: string[]
@@ -270,12 +268,12 @@ export interface Job {
 }
 
 export interface Images {
-  backdrops: Backdrop[]
-  logos: Backdrop[]
-  posters: Backdrop[]
+  backdrops: Image[]
+  logos: Image[]
+  posters: Image[]
 }
 
-export interface Backdrop {
+export interface Image {
   aspect_ratio: number
   height: number
   iso_639_1: null | string

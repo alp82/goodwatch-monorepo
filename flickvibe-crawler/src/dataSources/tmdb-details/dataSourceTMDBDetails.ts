@@ -8,7 +8,7 @@ import {
   saveTMDBCertifications,
   saveTMDBCollection,
   saveTMDBCrew,
-  saveTMDBGenres,
+  saveTMDBGenres, saveTMDBMediaImages, saveTMDBMediaVideos,
   saveTMDBMovie, saveTMDBStreamingProviders,
   saveTMDBTv,
 } from './tmdb-details-handler'
@@ -31,7 +31,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       classDefinition: DataSourceTMDBDetails,
       updateIntervalMinutes: 60 * 24 * 7,
       retryIntervalSeconds: 30,
-      batchSize: 30,
+      batchSize: 20,
       batchDelaySeconds: 0,
       rateLimitDelaySeconds: 60,
       usesExistingMedia: false,
@@ -72,15 +72,15 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       })(),
       saveTMDBCertifications(mediaId, data.details.release_dates.results),
       saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
-      // TODO images
-      // TODO videos
+      saveTMDBMediaImages(mediaId, data.details.images),
+      saveTMDBMediaVideos(mediaId, data.details.videos),
       // TODO keywords
       // TODO production companies
       // TODO production countries
-      // TODO spoken languages
-      // TODO translations
       // TODO recommendations
       // TODO similar
+      // TODO spoken languages
+      // TODO translations
     ]
     await Promise.all(promises)
   }
@@ -97,18 +97,18 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       })(),
       saveTMDBCertifications(mediaId, data.details.content_ratings.results),
       saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
-      // data.details.images
-      // data.details.videos
+      saveTMDBMediaImages(mediaId, data.details.images),
+      saveTMDBMediaVideos(mediaId, data.details.videos),
       // data.details.keywords
       // TODO production companies
       // TODO production countries
+      // TODO recommendations
+      // TODO similar
       // data.details.spoken_languages
       // data.details.translations
       // data.details.languages
       // data.details.networks
       // data.details.seasons
-      // TODO recommendations
-      // TODO similar
     ]
     await Promise.all(promises)
   }
