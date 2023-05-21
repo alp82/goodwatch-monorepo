@@ -188,6 +188,9 @@ const getDataType = (value: any): string => {
     if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/)) {
       return 'timestamp'
     }
+    if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return 'timestamp'
+    }
     return 'text'
   } else if (value instanceof Date) {
     return 'timestamp'

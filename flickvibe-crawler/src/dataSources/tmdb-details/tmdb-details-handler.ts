@@ -6,11 +6,26 @@ import { toDashed, toPascalCase, tryRequests } from '../../utils/helpers'
 import {
   AlternativeTitle,
   CastMovie,
-  CastTv, ContentRatingResult, CrewMovie, CrewTv,
-  Genre, Image, Images, Keywords, ProductionCompany, Provider, ProviderData, ReleaseDatesResult,
+  CastTv,
+  ContentRatingResult,
+  CrewMovie,
+  CrewTv,
+  Genre,
+  Image,
+  Images,
+  Keywords,
+  Network,
+  ProductionCompany,
+  Provider,
+  ProviderData,
+  Recommendations,
+  ReleaseDatesResult, Season,
   TMDBCollection,
   TMDBMovieDetails,
-  TMDBTvDetails, Videos, WatchProviders,
+  TMDBTvDetails,
+  Translations,
+  Videos,
+  WatchProviders,
 } from '../../types/details.types'
 import { userAgentHeader } from '../../utils/user-agent'
 import { QueryResult } from 'pg'
@@ -144,6 +159,7 @@ export const saveTMDBMovie = async (details: TMDBMovieDetails): Promise<number |
         titles_pascal_cased: details.titles_pascal_cased,
         original_title: details.original_title,
         original_language_code: details.original_language,
+        spoken_language_codes: details.spoken_languages.map((language) => language.iso_639_1),
         production_country_codes: details.production_countries.map((country) => country.iso_3166_1),
         homepage: details.homepage,
         adult: details.adult || false,
@@ -188,6 +204,9 @@ export const saveTMDBTv = async (details: TMDBTvDetails): Promise<number | undef
       titles_pascal_cased: details.titles_pascal_cased,
       original_title: details.original_name,
       original_language_code: details.original_language,
+      spoken_language_codes: details.spoken_languages.map((language) => language.iso_639_1),
+      language_codes: details.languages.map((language) => language),
+      production_country_codes: details.production_countries.map((country) => country.iso_3166_1),
       homepage: details.homepage,
       adult: details.adult || false,
 
@@ -298,10 +317,10 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
     }
 }
 
-export const saveTMDBKeywords = async (mediaId?: number, keywords?: Keywords, type?: 'movie' | 'tv'): Promise<BulkUpsertResult | undefined> => {
+export const saveTMDBKeywords = async (mediaId?: number, keywords?: Keywords, type?: 'movie' | 'tv', tmdbId?: number): Promise<BulkUpsertResult | undefined> => {
   if (!mediaId || !keywords?.results?.length) return
 
-  const url = `https://www.themoviedb.org/${type}/${mediaId}}`
+  const url = `https://www.themoviedb.org/${type}/${tmdbId}`
   const tagsData = {
     tags_provider: new Array(keywords.results.length).fill('tmdb'),
     name: keywords.results.map((keyword) => keyword.name),
@@ -865,7 +884,7 @@ export const saveTMDBProductionCompanies = async (mediaId?: number, productionCo
     }, {})
     const companyIds = Object.keys(companyNameToId)
 
-    const mediaProvidersData = {
+    const mediaCompaniesData = {
       media_id:  new Array(companyIds.length).fill(mediaId),
       production_company_id: companyIds.map((companyId) => companyNameToId[companyId]),
     }
@@ -873,7 +892,7 @@ export const saveTMDBProductionCompanies = async (mediaId?: number, productionCo
     try {
       const result = await bulkUpsertData(
         'media_production_companies',
-        mediaProvidersData,
+        mediaCompaniesData,
         {},
         ['media_id', 'production_company_id'],
         ['media_id', 'production_company_id'],
@@ -883,6 +902,169 @@ export const saveTMDBProductionCompanies = async (mediaId?: number, productionCo
     } catch (error) {
       console.error(error)
     }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export const saveTMDBNetworks = async (mediaId?: number, networks?: Network[]): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !networks?.length) return
+
+  const networksData = {
+    name: networks.map((company) => company.name),
+    logo_path: networks.map((company) => company.logo_path),
+    origin_country_code: networks.map((company) => convertCountryNameToCode(company.origin_country)),
+  }
+
+  try {
+    const networksResult = await bulkUpsertData(
+      'networks',
+      networksData,
+      {},
+      ['name'],
+      ['id', 'name'],
+    )
+    const networkNameToId = (networksResult?.all || []).reduce((result, row) => {
+      return {
+        ...result,
+        [row.name as string]: row.id,
+      }
+    }, {})
+    const networkIds = Object.keys(networkNameToId)
+
+    const mediaNetworksData = {
+      media_id:  new Array(networkIds.length).fill(mediaId),
+      network_id: networkIds.map((companyId) => networkNameToId[companyId]),
+    }
+
+    try {
+      const result = await bulkUpsertData(
+        'media_networks',
+        mediaNetworksData,
+        {},
+        ['media_id', 'network_id'],
+        ['media_id', 'network_id'],
+      )
+      // console.log('\\NETWORKS')
+      return result
+    } catch (error) {
+      console.error(error)
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export const saveTMDBTranslations = async (mediaId?: number, translations?: Translations): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !translations) return
+
+  const translationsData = translations.translations.map((translation) => {
+    return {
+      media_id: mediaId,
+      country_code: convertCountryNameToCode(translation.iso_3166_1),
+      language_code: translation.iso_639_1,
+      title: translation.data.title || translation.data.name,
+      tagline: translation.data.tagline,
+      synopsis: translation.data.overview,
+      homepage: translation.data.homepage,
+      runtime: translation.data.runtime,
+    }
+  })
+  const mediaTranslationsData = Object.fromEntries(
+    Object.keys(translationsData[0]).map((key) => [
+      key,
+      translationsData.map((translationData) => translationData[key as keyof typeof translationData]),
+    ])
+  );
+
+  try {
+    const result = await bulkUpsertData(
+      'media_translations',
+      mediaTranslationsData,
+      { runtime: 'numeric' },
+      ['media_id', 'country_code', 'language_code'],
+      ['media_id', 'country_code', 'language_code'],
+    )
+    // console.log('\tMEDIA TRANSLATIONS')
+    return result
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export const saveTMDBMediaRelations = async (mediaId?: number, recommendations?: Recommendations, similar?: Recommendations): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !recommendations || !similar) return
+
+  const recommendationsData = recommendations.results.map((relation) => {
+    return {
+      media_id: mediaId,
+      related_media_id: relation.id,
+      relation_type: 'tmdb_recommendation'
+    }
+  })
+  const similarData = similar.results.map((relation) => {
+    return {
+      media_id: mediaId,
+      related_media_id: relation.id,
+      relation_type: 'tmdb_similar'
+    }
+  })
+  const mediaRelationsData = Object.fromEntries(
+    Object.keys(recommendationsData[0]).map((key) => [
+      key,
+      [
+        ...recommendationsData.map((relationData) => relationData[key as keyof typeof relationData]),
+        ...similarData.map((relationData) => relationData[key as keyof typeof relationData]),
+      ],
+    ])
+  );
+
+  try {
+    const result = await bulkUpsertData(
+      'media_relations',
+      mediaRelationsData,
+      {},
+      ['media_id', 'related_media_id', 'relation_type'],
+      ['media_id', 'related_media_id', 'relation_type'],
+    )
+    // console.log('\tMEDIA RELATIONS')
+    return result
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export const saveTMDBTVSeasons = async (mediaId?: number, seasons?: Season[]): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !seasons) return
+
+  const seasonsData = seasons.map((season) => {
+    return {
+      media_id: mediaId,
+      name: season.name,
+      synopsis: season.overview,
+      air_date: season.air_date,
+      season_number: season.season_number,
+      episode_count: season.episode_count,
+      poster_path: season.poster_path,
+    }
+  })
+  const mediaSeasonsData = Object.fromEntries(
+    Object.keys(seasonsData[0]).map((key) => [
+      key,
+      seasonsData.map((seasonData) => seasonData[key as keyof typeof seasonData]),
+    ])
+  );
+
+  try {
+    const result = await bulkUpsertData(
+      'media_seasons',
+      mediaSeasonsData,
+      { air_date: 'timestamp' },
+      ['media_id', 'name'],
+      ['media_id', 'name'],
+    )
+    // console.log('\tTV SEASONS')
+    return result
   } catch (error) {
     console.error(error)
   }

@@ -60,7 +60,6 @@ CREATE TABLE IF NOT EXISTS media (
     popularity NUMERIC NOT NULL,
     status VARCHAR(255),
 
-
     poster_path VARCHAR(255),
     backdrop_path VARCHAR(255),
 
@@ -69,6 +68,7 @@ CREATE TABLE IF NOT EXISTS media (
     titles_pascal_cased VARCHAR(255)[],
     original_title VARCHAR(255),
     original_language_code CHAR(2),
+    spoken_language_codes CHAR(2)[],
     production_country_codes CHAR(2)[],
     homepage TEXT,
     adult BOOLEAN NOT NULL,
@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS tv (
 
     last_air_date DATE,
     origin_country_code CHAR(2)[],
+    language_codes CHAR(2)[],
 
     freebase_mid VARCHAR(255),
     freebase_id VARCHAR(255),
@@ -157,14 +158,14 @@ CREATE TABLE IF NOT EXISTS media_collections (
 
 -- tv seasons
 CREATE TABLE IF NOT EXISTS media_seasons (
-    id SERIAL PRIMARY KEY,
     media_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
-    overview TEXT,
+    synopsis TEXT,
     air_date DATE,
     season_number INTEGER NOT NULL,
     episode_count INTEGER NOT NULL,
-    poster_path VARCHAR(255)
+    poster_path VARCHAR(255),
+    PRIMARY KEY (media_id, name)
 );
 
 -- media ratings
@@ -299,20 +300,6 @@ CREATE TABLE IF NOT EXISTS media_production_companies (
     PRIMARY KEY (media_id, production_company_id)
 );
 
--- media spoken languages
-CREATE TABLE IF NOT EXISTS spoken_languages (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
-    english_name VARCHAR(255) NOT NULL,
-    language_code CHAR(2) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS media_spoken_languages (
-    media_id INTEGER NOT NULL,
-    spoken_language_id INTEGER REFERENCES spoken_languages (id),
-    PRIMARY KEY (media_id, spoken_language_id)
-);
-
 -- media images
 CREATE TABLE IF NOT EXISTS media_images (
     media_id INTEGER NOT NULL,
@@ -357,16 +344,11 @@ CREATE TABLE IF NOT EXISTS media_videos (
 );
 
 -- media relations
-CREATE TABLE IF NOT EXISTS relation_types (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
 CREATE TABLE IF NOT EXISTS media_relations (
     media_id INTEGER NOT NULL,
-    related_media_id INTEGER NOT NULL REFERENCES media (id),
-    relation_type_id INTEGER NOT NULL REFERENCES relation_types (id),
-    PRIMARY KEY (media_id, related_media_id, relation_type_id)
+    related_media_id INTEGER NOT NULL,
+    relation_type VARCHAR(50) NOT NULL,
+    PRIMARY KEY (media_id, related_media_id, relation_type)
 );
 
 -- media releases and certifications
@@ -383,18 +365,15 @@ CREATE TABLE IF NOT EXISTS media_certifications (
 
 -- media translations
 CREATE TABLE IF NOT EXISTS media_translations (
-    id SERIAL PRIMARY KEY,
     media_id INTEGER NOT NULL,
     country_code CHAR(2) NOT NULL,
     language_code CHAR(2) NOT NULL,
-    language_name TEXT NOT NULL,
-    language_name_english TEXT NOT NULL,
     title VARCHAR(255),
     tagline VARCHAR(255),
     synopsis TEXT,
     homepage TEXT,
     runtime INTEGER,
-    UNIQUE (media_id, country_code, language_code)
+    PRIMARY KEY (media_id, country_code, language_code)
 );
 
 -- people translations

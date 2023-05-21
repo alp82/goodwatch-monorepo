@@ -8,9 +8,9 @@ import {
   saveTMDBCertifications,
   saveTMDBCollection,
   saveTMDBCrew,
-  saveTMDBGenres, saveTMDBKeywords, saveTMDBMediaImages, saveTMDBMediaVideos,
-  saveTMDBMovie, saveTMDBProductionCompanies, saveTMDBStreamingProviders,
-  saveTMDBTv,
+  saveTMDBGenres, saveTMDBKeywords, saveTMDBMediaImages, saveTMDBMediaRelations, saveTMDBMediaVideos,
+  saveTMDBMovie, saveTMDBNetworks, saveTMDBProductionCompanies, saveTMDBStreamingProviders, saveTMDBTranslations,
+  saveTMDBTv, saveTMDBTVSeasons,
 } from './tmdb-details-handler'
 import {TMDBCollection, TMDBMovieDetails, TMDBTvDetails} from "../../types/details.types";
 
@@ -65,7 +65,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     const promises = [
       saveTMDBCollection(mediaId, data.collection),
       saveTMDBGenres(mediaId, data.details.genres),
-      saveTMDBKeywords(mediaId, data.details.keywords, 'movie'),
+      saveTMDBKeywords(mediaId, data.details.keywords, 'movie', data.details.id),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
       (async () => {
         await saveTMDBCast(mediaId, data.details.credits.cast)
@@ -76,10 +76,8 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBMediaImages(mediaId, data.details.images),
       saveTMDBMediaVideos(mediaId, data.details.videos),
       saveTMDBProductionCompanies(mediaId, data.details.production_companies),
-      // TODO spoken languages
-      // TODO translations
-      // TODO recommendations
-      // TODO similar
+      saveTMDBTranslations(mediaId, data.details.translations),
+      saveTMDBMediaRelations(mediaId, data.details.recommendations, data.details.similar),
     ]
     await Promise.all(promises)
   }
@@ -89,7 +87,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     const promises: Promise<unknown>[] = [
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
-      saveTMDBKeywords(mediaId, data.details.keywords, 'tv'),
+      saveTMDBKeywords(mediaId, data.details.keywords, 'tv', data.details.id),
       (async () => {
         await saveTMDBCast(mediaId, data.details.aggregate_credits.cast)
         await saveTMDBCrew(mediaId, data.details.aggregate_credits.crew)
@@ -100,13 +98,10 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBMediaImages(mediaId, data.details.images),
       saveTMDBMediaVideos(mediaId, data.details.videos),
       saveTMDBProductionCompanies(mediaId, data.details.production_companies),
-      // data.details.spoken_languages
-      // data.details.translations
-      // TODO recommendations
-      // TODO similar
-      // data.details.languages
-      // data.details.networks
-      // data.details.seasons
+      saveTMDBNetworks(mediaId, data.details.networks),
+      saveTMDBTranslations(mediaId, data.details.translations),
+      saveTMDBMediaRelations(mediaId, data.details.recommendations, data.details.similar),
+      saveTMDBTVSeasons(mediaId, data.details.seasons),
     ]
     await Promise.all(promises)
   }
