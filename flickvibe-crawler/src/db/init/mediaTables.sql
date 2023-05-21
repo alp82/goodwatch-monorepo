@@ -391,7 +391,6 @@ CREATE TABLE IF NOT EXISTS people_translations (
 -- indexes
 CREATE UNIQUE INDEX IF NOT EXISTS media_types_name_idx ON media_types (name);
 CREATE UNIQUE INDEX IF NOT EXISTS streaming_providers_name_idx ON streaming_providers (name);
-CREATE UNIQUE INDEX IF NOT EXISTS streaming_types_name_idx ON streaming_types (name);
 CREATE INDEX IF NOT EXISTS daily_media_filter_idx ON daily_media (tmdb_id, media_type_id);
 CREATE INDEX IF NOT EXISTS data_sources_for_media_media_id_idx ON data_sources_for_media (tmdb_id, media_type_id);
 CREATE INDEX IF NOT EXISTS media_filter_idx ON media (media_type_id, release_year);
