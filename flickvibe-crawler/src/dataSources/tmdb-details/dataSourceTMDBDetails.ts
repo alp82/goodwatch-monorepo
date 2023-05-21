@@ -8,8 +8,8 @@ import {
   saveTMDBCertifications,
   saveTMDBCollection,
   saveTMDBCrew,
-  saveTMDBGenres, saveTMDBMediaImages, saveTMDBMediaVideos,
-  saveTMDBMovie, saveTMDBStreamingProviders,
+  saveTMDBGenres, saveTMDBKeywords, saveTMDBMediaImages, saveTMDBMediaVideos,
+  saveTMDBMovie, saveTMDBProductionCompanies, saveTMDBStreamingProviders,
   saveTMDBTv,
 } from './tmdb-details-handler'
 import {TMDBCollection, TMDBMovieDetails, TMDBTvDetails} from "../../types/details.types";
@@ -65,6 +65,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     const promises = [
       saveTMDBCollection(mediaId, data.collection),
       saveTMDBGenres(mediaId, data.details.genres),
+      saveTMDBKeywords(mediaId, data.details.keywords, 'movie'),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.titles),
       (async () => {
         await saveTMDBCast(mediaId, data.details.credits.cast)
@@ -74,13 +75,11 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
       saveTMDBMediaImages(mediaId, data.details.images),
       saveTMDBMediaVideos(mediaId, data.details.videos),
-      // TODO keywords
-      // TODO production companies
-      // TODO production countries
-      // TODO recommendations
-      // TODO similar
+      saveTMDBProductionCompanies(mediaId, data.details.production_companies),
       // TODO spoken languages
       // TODO translations
+      // TODO recommendations
+      // TODO similar
     ]
     await Promise.all(promises)
   }
@@ -90,6 +89,7 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
     const promises: Promise<unknown>[] = [
       saveTMDBGenres(mediaId, data.details.genres),
       saveTMDBAlternativeTitles(mediaId, data.details.alternative_titles.results),
+      saveTMDBKeywords(mediaId, data.details.keywords, 'tv'),
       (async () => {
         await saveTMDBCast(mediaId, data.details.aggregate_credits.cast)
         await saveTMDBCrew(mediaId, data.details.aggregate_credits.crew)
@@ -99,13 +99,11 @@ export class DataSourceTMDBDetails extends DataSourceForMedia {
       saveTMDBStreamingProviders(mediaId, data.details['watch/providers']),
       saveTMDBMediaImages(mediaId, data.details.images),
       saveTMDBMediaVideos(mediaId, data.details.videos),
-      // data.details.keywords
-      // TODO production companies
-      // TODO production countries
-      // TODO recommendations
-      // TODO similar
+      saveTMDBProductionCompanies(mediaId, data.details.production_companies),
       // data.details.spoken_languages
       // data.details.translations
+      // TODO recommendations
+      // TODO similar
       // data.details.languages
       // data.details.networks
       // data.details.seasons

@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS media (
     popularity NUMERIC NOT NULL,
     status VARCHAR(255),
 
+
     poster_path VARCHAR(255),
     backdrop_path VARCHAR(255),
 
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS media (
     titles_pascal_cased VARCHAR(255)[],
     original_title VARCHAR(255),
     original_language_code CHAR(2),
+    production_country_codes CHAR(2)[],
     homepage TEXT,
     adult BOOLEAN NOT NULL,
 
@@ -271,7 +273,7 @@ CREATE TABLE IF NOT EXISTS media_crew (
 
 -- media networks
 CREATE TABLE IF NOT EXISTS networks (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     origin_country_code CHAR(2) NOT NULL,
     logo_path VARCHAR(255)
@@ -285,7 +287,7 @@ CREATE TABLE IF NOT EXISTS media_networks (
 
 -- media production companies
 CREATE TABLE IF NOT EXISTS production_companies (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     origin_country_code CHAR(2) NOT NULL,
     logo_path VARCHAR(255)
@@ -297,22 +299,9 @@ CREATE TABLE IF NOT EXISTS media_production_companies (
     PRIMARY KEY (media_id, production_company_id)
 );
 
--- media production countries
-CREATE TABLE IF NOT EXISTS production_countries (
-    id INTEGER PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
-    country_code CHAR(2) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS media_production_countries (
-    media_id INTEGER NOT NULL,
-    production_country_id INTEGER REFERENCES production_countries (id),
-    PRIMARY KEY (media_id, production_country_id)
-);
-
 -- media spoken languages
 CREATE TABLE IF NOT EXISTS spoken_languages (
-    id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     english_name VARCHAR(255) NOT NULL,
     language_code CHAR(2) NOT NULL

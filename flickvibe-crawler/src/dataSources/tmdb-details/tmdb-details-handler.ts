@@ -7,7 +7,7 @@ import {
   AlternativeTitle,
   CastMovie,
   CastTv, ContentRatingResult, CrewMovie, CrewTv,
-  Genre, Image, Images, Provider, ProviderData, ReleaseDatesResult,
+  Genre, Image, Images, Keywords, ProductionCompany, Provider, ProviderData, ReleaseDatesResult,
   TMDBCollection,
   TMDBMovieDetails,
   TMDBTvDetails, Videos, WatchProviders,
@@ -144,6 +144,7 @@ export const saveTMDBMovie = async (details: TMDBMovieDetails): Promise<number |
         titles_pascal_cased: details.titles_pascal_cased,
         original_title: details.original_title,
         original_language_code: details.original_language,
+        production_country_codes: details.production_countries.map((country) => country.iso_3166_1),
         homepage: details.homepage,
         adult: details.adult || false,
         runtime: details.runtime,
@@ -295,6 +296,54 @@ export const saveTMDBGenres = async (mediaId?: number, genres?: Genre[]): Promis
     } catch (error) {
       console.error(error)
     }
+}
+
+export const saveTMDBKeywords = async (mediaId?: number, keywords?: Keywords, type?: 'movie' | 'tv'): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !keywords?.results?.length) return
+
+  const url = `https://www.themoviedb.org/${type}/${mediaId}}`
+  const tagsData = {
+    tags_provider: new Array(keywords.results.length).fill('tmdb'),
+    name: keywords.results.map((keyword) => keyword.name),
+  }
+  try {
+    const tagsResult = await bulkUpsertData(
+      'tags',
+      tagsData,
+      {},
+      ['tags_provider', 'name'],
+      ['id', 'name'],
+    )
+
+    const tagIds = (tagsResult?.all || []).map((row) => row.id)
+    const tagNames = (tagsResult?.all || []).map((row) => row.name)
+    const newTagNames = (tagsResult?.inserted || []).map((row) => row.name)
+    if (newTagNames.length) {
+      console.log(`\tNew Keywords added: ${newTagNames.join(', ')}`)
+    }
+
+    const mediaTagsData = {
+      media_id: new Array(tagIds.length).fill(mediaId),
+      tag_id: tagIds,
+      url: new Array(tagIds.length).fill(url),
+    }
+
+    try {
+      const result = await bulkUpsertData(
+        'media_tags',
+        mediaTagsData,
+        {},
+        ['media_id', 'tag_id'],
+        ['media_id', 'tag_id'],
+      )
+      console.log(`TMDB Keywords: ${tagNames.slice(0, 3).join(', ')}, ... (${url})`)
+      return result
+    } catch (error) {
+      console.error(error)
+    }
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export const saveTMDBAlternativeTitles = async (mediaId?: number, alternativeTitles?: AlternativeTitle[]): Promise<BulkUpsertResult | undefined> => {
@@ -785,6 +834,55 @@ export const saveTMDBMediaVideos = async (mediaId?: number, videos?: Videos): Pr
     )
     // console.log('\tMEDIA IMAGES')
     return result
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+
+export const saveTMDBProductionCompanies = async (mediaId?: number, productionCompanies?: ProductionCompany[]): Promise<BulkUpsertResult | undefined> => {
+  if (!mediaId || !productionCompanies?.length) return
+
+  const companiesData = {
+    name: productionCompanies.map((company) => company.name),
+    logo_path: productionCompanies.map((company) => company.logo_path),
+    origin_country_code: productionCompanies.map((company) => convertCountryNameToCode(company.origin_country)),
+  }
+
+  try {
+    const companiesResult = await bulkUpsertData(
+      'production_companies',
+      companiesData,
+      {},
+      ['name'],
+      ['id', 'name'],
+    )
+    const companyNameToId = (companiesResult?.all || []).reduce((result, row) => {
+      return {
+        ...result,
+        [row.name as string]: row.id,
+      }
+    }, {})
+    const companyIds = Object.keys(companyNameToId)
+
+    const mediaProvidersData = {
+      media_id:  new Array(companyIds.length).fill(mediaId),
+      production_company_id: companyIds.map((companyId) => companyNameToId[companyId]),
+    }
+
+    try {
+      const result = await bulkUpsertData(
+        'media_production_companies',
+        mediaProvidersData,
+        {},
+        ['media_id', 'production_company_id'],
+        ['media_id', 'production_company_id'],
+      )
+      // console.log('\tPRODUCTION COMPANIES')
+      return result
+    } catch (error) {
+      console.error(error)
+    }
   } catch (error) {
     console.error(error)
   }
