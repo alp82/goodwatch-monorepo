@@ -99,9 +99,6 @@ export default function Footer({}: FooterProps) {
           <a className="px-2 text-teal-600 hover:text-teal-400" href="https://www.themoviedb.org/">TMDB</a>and
           <a className="px-2 text-yellow-600 hover:text-yellow-400" href="https://www.justwatch.com/">JustWatch</a>
         </div>
-        <p className="mt-10 text-center text-xs leading-5 text-gray-400">
-          Made with ❤️ by Alper Ortac
-        </p>
       </div>
     </footer>
   )
