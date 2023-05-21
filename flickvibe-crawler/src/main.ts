@@ -4,6 +4,7 @@ import {DataSourceTMDBDetails} from "./dataSources/tmdb-details/dataSourceTMDBDe
 import { DataSourceIMDBRatings } from './dataSources/imdb-ratings/dataSourceIMDBRatings'
 import { DataSourceMetacriticRatings } from './dataSources/metacritic-ratings/dataSourceMetacriticRatings'
 import { DataSourceRottenTomatoesRatings } from './dataSources/rotten-tomatoes-ratings/dataSourceRottenTomatoesRatings'
+import { DataSourceTvTropesTags } from './dataSources/tvtropes-tags/dataSourceTvTropesTags'
 
 export const runMainDataFetchingLoop = async () => {
   await Promise.all([
@@ -12,5 +13,6 @@ export const runMainDataFetchingLoop = async () => {
     processDataSource(new DataSourceIMDBRatings()),
     processDataSource(new DataSourceMetacriticRatings()),
     processDataSource(new DataSourceRottenTomatoesRatings()),
+    processDataSource(new DataSourceTvTropesTags()),
   ])
 }

@@ -213,15 +213,17 @@ CREATE TABLE IF NOT EXISTS media_streaming_providers (
 -- media tags
 CREATE TABLE IF NOT EXISTS tags (
     id SERIAL PRIMARY KEY,
-    data_source_id INTEGER NOT NULL REFERENCES data_sources (id),
+    tags_provider VARCHAR(50) NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    UNIQUE (data_source_id, name)
+    UNIQUE (tags_provider, name)
 );
 
 CREATE TABLE IF NOT EXISTS media_tags (
     media_id INTEGER NOT NULL,
     tag_id INTEGER NOT NULL REFERENCES tags (id),
+    url VARCHAR(255) NOT NULL,
+    content TEXT,
     PRIMARY KEY (media_id, tag_id)
 );
 
