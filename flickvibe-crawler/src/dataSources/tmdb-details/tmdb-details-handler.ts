@@ -1060,8 +1060,8 @@ export const saveTMDBTVSeasons = async (mediaId?: number, seasons?: Season[]): P
       'media_seasons',
       mediaSeasonsData,
       { air_date: 'timestamp' },
-      ['media_id', 'name'],
-      ['media_id', 'name'],
+      ['media_id', 'name', 'season_number'],
+      ['media_id', 'name', 'season_number'],
     )
     // console.log('\tTV SEASONS')
     return result

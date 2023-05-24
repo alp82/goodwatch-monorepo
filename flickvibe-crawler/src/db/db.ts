@@ -84,11 +84,13 @@ export interface BulkUpsertResult {
 
 export const bulkUpsertData = async (
   tableName: string,
-  data: Record<string, unknown[]>,
+  rawData: Record<string, unknown[]>,
   columnTypes: Record<string, string>,
   conflictColumns: string[],
   returnColumns: string[]
 ): Promise<BulkUpsertResult | undefined> => {
+  const data = collectUniqueBulkData(rawData, conflictColumns)
+
   // query parts
   const columns = Object.keys(data)
   const columnNames = columns.map((c) => `"${c}"`).join(', ')
@@ -172,6 +174,57 @@ export const bulkUpsertData = async (
   } catch (error) {
     throw error
   }
+}
+
+type BulkDataObject<T> = {
+  [K in keyof T]: (T[K] | null)[];
+};
+
+function collectUniqueBulkData<T>(
+  data: BulkDataObject<T>,
+  uniqueFields: (keyof T)[]
+): BulkDataObject<T> {
+  const uniqueIndexesMap: { [key: string]: number[] } = {};
+  const uniqueKeys: string[] = [];
+
+  // Find indexes of unique values based on uniqueFields
+  for (let i = 0; i < data[uniqueFields[0]].length; i++) {
+    const uniqueValues = uniqueFields.map((field) => String(data[field][i]));
+    const uniqueKey = uniqueValues.join("|");
+
+    if (!uniqueIndexesMap[uniqueKey]) {
+      uniqueIndexesMap[uniqueKey] = [];
+      uniqueKeys.push(uniqueKey);
+    }
+
+    uniqueIndexesMap[uniqueKey].push(i);
+  }
+
+  // Filter data based on unique values and the most defined values
+  const filteredData: BulkDataObject<T> = {} as BulkDataObject<T>;
+
+  for (const uniqueKey of uniqueKeys) {
+    const indexes = uniqueIndexesMap[uniqueKey];
+    let mostDefinedIndex = indexes[0];
+
+    for (const index of indexes) {
+      for (const field of uniqueFields) {
+        if (
+          data[field][index] &&
+          !data[field][mostDefinedIndex]
+        ) {
+          mostDefinedIndex = index;
+        }
+      }
+    }
+
+    for (const field in data) {
+      filteredData[field] = filteredData[field] || [];
+      filteredData[field].push(data[field][mostDefinedIndex]);
+    }
+  }
+
+  return filteredData;
 }
 
 export interface Query {

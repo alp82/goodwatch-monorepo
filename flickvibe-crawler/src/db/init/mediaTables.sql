@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS media_seasons (
     season_number INTEGER NOT NULL,
     episode_count INTEGER NOT NULL,
     poster_path VARCHAR(255),
-    PRIMARY KEY (media_id, name)
+    PRIMARY KEY (media_id, name, season_number)
 );
 
 -- media ratings
