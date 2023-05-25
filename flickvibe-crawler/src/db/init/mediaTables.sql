@@ -389,18 +389,31 @@ CREATE TABLE IF NOT EXISTS people_translations (
 );
 
 -- indexes
-CREATE UNIQUE INDEX IF NOT EXISTS media_types_name_idx ON media_types (name);
-CREATE UNIQUE INDEX IF NOT EXISTS streaming_providers_name_idx ON streaming_providers (name);
-CREATE INDEX IF NOT EXISTS daily_media_filter_idx ON daily_media (tmdb_id, media_type_id);
-CREATE INDEX IF NOT EXISTS data_sources_for_media_media_id_idx ON data_sources_for_media (tmdb_id, media_type_id);
-CREATE INDEX IF NOT EXISTS media_filter_idx ON media (media_type_id, release_year);
-CREATE INDEX IF NOT EXISTS movies_filter_idx ON movies (budget, revenue);
-CREATE INDEX IF NOT EXISTS tv_filter_idx ON tv (in_production, tv_type);
-CREATE INDEX IF NOT EXISTS media_collections_media_id_idx ON media_collections (media_id);
-CREATE INDEX IF NOT EXISTS media_seasons_media_id_idx ON media_seasons (media_id);
-CREATE INDEX IF NOT EXISTS media_ratings_media_id_idx ON media_ratings (media_id);
-CREATE INDEX IF NOT EXISTS media_season_ratings_media_id_idx ON media_season_ratings (media_id);
-CREATE INDEX IF NOT EXISTS media_streaming_providers_media_id_idx ON media_streaming_providers (media_id);
+CREATE INDEX IF NOT EXISTS idx_daily_media_tmdb_id ON daily_media (tmdb_id);
+CREATE INDEX IF NOT EXISTS idx_daily_media_media_type_id ON daily_media (media_type_id);
+CREATE INDEX IF NOT EXISTS idx_data_sources_for_media_tmdb_id_media_type_id ON data_sources_for_media (tmdb_id, media_type_id);
+CREATE INDEX IF NOT EXISTS idx_data_sources_for_media_data_source_id ON data_sources_for_media (data_source_id);
+CREATE INDEX IF NOT EXISTS idx_people_id ON people (id);
+CREATE INDEX IF NOT EXISTS idx_people_tmdb_id ON people (tmdb_id);
+CREATE INDEX IF NOT EXISTS idx_media_id ON media (id);
+CREATE INDEX IF NOT EXISTS idx_media_tmdb_id ON media (tmdb_id);
+CREATE INDEX IF NOT EXISTS idx_media_alternative_titles_media_id ON media_alternative_titles (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_genres_media_id ON media_genres (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_tags_media_id ON media_tags (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_collections_media_id ON media_collections (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_seasons_media_id ON media_seasons (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_ratings_media_id ON media_ratings (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_season_ratings_media_id ON media_season_ratings (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_streaming_providers_media_id ON media_streaming_providers (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_production_companies_media_id ON media_production_companies (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_networks_media_id ON media_networks (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_cast_media_id ON media_cast (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_crew_media_id ON media_crew (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_images_media_id ON media_images (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_videos_media_id ON media_videos (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_relations_media_id ON media_relations (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_certifications_media_id ON media_certifications (media_id);
+CREATE INDEX IF NOT EXISTS idx_media_translations_media_id ON media_translations (media_id);
 
 -- initial data
 INSERT INTO media_types (id, name)

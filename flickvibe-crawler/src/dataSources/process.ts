@@ -56,7 +56,7 @@ export const processDataSource = async (
             now() - data_sources_for_media.last_attempt_at >= '${dataSourceConfig.updateIntervalMinutes} minutes'::interval
           ) AND (
             data_sources_for_media.data_status IS NULL OR
-            data_sources_for_media.data_status NOT IN ('ignore')
+            data_sources_for_media.data_status NOT IN ('ignore', 'running')
           )
           ORDER BY 
             CASE 
@@ -64,7 +64,7 @@ export const processDataSource = async (
                 ELSE 1 
             END, 
             CASE 
-                WHEN data_sources_for_media.data_status NOT IN ('failed', 'ignore') THEN 0 
+                WHEN data_sources_for_media.data_status NOT IN ('failed', 'ignore', 'running') THEN 0 
                 ELSE 1 
             END, 
             COALESCE(data_sources_for_media.last_successful_attempt_at, '1970-01-01'::timestamp) ASC, 
