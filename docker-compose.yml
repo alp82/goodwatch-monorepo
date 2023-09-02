@@ -1,8 +1,15 @@
-version: '3.5'
+version: '3.8'
 
 services:
+  mongodb:
+    image: mongo:7
+    ports:
+      - '29017:27017'
+    volumes:
+      - mongodb:/data/db
+
   postgres:
-    image: postgres
+    image: postgres:15
     env_file:
       - .env
     environment:
@@ -26,7 +33,6 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
       - pgadmin:/var/lib/pgadmin
-
     ports:
       - "${PGADMIN_PORT:-6080}:80"
     networks:
@@ -38,5 +44,6 @@ networks:
     driver: bridge
 
 volumes:
+  mongodb:
   postgres:
   pgadmin:
