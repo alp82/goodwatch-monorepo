@@ -1,7 +1,5 @@
 import requests
 
-import pandas as pd
-
 
 def url_exists(url: str):
     r = requests.head(url)

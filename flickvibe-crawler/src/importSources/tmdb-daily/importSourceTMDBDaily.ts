@@ -1,4 +1,3 @@
-import {DataSourceConfigForImport, DataSourceForImport} from "../dataSource";
 import {
   downloadAndExtract,
   ExportType,
@@ -9,6 +8,7 @@ import {
   TMDBDailyTv
 } from "./tmdb-daily-handler";
 import {pool} from "../../db/db";
+import { ImportSource, ImportSourceConfig } from '../importSource'
 
 export interface FetchedData {
   movies: TMDBDailyMovie[]
@@ -16,16 +16,15 @@ export interface FetchedData {
 }
 
 // @ts-ignore
-export class DataSourceTMDBDaily extends DataSourceForImport {
-  getConfig(): DataSourceConfigForImport {
+export class ImportSourceTMDBDaily extends ImportSource {
+  getConfig(): ImportSourceConfig {
     return {
       name: "tmdb_daily",
-      classDefinition: DataSourceTMDBDaily,
       updateIntervalMinutes: 60 * 24,
-      retryIntervalSeconds: 60,
+      retryIntervalSeconds: 60 * 5,
       batchSize: 5000,
       batchDelaySeconds: 60 * 60,
-      rateLimitDelaySeconds: 60,
+      rateLimitDelaySeconds: 60 * 10,
     }
   }
 
@@ -40,7 +39,7 @@ export class DataSourceTMDBDaily extends DataSourceForImport {
 
     if (results?.[0]?.[0]) {
       const query = `
-        SELECT tmdb_id, media_type_id FROM daily_media
+        SELECT tmdb_id, media_type FROM daily_media
         WHERE last_updated = $1
       `
       const { rows: upToDate } = await pool.query(query, [results[0][0].last_updated]);

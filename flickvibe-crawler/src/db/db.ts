@@ -1,8 +1,6 @@
 import * as dotenv from 'dotenv'
 import { DatabaseError, Pool, QueryResult } from 'pg'
-import {getCircularReplacer} from "../utils/helpers";
 import fs from "fs";
-import { AxiosError } from 'axios'
 
 dotenv.config()
 
@@ -13,27 +11,6 @@ export const pool = new Pool({
   database: process.env.POSTGRES_DB,
   port: parseInt(process.env.POSTGRES_PORT || '5432'),
 })
-
-type ColumnDataType = 'TEXT' | 'NUMERIC' | 'BOOLEAN' | 'TIMESTAMP' | 'TIMESTAMP WITH TIME ZONE' | 'JSONB'
-
-const getColumnDataType = (value: any): ColumnDataType => {
-  if (typeof value === 'number') {
-    return 'NUMERIC'
-  } else if (typeof value === 'boolean') {
-    return 'BOOLEAN'
-  } else if (typeof value === 'string') {
-    if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/)) {
-      return 'TIMESTAMP'
-    }
-  } else if (value instanceof Date) {
-    return 'TIMESTAMP WITH TIME ZONE'
-  } else if (Array.isArray(value)) {
-    return 'JSONB'
-  } else if (typeof value === 'object' && value !== null) {
-    return 'JSONB'
-  }
-  return 'TEXT'
-}
 
 export async function executeSqlFromFile(filename: string): Promise<void> {
   const sql = fs.readFileSync(filename, 'utf8');
@@ -84,11 +61,17 @@ export interface BulkUpsertResult {
 
 export const bulkUpsertData = async (
   tableName: string,
-  rawData: Record<string, unknown[]>,
+  records: Record<string, unknown>[],
   columnTypes: Record<string, string>,
   conflictColumns: string[],
   returnColumns: string[]
 ): Promise<BulkUpsertResult | undefined> => {
+  const rawData = Object.fromEntries(
+    Object.keys(records[0]).map((key) => [
+      key,
+      records.map((record) => record[key as keyof typeof record]),
+    ])
+  );
   const data = collectUniqueBulkData(rawData, conflictColumns)
 
   // query parts
@@ -99,7 +82,7 @@ export const bulkUpsertData = async (
   const groupByColumnNames = columns.filter((column) => {
     const value = data[column][0]
     const dataType = columnTypes[column] || getDataType(value)
-    return dataType !== 'json'
+    return !['JSON'].includes(dataType)
   }).map((c) => `"${c}"`).join(', ')
 
   const insertSelectColumns = columns.map((column, index) => {
@@ -107,7 +90,7 @@ export const bulkUpsertData = async (
     const dataType = columnTypes[column] || getDataType(value)
     // TODO does not account for objects
     // TODO does not work with feeding values via params
-    return dataType === 'json' ? `array_agg(${column}::text)` : `"${column}"`
+    return ['JSON'].includes(dataType) ? `array_agg(${column}::text)` : `"${column}"`
   })
   const placeholders = columns.map((column, index) => {
     const value = data[column][0]
@@ -148,7 +131,14 @@ export const bulkUpsertData = async (
   `
 
   const selectParams = conflictColumns.map((column) => data[column])
-  const upsertParams = Object.values(data)
+  const upsertParams = Object.values(data).map((paramList) => {
+    return paramList.map((param) => {
+      if (typeof param === 'object' && !Array.isArray(param)) {
+        return `"${JSON.stringify(param)}"`
+      }
+      return param
+    })
+  })
   try {
     const results = await performTransaction([
       { text: selectQuery, params: selectParams },
@@ -234,25 +224,25 @@ export interface Query {
 
 const getDataType = (value: any): string => {
   if (typeof value === 'number') {
-    return 'numeric'
+    return 'NUMERIC'
   } else if (typeof value === 'boolean') {
-    return 'boolean'
+    return 'BOOLEAN'
   } else if (typeof value === 'string') {
     if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/)) {
-      return 'timestamp'
+      return 'TIMESTAMP'
     }
     if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      return 'timestamp'
+      return 'TIMESTAMP'
     }
-    return 'text'
+    return 'TEXT'
   } else if (value instanceof Date) {
-    return 'timestamp'
+    return 'TIMESTAMP WITH TIME ZONE'
   } else if (Array.isArray(value)) {
-    return 'json'
+    return 'CSV'
   } else if (typeof value === 'object' && value !== null) {
-    return 'json'
+    return 'JSONB'
   }
-  return 'text'
+  return 'TEXT'
 }
 
 export const performTransaction = async (queries: Query[]): Promise<QueryResult[] | undefined> => {

@@ -3,7 +3,7 @@
 import cheerio from 'cheerio'
 import { userAgentHeader } from '../../utils/user-agent'
 import { tryRequests } from '../../utils/helpers'
-import { DataSourceConfigForMedia, DataSourceForMedia, MediaData } from '../dataSource'
+import { DataSourceConfig, DataSource, MediaData } from '../dataSource'
 import { bulkUpsertData, upsertData } from '../../db/db'
 
 export type RottenTomatoesPartPath = 'm' | 'tv'
@@ -26,19 +26,17 @@ export interface RottenTomatoesTvRatings {
   seasons?: RottenTomatoesRatings[]
 }
 
-export class DataSourceRottenTomatoesRatings extends DataSourceForMedia {
+export class DataSourceRottenTomatoesRatings extends DataSource {
   readonly mainUrl = 'https://www.rottentomatoes.com'
 
-  getConfig(): DataSourceConfigForMedia {
+  getConfig(): DataSourceConfig {
     return {
       name: "rotten_tomatoes_ratings",
-      classDefinition: DataSourceRottenTomatoesRatings,
       updateIntervalMinutes: 60 * 24 * 7,
       retryIntervalSeconds: 10,
-      batchSize: 5,
-      batchDelaySeconds: 2,
+      batchSize: 1,
+      batchDelaySeconds: 0,
       rateLimitDelaySeconds: 60,
-      usesExistingMedia: true,
     }
   }
 

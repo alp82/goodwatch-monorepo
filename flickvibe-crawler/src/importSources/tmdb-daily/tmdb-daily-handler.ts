@@ -10,7 +10,7 @@ export type ExportType = 'movie_ids' | 'tv_series_ids'
 
 export interface TMDBDailyMovie {
   tmdb_id: number
-  media_type_id: 1
+  media_type: 'movie'
   last_updated: Date
   original_title: string
   popularity: number
@@ -20,7 +20,7 @@ export interface TMDBDailyMovie {
 
 export interface TMDBDailyTv {
   tmdb_id: number
-  media_type_id: 2
+  media_type: 'tv'
   last_updated: Date
   original_title: string
   popularity: number
@@ -85,7 +85,7 @@ export const readLinesFromFile = async (exportType: ExportType, timestamp: Date)
       if (csvLine.original_title || csvLine.original_name) {
         entries.push({
           tmdb_id: csvLine.id,
-          media_type_id: 1,
+          media_type: 'movie',
           last_updated: timestamp,
           original_title: csvLine.original_title,
           popularity: csvLine.popularity,
@@ -111,7 +111,7 @@ export const readLinesFromFile = async (exportType: ExportType, timestamp: Date)
       if (csvLine.original_name) {
         entries.push({
           tmdb_id: csvLine.id,
-          media_type_id: 2,
+          media_type: 'tv',
           last_updated: timestamp,
           original_title: csvLine.original_name,
           popularity: csvLine.popularity,
@@ -141,7 +141,7 @@ export const insertMovieRowsInChunks = async (entries: TMDBDailyMovie[], batchSi
         (entry, row_index) => 
           `(${entry.map((_, column_index) => `$${row_index * columns.length + column_index + 1}`).join(', ')})`
         ).join(', ')}
-      ON CONFLICT (tmdb_id, media_type_id) DO UPDATE
+      ON CONFLICT (tmdb_id, media_type) DO UPDATE
       SET ${columns.map((column) => `${column} = excluded.${column}`).join(', ')}
     `
     console.log(`Writing movie batch from ${start} to ${end}`)
@@ -173,7 +173,7 @@ export const insertTvRowsInChunks = async (entries: TMDBDailyTv[], batchSize: nu
         (entry, row_index) => 
           `(${entry.map((_, column_index) => `$${row_index * columns.length + column_index + 1}`).join(', ')})`
         ).join(', ')}
-      ON CONFLICT (tmdb_id, media_type_id) DO UPDATE
+      ON CONFLICT (tmdb_id, media_type) DO UPDATE
       SET ${columns.map((column) => `${column} = excluded.${column}`).join(', ')}
     `
     console.log(`Writing tv batch from ${start} to ${end}`)

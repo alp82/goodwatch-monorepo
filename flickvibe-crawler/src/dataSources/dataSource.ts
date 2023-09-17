@@ -1,11 +1,13 @@
 import {pool} from "../db/db";
-import {Submittable} from "pg";
 import {sleep} from "../utils/helpers";
+import { FetchedMovieData, FetchedTvData } from './tmdb-details/dataSourceTMDBDetails'
 
-export type DataStatus = 'running' | 'success' | 'failed' | 'ignore'
+export type DataSourceType = 'tmdb_details' | 'imdb_ratings' | 'metacritic_ratings' | 'rotten_tomatoes_ratings' | 'tv_tropes_tags'
+export type MediaType = 'movie' | 'tv'
+export type ImportStatus = 'running' | 'success' | 'failed' | 'ignore'
 
-export interface BaseDataSourceConfig {
-  name: string
+export interface DataSourceConfig {
+  name: DataSourceType
   updateIntervalMinutes: number
   retryIntervalSeconds: number
   batchSize: number
@@ -13,100 +15,22 @@ export interface BaseDataSourceConfig {
   rateLimitDelaySeconds: number
 }
 
-export interface DataSourceConfigForImport extends BaseDataSourceConfig {
-  classDefinition: new () => DataSourceForImport
-}
-
-export interface DataSourceConfigForMedia extends BaseDataSourceConfig {
-  classDefinition: new () => DataSourceForMedia
-  usesExistingMedia: boolean
-}
-
-export type DataSourceConfig = DataSourceConfigForImport | DataSourceConfigForMedia
-
 export interface UpdateStatus {
-  newStatus: DataStatus
-  retryCount: number
-  timestamp: Date
-  success: boolean
-}
-
-export interface UpdateStatusForMedia extends UpdateStatus{
   tmdbId: number
-  mediaTypeId: number
+  mediaType: MediaType
+  status: ImportStatus
+  errors?: string[]
 }
 
-export type DataSource = DataSourceForImport | DataSourceForMedia
-
-export abstract class DataSourceForImport {
-  async process() {
-    const config = this.getConfig()
-    await this.updateStatus({ newStatus: 'running', retryCount: 0, timestamp: new Date(), success: false})
-
-    // Fetch the data from the data source
-    const data = await this.fetchData();
-
-    // If there is no data, update the status to 'failed' and continue
-    if (!data) {
-      await this.updateStatus({ newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
-      return;
-    }
-
-    // Save the data in the database
-    await this.storeData(data);
-
-    // Update the status to 'success'
-    await this.updateStatus({ newStatus: 'success', retryCount: 0, timestamp: new Date(), success: true})
-
-    // Wait for the configured delay between requests
-    await sleep(config.batchDelaySeconds * 1000);
-  }
-
-  async updateStatus({ newStatus, retryCount, timestamp, success }: UpdateStatus): Promise<void> {
-    const query = `
-      INSERT INTO data_sources_for_import (
-        data_source_id,
-        data_status,
-        retry_count,
-        last_attempt_at
-        ${success ? ', last_successful_attempt_at' : ''}
-      )
-      VALUES (
-        (SELECT id FROM data_sources WHERE name = '${this.getConfig().name}'),
-        $1,
-        $2,
-        $3
-        ${success ? ', $3' : ''}
-      )
-      ON CONFLICT (data_source_id) DO UPDATE
-      SET data_status = EXCLUDED.data_status,
-          retry_count = EXCLUDED.retry_count,
-          last_attempt_at = EXCLUDED.last_attempt_at,
-          last_successful_attempt_at = EXCLUDED.last_successful_attempt_at;
-    `
-    try {
-      await pool.query({
-        text: query.trim(),
-        values: [
-          newStatus,
-          retryCount,
-          timestamp,
-        ]
-      })
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  abstract getConfig(): DataSourceConfigForImport
-  abstract fetchData(): Promise<unknown>
-  abstract storeData(data: unknown): Promise<void>
-
+export interface UpdateStatusBulk {
+  mediaDataRows: MediaData[]
+  status: ImportStatus
+  errors?: string[]
 }
 
 export interface MediaData {
   tmdb_id: number
-  media_type_id: number
+  media_type: MediaType
   id?: number
   imdb_id?: string
   titles_dashed?: string[]
@@ -116,96 +40,182 @@ export interface MediaData {
   number_of_seasons?: number
 }
 
-export abstract class DataSourceForMedia {
-  async process(mediaData: MediaData) {
-    const { tmdb_id, media_type_id } = mediaData
+export abstract class DataSource {
+  async process(mediaDataRows: MediaData[]) {
     const config = this.getConfig()
-    await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'running', retryCount: 0, timestamp: new Date(), success: false})
+    const statusAlreadyUpdated: MediaData[] = []
+    await this.updateStatusBulk({ mediaDataRows, status: 'running' })
 
-    // Fetch the data from the data source
-    if (media_type_id === 1) {
-      const data = await this.fetchMovieData(mediaData);
+    const results: (FetchedMovieData | FetchedTvData)[] = []
+    for (const mediaData of mediaDataRows) {
+      const { tmdb_id, media_type } = mediaData
 
-      // If there is no data, update the status to 'failed' and continue
-      if (!data) {
-        await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
-        return;
+      // Fetch the data from the data source
+      if (media_type === 'movie') {
+        const data = await this.fetchMovieData(mediaData);
+
+        // If there is no data, update the status to 'failed' and continue
+        if (!data) {
+          await this.updateStatus({
+            tmdbId: tmdb_id,
+            mediaType: media_type,
+            status: 'failed',
+            errors: ['No data found'],
+          })
+          statusAlreadyUpdated.push(mediaData)
+          continue
+        }
+
+        results.push(data as FetchedMovieData)
+      } else {
+        const data = await this.fetchTvData(mediaData);
+
+        // If there is no data, update the status to 'failed' and continue
+        if (!data) {
+          await this.updateStatus({
+            tmdbId: tmdb_id,
+            mediaType: media_type,
+            status: 'failed',
+            errors: ['No data found'],
+          })
+          statusAlreadyUpdated.push(mediaData)
+          continue
+        }
+
+        results.push(data as FetchedTvData)
       }
 
       // Save the data in the database
-      await this.storeMovieData(data);
-    } else {
-      const data = await this.fetchTvData(mediaData);
+      const movieResults = results.filter((result) => result.mediaType === 'movie') as FetchedMovieData[]
+      const tvResults = results.filter((result) => result.mediaType === 'tv') as FetchedTvData[]
+      await this.storeMovieDatas(movieResults)
+      await this.storeTvDatas(tvResults)
 
-      // If there is no data, update the status to 'failed' and continue
-      if (!data) {
-        await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'failed', retryCount: 0, timestamp: new Date(), success: false})
-        return;
-      }
-
-      // Save the data in the database
-      await this.storeTvData(data);
+      // Update the status to 'success'
+      const remainingUpdates = mediaDataRows.filter((mediaData) => !statusAlreadyUpdated.includes(mediaData))
+      await this.updateStatusBulk({ mediaDataRows: remainingUpdates, status: 'success' })
     }
-
-    // Update the status to 'success'
-    await this.updateStatus({ tmdbId: tmdb_id, mediaTypeId: media_type_id, newStatus: 'success', retryCount: 0, timestamp: new Date(), success: true})
 
     // Wait for the configured delay between requests
     await sleep(config.batchDelaySeconds * 1000);
   }
 
-  async updateStatus({ tmdbId, mediaTypeId, newStatus, retryCount, timestamp, success }: UpdateStatusForMedia): Promise<void> {
-    const existsResult = await pool.query('SELECT id FROM media WHERE tmdb_id = $1 AND media_type_id = $2', [tmdbId, mediaTypeId])
-    if (!existsResult || existsResult.rowCount === 0) {
-      return
-    }
+  async updateStatus({ tmdbId, mediaType, status, errors = [] }: UpdateStatus): Promise<void> {
+    const { query, values } = this.generateUpdateQuery([{
+      tmdbId,
+      mediaType,
+      status,
+      errors
+    }])
 
-    const query = `
-      INSERT INTO data_sources_for_media (
-        tmdb_id,
-        media_type_id,
-        data_source_id,
-        data_status,
-        retry_count,
-        last_attempt_at
-        ${success ? ', last_successful_attempt_at' : ''}
-      )
-      VALUES (
-        $1,
-        $2,
-        (SELECT id FROM data_sources WHERE name = '${this.getConfig().name}'),
-        $3,
-        $4,
-        $5
-        ${success ? ', $5' : ''}
-      )
-      ON CONFLICT (tmdb_id, media_type_id, data_source_id) DO UPDATE
-      SET data_status = EXCLUDED.data_status,
-          retry_count = EXCLUDED.retry_count,
-          last_attempt_at = EXCLUDED.last_attempt_at
-          ${success ? ', last_successful_attempt_at = EXCLUDED.last_successful_attempt_at' : ''}
-          ;
-    `
     try {
       await pool.query({
-        text: query.trim(),
-        values: [
-          tmdbId,
-          mediaTypeId,
-          newStatus,
-          retryCount,
-          timestamp,
-        ]
+        text: query,
+        values: values
       })
     } catch (error) {
       console.error(error)
     }
   }
 
-  abstract getConfig(): DataSourceConfigForMedia
+  async updateStatusBulk(updateBulk: UpdateStatusBulk): Promise<void> {
+    const updates = updateBulk.mediaDataRows.map((mediaData) => {
+      const { tmdb_id, media_type } = mediaData
+      return {
+        tmdbId: tmdb_id,
+        mediaType: media_type,
+        status: updateBulk.status
+      }
+    })
+    const { query, values } = this.generateUpdateQuery(updates)
+
+    try {
+      await pool.query({
+        text: query,
+        values: values
+      })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  generateUpdateQuery(updates: UpdateStatus[]) {
+    const timestamp = new Date()
+    let valueIndex = 1
+    const queryValues: unknown[] = []
+
+    const valuePlaceholders = updates.map((update) => {
+      const { tmdbId, mediaType, status, errors = [] } = update
+      const isSuccess = status === 'success'
+      const isError = status === 'failed'
+
+      let placeholders = [
+        `$${valueIndex++}`, // $1
+        `$${valueIndex++}`, // $2
+        `$${valueIndex++}`, // $3
+        `$${valueIndex++}`, // $4
+      ]
+
+      if (isSuccess) {
+        placeholders.push(`$${valueIndex++}`) // $5
+      }
+
+      if (isError) {
+        placeholders.push(`$${valueIndex++}`) // $5 or $6 depending on the previous if condition
+      }
+
+      queryValues.push(
+        this.getConfig().name,
+        tmdbId,
+        mediaType,
+        status
+      )
+
+      if (isSuccess) {
+        queryValues.push(timestamp)
+      }
+
+      if (isError) {
+        queryValues.push(errors)
+      }
+
+      return `(${placeholders.join(', ')})`
+    })
+
+    const updateColumns = [
+      'last_status',
+      ...(updates.some((update) => update.status === 'success') ? ['last_updated_successfully'] : []),
+      ...(updates.some((update) => update.status === 'failed') ? ['last_updated_with_error', 'last_errors'] : [])
+    ]
+
+    const setClause = updateColumns.map((column, index) => `${column} = EXCLUDED.${column}`).join(',\n')
+
+    const query = `
+    INSERT INTO process_data_source (
+      data_source,
+      tmdb_id,
+      media_type,
+      last_status
+      ${updates.some((update) => update.status === 'success') ? ', last_updated_successfully' : ''}
+      ${updates.some((update) => update.status === 'failed') ? ', last_updated_with_error, last_errors' : ''}
+    )
+    VALUES
+      ${valuePlaceholders.join(',\n')}
+    ON CONFLICT (data_source, tmdb_id, media_type) DO UPDATE
+    SET ${setClause};
+  `
+
+    return {
+      query: query.trim(),
+      values: queryValues
+    }
+  }
+
+  abstract getConfig(): DataSourceConfig
+  abstract getNextBatch(): Promise<MediaData[]>
   abstract fetchMovieData(mediaData: MediaData): Promise<unknown>
   abstract fetchTvData(mediaData: MediaData): Promise<unknown>
-  abstract storeMovieData(data: unknown): Promise<void>
-  abstract storeTvData(data: unknown): Promise<void>
+  abstract storeMovieDatas(movieDatas: FetchedMovieData[]): Promise<void>
+  abstract storeTvDatas(tvDatas: FetchedTvData[]): Promise<void>
 
 }

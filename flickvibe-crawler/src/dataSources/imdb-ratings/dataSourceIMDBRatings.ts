@@ -4,7 +4,7 @@ import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 import { userAgentHeader } from '../../utils/user-agent'
 import { isRateLimited, sleep, tryRequests } from '../../utils/helpers'
-import { DataSourceConfigForMedia, DataSourceForMedia, MediaData } from '../dataSource'
+import { DataSourceConfig, DataSource, MediaData } from '../dataSource'
 import { bulkUpsertData, upsertData } from '../../db/db'
 
 export interface IMDbRatings {
@@ -23,19 +23,17 @@ export interface IMDbTvRatings {
   seasons?: IMDbRatings[]
 }
 
-export class DataSourceIMDBRatings extends DataSourceForMedia {
+export class DataSourceIMDBRatings extends DataSource {
   readonly mainUrl = 'https://www.imdb.com/title'
 
-  getConfig(): DataSourceConfigForMedia {
+  getConfig(): DataSourceConfig {
     return {
       name: "imdb_ratings",
-      classDefinition: DataSourceIMDBRatings,
       updateIntervalMinutes: 60 * 24 * 7,
       retryIntervalSeconds: 10,
-      batchSize: 5,
-      batchDelaySeconds: 2,
-      rateLimitDelaySeconds: 60,
-      usesExistingMedia: true,
+      batchSize: 1,
+      batchDelaySeconds: 0,
+      rateLimitDelaySeconds: 10,
     }
   }
 

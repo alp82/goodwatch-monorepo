@@ -4,7 +4,7 @@ import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 import { userAgentHeader } from '../../utils/user-agent'
 import { sleep, tryRequests } from '../../utils/helpers'
-import { DataSourceConfigForMedia, DataSourceForMedia, MediaData } from '../dataSource'
+import { DataSourceConfig, DataSource, MediaData } from '../dataSource'
 import { bulkUpsertData, upsertData } from '../../db/db'
 
 export type MetacriticPartPath = 'movie' | 'tv'
@@ -27,19 +27,17 @@ export interface MetacriticTvRatings {
   seasons?: MetacriticRatings[]
 }
 
-export class DataSourceMetacriticRatings extends DataSourceForMedia {
+export class DataSourceMetacriticRatings extends DataSource {
   readonly mainUrl = 'https://www.metacritic.com'
 
-  getConfig(): DataSourceConfigForMedia {
+  getConfig(): DataSourceConfig {
     return {
       name: "metacritic_ratings",
-      classDefinition: DataSourceMetacriticRatings,
       updateIntervalMinutes: 60 * 24 * 7,
       retryIntervalSeconds: 10,
-      batchSize: 5,
-      batchDelaySeconds: 2,
-      rateLimitDelaySeconds: 60,
-      usesExistingMedia: true,
+      batchSize: 1,
+      batchDelaySeconds: 0,
+      rateLimitDelaySeconds: 30,
     }
   }
 

@@ -4,7 +4,7 @@ import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 import { userAgentHeader } from '../../utils/user-agent'
 import { sleep, tryRequests } from '../../utils/helpers'
-import { DataSourceConfigForMedia, DataSourceForMedia, MediaData } from '../dataSource'
+import { DataSourceConfigForMedia, DataSource, MediaData } from '../dataSource'
 import { bulkUpsertData, BulkUpsertResult, upsertData } from '../../db/db'
 
 type TvTropesType = 'Film' | 'Series'
@@ -20,7 +20,7 @@ export interface TropesResult {
   tropes?: Tropes
 }
 
-export class DataSourceTvTropesTags extends DataSourceForMedia {
+export class DataSourceTvTropesTags extends DataSource {
   readonly mainUrl = 'https://tvtropes.org/pmwiki/pmwiki.php'
 
   getConfig(): DataSourceConfigForMedia {

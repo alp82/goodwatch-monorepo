@@ -107,10 +107,10 @@ export interface AlternativeTitle {
 export interface TMDBCollection {
   id: number
   name: string
-  overview: string
   poster_path: string
   backdrop_path: string
-  parts: Part[]
+  overview?: string
+  parts?: Part[]
 }
 
 export interface Part {

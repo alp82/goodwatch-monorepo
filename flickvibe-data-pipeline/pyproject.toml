@@ -6,11 +6,12 @@ authors = [
     {name = "Alper Ortac", email = "alportac@gmail.com"},
 ]
 dependencies = [
-    "prefect>=2.11.5",
+    "prefect>=2.13.1",
     "pandas>=2.1.0",
     "mongoengine>=0.27.0",
+    "prefect-dask>=0.2.5",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
 

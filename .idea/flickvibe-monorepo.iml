@@ -12,7 +12,7 @@
       <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/.cache" />
       <excludeFolder url="file://$MODULE_DIR$/flickvibe-webapp/public/build" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11 (flickvibe-monorepo)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.10 (flickvibe-monorepo)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
