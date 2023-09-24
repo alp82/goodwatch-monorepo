@@ -1,7 +1,8 @@
 from datetime import date, timedelta, datetime
 
-from prefect import flow, get_run_logger, task
+from prefect import flow, get_run_logger, serve, task
 from prefect.blocks.notifications import DiscordWebhook
+from prefect_dask.task_runners import DaskTaskRunner
 from pydantic import BaseModel
 from src.tmdb_daily.models import DumpType, TmdbDailyDumpAvailability
 from src.utils.db import init_db
@@ -71,7 +72,7 @@ def store_result(latest_dumps: LatestDumps):
             discord_webhook_block.notify(f"New daily dump available on TMDB for {daily_dump.type}")
 
 
-@flow
+@flow(task_runner=DaskTaskRunner())
 def tmdb_check_daily_dump_availability():
     logger = get_run_logger()
     logger.info("Checking TMDB for latest daily dump")
@@ -109,4 +110,8 @@ def tmdb_check_daily_dump_availability():
 
 
 if __name__ == "__main__":
-    tmdb_check_daily_dump_availability()
+    deployment = tmdb_check_daily_dump_availability.to_deployment(
+        name="local",
+        interval=60 * 30,
+    )
+    serve(deployment)

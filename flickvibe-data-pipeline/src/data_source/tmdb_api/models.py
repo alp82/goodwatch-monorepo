@@ -364,7 +364,7 @@ class BaseTmdbDetails(Document):
 
     created_at = DateTimeField()
     updated_at = DateTimeField()
-    fetched_at = DateTimeField()
+    selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
 

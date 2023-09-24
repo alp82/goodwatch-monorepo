@@ -2,7 +2,8 @@ import json
 from datetime import datetime
 
 import pymongo
-from prefect import flow, get_run_logger, task
+from prefect import flow, get_run_logger, serve, task
+from prefect_dask.task_runners import DaskTaskRunner
 from src.tmdb_daily.models import TmdbDailyDumpAvailability, DumpType, TmdbDailyDumpData, MediaType
 from src.utils.db import init_db
 from src.utils.file import unzip_json
@@ -102,7 +103,7 @@ def download_csv_and_store_in_db(daily_dump_availability: TmdbDailyDumpAvailabil
     daily_dump_availability.save()
 
 
-@flow
+@flow(task_runner=DaskTaskRunner())
 def tmdb_extract_daily_dump_data():
     logger = get_run_logger()
     logger.info("Checking TMDB for latest daily dumps")
@@ -114,4 +115,8 @@ def tmdb_extract_daily_dump_data():
 
 
 if __name__ == "__main__":
-    tmdb_extract_daily_dump_data()
+    deployment = tmdb_extract_daily_dump_data.to_deployment(
+        name="local",
+        interval=60 * 30,
+    )
+    serve(deployment)

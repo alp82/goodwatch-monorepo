@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Union
 
 import pymongo
-from prefect import flow, get_run_logger, task
+from prefect import flow, get_run_logger, serve, task
+from prefect_dask.task_runners import DaskTaskRunner
 
 from src.data_source.models import MediaType
 from src.data_source.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
@@ -71,7 +72,7 @@ def initialize_documents():
         store_copies(tv_operations, document_class=TmdbTvDetails, label_plural="tv series")
 
 
-@flow
+@flow(task_runner=DaskTaskRunner())
 def tmdb_init_details():
     logger = get_run_logger()
     logger.info("Prepare fetching details from TMDB API")
@@ -80,4 +81,8 @@ def tmdb_init_details():
 
 
 if __name__ == "__main__":
-    tmdb_init_details()
+    deployment = tmdb_init_details.to_deployment(
+        name="local",
+        interval=60 * 120, # TODO specific times
+    )
+    serve(deployment)
