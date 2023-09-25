@@ -110,6 +110,8 @@ def tmdb_check_daily_dump_availability():
 
 
 if __name__ == "__main__":
+    tmdb_check_daily_dump_availability()
+
     deployment = tmdb_check_daily_dump_availability.to_deployment(
         name="local",
         interval=60 * 30,

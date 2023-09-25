@@ -146,7 +146,7 @@ class ExternalIds(EmbeddedDocument):
     freebase_mid = StringField()
     freebase_id = StringField()
     tvdb_id = IntField()
-    tvrage_id = StringField()
+    tvrage_id = IntField()
     wikidata_id = StringField()
     facebook_id = StringField()
     instagram_id = StringField()
@@ -224,6 +224,7 @@ class TvResult(EmbeddedDocument):
     id = IntField()
     first_air_date = DateField()
     genre_ids = ListField(IntField())
+    media_type = StringField()
     origin_country = ListField(StringField())
     original_language = StringField()
     original_title = StringField()
@@ -276,7 +277,7 @@ class EpisodeToAir(EmbeddedDocument):
     runtime = IntField()
     season_number = IntField()
     show_id = IntField()
-    still_path = IntField()
+    still_path = StringField()
     title = StringField()
     vote_average = FloatField()
     vote_count = IntField()
@@ -401,9 +402,9 @@ class TmdbMovieDetails(BaseTmdbDetails):
     credits = EmbeddedDocumentField(CreditsMovie)
     images = EmbeddedDocumentField(Images)
     keywords = EmbeddedDocumentListField(Keyword)
-    recommendations = RecommendationsMovie
-    release_dates = ReleaseDates
-    similar = RecommendationsMovie
+    recommendations = EmbeddedDocumentField(RecommendationsMovie)
+    release_dates = EmbeddedDocumentField(ReleaseDates)
+    similar = EmbeddedDocumentField(RecommendationsMovie)
     translations = EmbeddedDocumentListField(Translation)
     videos = EmbeddedDocumentListField(Video)
     watch_providers = EmbeddedDocumentField(WatchProviders)
@@ -419,8 +420,8 @@ class TmdbTvDetails(BaseTmdbDetails):
     in_production = BooleanField()
     languages = ListField(StringField())
     last_air_date = DateField()
-    last_episode_to_air = EpisodeToAir
-    next_episode_to_air = EpisodeToAir
+    last_episode_to_air = EmbeddedDocumentField(EpisodeToAir)
+    next_episode_to_air = EmbeddedDocumentField(EpisodeToAir)
     networks = EmbeddedDocumentListField(Network)
     number_of_episodes = IntField()
     number_of_seasons = IntField()
@@ -441,11 +442,11 @@ class TmdbTvDetails(BaseTmdbDetails):
     aggregate_credits = EmbeddedDocumentField(CreditsTv)
     alternative_titles = EmbeddedDocumentListField(AlternativeTitle)
     content_ratings = EmbeddedDocumentListField(ContentRating)
-    external_ids = ExternalIds
+    external_ids = EmbeddedDocumentField(ExternalIds)
     images = EmbeddedDocumentField(Images)
     keywords = EmbeddedDocumentListField(Keyword)
-    recommendations = RecommendationsTv
-    similar = RecommendationsTv
+    recommendations = EmbeddedDocumentField(RecommendationsTv)
+    similar = EmbeddedDocumentField(RecommendationsTv)
     translations = EmbeddedDocumentListField(Translation)
     videos = EmbeddedDocumentListField(Video)
     watch_providers = EmbeddedDocumentField(WatchProviders)

@@ -115,6 +115,8 @@ def tmdb_extract_daily_dump_data():
 
 
 if __name__ == "__main__":
+    tmdb_extract_daily_dump_data()
+
     deployment = tmdb_extract_daily_dump_data.to_deployment(
         name="local",
         interval=60 * 30,

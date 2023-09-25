@@ -81,8 +81,10 @@ def tmdb_init_details():
 
 
 if __name__ == "__main__":
+    tmdb_init_details()
+
     deployment = tmdb_init_details.to_deployment(
         name="local",
-        interval=60 * 120, # TODO specific times
+        interval=60 * 120,  # TODO specific times
     )
     serve(deployment)

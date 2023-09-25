@@ -110,11 +110,11 @@ def convert_and_save_details(next_entry: Union[TmdbMovieDetails, TmdbTvDetails],
 
             if issubclass(field_type, EmbeddedDocumentListField) and value:
                 EmbeddedDoc = fields[key].field.document_type  # Get the EmbeddedDocument type
-                value = [EmbeddedDoc(**item) for item in value]
+                value = [EmbeddedDoc(**clean_empty_strings(item)) for item in value]
 
             elif issubclass(field_type, EmbeddedDocumentField) and value:
                 EmbeddedDoc = fields[key].document_type  # Get the EmbeddedDocument type
-                value = EmbeddedDoc(**value)
+                value = EmbeddedDoc(**clean_empty_strings(value))
 
             logger.debug(f"{key} => {value}")
             setattr(next_entry, key, value)
@@ -143,6 +143,8 @@ def convert_tv_details(details: dict) -> dict:
         details["keywords"] = details["keywords"]["results"]
     if details.get("last_episode_to_air", None):
         details["last_episode_to_air"]["title"] = details["last_episode_to_air"].pop("name")
+    if details.get("next_episode_to_air", None):
+        details["next_episode_to_air"]["title"] = details["next_episode_to_air"].pop("name")
     if details.get("original_name", None):
         details["original_title"] = details.pop("original_name")
     if details.get("name", None):
@@ -170,6 +172,19 @@ def convert_common_fields(details: dict) -> dict:
     return details
 
 
+def clean_empty_strings(data):
+    for key, value in data.items():
+        if isinstance(value, dict):
+            clean_empty_strings(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    clean_empty_strings(item)
+        elif value == "":
+            data[key] = None
+    return data
+
+
 @flow(task_runner=DaskTaskRunner())
 def tmdb_fetch_details_from_api():
     logger = get_run_logger()
@@ -178,7 +193,7 @@ def tmdb_fetch_details_from_api():
 
     next_entries = retrieve_next_entries.submit(count=BATCH_SIZE).result()
     if not next_entries:
-        logger.warning(f"no entries in tmdb_details")
+        logger.warning(f"no entries to fetch in tmdb details")
         return
 
     # add here some kind of loop that executes the following sequence of tasks in parallel for each entry
@@ -192,8 +207,7 @@ def tmdb_fetch_details_from_api():
 
 
 if __name__ == "__main__":
-    # while True:
-    #     tmdb_fetch_details_from_api()
+    tmdb_fetch_details_from_api()
 
     deployment = tmdb_fetch_details_from_api.to_deployment(
         name="local",
