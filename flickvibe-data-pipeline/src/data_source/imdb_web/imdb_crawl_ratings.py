@@ -1,17 +1,17 @@
 from datetime import datetime, timedelta
-from typing import Union
+from typing import Union, Optional
 
 import requests
 from bs4 import BeautifulSoup
-from mongoengine import Q
 from prefect import flow, get_run_logger, serve, task
 from prefect_dask.task_runners import DaskTaskRunner
 from pydantic import BaseModel
 
 from src.data_source.imdb_web.models import ImdbMovieRating, ImdbTvRating
+from src.data_source.utils import prepare_next_entries
 from src.utils.db import init_db
 
-BATCH_SIZE = 5
+BATCH_SIZE = 30
 BUFFER_SELECTED_AT_MINUTES = 10
 # TODO dotenv
 TMDB_API_KEY = "df95f1bae98baaf28e1c06d7a2762e27"
@@ -19,55 +19,20 @@ TMDB_API_KEY = "df95f1bae98baaf28e1c06d7a2762e27"
 
 class ImdbCrawlResult(BaseModel):
     url: str
-    user_score_original: float
-    user_score_normalized_percent: float
-    user_score_vote_count: int
+    user_score_original: Optional[float]
+    user_score_normalized_percent: Optional[float]
+    user_score_vote_count: Optional[int]
 
 
 @task
-def retrieve_next_entries(count: int):
+def retrieve_next_entries(count: int) -> Union[ImdbMovieRating, ImdbTvRating]:
     init_db()
-
-    # Get the top n entries without "selected_at" sorted by popularity
-    buffer_time_for_selected_entries = datetime.utcnow() - timedelta(minutes=BUFFER_SELECTED_AT_MINUTES)
-    movies_no_fetch = list(ImdbMovieRating.objects(
-        Q(selected_at=None) |
-        Q(__raw__={
-            "$and": [
-                {"$expr": {"$gt": ["$selected_at", "$updated_at"]}},
-                {"selected_at": {"$lt": buffer_time_for_selected_entries}}
-            ]
-        })
-    ).order_by("-popularity").limit(count))
-    tvs_no_fetch = list(ImdbTvRating.objects(
-        Q(selected_at=None) |
-        Q(__raw__={
-            "$and": [
-                {"$expr": {"$gt": ["$selected_at", "$updated_at"]}},
-                {"selected_at": {"$lt": buffer_time_for_selected_entries}}
-            ]
-        })
-    ).order_by("-popularity").limit(count))
-
-    # Get the top n entries with the oldest "selected_at"
-    movies_old_fetch = list(ImdbMovieRating.objects(selected_at__ne=None).order_by("selected_at").limit(count))
-    tvs_old_fetch = list(ImdbTvRating.objects(selected_at__ne=None).order_by("selected_at").limit(count))
-
-    # Compare and return
-    no_fetch_entries = sorted(movies_no_fetch + tvs_no_fetch, key=lambda x: x.popularity, reverse=True)[:count]
-    old_fetch_entries = sorted(movies_old_fetch + tvs_old_fetch, key=lambda x: x.selected_at)[:count]
-
-    next_entries = (no_fetch_entries + old_fetch_entries)[:count]
-
-    # Update "selected_at" field to reserve these for this worker
-    movie_ids_to_update = [entry.id for entry in next_entries if isinstance(entry, ImdbMovieRating)]
-    tv_ids_to_update = [entry.id for entry in next_entries if isinstance(entry, ImdbTvRating)]
-
-    if movie_ids_to_update:
-        ImdbMovieRating.objects(id__in=movie_ids_to_update).update(selected_at=datetime.utcnow())
-    if tv_ids_to_update:
-        ImdbTvRating.objects(id__in=tv_ids_to_update).update(selected_at=datetime.utcnow())
-
+    next_entries = prepare_next_entries(
+        movie_model=ImdbMovieRating,
+        tv_model=ImdbTvRating,
+        count=count,
+        buffer_minutes=BUFFER_SELECTED_AT_MINUTES,
+    )
     return next_entries
 
 
@@ -98,7 +63,8 @@ def crawl_imdb_page(imdb_id: str) -> ImdbCrawlResult:
     url = f"{main_url}/{imdb_id}/"
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537'}
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537'
+    }
     response = requests.get(url, headers=headers)
     html = response.text
     soup = BeautifulSoup(html, 'html.parser')
@@ -136,7 +102,7 @@ def crawl_imdb_page(imdb_id: str) -> ImdbCrawlResult:
     return ImdbCrawlResult(
         url=url,
         user_score_original=score,
-        user_score_normalized_percent=score*10,
+        user_score_normalized_percent=score*10 if score else None,
         user_score_vote_count=vote_count,
     )
 
@@ -145,9 +111,12 @@ def store_result(next_entry: Union[ImdbMovieRating, ImdbTvRating], result: ImdbC
     logger = get_run_logger()
     logger.info(f"saving rating for {next_entry.original_title}: {result.user_score_original} ({result.user_score_vote_count})")
 
-    next_entry.user_score_original = result.user_score_original
-    next_entry.user_score_normalized_percent = result.user_score_normalized_percent
-    next_entry.user_score_vote_count = result.user_score_vote_count
+    if type(result.user_score_original) in [int, float]:
+        next_entry.user_score_original = result.user_score_original
+    if type(result.user_score_normalized_percent) in [int, float]:
+        next_entry.user_score_normalized_percent = result.user_score_normalized_percent
+    if type(result.user_score_vote_count) == int:
+        next_entry.user_score_vote_count = result.user_score_vote_count
     next_entry.updated_at = datetime.utcnow()
     next_entry.save()
 

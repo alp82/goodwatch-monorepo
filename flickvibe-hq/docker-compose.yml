@@ -1,0 +1,128 @@
+version: "3.7"
+
+services:
+  db:
+    deploy:
+      # To use an external database, set replicas to 0 and set DATABASE_URL to the external database url in the .env file
+      replicas: 1
+    image: postgres:14
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_PASS}
+      POSTGRES_DB: windmill
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  windmill_server:
+    image: ${WM_IMAGE}
+    pull_policy: always
+    deploy:
+      replicas: 1
+    restart: unless-stopped
+    expose:
+      - 8000
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - RUST_LOG=info
+      ## You can set the number of workers to 1 and not need any separate worker service but not recommended
+      - NUM_WORKERS=0
+      - DISABLE_SERVER=false
+      - METRICS_ADDR=false # (ee only, if set to true, metrics will be exposed on port 8001)
+      # LICENSE_KEY is only needed for the enterprise edition
+      - LICENSE_KEY=${WM_LICENSE_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  windmill_worker:
+    image: ${WM_IMAGE}
+    pull_policy: always
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2048M
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - RUST_LOG=info
+      - DISABLE_SERVER=true
+      - KEEP_JOB_DIR=false
+      - METRICS_ADDR=false
+      - WORKER_GROUP=default
+      # LICENSE_KEY is only needed for the enterprise edition
+      - LICENSE_KEY=${WM_LICENSE_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    # to mount the worker folder to debug, KEEP_JOB_DIR=true and mount /tmp/windmill
+    volumes:
+      # mount the docker socket to allow to run docker containers from within the workers
+      - /var/run/docker.sock:/var/run/docker.sock
+      - worker_dependency_cache:/tmp/windmill/cache
+
+  ## This worker is specialized for "native" jobs. Native jobs run in-process and thus are much more lightweight than other jobs
+  windmill_worker_native:
+    # Use ghcr.io/windmill-labs/windmill-ee:main for the ee
+    image: ${WM_IMAGE}
+    pull_policy: always
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 128M
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - RUST_LOG=info
+      - DISABLE_SERVER=true
+      - METRICS_ADDR=false # (ee only, if set to true, metrics will be exposed on port 8001)
+      - WORKER_GROUP=native
+    depends_on:
+      db:
+        condition: service_healthy
+
+  lsp:
+    image: ghcr.io/windmill-labs/windmill-lsp:latest
+    restart: unless-stopped
+    expose:
+      - 3001
+    volumes:
+      - lsp_cache:/root/.cache
+
+  multiplayer:
+    image: ghcr.io/windmill-labs/windmill-multiplayer:latest
+    deploy:
+      replicas: 0 # Set to 1 to enable multiplayer, only available on Enterprise Edition
+    restart: unless-stopped
+    expose:
+      - 3002
+
+  caddy:
+    image: caddy:2.5.2-alpine
+    restart: unless-stopped
+
+    # Configure the mounted Caddyfile and the exposed ports or use another reverse proxy if needed
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      # To change the exposed port, simply change 80:80 to <desired_port>:80. No other changes needed
+      - 9000:80
+      #- 443:443 # Uncomment to enable HTTPS handling by Caddy
+    environment:
+      - BASE_URL=":80"
+      #- BASE_URL=mydomain.com # Uncomment and comment line above to enable HTTPS handling by Caddy
+
+volumes:
+  db_data: null
+  worker_dependency_cache: null
+  lsp_cache: null

@@ -7,6 +7,7 @@ from prefect import flow, get_run_logger, serve, task
 from prefect_dask.task_runners import DaskTaskRunner
 
 from src.data_source.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
+from src.data_source.utils import prepare_next_entries
 from src.utils.db import init_db
 
 BATCH_SIZE = 50
@@ -16,50 +17,14 @@ TMDB_API_KEY = "df95f1bae98baaf28e1c06d7a2762e27"
 
 
 @task
-def retrieve_next_entries(count: int):
-    logger = get_run_logger()
+def retrieve_next_entries(count: int) -> Union[TmdbMovieDetails, TmdbTvDetails]:
     init_db()
-
-    # Get the top n entries without "selected_at" sorted by popularity
-    buffer_time_for_selected_entries = datetime.utcnow() - timedelta(minutes=BUFFER_SELECTED_AT_MINUTES)
-    movies_no_fetch = list(TmdbMovieDetails.objects(
-        Q(selected_at=None) |
-        Q(__raw__={
-            "$and": [
-                {"$expr": {"$gt": ["$selected_at", "$updated_at"]}},
-                {"selected_at": {"$lt": buffer_time_for_selected_entries}}
-            ]
-        })
-    ).order_by("-popularity").limit(count))
-    tvs_no_fetch = list(TmdbTvDetails.objects(
-        Q(selected_at=None) |
-        Q(__raw__={
-            "$and": [
-                {"$expr": {"$gt": ["$selected_at", "$updated_at"]}},
-                {"selected_at": {"$lt": buffer_time_for_selected_entries}}
-            ]
-        })
-    ).order_by("-popularity").limit(count))
-
-    # Get the top n entries with the oldest "selected_at"
-    movies_old_fetch = list(TmdbMovieDetails.objects(selected_at__ne=None).order_by("selected_at").limit(count))
-    tvs_old_fetch = list(TmdbTvDetails.objects(selected_at__ne=None).order_by("selected_at").limit(count))
-
-    # Compare and return
-    no_fetch_entries = sorted(movies_no_fetch + tvs_no_fetch, key=lambda x: x.popularity, reverse=True)[:count]
-    old_fetch_entries = sorted(movies_old_fetch + tvs_old_fetch, key=lambda x: x.selected_at)[:count]
-
-    next_entries = (no_fetch_entries + old_fetch_entries)[:count]
-
-    # Update "selected_at" field to reserve these for this worker
-    movie_ids_to_update = [entry.id for entry in next_entries if isinstance(entry, TmdbMovieDetails)]
-    tv_ids_to_update = [entry.id for entry in next_entries if isinstance(entry, TmdbTvDetails)]
-
-    if movie_ids_to_update:
-        TmdbMovieDetails.objects(id__in=movie_ids_to_update).update(selected_at=datetime.utcnow())
-    if tv_ids_to_update:
-        TmdbTvDetails.objects(id__in=tv_ids_to_update).update(selected_at=datetime.utcnow())
-
+    next_entries = prepare_next_entries(
+        movie_model=TmdbMovieDetails,
+        tv_model=TmdbTvDetails,
+        count=count,
+        buffer_minutes=BUFFER_SELECTED_AT_MINUTES,
+    )
     return next_entries
 
 
