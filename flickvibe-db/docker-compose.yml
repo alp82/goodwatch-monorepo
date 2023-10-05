@@ -3,8 +3,13 @@ version: '3.9'
 services:
   mongodb:
     image: mongo:7
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASS:-secretpassword}
+      MONGO_INITDB_DATABASE: ${MONGODB_DB:-flickvibe}
     ports:
-      - '29017:27017'
+      - '${MONGODB_PORT:-29017}:27017'
     volumes:
       - mongodb:/data/db
 
@@ -20,7 +25,7 @@ services:
     volumes:
       - postgres:/data/postgres
     ports:
-      - "6432:5432"
+      - "${POSTGRES_PORT:-6432}:5432"
     networks:
       - postgres
     restart: unless-stopped
