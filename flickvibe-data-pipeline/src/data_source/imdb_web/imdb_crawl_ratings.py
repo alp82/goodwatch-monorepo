@@ -8,7 +8,7 @@ from prefect_dask.task_runners import DaskTaskRunner
 from pydantic import BaseModel
 
 from src.data_source.imdb_web.models import ImdbMovieRating, ImdbTvRating
-from src.data_source.utils import prepare_next_entries
+from src.data_source.common import prepare_next_entries
 from src.utils.db import init_db
 
 BATCH_SIZE = 30

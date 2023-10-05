@@ -7,7 +7,7 @@ from prefect import flow, get_run_logger, serve, task
 from prefect_dask.task_runners import DaskTaskRunner
 
 from src.data_source.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
-from src.data_source.utils import prepare_next_entries
+from src.data_source.common import prepare_next_entries
 from src.utils.db import init_db
 
 BATCH_SIZE = 50
