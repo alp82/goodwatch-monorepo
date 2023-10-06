@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from ssl import SSLError
 from typing import Union, Optional
 
 import requests
@@ -65,7 +66,11 @@ def crawl_imdb_page(imdb_id: str) -> ImdbCrawlResult:
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537'
     }
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers)
+    except SSLError error:
+        pass
+
     html = response.text
     soup = BeautifulSoup(html, 'html.parser')
 
