@@ -2,14 +2,6 @@
 
 See it running here: https://www.flickvibe.com/
 
-## TODO
-* install deno
-* `deno install --unstable -A https://deno.land/x/wmill/main.ts`
-
-* `wmill workspace add flickvibe flickvibe http://coinmatica.net:9000`
-* cd flickvibe-flows
-* `wmill sync pull`
-
 ## Getting started
 
 1. Checkout this repository

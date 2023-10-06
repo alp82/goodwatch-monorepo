@@ -1,0 +1,17 @@
+{
+  "summary": "",
+  "description": "",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "properties": {},
+    "required": [],
+    "type": "object"
+  },
+  "is_template": false,
+  "lock": [
+    "dnspython==2.4.2",
+    "mongoengine==0.27.0",
+    "pymongo==4.5.0"
+  ],
+  "kind": "trigger"
+}
