@@ -163,3 +163,5 @@ cython_debug/
 
 # windmill
 .wmill
+*.resource.yaml
+*.variable.yaml

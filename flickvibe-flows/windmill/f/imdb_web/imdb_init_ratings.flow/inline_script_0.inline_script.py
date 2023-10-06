@@ -29,7 +29,9 @@ def initialize_documents():
         end = min(start + BATCH_SIZE, total_movies)
         print(f"Processing movies {start} to {end}")
 
-        tmdb_movie_records = TmdbMovieDetails.objects(imdb_id__ne=None).skip(start).limit(BATCH_SIZE)
+        tmdb_movie_records = (
+            TmdbMovieDetails.objects(imdb_id__ne=None).skip(start).limit(BATCH_SIZE)
+        )
 
         for tmdb_movie in tmdb_movie_records:
             operation = build_operation(tmdb_entry=tmdb_movie, type=DumpType.MOVIES)
@@ -40,7 +42,11 @@ def initialize_documents():
         end = min(start + BATCH_SIZE, total_tv)
         print(f"Processing tv shows {start} to {end}")
 
-        tmdb_tv_records = TmdbTvDetails.objects(external_ids__imdb_id__ne=None).skip(start).limit(BATCH_SIZE)
+        tmdb_tv_records = (
+            TmdbTvDetails.objects(external_ids__imdb_id__ne=None)
+            .skip(start)
+            .limit(BATCH_SIZE)
+        )
 
         for tmdb_tv in tmdb_tv_records:
             operation = build_operation(tmdb_entry=tmdb_tv, type=DumpType.TV_SERIES)
@@ -95,7 +101,7 @@ def store_copies(
     operations: list[pymongo.UpdateOne],
     document_class: Union[Type[ImdbMovieRating], Type[ImdbTvRating]],
     label_plural: str,
-):
+) -> int:
     count_new_documents = 0
     for start in range(0, len(operations), BATCH_SIZE):
         end = min(start + BATCH_SIZE, len(operations))
@@ -107,7 +113,7 @@ def store_copies(
     if count_new_documents:
         print(f"Added {count_new_documents} new ratings for {label_plural}")
 
-    return store_copies
+    return count_new_documents
 
 
 def imdb_init_details():
@@ -120,5 +126,5 @@ def main():
     return imdb_init_details()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
