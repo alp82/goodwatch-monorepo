@@ -46,11 +46,10 @@ def initialize_documents():
             operation = build_operation(tmdb_entry=tmdb_tv, type=DumpType.TV_SERIES)
             tv_operations.append(operation)
 
-    return
-
     print(
         f"Storing copies of {len(movie_operations)} movies and {len(tv_operations)} tv series"
     )
+
     count_new_movies = 0
     count_new_tv = 0
     if movie_operations:

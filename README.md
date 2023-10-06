@@ -27,6 +27,15 @@ vercel deploy --prod
 ```
 
 
+## Troubleshooting Server
+
+### Not enough disc space
+```
+docker image prune -a
+docker builder prune
+```
+
+
 ## TODO's
 ```
 data sources:
