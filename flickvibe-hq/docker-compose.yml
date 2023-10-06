@@ -28,7 +28,6 @@ services:
     restart: unless-stopped
     expose:
       - 8000
-    working_dir: /tmp
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - RUST_LOG=info
