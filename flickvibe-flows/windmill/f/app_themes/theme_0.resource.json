@@ -1,8 +1,0 @@
-{
-  "description": "The default app theme",
-  "resource_type": "app_theme",
-  "value": {
-    "name": "Default Theme",
-    "value": ""
-  }
-}

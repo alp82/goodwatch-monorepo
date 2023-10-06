@@ -1,0 +1,5 @@
+description: The default app theme
+value:
+  name: Default Theme
+  value: ''
+resource_type: app_theme
