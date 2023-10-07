@@ -1,5 +1,5 @@
 summary: ''
-description: ''
+description: 'Download latest TMDB Daily Dump, extract JSON and persist in database'
 lock:
   - anyio==4.0.0
   - attrs==23.1.0

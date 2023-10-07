@@ -1,11 +1,13 @@
 summary: ''
 description: >-
-  Check if new TMDB Daily Dump is available for processing and persist meta
-  information for processing
+  Retrieve next batch of entries in order to crawl IMDB pages and find ratings
+  information
 lock:
   - annotated-types==0.5.0
   - anyio==4.0.0
   - attrs==23.1.0
+  - beautifulsoup4==4.12.2
+  - bs4==0.0.1
   - certifi==2023.7.22
   - charset-normalizer==3.3.0
   - dnspython==2.4.2
@@ -21,6 +23,7 @@ lock:
   - requests==2.31.0
   - six==1.16.0
   - sniffio==1.3.0
+  - soupsieve==2.5
   - typing-extensions==4.8.0
   - urllib3==2.0.6
   - windmill-api==1.181.0

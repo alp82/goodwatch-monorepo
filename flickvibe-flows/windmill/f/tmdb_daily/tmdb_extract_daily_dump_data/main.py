@@ -64,7 +64,7 @@ def prepare_data(dump_data, dump_type: DumpType):
     return converted_rows
 
 
-def download_csv_and_store_in_db(daily_dump_availability: TmdbDailyDumpAvailability):
+def download_zip_and_store_in_db(daily_dump_availability: TmdbDailyDumpAvailability):
     daily_dump_availability.started_at = datetime.utcnow
     daily_dump_availability.save()
 
@@ -117,7 +117,7 @@ def tmdb_extract_daily_dump_data():
 
     daily_dump_infos = get_daily_dump_infos()
     for daily_dump_info in daily_dump_infos:
-        download_csv_and_store_in_db(daily_dump_info)
+        download_zip_and_store_in_db(daily_dump_info)
     
     return daily_dump_infos
 
