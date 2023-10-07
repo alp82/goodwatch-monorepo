@@ -1,4 +1,4 @@
-summary: Check if new TMDB daily dump is available
+summary: ''
 description: ''
 lock:
   - annotated-types==0.5.0
