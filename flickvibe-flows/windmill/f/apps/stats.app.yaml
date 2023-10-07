@@ -1,0 +1,76 @@
+summary: Stats
+value:
+  css:
+    buttoncomponent:
+      button:
+        class: ''
+        style: ''
+      container:
+        class: ''
+        style: ''
+  fullscreen: false
+  grid:
+    - '12':
+        id: c
+        fixed: false
+        h: 8
+        w: 6
+        x: 0
+        y: 0
+      '3':
+        fixed: false
+        h: 8
+        w: 2
+        x: 0
+        y: 2
+      id: c
+      data:
+        id: c
+        type: displaycomponent
+        componentInput:
+          type: runnable
+          value:
+            foo: 42
+          autoRefresh: true
+          connections: []
+          expr: ''
+          fields: {}
+          fieldType: object
+          recomputeOnInputChanged: true
+          runnable:
+            type: runnableByPath
+            name: f/scripts/counts
+            path: f/scripts/counts
+            runType: script
+            schema:
+              $schema: 'https://json-schema.org/draft/2020-12/schema'
+              type: object
+              properties: {}
+              required: []
+        configuration:
+          hideDetails:
+            type: static
+            value: false
+          title:
+            type: static
+            value: Counts
+        customCss:
+          container:
+            class: ''
+            style: ''
+          header:
+            class: ''
+            style: ''
+  hiddenInlineScripts: []
+  norefreshbar: false
+  subgrids: {}
+  theme:
+    type: path
+    path: f/app_themes/theme_0
+  unusedInlineScripts: []
+policy:
+  execution_mode: publisher
+  on_behalf_of: u/Alp
+  on_behalf_of_email: alportac@gmail.com
+  triggerables:
+    'c:script/f/scripts/counts': {}
