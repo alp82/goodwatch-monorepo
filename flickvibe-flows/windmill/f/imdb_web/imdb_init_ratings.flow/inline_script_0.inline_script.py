@@ -48,7 +48,7 @@ def initialize_documents():
 
         for tmdb_tv in tmdb_tv_cursor:
             operation = build_operation(tmdb_entry=tmdb_tv, type=DumpType.TV_SERIES)
-            movie_operations.append(operation)
+            tv_operations.append(operation)
 
     print(
         f"Storing copies of {len(movie_operations)} movies and {len(tv_operations)} tv series"
