@@ -5,9 +5,10 @@ description: >-
 value:
   modules:
     - id: a
+      summary: Create Copies to prepare TMDB API calls
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.py'
+        content: '!inline create_copies_to_prepare_tmdb_api_calls.inline_script.py'
         input_transforms: {}
         lock: |-
           anyio==4.0.0

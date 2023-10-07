@@ -20,7 +20,9 @@ def initialize_documents():
     imdb_tv_collection = db["imdb_tv_rating"]
 
     total_movies = tmdb_movie_collection.count_documents({"imdb_id": {"$ne": None}})
-    total_tv = tmdb_tv_collection.count_documents({"external_ids.imdb_id": {"$ne": None}})
+    total_tv = tmdb_tv_collection.count_documents(
+        {"external_ids.imdb_id": {"$ne": None}}
+    )
 
     print(f"Total movie objects with IMDB ID: {total_movies}")
     print(f"Total tv objects with IMDB ID: {total_tv}")
@@ -33,7 +35,11 @@ def initialize_documents():
         end = min(start + BATCH_SIZE, total_movies)
         print(f"Processing movies {start} to {end}")
 
-        tmdb_movie_cursor = tmdb_movie_collection.find({"imdb_id": {"$ne": None}}).skip(start).limit(BATCH_SIZE)
+        tmdb_movie_cursor = (
+            tmdb_movie_collection.find({"imdb_id": {"$ne": None}})
+            .skip(start)
+            .limit(BATCH_SIZE)
+        )
 
         for tmdb_movie in tmdb_movie_cursor:
             operation = build_operation(tmdb_entry=tmdb_movie, type=DumpType.MOVIES)
@@ -44,7 +50,11 @@ def initialize_documents():
         end = min(start + BATCH_SIZE, total_tv)
         print(f"Processing tv shows {start} to {end}")
 
-        tmdb_tv_cursor = tmdb_tv_collection.find({"external_ids.imdb_id": {"$ne": None}}).skip(start).limit(BATCH_SIZE)
+        tmdb_tv_cursor = (
+            tmdb_tv_collection.find({"external_ids.imdb_id": {"$ne": None}})
+            .skip(start)
+            .limit(BATCH_SIZE)
+        )
 
         for tmdb_tv in tmdb_tv_cursor:
             operation = build_operation(tmdb_entry=tmdb_tv, type=DumpType.TV_SERIES)
@@ -101,7 +111,6 @@ def store_copies(
     collection: Collection,
     label_plural: str,
 ) -> int:
-
     count_new_documents = 0
     for start in range(0, len(operations), BATCH_SIZE):
         end = min(start + BATCH_SIZE, len(operations))
@@ -111,7 +120,9 @@ def store_copies(
         count_new_documents += bulk_result.upserted_count
 
     if count_new_documents:
-        print(f"Added {count_new_documents} new ratings for {label_plural}")
+        print(
+            f"Added {count_new_documents} new documents for fetching IMDB {label_plural} ratings"
+        )
 
     return count_new_documents
 
