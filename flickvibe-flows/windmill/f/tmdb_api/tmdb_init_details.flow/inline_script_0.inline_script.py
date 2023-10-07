@@ -1,36 +1,37 @@
 from datetime import datetime
-import pymongo
-from typing import Union
+from mongoengine import get_db
+from pymongo import UpdateOne
+from pymongo.collection import Collection
 import wmill
 
 from f.data_source.models import MediaType
 from f.db.mongodb import init_mongodb
-from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
-from f.tmdb_daily.models import TmdbDailyDumpData
 
 BATCH_SIZE = 50000
 
 
 def initialize_documents():
     print("Initializing documents for details")
-
-    tmdb_dump_records = TmdbDailyDumpData.objects
+    db = get_db()
+    tmdb_daily_dump_collection = db["tmdb_daily_dump_data"]
+    tmdb_movie_collection = db["tmdb_movie_details"]
+    tmdb_tv_collection = db["tmdb_tv_details"]
 
     movie_operations = []
     tv_operations = []
-    for tmdb_dump in tmdb_dump_records:
+    for tmdb_dump in tmdb_daily_dump_collection.find():
         date_now = datetime.utcnow()
         update_fields = {
-            "original_title": tmdb_dump.original_title,
-            "popularity": tmdb_dump.popularity,
-            "adult": tmdb_dump.adult,
-            "video": tmdb_dump.video,
+            "original_title": tmdb_dump.get("original_title"),
+            "popularity": tmdb_dump.get("popularity"),
+            "adult": tmdb_dump.get("adult"),
+            "video": tmdb_dump.get("video"),
             "updated_at": date_now,
         }
 
-        operation = pymongo.UpdateOne(
+        operation = UpdateOne(
             {
-                "tmdb_id": tmdb_dump.tmdb_id,
+                "tmdb_id": tmdb_dump.get("tmdb_id"),
             },
             {"$setOnInsert": {"created_at": date_now}, "$set": update_fields},
             upsert=True,
@@ -49,11 +50,11 @@ def initialize_documents():
     count_new_tv = 0
     if movie_operations:
         count_new_movies = store_copies(
-            movie_operations, document_class=TmdbMovieDetails, label_plural="movies"
+            movie_operations, collection=tmdb_movie_collection, label_plural="movies"
         )
     if tv_operations:
         count_new_tv = store_copies(
-            tv_operations, document_class=TmdbTvDetails, label_plural="tv series"
+            tv_operations, collection=tmdb_tv_collection, label_plural="tv series"
         )
 
     return {
@@ -63,8 +64,8 @@ def initialize_documents():
 
 
 def store_copies(
-    operations: list[pymongo.UpdateOne],
-    document_class: Union[TmdbMovieDetails, TmdbTvDetails],
+    operations: list[UpdateOne],
+    collection: Collection,
     label_plural: str,
 ):
     count_new_documents = 0
@@ -72,7 +73,7 @@ def store_copies(
         end = min(start + BATCH_SIZE, len(operations))
         print(f"copying {start} to {end} {label_plural}")
         batch = operations[start:end]
-        bulk_result = document_class._get_collection().bulk_write(batch)
+        bulk_result = collection.bulk_write(batch)
         count_new_documents += bulk_result.upserted_count
 
     if count_new_documents:
@@ -89,3 +90,7 @@ def tmdb_init_details():
 
 def main():
     return tmdb_init_details()
+
+
+if __name__ == '__main__':
+    main()
