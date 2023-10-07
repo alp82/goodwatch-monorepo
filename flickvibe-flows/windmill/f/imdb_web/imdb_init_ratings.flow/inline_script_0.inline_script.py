@@ -105,7 +105,7 @@ def store_copies(
     count_new_documents = 0
     for start in range(0, len(operations), BATCH_SIZE):
         end = min(start + BATCH_SIZE, len(operations))
-        print(f"copying {start} to {end} movies")
+        print(f"copying {start} to {end} {label_plural}")
         batch = operations[start:end]
         bulk_result = collection.bulk_write(batch)
         count_new_documents += bulk_result.upserted_count
