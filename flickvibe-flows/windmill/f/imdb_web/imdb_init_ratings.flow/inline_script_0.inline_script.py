@@ -1,22 +1,26 @@
 from datetime import datetime
-import pymongo
-from typing import Union, Type
+from mongoengine import get_db
+from pymongo import UpdateOne
+from pymongo.collection import Collection
 import wmill
 
 from f.db.mongodb import init_mongodb
-from f.imdb_web.models import ImdbMovieRating, ImdbTvRating
-from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 from f.tmdb_daily.models import DumpType
 
 
-BATCH_SIZE = 1000
+BATCH_SIZE = 10000
 
 
 def initialize_documents():
     print("Initializing documents for IMDB ratings")
+    db = get_db()
+    tmdb_movie_collection = db["tmdb_movie_details"]
+    tmdb_tv_collection = db["tmdb_tv_details"]
+    imdb_movie_collection = db["imdb_movie_rating"]
+    imdb_tv_collection = db["imdb_tv_rating"]
 
-    total_movies = TmdbMovieDetails.objects(imdb_id__ne=None).count()
-    total_tv = TmdbTvDetails.objects(external_ids__imdb_id__ne=None).count()
+    total_movies = tmdb_movie_collection.count_documents({"imdb_id": {"$ne": None}})
+    total_tv = tmdb_tv_collection.count_documents({"external_ids.imdb_id": {"$ne": None}})
 
     print(f"Total movie objects with IMDB ID: {total_movies}")
     print(f"Total tv objects with IMDB ID: {total_tv}")
@@ -29,11 +33,9 @@ def initialize_documents():
         end = min(start + BATCH_SIZE, total_movies)
         print(f"Processing movies {start} to {end}")
 
-        tmdb_movie_records = (
-            TmdbMovieDetails.objects(imdb_id__ne=None).skip(start).limit(BATCH_SIZE)
-        )
+        tmdb_movie_cursor = tmdb_movie_collection.find({"imdb_id": {"$ne": None}}).skip(start).limit(BATCH_SIZE)
 
-        for tmdb_movie in tmdb_movie_records:
+        for tmdb_movie in tmdb_movie_cursor:
             operation = build_operation(tmdb_entry=tmdb_movie, type=DumpType.MOVIES)
             movie_operations.append(operation)
 
@@ -42,15 +44,11 @@ def initialize_documents():
         end = min(start + BATCH_SIZE, total_tv)
         print(f"Processing tv shows {start} to {end}")
 
-        tmdb_tv_records = (
-            TmdbTvDetails.objects(external_ids__imdb_id__ne=None)
-            .skip(start)
-            .limit(BATCH_SIZE)
-        )
+        tmdb_tv_cursor = tmdb_tv_collection.find({"external_ids.imdb_id": {"$ne": None}}).skip(start).limit(BATCH_SIZE)
 
-        for tmdb_tv in tmdb_tv_records:
+        for tmdb_tv in tmdb_tv_cursor:
             operation = build_operation(tmdb_entry=tmdb_tv, type=DumpType.TV_SERIES)
-            tv_operations.append(operation)
+            movie_operations.append(operation)
 
     print(
         f"Storing copies of {len(movie_operations)} movies and {len(tv_operations)} tv series"
@@ -60,11 +58,11 @@ def initialize_documents():
     count_new_tv = 0
     if movie_operations:
         count_new_movies = store_copies(
-            movie_operations, document_class=ImdbMovieRating, label_plural="movies"
+            movie_operations, collection=imdb_movie_collection, label_plural="movies"
         )
     if tv_operations:
         count_new_tv = store_copies(
-            tv_operations, document_class=ImdbTvRating, label_plural="tv series"
+            tv_operations, collection=imdb_tv_collection, label_plural="tv series"
         )
 
     return {
@@ -73,23 +71,24 @@ def initialize_documents():
     }
 
 
-def build_operation(tmdb_entry, type: DumpType):
+def build_operation(tmdb_entry: dict, type: DumpType):
     date_now = datetime.utcnow()
     imdb_id = (
-        tmdb_entry.imdb_id
+        tmdb_entry.get("imdb_id")
         if type == DumpType.MOVIES
-        else tmdb_entry.external_ids.imdb_id
+        else tmdb_entry.get("external_ids", {}).get("imdb_id")
     )
 
     update_fields = {
         "imdb_id": imdb_id,
-        "original_title": tmdb_entry.original_title,
-        "popularity": tmdb_entry.popularity,
+        "original_title": tmdb_entry.get("original_title"),
+        "popularity": tmdb_entry.get("popularity"),
         "updated_at": date_now,
     }
-    operation = pymongo.UpdateOne(
+
+    operation = UpdateOne(
         {
-            "tmdb_id": tmdb_entry.tmdb_id,
+            "tmdb_id": tmdb_entry.get("tmdb_id"),
         },
         {"$setOnInsert": {"created_at": date_now}, "$set": update_fields},
         upsert=True,
@@ -98,16 +97,17 @@ def build_operation(tmdb_entry, type: DumpType):
 
 
 def store_copies(
-    operations: list[pymongo.UpdateOne],
-    document_class: Union[Type[ImdbMovieRating], Type[ImdbTvRating]],
+    operations: list[UpdateOne],
+    collection: Collection,
     label_plural: str,
 ) -> int:
+
     count_new_documents = 0
     for start in range(0, len(operations), BATCH_SIZE):
         end = min(start + BATCH_SIZE, len(operations))
         print(f"copying {start} to {end} movies")
         batch = operations[start:end]
-        bulk_result = document_class._get_collection().bulk_write(batch)
+        bulk_result = collection.bulk_write(batch)
         count_new_documents += bulk_result.upserted_count
 
     if count_new_documents:
