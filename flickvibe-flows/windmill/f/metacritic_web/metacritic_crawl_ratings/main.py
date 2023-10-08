@@ -132,9 +132,9 @@ def crawl_metacritic_page(
     if meta_score_vote_count_element:
         meta_score_vote_count_text = meta_score_vote_count_element.string
         try:
-            match = re.search(r"\d+", meta_score_vote_count_text)
+            match = re.search(r"[\d,]+", meta_score_vote_count_text)
             if match:
-                meta_score_vote_count = int(match.group())
+                meta_score_vote_count = int(match.group().replace(",", ""))
         except ValueError:
             pass
 
@@ -142,9 +142,9 @@ def crawl_metacritic_page(
     if user_score_vote_count_element:
         user_score_vote_count_text = user_score_vote_count_element.string
         try:
-            match = re.search(r"\d+", user_score_vote_count_text)
+            match = re.search(r"[\d,]+", user_score_vote_count_text)
             if match:
-                user_score_vote_count = int(match.group())
+                user_score_vote_count = int(match.group().replace(",", ""))
         except ValueError:
             pass
 
@@ -164,7 +164,7 @@ def store_result(
     result: MetacriticCrawlResult,
 ):
     print(
-        f"saving rating for {next_entry.original_title}: {result.user_score_original} ({result.user_score_vote_count})"
+        f"saving rating for {next_entry.original_title}: {result.meta_score_original} ({result.meta_score_vote_count}) / {result.user_score_original} ({result.user_score_vote_count})"
     )
 
     if type(result.url) in [str]:
