@@ -93,7 +93,6 @@ def build_operation(tmdb_entry: dict, type: DumpType):
     update_fields = {
         "original_title": tmdb_entry.get("original_title"),
         "popularity": tmdb_entry.get("popularity"),
-        "updated_at": date_now,
         "title_variations": title_variations,
         "release_year": release_date.year if release_date else None,
     }

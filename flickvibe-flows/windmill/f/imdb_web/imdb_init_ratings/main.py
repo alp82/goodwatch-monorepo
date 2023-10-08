@@ -93,7 +93,6 @@ def build_operation(tmdb_entry: dict, type: DumpType):
         "imdb_id": imdb_id,
         "original_title": tmdb_entry.get("original_title"),
         "popularity": tmdb_entry.get("popularity"),
-        "updated_at": date_now,
     }
 
     operation = UpdateOne(

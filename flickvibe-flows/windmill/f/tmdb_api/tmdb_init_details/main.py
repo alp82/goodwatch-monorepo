@@ -26,7 +26,6 @@ def initialize_documents():
             "popularity": tmdb_dump.get("popularity"),
             "adult": tmdb_dump.get("adult"),
             "video": tmdb_dump.get("video"),
-            "updated_at": date_now,
         }
 
         operation = UpdateOne(
