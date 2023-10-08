@@ -42,7 +42,11 @@ services:
         condition: service_healthy
 
   windmill_worker:
-    image: ${WM_IMAGE}
+    #image: ${WM_IMAGE}
+    build:
+      context: ./worker
+      args:
+        WM_IMAGE: ${WM_IMAGE}
     pull_policy: always
     deploy:
       replicas: 8
