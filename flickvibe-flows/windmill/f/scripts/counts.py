@@ -4,6 +4,7 @@ import wmill
 from f.db.mongodb import init_mongodb
 from f.imdb_web.models import ImdbMovieRating, ImdbTvRating
 from f.metacritic_web.models import MetacriticMovieRating, MetacriticTvRating
+from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRating
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 
@@ -65,10 +66,33 @@ def count_metacritic_ratings():
     }
 
 
+def count_rotten_tomatoes_ratings():
+    count_movies_selected = RottenTomatoesMovieRating.objects(selected_at__ne=None).count()
+    count_tv_selected = RottenTomatoesTvRating.objects(selected_at__ne=None).count()
+    count_movies = RottenTomatoesMovieRating.objects(
+        Q(audience_score_original__ne=None) | Q(tomato_score_original__ne=None)
+    ).count()
+    count_tv = RottenTomatoesTvRating.objects(
+        Q(audience_score_original__ne=None) | Q(tomato_score_original__ne=None)
+    ).count()
+
+    return {
+        "selected": {
+            "movie": count_movies_selected,
+            "tv": count_tv_selected,
+        },
+        "with_rating": {
+            "movie": count_movies,
+            "tv": count_tv,
+        },
+    }
+
+
 def main():
     init_mongodb()
     return {
         "tmdb_details": count_tmdb_details(),
         "imdb_ratings": count_imdb_ratings(),
         "metacritic_ratings": count_metacritic_ratings(),
+        "rotten_ratings": count_rotten_tomatoes_ratings(),
     }
