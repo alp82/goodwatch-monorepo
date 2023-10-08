@@ -45,11 +45,11 @@ services:
     image: ${WM_IMAGE}
     pull_policy: always
     deploy:
-      replicas: 5
+      replicas: 8
       resources:
         limits:
-          cpus: "2"
-          memory: 8192M
+          cpus: "1"
+          memory: 4096M
     restart: unless-stopped
     environment:
       - DATABASE_URL=${DATABASE_URL}

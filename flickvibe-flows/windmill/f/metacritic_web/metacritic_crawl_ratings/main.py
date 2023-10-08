@@ -18,7 +18,7 @@ TMDB_API_KEY = "df95f1bae98baaf28e1c06d7a2762e27"
 
 
 class MetacriticCrawlResult(BaseModel):
-    url: str
+    url: Optional[str]
     meta_score_original: Optional[float]
     meta_score_normalized_percent: Optional[float]
     meta_score_vote_count: Optional[int]
@@ -52,21 +52,19 @@ async def crawl_data(
 
 def crawl_movie_rating(next_entry: MetacriticMovieRating) -> MetacriticCrawlResult:
     result = crawl_metacritic_page(next_entry=next_entry, type="movie")
-    if result:
-        store_result(next_entry=next_entry, result=result)
+    store_result(next_entry=next_entry, result=result)
     return result
 
 
 def crawl_tv_rating(next_entry: MetacriticTvRating) -> MetacriticCrawlResult:
     result = crawl_metacritic_page(next_entry=next_entry, type="tv")
-    if result:
-        store_result(next_entry=next_entry, result=result)
+    store_result(next_entry=next_entry, result=result)
     return result
 
 
 def crawl_metacritic_page(
     next_entry: Union[MetacriticMovieRating, MetacriticTvRating], type: str
-) -> Optional[MetacriticCrawlResult]:
+) -> MetacriticCrawlResult:
     main_url = "https://www.metacritic.com"
     base_url = f"{main_url}/{type}"
 
@@ -95,7 +93,15 @@ def crawl_metacritic_page(
             break
 
     if not response:
-        return
+        return MetacriticCrawlResult(
+            url=None,
+            meta_score_original=None,
+            meta_score_normalized_percent=None,
+            meta_score_vote_count=None,
+            user_score_original=None,
+            user_score_normalized_percent=None,
+            user_score_vote_count=None,
+        )
 
     html = response.text
     soup = BeautifulSoup(html, "html.parser")
