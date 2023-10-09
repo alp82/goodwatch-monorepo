@@ -89,7 +89,7 @@ async def crawl_rotten_tomatoes_page(
             for title in next_entry.title_variations
             for i in range(2)
         ]
-        if next_entry.release_year
+        if next_entry.release_year and is_ambiguous_title(next_entry.original_title, type)
         else next_entry.title_variations
     )
     all_urls = [f"{base_url}/{title}" for title in all_variations]
@@ -189,6 +189,18 @@ async def crawl_rotten_tomatoes_page(
     )
 
 
+def is_ambiguous_title(
+    original_title: str,
+    type: str
+) -> bool:
+    if type == "m":
+        count_with_same_title = RottenTomatoesMovieRating.objects(original_title=original_title).count()
+    else:
+        count_with_same_title = RottenTomatoesTvRating.objects(original_title=original_title).count()
+
+    return count_with_same_title > 1
+
+
 def store_result(
     next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating],
     result: RottenTomatoesCrawlResult,
@@ -270,5 +282,14 @@ def main():
     return asyncio.run(rotten_tomatoes_crawl_ratings())
 
 
+async def debug():
+    init_mongodb()
+    next_entry = RottenTomatoesMovieRating.objects.get(tmdb_id=680)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        result = await crawl_data(next_entry, browser)
+        await browser.close()
+
 if __name__ == "__main__":
-    main()
+    # main()
+    asyncio.run(debug())
