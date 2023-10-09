@@ -1,17 +1,15 @@
 import asyncio
-from bs4 import BeautifulSoup
 from datetime import datetime
+from playwright.async_api import async_playwright, Browser
 from pydantic import BaseModel
 import re
-import requests
-from ssl import SSLError
 from typing import Union, Optional
 
 from f.data_source.common import prepare_next_entries
 from f.db.mongodb import init_mongodb
 from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRating
 
-BATCH_SIZE = 3
+BATCH_SIZE = 1
 BUFFER_SELECTED_AT_MINUTES = 30
 # TODO dotenv
 TMDB_API_KEY = "df95f1bae98baaf28e1c06d7a2762e27"
@@ -41,34 +39,45 @@ def retrieve_next_entries(
 
 
 async def crawl_data(
-    next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating]
+    next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating],
+    browser: Browser,
 ) -> tuple[
     RottenTomatoesCrawlResult, Union[RottenTomatoesMovieRating, RottenTomatoesTvRating]
 ]:
     if isinstance(next_entry, RottenTomatoesMovieRating):
-        return crawl_movie_rating(next_entry), next_entry
+        return await crawl_movie_rating(next_entry, browser), next_entry
     elif isinstance(next_entry, RottenTomatoesTvRating):
-        return crawl_tv_rating(next_entry), next_entry
+        return await crawl_tv_rating(next_entry, browser), next_entry
     else:
         raise Exception(f"next_entry has an unexpected type: {type(next_entry)}")
 
 
-def crawl_movie_rating(
+async def crawl_movie_rating(
     next_entry: RottenTomatoesMovieRating,
+    browser: Browser,
 ) -> RottenTomatoesCrawlResult:
-    result = crawl_rotten_tomatoes_page(next_entry=next_entry, type="m")
+    result = await crawl_rotten_tomatoes_page(
+        next_entry=next_entry, type="m", browser=browser
+    )
     store_result(next_entry=next_entry, result=result)
     return result
 
 
-def crawl_tv_rating(next_entry: RottenTomatoesTvRating) -> RottenTomatoesCrawlResult:
-    result = crawl_rotten_tomatoes_page(next_entry=next_entry, type="tv")
+async def crawl_tv_rating(
+    next_entry: RottenTomatoesTvRating,
+    browser: Browser,
+) -> RottenTomatoesCrawlResult:
+    result = await crawl_rotten_tomatoes_page(
+        next_entry=next_entry, type="tv", browser=browser
+    )
     store_result(next_entry=next_entry, result=result)
     return result
 
 
-def crawl_rotten_tomatoes_page(
-    next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating], type: str
+async def crawl_rotten_tomatoes_page(
+    next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating],
+    type: str,
+    browser: Browser,
 ) -> RottenTomatoesCrawlResult:
     main_url = "https://www.rottentomatoes.com"
     base_url = f"{main_url}/{type}"
@@ -84,19 +93,17 @@ def crawl_rotten_tomatoes_page(
     )
     all_urls = [f"{base_url}/{title}" for title in all_variations]
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
-    }
-    response = None
+    # headers = {
+    #     #        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+    #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
+    #     "Accept-Language": "en-US,en;q=0.9",
+    #     "Referer": "https://www.google.com/",
+    # }
     for url in all_urls:
-        try:
-            print(url)
-            response = requests.get(url, headers=headers)
-        except SSLError as error:
-            # TODO error handling
-            print(error)
-            raise error
-        if response.status_code == 403:
+        print(f"trying url: {url}")
+        page = await browser.new_page()
+        response = await page.goto(url)
+        if response.status == 403:
             return RottenTomatoesCrawlResult(
                 url=None,
                 tomato_score_original=None,
@@ -107,10 +114,10 @@ def crawl_rotten_tomatoes_page(
                 audience_score_vote_count=None,
                 rate_limit_reached=True,
             )
-        elif response.status_code == 200:
+        elif response.status == 200:
             break
 
-    if not response:
+    if response.status != 200:
         return RottenTomatoesCrawlResult(
             url=None,
             tomato_score_original=None,
@@ -122,40 +129,48 @@ def crawl_rotten_tomatoes_page(
             rate_limit_reached=False,
         )
 
-    html = response.text
-    soup = BeautifulSoup(html, "html.parser")
-
     # Locate the score elements
-    score_element = soup.select_one("#topSection score-board")
-    tomato_score_vote_count_element = soup.select_one('[slot="critics-count"]')
-    audience_score_vote_count_element = soup.select_one('[slot="audience-count"]')
+    tomato_score_element = page.locator("score-details-critics")
+    audience_score_element = page.locator("score-details-audience")
+
+    tomato_score_raw = await tomato_score_element.get_attribute("value")
+    audience_score_raw = await audience_score_element.get_attribute("value")
+    tomato_score_vote_count_raw = await tomato_score_element.get_attribute(
+        "reviewcount"
+    )
+    audience_score_vote_count_raw = await audience_score_element.get_attribute(
+        "bandedratingcount"
+    )
 
     # Extract and format the scores
     tomato_score = None
-    audience_score = None
-    if score_element:
+    if tomato_score_raw:
         try:
-            tomato_score = float(score_element.get("tomatometerscore"))
-            audience_score = float(score_element.get("audiencescore"))
+            tomato_score = float(tomato_score_raw)
+        except ValueError:
+            pass
+
+    audience_score = None
+    if audience_score_raw:
+        try:
+            audience_score = float(audience_score_raw)
         except ValueError:
             pass
 
     # Extract and format the vote counts
     tomato_score_vote_count = None
-    if tomato_score_vote_count_element:
-        tomato_score_vote_count_text = tomato_score_vote_count_element.string
+    if tomato_score_vote_count_raw:
         try:
-            match = re.search(r"[\d,]+", tomato_score_vote_count_text)
+            match = re.search(r"[\d,]+", tomato_score_vote_count_raw)
             if match:
                 tomato_score_vote_count = int(match.group().replace(",", ""))
         except ValueError:
             pass
 
     audience_score_vote_count = None
-    if audience_score_vote_count_element:
-        audience_score_vote_count_text = audience_score_vote_count_element.string
+    if audience_score_vote_count_raw:
         try:
-            match = re.search(r"[\d,]+", audience_score_vote_count_text)
+            match = re.search(r"[\d,]+", audience_score_vote_count_raw)
             if match:
                 audience_score_vote_count = int(match.group().replace(",", ""))
         except ValueError:
@@ -229,9 +244,12 @@ async def rotten_tomatoes_crawl_ratings():
             f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity})"
         )
 
-    list_of_crawl_results = await asyncio.gather(
-        *[crawl_data(next_entry) for next_entry in next_entries]
-    )
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        list_of_crawl_results = await asyncio.gather(
+            *[crawl_data(next_entry, browser) for next_entry in next_entries]
+        )
+        await browser.close()
 
     return {
         "count_new_ratings": len(next_entries),
