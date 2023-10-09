@@ -4,6 +4,7 @@ from playwright.async_api import async_playwright, Browser
 from pydantic import BaseModel
 import re
 from typing import Union, Optional
+import wmill
 
 from f.data_source.common import prepare_next_entries
 from f.db.mongodb import init_mongodb
