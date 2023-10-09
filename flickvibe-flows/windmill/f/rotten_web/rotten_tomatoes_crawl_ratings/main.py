@@ -139,7 +139,7 @@ async def crawl_rotten_tomatoes_page(
         "reviewcount"
     )
     audience_score_vote_count_raw = await audience_score_element.get_attribute(
-        "bandedratingcount"
+        "ratingcount"
     )
 
     # Extract and format the scores
