@@ -24,7 +24,7 @@ services:
         WM_IMAGE: ${WM_IMAGE}
     pull_policy: always
     deploy:
-      replicas: ${WM_WORKER_COUNT}
+      replicas: ${WORKER_COUNT}
       resources:
         limits:
           cpus: "1"
@@ -36,7 +36,7 @@ services:
       - DISABLE_SERVER=true
       - KEEP_JOB_DIR=false
       - METRICS_ADDR=false
-      - WORKER_GROUP=default
+      - WORKER_GROUP=remote-${WORKER_GROUP}
       # LICENSE_KEY is only needed for the enterprise edition
       - LICENSE_KEY=${WM_LICENSE_KEY}
     depends_on:
