@@ -31,7 +31,6 @@ services:
           memory: 4096M
     restart: unless-stopped
     environment:
-      - BASE_URL=${WM_BASE_URL}
       - DATABASE_URL=${DATABASE_URL}
       - RUST_LOG=info
       - DISABLE_SERVER=true
