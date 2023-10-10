@@ -27,12 +27,33 @@ def to_underscored(title: str) -> str:
 
 def to_pascal_case(text: str) -> str:
     """Convert a text to PascalCase."""
-    return re.sub(r"(^\w|-\w)", clear_and_upper, text)
+
+    # Remove all non-alphanumeric characters
+    clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+
+    # Split by spaces and capitalize each word
+    words = clean_text.split()
+    capitalized_words = [word.capitalize() for word in words]
+
+    # Join the words back together
+    pascal_case_text = ''.join(capitalized_words)
+
+    return pascal_case_text
 
 
-def clear_and_upper(text: str) -> str:
-    """Clear dashes and convert to uppercase."""
-    return text.replace("-", "").upper()
+def remove_prefix(text, prefix):
+    # Remove prefix wrapped in HTML tags
+    text = re.sub(f'<.*?>{prefix}<.*?>:', '', text)
+
+    # Remove prefix with colon
+    if text.startswith(f"{prefix}:"):
+        return text.replace(f"{prefix}:", "", 1).lstrip()
+
+    # Remove prefix without colon
+    elif text.startswith(prefix):
+        return text.replace(prefix, "", 1).lstrip()
+
+    return text.strip()
 
 
 def main():

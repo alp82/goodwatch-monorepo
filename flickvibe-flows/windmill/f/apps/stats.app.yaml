@@ -13,7 +13,7 @@ value:
     - '12':
         id: c
         fixed: false
-        h: 19
+        h: 28
         w: 6
         x: 0
         y: 0

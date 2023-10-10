@@ -118,8 +118,8 @@ def tmdb_extract_daily_dump_data():
     daily_dump_infos = get_daily_dump_infos()
     for daily_dump_info in daily_dump_infos:
         download_zip_and_store_in_db(daily_dump_info)
-    
-    return [info.model_dump() for info in daily_dump_infos]
+
+    return [dict(info) for info in daily_dump_infos]
 
 
 def main():

@@ -21,9 +21,9 @@ def initialize_documents():
     metacritic_tv_collection = db["metacritic_tv_rating"]
 
     total_movies = tmdb_movie_collection.count_documents(
-        {"original_title": {"$ne": None}}
+        {"title": {"$ne": None}}
     )
-    total_tv = tmdb_tv_collection.count_documents({"original_title": {"$ne": None}})
+    total_tv = tmdb_tv_collection.count_documents({"title": {"$ne": None}})
 
     print(f"Total movie objects with titles: {total_movies}")
     print(f"Total tv objects with titles: {total_tv}")
@@ -37,7 +37,7 @@ def initialize_documents():
         print(f"Processing movies {start} to {end}")
 
         tmdb_movie_cursor = (
-            tmdb_movie_collection.find({"original_title": {"$ne": None}})
+            tmdb_movie_collection.find({"title": {"$ne": None}})
             .skip(start)
             .limit(BATCH_SIZE)
         )
@@ -52,7 +52,7 @@ def initialize_documents():
         print(f"Processing tv shows {start} to {end}")
 
         tmdb_tv_cursor = (
-            tmdb_tv_collection.find({"original_title": {"$ne": None}})
+            tmdb_tv_collection.find({"title": {"$ne": None}})
             .skip(start)
             .limit(BATCH_SIZE)
         )
