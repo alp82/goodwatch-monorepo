@@ -12,8 +12,6 @@ from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRatin
 
 BATCH_SIZE = 1
 BUFFER_SELECTED_AT_MINUTES = 30
-# TODO dotenv
-TMDB_API_KEY = "df95f1bae98baaf28e1c06d7a2762e27"
 
 
 class RottenTomatoesCrawlResult(BaseModel):

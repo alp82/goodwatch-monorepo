@@ -3,6 +3,7 @@ from datetime import datetime
 from mongoengine import EmbeddedDocumentField, EmbeddedDocumentListField
 import requests
 from typing import Union
+import wmill
 
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 from f.data_source.common import prepare_next_entries
@@ -11,8 +12,7 @@ from f.db.mongodb import init_mongodb
 
 BATCH_SIZE = 50
 BUFFER_SELECTED_AT_MINUTES = 10
-# TODO dotenv
-TMDB_API_KEY = "df95f1bae98baaf28e1c06d7a2762e27"
+TMDB_API_KEY = wmill.get_variable("u/Alp/TMDB_API_KEY")
 
 
 def retrieve_next_entries(count: int) -> Union[TmdbMovieDetails, TmdbTvDetails]:

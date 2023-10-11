@@ -11,7 +11,7 @@ from f.db.mongodb import init_mongodb
 from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags, TropeData
 from f.utils.string import remove_prefix
 
-BATCH_SIZE = 10
+BATCH_SIZE = 5
 BUFFER_SELECTED_AT_MINUTES = 30
 BROWSER_TIMEOUT = 360000
 

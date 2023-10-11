@@ -3,7 +3,7 @@ description: >-
   Retrieve next batch of entries in order to crawl Metacritic pages and find
   ratings information
 lock:
-  - annotated-types==0.5.0
+  - annotated-types==0.6.0
   - anyio==4.0.0
   - attrs==23.1.0
   - beautifulsoup4==4.12.2
@@ -26,8 +26,8 @@ lock:
   - soupsieve==2.5
   - typing-extensions==4.8.0
   - urllib3==2.0.6
-  - windmill-api==1.181.0
-  - wmill==1.181.0
+  - windmill-api==1.182.3
+  - wmill==1.182.3
 is_template: false
 kind: script
 schema:
