@@ -1,7 +1,7 @@
 import asyncio
 import re
 from datetime import datetime
-from playwright.async_api import async_playwright, Browser
+from playwright.async_api import async_playwright, BrowserContext
 from pydantic import BaseModel
 from typing import Union, Optional
 import wmill
@@ -13,6 +13,7 @@ from f.utils.string import remove_prefix
 
 BATCH_SIZE = 10
 BUFFER_SELECTED_AT_MINUTES = 30
+BROWSER_TIMEOUT = 360000
 
 
 class Trope(BaseModel):
@@ -41,7 +42,7 @@ def retrieve_next_entries(
 
 async def crawl_data(
     next_entry: Union[TvTropesMovieTags, TvTropesTvTags],
-    browser: Browser,
+    browser: BrowserContext,
 ) -> tuple[TvTropesCrawlResult, Union[TvTropesMovieTags, TvTropesTvTags]]:
     if isinstance(next_entry, TvTropesMovieTags):
         return await crawl_movie_rating(next_entry, browser), next_entry
@@ -53,7 +54,7 @@ async def crawl_data(
 
 async def crawl_movie_rating(
     next_entry: TvTropesMovieTags,
-    browser: Browser,
+    browser: BrowserContext,
 ) -> TvTropesCrawlResult:
     result = await crawl_rotten_tomatoes_page(
         next_entry=next_entry, type="Film", browser=browser
@@ -64,7 +65,7 @@ async def crawl_movie_rating(
 
 async def crawl_tv_rating(
     next_entry: TvTropesTvTags,
-    browser: Browser,
+    browser: BrowserContext,
 ) -> TvTropesCrawlResult:
     result = await crawl_rotten_tomatoes_page(
         next_entry=next_entry, type="Series", browser=browser
@@ -76,7 +77,7 @@ async def crawl_tv_rating(
 async def crawl_rotten_tomatoes_page(
     next_entry: Union[TvTropesMovieTags, TvTropesTvTags],
     type: str,
-    browser: Browser,
+    browser: BrowserContext,
 ) -> TvTropesCrawlResult:
     main_url = "https://tvtropes.org/pmwiki/pmwiki.php"
     base_url = f"{main_url}/{type}"
@@ -94,6 +95,7 @@ async def crawl_rotten_tomatoes_page(
     all_urls = [f"{base_url}/{title}" for title in all_variations]
 
     for url in all_urls:
+        # url = "https://tvtropes.org/pmwiki/pmwiki.php/Series/KitchenNightmares"
         print(f"trying url: {url}")
         page = await browser.new_page()
         response = await page.goto(url)
@@ -113,11 +115,13 @@ async def crawl_rotten_tomatoes_page(
             is_anime = await anime_link.is_visible()
             is_animation = await animation_link.is_visible()
             if is_anime:
+                print(f"is anime: {url}")
                 correct_url = await anime_link.get_attribute("href")
                 full_correct_url = f"https://tvtropes.org{correct_url}"
                 response = await page.goto(full_correct_url)
                 pass
             if is_animation:
+                print(f"is animation: {url}")
                 correct_url = await animation_link.get_attribute("href")
                 full_correct_url = f"https://tvtropes.org{correct_url}"
                 response = await page.goto(full_correct_url)
@@ -263,10 +267,12 @@ async def tvtropes_crawl_tags():
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
+        context = await browser.new_context()
+        context.set_default_timeout(BROWSER_TIMEOUT)
         list_of_crawl_results = await asyncio.gather(
-            *[crawl_data(next_entry, browser) for next_entry in next_entries]
+            *[crawl_data(next_entry, context) for next_entry in next_entries]
         )
-        await browser.close()
+        await context.close()
 
     return {
         "count_new_tropes": len(next_entries),
@@ -291,7 +297,9 @@ async def debug():
     next_entry = TvTropesMovieTags.objects.get(tmdb_id=680)
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        result = await crawl_data(next_entry, browser)
+        context = await browser.new_context()
+        context.set_default_timeout(BROWSER_TIMEOUT)
+        result = await crawl_data(next_entry, context)
         await browser.close()
 
 

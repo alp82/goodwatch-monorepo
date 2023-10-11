@@ -43,7 +43,8 @@ def to_pascal_case(text: str) -> str:
 
 def remove_prefix(text, prefix):
     # Remove prefix wrapped in HTML tags
-    text = re.sub(f'<.*?>{prefix}<.*?>:', '', text)
+    # text = re.sub(f'<.*?>{prefix}<.*?>:', '', text)
+    text = re.sub(f'<.*?>{re.escape(prefix)}<.*?>:', '', text)
 
     # Remove prefix with colon
     if text.startswith(f"{prefix}:"):
