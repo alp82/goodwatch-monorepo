@@ -154,6 +154,8 @@ def convert_common_fields(details: dict) -> dict:
         details["translations"] = details["translations"]["translations"]
     if details.get("videos", None):
         details["videos"] = details["videos"]["results"]
+    if details.get("watch/providers", None):
+        details["watch_providers"] = details.pop("watch/providers")
     return details
 
 
@@ -198,7 +200,7 @@ async def tmdb_fetch_details_from_api():
         "count_new_entries": len(list_of_details),
         "entries": [
             {
-                "tmdb_id": next_entry.tmdb_id,
+                "tmdb_id": details.get("tmdb_id"),
                 "title": details.get("title"),
                 "popularity": details.get("popularity"),
                 "genres": ", ".join(

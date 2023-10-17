@@ -11,9 +11,9 @@ from f.db.mongodb import init_mongodb
 from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags, TropeData
 from f.utils.string import remove_prefix
 
-BATCH_SIZE = 5
+BATCH_SIZE = 20
 BUFFER_SELECTED_AT_MINUTES = 30
-BROWSER_TIMEOUT = 360000
+BROWSER_TIMEOUT = 180000
 
 
 class Trope(BaseModel):
@@ -110,22 +110,49 @@ async def crawl_rotten_tomatoes_page(
             # e.g. https://tvtropes.org/pmwiki/pmwiki.php/Film/FindingNemo
             # do not follow language specific links (like "EsAnime/Bleach")
             # e.g. https://tvtropes.org/pmwiki/pmwiki.php/Series/Bleach
-            anime_link = page.locator("#main-article a:text-matches('^Anime/', 'i')")
-            animation_link = page.locator("#main-article a:text-matches('^WesternAnimation/', 'i')")
-            is_anime = await anime_link.is_visible()
-            is_animation = await animation_link.is_visible()
-            if is_anime:
+            try:
+                western_animation_link = page.locator(
+                    "#main-article a:text-matches('^WesternAnimation/', 'i')"
+                )
+                is_western_animation = await western_animation_link.is_visible()
+            except TimeoutError:
+                print(
+                    f"Timeout for {all_variations[0]} at {url} trying to locate ^WesternAnimation/"
+                )
+            try:
+                animation_link = page.locator(
+                    "#main-article a:text-matches('^Animation/', 'i')"
+                )
+                is_animation = await animation_link.is_visible()
+            except TimeoutError:
+                print(
+                    f"Timeout for {all_variations[0]} at {url} trying to locate ^Animation/"
+                )
+            try:
+                anime_link = page.locator(
+                    "#main-article a:text-matches('^Anime/', 'i')"
+                )
+                is_anime = await anime_link.is_visible()
+            except TimeoutError:
+                print(
+                    f"Timeout for {all_variations[0]} at {url} trying to locate ^Anime/"
+                )
+
+            if is_western_animation:
+                print(f"is animation: {url}")
+                correct_url = await western_animation_link.get_attribute("href")
+                full_correct_url = f"https://tvtropes.org{correct_url}"
+                response = await page.goto(full_correct_url)
+            elif is_anime:
                 print(f"is anime: {url}")
                 correct_url = await anime_link.get_attribute("href")
                 full_correct_url = f"https://tvtropes.org{correct_url}"
                 response = await page.goto(full_correct_url)
-                pass
-            if is_animation:
+            elif is_animation:
                 print(f"is animation: {url}")
                 correct_url = await animation_link.get_attribute("href")
                 full_correct_url = f"https://tvtropes.org{correct_url}"
                 response = await page.goto(full_correct_url)
-                pass
 
         elif response.status == 200:
             # returns empty tropes list from summary pages

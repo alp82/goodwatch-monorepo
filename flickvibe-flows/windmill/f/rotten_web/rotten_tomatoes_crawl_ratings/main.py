@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from playwright.async_api import async_playwright, Browser
+from playwright.async_api import async_playwright, BrowserContext
 from pydantic import BaseModel
 import re
 from typing import Union, Optional
@@ -12,6 +12,7 @@ from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRatin
 
 BATCH_SIZE = 1
 BUFFER_SELECTED_AT_MINUTES = 30
+BROWSER_TIMEOUT = 180000
 
 
 class RottenTomatoesCrawlResult(BaseModel):
@@ -39,7 +40,7 @@ def retrieve_next_entries(
 
 async def crawl_data(
     next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating],
-    browser: Browser,
+    browser: BrowserContext,
 ) -> tuple[
     RottenTomatoesCrawlResult, Union[RottenTomatoesMovieRating, RottenTomatoesTvRating]
 ]:
@@ -53,7 +54,7 @@ async def crawl_data(
 
 async def crawl_movie_rating(
     next_entry: RottenTomatoesMovieRating,
-    browser: Browser,
+    browser: BrowserContext,
 ) -> RottenTomatoesCrawlResult:
     result = await crawl_rotten_tomatoes_page(
         next_entry=next_entry, type="m", browser=browser
@@ -64,7 +65,7 @@ async def crawl_movie_rating(
 
 async def crawl_tv_rating(
     next_entry: RottenTomatoesTvRating,
-    browser: Browser,
+    browser: BrowserContext,
 ) -> RottenTomatoesCrawlResult:
     result = await crawl_rotten_tomatoes_page(
         next_entry=next_entry, type="tv", browser=browser
@@ -76,7 +77,7 @@ async def crawl_tv_rating(
 async def crawl_rotten_tomatoes_page(
     next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating],
     type: str,
-    browser: Browser,
+    browser: BrowserContext,
 ) -> RottenTomatoesCrawlResult:
     main_url = "https://www.rottentomatoes.com"
     base_url = f"{main_url}/{type}"
@@ -257,8 +258,10 @@ async def rotten_tomatoes_crawl_ratings():
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
+        context = await browser.new_context()
+        context.set_default_timeout(BROWSER_TIMEOUT)
         list_of_crawl_results = await asyncio.gather(
-            *[crawl_data(next_entry, browser) for next_entry in next_entries]
+            *[crawl_data(next_entry, context) for next_entry in next_entries]
         )
         await browser.close()
 
@@ -285,7 +288,9 @@ async def debug():
     next_entry = RottenTomatoesMovieRating.objects.get(tmdb_id=680)
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        result = await crawl_data(next_entry, browser)
+        context = await browser.new_context()
+        context.set_default_timeout(BROWSER_TIMEOUT)
+        result = await crawl_data(next_entry, context)
         await browser.close()
 
 if __name__ == "__main__":
