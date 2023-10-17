@@ -4,14 +4,14 @@ description: >-
   schemas
 value:
   modules:
-    - id: a
+    - id: c
       value:
         type: script
         input_transforms:
           database:
             type: static
             value: '$res:u/Alp/resource/postgresql'
-        path: f/db/sql/create_movies_table
+        path: f/combine_data/copy_movies/create_movies_table
     - id: b
       value:
         type: script
