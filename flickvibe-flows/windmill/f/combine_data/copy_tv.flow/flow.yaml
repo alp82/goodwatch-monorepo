@@ -1,22 +1,22 @@
-summary: Combine and copy movie data
+summary: Combine and copy tv data
 description: >-
-  Merge and combine movie data from mongodb collections into relational postgres
+  Merge and combine tv data from mongodb collections into relational postgres
   schemas
 value:
   modules:
-    - id: c
+    - id: a
       value:
         type: script
         input_transforms:
           database:
             type: static
             value: '$res:u/Alp/resource/postgresql'
-        path: f/combine_data/copy_movies/create_movies_table
+        path: f/combine_data/copy_tv/create_tv_table
     - id: b
       value:
         type: script
         input_transforms: {}
-        path: f/combine_data/copy_movies/main
+        path: f/combine_data/copy_tv/main
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

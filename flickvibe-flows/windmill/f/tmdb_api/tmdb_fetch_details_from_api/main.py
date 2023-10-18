@@ -16,6 +16,7 @@ TMDB_API_KEY = wmill.get_variable("u/Alp/TMDB_API_KEY")
 
 
 def retrieve_next_entries(count: int) -> Union[TmdbMovieDetails, TmdbTvDetails]:
+    return TmdbTvDetails.objects(original_title="Breaking Bad")
     next_entries = prepare_next_entries(
         movie_model=TmdbMovieDetails,
         tv_model=TmdbTvDetails,
@@ -214,3 +215,6 @@ async def tmdb_fetch_details_from_api():
 
 def main():
     return asyncio.run(tmdb_fetch_details_from_api())
+
+if __name__ == '__main__':
+    main()

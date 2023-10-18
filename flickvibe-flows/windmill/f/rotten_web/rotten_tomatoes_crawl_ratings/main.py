@@ -130,8 +130,8 @@ async def crawl_rotten_tomatoes_page(
         )
 
     # Locate the score elements
-    tomato_score_element = page.locator("score-details-critics")
-    audience_score_element = page.locator("score-details-audience")
+    tomato_score_element = page.locator("score-details-critics-deprecated")
+    audience_score_element = page.locator("score-details-audience-deprecated")
 
     tomato_score_raw = await tomato_score_element.get_attribute("value")
     audience_score_raw = await audience_score_element.get_attribute("value")
