@@ -29,18 +29,7 @@ def fetch_documents_in_batch(tmdb_ids, collection):
 
 """
 TODO
-unique_collections = mongo_db.tmdb_movie_details.aggregate([
-    {"$match": {"collection.id": {"$ne": None}}},
-    {"$group": {"_id": "$collection.id", "collection": {"$first": "$collection"}}}
-])
-"""
-
-"""
-TODO
 production companies
-cast
-crew
-collections
 """
 
 

@@ -1,0 +1,25 @@
+summary: Combine and copy cast data
+description: >-
+  Merge and combine cast data from mongodb collections into relational postgres
+  schemas
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms:
+          database:
+            type: static
+            value: '$res:u/Alp/resource/postgresql'
+        path: f/combine_data/copy_cast/create_cast_table
+    - id: b
+      value:
+        type: script
+        input_transforms: {}
+        path: f/combine_data/copy_cast/main
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+tag: null
