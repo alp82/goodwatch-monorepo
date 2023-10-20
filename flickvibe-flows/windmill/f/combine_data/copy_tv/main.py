@@ -26,14 +26,6 @@ def fetch_documents_in_batch(tmdb_ids, collection):
         doc["tmdb_id"]: doc for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}})
     }
 
-"""
-TODO
-networks
-production companies
-cast
-crew
-"""
-
 
 def copy_tv(pg):
     pg_cursor = pg.cursor()

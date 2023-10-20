@@ -27,12 +27,6 @@ def fetch_documents_in_batch(tmdb_ids, collection):
     }
 
 
-"""
-TODO
-production companies
-"""
-
-
 def copy_movies(pg):
     pg_cursor = pg.cursor()
     mongo_db = get_db()

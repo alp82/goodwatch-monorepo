@@ -7,6 +7,7 @@ value:
         type: script
         input_transforms: {}
         path: f/rotten_web/rotten_tomatoes_crawl_ratings/main
+      timeout: 300
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
