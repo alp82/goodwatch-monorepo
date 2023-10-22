@@ -40,7 +40,7 @@ def copy_tv(pg):
         "synopsis",
         "alternative_titles",
         "popularity",
-        '"type"',  # needs to be enclosed because it's a reserved keyword
+        "type",
         "status",
         "in_production",
         "adult",
@@ -55,7 +55,7 @@ def copy_tv(pg):
         "network_ids",
         "production_company_ids",
         "certifications",
-        '"cast"',  # needs to be enclosed because it's a reserved keyword
+        "cast",
         "crew",
         "poster_path",
         "backdrop_path",

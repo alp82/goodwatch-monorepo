@@ -40,8 +40,11 @@ docker builder prune
 ```
 data sources:
 
-tmdb_people
-tvtropes_tags ???
+existing crawlers: use existing url instead of guessing
+tmdb justwatch streaming crawler
+allmovie moods and themes
+
+tmdb people api
 ```
 
 ```
