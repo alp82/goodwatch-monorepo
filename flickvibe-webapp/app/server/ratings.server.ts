@@ -30,8 +30,8 @@ export const getRatingsForMovie = async (params: RatingsMovieParams) => {
     name: 'ratings-movie',
     target: _getRatingsForMovie,
     params,
-    // ttlMinutes: 60 * 12,
-    ttlMinutes: 0,
+    ttlMinutes: 60 * 6,
+    // ttlMinutes: 0,
   })
 }
 
