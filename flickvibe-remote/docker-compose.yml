@@ -28,7 +28,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 4096M
+          memory: 8192M
     restart: unless-stopped
     environment:
       - DATABASE_URL=${DATABASE_URL}
