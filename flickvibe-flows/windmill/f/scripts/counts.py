@@ -6,6 +6,7 @@ from f.imdb_web.models import ImdbMovieRating, ImdbTvRating
 from f.metacritic_web.models import MetacriticMovieRating, MetacriticTvRating
 from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRating
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
+from f.tmdb_web.models import TmdbMovieProviders, TmdbTvProviders
 from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags
 
 
@@ -21,6 +22,24 @@ def count_tmdb_details():
             "tv": count_tv_total,
         },
         "with_details": {
+            "movie": count_movies,
+            "tv": count_tv,
+        },
+    }
+
+
+def count_tmdb_providers():
+    count_movies_selected = TmdbMovieProviders.objects(selected_at__ne=None).count()
+    count_tv_selected = TmdbTvProviders.objects(selected_at__ne=None).count()
+    count_movies = TmdbMovieProviders.objects(streaming_links__ne=None).count()
+    count_tv = TmdbTvProviders.objects(streaming_links__ne=None).count()
+
+    return {
+        "selected": {
+            "movie": count_movies_selected,
+            "tv": count_tv_selected,
+        },
+        "with_providers": {
             "movie": count_movies,
             "tv": count_tv,
         },
@@ -117,6 +136,7 @@ def main():
     init_mongodb()
     return {
         "tmdb_details": count_tmdb_details(),
+        "tmdb_providers": count_tmdb_providers(),
         "imdb_ratings": count_imdb_ratings(),
         "metacritic_ratings": count_metacritic_ratings(),
         "rotten_ratings": count_rotten_tomatoes_ratings(),

@@ -1,5 +1,7 @@
 summary: ''
-description: ''
+description: >-
+  Prepare TMDB streaming crawler by copying all watch URL's from details entries
+  that have watch providers.
 lock:
   - anyio==4.0.0
   - attrs==23.1.0
@@ -20,7 +22,7 @@ lock:
   - windmill-api==1.193.0
   - wmill==1.193.0
 is_template: false
-kind: trigger
+kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

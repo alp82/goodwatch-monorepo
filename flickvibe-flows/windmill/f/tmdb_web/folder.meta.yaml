@@ -1,0 +1,5 @@
+display_name: tmdb_web
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp

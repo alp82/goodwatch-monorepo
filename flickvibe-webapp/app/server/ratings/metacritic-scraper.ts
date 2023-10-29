@@ -43,8 +43,6 @@ export class MetacriticScraper {
 
     const metaScore = metaScoreElement[0]?.data && !isNaN(parseFloat(metaScoreElement[0].data)) ? parseInt(metaScoreElement[0].data).toFixed(0) : undefined
     const userScore = userScoreElement[0]?.data && !isNaN(parseFloat(userScoreElement[0].data)) ? parseFloat(userScoreElement[0].data).toFixed(1) : undefined
-    console.log(metaScore)
-    console.log(userScore)
 
     return {
       url,
