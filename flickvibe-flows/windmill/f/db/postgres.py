@@ -23,11 +23,21 @@ def init_postgres():
         print(f"Failed postregsql initialization: ", error)
 
 
-def generate_upsert_query(table_name, columns):
-    columns_str = ", ".join([f"\"{column}\"" for column in columns])
+def generate_insert_query(table_name, columns):
+    columns_str = ", ".join([f'"{column}"' for column in columns])
 
-    unique_column, *other_columns = columns 
-    update_str = ", ".join([f"\"{col}\" = EXCLUDED.\"{col}\"" for col in other_columns])
+    query = f"""
+        INSERT INTO "{table_name}" ({columns_str})
+        VALUES %s
+    """
+    return query
+
+
+def generate_upsert_query(table_name, columns):
+    columns_str = ", ".join([f'"{column}"' for column in columns])
+
+    unique_column, *other_columns = columns
+    update_str = ", ".join([f'"{col}" = EXCLUDED."{col}"' for col in other_columns])
 
     query = f"""
         INSERT INTO "{table_name}" ({columns_str})
@@ -35,7 +45,6 @@ def generate_upsert_query(table_name, columns):
         ON CONFLICT ({unique_column}) DO UPDATE SET {update_str}
     """
     return query
-
 
 
 def main():

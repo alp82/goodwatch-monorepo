@@ -12,7 +12,7 @@ from f.data_source.common import prepare_next_entries
 from f.db.mongodb import init_mongodb
 from f.tmdb_web.models import TmdbMovieProviders, TmdbTvProviders, StreamingLinkDoc
 
-BATCH_SIZE = 100
+BATCH_SIZE = 50
 BUFFER_SELECTED_AT_MINUTES = 30
 BROWSER_TIMEOUT = 180000
 
@@ -90,6 +90,14 @@ def crawl_tmdb_watch_page(
         # TODO error handling
         raise error
 
+    if response.status_code == 429:
+        return TmdbStreamingCrawlResult(
+            url=url,
+            country_code=country_code,
+            streaming_links=None,
+            rate_limit_reached=True,
+        )
+
     html = response.text
     soup = BeautifulSoup(html, "html.parser")
 
@@ -104,10 +112,13 @@ def crawl_tmdb_watch_page(
             stream_url = provider_link.get("href")
 
             stream_title = provider_link.get("title")
-            parts = stream_title.split(" on ")
             provider_name = None
-            if len(parts) > 1:
-                provider_name = parts[-1]
+            if stream_title.endswith("Demand"):
+                parts = stream_title.rsplit(" on ", 2)
+                provider_name = " on ".join(parts[-2:]) if len(parts) > 2 else stream_title
+            else:
+                parts = stream_title.rsplit(" on ", 1)
+                provider_name = parts[-1] if len(parts) > 1 else stream_title
 
             price = None
             try:
@@ -137,14 +148,6 @@ def crawl_tmdb_watch_page(
                 )
             )
 
-    if not streaming_links:
-        return TmdbStreamingCrawlResult(
-            url=url,
-            country_code=country_code,
-            streaming_links=streaming_links,
-            rate_limit_reached=True,
-        )
-
     return TmdbStreamingCrawlResult(
         url=url,
         country_code=country_code,
@@ -160,17 +163,18 @@ def store_result(
     if type(result.country_code) in [str]:
         next_entry.country_code = result.country_code
 
-    streaming_link_docs = []
-    for streaming_link in result.streaming_links:
-        streaming_link_doc = StreamingLinkDoc(
-            stream_url=streaming_link.stream_url,
-            stream_type=streaming_link.stream_type,
-            provider_name=streaming_link.provider_name,
-            price_dollar=streaming_link.price_dollar,
-            quality=streaming_link.quality,
-        )
-        streaming_link_docs.append(streaming_link_doc)
-    next_entry.streaming_links = streaming_link_docs
+    if type(result.streaming_links) in [list]:
+        streaming_link_docs = []
+        for streaming_link in result.streaming_links:
+            streaming_link_doc = StreamingLinkDoc(
+                stream_url=streaming_link.stream_url,
+                stream_type=streaming_link.stream_type,
+                provider_name=streaming_link.provider_name,
+                price_dollar=streaming_link.price_dollar,
+                quality=streaming_link.quality,
+            )
+            streaming_link_docs.append(streaming_link_doc)
+        next_entry.streaming_links = streaming_link_docs
 
     if result.rate_limit_reached:
         next_entry.error_message = "Rate Limit reached"

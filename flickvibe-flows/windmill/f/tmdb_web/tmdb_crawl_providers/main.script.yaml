@@ -9,7 +9,7 @@ lock:
   - beautifulsoup4==4.12.2
   - bs4==0.0.1
   - certifi==2023.7.22
-  - charset-normalizer==3.3.1
+  - charset-normalizer==3.3.2
   - dnspython==2.4.2
   - h11==0.14.0
   - httpcore==0.17.3
@@ -18,7 +18,7 @@ lock:
   - mongoengine==0.27.0
   - pydantic==2.4.2
   - pydantic-core==2.10.1
-  - pymongo==4.5.0
+  - pymongo==4.6.0
   - python-dateutil==2.8.2
   - requests==2.31.0
   - six==1.16.0
@@ -26,8 +26,8 @@ lock:
   - soupsieve==2.5
   - typing-extensions==4.8.0
   - urllib3==2.0.7
-  - windmill-api==1.193.0
-  - wmill==1.193.0
+  - windmill-api==1.197.1
+  - wmill==1.197.1
 is_template: false
 kind: script
 schema:

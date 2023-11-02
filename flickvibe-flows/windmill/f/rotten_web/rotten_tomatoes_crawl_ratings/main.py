@@ -99,6 +99,7 @@ async def crawl_rotten_tomatoes_page(
     #     "Accept-Language": "en-US,en;q=0.9",
     #     "Referer": "https://www.google.com/",
     # }
+    response = None
     for url in all_urls:
         print(f"trying url: {url}")
         page = await browser.new_page()
@@ -117,7 +118,7 @@ async def crawl_rotten_tomatoes_page(
         elif response.status == 200:
             break
 
-    if response.status != 200:
+    if not response or response.status != 200:
         return RottenTomatoesCrawlResult(
             url=None,
             tomato_score_original=None,

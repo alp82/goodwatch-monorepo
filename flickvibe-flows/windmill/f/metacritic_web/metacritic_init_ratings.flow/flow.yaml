@@ -15,3 +15,4 @@ schema:
   properties: {}
   required: []
 tag: null
+ws_error_handler_muted: false

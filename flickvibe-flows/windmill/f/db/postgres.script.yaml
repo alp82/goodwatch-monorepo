@@ -12,8 +12,8 @@ lock:
   - python-dateutil==2.8.2
   - six==1.16.0
   - sniffio==1.3.0
-  - windmill-api==1.183.0
-  - wmill==1.183.0
+  - windmill-api==1.197.1
+  - wmill==1.197.1
 is_template: false
 kind: script
 schema:

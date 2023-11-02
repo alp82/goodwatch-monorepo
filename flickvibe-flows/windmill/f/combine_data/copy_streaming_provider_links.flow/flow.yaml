@@ -1,7 +1,7 @@
-summary: Combine and copy network data
+summary: Combine and copy streaming provider links
 description: >-
-  Merge and combine movie network data from mongodb collections into relational
-  postgres schemas
+  Merge and combine streaming provider links from mongodb collections into
+  relational postgres schemas
 value:
   modules:
     - id: a
@@ -11,12 +11,13 @@ value:
           database:
             type: static
             value: '$res:u/Alp/resource/postgresql'
-        path: f/combine_data/copy_networks/create_networks_table
+        path: >-
+          f/combine_data/copy_streaming_provider_links/create_streaming_provider_links_table
     - id: b
       value:
         type: script
         input_transforms: {}
-        path: f/combine_data/copy_networks/main
+        path: f/combine_data/copy_streaming_provider_links/main
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
