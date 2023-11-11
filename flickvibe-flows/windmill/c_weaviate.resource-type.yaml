@@ -1,0 +1,33 @@
+description: Connection configuration for a Weaviate server
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order:
+    - host
+    - port
+    - grpc_port
+    - headers
+  properties:
+    grpc_port:
+      type: integer
+      description: ''
+    headers:
+      type: object
+      description: ''
+      properties:
+        X-OpenAI-Api-Key:
+          type: string
+          description: ''
+          default: ''
+      required: []
+    host:
+      type: string
+      description: ''
+      default: ''
+    port:
+      type: integer
+      description: ''
+  required:
+    - host
+    - port
+    - grpc_port

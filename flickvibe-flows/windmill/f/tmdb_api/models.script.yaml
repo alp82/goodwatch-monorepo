@@ -3,7 +3,7 @@ description: ''
 lock:
   - dnspython==2.4.2
   - mongoengine==0.27.0
-  - pymongo==4.5.0
+  - pymongo==4.6.0
 is_template: false
 kind: trigger
 schema:

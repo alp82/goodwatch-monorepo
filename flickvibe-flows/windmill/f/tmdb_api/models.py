@@ -371,6 +371,7 @@ class Provider(EmbeddedDocument):
 
 class ProviderData(EmbeddedDocument):
     link = StringField()
+    fast = EmbeddedDocumentListField(Provider)
     flatrate_and_buy = EmbeddedDocumentListField(Provider)
     flatrate = EmbeddedDocumentListField(Provider)
     buy = EmbeddedDocumentListField(Provider)

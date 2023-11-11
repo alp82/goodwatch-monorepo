@@ -1,0 +1,199 @@
+summary: ''
+description: ''
+value:
+  modules:
+    - id: d
+      value:
+        type: rawscript
+        content: '!inline inline_script_0.inline_script.py'
+        input_transforms: {}
+        lock: |-
+          anyio==4.0.0
+          attrs==23.1.0
+          certifi==2023.7.22
+          charset-normalizer==3.3.2
+          h11==0.14.0
+          httpcore==0.17.3
+          httpx==0.24.1
+          idna==3.4
+          numpy==1.26.1
+          pandas==2.1.2
+          psycopg2-binary==2.9.9
+          python-dateutil==2.8.2
+          pytz==2023.3.post1
+          requests==2.31.0
+          six==1.16.0
+          sniffio==1.3.0
+          tzdata==2023.3
+          urllib3==2.0.7
+          windmill-api==1.202.1
+          wmill==1.202.1
+        language: python3
+    - id: e
+      value:
+        type: rawscript
+        content: '!inline inline_script_1.inline_script.py'
+        input_transforms:
+          movie_tropes:
+            type: javascript
+            expr: results.d.movie_tropes
+        lock: |-
+          numpy==1.26.1
+          pandas==2.1.2
+          python-dateutil==2.8.2
+          pytz==2023.3.post1
+          six==1.16.0
+          tzdata==2023.3
+        language: python3
+    - id: b
+      value:
+        type: rawscript
+        content: '!inline inline_script_2.inline_script.py'
+        input_transforms:
+          min_popularity:
+            type: javascript
+            expr: flow_input.min_popularity
+        lock: |-
+          anyio==4.0.0
+          attrs==23.1.0
+          certifi==2023.7.22
+          charset-normalizer==3.3.2
+          h11==0.14.0
+          httpcore==0.17.3
+          httpx==0.24.1
+          idna==3.4
+          psycopg2-binary==2.9.9
+          python-dateutil==2.8.2
+          requests==2.31.0
+          six==1.16.0
+          sniffio==1.3.0
+          urllib3==2.0.7
+          windmill-api==1.202.1
+          wmill==1.202.1
+        language: python3
+    - id: c
+      value:
+        type: forloopflow
+        modules:
+          - id: a
+            value:
+              type: rawscript
+              content: '!inline inline_script_3.inline_script.py'
+              input_transforms:
+                batch:
+                  type: javascript
+                  expr: flow_input.iter.value
+                batch_size:
+                  type: javascript
+                  expr: results.b.batch_size
+                min_popularity:
+                  type: javascript
+                  expr: flow_input.min_popularity
+              lock: |-
+                anyio==4.0.0
+                attrs==23.1.0
+                certifi==2023.7.22
+                charset-normalizer==3.3.2
+                h11==0.14.0
+                httpcore==0.17.3
+                httpx==0.24.1
+                idna==3.4
+                numpy==1.26.1
+                pandas==2.1.2
+                psycopg2-binary==2.9.9
+                python-dateutil==2.8.2
+                pytz==2023.3.post1
+                requests==2.31.0
+                six==1.16.0
+                sniffio==1.3.0
+                tzdata==2023.3
+                urllib3==2.0.7
+                windmill-api==1.202.1
+                wmill==1.202.1
+              language: python3
+          - id: l
+            value:
+              type: flow
+              input_transforms:
+                movie_list:
+                  type: javascript
+                  expr: results.a.movies_list
+                movie_tropes:
+                  type: javascript
+                  expr: results.d.movie_tropes
+              path: f/recommendations/movie_batch_embeddings
+          - id: m
+            value:
+              type: rawscript
+              content: '!inline inline_script_4.inline_script.py'
+              input_transforms:
+                results:
+                  type: javascript
+                  expr: results.l
+              lock: |
+                annotated-types==0.6.0
+                anyio==4.0.0
+                attrs==23.1.0
+                authlib==1.2.1
+                certifi==2023.7.22
+                cffi==1.16.0
+                charset-normalizer==3.3.2
+                cryptography==41.0.5
+                grpcio==1.59.2
+                grpcio-tools==1.59.2
+                h11==0.14.0
+                httpcore==0.17.3
+                httpx==0.24.1
+                idna==3.4
+                numpy==1.26.1
+                pandas==2.1.2
+                protobuf==4.25.0
+                psycopg2-binary==2.9.9
+                pycparser==2.21
+                pydantic==2.4.2
+                pydantic-core==2.10.1
+                python-dateutil==2.8.2
+                pytz==2023.3.post1
+                requests==2.31.0
+                six==1.16.0
+                sniffio==1.3.0
+                typing-extensions==4.8.0
+                tzdata==2023.3
+                urllib3==2.0.7
+                validators==0.22.0
+                weaviate-client==4.2b0
+                windmill-api==1.204.1
+                wmill==1.204.1
+              language: python3
+        iterator:
+          type: javascript
+          expr: results.b.movie_batches
+        parallel: true
+        parallelism: 3
+        skip_failures: true
+    - id: n
+      value:
+        type: rawscript
+        content: '!inline inline_script_5.inline_script.py'
+        input_transforms:
+          output_list:
+            type: javascript
+            expr: results.c
+        lock: ''
+        language: python3
+  concurrency_time_window_s: 0
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order:
+    - min_popularity
+  properties:
+    min_popularity:
+      type: number
+      description: ''
+      default: 10
+      format: ''
+  required:
+    - min_popularity
+tag: null
+ws_error_handler_muted: false
