@@ -1,0 +1,18 @@
+summary: Initialize all entries for TV Tropes semantic tags
+description: >-
+  Initialize all entries for TV Tropes semantic tags by copying details with
+  titles into collections.
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms: {}
+        path: f/tvtropes_web/tvtropes_init_tags/main
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+tag: null
+ws_error_handler_muted: false

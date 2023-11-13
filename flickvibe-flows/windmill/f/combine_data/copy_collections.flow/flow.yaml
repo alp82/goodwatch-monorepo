@@ -1,0 +1,26 @@
+summary: Combine and copy collection data
+description: >-
+  Merge and combine movie collection data from mongodb collections into
+  relational postgres schemas
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms:
+          database:
+            type: static
+            value: '$res:u/Alp/resource/postgresql'
+        path: f/combine_data/copy_collections/create_collections_table
+    - id: b
+      value:
+        type: script
+        input_transforms: {}
+        path: f/combine_data/copy_collections/main
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+tag: null
+ws_error_handler_muted: false

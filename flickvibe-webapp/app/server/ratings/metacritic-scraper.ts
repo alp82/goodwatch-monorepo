@@ -37,9 +37,12 @@ export class MetacriticScraper {
     const html = response.data
     const $ = cheerio.load(html)
 
-    const distributionScores = $('.distribution .metascore_w').contents()
-    const metaScore = distributionScores[0]?.data && !isNaN(parseFloat(distributionScores[0]?.data)) ? parseInt(distributionScores[0]?.data).toFixed(0) : undefined
-    const userScore = distributionScores[1]?.data && !isNaN(parseFloat(distributionScores[1]?.data)) ? parseFloat(distributionScores[1]?.data).toFixed(1) : undefined
+    // const distributionScores = $('.distribution .metascore_w').contents()
+    const metaScoreElement = $('.c-siteReviewScore[title^="Metascore"] span').first().contents()
+    const userScoreElement = $('.c-siteReviewScore[title^="User score"] span').first().contents()
+
+    const metaScore = metaScoreElement[0]?.data && !isNaN(parseFloat(metaScoreElement[0].data)) ? parseInt(metaScoreElement[0].data).toFixed(0) : undefined
+    const userScore = userScoreElement[0]?.data && !isNaN(parseFloat(userScoreElement[0].data)) ? parseFloat(userScoreElement[0].data).toFixed(1) : undefined
 
     return {
       url,

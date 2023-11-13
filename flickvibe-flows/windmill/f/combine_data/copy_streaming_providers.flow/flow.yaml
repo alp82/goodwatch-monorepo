@@ -1,0 +1,38 @@
+summary: Combine and copy streaming provider data
+description: >-
+  Merge and combine movie streaming provider data from mongodb collections into
+  relational postgres schemas
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms:
+          database:
+            type: static
+            value: '$res:u/Alp/resource/postgresql'
+        path: >-
+          f/combine_data/copy_streaming_providers/create_streaming_providers_table
+    - id: c
+      summary: ''
+      value:
+        type: script
+        input_transforms:
+          db:
+            type: static
+            value: '$res:u/Alp/resource/postgresql'
+        hash: d778dcddf8cd0d96
+        path: >-
+          f/combine_data/copy_streaming_providers/postgresql/execute_query_and_return_results
+    - id: b
+      value:
+        type: script
+        input_transforms: {}
+        path: f/combine_data/copy_streaming_providers/main
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+tag: null
+ws_error_handler_muted: false

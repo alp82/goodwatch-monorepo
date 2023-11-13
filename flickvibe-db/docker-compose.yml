@@ -1,0 +1,80 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:7
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASS:-secretpassword}
+      MONGO_INITDB_DATABASE: ${MONGODB_DB:-flickvibe}
+    ports:
+      - '${MONGODB_PORT:-29017}:27017'
+    volumes:
+      - mongodb:/data/db
+
+  postgres:
+    image: postgres:15
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS:-secretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-flickvibe}
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "${POSTGRES_PORT:-6432}:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:7.1
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-6080}:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  weaviate:
+    image: semitechnologies/weaviate:1.22.2
+    ports:
+      - "${WEAVIATE_PORT:-8765}:8080"
+      - "${WEAVIATE_GRPC_PORT:-50081}:50051"
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8080'
+      - --scheme
+      - http
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: on-failure
+    environment:
+      ASYNC_INDEXING: 'true'
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      CLUSTER_HOSTNAME: 'node1'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai'
+      OPENAI_APIKEY: ${OPENAI_APIKEY}
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      QUERY_DEFAULTS_LIMIT: 10
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  mongodb:
+  postgres:
+  pgadmin:
+  weaviate_data:

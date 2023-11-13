@@ -28,12 +28,8 @@ export class RottenTomatoesScraper {
     const html = response.data
     const $ = cheerio.load(html)
 
-    const scoreTomatometerMovie = $('#topSection score-board').attr('tomatometerscore')
-    const scoreAudienceMovie = $('#topSection score-board').attr('audiencescore')
-    const scoreTomatometerTV = $('#topSection [data-qa=tomatometer]').text().replace(/\s|\n|%/g, '')
-    const scoreAudienceTV = $('#topSection [data-qa=audience-score]').text().replace(/\s|\n|%/g, '')
-    const scoreTomatometer = scoreTomatometerMovie || scoreTomatometerTV
-    const scoreAudience = scoreAudienceMovie || scoreAudienceTV
+    const scoreTomatometer = $('score-board-deprecated').attr('tomatometerscore')
+    const scoreAudience = $('score-board-deprecated').attr('audiencescore')
 
     const tomatometer = scoreTomatometer && !isNaN(parseInt(scoreTomatometer)) ? parseInt(scoreTomatometer).toFixed(0) : undefined
     const audienceScore = scoreAudience && !isNaN(parseInt(scoreAudience)) ? parseInt(scoreAudience).toFixed(0) : undefined

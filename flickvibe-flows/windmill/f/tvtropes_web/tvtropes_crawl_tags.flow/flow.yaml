@@ -1,0 +1,17 @@
+summary: Crawl TV Tropes pages to get semantic tags
+description: Crawl TV Tropes pages to get semantic tags and persist it.
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms: {}
+        path: f/tvtropes_web/tv_tropes_crawl_tags/main
+      timeout: 300
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+tag: null
+ws_error_handler_muted: false

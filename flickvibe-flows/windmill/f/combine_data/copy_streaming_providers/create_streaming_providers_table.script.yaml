@@ -1,0 +1,15 @@
+summary: ''
+description: ''
+lock: []
+is_template: false
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    database:
+      type: object
+      description: ''
+      format: resource-postgresql
+  required:
+    - database

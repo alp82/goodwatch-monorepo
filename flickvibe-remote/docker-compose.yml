@@ -1,0 +1,52 @@
+version: "3.7"
+
+services:
+  db:
+    deploy:
+      # To use an external database, set replicas to 0 and set DATABASE_URL to the external database url in the .env file
+      replicas: 0
+    image: postgres:14
+    restart: unless-stopped
+    expose:
+      - 5432
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  windmill_worker:
+    build:
+      context: ./worker
+      args:
+        WM_IMAGE: ${WM_IMAGE}
+    pull_policy: always
+    deploy:
+      replicas: ${WORKER_COUNT}
+      resources:
+        limits:
+          cpus: "1"
+          memory: 8192M
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - RUST_LOG=info
+      - DISABLE_SERVER=true
+      - KEEP_JOB_DIR=false
+      - METRICS_ADDR=false
+      - WORKER_GROUP=remote-${WORKER_GROUP}
+      # LICENSE_KEY is only needed for the enterprise edition
+      - LICENSE_KEY=${WM_LICENSE_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    # to mount the worker folder to debug, KEEP_JOB_DIR=true and mount /tmp/windmill
+    volumes:
+      # mount the docker socket to allow to run docker containers from within the workers
+      - /var/run/docker.sock:/var/run/docker.sock
+      - worker_dependency_cache:/tmp/windmill/cache
+
+volumes:
+  worker_dependency_cache: null

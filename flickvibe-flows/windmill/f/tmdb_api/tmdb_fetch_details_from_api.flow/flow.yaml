@@ -1,0 +1,17 @@
+summary: Fetch TMDB details from API
+description: Fetch TMDB details from API and persist them
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms: {}
+        path: f/tmdb_api/tmdb_fetch_details_from_api/main
+      timeout: 300
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+tag: null
+ws_error_handler_muted: false

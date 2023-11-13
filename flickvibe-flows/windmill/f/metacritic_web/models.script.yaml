@@ -1,0 +1,13 @@
+summary: ''
+description: Mongoengine documents for storing metacritic rating crawling results
+lock:
+  - dnspython==2.4.2
+  - mongoengine==0.27.0
+  - pymongo==4.5.0
+is_template: false
+kind: trigger
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

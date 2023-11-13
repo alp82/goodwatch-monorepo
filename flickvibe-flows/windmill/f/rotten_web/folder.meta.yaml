@@ -1,0 +1,5 @@
+display_name: rotten_web
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp
