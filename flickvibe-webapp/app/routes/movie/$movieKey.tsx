@@ -27,7 +27,6 @@ export default function MovieDetails() {
   const { movieKey = '' } = useParams()
   const movieId = movieKey.split('-')[0]
   const detailsFetcher = useFetcher()
-  const ratingsFetcher = useFetcher()
 
   useEffect(() => {
     detailsFetcher.submit(
@@ -37,17 +36,9 @@ export default function MovieDetails() {
         action: '/api/details/movie',
       }
     )
-    ratingsFetcher.submit(
-      { movieId },
-      {
-        method: 'get',
-        action: '/api/ratings/movie',
-      }
-    )
   }, [movieId])
 
   const details = detailsFetcher.data?.details || {}
-  const ratings: RatingsProps = ratingsFetcher.data?.ratings || {}
   const providers = details['watch/providers'] || {}
   console.log({ details })
 

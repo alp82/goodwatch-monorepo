@@ -1,6 +1,7 @@
+import { createClient } from '@supabase/supabase-js'
 import { cached } from '~/utils/api'
 import { titleToDashed } from '~/utils/helpers'
-import { createClient } from '@supabase/supabase-js'
+import { query } from '~/utils/postgres'
 
 const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
 
@@ -337,11 +338,13 @@ export interface TVDetails extends BaseDetails {
 export interface DetailsMovieParams {
   movieId: string
   language: string
+  country: string
 }
 
 export interface DetailsTVParams {
   tvId: string
   language: string
+  country: string
 }
 
 export const getDetailsForMovie = async (params: DetailsMovieParams) => {
@@ -349,42 +352,37 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
     name: 'details-movie',
     target: _getDetailsForMovie,
     params,
-    ttlMinutes: 60 * 12,
+    //ttlMinutes: 60 * 12,
+    ttlMinutes: 0,
   })
 }
 
-export async function _getDetailsForMovie({ movieId, language }: DetailsMovieParams): Promise<MovieDetails> {
-  const details = await fetch(
-    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=credits,keywords,recommendations,release_dates,videos,watch/providers`
-  ).then((res) => res.json())
+// TODO country & language
+export async function _getDetailsForMovie({ movieId, language, country }: DetailsMovieParams): Promise<MovieDetails> {
+  const result = await query(`SELECT * FROM movies WHERE tmdb_id = ${movieId}`);
+  if (!result.rows.length) throw Error(`movie with ID "${movieId}" not found`)
 
-  if (details.belongs_to_collection) {
-    details.belongs_to_collection = await fetch(
-      `https://api.themoviedb.org/3/collection/${details.belongs_to_collection.id}?api_key=${process.env.TMDB_API_KEY}`
-    ).then((res) => res.json())
-  }
+  const movie = result.rows[0]
 
-  const title_dashed = titleToDashed(details.title)
-  const title_underscored = title_dashed.replace(/-/g, '_')
-  const year = details?.release_date?.split('-')?.[0] || '0'
+  const alternative_titles = movie.alternative_titles.filter((title: Record<string, string>) => title.iso_3166_1 === country)
+  movie.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
+  delete movie.alternative_titles
+
+  const certifications = movie.certifications.filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
+  movie.certifications = certifications.length ? certifications[0].release_dates : null
+
+  const translations = movie.translations.filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
+  movie.translations = translations.length ? translations : null
 
   const { data, error } = await supabase
-    .from('keywords')
-    .upsert(details.keywords.keywords)
-    .select()
+      .from('keywords')
+      .upsert(movie.keywords)
+      .select()
   if (error) {
     console.error({ data, error })
   }
 
-  return {
-    ...details,
-    keywords: {
-      results: details.keywords.keywords,
-    },
-    title_dashed,
-    title_underscored,
-    year,
-  }
+  return movie
 }
 
 export const getDetailsForTV = async (params: DetailsTVParams) => {
@@ -396,7 +394,7 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
   })
 }
 
-export async function _getDetailsForTV({ tvId, language }: DetailsTVParams): Promise<TVDetails> {
+export async function _getDetailsForTV({ tvId, language, country }: DetailsTVParams): Promise<TVDetails> {
   const details = await fetch(
     `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=content_ratings,credits,external_ids,keywords,recommendations,videos,watch/providers`
   ).then((res) => res.json())
