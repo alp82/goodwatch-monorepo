@@ -70,6 +70,12 @@ CREATE TABLE IF NOT EXISTS movies (
     rotten_tomatoes_tomato_score_original FLOAT,
     rotten_tomatoes_tomato_score_normalized_percent FLOAT,
     rotten_tomatoes_tomato_score_review_count FLOAT,
+    aggregated_user_score_normalized_percent FLOAT,
+    aggregated_user_score_rating_count FLOAT,
+    aggregated_official_score_normalized_percent FLOAT,
+    aggregated_official_score_review_count FLOAT,
+    aggregated_overall_score_normalized_percent FLOAT,
+    aggregated_overall_score_voting_count FLOAT,
 
     -- relations
     collection_id INTEGER,

@@ -9,7 +9,7 @@ import wmill
 WeaviateServer = wmill.get_resource("u/Alp/weaviate_server")
 
 
-def main(tmdb_ids: list[str] = [13, 122, 129, 155, 278, 424, 603, 680]):
+def main(tmdb_ids: list[str] = [13, 122, 129, 155, 278, 424, 550, 603, 680]):
     print("connecting to weaviate server...")
     weaviate_client = weaviate.connect_to_local(
         host=WeaviateServer.get("host"),

@@ -76,5 +76,4 @@ schema:
   required:
     - movie_list
     - movie_tropes
-tag: null
 ws_error_handler_muted: false

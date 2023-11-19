@@ -93,6 +93,12 @@ def copy_tv(pg):
         "rotten_tomatoes_tomato_score_original",
         "rotten_tomatoes_tomato_score_normalized_percent",
         "rotten_tomatoes_tomato_score_review_count",
+        "aggregated_user_score_normalized_percent",
+        "aggregated_user_score_rating_count",
+        "aggregated_official_score_normalized_percent",
+        "aggregated_official_score_review_count",
+        "aggregated_overall_score_normalized_percent",
+        "aggregated_overall_score_voting_count",
         "tmdb_recommendation_ids",
         "tmdb_similar_ids",
         "homepage",
@@ -159,6 +165,84 @@ def copy_tv(pg):
             imdb_id = imdb_rating.get("imdb_id", None)
             metacritic_rating = metacritic_ratings.get(tmdb_id, {})
             rotten_tomatoes_rating = rotten_tomatoes_ratings.get(tmdb_id, {})
+
+            tmdb_user_score_normalized_percent = (
+                tmdb_user_score * 10 if tmdb_user_score else None
+            )
+            tmdb_user_score_vote_count = tmdb_details.get("vote_count")
+            imdb_user_score_normalized_percent = imdb_rating.get(
+                "user_score_normalized_percent", None
+            )
+            imdb_user_score_vote_count = imdb_rating.get("user_score_vote_count", None)
+            metacritic_user_score_normalized_percent = metacritic_rating.get(
+                "user_score_normalized_percent", None
+            )
+            metacritic_user_score_vote_count = metacritic_rating.get(
+                "user_score_vote_count", None
+            )
+            metacritic_official_score_normalized_percent = metacritic_rating.get(
+                "meta_score_normalized_percent", None
+            )
+            metacritic_official_score_vote_count = metacritic_rating.get(
+                "meta_score_vote_count", None
+            )
+            rotten_tomatoes_user_score_normalized_percent = rotten_tomatoes_rating.get(
+                "audience_score_normalized_percent", None)
+            rotten_tomatoes_user_score_vote_count = rotten_tomatoes_rating.get("audience_score_vote_count", None)
+            rotten_tomatoes_official_score_normalized_percent = rotten_tomatoes_rating.get(
+                "tomato_score_normalized_percent", None)
+            rotten_tomatoes_official_score_vote_count = rotten_tomatoes_rating.get("tomato_score_vote_count", None)
+
+            # Filtering out None values and calculating aggregated values
+            def calculate_average(scores):
+                valid_scores = [score for score in scores if score is not None]
+                return sum(valid_scores) / len(valid_scores) if valid_scores else None
+
+            def calculate_sum(counts):
+                valid_counts = [count for count in counts if count is not None]
+                return sum(valid_counts)
+
+            # User score percents and counts
+            user_score_percents = [
+                tmdb_user_score_normalized_percent,
+                imdb_user_score_normalized_percent,
+                metacritic_user_score_normalized_percent,
+                rotten_tomatoes_user_score_normalized_percent,
+            ]
+            aggregated_user_score_normalized_percent = calculate_average(user_score_percents)
+
+            user_score_counts = [
+                tmdb_user_score_vote_count,
+                imdb_user_score_vote_count,
+                metacritic_user_score_vote_count,
+                rotten_tomatoes_user_score_vote_count,
+            ]
+            aggregated_user_score_rating_count = calculate_sum(user_score_counts)
+
+            # Official score percents and counts
+            official_score_percents = [
+                metacritic_official_score_normalized_percent,
+                rotten_tomatoes_official_score_normalized_percent,
+            ]
+            aggregated_official_score_normalized_percent = calculate_average(official_score_percents)
+
+            official_score_counts = [
+                metacritic_official_score_vote_count,
+                rotten_tomatoes_official_score_vote_count,
+            ]
+            aggregated_official_score_review_count = calculate_sum(official_score_counts)
+
+            # Calculating aggregated overall scores
+            aggregated_overall_score_normalized_percent = calculate_average([
+                aggregated_user_score_normalized_percent,
+                aggregated_official_score_normalized_percent
+            ])
+
+            aggregated_overall_score_voting_count = calculate_sum([
+                aggregated_user_score_rating_count,
+                aggregated_official_score_review_count
+            ])
+
             data = (
                 tmdb_id,
                 tmdb_details.get("original_title"),
@@ -253,6 +337,12 @@ def copy_tv(pg):
                 rotten_tomatoes_rating.get("tomato_score_original", None),
                 rotten_tomatoes_rating.get("tomato_score_normalized_percent", None),
                 rotten_tomatoes_rating.get("tomato_score_vote_count", None),
+                aggregated_user_score_normalized_percent,
+                aggregated_user_score_rating_count,
+                aggregated_official_score_normalized_percent,
+                aggregated_official_score_review_count,
+                aggregated_overall_score_normalized_percent,
+                aggregated_overall_score_voting_count,
                 [
                     tv.get("id")
                     for tv in tmdb_details.get("recommendations", {}).get(
