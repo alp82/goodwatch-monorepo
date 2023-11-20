@@ -10,7 +10,7 @@ export default function AgeRating({ ageRating }: AgeRatingProps) {
   return (
     <>
       {ageRating && <>
-        <div className="inline-block align-baseline p-1 h-8 border-2 text-sm font-bold text-center">{ageRating.certification || ageRating.rating}</div>
+        <div className="inline-block align-baseline p-1 h-7 border-2 text-sm font-bold text-center">{ageRating.certification || ageRating.rating}</div>
       </>}
     </>
   )

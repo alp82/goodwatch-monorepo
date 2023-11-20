@@ -11,6 +11,8 @@ import AgeRating from '~/ui/AgeRating'
 import {ReleaseDatesResult, VideoResult} from '~/server/details.server'
 import Description from '~/ui/Description'
 import Videos from "~/ui/Videos";
+import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
+import RatingBadges from '~/ui/RatingBadges'
 
 export const meta: MetaFunction = () => {
   return {
@@ -67,6 +69,14 @@ export default function TVDetails() {
 
   const mainInfo = (
     <>
+      {tagline && <div className="mb-4">
+        <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
+          <p className="text-white italic sm:text-xl">
+            {tagline}
+          </p>
+        </blockquote>
+      </div>}
+      <Description description={overview} />
       <Ratings {...ratings} />
       {ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">
         <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer hover:text-indigo-100 hover:bg-indigo-900">
@@ -77,17 +87,18 @@ export default function TVDetails() {
         ))}
       </div>}
       <Providers providers={providers} />
-      <Videos results={videos?.results || []} />
+      <Videos videos={videos || []} />
       <Keywords keywords={keywords} type="tv" />
     </>
   )
 
   return (
-    <div className="mt-8">
+    <div className="md:mt-4 lg:mt-8">
       {detailsFetcher.state === 'idle' ?
         <>
-          <div className="relative p-3 flex lg:h-96 bg-cover before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
-            <div className="relative flex-none w-32 lg:w-60">
+          <div className="relative p-3 flex lg:h-96 bg-contain bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+            <div className="hidden md:block relative flex-none w-32 lg:w-60">
+              <RatingProgressOverlay ratings={ratings} />
               <img
                 className="block"
                 src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
@@ -95,25 +106,18 @@ export default function TVDetails() {
                 title={`Poster for ${name}`}
               />
             </div>
-            <div className="relative flex-1 pl-4">
+            <div className="relative flex-1 md:pl-4">
               <h2 className="mb-2 text-2xl">
                 <span className="text-3xl font-bold pr-2">{name}</span> ({year})
               </h2>
+              <Genres genres={genres} type="tv" />
               <div className="flex gap-4">
                 <AgeRating ageRating={ageRating} />
-                <Genres genres={genres} type="tv" />
                 <div className="ml-1 mt-1">
                   {ratingsSeasons?.length} Season{ratingsSeasons?.length === 1 ? '' : 's'}
                 </div>
               </div>
-              {tagline && <div className="mb-4">
-                  <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
-                      <p className="text-white italic sm:text-xl">
-                        {tagline}
-                      </p>
-                  </blockquote>
-              </div>}
-              <Description description={overview} />
+              <RatingBadges ratings={ratings} />
             </div>
           </div>
           <div className="hidden lg:block">

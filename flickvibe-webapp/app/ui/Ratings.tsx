@@ -25,8 +25,8 @@ export default function Ratings({ ratings, title = 'Ratings', compact = false }:
       <div className={`mt-2 mb-2 font-bold ${compact ? 'text-lg' : 'text-xl'}`}>{title}</div>
       <ul className={`underline-offset-2 flex gap-4 flex-wrap ${isComplete ? '' : 'opacity-50'}`}>
         <dl className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} w-28 p-3 rounded-lg shadow overflow-hidden text-center`}>
-          <dd className={`${vibeColorIndex == null ? 'text-gray-300' : (vibeColorIndex < 90 ? 'text-gray-900' : 'text-gray-100')} mt-1 text-5xl font-semibold tracking-tight`}>{ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings?.aggregated_overall_score_normalized_percent) : '--'}</dd>
-          <dt className={`${vibeColorIndex == null ? 'text-gray-400' : (vibeColorIndex < 90 ? 'text-gray-800' : 'text-gray-300')} mt-2 truncate text-lg font-medium`}>Vibes</dt>
+          <dd className={`${vibeColorIndex == null ? 'text-gray-300' : 'text-gray-100'} mt-1 text-5xl font-semibold tracking-tight`}>{ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings?.aggregated_overall_score_normalized_percent) : '--'}</dd>
+          <dt className={`${vibeColorIndex == null ? 'text-gray-400' : 'text-gray-300'} mt-2 truncate text-lg font-medium`}>Vibes</dt>
         </dl>
 
         <a className="" href={ratings?.imdb_url} target="_blank">

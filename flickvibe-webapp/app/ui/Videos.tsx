@@ -4,6 +4,15 @@ import YouTube from "react-youtube";
 import {Videos, VideoResult} from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
 
+const allTypes = [
+  'trailers',
+  'teasers',
+  'clips',
+  'featurettes',
+  'behind the sceness',
+  'bloopers',
+]
+
 export interface VideosProps {
   videos: Videos
 }
@@ -14,10 +23,10 @@ export default function Videos({ videos }: VideosProps) {
   const [selectedNumber, setSelectedNumber] = useState(0)
   const selectedVideos = videos?.[selectedType] || []
 
-  const typeTabs: Tab[] = types.map((type) => {
+  const typeTabs: Tab[] = allTypes.filter((type) => types.includes(type)).map((type) => {
     return {
       key: type,
-      label: type,
+      label: type.charAt(0).toUpperCase() + type.slice(1, -1),
       current: type === selectedType,
     }
   })
