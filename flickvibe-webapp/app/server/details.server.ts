@@ -23,13 +23,13 @@ export interface Part {
   vote_count:        number
 }
 
-export interface BelongsToCollection {
+export interface Collection {
   id:            number
   name:          string
   overview:      string
   poster_path:   string
   backdrop_path: string
-  parts:         Part[]
+  movie_ids:      number[]
 }
 
 export interface BaseDetails {
@@ -38,21 +38,7 @@ export interface BaseDetails {
   year: string
 }
 
-export interface Flatrate {
-  logo_path: string
-  provider_id: number
-  provider_name: string
-  display_priority: number
-}
-
-export interface Buy {
-  logo_path: string
-  provider_id: number
-  provider_name: string
-  display_priority: number
-}
-
-export interface Rent {
+export interface ProviderData {
   logo_path: string
   provider_id: number
   provider_name: string
@@ -60,14 +46,13 @@ export interface Rent {
 }
 
 export interface ProviderData {
-  link: string
-  flatrate: Flatrate[]
-  buy: Buy[]
-  rent: Rent[]
 }
 
-export interface WatchProviders {
-  results: Record<string, ProviderData>
+export interface StreamingProviders {
+  buy: ProviderData[]
+  flatrate: ProviderData[]
+  flatrate_and_buy: ProviderData[]
+  rent: ProviderData[]
 }
 
 export interface Genre {
@@ -204,13 +189,15 @@ export interface VideoResult {
 }
 
 export interface Videos {
-  results: VideoResult[]
+  clips: VideoResult[]
+  featurettes: VideoResult[]
+  trailers: VideoResult[]
 }
 
 export interface MovieDetails extends BaseDetails {
   adult: boolean
   backdrop_path: string
-  belongs_to_collection?: BelongsToCollection
+  belongs_to_collection?: Collection
   budget: number
   genres: Genre[]
   homepage: string
@@ -238,7 +225,7 @@ export interface MovieDetails extends BaseDetails {
   recommendations: Recommendations
   release_dates: ReleaseDates
   videos: Videos
-  ['watch/providers']: WatchProviders
+  streaming_providers: StreamingProviders
 }
 
 export interface CreatedBy {
@@ -332,7 +319,7 @@ export interface TVDetails extends BaseDetails {
   keywords: Keywords
   recommendations: Recommendations
   videos: Videos
-  ['watch/providers']: WatchProviders
+  ['watch/providers']: StreamingProviders
 }
 
 export interface DetailsMovieParams {
@@ -352,7 +339,7 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
     name: 'details-movie',
     target: _getDetailsForMovie,
     params,
-    //ttlMinutes: 60 * 12,
+    //TODO ttlMinutes: 60 * 12,
     ttlMinutes: 0,
   })
 }
@@ -370,6 +357,9 @@ export async function _getDetailsForMovie({ movieId, language, country }: Detail
 
   const certifications = movie.certifications.filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
   movie.certifications = certifications.length ? certifications[0].release_dates : null
+
+  const streaming_providers = movie.streaming_providers[country.toUpperCase()]
+  movie.streaming_providers = streaming_providers || null
 
   const translations = movie.translations.filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
   movie.translations = translations.length ? translations : null

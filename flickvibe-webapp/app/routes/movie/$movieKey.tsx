@@ -15,6 +15,7 @@ import Videos from "~/ui/Videos";
 import {titleToDashed} from "~/utils/helpers";
 import Collection from "~/ui/Collection";
 import Runtime from "~/ui/Runtime";
+import { extractRatings } from '~/utils/ratings'
 
 export const meta: MetaFunction = () => {
   return {
@@ -39,20 +40,18 @@ export default function MovieDetails() {
   }, [movieId])
 
   const details = detailsFetcher.data?.details || {}
-  const providers = details['watch/providers'] || {}
+  const ratings = extractRatings(details)
   console.log({ details })
 
-  const { backdrop_path, belongs_to_collection, keywords, genres = [], overview, poster_path, release_dates, runtime, tagline, title, videos, year } = details
-  const countryCode = 'DE'
-  const releases = (release_dates?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
-  const ageRating = (releases?.release_dates || []).length > 0 ? releases.release_dates.find((release: ReleaseDate) => release.certification) : null
+  const { backdrop_path, certifications, collection, keywords, genres = [], original_title, poster_path, release_year, runtime, streaming_providers, synopsis, tagline, title, videos } = details
+  const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.certification) : null
 
   const mainInfo = (
     <>
-      <Ratings {...ratings} />
-      <Providers providers={providers} />
-      <Collection collection={belongs_to_collection} movieId={details.id} />
-      <Videos results={videos?.results || []} />
+      <Ratings ratings={ratings} />
+      <Providers providers={streaming_providers} />
+      <Collection collection={collection} movieId={details.id} />
+      <Videos videos={videos || []} />
       <Keywords keywords={keywords} type="movie" />
     </>
   )
@@ -72,7 +71,7 @@ export default function MovieDetails() {
             </div>
             <div className="relative flex-1 pl-4">
               <h2 className="mb-2 text-2xl">
-                <span className="text-3xl font-bold pr-2">{title}</span> ({year})
+                <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
               <div className="flex gap-4">
                 <AgeRating ageRating={ageRating} />
@@ -88,7 +87,7 @@ export default function MovieDetails() {
                   </p>
                 </blockquote>
               </div>}
-              <Description description={overview} />
+              <Description description={synopsis} />
             </div>
           </div>
           <div className="hidden lg:block">

@@ -1,23 +1,21 @@
 import React, { useState } from 'react'
-import { WatchProviders } from '~/server/details.server'
+import { StreamingProviders } from '~/server/details.server'
 import InfoBox from '~/ui/InfoBox'
 
 export interface ProvidersProps {
-  providers: WatchProviders
+  providers: StreamingProviders
 }
 
 export default function Providers({ providers }: ProvidersProps) {
-  const results = providers.results
-  if (!results) {
+  if (!providers) {
     return (
       <div className="mt-8 text-xl">no streaming providers available</div>
     )
   }
-  const locationProviders = results['DE'] || {}
 
-  const hasFlatrate = locationProviders.flatrate?.length
-  const hasBuy = locationProviders.buy?.length
-  const hasRent = locationProviders.rent?.length
+  const hasFlatrate = providers.flatrate?.length
+  const hasBuy = providers.buy?.length
+  const hasRent = providers.rent?.length
   const hasNothing = !hasFlatrate && !hasBuy
 
   return (
@@ -32,7 +30,7 @@ export default function Providers({ providers }: ProvidersProps) {
             Streaming
           </div>
           <div className="mb-2 text-sm italic">
-            powered by <a href="https://justwatch.com" className="text-yellow-500 hover:text-yellow-300">Justwatch</a>
+            powered by <a href="https://justwatch.com" className="text-yellow-500 hover:text-yellow-300">JustWatch</a>
           </div>
         </>
       )}
@@ -45,7 +43,7 @@ export default function Providers({ providers }: ProvidersProps) {
             </span>
           </div>
           <div className="flex flex-wrap gap-4">
-            {locationProviders.flatrate.map(provider => {
+            {providers.flatrate.map(provider => {
               return (
                 <div key={provider.provider_id}>
                   <img
@@ -64,7 +62,7 @@ export default function Providers({ providers }: ProvidersProps) {
         <div>
           <div className="mt-10 mb-2 text-lg font-bold">Buy</div>
           <div className="flex flex-wrap gap-4">
-            {locationProviders.buy.map(provider => {
+            {providers.buy.map(provider => {
               return (
                 <div key={provider.provider_id}>
                   <img
@@ -83,7 +81,7 @@ export default function Providers({ providers }: ProvidersProps) {
       {/*  <div>*/}
       {/*    <div className="mt-2 mb-2 text-lg font-bold">Rent</div>*/}
       {/*    <div className="flex flex-wrap gap-4">*/}
-      {/*      {locationProviders.buy.map(provider => {*/}
+      {/*      {providers.buy.map(provider => {*/}
       {/*        return (*/}
       {/*          <div key={provider.provider_id}>*/}
       {/*            <img className="w-10 h-10 rounded-lg" src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`} alt={provider.provider_name} />*/}

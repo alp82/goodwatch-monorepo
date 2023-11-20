@@ -1,28 +1,18 @@
 import React, {useState} from 'react'
 import Tabs, {Tab} from "~/ui/Tabs";
 import YouTube from "react-youtube";
-import {VideoResult} from "~/server/details.server";
+import {Videos, VideoResult} from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
 
 export interface VideosProps {
-  results: VideoResult[]
+  videos: Videos
 }
 
-export default function Videos({ results }: VideosProps) {
-  const videos = (results || []).sort((a: VideoResult, b: VideoResult) => {
-    return a.published_at < b.published_at ? -1 : 1
-  })
-
-  const types: string[] = []
-  videos.forEach((video) => {
-    if (!types.includes(video.type)) {
-      types.push(video.type)
-    }
-  })
-
+export default function Videos({ videos }: VideosProps) {
+  const types = Object.keys(videos || {})
   const [selectedType, setSelectedType] = useState(types[0])
   const [selectedNumber, setSelectedNumber] = useState(0)
-  const selectedVideos = videos.filter((video) => video.type === selectedType)
+  const selectedVideos = videos?.[selectedType] || []
 
   const typeTabs: Tab[] = types.map((type) => {
     return {
@@ -62,7 +52,7 @@ export default function Videos({ results }: VideosProps) {
   return (
     <div className="mt-8">
       <div className="mb-2 text-lg font-bold">Videos</div>
-      {videos.length ? (
+      {types.length ? (
         <>
           <div className="mb-2">
             <Tabs tabs={typeTabs} pills={true} onSelect={handleTypeSelection} />
