@@ -8,6 +8,7 @@ const allTypes = [
   'trailers',
   'teasers',
   'clips',
+  'opening creditss',
   'featurettes',
   'behind the sceness',
   'bloopers',
@@ -19,7 +20,7 @@ export interface VideosProps {
 
 export default function Videos({ videos }: VideosProps) {
   const types = Object.keys(videos || {})
-  const [selectedType, setSelectedType] = useState(types[0])
+  const [selectedType, setSelectedType] = useState(allTypes.find((type) => types.includes(type)) || allTypes[0])
   const [selectedNumber, setSelectedNumber] = useState(0)
   const selectedVideos = videos?.[selectedType] || []
 

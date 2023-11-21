@@ -2,17 +2,21 @@ import React, {useEffect, useState} from 'react'
 import Ratings, { RatingsProps } from '~/ui/Ratings'
 import InfoBox from '~/ui/InfoBox'
 import { useFetcher, useParams } from '@remix-run/react'
-import Providers from '~/ui/Providers'
+import Streaming from '~/ui/Streaming'
 import { MetaFunction } from '@remix-run/node'
 import YouTube from 'react-youtube'
 import Genres from '~/ui/Genres'
 import Keywords from '~/ui/Keywords'
 import AgeRating from '~/ui/AgeRating'
-import {ReleaseDatesResult, VideoResult} from '~/server/details.server'
+import { ReleaseDate, ReleaseDatesResult, VideoResult } from '~/server/details.server'
 import Description from '~/ui/Description'
 import Videos from "~/ui/Videos";
 import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
 import RatingBadges from '~/ui/RatingBadges'
+import StreamingBadges from '~/ui/StreamingBadges'
+import { extractRatings } from '~/utils/ratings'
+import Tabs, { Tab } from '~/ui/Tabs'
+import Runtime from '~/ui/Runtime'
 
 export const meta: MetaFunction = () => {
   return {
@@ -25,7 +29,6 @@ export default function TVDetails() {
   const { tvKey = '' } = useParams()
   const tvId = tvKey.split('-')[0]
   const detailsFetcher = useFetcher()
-  const ratingsFetcher = useFetcher()
   const ratingsSeasonsFetcher = useFetcher()
 
   useEffect(() => {
@@ -34,13 +37,6 @@ export default function TVDetails() {
       {
         method: 'get',
         action: '/api/details/tv',
-      }
-    )
-    ratingsFetcher.submit(
-      { tvId },
-      {
-        method: 'get',
-        action: '/api/ratings/tv',
       }
     )
     ratingsSeasonsFetcher.submit(
@@ -53,9 +49,8 @@ export default function TVDetails() {
   }, [tvId])
 
   const details = detailsFetcher.data?.details || {}
-  const ratings: RatingsProps = ratingsFetcher.data?.ratings || {}
+  const ratings = extractRatings(details)
   const ratingsSeasons: RatingsProps[] = ratingsSeasonsFetcher.data?.ratings
-  const providers = details['watch/providers'] || {}
   console.log({ details })
 
   const [showSeasonRatings, setShowSeasonRatings] = useState(false)
@@ -63,32 +58,59 @@ export default function TVDetails() {
     setShowSeasonRatings(value => !value)
   }
 
-  const { backdrop_path, content_ratings, genres, keywords, name, overview, poster_path, tagline, videos, year } = details
-  const countryCode = 'DE'
-  const ageRating = (content_ratings?.results || []).find((result: ReleaseDatesResult) => result.iso_3166_1 === countryCode)
+  const { backdrop_path, certifications, genres, keywords, poster_path, release_year, streaming_providers, synopsis, tagline, title, videos } = details
+  const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.rating) : null
+
+  const [selectedTab, setSelectedTab] = useState('details')
+  const movieTabs = ['details', 'ratings', 'streaming', 'videos'].map((tab) => {
+    return {
+      key: tab,
+      label: tab.charAt(0).toUpperCase() + tab.slice(1),
+      current: tab === selectedTab,
+    }
+  })
+  const handleTabSelection = (tab: Tab) => {
+    setSelectedTab(tab.key)
+  }
 
   const mainInfo = (
     <>
-      {tagline && <div className="mb-4">
-        <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
-          <p className="text-white italic sm:text-xl">
-            {tagline}
-          </p>
-        </blockquote>
-      </div>}
-      <Description description={overview} />
-      <Ratings {...ratings} />
-      {ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">
-        <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer hover:text-indigo-100 hover:bg-indigo-900">
-          {showSeasonRatings ? 'Hide' : 'Show'} Ratings per Season
-        </a>
-        {showSeasonRatings && ratingsSeasons.map((ratingsSeason, index) => (
-          <Ratings key={index} {...ratingsSeason} title={`Season ${index+1}`} compact={true} />
-        ))}
-      </div>}
-      <Providers providers={providers} />
-      <Videos videos={videos || []} />
-      <Keywords keywords={keywords} type="tv" />
+      {selectedTab === 'details' && (
+        <>
+          {tagline && <div className="mb-4">
+            <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
+              <p className="text-white italic sm:text-xl">
+                {tagline}
+              </p>
+            </blockquote>
+          </div>}
+          <Description description={synopsis} />
+          <Keywords keywords={keywords} type="tv" />
+        </>
+      )}
+      {selectedTab === 'ratings' && (
+        <>
+          <Ratings ratings={ratings} />
+          {ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">
+            <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer hover:text-indigo-100 hover:bg-indigo-900">
+              {showSeasonRatings ? 'Hide' : 'Show'} Ratings per Season
+            </a>
+            {showSeasonRatings && ratingsSeasons.map((ratingsSeason, index) => (
+              <Ratings key={index} {...ratingsSeason} title={`Season ${index+1}`} compact={true} />
+            ))}
+          </div>}
+        </>
+      )}
+      {selectedTab === 'streaming' && (
+        <>
+          <Streaming providers={streaming_providers} />
+        </>
+      )}
+      {selectedTab === 'videos' && (
+        <>
+          <Videos videos={videos || []} />
+        </>
+      )}
     </>
   )
 
@@ -96,29 +118,42 @@ export default function TVDetails() {
     <div className="md:mt-4 lg:mt-8">
       {detailsFetcher.state === 'idle' ?
         <>
-          <div className="relative p-3 flex lg:h-96 bg-contain bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
-            <div className="hidden md:block relative flex-none w-32 lg:w-60">
+          <div className="relative mb-2 flex lg:h-96 bg-contain bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+            <div className="md:hidden">
               <RatingProgressOverlay ratings={ratings} />
-              <img
-                className="block"
-                src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
-                alt={`Poster for ${name}`}
-                title={`Poster for ${name}`}
-              />
             </div>
-            <div className="relative flex-1 md:pl-4">
-              <h2 className="mb-2 text-2xl">
-                <span className="text-3xl font-bold pr-2">{name}</span> ({year})
-              </h2>
-              <Genres genres={genres} type="tv" />
-              <div className="flex gap-4">
-                <AgeRating ageRating={ageRating} />
-                <div className="ml-1 mt-1">
-                  {ratingsSeasons?.length} Season{ratingsSeasons?.length === 1 ? '' : 's'}
+            <div className="p-3 flex">
+              <div className="hidden md:block relative flex-none w-40 lg:w-60">
+                <RatingProgressOverlay ratings={ratings} />
+                <img
+                  className="block"
+                  src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
+                  alt={`Poster for ${title}`}
+                  title={`Poster for ${title}`}
+                />
+              </div>
+              <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">
+                <h2 className="mb-2 text-2xl">
+                  <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
+                </h2>
+                <Genres genres={genres} type="tv" />
+                <div className="flex gap-4 mb-4">
+                  <AgeRating ageRating={ageRating} />
+                  <div className="ml-1 mt-1">
+                    {ratingsSeasons?.length} Season{ratingsSeasons?.length === 1 ? '' : 's'}
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <RatingBadges ratings={ratings} />
+                </div>
+                <div className="mb-4">
+                  <StreamingBadges providers={streaming_providers} />
                 </div>
               </div>
-              <RatingBadges ratings={ratings} />
             </div>
+          </div>
+          <div className="my-4">
+            <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection} />
           </div>
           <div className="hidden lg:block">
             {mainInfo}

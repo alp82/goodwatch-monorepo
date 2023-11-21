@@ -380,31 +380,37 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
     name: 'details-tv',
     target: _getDetailsForTV,
     params,
-    ttlMinutes: 60 * 12,
+    //TODO ttlMinutes: 60 * 12,
+    ttlMinutes: 0,
   })
 }
 
 export async function _getDetailsForTV({ tvId, language, country }: DetailsTVParams): Promise<TVDetails> {
-  const details = await fetch(
-    `https://api.themoviedb.org/3/tv/${tvId}?api_key=${process.env.TMDB_API_KEY}&append_to_response=content_ratings,credits,external_ids,keywords,recommendations,videos,watch/providers`
-  ).then((res) => res.json())
+  const result = await query(`SELECT * FROM tv WHERE tmdb_id = ${tvId}`);
+  if (!result.rows.length) throw Error(`movie with ID "${tvId}" not found`)
 
-  const title_dashed = titleToDashed(details.name)
-  const title_underscored = title_dashed.replace(/-/g, '_')
-  const year = details?.first_air_date?.split('-')?.[0] || '0'
+  const tv = result.rows[0]
+
+  const alternative_titles = tv.alternative_titles.filter((title: Record<string, string>) => title.iso_3166_1 === country)
+  tv.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
+  delete tv.alternative_titles
+
+  const certifications = tv.certifications[country.toUpperCase()]
+  tv.certifications = certifications || null
+
+  const streaming_providers = tv.streaming_providers[country.toUpperCase()]
+  tv.streaming_providers = streaming_providers || null
+
+  const translations = tv.translations.filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
+  tv.translations = translations.length ? translations : null
 
   const { data, error } = await supabase
     .from('keywords')
-    .upsert(details.keywords.results)
+    .upsert(tv.keywords)
     .select()
   if (error) {
     console.error({ data, error })
   }
 
-  return {
-    ...details,
-    title_dashed,
-    title_underscored,
-    year,
-  }
+  return tv
 }

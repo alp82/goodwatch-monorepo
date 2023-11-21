@@ -17,10 +17,10 @@ export default function RatingProgressOverlay({ ratings }: RatingsProps) {
   const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10 : null
 
   return (
-    <div className="absolute w-full rounded-t-md bg-gray-800 h-2">
+    <div className="absolute w-full rounded-t-md bg-gray-800 h-2 lg:h-4">
       {hasScore && (
         <>
-          <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} absolute -top-1 w-6 h-4 rounded flex items-center justify-center text-gray-100 text-sm font-bold`} style={{left: `${score}%`, transform: "translateX(-50%)"}}>
+          <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} absolute -top-1 lg:-top-2 w-6 h-4 lg:w-12 lg:h-8 rounded flex items-center justify-center text-gray-100 font-bold text-sm lg:text-lg`} style={{left: `${score}%`, transform: "translateX(-50%)"}}>
             {score}
           </div>
           <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} h-full rounded-t-md`} style={{width: `${score}%`}}></div>

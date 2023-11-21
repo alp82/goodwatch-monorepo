@@ -35,7 +35,7 @@ export default function App() {
       <body className="flex flex-col h-screen bg-gray-900">
         <Analytics />
         <Header />
-        <div className="flex-grow mx-auto mt-2 max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+        <div className="flex-grow mx-auto mt-2 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
           <Outlet />
         </div>
         <Footer />

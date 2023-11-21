@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { StreamingProviders } from '~/server/details.server'
 import InfoBox from '~/ui/InfoBox'
 
-export interface ProvidersProps {
+export interface StreamingProps {
   providers: StreamingProviders
 }
 
-export default function Providers({ providers }: ProvidersProps) {
+export default function Streaming({ providers }: StreamingProps) {
   if (!providers) {
     return (
       <div className="mt-8 text-xl">no streaming providers available</div>
