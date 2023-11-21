@@ -13,9 +13,9 @@ export default function Streaming({ providers }: StreamingProps) {
     )
   }
 
-  const hasFlatrate = providers.flatrate?.length
-  const hasBuy = providers.buy?.length
-  const hasRent = providers.rent?.length
+  const hasFlatrate = Boolean(providers.flatrate?.length)
+  const hasBuy = Boolean(providers.buy?.length)
+  const hasRent = Boolean(providers.rent?.length)
   const hasNothing = !hasFlatrate && !hasBuy
 
   return (
