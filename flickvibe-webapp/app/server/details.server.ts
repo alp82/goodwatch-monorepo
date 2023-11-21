@@ -55,6 +55,19 @@ export interface StreamingProviders {
   rent: ProviderData[]
 }
 
+export interface StreamingLink {
+  provider_id: number
+  provider_name: string
+  provider_logo_path: string
+  tmdb_url: string
+  stream_type: 'ads' | 'buy' | 'flatrate' | 'flatrate_and_buy' | 'free' | 'rent'
+  stream_url: string
+  price_dollar: number
+  quality: string
+  display_priority: number
+}
+
+
 export interface Genre {
   id: number
   name: string
@@ -346,7 +359,41 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 
 // TODO country & language
 export async function _getDetailsForMovie({ movieId, language, country }: DetailsMovieParams): Promise<MovieDetails> {
-  const result = await query(`SELECT * FROM movies WHERE tmdb_id = ${movieId}`);
+  const result = await query(`
+    SELECT
+      m.*,
+      json_agg(
+        json_build_object(
+          'provider_id', spl.provider_id,
+          'provider_name', sp.name,
+          'provider_logo_path', sp.logo_path,
+          'tmdb_url', spl.tmdb_url,
+          'stream_type', spl.stream_type,
+          'stream_url', spl.stream_url,
+          'price_dollar', spl.price_dollar,
+          'quality', spl.quality,
+          'display_priority', spl.display_priority
+        )
+      ) AS streaming_links
+    FROM
+      movies m
+    INNER JOIN
+      streaming_provider_links spl
+    ON
+      spl.tmdb_id = m.tmdb_id
+      AND spl.media_type = 'movie'
+      AND spl.country_code = '${country}'
+    INNER JOIN
+      streaming_providers sp
+    ON
+      spl.provider_id = sp.id
+    WHERE
+      m.tmdb_id = ${movieId}
+    GROUP BY
+      m.tmdb_id
+    ORDER BY
+      MIN(sp.display_priority);
+  `);
   if (!result.rows.length) throw Error(`movie with ID "${movieId}" not found`)
 
   const movie = result.rows[0]
@@ -386,7 +433,40 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
 }
 
 export async function _getDetailsForTV({ tvId, language, country }: DetailsTVParams): Promise<TVDetails> {
-  const result = await query(`SELECT * FROM tv WHERE tmdb_id = ${tvId}`);
+  const result = await query(`
+    SELECT
+      t.*,
+      json_agg(
+        json_build_object(
+          'provider_id', spl.provider_id,
+          'provider_name', sp.name,
+          'provider_logo_path', sp.logo_path,
+          'stream_type', spl.stream_type,
+          'stream_url', spl.stream_url,
+          'price_dollar', spl.price_dollar,
+          'quality', spl.quality,
+          'display_priority', spl.display_priority
+        )
+      ) AS streaming_links
+    FROM
+      tv t
+    INNER JOIN
+      streaming_provider_links spl
+    ON
+      spl.tmdb_id = t.tmdb_id
+      AND spl.media_type = 'tv'
+      AND spl.country_code = '${country}'
+    INNER JOIN
+      streaming_providers sp
+    ON
+      spl.provider_id = sp.id
+    WHERE
+      t.tmdb_id = ${tvId}
+    GROUP BY
+      t.tmdb_id
+    ORDER BY
+      MIN(sp.display_priority);
+  `);
   if (!result.rows.length) throw Error(`movie with ID "${tvId}" not found`)
 
   const tv = result.rows[0]

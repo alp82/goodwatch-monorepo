@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import logo from '~/img/logo-250.png'
+import logo from '~/img/goodwatch-logo.png'
 import Search from '~/ui/Search'
 import {useLocation} from "react-router";
 
@@ -22,17 +22,15 @@ export default function Header() {
                 <div className="flex-shrink-0">
                   <a href="/">
                     <img
-                      className="block h-12 w-auto lg:hidden"
+                      className="h-16 w-auto"
                       src={logo}
-                      alt="flickvibe"
-                    />
-                    <img
-                      className="hidden h-12 w-auto lg:block"
-                      src={logo}
-                      alt="flickvibe"
+                      alt="GoodWatch Logo"
                     />
                   </a>
                 </div>
+                <a href="/">
+                  <h1 className="brand-header hidden sm:block text-2xl text-gray-100">GoodWatch</h1>
+                </a>
                 <div className="hidden lg:ml-6 lg:block">
                   <div className="flex space-x-4">
                     <a href="/discover" className={`rounded-md px-3 py-2 text-sm font-medium ${isDiscover ? 'text-white bg-gray-900' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>

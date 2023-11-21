@@ -10,7 +10,8 @@ import {
 } from "@remix-run/react";
 import { Analytics } from '@vercel/analytics/react'
 
-import stylesheet from "~/tailwind.css";
+import cssMain from "~/main.css";
+import cssTailwind from "~/tailwind.css";
 import Header from '~/ui/Header'
 import Footer from "~/ui/Footer";
 
@@ -21,7 +22,8 @@ export const meta: MetaFunction = () => ({
 });
 
 export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: stylesheet },
+  { rel: "stylesheet", href: cssTailwind },
+  { rel: "stylesheet", href: cssMain },
 ];
 
 
@@ -31,6 +33,9 @@ export default function App() {
       <head>
         <Meta />
         <Links />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap" rel="stylesheet" />
       </head>
       <body className="flex flex-col h-screen bg-gray-900">
         <Analytics />

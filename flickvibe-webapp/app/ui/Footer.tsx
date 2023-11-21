@@ -1,4 +1,5 @@
 import React from 'react'
+import tmdb_logo from '~/img/tmdb-logo.svg'
 
 const navigation = {
   main: [
@@ -77,7 +78,7 @@ export default function Footer({}: FooterProps) {
   return (
     <footer className="mt-8 bg-gray-950">
       <div className="mx-auto max-w-7xl overflow-hidden py-12 px-6 sm:py-16 lg:px-8">
-        <nav className="-mb-6 columns-2 sm:flex sm:justify-center sm:space-x-12" aria-label="Footer">
+        <nav className="-mb-6 columns-2 flex justify-center space-x-12" aria-label="Footer">
           {navigation.main.map((item) => (
             <div key={item.name} className="pb-6">
               <a href={item.href} className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100">
@@ -94,10 +95,15 @@ export default function Footer({}: FooterProps) {
             </a>
           ))}
         </div>
-        <div className="mt-10 text-center text-xs leading-5 text-gray-400">
-          powered by
-          <a className="px-2 text-teal-600 hover:text-teal-400" href="https://www.themoviedb.org/">TMDB</a>and
-          <a className="px-2 text-yellow-600 hover:text-yellow-400" href="https://www.justwatch.com/">JustWatch</a>
+        <div className="mt-10 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
+          <small>powered by</small>
+          <a href="https://www.themoviedb.org" target="_blank" className="">
+            <img alt="TMDB" className="h-3 w-auto" src={tmdb_logo} />
+          </a>
+          <small>and</small>
+          <a href="https://justwatch.com" target="_blank" className="scale-125 ml-2" data-original="https://www.justwatch.com">
+            <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
+          </a>
         </div>
       </div>
     </footer>

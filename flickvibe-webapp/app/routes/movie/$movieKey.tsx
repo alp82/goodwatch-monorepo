@@ -40,6 +40,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 export default function MovieDetails() {
   const params = useLoaderData()
   const navigate = useNavigate()
+  const country = 'DE'
 
   const { movieKey = '' } = useParams()
   const movieId = movieKey.split('-')[0]
@@ -59,7 +60,7 @@ export default function MovieDetails() {
   const ratings = extractRatings(details)
   console.log({ details })
 
-  const { backdrop_path, certifications, collection, keywords, genres = [], original_title, poster_path, release_year, runtime, streaming_providers, synopsis, tagline, title, videos } = details
+  const { backdrop_path, certifications, collection, keywords, genres = [], original_title, poster_path, release_year, runtime, streaming_links, synopsis, tagline, title, videos } = details
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.certification) : null
 
   const [selectedTab, setSelectedTab] = useState(params.tab)
@@ -98,7 +99,7 @@ export default function MovieDetails() {
       )}
       {selectedTab === 'streaming' && (
         <>
-          <Streaming providers={streaming_providers} />
+          <Streaming links={streaming_links} mediaType="tv-show" title={title} country={country} />
         </>
       )}
       {selectedTab === 'videos' && (
@@ -113,7 +114,7 @@ export default function MovieDetails() {
     <div className="md:mt-4 lg:mt-8">
       {detailsFetcher.state === 'idle' ?
         <>
-          <div className="relative mb-2 flex h-64 lg:h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+          <div className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
             <div className="md:hidden">
               <RatingProgressOverlay ratings={ratings} />
             </div>
@@ -142,7 +143,7 @@ export default function MovieDetails() {
                   <RatingBadges ratings={ratings} />
                 </div>
                 <div className="mb-4">
-                  <StreamingBadges providers={streaming_providers} />
+                  <StreamingBadges links={streaming_links} mediaType="tv-show" title={title} country={country} />
                 </div>
               </div>
             </div>

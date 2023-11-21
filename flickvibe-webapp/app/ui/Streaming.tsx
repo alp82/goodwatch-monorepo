@@ -1,22 +1,27 @@
-import React, { useState } from 'react'
-import { StreamingProviders } from '~/server/details.server'
+import React from 'react'
+import { StreamingLink } from '~/server/details.server'
 import InfoBox from '~/ui/InfoBox'
+import tmdb_logo from '~/img/tmdb-logo.svg'
 
 export interface StreamingProps {
-  providers: StreamingProviders
+  links: StreamingLink[]
 }
 
-export default function Streaming({ providers }: StreamingProps) {
-  if (!providers) {
+export default function Streaming({ links }: StreamingProps) {
+  if (!links?.length) {
     return (
       <div className="mt-8 text-xl">no streaming providers available</div>
     )
   }
 
-  const hasFlatrate = Boolean(providers.flatrate?.length)
-  const hasBuy = Boolean(providers.buy?.length)
-  const hasRent = Boolean(providers.rent?.length)
-  const hasNothing = !hasFlatrate && !hasBuy
+  const flatrateLinks = links.filter((link: StreamingLink) => link.stream_type == "flatrate")
+  const buyLinks = links.filter((link: StreamingLink) => link.stream_type == "buy")
+  const rentLinks = links.filter((link: StreamingLink) => link.stream_type == "renr")
+
+  const hasFlatrate = Boolean(flatrateLinks.length)
+  const hasBuy = Boolean(buyLinks.length)
+  const hasRent = Boolean(rentLinks.length)
+  const hasNothing = !hasFlatrate && !hasBuy && !hasRent
 
   return (
     <>
@@ -25,14 +30,9 @@ export default function Streaming({ providers }: StreamingProps) {
           <InfoBox text="No streaming provider available yet" />
         </div>
       ) : (
-        <>
-          <div className="mt-6 text-xl font-bold flex items-center">
-            Streaming
-          </div>
-          <div className="mb-2 text-sm italic">
-            powered by <a href="https://justwatch.com" className="text-yellow-500 hover:text-yellow-300">JustWatch</a>
-          </div>
-        </>
+        <div className="mt-6 text-xl font-bold">
+          Streaming
+        </div>
       )}
       {hasFlatrate && (
         <div>
@@ -43,16 +43,16 @@ export default function Streaming({ providers }: StreamingProps) {
             </span>
           </div>
           <div className="flex flex-wrap gap-4">
-            {providers.flatrate.map(provider => {
+            {flatrateLinks.map(link => {
               return (
-                <div key={provider.provider_id}>
+                <a key={link.display_priority} href={link.stream_url} target="_blank">
                   <img
                     className="w-28 h-28 rounded-lg"
-                    src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`}
-                    alt={provider.provider_name}
-                    title={provider.provider_name}
+                    src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
+                    alt={link.provider_name}
+                    title={link.provider_name}
                   />
-                </div>
+                </a>
               )
             })}
           </div>
@@ -62,36 +62,50 @@ export default function Streaming({ providers }: StreamingProps) {
         <div>
           <div className="mt-10 mb-2 text-lg font-bold">Buy</div>
           <div className="flex flex-wrap gap-4">
-            {providers.buy.map(provider => {
+            {buyLinks.map(link => {
               return (
-                <div key={provider.provider_id}>
+                <a key={link.display_priority} href={link.stream_url} target="_blank">
                   <img
                     className="w-10 h-10 rounded-lg"
-                    src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`}
-                    alt={provider.provider_name}
-                    title={provider.provider_name}
+                    src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
+                    alt={link.provider_name}
+                    title={link.provider_name}
                   />
-                </div>
+                </a>
               )
             })}
           </div>
         </div>
       )}
-      {/*{hasRent && (*/}
-      {/*  <div>*/}
-      {/*    <div className="mt-2 mb-2 text-lg font-bold">Rent</div>*/}
-      {/*    <div className="flex flex-wrap gap-4">*/}
-      {/*      {providers.buy.map(provider => {*/}
-      {/*        return (*/}
-      {/*          <div key={provider.provider_id}>*/}
-      {/*            <img className="w-10 h-10 rounded-lg" src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`} alt={provider.provider_name} />*/}
-      {/*          </div>*/}
-      {/*        )*/}
-      {/*      })}*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*)}*/}
-
+      {hasRent && (
+        <div>
+          <div className="mt-2 mb-2 text-lg font-bold">Rent</div>
+          <div className="flex flex-wrap gap-4">
+            {rentLinks.map(link => {
+              return (
+                <a key={link.display_priority} href={link.stream_url} target="_blank">
+                  <img
+                    className="w-10 h-10 rounded-lg"
+                    src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
+                    alt={link.provider_name}
+                    title={link.provider_name}
+                  />
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      <div className="mt-12 w-auto h-3 flex gap-2 items-center">
+        <small>Streaming data by</small>
+        <a href={flatrateLinks[0].tmdb_url} target="_blank" className="">
+          <img alt="TMDB" className="h-3 w-auto" src={tmdb_logo} />
+        </a>
+        <small>and</small>
+        <a href="https://justwatch.com" target="_blank" className="scale-125 ml-2" data-original="https://www.justwatch.com">
+          <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
+        </a>
+      </div>
     </>
   )
 }
