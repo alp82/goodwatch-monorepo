@@ -2,21 +2,16 @@ import React from 'react'
 import { StreamingLink } from '~/server/details.server'
 import InfoBox from '~/ui/InfoBox'
 import tmdb_logo from '~/img/tmdb-logo.svg'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/solid'
 
 export interface StreamingProps {
   links: StreamingLink[]
 }
 
 export default function Streaming({ links }: StreamingProps) {
-  if (!links?.length) {
-    return (
-      <div className="mt-8 text-xl">no streaming providers available</div>
-    )
-  }
-
-  const flatrateLinks = links.filter((link: StreamingLink) => link.stream_type == "flatrate")
-  const buyLinks = links.filter((link: StreamingLink) => link.stream_type == "buy")
-  const rentLinks = links.filter((link: StreamingLink) => link.stream_type == "rent")
+  const flatrateLinks = (links || []).filter((link: StreamingLink) => link.stream_type == "flatrate")
+  const buyLinks = (links || []).filter((link: StreamingLink) => link.stream_type == "buy")
+  const rentLinks = (links || []).filter((link: StreamingLink) => link.stream_type == "rent")
 
   const hasFlatrate = Boolean(flatrateLinks.length)
   const hasBuy = Boolean(buyLinks.length)
@@ -27,7 +22,7 @@ export default function Streaming({ links }: StreamingProps) {
     <>
       {hasNothing && (
         <div className="mt-6">
-          <InfoBox text="No streaming provider available yet" />
+          <InfoBox text="This title is currently not available on any streaming platform" />
         </div>
       )}
       {hasFlatrate && (
@@ -92,16 +87,19 @@ export default function Streaming({ links }: StreamingProps) {
           </div>
         </div>
       )}
-      <div className="mt-12 w-auto h-3 flex gap-2 items-center">
-        <small>Streaming data by</small>
-        <a href={flatrateLinks[0].tmdb_url} target="_blank" className="">
-          <img alt="TMDB" className="h-3 w-auto" src={tmdb_logo} />
-        </a>
-        <small>and</small>
-        <a href="https://justwatch.com" target="_blank" className="scale-125 ml-2" data-original="https://www.justwatch.com">
-          <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
-        </a>
-      </div>
+      {!hasNothing && (
+        <div className="mt-12 w-auto h-3 flex gap-2 items-center">
+          <small>Streaming data by</small>
+          <a href={links[0].tmdb_url} target="_blank" className="">
+            <img alt="TMDB" className="h-3 w-auto" src={tmdb_logo} />
+          </a>
+          <small>and</small>
+          <a href="https://justwatch.com" target="_blank" className="scale-125 ml-2" data-original="https://www.justwatch.com">
+            <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
+          </a>
+        </div>
+      )}
+
     </>
   )
 }

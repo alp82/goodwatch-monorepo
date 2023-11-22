@@ -377,13 +377,13 @@ export async function _getDetailsForMovie({ movieId, language, country }: Detail
       ) AS streaming_links
     FROM
       movies m
-    INNER JOIN
+    LEFT JOIN
       streaming_provider_links spl
     ON
       spl.tmdb_id = m.tmdb_id
       AND spl.media_type = 'movie'
       AND spl.country_code = '${country}'
-    INNER JOIN
+    LEFT JOIN
       streaming_providers sp
     ON
       spl.provider_id = sp.id
@@ -450,13 +450,13 @@ export async function _getDetailsForTV({ tvId, language, country }: DetailsTVPar
       ) AS streaming_links
     FROM
       tv t
-    INNER JOIN
+    LEFT JOIN
       streaming_provider_links spl
     ON
       spl.tmdb_id = t.tmdb_id
       AND spl.media_type = 'tv'
       AND spl.country_code = '${country}'
-    INNER JOIN
+    LEFT JOIN
       streaming_providers sp
     ON
       spl.provider_id = sp.id
