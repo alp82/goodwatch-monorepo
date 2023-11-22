@@ -22,14 +22,14 @@ export default function Header() {
                 <div className="flex-shrink-0">
                   <a href="/">
                     <img
-                      className="h-16 w-auto"
+                      className="h-10 w-auto"
                       src={logo}
                       alt="GoodWatch Logo"
                     />
                   </a>
                 </div>
                 <a href="/">
-                  <h1 className="brand-header hidden sm:block text-2xl text-gray-100">GoodWatch</h1>
+                  <h1 className="brand-header hidden sm:block ml-2 text-2xl text-gray-100">GoodWatch</h1>
                 </a>
                 <div className="hidden lg:ml-6 lg:block">
                   <div className="flex space-x-4">

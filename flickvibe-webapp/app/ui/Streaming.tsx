@@ -16,7 +16,7 @@ export default function Streaming({ links }: StreamingProps) {
 
   const flatrateLinks = links.filter((link: StreamingLink) => link.stream_type == "flatrate")
   const buyLinks = links.filter((link: StreamingLink) => link.stream_type == "buy")
-  const rentLinks = links.filter((link: StreamingLink) => link.stream_type == "renr")
+  const rentLinks = links.filter((link: StreamingLink) => link.stream_type == "rent")
 
   const hasFlatrate = Boolean(flatrateLinks.length)
   const hasBuy = Boolean(buyLinks.length)
@@ -25,13 +25,9 @@ export default function Streaming({ links }: StreamingProps) {
 
   return (
     <>
-      {hasNothing ? (
+      {hasNothing && (
         <div className="mt-6">
           <InfoBox text="No streaming provider available yet" />
-        </div>
-      ) : (
-        <div className="mt-6 text-xl font-bold">
-          Streaming
         </div>
       )}
       {hasFlatrate && (
@@ -45,7 +41,7 @@ export default function Streaming({ links }: StreamingProps) {
           <div className="flex flex-wrap gap-4">
             {flatrateLinks.map(link => {
               return (
-                <a key={link.display_priority} href={link.stream_url} target="_blank">
+                <a key={link.display_priority} href={link.stream_url} target="_blank" className="rounded-xl border-4 border-gray-600 hover:border-gray-500">
                   <img
                     className="w-28 h-28 rounded-lg"
                     src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
@@ -59,12 +55,12 @@ export default function Streaming({ links }: StreamingProps) {
         </div>
       )}
       {hasBuy && (
-        <div>
-          <div className="mt-10 mb-2 text-lg font-bold">Buy</div>
+        <div className="mt-10">
+          <div className="mb-2 text-lg font-bold">Buy</div>
           <div className="flex flex-wrap gap-4">
             {buyLinks.map(link => {
               return (
-                <a key={link.display_priority} href={link.stream_url} target="_blank">
+                <a key={link.display_priority} href={link.stream_url} target="_blank" className="rounded-xl border-4 border-gray-600 hover:border-gray-500">
                   <img
                     className="w-10 h-10 rounded-lg"
                     src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
@@ -78,12 +74,12 @@ export default function Streaming({ links }: StreamingProps) {
         </div>
       )}
       {hasRent && (
-        <div>
-          <div className="mt-2 mb-2 text-lg font-bold">Rent</div>
+        <div className="mt-6">
+          <div className="mb-2 text-lg font-bold">Rent</div>
           <div className="flex flex-wrap gap-4">
             {rentLinks.map(link => {
               return (
-                <a key={link.display_priority} href={link.stream_url} target="_blank">
+                <a key={link.display_priority} href={link.stream_url} target="_blank" className="rounded-xl border-4 border-gray-600 hover:border-gray-500">
                   <img
                     className="w-10 h-10 rounded-lg"
                     src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}

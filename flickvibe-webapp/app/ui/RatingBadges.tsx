@@ -23,7 +23,7 @@ export default function RatingBadges({ ratings }: RatingsProps) {
       )}
       <ul className={`underline-offset-2 flex gap-3 sm:gap-6  ${isComplete ? '' : 'opacity-50'}`}>
         <a className="" href={ratings?.imdb_url} target="_blank">
-          <dl className={`${ratings?.imdb_url ? 'hover:border-black/[.45] active:border-black/[.45]' : 'opacity-60'} rounded-lg border-4 border-white/[.5] h-full px-2 bg-imdb shadow overflow-hidden text-center flex items-center gap-2`}>
+          <dl className={`${ratings?.imdb_url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-black/[.3] h-full px-2 bg-imdb shadow overflow-hidden text-center flex items-center gap-2`}>
             <img className="hidden sm:block h-4 object-contain" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" />
             <dd className="text-sm font-semibold tracking-tight text-gray-900">{ratings?.imdb_user_score_original ? ratings?.imdb_user_score_original.toFixed(1) : '--'}</dd>
           </dl>
@@ -39,7 +39,7 @@ export default function RatingBadges({ ratings }: RatingsProps) {
         </a>
 
         <a className="" href={ratings?.rotten_tomatoes_url} target="_blank">
-          <dl className={`${ratings?.rotten_tomatoes_url ? 'hover:border-white/[.9] active:border-white/[.9]' : 'opacity-60'} rounded-lg border-4 border-white/[.5] h-full px-2 bg-rotten shadow overflow-hidden text-center flex items-center gap-2`}>
+          <dl className={`${ratings?.rotten_tomatoes_url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-black/[.3] h-full px-2 bg-rotten shadow overflow-hidden text-center flex items-center gap-2`}>
             <img className="hidden sm:block h-4 object-contain" src={rottenLogo} alt="Rotten Tomatoes Logo" title="Rotten Tomatoes Logo" />
             <dd className="text-sm font-semibold tracking-tight text-gray-50">{ratings?.rotten_tomatoes_tomato_score_original ? Math.floor(ratings?.rotten_tomatoes_tomato_score_original) : '--'}</dd>
             |

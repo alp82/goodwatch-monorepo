@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
+import { useFetcher, useLoaderData, useNavigate, useParams } from '@remix-run/react'
+import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
+import { MegaphoneIcon } from '@heroicons/react/24/solid'
+import { ReleaseDate } from '~/server/details.server'
 import Ratings from '~/ui/Ratings'
 import InfoBox from '~/ui/InfoBox'
-import { useFetcher, useLoaderData, useNavigate, useParams } from '@remix-run/react'
 import Streaming from '~/ui/Streaming'
-import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
-import { ReleaseDate } from '~/server/details.server'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
 import AgeRating from '~/ui/AgeRating'
@@ -18,6 +19,8 @@ import { extractRatings } from '~/utils/ratings'
 import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
 import RatingBadges from '~/ui/RatingBadges'
 import StreamingBadges from '~/ui/StreamingBadges'
+import Cast from '~/ui/Cast'
+import Crew from '~/ui/Crew'
 
 export const meta: MetaFunction = () => {
   return {
@@ -40,7 +43,6 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 export default function MovieDetails() {
   const params = useLoaderData()
   const navigate = useNavigate()
-  const country = 'DE'
 
   const { movieKey = '' } = useParams()
   const movieId = movieKey.split('-')[0]
@@ -60,11 +62,11 @@ export default function MovieDetails() {
   const ratings = extractRatings(details)
   console.log({ details })
 
-  const { backdrop_path, certifications, collection, keywords, genres = [], original_title, poster_path, release_year, runtime, streaming_links, synopsis, tagline, title, videos } = details
+  const { backdrop_path, cast, certifications, crew, collection, keywords, genres = [], original_title, poster_path, release_year, runtime, streaming_links, synopsis, tagline, title, videos } = details
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.certification) : null
 
   const [selectedTab, setSelectedTab] = useState(params.tab)
-  const movieTabs = ['details', 'ratings', 'streaming', 'videos'].map((tab) => {
+  const movieTabs = ['details', 'cast', 'ratings', 'streaming', 'videos'].map((tab) => {
     return {
       key: tab,
       label: tab.charAt(0).toUpperCase() + tab.slice(1),
@@ -88,8 +90,14 @@ export default function MovieDetails() {
             </blockquote>
           </div>}
           <Description description={synopsis} />
+          <Crew crew={crew} />
           <Collection collection={collection} movieId={details.id} />
           <Keywords keywords={keywords} type="movie" />
+        </>
+      )}
+      {selectedTab === 'cast' && (
+        <>
+          <Cast cast={cast} />
         </>
       )}
       {selectedTab === 'ratings' && (
@@ -99,7 +107,7 @@ export default function MovieDetails() {
       )}
       {selectedTab === 'streaming' && (
         <>
-          <Streaming links={streaming_links} mediaType="tv-show" title={title} country={country} />
+          <Streaming links={streaming_links} />
         </>
       )}
       {selectedTab === 'videos' && (
@@ -143,7 +151,7 @@ export default function MovieDetails() {
                   <RatingBadges ratings={ratings} />
                 </div>
                 <div className="mb-4">
-                  <StreamingBadges links={streaming_links} mediaType="tv-show" title={title} country={country} />
+                  <StreamingBadges links={streaming_links} />
                 </div>
               </div>
             </div>

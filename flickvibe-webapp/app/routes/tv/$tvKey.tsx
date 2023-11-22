@@ -16,6 +16,8 @@ import StreamingBadges from '~/ui/StreamingBadges'
 import { extractRatings } from '~/utils/ratings'
 import Tabs, { Tab } from '~/ui/Tabs'
 import { titleToDashed } from '~/utils/helpers'
+import Cast from '~/ui/Cast'
+import Crew from '~/ui/Crew'
 
 export const meta: MetaFunction = () => {
   return {
@@ -38,7 +40,6 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 export default function TVDetails() {
   const params = useLoaderData()
   const navigate = useNavigate()
-  const country = 'DE'
 
   const { tvKey = '' } = useParams()
   const tvId = tvKey.split('-')[0]
@@ -72,11 +73,11 @@ export default function TVDetails() {
     setShowSeasonRatings(value => !value)
   }
 
-  const { backdrop_path, certifications, genres, keywords, poster_path, release_year, streaming_links, synopsis, tagline, title, videos } = details
+  const { backdrop_path, cast, certifications, crew, genres, keywords, poster_path, release_year, streaming_links, synopsis, tagline, title, videos } = details
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.rating) : null
 
   const [selectedTab, setSelectedTab] = useState(params.tab)
-  const movieTabs = ['details', 'ratings', 'streaming', 'videos'].map((tab) => {
+  const movieTabs = ['details', 'cast', 'ratings', 'streaming', 'videos'].map((tab) => {
     return {
       key: tab,
       label: tab.charAt(0).toUpperCase() + tab.slice(1),
@@ -100,7 +101,13 @@ export default function TVDetails() {
             </blockquote>
           </div>}
           <Description description={synopsis} />
+          <Crew crew={crew} />
           <Keywords keywords={keywords} type="tv" />
+        </>
+      )}
+      {selectedTab === 'cast' && (
+        <>
+          <Cast cast={cast} />
         </>
       )}
       {selectedTab === 'ratings' && (
@@ -118,7 +125,7 @@ export default function TVDetails() {
       )}
       {selectedTab === 'streaming' && (
         <>
-          <Streaming links={streaming_links} mediaType="tv-show" title={title} country={country} />
+          <Streaming links={streaming_links} />
         </>
       )}
       {selectedTab === 'videos' && (
@@ -165,7 +172,7 @@ export default function TVDetails() {
                   <RatingBadges ratings={ratings} />
                 </div>
                 <div className="mb-4">
-                  <StreamingBadges links={streaming_links} mediaType="tv-show" title={title} country={country} />
+                  <StreamingBadges links={streaming_links} />
                 </div>
               </div>
             </div>

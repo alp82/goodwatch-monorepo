@@ -29,8 +29,8 @@ export default function Collection({ collection, movieId }: CollectionProps) {
   const movies = (moviesFetcher.data?.movies || []) as CollectionMovie[]
   return (
     <>
-      {collection && <div className="mb-4">
-        <div className="mt-6 mb-2 text-lg font-bold">Movies from same collection</div>
+      {collection && <div className="mt-8 mb-4">
+        <div className="mb-2 text-lg font-bold">Movies from same collection</div>
         <div className="flex flex-wrap">
           {movies.filter((movie) => movie.tmdb_id !== movieId).map((movie) => {
             return (

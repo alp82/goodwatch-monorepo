@@ -5,6 +5,9 @@ import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
 import { AllRatings } from '~/utils/ratings'
 
+const minPosition = 30
+const maxPosition = 70
+
 export interface RatingsProps {
   ratings?: AllRatings
   title?: string
@@ -12,18 +15,21 @@ export interface RatingsProps {
 }
 
 export default function RatingProgressOverlay({ ratings }: RatingsProps) {
-  const hasScore = Boolean(ratings?.aggregated_overall_score_normalized_percent)
-  const score = ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings.aggregated_overall_score_normalized_percent) : null
-  const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10 : null
+  const hasScore = typeof ratings?.aggregated_overall_score_normalized_percent === "number"
+  const score = hasScore ? Math.floor(ratings.aggregated_overall_score_normalized_percent) : null
+  const vibeColorIndex = hasScore ? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10 : null
+  const progressPosition = typeof score === "number" ? score : 50
+  const badgePosition = typeof score === "number" ? (score / 100) * 55 + 20 : 57
 
   return (
-    <div className="absolute w-full rounded-t-md bg-gray-800 h-2 lg:h-4">
+    <div className="absolute w-full rounded-t-md bg-gray-800 h-2 md:h-4">
       {hasScore && (
         <>
-          <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} absolute -top-1 lg:-top-2 w-6 h-4 lg:w-12 lg:h-8 rounded flex items-center justify-center text-gray-100 font-bold text-sm lg:text-lg`} style={{left: `${score}%`, transform: "translateX(-50%)"}}>
-            {score}
+          <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} absolute -top-1 h-4 md:h-6 px-2 rounded-md flex items-center justify-center gap-2 text-gray-100 text-sm md:text-lg`} style={{left: `${badgePosition}%`, transform: "translateX(-50%)"}}>
+            <small>Score:</small>
+            <strong className="-top-2">{score}</strong>
           </div>
-          <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} h-full rounded-t-md`} style={{width: `${score}%`}}></div>
+          <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} h-full rounded-t-md`} style={{width: `${progressPosition}%`}}></div>
         </>
       )}
     </div>
