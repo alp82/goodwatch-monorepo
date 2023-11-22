@@ -119,7 +119,7 @@ def copy_tv(pg):
 
     while True:
         aggregated_data = []
-        
+
         tmdb_details_batch = list(
             # mongo_db.tmdb_tv_details.find({"original_title": "Breaking Bad"})
             mongo_db.tmdb_tv_details.find()
@@ -138,9 +138,7 @@ def copy_tv(pg):
         rotten_tomatoes_ratings = fetch_documents_in_batch(
             tmdb_ids, mongo_db.rotten_tomatoes_tv_rating
         )
-        tv_tropes_tags = fetch_documents_in_batch(
-            tmdb_ids, mongo_db.tv_tropes_tv_tags
-        )
+        tv_tropes_tags = fetch_documents_in_batch(tmdb_ids, mongo_db.tv_tropes_tv_tags)
 
         for tmdb_details in tmdb_details_batch:
             tmdb_id = tmdb_details["tmdb_id"]
@@ -152,7 +150,7 @@ def copy_tv(pg):
 
             grouped_certifications = defaultdict(list)
             for certification in tmdb_details.get("content_ratings", []):
-                certification_type = certification.get('iso_3166_1', 'unknown')
+                certification_type = certification.get("iso_3166_1", "unknown")
                 grouped_certifications[certification_type].append(certification)
 
             grouped_videos = defaultdict(list)
@@ -187,11 +185,17 @@ def copy_tv(pg):
                 "meta_score_vote_count", None
             )
             rotten_tomatoes_user_score_normalized_percent = rotten_tomatoes_rating.get(
-                "audience_score_normalized_percent", None)
-            rotten_tomatoes_user_score_vote_count = rotten_tomatoes_rating.get("audience_score_vote_count", None)
-            rotten_tomatoes_official_score_normalized_percent = rotten_tomatoes_rating.get(
-                "tomato_score_normalized_percent", None)
-            rotten_tomatoes_official_score_vote_count = rotten_tomatoes_rating.get("tomato_score_vote_count", None)
+                "audience_score_normalized_percent", None
+            )
+            rotten_tomatoes_user_score_vote_count = rotten_tomatoes_rating.get(
+                "audience_score_vote_count", None
+            )
+            rotten_tomatoes_official_score_normalized_percent = (
+                rotten_tomatoes_rating.get("tomato_score_normalized_percent", None)
+            )
+            rotten_tomatoes_official_score_vote_count = rotten_tomatoes_rating.get(
+                "tomato_score_vote_count", None
+            )
 
             # Filtering out None values and calculating aggregated values
             def calculate_average(scores):
@@ -209,7 +213,9 @@ def copy_tv(pg):
                 metacritic_user_score_normalized_percent,
                 rotten_tomatoes_user_score_normalized_percent,
             ]
-            aggregated_user_score_normalized_percent = calculate_average(user_score_percents)
+            aggregated_user_score_normalized_percent = calculate_average(
+                user_score_percents
+            )
 
             user_score_counts = [
                 tmdb_user_score_vote_count,
@@ -224,24 +230,32 @@ def copy_tv(pg):
                 metacritic_official_score_normalized_percent,
                 rotten_tomatoes_official_score_normalized_percent,
             ]
-            aggregated_official_score_normalized_percent = calculate_average(official_score_percents)
+            aggregated_official_score_normalized_percent = calculate_average(
+                official_score_percents
+            )
 
             official_score_counts = [
                 metacritic_official_score_vote_count,
                 rotten_tomatoes_official_score_vote_count,
             ]
-            aggregated_official_score_review_count = calculate_sum(official_score_counts)
+            aggregated_official_score_review_count = calculate_sum(
+                official_score_counts
+            )
 
             # Calculating aggregated overall scores
-            aggregated_overall_score_normalized_percent = calculate_average([
-                aggregated_user_score_normalized_percent,
-                aggregated_official_score_normalized_percent
-            ])
+            aggregated_overall_score_normalized_percent = calculate_average(
+                [
+                    aggregated_user_score_normalized_percent,
+                    aggregated_official_score_normalized_percent,
+                ]
+            )
 
-            aggregated_overall_score_voting_count = calculate_sum([
-                aggregated_user_score_rating_count,
-                aggregated_official_score_review_count
-            ])
+            aggregated_overall_score_voting_count = calculate_sum(
+                [
+                    aggregated_user_score_rating_count,
+                    aggregated_official_score_review_count,
+                ]
+            )
 
             data = (
                 tmdb_id,
@@ -263,10 +277,7 @@ def copy_tv(pg):
                 tmdb_details.get("number_of_episodes"),
                 tmdb_details.get("episode_run_time"),
                 json.dumps(tmdb_details.get("seasons")),
-                [
-                    network.get("id")
-                    for network in tmdb_details.get("networks", [])
-                ],
+                [network.get("id") for network in tmdb_details.get("networks", [])],
                 [
                     company.get("id")
                     for company in tmdb_details.get("production_companies", [])
@@ -278,16 +289,40 @@ def copy_tv(pg):
                 ),
                 json.dumps(
                     [
-                        {k: person.get(k) for k in ["id", "roles", "total_episode_count"]}
-                        for person in tmdb_details.get("aggregate_credits", {}).get("cast", [])
+                        {
+                            k: person.get(k)
+                            for k in [
+                                "id",
+                                "roles",
+                                "total_episode_count",
+                                "name",
+                                "popularity",
+                                "profile_path",
+                            ]
+                        }
+                        for person in tmdb_details.get("aggregate_credits", {}).get(
+                            "cast", []
+                        )
                     ],
                     sort_keys=True,
                     default=str,
                 ),
                 json.dumps(
                     [
-                        {k: person.get(k) for k in ["id", "jobs", "total_episode_count"]}
-                        for person in tmdb_details.get("aggregate_credits", {}).get("crew", [])
+                        {
+                            k: person.get(k)
+                            for k in [
+                                "id",
+                                "jobs",
+                                "total_episode_count",
+                                "name",
+                                "popularity",
+                                "profile_path",
+                            ]
+                        }
+                        for person in tmdb_details.get("aggregate_credits", {}).get(
+                            "crew", []
+                        )
                     ],
                     sort_keys=True,
                     default=str,
@@ -345,9 +380,7 @@ def copy_tv(pg):
                 aggregated_overall_score_voting_count,
                 [
                     tv.get("id")
-                    for tv in tmdb_details.get("recommendations", {}).get(
-                        "results", []
-                    )
+                    for tv in tmdb_details.get("recommendations", {}).get("results", [])
                 ],
                 [
                     tv.get("id")
@@ -367,7 +400,9 @@ def copy_tv(pg):
             )
             aggregated_data.append(data)
 
-        print(f"executing batch from {start} to {start + len(aggregated_data)} tv shows")
+        print(
+            f"executing batch from {start} to {start + len(aggregated_data)} tv shows"
+        )
         query = generate_upsert_query(table_name, columns)
         execute_values(pg_cursor, query, aggregated_data)
 
@@ -381,9 +416,7 @@ def copy_tv(pg):
         start += BATCH_SIZE
 
     pg_cursor.close()
-    return {
-        "total_count": total_count
-    }
+    return {"total_count": total_count}
 
 
 def main():

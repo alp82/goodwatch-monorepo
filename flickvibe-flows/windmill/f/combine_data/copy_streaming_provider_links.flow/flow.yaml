@@ -13,6 +13,16 @@ value:
             value: '$res:u/Alp/resource/postgresql'
         path: >-
           f/combine_data/copy_streaming_provider_links/create_streaming_provider_links_table
+    - id: c
+      value:
+        type: rawscript
+        content: '!inline inline_script_0.inline_script.pg.sql'
+        input_transforms:
+          database:
+            type: static
+            value: '$res:u/Alp/resource/postgresql'
+        lock: ''
+        language: postgresql
     - id: b
       value:
         type: script

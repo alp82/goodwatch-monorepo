@@ -1,0 +1,58 @@
+summary: ''
+description: ''
+lock:
+  - annotated-types==0.6.0
+  - anyio==4.0.0
+  - attrs==23.1.0
+  - authlib==1.2.1
+  - certifi==2023.7.22
+  - cffi==1.16.0
+  - charset-normalizer==3.3.2
+  - cryptography==41.0.5
+  - grpcio==1.59.2
+  - grpcio-tools==1.59.2
+  - h11==0.14.0
+  - httpcore==0.17.3
+  - httpx==0.24.1
+  - idna==3.4
+  - np==1.0.2
+  - numpy==1.26.1
+  - pandas==2.1.3
+  - protobuf==4.25.0
+  - pycparser==2.21
+  - pydantic==2.4.2
+  - pydantic-core==2.10.1
+  - python-dateutil==2.8.2
+  - pytz==2023.3.post1
+  - requests==2.31.0
+  - six==1.16.0
+  - sniffio==1.3.0
+  - typing-extensions==4.8.0
+  - tzdata==2023.3
+  - urllib3==2.0.7
+  - validators==0.22.0
+  - weaviate-client==4.2b0
+  - windmill-api==1.205.0
+  - wmill==1.205.0
+is_template: false
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    tmdb_ids:
+      type: array
+      description: ''
+      default:
+        - 13
+        - 122
+        - 129
+        - 155
+        - 278
+        - 424
+        - 550
+        - 603
+        - 680
+      items:
+        type: number
+  required: []

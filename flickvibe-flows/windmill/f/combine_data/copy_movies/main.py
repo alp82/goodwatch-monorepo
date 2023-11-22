@@ -19,12 +19,37 @@ def init_postgres_tables(pg):
 
     pg_cursor.execute(create_table_query)
     pg.commit()
+    pg_cursor.close()
 
 
 def fetch_documents_in_batch(tmdb_ids, collection):
     return {
         doc["tmdb_id"]: doc for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}})
     }
+
+
+def fetch_collections_by_tmdb_id(pg):
+    pg_cursor = pg.cursor()
+
+    query = "SELECT * FROM collections"
+    pg_cursor.execute(query)
+    result = pg_cursor.fetchall()
+    pg_cursor.close()
+
+    collections_by_id = {}
+    for row in result:
+        collection_id, name, poster_path, backdrop_path, tmdb_ids, _ = row
+
+        for tmdb_id in tmdb_ids:
+            collections_by_id[tmdb_id] = {
+                "id": collection_id,
+                "name": name,
+                "poster_path": poster_path,
+                "backdrop_path": backdrop_path,
+                "movie_ids": tmdb_ids,
+            }
+
+    return collections_by_id
 
 
 def copy_movies(pg):
@@ -92,7 +117,7 @@ def copy_movies(pg):
         "aggregated_official_score_review_count",
         "aggregated_overall_score_normalized_percent",
         "aggregated_overall_score_voting_count",
-        "collection_id",
+        "collection",
         "tmdb_recommendation_ids",
         "tmdb_similar_ids",
         "homepage",
@@ -103,6 +128,8 @@ def copy_movies(pg):
         "created_at",
         "updated_at",
     ]
+
+    collections_by_tmdb_id = fetch_collections_by_tmdb_id(pg)
 
     start = 0
     total_count = 0
@@ -143,6 +170,8 @@ def copy_movies(pg):
                 video_type = f"{video.get('type', 'unknown').lower()}s"
                 grouped_videos[video_type].append(video)
 
+            collection = collections_by_tmdb_id.get(tmdb_id)
+
             tmdb_user_score = tmdb_details.get("vote_average")
             imdb_rating = imdb_ratings.get(tmdb_id, {})
             imdb_id = imdb_rating.get("imdb_id", None)
@@ -169,10 +198,18 @@ def copy_movies(pg):
             metacritic_official_score_vote_count = metacritic_rating.get(
                 "meta_score_vote_count", None
             )
-            rotten_tomatoes_user_score_normalized_percent = rotten_tomatoes_rating.get("audience_score_normalized_percent", None)
-            rotten_tomatoes_user_score_vote_count = rotten_tomatoes_rating.get("audience_score_vote_count", None)
-            rotten_tomatoes_official_score_normalized_percent = rotten_tomatoes_rating.get("tomato_score_normalized_percent", None)
-            rotten_tomatoes_official_score_vote_count = rotten_tomatoes_rating.get("tomato_score_vote_count", None)
+            rotten_tomatoes_user_score_normalized_percent = rotten_tomatoes_rating.get(
+                "audience_score_normalized_percent", None
+            )
+            rotten_tomatoes_user_score_vote_count = rotten_tomatoes_rating.get(
+                "audience_score_vote_count", None
+            )
+            rotten_tomatoes_official_score_normalized_percent = (
+                rotten_tomatoes_rating.get("tomato_score_normalized_percent", None)
+            )
+            rotten_tomatoes_official_score_vote_count = rotten_tomatoes_rating.get(
+                "tomato_score_vote_count", None
+            )
 
             # Filtering out None values and calculating aggregated values
             def calculate_average(scores):
@@ -190,7 +227,9 @@ def copy_movies(pg):
                 metacritic_user_score_normalized_percent,
                 rotten_tomatoes_user_score_normalized_percent,
             ]
-            aggregated_user_score_normalized_percent = calculate_average(user_score_percents)
+            aggregated_user_score_normalized_percent = calculate_average(
+                user_score_percents
+            )
 
             user_score_counts = [
                 tmdb_user_score_vote_count,
@@ -205,24 +244,32 @@ def copy_movies(pg):
                 metacritic_official_score_normalized_percent,
                 rotten_tomatoes_official_score_normalized_percent,
             ]
-            aggregated_official_score_normalized_percent = calculate_average(official_score_percents)
+            aggregated_official_score_normalized_percent = calculate_average(
+                official_score_percents
+            )
 
             official_score_counts = [
                 metacritic_official_score_vote_count,
                 rotten_tomatoes_official_score_vote_count,
             ]
-            aggregated_official_score_review_count = calculate_sum(official_score_counts)
+            aggregated_official_score_review_count = calculate_sum(
+                official_score_counts
+            )
 
             # Calculating aggregated overall scores
-            aggregated_overall_score_normalized_percent = calculate_average([
-                aggregated_user_score_normalized_percent,
-                aggregated_official_score_normalized_percent
-            ])
+            aggregated_overall_score_normalized_percent = calculate_average(
+                [
+                    aggregated_user_score_normalized_percent,
+                    aggregated_official_score_normalized_percent,
+                ]
+            )
 
-            aggregated_overall_score_voting_count = calculate_sum([
-                aggregated_user_score_rating_count,
-                aggregated_official_score_review_count
-            ])
+            aggregated_overall_score_voting_count = calculate_sum(
+                [
+                    aggregated_user_score_rating_count,
+                    aggregated_official_score_review_count,
+                ]
+            )
 
             data = (
                 tmdb_id,
@@ -250,7 +297,17 @@ def copy_movies(pg):
                 ),
                 json.dumps(
                     [
-                        {k: person.get(k) for k in ["id", "credit_id", "character"]}
+                        {
+                            k: person.get(k)
+                            for k in [
+                                "id",
+                                "credit_id",
+                                "character",
+                                "name",
+                                "popularity",
+                                "profile_path",
+                            ]
+                        }
                         for person in tmdb_details.get("credits", {}).get("cast", [])
                     ],
                     sort_keys=True,
@@ -258,7 +315,10 @@ def copy_movies(pg):
                 ),
                 json.dumps(
                     [
-                        {k: person.get(k) for k in ["id", "credit_id", "job"]}
+                        {
+                            k: person.get(k)
+                            for k in ["id", "credit_id", "job", "name", "popularity"]
+                        }
                         for person in tmdb_details.get("credits", {}).get("crew", [])
                     ],
                     sort_keys=True,
@@ -314,7 +374,7 @@ def copy_movies(pg):
                 aggregated_official_score_review_count,
                 aggregated_overall_score_normalized_percent,
                 aggregated_overall_score_voting_count,
-                tmdb_details.get("belongs_to_collection", {}).get("id"),
+                json.dumps(collection) if collection else None,
                 [
                     movie.get("id")
                     for movie in tmdb_details.get("recommendations", {}).get(

@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS idx_streaming_provider_links_on_tmdb_id_media_type_country_code
+ON streaming_provider_links (tmdb_id, media_type, country_code);

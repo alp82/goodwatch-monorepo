@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS movies (
     aggregated_overall_score_voting_count FLOAT,
 
     -- relations
-    collection_id INTEGER,
+    collection JSONB,
     tmdb_recommendation_ids INTEGER[],
     tmdb_similar_ids INTEGER[],
 
