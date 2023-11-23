@@ -11,7 +11,7 @@ export default function Keywords({ keywords, type }: KeywordsProps) {
 
   return (
     <div className="mb-8">
-      {keywords?.length && <>
+      {keywords?.length > 0 && <>
         <div className="mt-6 mb-2 text-lg font-bold">Keywords</div>
         <div className="flex flex-wrap gap-2">
           {keywords.map((keyword) => (

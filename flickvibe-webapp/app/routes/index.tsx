@@ -1,123 +1,183 @@
+import React from 'react'
 import type { MetaFunction } from '@remix-run/node'
-import { useFetcher } from '@remix-run/react'
-import { useEffect } from 'react'
-import type { PopularMovie, PopularTV } from '~/server/popular.server'
+import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+import { ArrowUpRightIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
+import type { PopularTV } from '~/server/popular.server'
 import { titleToDashed } from '~/utils/helpers'
 import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
-import { FilmIcon, TvIcon } from '@heroicons/react/24/solid'
-import { CardLoader } from '~/ui/CardLoader'
+import netflixLogo from '~/img/netflix-logo.svg'
+import primeLogo from '~/img/primevideo-logo.svg'
+import disneyLogo from '~/img/disneyplus-logo.svg'
+import { MovieCard } from '~/ui/MovieCard'
+import { MovieDetails, TVDetails } from '~/server/details.server'
+import { getTrendingMovies, getTrendingTV } from '~/server/trending.server'
+import { TvCard } from '~/ui/TvCard'
 
 export const meta: MetaFunction = () => {
   return {
     title: 'GoodWatch',
-    description: 'All movie and tv show ratings and streaming providers on the same page',
+    description: 'What do you want to watch next? All movie and tv show ratings and streaming providers on one page.',
   }
 }
 
+type LoaderData = {
+  trendingMovies: Awaited<MovieDetails[]>
+  trendingTV: Awaited<TVDetails[]>
+}
+
+export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
+  const [trendingMovies, trendingTV] = await Promise.all([
+    getTrendingMovies({
+      type: 'default',
+    }),
+    getTrendingTV({
+      type: 'default',
+    }),
+  ])
+
+  return json<LoaderData>({
+    trendingMovies,
+    trendingTV,
+  })
+}
+
 export default function Index() {
-  const language = 'en'
+  const { trendingMovies, trendingTV } = useLoaderData<LoaderData>()
+  const bestRatedMovies = trendingMovies.sort((a, b) => b.aggregated_overall_score_normalized_percent - a.aggregated_overall_score_normalized_percent)
+  const bestRatedTv = trendingTV.sort((a, b) => b.aggregated_overall_score_normalized_percent - a.aggregated_overall_score_normalized_percent)
   const numberOfItemsToShow = 6
-
-  const fetcherMovie = useFetcher()
-  const fetcherTV = useFetcher()
-
-  useEffect(() => {
-    fetcherMovie.submit(
-      {
-        language,
-      },
-      {
-        method: 'get',
-        action: '/api/trending/movie',
-      }
-    )
-    fetcherTV.submit(
-      {
-        language,
-      },
-      {
-        method: 'get',
-        action: '/api/trending/tv',
-      }
-    )
-  }, [])
-
-  const isTrendingMovieLoading = fetcherMovie.state === 'submitting';
-  const trendingMovieResults = fetcherMovie.data?.trending?.results || []
-  const isTrendingTVLoading = fetcherTV.state === 'submitting';
-  const trendingTVResults = fetcherTV.data?.trending?.results || []
 
   return (
     <div>
-      <div className="mt-4 mb-8">
-        <div className="leading-8 text-lg lg:text-2xl">
-          <p className="my-8">
-            Welcome to <strong>GoodWatch</strong>. Search above and select a movie or tv show. You can then check ratings from
-            <span className="mx-4 inline-flex flex-wrap gap-4">
-              <span><img className="h-5 inline-block" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" /> ,</span>
-              <span><img className="h-6 inline-block" src={metacriticLogo} alt="Metacritic Logo" title="Metacritic Logo" /></span>
-              <span>and</span>
-              <span><img className="h-5 inline-block" src={rottenLogo} alt="Rotten Tomatoes Logo" title="Rotten Tomatoes Logo" /></span>
-            </span>
-            and many streaming providers on the same page.
-          </p>
-          <p>
-            <a href="/discover" className="underline text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900">Discover</a> movies and tv shows with an easy to explore
-            search interface.
-          </p>
+      <div className="relative isolate">
+        <svg
+          className="absolute inset-x-0 top-0 -z-10 h-[64rem] w-full stroke-gray-700 [mask-image:radial-gradient(32rem_32rem_at_center,white,transparent)]"
+          aria-hidden="true"
+        >
+          <defs>
+            <pattern
+              id="1f932ae7-37de-4c0a-a8b0-a6e3b4d44b84"
+              width={200}
+              height={200}
+              x="50%"
+              y={-1}
+              patternUnits="userSpaceOnUse"
+            >
+              <path d="M.5 200V.5H200" fill="none" />
+            </pattern>
+          </defs>
+          <svg x="50%" y={-1} className="overflow-visible fill-indigo-950">
+            <path
+              d="M-200 200h201v201h-201Z M600 0h201v201h-201Z M-400 400h201v201h-201Z M200 800h201v201h-201Z"
+              strokeWidth={0}
+            />
+          </svg>
+          <rect width="100%" height="100%" strokeWidth={0} fill="url(#1f932ae7-37de-4c0a-a8b0-a6e3b4d44b84)" />
+        </svg>
+        <div
+          className="absolute left-1/2 right-0 top-0 -z-10 -ml-24 transform-gpu overflow-hidden blur-3xl lg:ml-24 xl:ml-48"
+          aria-hidden="true"
+        >
+          <div
+            className="aspect-[801/1036] w-[50.0625rem] bg-gradient-to-tr from-[#8c17b6] to-[#9089fc] opacity-30"
+            style={{
+              clipPath:
+                'polygon(63.1% 29.5%, 100% 17.1%, 76.6% 3%, 48.4% 0%, 44.6% 4.7%, 54.5% 25.3%, 59.8% 49%, 55.2% 57.8%, 44.4% 57.2%, 27.8% 47.9%, 35.1% 81.5%, 0% 97.7%, 39.2% 100%, 35.2% 81.4%, 97.2% 52.8%, 63.1% 29.5%)',
+            }}
+          />
+        </div>
+        <div className="overflow-hidden">
+          <div className="mx-auto max-w-7xl px-6 pb-32 pt-36 sm:pt-60 lg:px-8 lg:pt-32">
+            <div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
+              <div className="relative w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
+                <h1 className="text-4xl font-bold tracking-tight text-gray-100 sm:text-6xl">
+                  What do you want to watch next?
+                </h1>
+                <div className="mt-12 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
+                  <p className="leading-8">
+                    Welcome to GoodWatch. You'll find <span className="accent font-bold">everything</span> you need to know about your next favorite movie or TV show.
+                  </p>
+                  <p className="mt-6 leading-8">
+                    Discover movies and TV shows on your favorite streaming providers like
+                    <span className="mx-3 inline-flex flex-wrap gap-2">
+                      <span><img className="h-5 inline-block" src={netflixLogo} alt="Netflix Logo" title="Netflix Logo" /> ,</span>
+                      <span><img className="h-8 mt-1 inline-block" src={primeLogo} alt="Amazon Prime Logo" title="Amazon Prime Logo" /></span>
+                      <span>and</span>
+                      <span><img className="h-10 -mt-3 inline-block" src={disneyLogo} alt="Disney+ Logo" title="Disney+ Logo" /></span>
+                    </span>
+                  </p>
+                  <p className="mt-6 leading-8">
+                    See all scores from
+                    <span className="mx-3 inline-flex flex-wrap gap-2">
+                      <span><img className="h-5 inline-block" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" /> ,</span>
+                      <span><img className="h-6 inline-block" src={metacriticLogo} alt="Metacritic Logo" title="Metacritic Logo" /></span>
+                      <span>and</span>
+                      <span><img className="h-5 inline-block" src={rottenLogo} alt="Rotten Tomatoes Logo" title="Rotten Tomatoes Logo" /></span>
+                    </span>
+                    combined.
+                  </p>
+                  <p className="mt-6 leading-8 font-bold">
+                    It's all here.
+                  </p>
+                </div>
+                <div className="mt-10 flex items-center gap-x-6">
+                  <a
+                    href="#trending"
+                    className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  >
+                    <ArrowUpRightIcon className="h-5 w-auto" />
+                    What's Trending?
+                  </a>
+                  <a href="/discover" className="text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900">
+                    Discover
+                  </a>
+                </div>
+              </div>
+              <div className="hidden lg:flex mt-14 justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
+                <div className="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-none xl:pt-80">
+                  <MovieCard movie={bestRatedMovies[0]} />
+                  <MovieCard movie={bestRatedMovies[2]} />
+                  <MovieCard movie={bestRatedMovies[4]} />
+                </div>
+                <div className="mr-auto w-44 flex-none space-y-8 sm:mr-0 sm:pt-52 lg:pt-36">
+                  <TvCard tv={bestRatedTv[0]} />
+                  <TvCard tv={bestRatedTv[2]} />
+                  <TvCard tv={bestRatedTv[1]} />
+                </div>
+                <div className="w-44 flex-none space-y-8 pt-32 sm:pt-0">
+                  <MovieCard movie={bestRatedMovies[1]} />
+                  <MovieCard movie={bestRatedMovies[3]} />
+                  <MovieCard movie={bestRatedMovies[5]} />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <h2 className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
-      {/* Set a height so page doesn't jumps when card heights change */}
-      <div className='lg:h-64'>
-      {isTrendingMovieLoading ? <CardLoader /> :
-      trendingMovieResults.length > 0 && <div className="flex flex-wrap gap-4">
-        {trendingMovieResults.slice(0, numberOfItemsToShow).map((movie: PopularMovie) => 
-            <a key={movie.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/movie/${movie.id}-${titleToDashed(movie.title)}`}>
-              <div>
-                <img
-                  className="block rounded-md"
-                  src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${movie.poster_path}`}
-                  alt={`Poster for ${movie.title}`}
-                  title={`Poster for ${movie.title}`}
-                />
-              </div>
-              <div className="my-2 px-2">
-                <span className="text-sm font-bold">{movie.title}</span>
-              </div>
-            </a>
-        )}
-        <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=movie">
-          <FilmIcon className="w-16 h-16" />
-          <div className="my-2 px-2">
-            <span className="font-bold text-indigo-400">Discover more Movies</span>
-          </div>
-        </a>
-      </div>
-      }
-      </div>
-      <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
-      {isTrendingTVLoading ? <CardLoader /> :
-      trendingTVResults.length > 0 && <div>
+
+      <h2 id="trending" className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
+      {trendingMovies.length > 0 && <div className='lg:h-64'>
         <div className="flex flex-wrap gap-4">
-          {trendingTVResults.slice(0, numberOfItemsToShow).map((tv: PopularTV) =>
-              <a key={tv.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/tv/${tv.id}-${titleToDashed(tv.name)}`}>
-                <div>
-                  <img
-                    className="block rounded-md"
-                    src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${tv.poster_path}`}
-                    alt={`Poster for ${tv.name}`}
-                    title={`Poster for ${tv.name}`}
-                  />
-                </div>
-                <div className="my-2 px-2">
-                  <span className="text-sm font-bold">{tv.name}</span>
-                </div>
-              </a>
-            )
-          }
+          {trendingMovies.slice(0, numberOfItemsToShow).map((movie: MovieDetails) =>
+              <MovieCard key={movie.tmdb_id} movie={movie} />
+          )}
+          <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=movie">
+            <FilmIcon className="w-16 h-16" />
+            <div className="my-2 px-2">
+              <span className="font-bold text-indigo-400">Discover more Movies</span>
+            </div>
+          </a>
+        </div>
+      </div>}
+      <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
+      {trendingTV.length > 0 && <div>
+        <div className="flex flex-wrap gap-4">
+          {trendingTV.slice(0, numberOfItemsToShow).map((tv: TVDetails) =>
+            <TvCard key={tv.tmdb_id} tv={tv} />
+          )}
           <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=tv">
             <TvIcon className="w-16 h-16" />
             <div className="my-2 px-2">

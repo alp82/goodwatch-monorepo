@@ -4,6 +4,7 @@ import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
 import { AllRatings } from '~/utils/ratings'
+import logo from '~/img/goodwatch-logo.png'
 
 export interface RatingsProps {
   ratings?: AllRatings
@@ -26,7 +27,14 @@ export default function Ratings({ ratings, title = 'Ratings', compact = false }:
       <ul className={`underline-offset-2 flex gap-4 flex-wrap ${isComplete ? '' : 'opacity-50'}`}>
         <dl className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} w-28 p-3 rounded-lg shadow overflow-hidden text-center`}>
           <dd className={`${vibeColorIndex == null ? 'text-gray-300' : 'text-gray-100'} mt-1 text-5xl font-semibold tracking-tight`}>{ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings?.aggregated_overall_score_normalized_percent) : '--'}</dd>
-          <dt className={`${vibeColorIndex == null ? 'text-gray-400' : 'text-gray-300'} mt-2 truncate text-lg font-medium`}>Vibes</dt>
+          <dt className={`${vibeColorIndex == null ? 'text-gray-400' : 'text-gray-200'} mt-2 flex items-center justify-center gap-2 truncate text-md font-medium`}>
+            <img
+              className="h-4 w-auto"
+              src={logo}
+              alt="GoodWatch Logo"
+            />
+            Score
+          </dt>
         </dl>
 
         <a className="" href={ratings?.imdb_url} target="_blank">

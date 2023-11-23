@@ -208,13 +208,13 @@ export interface Videos {
 }
 
 export interface MovieDetails extends BaseDetails {
+  tmdb_id: number
   adult: boolean
   backdrop_path: string
   belongs_to_collection?: Collection
   budget: number
   genres: Genre[]
   homepage: string
-  id: number
   imdb_id: string
   original_language: string
   original_title: string
@@ -294,6 +294,7 @@ export interface ExternalIds {
 }
 
 export interface TVDetails extends BaseDetails {
+  tmdb_id: number
   adult: boolean
   backdrop_path: string
   created_by: CreatedBy[]
@@ -301,19 +302,18 @@ export interface TVDetails extends BaseDetails {
   first_air_date: string
   genres: Genre[]
   homepage: string
-  id: number
   in_production: boolean
   languages: string[]
   last_air_date: string
   last_episode_to_air: LastEpisodeToAir
-  name: string
+  title: string
   next_episode_to_air?: any
   networks: Network[]
   number_of_episodes: number
   number_of_seasons: number
   origin_country: string[]
   original_language: string
-  original_name: string
+  original_title: string
   overview: string
   popularity: number
   poster_path: string
@@ -398,17 +398,17 @@ export async function _getDetailsForMovie({ movieId, language, country }: Detail
 
   const movie = result.rows[0]
 
-  const alternative_titles = movie.alternative_titles.filter((title: Record<string, string>) => title.iso_3166_1 === country)
+  const alternative_titles = (movie.alternative_titles || []).filter((title: Record<string, string>) => title.iso_3166_1 === country)
   movie.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
   delete movie.alternative_titles
 
-  const certifications = movie.certifications.filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
+  const certifications = (movie.certifications || []).filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
   movie.certifications = certifications.length ? certifications[0].release_dates : null
 
-  const streaming_providers = movie.streaming_providers[country.toUpperCase()]
+  const streaming_providers = (movie.streaming_providers || {})[country.toUpperCase()]
   movie.streaming_providers = streaming_providers || null
 
-  const translations = movie.translations.filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
+  const translations = (movie.translations || []).filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
   movie.translations = translations.length ? translations : null
 
   const { data, error } = await supabase
@@ -471,17 +471,17 @@ export async function _getDetailsForTV({ tvId, language, country }: DetailsTVPar
 
   const tv = result.rows[0]
 
-  const alternative_titles = tv.alternative_titles.filter((title: Record<string, string>) => title.iso_3166_1 === country)
+  const alternative_titles = (tv.alternative_titles || []).filter((title: Record<string, string>) => title.iso_3166_1 === country)
   tv.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
   delete tv.alternative_titles
 
-  const certifications = tv.certifications[country.toUpperCase()]
+  const certifications = (tv.certifications || {})[country.toUpperCase()]
   tv.certifications = certifications || null
 
-  const streaming_providers = tv.streaming_providers[country.toUpperCase()]
+  const streaming_providers = (tv.streaming_providers || {})[country.toUpperCase()]
   tv.streaming_providers = streaming_providers || null
 
-  const translations = tv.translations.filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
+  const translations = (tv.translations || []).filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
   tv.translations = translations.length ? translations : null
 
   const { data, error } = await supabase

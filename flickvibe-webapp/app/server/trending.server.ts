@@ -1,39 +1,9 @@
 import { cached } from '~/utils/api'
+import { MovieDetails, TVDetails } from '~/server/details.server'
+import { query } from '~/utils/postgres'
 
-export interface TrendingMovie {
-  adult: boolean
-  backdrop_path: string
-  genre_ids: number[]
-  id: number
-  original_language: string
-  original_title: string
-  overview: string
-  trendingity: number
-  poster_path: string
-  release_date: string
-  title: string
-  video: boolean
-  vote_average: number
-  vote_count: number
-}
-
-export interface TrendingTV {
-  backdrop_path: string
-  first_air_date: string
-  genre_ids: number[]
-  id: number
-  name: string
-  origin_country: string[]
-  original_language: string
-  original_name: string
-  overview: string
-  trendingity: number
-  poster_path: string
-  vote_average: number
-  vote_count: number
-}
-export type TrendingMovieResults = TrendingMovie[]
-export type TrendingTVResults = TrendingTV[]
+export type TrendingMovieResults = MovieDetails[]
+export type TrendingTVResults = TVDetails[]
 
 export interface TrendingMovieParams {
   type: string
@@ -42,19 +12,36 @@ export interface TrendingTVParams {
   type: string
 }
 
-export const getTrendingMovie = async (params: TrendingMovieParams) => {
+export const getTrendingMovies = async (params: TrendingMovieParams) => {
   return await cached<TrendingMovieParams, TrendingMovieResults>({
-    name: 'trending-movie',
-    target: _getTrendingMovie,
+    name: 'trending-movies',
+    target: _getTrendingMovies,
     params,
-    ttlMinutes: 30,
+    //TODO ttlMinutes: 60 * 12,
+    ttlMinutes: 0,
   })
 }
 
-export async function _getTrendingMovie({}: TrendingMovieParams): Promise<TrendingMovieResults> {
-  return await fetch(
+export async function _getTrendingMovies({}: TrendingMovieParams): Promise<TrendingMovieResults> {
+  const trendingResults = await fetch(
     `https://api.themoviedb.org/3/trending/movie/day?api_key=${process.env.TMDB_API_KEY}`
   ).then((res) => res.json())
+  const trendingIds = trendingResults.results.map((movie) => movie.id)
+
+  const result = await query(`
+    SELECT
+      *
+    FROM
+      movies
+    WHERE
+      tmdb_id IN (${trendingIds.join(', ')})
+      AND poster_path IS NOT NULL
+      AND aggregated_overall_score_normalized_percent > 0
+    ORDER BY
+      popularity;
+  `);
+  if (!result.rows.length) throw Error(`no trending movies found`)
+  return result.rows
 }
 
 export const getTrendingTV = async (params: TrendingTVParams) => {
@@ -62,12 +49,29 @@ export const getTrendingTV = async (params: TrendingTVParams) => {
     name: 'trending-tv',
     target: _getTrendingTV,
     params,
-    ttlMinutes: 30,
+    //TODO ttlMinutes: 60 * 12,
+    ttlMinutes: 0,
   })
 }
 
 export async function _getTrendingTV({}: TrendingTVParams): Promise<TrendingTVResults> {
-  return await fetch(
+  const trendingResults = await fetch(
     `https://api.themoviedb.org/3/trending/tv/day?api_key=${process.env.TMDB_API_KEY}`
   ).then((res) => res.json())
+  const trendingIds = trendingResults.results.map((tv) => tv.id)
+
+  const result = await query(`
+    SELECT
+      *
+    FROM
+      tv
+    WHERE
+      tmdb_id IN (${trendingIds.join(', ')})
+      AND poster_path IS NOT NULL
+      AND aggregated_overall_score_normalized_percent > 0
+    ORDER BY
+      popularity;
+  `);
+  if (!result.rows.length) throw Error(`no trending tv shows found`)
+  return result.rows
 }

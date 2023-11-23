@@ -1,4 +1,4 @@
-import { MovieDetails } from '~/server/details.server'
+import { MovieDetails, TVDetails } from '~/server/details.server'
 
 export interface AllRatings {
   tmdb_url: string
@@ -31,7 +31,7 @@ export interface AllRatings {
   aggregated_overall_score_voting_count: number
 }
 
-export const extractRatings = (details: MovieDetails) => {
+export const extractRatings = (details: MovieDetails | TVDetails) => {
   const keys: (keyof AllRatings)[] = [
     'tmdb_url',
     'tmdb_user_score_original',

@@ -26,7 +26,7 @@ export const meta: MetaFunction = ({ data }) => {
   }
 }
 
-export type LoaderData = {
+type LoaderData = {
   details: Awaited<TvDetails>
   tab: string
 }
@@ -67,7 +67,6 @@ export default function TVDetails() {
 
   const ratings = extractRatings(details)
   const ratingsSeasons: RatingsProps[] = ratingsSeasonsFetcher.data?.ratings
-  console.log({ details })
 
   const [showSeasonRatings, setShowSeasonRatings] = useState(false)
   const handleToggleShowSeasonRatings = () => {
