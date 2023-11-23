@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useFetcher, useLoaderData, useNavigate, useParams } from '@remix-run/react'
 import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { MegaphoneIcon } from '@heroicons/react/24/solid'
-import { ReleaseDate } from '~/server/details.server'
+import { getDetailsForMovie, MovieDetails, ReleaseDate } from '~/server/details.server'
 import Ratings from '~/ui/Ratings'
 import InfoBox from '~/ui/InfoBox'
 import Streaming from '~/ui/Streaming'
@@ -22,50 +22,47 @@ import StreamingBadges from '~/ui/StreamingBadges'
 import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction = ({ data }) => {
   return {
-    title: 'flickvibe',
+    title: `${data.details.title} | Movie | GoodWatch`,
     description: 'All movie and tv show ratings and streaming providers on the same page',
   }
 }
 
-export type MovieDetailsUrlParams = { tab: string }
+export type LoaderData = {
+  details: Awaited<MovieDetails>
+  tab: string
+}
 
-export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
+export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
   const url = new URL(request.url)
   const tab = url.searchParams.get('tab') || 'details'
 
-  return json<MovieDetailsUrlParams>({
+  const movieId = (params.movieKey || '').split('-')[0]
+  const language = url.searchParams.get('language') || 'en'
+  const country = url.searchParams.get('country') || 'DE'
+  const details = await getDetailsForMovie({
+    movieId,
+    language,
+    country,
+  })
+
+  return json<LoaderData>({
+    details,
     tab,
   })
 }
 
 export default function MovieDetails() {
-  const params = useLoaderData()
   const navigate = useNavigate()
-
-  const { movieKey = '' } = useParams()
-  const movieId = movieKey.split('-')[0]
-  const detailsFetcher = useFetcher()
-
-  useEffect(() => {
-    detailsFetcher.submit(
-      { movieId },
-      {
-        method: 'get',
-        action: '/api/details/movie',
-      }
-    )
-  }, [movieId])
-
-  const details = detailsFetcher.data?.details || {}
+  const { tab, details } = useLoaderData()
   const ratings = extractRatings(details)
   console.log({ details })
 
   const { backdrop_path, cast, certifications, crew, collection, keywords, genres = [], original_title, poster_path, release_year, runtime, streaming_links, synopsis, tagline, title, videos } = details
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.certification) : null
 
-  const [selectedTab, setSelectedTab] = useState(params.tab)
+  const [selectedTab, setSelectedTab] = useState(tab)
   const movieTabs = ['details', 'cast', 'ratings', 'streaming', 'videos'].map((tab) => {
     return {
       key: tab,
@@ -75,7 +72,7 @@ export default function MovieDetails() {
   })
   const handleTabSelection = (tab: Tab) => {
     setSelectedTab(tab.key)
-    navigate(`/movie/${movieId}-${titleToDashed(title)}?tab=${tab.key}`)
+    navigate(`/movie/${details.tmdb_id}-${titleToDashed(title)}?tab=${tab.key}`)
   }
 
   const mainInfo = (
@@ -120,55 +117,51 @@ export default function MovieDetails() {
 
   return (
     <div className="md:mt-4 lg:mt-8">
-      {detailsFetcher.state === 'idle' ?
-        <>
-          <div className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
-            <div className="md:hidden">
+      <>
+        <div className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+          <div className="md:hidden">
+            <RatingProgressOverlay ratings={ratings} />
+          </div>
+          <div className="p-3 flex">
+            <div className="hidden md:block relative flex-none w-40 lg:w-60">
               <RatingProgressOverlay ratings={ratings} />
+              <img
+                className="block rounded-md"
+                src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
+                alt={`Poster for ${title}`}
+                title={`Poster for ${title}`}
+              />
             </div>
-            <div className="p-3 flex">
-              <div className="hidden md:block relative flex-none w-40 lg:w-60">
-                <RatingProgressOverlay ratings={ratings} />
-                <img
-                  className="block rounded-md"
-                  src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
-                  alt={`Poster for ${title}`}
-                  title={`Poster for ${title}`}
-                />
+            <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">
+              <h2 className="mb-2 text-2xl">
+                <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
+              </h2>
+              <Genres genres={genres} type="movie" />
+              <div className="flex gap-4 mb-4">
+                <AgeRating ageRating={ageRating} />
+                <div className="ml-1 mt-1">
+                  <Runtime minutes={runtime} />
+                </div>
               </div>
-              <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">
-                <h2 className="mb-2 text-2xl">
-                  <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
-                </h2>
-                <Genres genres={genres} type="movie" />
-                <div className="flex gap-4 mb-4">
-                  <AgeRating ageRating={ageRating} />
-                  <div className="ml-1 mt-1">
-                    <Runtime minutes={runtime} />
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <RatingBadges ratings={ratings} />
-                </div>
-                <div className="mb-4">
-                  <StreamingBadges links={streaming_links} />
-                </div>
+              <div className="mb-4">
+                <RatingBadges ratings={ratings} />
+              </div>
+              <div className="mb-4">
+                <StreamingBadges links={streaming_links} />
               </div>
             </div>
           </div>
-          <div className="my-4">
-            <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection} />
-          </div>
-          <div className="hidden lg:block">
-            {mainInfo}
-          </div>
-          <div className="block lg:hidden">
-            {mainInfo}
-          </div>
-        </>
-      :
-        <InfoBox text="Inititalizing movie data..." />
-      }
+        </div>
+        <div className="my-4">
+          <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection} />
+        </div>
+        <div className="hidden lg:block">
+          {mainInfo}
+        </div>
+        <div className="block lg:hidden">
+          {mainInfo}
+        </div>
+      </>
     </div>
   )
 }

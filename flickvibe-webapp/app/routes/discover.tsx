@@ -20,7 +20,7 @@ import { WatchProvider } from '~/server/watchProviders.server'
 
 export const meta: MetaFunction = () => {
   return {
-    title: 'flickvibe',
+    title: 'Discover | GoodWatch',
     description: 'All movie and tv show ratings and streaming providers on the same page',
   }
 }

@@ -17,11 +17,16 @@ import Footer from "~/ui/Footer";
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
-  title: "New Remix App",
+  title: "GoodWatch",
   viewport: "width=device-width,initial-scale=1",
 });
 
 export const links: LinksFunction = () => [
+  {
+    rel: "icon",
+    href: "/favicon.png",
+    type: "image/png",
+  },
   { rel: "stylesheet", href: cssTailwind },
   { rel: "stylesheet", href: cssMain },
 ];

@@ -7,7 +7,7 @@ import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import Genres from '~/ui/Genres'
 import Keywords from '~/ui/Keywords'
 import AgeRating from '~/ui/AgeRating'
-import { ReleaseDate } from '~/server/details.server'
+import { getDetailsForTV, TvDetails, ReleaseDate } from '~/server/details.server'
 import Description from '~/ui/Description'
 import Videos from '~/ui/Videos'
 import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
@@ -19,41 +19,43 @@ import { titleToDashed } from '~/utils/helpers'
 import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction = ({ data }) => {
   return {
-    title: 'flickvibe',
+    title: `${data.details.title} | TV Show | GoodWatch`,
     description: 'All movie and tv show ratings and streaming providers on the same page',
   }
 }
 
-export type TVDetailsUrlParams = { tab: string }
+export type LoaderData = {
+  details: Awaited<TvDetails>
+  tab: string
+}
 
-export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
+export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
   const url = new URL(request.url)
   const tab = url.searchParams.get('tab') || 'details'
 
-  return json<TVDetailsUrlParams>({
+  const tvId = (params.tvKey || '').split('-')[0]
+  const language = url.searchParams.get('language') || 'en'
+  const country = url.searchParams.get('country') || 'DE'
+  const details = await getDetailsForTV({
+    tvId,
+    language,
+    country,
+  })
+
+  return json<LoaderData>({
+    details,
     tab,
   })
 }
 
 export default function TVDetails() {
-  const params = useLoaderData()
   const navigate = useNavigate()
+  const { details, tab } = useLoaderData()
 
-  const { tvKey = '' } = useParams()
-  const tvId = tvKey.split('-')[0]
-  const detailsFetcher = useFetcher()
   const ratingsSeasonsFetcher = useFetcher()
-
   useEffect(() => {
-    detailsFetcher.submit(
-      { tvId },
-      {
-        method: 'get',
-        action: '/api/details/tv',
-      }
-    )
     // ratingsSeasonsFetcher.submit(
     //   { tvId },
     //   {
@@ -61,9 +63,8 @@ export default function TVDetails() {
     //     action: '/api/ratings/tv-seasons',
     //   }
     // )
-  }, [tvId])
+  }, [])
 
-  const details = detailsFetcher.data?.details || {}
   const ratings = extractRatings(details)
   const ratingsSeasons: RatingsProps[] = ratingsSeasonsFetcher.data?.ratings
   console.log({ details })
@@ -76,7 +77,7 @@ export default function TVDetails() {
   const { backdrop_path, cast, certifications, crew, genres, keywords, poster_path, release_year, streaming_links, synopsis, tagline, title, videos } = details
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.rating) : null
 
-  const [selectedTab, setSelectedTab] = useState(params.tab)
+  const [selectedTab, setSelectedTab] = useState(tab)
   const movieTabs = ['details', 'cast', 'ratings', 'streaming', 'videos'].map((tab) => {
     return {
       key: tab,
@@ -86,7 +87,7 @@ export default function TVDetails() {
   })
   const handleTabSelection = (tab: Tab) => {
     setSelectedTab(tab.key)
-    navigate(`/tv/${tvId}-${titleToDashed(title)}?tab=${tab.key}`)
+    navigate(`/tv/${details.tmdb_id}-${titleToDashed(title)}?tab=${tab.key}`)
   }
 
   const mainInfo = (
@@ -138,58 +139,54 @@ export default function TVDetails() {
 
   return (
     <div className="md:mt-4 lg:mt-8">
-      {detailsFetcher.state === 'idle' ?
-        <>
-          <div className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
-            <div className="md:hidden">
+      <>
+        <div className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+          <div className="md:hidden">
+            <RatingProgressOverlay ratings={ratings} />
+          </div>
+          <div className="p-3 flex">
+            <div className="hidden md:block relative flex-none w-40 lg:w-60">
               <RatingProgressOverlay ratings={ratings} />
+              <img
+                className="block"
+                src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
+                alt={`Poster for ${title}`}
+                title={`Poster for ${title}`}
+              />
             </div>
-            <div className="p-3 flex">
-              <div className="hidden md:block relative flex-none w-40 lg:w-60">
-                <RatingProgressOverlay ratings={ratings} />
-                <img
-                  className="block"
-                  src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
-                  alt={`Poster for ${title}`}
-                  title={`Poster for ${title}`}
-                />
+            <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">
+              <h2 className="mb-2 text-2xl">
+                <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
+              </h2>
+              <Genres genres={genres} type="tv" />
+              <div className="flex gap-4 mb-4">
+                <AgeRating ageRating={ageRating} />
+                <div className="ml-1 mt-1 flex gap-1">
+                  <strong>{details?.number_of_episodes}</strong>
+                  Episode{details?.number_of_episodes === 1 ? '' : 's'} in
+                  <strong>{details?.number_of_seasons}</strong>
+                  Season{details?.number_of_seasons === 1 ? '' : 's'}
+                </div>
               </div>
-              <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">
-                <h2 className="mb-2 text-2xl">
-                  <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
-                </h2>
-                <Genres genres={genres} type="tv" />
-                <div className="flex gap-4 mb-4">
-                  <AgeRating ageRating={ageRating} />
-                  <div className="ml-1 mt-1 flex gap-1">
-                    <strong>{details?.number_of_episodes}</strong>
-                    Episode{details?.number_of_episodes === 1 ? '' : 's'} in
-                    <strong>{details?.number_of_seasons}</strong>
-                    Season{details?.number_of_seasons === 1 ? '' : 's'}
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <RatingBadges ratings={ratings} />
-                </div>
-                <div className="mb-4">
-                  <StreamingBadges links={streaming_links} />
-                </div>
+              <div className="mb-4">
+                <RatingBadges ratings={ratings} />
+              </div>
+              <div className="mb-4">
+                <StreamingBadges links={streaming_links} />
               </div>
             </div>
           </div>
-          <div className="my-4">
-            <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection} />
-          </div>
-          <div className="hidden lg:block">
-            {mainInfo}
-          </div>
-          <div className="block lg:hidden">
-            {mainInfo}
-          </div>
-        </>
-      :
-        <InfoBox text="Inititalizing tv show data..." />
-      }
+        </div>
+        <div className="my-4">
+          <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection} />
+        </div>
+        <div className="hidden lg:block">
+          {mainInfo}
+        </div>
+        <div className="block lg:hidden">
+          {mainInfo}
+        </div>
+      </>
     </div>
   )
 }

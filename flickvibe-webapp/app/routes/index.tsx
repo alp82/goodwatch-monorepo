@@ -11,7 +11,7 @@ import { CardLoader } from '~/ui/CardLoader'
 
 export const meta: MetaFunction = () => {
   return {
-    title: 'flickvibe',
+    title: 'GoodWatch',
     description: 'All movie and tv show ratings and streaming providers on the same page',
   }
 }
@@ -54,7 +54,7 @@ export default function Index() {
       <div className="mt-4 mb-8">
         <div className="leading-8 text-lg lg:text-2xl">
           <p className="my-8">
-            Welcome to <strong>flickvibe</strong>. Search above and select a movie or tv show. You can then check ratings from
+            Welcome to <strong>GoodWatch</strong>. Search above and select a movie or tv show. You can then check ratings from
             <span className="mx-4 inline-flex flex-wrap gap-4">
               <span><img className="h-5 inline-block" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" /> ,</span>
               <span><img className="h-6 inline-block" src={metacriticLogo} alt="Metacritic Logo" title="Metacritic Logo" /></span>
