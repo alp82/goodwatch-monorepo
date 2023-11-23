@@ -44,7 +44,7 @@ const navigation = {
     // },
     {
       name: 'GitHub',
-      href: 'https://github.com/alp82/flickvibe-monorepo',
+      href: 'https://github.com/alp82/goodwatch-monorepo',
       icon: (props: Record<string, string>) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path

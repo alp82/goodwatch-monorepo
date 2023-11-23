@@ -1,4 +1,4 @@
-# Flickvibe Flows
+# GoodWatch Flows
 
 Collect and process all necessary data for movies and tv shows.
 
@@ -20,7 +20,7 @@ pdm install
 * `deno install --unstable -A https://deno.land/x/wmill/main.ts`
 
 * `wmill workspace add flickvibe flickvibe http://coinmatica.net:9000`
-* `cd flickvibe-flows/windmill`
+* `cd goodwatch-flows/windmill`
 * `wmill sync pull --json --yes`
 
 * `wmill sync push --json --yes`
@@ -29,8 +29,8 @@ pdm install
 
 ### PyCharm
 
-1. set `/flickvibe-flows/windmill` as sources root
-2. choose python interpreter from existing venv in `flickvibe-flows/windmill/.venv/bin/python`
+1. set `/goodwatch-flows/windmill` as sources root
+2. choose python interpreter from existing venv in `goodwatch-flows/windmill/.venv/bin/python`
 3. update python run configuration template:
 
 ```
