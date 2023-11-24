@@ -12,7 +12,7 @@ export default function Cast({ cast }: CastProps) {
     <>
       <div className="flex flex-wrap gap-4">
         {(castWithPhotos || []).map((castMember) => {
-          const character = castMember.character || castMember.roles[0].character
+          const character = castMember.character || castMember.roles?.[0].character
           return (
             <div className="w-36 h-72 border-2 border-gray-800 flex flex-col items-center">
               <img
@@ -32,10 +32,10 @@ export default function Cast({ cast }: CastProps) {
       </div>
       <div className="mt-8 flex flex-wrap gap-4">
         {(castWithoutPhotos || []).map((castMember) => {
-          const character = castMember.character || castMember.roles[0].character
+          const character = castMember.character || castMember.roles?.[0].character
           return (
             <div className="w-64 h-16">
-              <strong>{castMember.name}</strong> as <em>{character}</em>
+              <strong>{castMember.name}</strong> {character && <>as <em>{character}</em></>}
             </div>
           )
         })}

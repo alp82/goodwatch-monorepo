@@ -6,14 +6,15 @@ import {
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration,
-} from "@remix-run/react";
+  ScrollRestoration, useRouteError,
+} from '@remix-run/react'
 import { Analytics } from '@vercel/analytics/react'
 
 import cssMain from "~/main.css";
 import cssTailwind from "~/tailwind.css";
 import Header from '~/ui/Header'
 import Footer from "~/ui/Footer";
+import InfoBox from '~/ui/InfoBox'
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
@@ -29,7 +30,44 @@ export const links: LinksFunction = () => [
   },
   { rel: "stylesheet", href: cssTailwind },
   { rel: "stylesheet", href: cssMain },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap" },
 ];
+
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  console.error(error);
+  return (
+    <html>
+    <head>
+      <title>Oh no!</title>
+      <Meta />
+      <Links />
+    </head>
+    <body>
+    <body className="flex flex-col h-screen bg-gray-900">
+      <Analytics />
+      <Header />
+      <div className="flex-grow mx-auto mt-12 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+        <InfoBox text="Sorry, but an error occurred" />
+        <div className="mt-6 p-3 bg-red-900 overflow-hidden">
+          <strong>{error.message}</strong>
+          <pre className="mt-2">
+            {JSON.stringify(error.stack, null, 2).replace(/\\n/g, '\n')}
+          </pre>
+        </div>
+      </div>
+      <Footer />
+      <ScrollRestoration />
+      <Scripts />
+      <LiveReload />
+    </body>
+    </body>
+    </html>
+  );
+}
 
 
 export default function App() {
@@ -38,9 +76,6 @@ export default function App() {
       <head>
         <Meta />
         <Links />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap" rel="stylesheet" />
       </head>
       <body className="flex flex-col h-screen bg-gray-900">
         <Analytics />

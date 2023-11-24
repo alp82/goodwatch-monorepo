@@ -62,7 +62,8 @@ export default function MovieDetails() {
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.certification) : null
 
   const [selectedTab, setSelectedTab] = useState(tab)
-  const movieTabs = ['details', 'cast', 'ratings', 'streaming', 'videos'].map((tab) => {
+  const existingTabs = ['details', 'cast', 'ratings', 'streaming', 'videos']
+  const movieTabs = existingTabs.map((tab) => {
     return {
       key: tab,
       label: tab.charAt(0).toUpperCase() + tab.slice(1),
@@ -76,7 +77,7 @@ export default function MovieDetails() {
 
   const mainInfo = (
     <>
-      {selectedTab === 'details' && (
+      {(selectedTab === 'details' || !existingTabs.includes(selectedTab)) && (
         <>
           {tagline && <div className="mb-4">
             <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
