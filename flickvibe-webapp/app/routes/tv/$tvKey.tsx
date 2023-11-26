@@ -18,6 +18,8 @@ import Tabs, { Tab } from '~/ui/Tabs'
 import { titleToDashed } from '~/utils/helpers'
 import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
+import ShareButton from '~/ui/ShareButton'
+import { Poster } from '~/ui/Poster'
 
 export const meta: MetaFunction = ({ data }) => {
   return {
@@ -147,15 +149,10 @@ export default function TVDetails() {
           <div className="p-3 flex">
             <div className="hidden md:block relative flex-none w-40 lg:w-60">
               <RatingProgressOverlay ratings={ratings} />
-              <img
-                className="block"
-                src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
-                alt={`Poster for ${title}`}
-                title={`Poster for ${title}`}
-              />
+              <Poster path={poster_path} title={title}/>
             </div>
             <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">
-              <h2 className="mb-2 text-2xl">
+              <h2 className="mb-2 mr-12 text-2xl">
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
               <Genres genres={genres} type="tv" />
@@ -176,6 +173,7 @@ export default function TVDetails() {
               </div>
             </div>
           </div>
+          <ShareButton />
         </div>
         <div className="my-4">
           <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection} />

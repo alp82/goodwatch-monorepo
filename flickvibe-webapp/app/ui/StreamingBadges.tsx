@@ -14,7 +14,7 @@ export default function StreamingBadges({ links = [] }: StreamingBadgesProps) {
   const hasBuy = Boolean(buyLinks.length)
   if (!hasFlatrate) {
     return hasBuy ? (
-      <div className="text-xl">only available for streaming when bought</div>
+      <div className="text-xl">only available for streaming to <a className="text-indigo-400 hover:underline" href="?tab=streaming">buy or rent</a></div>
     ) : (
       <div className="text-xl">not available for streaming</div>
     )

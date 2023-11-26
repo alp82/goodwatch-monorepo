@@ -14,7 +14,7 @@ export interface TrendingTVParams {
 
 export const getTrendingMovies = async (params: TrendingMovieParams) => {
   return await cached<TrendingMovieParams, TrendingMovieResults>({
-    name: 'trending-movies',
+    name: 'trending-movie',
     target: _getTrendingMovies,
     params,
     ttlMinutes: 60 * 12,

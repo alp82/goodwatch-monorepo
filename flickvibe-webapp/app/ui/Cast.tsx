@@ -14,7 +14,7 @@ export default function Cast({ cast }: CastProps) {
         {(castWithPhotos || []).map((castMember) => {
           const character = castMember.character || castMember.roles?.[0].character
           return (
-            <div className="w-36 h-72 border-2 border-gray-800 flex flex-col items-center">
+            <div key={castMember.id} className="w-36 h-72 border-2 border-gray-800 flex flex-col items-center">
               <img
                 className="w-full h-auto"
                 src={`https://www.themoviedb.org/t/p/original/${castMember.profile_path}`}
@@ -34,7 +34,7 @@ export default function Cast({ cast }: CastProps) {
         {(castWithoutPhotos || []).map((castMember) => {
           const character = castMember.character || castMember.roles?.[0].character
           return (
-            <div className="w-64 h-16">
+            <div key={castMember.id} className="w-64 h-16">
               <strong>{castMember.name}</strong> {character && <>as <em>{character}</em></>}
             </div>
           )

@@ -1,7 +1,7 @@
 import React from 'react'
 import type { MetaFunction } from '@remix-run/node'
 import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { PrefetchPageLinks, useLoaderData } from '@remix-run/react'
 import { ArrowUpRightIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
 import type { PopularTV } from '~/server/popular.server'
 import { titleToDashed } from '~/utils/helpers'
@@ -24,8 +24,8 @@ export const meta: MetaFunction = () => {
 }
 
 type LoaderData = {
-  trendingMovies: Awaited<MovieDetails[]>
-  trendingTV: Awaited<TVDetails[]>
+  trendingMovies: MovieDetails[]
+  trendingTV: TVDetails[]
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
@@ -161,9 +161,12 @@ export default function Index() {
       <h2 id="trending" className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
       {trendingMovies.length > 0 && <div className='lg:h-64'>
         <div className="flex flex-wrap gap-4">
-          {trendingMovies.slice(0, numberOfItemsToShow).map((movie: MovieDetails) =>
-              <MovieCard key={movie.tmdb_id} movie={movie} />
-          )}
+          {trendingMovies.slice(0, numberOfItemsToShow).map((movie: MovieDetails) => (
+            <div key={movie.tmdb_id}>
+              <MovieCard movie={movie} />
+              <PrefetchPageLinks page={`/movie/${movie.tmdb_id}-${titleToDashed(movie.title)}`} />
+            </div>
+          ))}
           <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=movie">
             <FilmIcon className="w-16 h-16" />
             <div className="my-2 px-2">
@@ -175,9 +178,12 @@ export default function Index() {
       <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
       {trendingTV.length > 0 && <div>
         <div className="flex flex-wrap gap-4">
-          {trendingTV.slice(0, numberOfItemsToShow).map((tv: TVDetails) =>
-            <TvCard key={tv.tmdb_id} tv={tv} />
-          )}
+          {trendingTV.slice(0, numberOfItemsToShow).map((tv: TVDetails) => (
+            <div key={tv.tmdb_id}>
+              <TvCard tv={tv} />
+              <PrefetchPageLinks page={`/tv/${tv.tmdb_id}-${titleToDashed(tv.title)}`} />
+            </div>
+          ))}
           <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=tv">
             <TvIcon className="w-16 h-16" />
             <div className="my-2 px-2">

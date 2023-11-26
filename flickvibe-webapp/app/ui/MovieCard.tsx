@@ -3,6 +3,7 @@ import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
 import React from 'react'
 import { extractRatings } from '~/utils/ratings'
 import { MovieDetails } from '~/server/details.server'
+import { Poster } from '~/ui/Poster'
 
 interface MovieCardProps {
   movie: MovieDetails
@@ -17,12 +18,7 @@ export function MovieCard({ movie }: MovieCardProps) {
     >
       <div className="relative">
         <RatingProgressOverlay ratings={ratings} />
-        <img
-          className="block rounded-md"
-          src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${movie.poster_path}`}
-          alt={`Poster for ${movie.title}`}
-          title={`Poster for ${movie.title}`}
-        />
+        <Poster path={movie.poster_path} title={movie.title}/>
       </div>
       <div className="my-2 px-2">
         <span className="text-sm font-bold">{movie.title}</span>

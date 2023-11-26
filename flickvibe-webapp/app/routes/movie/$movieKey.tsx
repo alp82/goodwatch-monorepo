@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useFetcher, useLoaderData, useNavigate, useParams } from '@remix-run/react'
 import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
-import { MegaphoneIcon } from '@heroicons/react/24/solid'
+import { ShareIcon } from '@heroicons/react/24/solid'
 import { getDetailsForMovie, MovieDetails, ReleaseDate } from '~/server/details.server'
 import Ratings from '~/ui/Ratings'
 import InfoBox from '~/ui/InfoBox'
@@ -21,6 +21,9 @@ import RatingBadges from '~/ui/RatingBadges'
 import StreamingBadges from '~/ui/StreamingBadges'
 import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
+import ShareButton from '~/ui/ShareButton'
+import { placeholder } from '@babel/types'
+import { Poster } from '~/ui/Poster'
 
 export const meta: MetaFunction = ({ data }) => {
   return {
@@ -118,42 +121,40 @@ export default function MovieDetails() {
   return (
     <div className="md:mt-4 lg:mt-8">
       <>
-        <div className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]" style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
+        <div
+          className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]"
+          style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
           <div className="md:hidden">
-            <RatingProgressOverlay ratings={ratings} />
+            <RatingProgressOverlay ratings={ratings}/>
           </div>
           <div className="p-3 flex">
             <div className="hidden md:block relative flex-none w-40 lg:w-60">
-              <RatingProgressOverlay ratings={ratings} />
-              <img
-                className="block rounded-md"
-                src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${poster_path}`}
-                alt={`Poster for ${title}`}
-                title={`Poster for ${title}`}
-              />
+              <RatingProgressOverlay ratings={ratings}/>
+              <Poster path={poster_path} title={title}/>
             </div>
             <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">
-              <h2 className="mb-2 text-2xl">
+              <h2 className="mb-2 mr-12 text-2xl">
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
-              <Genres genres={genres} type="movie" />
+              <Genres genres={genres} type="movie"/>
               <div className="flex gap-4 mb-4">
-                <AgeRating ageRating={ageRating} />
+                <AgeRating ageRating={ageRating}/>
                 <div className="ml-1 mt-1">
-                  <Runtime minutes={runtime} />
+                  <Runtime minutes={runtime}/>
                 </div>
               </div>
               <div className="mb-4">
-                <RatingBadges ratings={ratings} />
+                <RatingBadges ratings={ratings}/>
               </div>
               <div className="mb-4">
-                <StreamingBadges links={streaming_links} />
+                <StreamingBadges links={streaming_links}/>
               </div>
             </div>
           </div>
+          <ShareButton/>
         </div>
         <div className="my-4">
-          <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection} />
+          <Tabs tabs={movieTabs} pills={true} onSelect={handleTabSelection}/>
         </div>
         <div className="hidden lg:block">
           {mainInfo}

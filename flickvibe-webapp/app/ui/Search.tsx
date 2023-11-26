@@ -1,9 +1,10 @@
 import React from 'react'
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { useFetcher, useNavigate } from '@remix-run/react'
+import { PrefetchPageLinks, useFetcher, useNavigate } from '@remix-run/react'
 import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/Autocomplete'
 import { MediaType, SearchResult } from '~/server/search.server'
 import { classNames, titleToDashed } from '~/utils/helpers'
+import placeholder from '~/img/placeholder-poster.png'
 
 export interface SearchAutocompleteItem extends AutocompleteItem {
   mediaType: MediaType
@@ -13,14 +14,15 @@ export interface SearchAutocompleteItem extends AutocompleteItem {
 
 export default function Search() {
   const fetcher = useFetcher()
-  const autocompleteItems = (fetcher.data?.searchResults || []).map((searchResult: SearchResult) => {
+  const autocompleteItems: SearchAutocompleteItem[] = (fetcher.data?.searchResults || []).map((searchResult: SearchResult) => {
+    const imageUrl = searchResult.poster_path ? `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${searchResult.poster_path}` : placeholder
     return {
       key: searchResult.id,
       mediaType: searchResult.media_type,
       label: searchResult.title || searchResult.name,
       year: (searchResult.release_date || searchResult.first_air_date || '').split('-')[0],
       // TODO smaller image
-      imageUrl: `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${searchResult.poster_path}`,
+      imageUrl,
     }
   })
 
@@ -43,19 +45,24 @@ export default function Search() {
   }
 
   // TODO debounce
-  return <fetcher.Form method="get" action="/api/search">
-    <Autocomplete<SearchAutocompleteItem>
-      name="query"
-      placeholder="Search"
-      icon={fetcher.state === 'idle' ?
-        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-        :
-        <ArrowPathIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-      }
-      autocompleteItems={autocompleteItems}
-      renderItem={renderItem}
-      onChange={(event) => fetcher.submit(event.target.form)}
-      onSelect={handleSelect}
-    />
-  </fetcher.Form>
+  return <>
+    <fetcher.Form method="get" action="/api/search">
+      <Autocomplete<SearchAutocompleteItem>
+        name="query"
+        placeholder="Search"
+        icon={fetcher.state === 'idle' ?
+          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          :
+          <ArrowPathIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+        }
+        autocompleteItems={autocompleteItems}
+        renderItem={renderItem}
+        onChange={(event) => fetcher.submit(event.target.form)}
+        onSelect={handleSelect}
+      />
+    </fetcher.Form>
+    {autocompleteItems.slice(0, 3).map((item) => (
+      <PrefetchPageLinks page={`/${item.mediaType}/${item.key}-${titleToDashed(item.label)}`} />
+    ))}
+  </>
 }
