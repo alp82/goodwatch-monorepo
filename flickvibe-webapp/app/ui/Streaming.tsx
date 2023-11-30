@@ -41,7 +41,6 @@ export default function Streaming({ links }: StreamingProps) {
                     className="w-28 h-28 rounded-lg"
                     src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
                     alt={link.provider_name}
-                    title={link.provider_name}
                   />
                 </a>
               )
@@ -60,7 +59,6 @@ export default function Streaming({ links }: StreamingProps) {
                     className="w-10 h-10 rounded-lg"
                     src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
                     alt={link.provider_name}
-                    title={link.provider_name}
                   />
                 </a>
               )
@@ -79,7 +77,6 @@ export default function Streaming({ links }: StreamingProps) {
                     className="w-10 h-10 rounded-lg"
                     src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
                     alt={link.provider_name}
-                    title={link.provider_name}
                   />
                 </a>
               )

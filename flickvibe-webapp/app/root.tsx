@@ -6,10 +6,13 @@ import {
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration, useRouteError,
+  ScrollRestoration, useLocation, useRouteError,
 } from '@remix-run/react'
 import { Analytics } from '@vercel/analytics/react'
+import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
+import { TracingInstrumentation } from '@grafana/faro-web-tracing';
 import { ToastContainer } from 'react-toastify'
+import { AnimatePresence, motion } from 'framer-motion'
 
 import Header from '~/ui/Header'
 import Footer from "~/ui/Footer";
@@ -19,6 +22,25 @@ import cssMain from "~/main.css";
 import cssTailwind from "~/tailwind.css";
 import cssToastify from 'react-toastify/dist/ReactToastify.css';
 
+// if (typeof document !== "undefined") {
+//   const faro = initializeFaro({
+//     url: 'https://faro-collector-prod-eu-west-2.grafana.net/collect/4adfc01553e8f9e34abb2a702a8b9103',
+//     app: {
+//       name: 'GoodWatch WebApp',
+//       version: '1.0.0',
+//       environment: 'production'
+//     },
+//     instrumentations: [
+//       // Mandatory, overwriting the instrumentations array would cause the default instrumentations to be omitted
+//       ...getWebInstrumentations(),
+//
+//       // Initialization of the tracing package.
+//       // This packages is optional because it increases the bundle size noticeably. Only add it if you want tracing data.
+//       new TracingInstrumentation(),
+//     ],
+//   });
+// }
+
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
   title: "GoodWatch",
@@ -26,11 +48,6 @@ export const meta: MetaFunction = () => ({
 });
 
 export const links: LinksFunction = () => [
-  {
-    rel: "icon",
-    href: "/favicon.png",
-    type: "image/png",
-  },
   { rel: "stylesheet", href: cssTailwind },
   { rel: "stylesheet", href: cssMain },
   { rel: "stylesheet", href: cssToastify },
@@ -75,6 +92,7 @@ export function ErrorBoundary() {
 
 
 export default function App() {
+  const location = useLocation()
   return (
     <html lang="en" className="scroll-smooth">
       <head>
@@ -86,7 +104,17 @@ export default function App() {
         <Header />
         <ToastContainer />
         <div className="flex-grow mx-auto mt-2 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.main
+              key={location.pathname}
+              initial={{x: '-2%', opacity: 0}}
+              animate={{x: '0', opacity: 1}}
+              exit={{x: '2%', opacity: 0}}
+              transition={{duration: 0.2, type: 'tween'}}
+            >
+              <Outlet />
+            </motion.main>
+          </AnimatePresence>
         </div>
         <Footer />
         <ScrollRestoration />

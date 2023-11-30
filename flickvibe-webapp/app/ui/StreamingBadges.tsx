@@ -31,7 +31,6 @@ export default function StreamingBadges({ links = [] }: StreamingBadgesProps) {
                   className="w-8 h-8 rounded-lg"
                   src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
                   alt={link.provider_name}
-                  title={link.provider_name}
                 />
                 <span className={`${index < 2 ? 'pr-2' : 'sm:pr-2 hidden'} sm:block`}>
                   {link.provider_name}

@@ -137,11 +137,9 @@ export default function MovieDetails() {
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
               <Genres genres={genres} type="movie"/>
-              <div className="flex gap-4 mb-4">
+              <div className="flex gap-4 items-center mb-4">
                 <AgeRating ageRating={ageRating}/>
-                <div className="ml-1 mt-1">
-                  <Runtime minutes={runtime}/>
-                </div>
+                <Runtime minutes={runtime}/>
               </div>
               <div className="mb-4">
                 <RatingBadges ratings={ratings}/>

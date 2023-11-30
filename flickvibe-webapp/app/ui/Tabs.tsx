@@ -8,14 +8,16 @@ export interface Tab {
 }
 
 export interface TabsProps {
+  title?: string
   tabs: Tab[]
   pills: boolean
   onSelect: (tab: Tab) => void
 }
 
-export default function Tabs({ tabs, pills, onSelect }: TabsProps) {
+export default function Tabs({ title, tabs, pills, onSelect }: TabsProps) {
   const renderedTabs = (
-    <div className="flex flex-wrap gap-2 font-medium text-xs sm:text-sm md:text-md lg:text-lg">
+    <div className="flex flex-wrap items-center gap-2 font-medium text-xs sm:text-sm md:text-md lg:text-lg">
+      {title && <span className="mx-2 text-xs text-gray-300">{title}</span>}
       {tabs.map((tab) => (
         <span
           key={tab.key}
@@ -30,7 +32,7 @@ export default function Tabs({ tabs, pills, onSelect }: TabsProps) {
               : 'group border-b-2 py-4 px-1'
             }
             ${tab.current && pills && 'bg-indigo-800'}
-            cursor-pointer inline-flex items-center
+            cursor-pointer inline-flex items-center font-bold
           `}
           aria-current={tab.current ? 'page' : undefined}
         >

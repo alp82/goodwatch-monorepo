@@ -1,27 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { cached } from '~/utils/api'
 import { titleToDashed } from '~/utils/helpers'
-import { query } from '~/utils/postgres'
+import { executeQuery } from '~/utils/postgres'
 
 const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
-
-export interface Part {
-  adult:             boolean
-  backdrop_path:     string
-  id:                string
-  title:             string
-  original_language: string
-  original_title:    string
-  overview:          string
-  poster_path:       string
-  media_type:        string
-  genre_ids:         number[]
-  popularity:        number
-  release_date:      Date
-  video:             boolean
-  vote_average:      number
-  vote_count:        number
-}
 
 export interface Collection {
   id:            number
@@ -175,7 +157,7 @@ export interface ReleaseDate {
   descriptors: any[]
   iso_639_1: string
   note: string
-  release_date: Date
+  release_date: string | Date
   type: number
 }
 
@@ -193,7 +175,7 @@ export interface VideoResult {
   iso_3166_1: string
   name: string
   key: string
-  published_at: Date
+  published_at: string | Date
   site: string
   size: number
   type: string
@@ -358,7 +340,7 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 
 // TODO country & language
 export async function _getDetailsForMovie({ movieId, language, country }: DetailsMovieParams): Promise<MovieDetails> {
-  const result = await query(`
+  const result = await executeQuery(`
     SELECT
       m.*,
       json_agg(
@@ -431,7 +413,7 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
 }
 
 export async function _getDetailsForTV({ tvId, language, country }: DetailsTVParams): Promise<TVDetails> {
-  const result = await query(`
+  const result = await executeQuery(`
     SELECT
       t.*,
       json_agg(

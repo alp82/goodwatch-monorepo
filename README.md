@@ -41,21 +41,40 @@ https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-d
 
 ## TODO's
 ```
-better dynamic trending grid
-fix rating progress bar for smaller ones
+optimize discover query
 
 fix discover genres & keywords
 discover genres more prominent
 discover sort by random (good roulette)
-prefetch discover
+prefetch discover links: sort by tabs
+sanitize input to contruct sql query
+debounce requests
 supabase caching
+
+moviecard show streamer
+
+random full screen: album cover
 
 region selection
 save streaming provider selection in localstorage
 
+search page
+
+parallax scrolling landing page
+best rated picks animation
+stagger animation for rating progress bars
+show picks on mobile too
+
+description full text toggle
+score explanations
+streaming explanations
 autocomplete dark style
-show generic recommendations
+
 explore button for media titles (prefilled discover, map feature)
+
+show generic recommendations
+
+vercel cdn caching
 
 android app
 
@@ -67,21 +86,20 @@ report missing ratings
 report missing streaming providers
 report missing info
 
-data source: seasons ratings and details
+data source: seasons ratings and details (flickvibe-webapp/app/routes/api/ratings/tv-seasons.tsx)
 data source: existing crawlers use existing url instead of guessing
 data source: allmovie moods and themes
 data source: letterboxd ratings
 data source: tmdb people api
 
-preloading search results
-description full text toggle
-score explanations
 fix certification longer than 50 chars: 12 éven aluliak számára a megtekintése nagykorú felügyelete mellett ajánlott
 
 issue: breaking bad streaming missing -> justwatch streaming data
 issue: tmdb imagery redundant -> justwatch imagery
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
 
+https://blog.logrocket.com/guide-adding-google-login-react-app/
+https://github.com/MomenSherif/react-oauth
 authentication and user profiles
 connect accounts
 notification when streaming is available

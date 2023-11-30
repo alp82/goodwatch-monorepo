@@ -3,8 +3,10 @@ import {CheckIcon, ChevronUpDownIcon, XMarkIcon} from '@heroicons/react/20/solid
 import { Combobox } from '@headlessui/react'
 import { classNames } from '~/utils/helpers'
 
+export type AutocompleteMode = 'select' | 'search'
+
 export interface AutocompleteItem {
-  key: string
+  key: string | number
   label: string
 }
 
@@ -35,13 +37,18 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
   onSelect,
 }: AutocompleteProps<RenderItem>) {
   const [query, setQuery] = useState('')
-  const [isDirty, setIsDirty] = useState(false)
-  const [selectedItem, setSelectedItem] = useState(null)
+  const [isDirty, setIsDirty] = useState(Boolean(query))
+  const [selectedItem, setSelectedItem] = useState<RenderItem | null>(null)
+
+  const autocompleteMatches = query ? autocompleteItems.filter((item) => {
+    const lowercaseQuery = query.toLowerCase()
+    return (typeof item.key !== 'string' || item.key.toLowerCase().includes(lowercaseQuery)) || item.label.toLowerCase().includes(lowercaseQuery)
+  }) : autocompleteItems
 
   useEffect(() => {
     if (!selectedItem) return
     onSelect(selectedItem)
-    handleReset()
+    setQuery(selectedItem.label)
   }, [selectedItem])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,6 +63,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
     setQuery('')
     setIsDirty(false)
   }
+
 
   return (
     <Combobox as="div" value={selectedItem} onChange={setSelectedItem}>
@@ -79,9 +87,9 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
           <ChevronUpDownIcon className="h-5 w-5 text-gray-400 hover:text-gray-200" aria-hidden="true" />
         </Combobox.Button>
 
-        {autocompleteItems?.length > 0 && (
+        {autocompleteMatches?.length > 0 && (
           <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-            {autocompleteItems.map((item) => (
+            {autocompleteMatches.map((item) => (
               <Combobox.Option
                 key={item.key}
                 value={item}

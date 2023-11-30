@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react'
 import { BookmarkIcon, HashtagIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import { useFetcher } from '@remix-run/react'
-import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/Autocomplete'
+import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/form/Autocomplete'
 import { Genre } from '~/server/genres.server'
 
 export interface FilterGenresProps {
   type: 'movie' | 'tv'
-  withGenres: string
-  withoutGenres: string
+  withGenres?: string
+  withoutGenres?: string
   onChange: (genresToInclude: Genre[], genresToExclude: Genre[]) => void
 }
 
-export default function FilterGenres({ type, withGenres, withoutGenres, onChange }: FilterGenresProps) {
+export default function FilterGenres({ type, withGenres = '', withoutGenres = '', onChange }: FilterGenresProps) {
   const genresFetcher = useFetcher()
   useEffect(() => {
     genresFetcher.submit(
@@ -63,6 +63,7 @@ export default function FilterGenres({ type, withGenres, withoutGenres, onChange
       name="query"
       placeholder="Genre Search"
       icon={<BookmarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />}
+      mode="select"
       autocompleteItems={autocompleteItems}
       renderItem={renderItem}
       onSelect={handleSelect}

@@ -1,6 +1,6 @@
 import { cached } from '~/utils/api'
 import { MovieDetails, TVDetails } from '~/server/details.server'
-import { query } from '~/utils/postgres'
+import { executeQuery } from '~/utils/postgres'
 
 export type TrendingMovieResults = MovieDetails[]
 export type TrendingTVResults = TVDetails[]
@@ -27,7 +27,7 @@ export async function _getTrendingMovies({}: TrendingMovieParams): Promise<Trend
   ).then((res) => res.json())
   const trendingIds = trendingResults.results.map((movie) => movie.id)
 
-  const result = await query(`
+  const result = await executeQuery(`
     SELECT
       *
     FROM
@@ -58,7 +58,7 @@ export async function _getTrendingTV({}: TrendingTVParams): Promise<TrendingTVRe
   ).then((res) => res.json())
   const trendingIds = trendingResults.results.map((tv) => tv.id)
 
-  const result = await query(`
+  const result = await executeQuery(`
     SELECT
       *
     FROM

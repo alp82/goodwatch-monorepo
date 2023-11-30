@@ -1,22 +1,29 @@
+import React, { ChangeEventHandler, useEffect, useState } from 'react'
 import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
-import { useFetcher, useLoaderData, useNavigate } from '@remix-run/react'
-import React, { ChangeEventHandler, useEffect } from 'react'
-import { titleToDashed } from '~/utils/helpers'
+import { PrefetchPageLinks, useFetcher, useLoaderData, useLocation, useNavigate, useNavigation } from '@remix-run/react'
+import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
+import {AnimatePresence, motion} from 'framer-motion'
 import {
   DiscoverMovieParams,
-  DiscoverMovieResult,
   DiscoverMovieSortBy,
-  DiscoverTVResult,
+  DiscoverTVParams,
+  getDiscoverMovieResults,
 } from '~/server/discover.server'
 import FilterKeywords from '~/ui/filter/FilterKeywords'
-import NumberInput from '~/ui/input/NumberInput'
+import NumberInput from '~/ui/form/NumberInput'
 import { Keyword } from '~/server/keywords.server'
 import { Genre } from '~/server/genres.server'
 import FilterGenres from '~/ui/filter/FilterGenres'
 import { MediaType } from '~/server/search.server'
 import Tabs, { Tab } from '~/ui/Tabs'
-import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { WatchProvider } from '~/server/watchProviders.server'
+import { MovieDetails, TVDetails } from '~/server/details.server'
+import { MovieCard } from '~/ui/MovieCard'
+import { TvCard } from '~/ui/TvCard'
+import { CardLoader } from '~/ui/CardLoader'
+import FilterCountries from '~/ui/filter/FilterCountries'
+import { getCountryName } from '~/server/resources/country-names'
+import FilterStreamingProviders from '~/ui/filter/FilterStreamingProviders'
 
 export const meta: MetaFunction = () => {
   return {
@@ -25,145 +32,138 @@ export const meta: MetaFunction = () => {
   }
 }
 
-export type DiscoverUrlParams = DiscoverMovieParams & { type: MediaType }
+export type LoaderData = {
+  params: DiscoverMovieParams | DiscoverTVParams,
+  results: MovieDetails[] | TVDetails[],
+}
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
   const type = (url.searchParams.get('type') || 'movie') as MediaType
-  const language = url.searchParams.get('language') || 'en_US'
-  const age_rating_country = url.searchParams.get('age_rating_country') || ''
-  const min_age_rating = url.searchParams.get('min_age_rating') || ''
-  const max_age_rating = url.searchParams.get('max_age_rating') || ''
-  const min_year = url.searchParams.get('min_year') || ''
-  const max_year = url.searchParams.get('max_year') || new Date().getFullYear().toString()
-  const with_keywords = url.searchParams.get('with_keywords') || ''
-  const without_keywords = url.searchParams.get('without_keywords') || ''
-  const with_genres = url.searchParams.get('with_genres') || ''
-  const without_genres = url.searchParams.get('without_genres') || ''
-  const with_watch_providers = url.searchParams.get('with_watch_providers') || '8,9,337'
-  const watch_region = url.searchParams.get('watch_region') || 'DE'
-  const sort_by = (url.searchParams.get('sort_by') || 'popularity.desc') as DiscoverMovieSortBy
-
-  return json<DiscoverUrlParams>({
+  const mode = (url.searchParams.get('mode') || 'advanced') as 'advanced'
+  const country = url.searchParams.get('country') || 'DE'
+  const minAgeRating = url.searchParams.get('minAgeRating') || ''
+  const maxAgeRating = url.searchParams.get('maxAgeRating') || ''
+  const minYear = url.searchParams.get('minYear') || ''
+  // const maxYear = url.searchParams.get('maxYear') || new Date().getFullYear().toString()
+  const maxYear = url.searchParams.get('maxYear') || ''
+  const minScore = url.searchParams.get('minScore') || ''
+  const withKeywords = url.searchParams.get('withKeywords') || ''
+  const withoutKeywords = url.searchParams.get('withoutKeywords') || ''
+  const withGenres = url.searchParams.get('withGenres') || ''
+  const withoutGenres = url.searchParams.get('withoutGenres') || ''
+  const withStreamingProviders = url.searchParams.get('withStreamingProviders') || '8,9,337'
+  const sortBy = (url.searchParams.get('sortBy') || 'popularity') as DiscoverMovieSortBy
+  const sortDirection = (url.searchParams.get('sortDirection') || 'desc') as 'asc' | 'desc'
+  const params = {
     type,
-    language,
-    age_rating_country,
-    min_age_rating,
-    max_age_rating,
-    min_year,
-    max_year,
-    with_keywords,
-    without_keywords,
-    with_genres,
-    without_genres,
-    with_watch_providers,
-    watch_region,
-    sort_by,
+    mode,
+    country,
+    minAgeRating,
+    maxAgeRating,
+    minYear,
+    maxYear,
+    minScore,
+    withKeywords,
+    withoutKeywords,
+    withGenres,
+    withoutGenres,
+    withStreamingProviders,
+    sortBy,
+    sortDirection,
+  }
+
+  const results = await getDiscoverMovieResults(params)
+
+  return json<LoaderData>({
+    params,
+    results,
   })
 }
 
 export default function Discover() {
-  const params = useLoaderData()
+  const { params, results } = useLoaderData<LoaderData>()
   const navigate = useNavigate()
+  const navigation = useNavigation()
 
-  const watchProvidersFetcher = useFetcher()
-  useEffect(() => {
-    watchProvidersFetcher.submit(
-      params,
-      {
-        method: 'get',
-        action: `/api/watch-providers/${params.type}`,
-      }
-    )
-  }, [params.type])
-  const watchProviders = watchProvidersFetcher.data?.watchProviders || []
-  const availableWatchProviders = watchProviders.filter((watchProvider: WatchProvider) => '8,9,337,2,3'.split(',').includes(watchProvider.provider_id.toString()))
+  // const watchProvidersFetcher = useFetcher()
+  // useEffect(() => {
+  //   watchProvidersFetcher.submit(
+  //     params,
+  //     {
+  //       method: 'get',
+  //       action: `/api/watch-providers/${params.type}`,
+  //     }
+  //   )
+  // }, [params.type])
+  // const watchProviders = watchProvidersFetcher.data?.watchProviders || []
+  // const availableWatchProviders = watchProviders.filter((watchProvider: WatchProvider) => '8,9,337,2,3'.split(',').includes(watchProvider.provider_id.toString()))
 
-  const fetcher = useFetcher()
-  useEffect(() => {
-    if (!watchProviders) return
-    // const watchProviderIds = watchProviders.map((watchProvider: WatchProvider) => watchProvider.provider_id)
-
-    fetcher.submit(
-      {
-        ...params,
-        // with_watch_providers: watchProviderIds.join(',')
-      },
-      {
-        method: 'get',
-        action: `/api/discover/${params.type}`,
-      }
-    )
-  }, [params, Boolean(watchProviders)])
-  const movieResults = fetcher.data?.discoverMovieResults || []
-  const tvResults = fetcher.data?.discoverTVResults || []
+  const [currentParams, setCurrentParams] = useState(params)
 
   const discoverTypeTabs: Tab[] = [{
     key: 'movie',
     label: 'Movies',
     icon: FilmIcon,
-    current: params.type === 'movie',
+    current: currentParams.type === 'movie',
   }, {
     key: 'tv',
     label: 'TV Shows',
     icon: TvIcon,
-    current: params.type === 'tv',
+    current: currentParams.type === 'tv',
   }]
-
-  const handleTabSelect = (tab: Tab) => {
-    const newParams = {
-      ...params,
-      type: tab.key,
-    }
-    navigate(`/discover?${new URLSearchParams(newParams).toString()}`)
-  }
 
   const sortByTabs: Tab[] = [{
-    key: 'popularity.desc',
+    key: 'popularity',
     label: 'Most popular',
     icon: FireIcon,
-    current: params.sort_by === 'popularity.desc',
+    current: currentParams.sortBy === 'popularity',
   }, {
-    key: 'vote_average.desc',
+    key: 'aggregated_score',
     label: 'Highest rating',
     icon: StarIcon,
-    current: params.sort_by === 'vote_average.desc',
+    current: currentParams.sortBy === 'aggregated_score',
   }, {
-    key: params.type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc',
+    key: 'release_date',
     label: 'Most recent',
     icon: ClockIcon,
-    current: params.sort_by === (params.type === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc'),
+    current: currentParams.sortBy === 'release_date',
   }]
 
-  const updateParams = (newParams: Record<string, string>) => {
-    const nonEmptyNewParams = Object.keys(newParams).reduce((result, key) => {
+  const getNonEmptyParams = (newParams: Record<string, string>) => {
+    return Object.keys(newParams).sort().reduce((result, key) => {
       const value = newParams[key]
       if (!value) return result
       return {
         ...result,
         [key]: value,
       }
-    }, {})
-    navigate(`/discover?${new URLSearchParams(nonEmptyNewParams).toString()}`)
+    }, {}) as LoaderData["params"]
   }
 
-  const handleSortBySelect = (tab: Tab) => {
+  const constructUrl = (newParams: Record<string, string>) => {
+    const nonEmptyNewParams = getNonEmptyParams(newParams)
+    return `/discover?${new URLSearchParams(nonEmptyNewParams).toString()}`
+  }
+
+  const updateParams = (newParams: Record<string, string>) => {
+    const nonEmptyNewParams = getNonEmptyParams(newParams)
+    setCurrentParams(nonEmptyNewParams)
+    navigate(constructUrl(newParams))
+  }
+
+  const handleTabSelect = (tab: Tab) => {
     const newParams = {
-      ...params,
-      sort_by: tab.key,
+      ...currentParams,
+      type: tab.key,
     }
     updateParams(newParams)
   }
 
-  const handleProviderToggle = (provider: WatchProvider) => {
-    const currentIds = params.with_watch_providers.split(',')
-    const with_watch_providers = Array.from(new Set(currentIds.includes(provider.provider_id.toString())
-      ? currentIds.filter((id: string) => id !== provider.provider_id.toString())
-      : [...currentIds, provider.provider_id])).join(',')
-    console.log({currentIds, with_watch_providers})
+  const handleSortBySelect = (tab: Tab) => {
     const newParams = {
-      ...params,
-      with_watch_providers,
+      ...currentParams,
+      sortBy: tab.key,
     }
     updateParams(newParams)
   }
@@ -171,7 +171,7 @@ export default function Discover() {
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
     const target = event.target
     const newParams = {
-      ...params,
+      ...currentParams,
       [target.name]: target.value,
     }
     updateParams(newParams)
@@ -179,110 +179,104 @@ export default function Discover() {
 
   const handleGenresChange = (genresToInclude: Genre[], genresToExclude: Genre[]) => {
     const newParams = {
-      ...params,
-      with_genres: genresToInclude.map((genre) => genre.id),
-      without_genres: genresToExclude.map((genre) => genre.id),
+      ...currentParams,
+      withGenres: genresToInclude.map((genre) => genre.id).join(','),
+      withoutGenres: genresToExclude.map((genre) => genre.id).join(','),
     }
     updateParams(newParams)
   }
 
   const handleKeywordsChange = (keywordsToInclude: Keyword[], keywordsToExclude: Keyword[]) => {
     const newParams = {
-      ...params,
-      with_keywords: keywordsToInclude.map((keyword) => keyword.id),
-      without_keywords: keywordsToExclude.map((keyword) => keyword.id),
+      ...currentParams,
+      withKeywords: keywordsToInclude.map((keyword) => keyword.id).join(','),
+      withoutKeywords: keywordsToExclude.map((keyword) => keyword.id).join(','),
     }
     updateParams(newParams)
   }
 
   return (
-    <div>
-      <div className="mb-2 text-lg font-bold">Discover</div>
+    <div className="flex flex-col gap-5 sm:gap-6">
       <div>
         <Tabs tabs={discoverTypeTabs} pills={false} onSelect={handleTabSelect} />
+        <PrefetchPageLinks key="discover-type" page={constructUrl({
+          ...currentParams,
+          type: params.type === 'movie' ? 'tv' : 'movie',
+        })} />
       </div>
-      <div className="my-4 flex flex-col gap-1">
-        <span className="text-sm font-bold">Streaming:</span>
-        <div className="flex flex-wrap gap-4">
-        {availableWatchProviders.map((provider: WatchProvider) => {
-          const isSelected = params.with_watch_providers.split(',').includes(provider.provider_id.toString())
-          return (
-            <div key={provider.provider_id}>
-              <img
-                className={`w-10 h-10 rounded-lg border-2 ${isSelected ? 'border-gray-300 hover:border-gray-500 hover:opacity-75' : 'border-gray-500 opacity-25 hover:opacity-50'}`}
-                src={`https://www.themoviedb.org//t/p/original/${provider.logo_path}`}
-                alt={provider.provider_name}
-                title={provider.provider_name}
-                onClick={() => handleProviderToggle(provider)}
-              />
-            </div>
-          )
-        })}
-        </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <FilterStreamingProviders
+          type={currentParams.type}
+          selectedProviders={currentParams.withStreamingProviders.split(',')}
+          onChange={(newProviders) => updateParams({
+            ...currentParams,
+            withStreamingProviders: newProviders,
+          })}
+        />
+        <span className="mt-2 text-sm">streaming in</span>
+        <FilterCountries
+          type={currentParams.type}
+          selectedCountry={currentParams.country}
+          onChange={(newCountry) => updateParams({
+            ...currentParams,
+            country: newCountry,
+          })}
+        />
       </div>
-      <div className="my-4 flex flex-col flex-wrap gap-4">
-        <div>
-          <span className="text-sm font-bold">Release Year:</span>
-          <div className="mt-1 flex gap-3 items-center">
-            <NumberInput name="min_year" placeholder="Min Year" onChange={handleChange} />
-            <span className="italic">to</span>
-            <NumberInput name="max_year" placeholder="Max Year" onChange={handleChange} />
-          </div>
-        </div>
-        <div>
-          <span className="text-sm font-bold">Genres:</span>
-          <FilterGenres type={params.type} withGenres={params.with_genres} withoutGenres={params.without_genres} onChange={handleGenresChange} />
-        </div>
-        <div>
-          <span className="text-sm font-bold">Tags:</span>
-          <FilterKeywords withKeywords={params.with_keywords} withoutKeywords={params.without_keywords} onChange={handleKeywordsChange} />
-        </div>
-        <div>
-          <Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
-        </div>
-      </div>
-      <div className="mt-8 flex flex-wrap gap-4">
-        {movieResults.length > 0 ? movieResults.map((movie: DiscoverMovieResult) => {
-          return (
-            <a key={movie.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/movie/${movie.id}-${titleToDashed(movie.title)}`}>
-              <div>
-                <img
-                  className="block rounded-md"
-                  src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${movie.poster_path}`}
-                  alt={`Poster for ${movie.title}`}
-                  title={`Poster for ${movie.title}`}
-                />
-              </div>
-              <div className="my-2 px-2">
-                <span className="text-sm font-bold">{movie.title}</span>
-              </div>
-            </a>
-          )
-        }) : tvResults.length > 0 ? tvResults.map((tv: DiscoverTVResult) => {
-          return (
-            <a key={tv.id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={`/tv/${tv.id}-${titleToDashed(tv.name)}`}>
-              <div>
-                <img
-                  className="block rounded-md"
-                  src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${tv.poster_path}`}
-                  alt={`Poster for ${tv.name}`}
-                  title={`Poster for ${tv.name}`}
-                />
-              </div>
-              <div className="my-2 px-2">
-                <span className="text-sm font-bold">{tv.name}</span>
-              </div>
-            </a>
-          )
-        }) : (fetcher.state !== 'idle' ? (
-          <div className="my-6 text-lg italic">
-            Discovering...
-          </div>
-        ) : (
-          <div className="my-6 text-lg italic">
-            No results. Try to change your search filters.
-          </div>
+      <div className="">
+        <Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
+        {sortByTabs.filter((tab) => !tab.current).map((tab) => (
+          <PrefetchPageLinks key={tab.key} page={constructUrl({
+            ...currentParams,
+            sortBy: tab.key,
+          })} />
         ))}
+      </div>
+      {/*<div className="my-4 flex flex-col flex-wrap gap-4">*/}
+      {/*  <div>*/}
+      {/*    <span className="text-sm font-bold">Release Year:</span>*/}
+      {/*    <div className="mt-1 flex gap-3 items-center">*/}
+      {/*      <NumberInput name="minYear" placeholder="Min Year" defaultValue={currentParams.minYear} onBlur={handleChange} />*/}
+      {/*      <span className="italic">to</span>*/}
+      {/*      <NumberInput name="maxYear" placeholder="Max Year" defaultValue={currentParams.maxYear} onBlur={handleChange} />*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
+      {/*  <div>*/}
+      {/*    <span className="text-sm font-bold">Genres:</span>*/}
+      {/*    <FilterGenres type={currentParams.type} withGenres={currentParams.withGenres} withoutGenres={currentParams.withoutGenres} onChange={handleGenresChange} />*/}
+      {/*  </div>*/}
+      {/*  <div>*/}
+      {/*    <span className="text-sm font-bold">Tags:</span>*/}
+      {/*    <FilterKeywords withKeywords={currentParams.withKeywords} withoutKeywords={currentParams.withoutKeywords} onChange={handleKeywordsChange} />*/}
+      {/*  </div>*/}
+      {/*</div>*/}
+      <div className={`relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4`}>
+        <AnimatePresence initial={false}>
+          {navigation.state === 'loading' && (
+            <span className="absolute top-2 left-6 animate-ping inline-flex h-8 w-8 rounded-full bg-sky-300 opacity-75" />
+          )}
+          {!results.length && navigation.state === 'idle' && (
+            <div className="my-6 text-lg italic">
+              No results. Try to change your search filters.
+            </div>
+          )}
+          {results.length > 0 && navigation.state === 'idle' && results.map((result: MovieDetails | TVDetails, index) => {
+            return (
+              <div key={result.tmdb_id}>
+                <motion.div
+                  key={currentParams.sortBy}
+                  initial={{y: `-${Math.floor(Math.random()*10) + 5}%`, opacity: 0}}
+                  animate={{y: '0', opacity: 1}}
+                  exit={{y: `${Math.floor(Math.random()*10) + 5}%`, opacity: 0}}
+                  transition={{duration: 0.5, type: 'tween'}}
+                >
+                  {currentParams.type === 'movie' && <MovieCard movie={result as MovieDetails} prefetch={index < 6} />}
+                  {currentParams.type === 'tv' && <TvCard tv={result as TVDetails} prefetch={index < 6} />}
+                </motion.div>
+              </div>
+            )
+          })}
+        </AnimatePresence>
       </div>
     </div>
   );

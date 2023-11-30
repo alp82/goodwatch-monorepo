@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react'
 import { ArrowPathIcon, HashtagIcon, TagIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import { useFetcher } from '@remix-run/react'
-import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/Autocomplete'
+import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/form/Autocomplete'
 import { Keyword } from '~/server/keywords.server'
 
 export interface FilterKeywordsProps {
-  withKeywords: string
-  withoutKeywords: string
+  withKeywords?: string
+  withoutKeywords?: string
   onChange: (keywordsToInclude: Keyword[], keywordsToExclude: Keyword[]) => void
 }
 
-export default function FilterKeywords({ withKeywords, withoutKeywords, onChange }: FilterKeywordsProps) {
+export default function FilterKeywords({ withKeywords = '', withoutKeywords = '', onChange }: FilterKeywordsProps) {
   const withKeywordsFetcher = useFetcher()
   useEffect(() => {
     withKeywordsFetcher.submit(
@@ -76,6 +76,7 @@ export default function FilterKeywords({ withKeywords, withoutKeywords, onChange
           :
           <ArrowPathIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
         }
+        mode="select"
         autocompleteItems={autocompleteItems}
         renderItem={renderItem}
         onChange={(event) => autocompleteFetcher.submit(event.target.form)}

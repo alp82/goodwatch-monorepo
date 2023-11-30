@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react'
-import { PrefetchPageLinks, useFetcher } from '@remix-run/react'
-import {titleToDashed} from "~/utils/helpers";
-import {Collection} from "~/server/details.server";
-import { CollectionMovie } from '~/server/collection.server'
+import { useFetcher } from '@remix-run/react'
+import { titleToDashed } from '~/utils/helpers'
+import { Collection } from '~/server/details.server'
+import { MoviesInCollection } from '~/server/collection.server'
+import { MovieCard } from '~/ui/MovieCard'
 
 export interface CollectionProps {
   collection: Collection
@@ -12,7 +13,7 @@ export interface CollectionProps {
 export default function Collection({ collection, movieId }: CollectionProps) {
   const collectionId = collection?.id.toString()
   const movieIds = (collection?.movie_ids || []).map(movieId => movieId.toString()).join(",")
-  const moviesFetcher = useFetcher()
+  const moviesFetcher = useFetcher<MoviesInCollection>()
 
   useEffect(() => {
     if (!movieIds) return
@@ -26,29 +27,18 @@ export default function Collection({ collection, movieId }: CollectionProps) {
     )
   }, [movieIds])
 
-  const movies = (moviesFetcher.data?.movies || []) as CollectionMovie[]
+  const movies = (moviesFetcher.data?.movies || [])
   return (
     <>
       {collection && <div className="mt-8 mb-4">
         <div className="mb-2 text-lg font-bold">Movies from same collection</div>
-        <div className="flex flex-wrap">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {movies.filter((movie) => movie.tmdb_id !== movieId).map((movie) => {
             const url = `/movie/${movie.tmdb_id}-${titleToDashed(movie.title)}`
             return (
-              <a key={movie.tmdb_id} className="flex flex-col w-36 border-4 border-transparent hover:bg-indigo-900 hover:border-indigo-900" href={url}>
-                <div>
-                  <img
-                    className="block rounded-md"
-                    src={`https://www.themoviedb.org/t/p/w300_and_h450_bestv2${movie.poster_path}`}
-                    alt={`Poster for ${movie.title}`}
-                    title={`Poster for ${movie.title}`}
-                  />
-                </div>
-                <div className="my-2 px-2">
-                  <span className="text-sm font-bold">{movie.title}</span>
-                </div>
-                <PrefetchPageLinks page={url} />
-              </a>
+              <div key={movie.tmdb_id}>
+                <MovieCard movie={movie} prefetch={true} />
+              </div>
             )
           })}
         </div>

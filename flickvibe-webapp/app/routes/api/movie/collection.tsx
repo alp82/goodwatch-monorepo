@@ -1,9 +1,10 @@
 import {json, LoaderArgs, LoaderFunction} from '@remix-run/node'
-import { CollectionMovie, getMoviesInCollection } from '~/server/collection.server'
+import { getMoviesInCollection } from '~/server/collection.server'
+import { MovieDetails } from '~/server/details.server'
 
 type LoaderData = {
   collectionId: string
-  movies: CollectionMovie[]
+  movies: MovieDetails[]
 };
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {

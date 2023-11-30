@@ -156,9 +156,9 @@ export default function TVDetails() {
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
               <Genres genres={genres} type="tv" />
-              <div className="flex gap-4 mb-4">
+              <div className="flex items-center gap-4 mb-4">
                 <AgeRating ageRating={ageRating} />
-                <div className="ml-1 mt-1 flex gap-1">
+                <div className="flex gap-1">
                   <strong>{details?.number_of_episodes}</strong>
                   Episode{details?.number_of_episodes === 1 ? '' : 's'} in
                   <strong>{details?.number_of_seasons}</strong>

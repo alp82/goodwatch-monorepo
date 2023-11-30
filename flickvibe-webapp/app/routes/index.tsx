@@ -15,6 +15,7 @@ import { MovieCard } from '~/ui/MovieCard'
 import { MovieDetails, TVDetails } from '~/server/details.server'
 import { getTrendingMovies, getTrendingTV } from '~/server/trending.server'
 import { TvCard } from '~/ui/TvCard'
+import { getPopularPicksMovies, getPopularPicksTV } from '~/server/popular-picks.server'
 
 export const meta: MetaFunction = () => {
   return {
@@ -26,14 +27,27 @@ export const meta: MetaFunction = () => {
 type LoaderData = {
   trendingMovies: MovieDetails[]
   trendingTV: TVDetails[]
+  popularPicksMovies: MovieDetails[]
+  popularPicksTV: TVDetails[]
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
-  const [trendingMovies, trendingTV] = await Promise.all([
+  const [
+    trendingMovies,
+    trendingTV,
+    popularPicksMovies,
+    popularPicksTV,
+  ] = await Promise.all([
     getTrendingMovies({
       type: 'default',
     }),
     getTrendingTV({
+      type: 'default',
+    }),
+    getPopularPicksMovies({
+      type: 'default',
+    }),
+    getPopularPicksTV({
       type: 'default',
     }),
   ])
@@ -41,14 +55,19 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) =>
   return json<LoaderData>({
     trendingMovies,
     trendingTV,
+    popularPicksMovies,
+    popularPicksTV,
   })
 }
 
 export default function Index() {
-  const { trendingMovies, trendingTV } = useLoaderData<LoaderData>()
-  const bestRatedMovies = [...trendingMovies].sort((a, b) => b.aggregated_overall_score_normalized_percent - a.aggregated_overall_score_normalized_percent)
-  const bestRatedTv = [...trendingTV].sort((a, b) => b.aggregated_overall_score_normalized_percent - a.aggregated_overall_score_normalized_percent)
-  const numberOfItemsToShow = 6
+  const {
+    trendingMovies,
+    trendingTV,
+    popularPicksMovies,
+    popularPicksTV,
+  } = useLoaderData<LoaderData>()
+  const numberOfItemsToShow = 11
 
   return (
     <div>
@@ -90,7 +109,7 @@ export default function Index() {
           />
         </div>
         <div className="overflow-hidden">
-          <div className="mx-auto max-w-7xl px-6 pb-32 pt-36 sm:pt-60 lg:px-8 lg:pt-32">
+          <div className="mx-auto max-w-7xl px-6 pb-32 pt-24 sm:pt-60 lg:px-8 lg:pt-32">
             <div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
               <div className="relative w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
                 <h1 className="text-4xl font-bold tracking-tight text-gray-100 sm:text-6xl">
@@ -101,7 +120,7 @@ export default function Index() {
                     Welcome to GoodWatch. You'll find <span className="accent font-bold">everything</span> you need to know about your next favorite movie or TV show.
                   </p>
                   <p className="mt-6 leading-8">
-                    Discover movies and TV shows on your favorite streaming providers like
+                    Discover great titles on your preferred streaming providers like
                     <span className="mx-3 inline-flex flex-wrap gap-2">
                       <span><img className="h-5 inline-block" src={netflixLogo} alt="Netflix Logo" title="Netflix Logo" /> ,</span>
                       <span><img className="h-8 mt-1 inline-block" src={primeLogo} alt="Amazon Prime Logo" title="Amazon Prime Logo" /></span>
@@ -143,14 +162,14 @@ export default function Index() {
                 {/*  <MovieCard movie={bestRatedMovies[4]} />*/}
                 {/*</div>*/}
                 <div className="mr-auto w-44 flex-none space-y-8 sm:mr-0 sm:pt-52 lg:pt-36">
-                  <TvCard tv={bestRatedTv[0]} />
-                  <TvCard tv={bestRatedTv[2]} />
-                  <TvCard tv={bestRatedTv[1]} />
+                  <TvCard tv={popularPicksTV[0]} />
+                  <TvCard tv={popularPicksTV[2]} />
+                  <TvCard tv={popularPicksTV[1]} />
                 </div>
                 <div className="w-44 flex-none space-y-8 pt-32 sm:pt-0">
-                  <MovieCard movie={bestRatedMovies[2]} />
-                  <MovieCard movie={bestRatedMovies[0]} />
-                  <MovieCard movie={bestRatedMovies[1]} />
+                  <MovieCard movie={popularPicksMovies[2]} />
+                  <MovieCard movie={popularPicksMovies[0]} />
+                  <MovieCard movie={popularPicksMovies[1]} />
                 </div>
               </div>
             </div>
@@ -159,12 +178,11 @@ export default function Index() {
       </div>
 
       <h2 id="trending" className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
-      {trendingMovies.length > 0 && <div className='lg:h-64'>
-        <div className="flex flex-wrap gap-4">
+      {trendingMovies.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {trendingMovies.slice(0, numberOfItemsToShow).map((movie: MovieDetails) => (
             <div key={movie.tmdb_id}>
-              <MovieCard movie={movie} />
-              <PrefetchPageLinks page={`/movie/${movie.tmdb_id}-${titleToDashed(movie.title)}`} />
+              <MovieCard movie={movie} prefetch={true} />
             </div>
           ))}
           <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=movie">
@@ -174,14 +192,13 @@ export default function Index() {
             </div>
           </a>
         </div>
-      </div>}
+      )}
       <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
-      {trendingTV.length > 0 && <div>
-        <div className="flex flex-wrap gap-4">
+      {trendingTV.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {trendingTV.slice(0, numberOfItemsToShow).map((tv: TVDetails) => (
             <div key={tv.tmdb_id}>
-              <TvCard tv={tv} />
-              <PrefetchPageLinks page={`/tv/${tv.tmdb_id}-${titleToDashed(tv.title)}`} />
+              <TvCard tv={tv} prefetch={true} />
             </div>
           ))}
           <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=tv">
@@ -191,8 +208,7 @@ export default function Index() {
             </div>
           </a>
         </div>
-      </div>
-      }
+      )}
     </div>
   );
 }

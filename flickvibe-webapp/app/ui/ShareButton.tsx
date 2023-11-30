@@ -54,15 +54,15 @@ export default function ShareButton({ link }: ShareButtonProps) {
 
   return (
     <div ref={ref} className="absolute top-8 right-4 md:top-4 flex flex-col items-end">
-      <ShareIcon className="mb-1 h-10 lg:h-12 w-auto p-2 border-2 rounded-full border-indigo-800 bg-white/[.2] hover:bg-indigo-800 cursor-pointer" onClick={handleToggleMenu} />
+      <ShareIcon className="mb-1 h-10 lg:h-12 w-auto p-2 border-2 rounded-full border-indigo-800 bg-black/[.5] hover:bg-indigo-800 cursor-pointer" onClick={handleToggleMenu} />
       {showMenu && <>
-        <div className="right-0 top-10 border-indigo-800 bg-white/[.2] cursor-pointer">
+        <div className="right-0 top-10 border-indigo-800 bg-black/[.8] cursor-pointer">
           <div className="flex gap-2 items-center w-full px-4 py-2 hover:bg-indigo-800" onClick={handleCopyLink}>
             <ClipboardIcon className="h-4" />
             Copy link
           </div>
         </div>
-        {hasShareFunctionality && <div className="right-0 top-10 border-indigo-800 bg-white/[.2] cursor-pointer">
+        {hasShareFunctionality && <div className="right-0 top-10 border-indigo-800 bg-black/[.8] cursor-pointer">
           <div className="flex gap-2 items-center w-full px-4 py-2 hover:bg-indigo-800" onClick={handleOpenShareMenu}>
             <QueueListIcon className="h-4" />
             Open share menu

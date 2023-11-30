@@ -1,19 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import { cached } from '~/utils/api'
-import { query } from '~/utils/postgres'
+import { executeQuery } from '~/utils/postgres'
+import { MovieDetails } from '~/server/details.server'
 
 const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
 
-export interface CollectionMovie {
-  tmdb_id: number
-  title: string
-  poster_path: string
-  aggregated_overall_score_normalized_percent: number
-}
-
 export interface MoviesInCollection {
   collectionId: string
-  movies: CollectionMovie[]
+  movies: MovieDetails[]
 }
 
 export interface MovieCollectionParams {
@@ -33,10 +27,10 @@ export const getMoviesInCollection = async (params: MovieCollectionParams) => {
 export async function _getMoviesInCollection({ collectionId, movieIds }: MovieCollectionParams): Promise<MoviesInCollection> {
   const collectionQuery = `SELECT tmdb_id, title, poster_path, aggregated_overall_score_normalized_percent FROM movies WHERE tmdb_id IN (${movieIds})`
   console.log(collectionQuery)
-  const result = await query(collectionQuery)
+  const result = await executeQuery(collectionQuery)
   if (!result.rows.length) throw Error(`movie collection with ID "${collectionId}" has no movies`)
 
-  const movies = result.rows as CollectionMovie[]
+  const movies = result.rows as MovieDetails[]
   return {
     collectionId,
     movies,

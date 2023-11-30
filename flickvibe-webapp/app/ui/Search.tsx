@@ -1,7 +1,7 @@
 import React from 'react'
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { PrefetchPageLinks, useFetcher, useNavigate } from '@remix-run/react'
-import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/Autocomplete'
+import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/form/Autocomplete'
 import { MediaType, SearchResult } from '~/server/search.server'
 import { classNames, titleToDashed } from '~/utils/helpers'
 import placeholder from '~/img/placeholder-poster.png'
@@ -53,7 +53,7 @@ export default function Search() {
         icon={fetcher.state === 'idle' ?
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
           :
-          <ArrowPathIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" aria-hidden="true" />
         }
         autocompleteItems={autocompleteItems}
         renderItem={renderItem}
@@ -61,7 +61,7 @@ export default function Search() {
         onSelect={handleSelect}
       />
     </fetcher.Form>
-    {autocompleteItems.slice(0, 3).map((item) => (
+    {autocompleteItems.slice(0, 4).map((item) => (
       <PrefetchPageLinks page={`/${item.mediaType}/${item.key}-${titleToDashed(item.label)}`} />
     ))}
   </>

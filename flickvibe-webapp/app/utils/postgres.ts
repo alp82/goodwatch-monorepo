@@ -8,10 +8,15 @@ const pool = new Pool({
     database: process.env.POSTGRES_DB,
 });
 
-export async function query(text: string, params?: any[]) {
+export async function executeQuery(query: string, params?: any[]) {
     const start = Date.now();
-    const res = await pool.query(text, params);
-    const duration = Date.now() - start;
-    console.log('executed query', { text, duration, rowCount: res.rowCount });
-    return res;
+    try {
+        const res = await pool.query(query, params);
+        const duration = Date.now() - start;
+        console.log('executed query', { query, duration, rowCount: res.rowCount });
+        return res;
+    } catch (err) {
+        console.error('error executing query', { query, params, error: err });
+        throw err;
+    }
 }
