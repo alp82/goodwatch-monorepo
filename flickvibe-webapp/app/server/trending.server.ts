@@ -17,7 +17,7 @@ export const getTrendingMovies = async (params: TrendingMovieParams) => {
     name: 'trending-movie',
     target: _getTrendingMovies,
     params,
-    ttlMinutes: 60 * 12,
+    ttlMinutes: 60 * 2,
   })
 }
 
@@ -48,7 +48,7 @@ export const getTrendingTV = async (params: TrendingTVParams) => {
     name: 'trending-tv',
     target: _getTrendingTV,
     params,
-    ttlMinutes: 60 * 12,
+    ttlMinutes: 60 * 2,
   })
 }
 
