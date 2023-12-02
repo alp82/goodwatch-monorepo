@@ -3,6 +3,7 @@ version: '3.9'
 services:
   redis:
     image: redis:7
+    command: redis-server --requirepass ${REDIS_PASS}
     ports:
       - '${REDIS_PORT:-7379}:6379'
     volumes:
@@ -13,7 +14,7 @@ services:
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-root}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASS:-secretpassword}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASS}
       MONGO_INITDB_DATABASE: ${MONGODB_DB:-flickvibe}
     ports:
       - '${MONGODB_PORT:-29017}:27017'
@@ -26,7 +27,7 @@ services:
       - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASS:-secretpassword}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
       POSTGRES_DB: ${POSTGRES_DB:-flickvibe}
       PGDATA: /data/postgres
     volumes:
