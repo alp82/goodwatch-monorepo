@@ -1,6 +1,13 @@
 version: '3.9'
 
 services:
+  redis:
+    image: redis:7
+    ports:
+      - '${REDIS_PORT:-7379}:6379'
+    volumes:
+      - redis_data:/data
+
   mongodb:
     image: mongo:7
     restart: always
@@ -74,6 +81,7 @@ networks:
     driver: bridge
 
 volumes:
+  redis_data:
   mongodb:
   postgres:
   pgadmin:

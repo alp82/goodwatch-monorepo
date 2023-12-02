@@ -41,24 +41,30 @@ https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-d
 
 ## TODO's
 ```
-optimize discover query
-
-fix discover genres & keywords
+filter inspiration: https://www.yidio.com/movies
+discover scores
+discover decades
 discover genres more prominent
-discover sort by random (good roulette)
-prefetch discover links: sort by tabs
-sanitize input to contruct sql query
-debounce requests
+disocver keywords and tropes
+discover age ratings
+sanitize input to construct sql query
 supabase caching
 
-moviecard show streamer
+do not show "0 min" (e.g. candy cane lane)
+localstorage: country and save streaming provider selection
 
-random full screen: album cover
+moviecard show streaming icons
 
-region selection
-save streaming provider selection in localstorage
+important streaming links queue
+important streaming link button
+https://www.themoviedb.org/movie/872585-oppenheimer/watch
+candy cane lane
+
+trending load more
 
 search page
+
+random full screen: album cover (good roulette)
 
 parallax scrolling landing page
 best rated picks animation
@@ -78,9 +84,7 @@ vercel cdn caching
 
 android app
 
-important streaming links queue
-important streaming link button
-https://www.themoviedb.org/movie/872585-oppenheimer/watch
+decide together: watch party / good swipe / swipe watch
 
 report missing ratings
 report missing streaming providers
