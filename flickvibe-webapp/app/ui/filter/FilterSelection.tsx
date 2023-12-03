@@ -109,7 +109,7 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                           <div className="flex h-7 items-center">
                             <button
                               type="button"
-                              className="relative text-gray-400 hover:text-gray-500"
+                              className="relative text-gray-400 hover:text-gray-500 focus:outline-none"
                               onClick={onClose}
                             >
                               <span className="absolute -inset-2.5" />

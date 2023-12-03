@@ -41,17 +41,17 @@ https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-d
 
 ## TODO's
 ```
-filter inspiration: https://www.yidio.com/movies
+filter inspiration:
+    https://www.yidio.com/movies
+    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
 discover scores
-discover genres more prominent
-disocver keywords and tropes
 discover age ratings
 discover actors
 discover cast
 discover budget & revenue
+disocver keywords and tropes
 localstorage: country and save streaming provider selection
 
-collection order by year: die hard
 do not show "0 min" (e.g. candy cane lane)
 
 moviecard show streaming icons

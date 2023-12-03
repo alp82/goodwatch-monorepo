@@ -22,8 +22,7 @@ export const getMoviesInCollection = async (params: MovieCollectionParams) => {
 }
 
 export async function _getMoviesInCollection({ collectionId, movieIds }: MovieCollectionParams): Promise<MoviesInCollection> {
-  const collectionQuery = `SELECT tmdb_id, title, poster_path, aggregated_overall_score_normalized_percent FROM movies WHERE tmdb_id IN (${movieIds})`
-  console.log(collectionQuery)
+  const collectionQuery = `SELECT tmdb_id, title, poster_path, aggregated_overall_score_normalized_percent FROM movies WHERE tmdb_id IN (${movieIds}) ORDER BY release_date ASC`
   const result = await executeQuery(collectionQuery)
   if (!result.rows.length) throw Error(`movie collection with ID "${collectionId}" has no movies`)
 
