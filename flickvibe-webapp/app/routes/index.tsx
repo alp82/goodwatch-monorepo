@@ -2,7 +2,7 @@ import React from 'react'
 import type { MetaFunction } from '@remix-run/node'
 import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData } from '@remix-run/react'
-import { ArrowUpRightIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
+import { ArrowSmallDownIcon, ArrowUpRightIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
 import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
@@ -148,14 +148,15 @@ export default function Index() {
                 </div>
                 <div className="mt-10 flex items-center gap-x-6">
                   <a
-                    href="#trending"
+                    href="/discover"
                     className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     <ArrowUpRightIcon className="h-5 w-auto" />
-                    What's Trending?
-                  </a>
-                  <a href="/discover" className="text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900">
                     Discover
+                  </a>
+                  <a href="#trending" className="flex items-center justify-center gap-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900">
+                    <ArrowSmallDownIcon className="h-5 w-auto" />
+                    What's Trending?
                   </a>
                 </div>
               </div>
