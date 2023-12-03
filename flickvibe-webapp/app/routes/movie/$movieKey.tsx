@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { useFetcher, useLoaderData, useNavigate, useParams } from '@remix-run/react'
+import React, { useState } from 'react'
+import { useLoaderData, useNavigate } from '@remix-run/react'
 import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
-import { ShareIcon } from '@heroicons/react/24/solid'
 import { getDetailsForMovie, MovieDetails, ReleaseDate } from '~/server/details.server'
 import Ratings from '~/ui/Ratings'
-import InfoBox from '~/ui/InfoBox'
 import Streaming from '~/ui/Streaming'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
@@ -22,8 +20,13 @@ import StreamingBadges from '~/ui/StreamingBadges'
 import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
 import ShareButton from '~/ui/ShareButton'
-import { placeholder } from '@babel/types'
 import { Poster } from '~/ui/Poster'
+
+export function headers() {
+  return {
+    'Cache-Control': 's-maxage=60, stale-while-revalidate=119',
+  };
+}
 
 export const meta: MetaFunction = ({ data }) => {
   return {

@@ -32,8 +32,8 @@ export default function FilterGenres({ type, withGenres = '', withoutGenres = ''
     }
   })
 
-  const genresToInclude = genres.filter((genre) => withGenres.includes(genre.id.toString()))
-  const genresToExclude = genres.filter((genre) => withoutGenres.includes(genre.id.toString()))
+  const genresToInclude = genres.filter((genre) => withGenres.includes(genre.name.toString()))
+  const genresToExclude = genres.filter((genre) => withoutGenres.includes(genre.name.toString()))
 
   const handleSelect = (selectedItem: AutocompleteItem) => {
     const updatedGenresToInclude: Genre[] = [...genresToInclude, {
@@ -63,7 +63,6 @@ export default function FilterGenres({ type, withGenres = '', withoutGenres = ''
       name="query"
       placeholder="Genre Search"
       icon={<BookmarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />}
-      mode="select"
       autocompleteItems={autocompleteItems}
       renderItem={renderItem}
       onSelect={handleSelect}

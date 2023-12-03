@@ -3,8 +3,6 @@ import type { MetaFunction } from '@remix-run/node'
 import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData } from '@remix-run/react'
 import { ArrowUpRightIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
-import type { PopularTV } from '~/server/popular.server'
-import { titleToDashed } from '~/utils/helpers'
 import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
@@ -16,6 +14,12 @@ import { MovieDetails, TVDetails } from '~/server/details.server'
 import { getTrendingMovies, getTrendingTV } from '~/server/trending.server'
 import { TvCard } from '~/ui/TvCard'
 import { getPopularPicksMovies, getPopularPicksTV } from '~/server/popular-picks.server'
+
+export function headers() {
+  return {
+    'Cache-Control': 's-maxage=60, stale-while-revalidate=119',
+  };
+}
 
 export const meta: MetaFunction = () => {
   return {

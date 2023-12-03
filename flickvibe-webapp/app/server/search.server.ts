@@ -1,4 +1,4 @@
-import { cached } from '~/utils/api'
+import { cached } from '~/utils/cache'
 
 export type MediaType = 'movie' | 'tv'
 

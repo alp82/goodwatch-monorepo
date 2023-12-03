@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import Ratings, { RatingsProps } from '~/ui/Ratings'
-import InfoBox from '~/ui/InfoBox'
-import { useFetcher, useLoaderData, useNavigate, useParams } from '@remix-run/react'
+import { useFetcher, useLoaderData, useNavigate } from '@remix-run/react'
 import Streaming from '~/ui/Streaming'
 import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import Genres from '~/ui/Genres'
 import Keywords from '~/ui/Keywords'
 import AgeRating from '~/ui/AgeRating'
-import { getDetailsForTV, TvDetails, ReleaseDate } from '~/server/details.server'
 import Description from '~/ui/Description'
 import Videos from '~/ui/Videos'
 import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
@@ -20,6 +18,13 @@ import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
 import ShareButton from '~/ui/ShareButton'
 import { Poster } from '~/ui/Poster'
+import { getDetailsForTV, ReleaseDate, TVDetails } from '~/server/details.server'
+
+export function headers() {
+  return {
+    'Cache-Control': 's-maxage=60, stale-while-revalidate=119',
+  };
+}
 
 export const meta: MetaFunction = ({ data }) => {
   return {
@@ -29,7 +34,7 @@ export const meta: MetaFunction = ({ data }) => {
 }
 
 type LoaderData = {
-  details: Awaited<TvDetails>
+  details: Awaited<TVDetails>
   tab: string
 }
 

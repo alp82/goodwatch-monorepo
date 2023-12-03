@@ -76,7 +76,6 @@ export default function FilterKeywords({ withKeywords = '', withoutKeywords = ''
           :
           <ArrowPathIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
         }
-        mode="select"
         autocompleteItems={autocompleteItems}
         renderItem={renderItem}
         onChange={(event) => autocompleteFetcher.submit(event.target.form)}

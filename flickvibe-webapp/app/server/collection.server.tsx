@@ -1,9 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
-import { cached } from '~/utils/api'
+import { cached } from '~/utils/cache'
 import { executeQuery } from '~/utils/postgres'
 import { MovieDetails } from '~/server/details.server'
-
-const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
 
 export interface MoviesInCollection {
   collectionId: string

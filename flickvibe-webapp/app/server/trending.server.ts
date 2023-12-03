@@ -1,4 +1,4 @@
-import { cached } from '~/utils/api'
+import { cached } from '~/utils/cache'
 import { MovieDetails, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
 

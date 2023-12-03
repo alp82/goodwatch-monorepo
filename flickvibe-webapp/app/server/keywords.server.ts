@@ -1,7 +1,4 @@
-import { cached } from '~/utils/api'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
+import { cached } from '~/utils/cache'
 
 export interface Keyword {
   id: number
@@ -37,22 +34,12 @@ async function _getKeywordSearchResults({ query }: KeywordSearchParams): Promise
     `https://api.themoviedb.org/3/search/keyword?api_key=${process.env.TMDB_API_KEY}&query=${query}`
   ).then((res) => res.json())
 
-  const { data, error } = await supabase
-    .from('keywords')
-    .upsert(keywordsResults.results)
-    .select()
-  if (error) {
-    console.error({ data, error })
-  }
-
   return keywordsResults
 }
 
 export const getKeywords = async ({ keywordIds }: KeywordsParams): Promise<Keyword[]> => {
-  const response = await supabase
-    .from('keywords')
-    .select()
-    .in('id', keywordIds)
+  // TODO keywords
+  const response = {}
 
   return (response.data || []) as Keyword[]
 }

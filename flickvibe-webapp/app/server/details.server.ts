@@ -1,9 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { cached } from '~/utils/api'
-import { titleToDashed } from '~/utils/helpers'
+import { cached } from '~/utils/cache'
 import { executeQuery } from '~/utils/postgres'
-
-const supabase = createClient(process.env.SUPABASE_PROJECT_URL || '', process.env.SUPABASE_API_KEY || '')
 
 export interface Collection {
   id:            number
@@ -392,14 +388,6 @@ export async function _getDetailsForMovie({ movieId, language, country }: Detail
   const translations = (movie.translations || []).filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
   movie.translations = translations.length ? translations : null
 
-  const { data, error } = await supabase
-      .from('keywords')
-      .upsert(movie.keywords)
-      .select()
-  if (error) {
-    console.error({ data, error })
-  }
-
   return movie
 }
 
@@ -463,14 +451,6 @@ export async function _getDetailsForTV({ tvId, language, country }: DetailsTVPar
 
   const translations = (tv.translations || []).filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
   tv.translations = translations.length ? translations : null
-
-  const { data, error } = await supabase
-    .from('keywords')
-    .upsert(tv.keywords)
-    .select()
-  if (error) {
-    console.error({ data, error })
-  }
 
   return tv
 }

@@ -3,7 +3,7 @@ import { MetacriticRatings, MetacriticScraper } from '~/server/ratings/metacriti
 import { RottenTomatoesRatings, RottenTomatoesScraper } from '~/server/ratings/rottentomatoes-scraper'
 import { VibeRatings, VibesCalculator } from '~/server/ratings/vibes-calculator'
 import { getDetailsForMovie, getDetailsForTV } from '~/server/details.server'
-import { cached } from '~/utils/api'
+import { cached } from '~/utils/cache'
 
 export enum Type {
   MOVIE = 'movie',

@@ -1,9 +1,6 @@
 import React, { useEffect } from 'react'
-import { GlobeAltIcon } from '@heroicons/react/20/solid'
 import { useFetcher } from '@remix-run/react'
-import { RenderItemParams } from '~/ui/form/Autocomplete'
 import Select, { SelectItem } from '~/ui/form/Select'
-import { Country } from '~/server/countries.server'
 import { StreamingProviderResults } from '~/server/streaming-providers.server'
 
 export interface FilterCountriesProps {

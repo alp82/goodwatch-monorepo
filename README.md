@@ -43,18 +43,20 @@ https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-d
 ```
 filter inspiration: https://www.yidio.com/movies
 discover scores
-discover decades
 discover genres more prominent
 disocver keywords and tropes
 discover age ratings
-sanitize input to construct sql query
-supabase caching
-
-do not show "0 min" (e.g. candy cane lane)
+discover actors
+discover cast
+discover budget & revenue
 localstorage: country and save streaming provider selection
+
+collection order by year: die hard
+do not show "0 min" (e.g. candy cane lane)
 
 moviecard show streaming icons
 
+priority scraping
 important streaming links queue
 important streaming link button
 https://www.themoviedb.org/movie/872585-oppenheimer/watch
@@ -80,8 +82,6 @@ explore button for media titles (prefilled discover, map feature)
 
 show generic recommendations
 
-vercel cdn caching
-
 android app
 
 decide together: watch party / good swipe / swipe watch
@@ -89,12 +89,19 @@ decide together: watch party / good swipe / swipe watch
 report missing ratings
 report missing streaming providers
 report missing info
+extra link for multiple in same year: https://www.rottentomatoes.com/m/nowhere_2023_2
 
-data source: seasons ratings and details (flickvibe-webapp/app/routes/api/ratings/tv-seasons.tsx)
 data source: existing crawlers use existing url instead of guessing
-data source: allmovie moods and themes
+data source: allmovie sub-genres, moods, themes, attributes, flags (https://www.allmovie.com/movie/fargo-vm422651)
+data source: allmovie tones (https://www.allmovie.com/advanced-search)
+data source: seasons ratings and details (flickvibe-webapp/app/routes/api/ratings/tv-seasons.tsx)
+data source: imdb plotsummary + keywords
 data source: letterboxd ratings
 data source: tmdb people api
+data source: moviespoiler + moviepooper
+
+realtime updates
+https://github.com/supabase/realtime
 
 fix certification longer than 50 chars: 12 éven aluliak számára a megtekintése nagykorú felügyelete mellett ajánlott
 

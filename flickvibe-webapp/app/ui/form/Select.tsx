@@ -9,13 +9,24 @@ export interface SelectItem {
   disabled?: boolean
 }
 
-export interface SelectProps<RenderItem> {
+export interface SelectPropsBase<RenderItem> {
   selectItems: RenderItem[]
-  selectedItems?: RenderItem | RenderItem[]
   withSearch?: boolean
-  withMultiSelection?: boolean
-  onSelect: (selectedItem: RenderItem | RenderItem[]) => void
 }
+
+export interface SelectPropsSingle<RenderItem> extends SelectPropsBase<RenderItem> {
+  selectedItems?: RenderItem
+  withMultiSelection?: false
+  onSelect: (selectedItem: RenderItem) => void
+}
+
+export interface SelectPropsMulti<RenderItem> extends SelectPropsBase<RenderItem> {
+  selectedItems: RenderItem[]
+  withMultiSelection: true
+  onSelect: (selectedItem: RenderItem[]) => void
+}
+
+export type SelectProps<RenderItem> = SelectPropsSingle<RenderItem> | SelectPropsMulti<RenderItem>
 
 export default function Select<RenderItem extends SelectItem>({
   selectItems,
@@ -26,26 +37,35 @@ export default function Select<RenderItem extends SelectItem>({
 }: SelectProps<RenderItem>) {
   const [query, setQuery] = useState('')
 
-  const searchMatches = query ? selectItems.filter((item) => {
+  let searchMatches = query ? selectItems.filter((item) => {
     const lowercaseQuery = query.toLowerCase()
     return item.key.toLowerCase().includes(lowercaseQuery) || item.label.toLowerCase().includes(lowercaseQuery)
   }) : selectItems
+
+  if (withMultiSelection) {
+    searchMatches = searchMatches.sort((a, b) => {
+      if (selectedItems.find((item) => item.key === a.key)) {
+        return -1
+      }
+      return 0
+    })
+  }
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value)
   }
 
   const handleSelect = (selectedItem: RenderItem) => {
-    if (withMultiSelection) {
-      onSelect(selectedItems.find((item) => item.key === selectedItem.key) ? selectedItems.filter((item) => item.key !== selectedItem.key) : [...selectedItems, selectedItem])
-    } else {
-      onSelect(selectedItem)
-    }
+    onSelect(selectedItem)
     setQuery('')
   }
 
+  const handleMultiSelect = (selectedItems: RenderItem[]) => {
+    onSelect(selectedItems)
+  }
+
   return (
-    <Listbox value={selectedItems} onChange={handleSelect}>
+    <Listbox value={withMultiSelection ? selectedItems || [] : selectedItems || ''} onChange={withMultiSelection ? handleMultiSelect : handleSelect} multiple={withMultiSelection}>
       {({ open }) => (
         <>
           <div className="relative mt-2">
@@ -88,6 +108,7 @@ export default function Select<RenderItem extends SelectItem>({
                       <input
                         type="search"
                         name="search"
+                        defaultValue={query}
                         autoComplete={"off"}
                         className="bg-gray-800 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                         placeholder="Search"

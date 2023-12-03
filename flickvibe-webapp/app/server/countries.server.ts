@@ -1,4 +1,4 @@
-import { cached } from '~/utils/api'
+import { cached } from '~/utils/cache'
 import { executeQuery } from '~/utils/postgres'
 import { getCountryName } from '~/server/resources/country-names'
 
