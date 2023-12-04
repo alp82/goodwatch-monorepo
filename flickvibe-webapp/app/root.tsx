@@ -11,16 +11,17 @@ import {
 import { Analytics } from '@vercel/analytics/react'
 import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
 import { TracingInstrumentation } from '@grafana/faro-web-tracing';
-import { ToastContainer } from 'react-toastify'
 import { AnimatePresence, motion } from 'framer-motion'
+import { ToastContainer } from 'react-toastify'
+import cssToastify from 'react-toastify/dist/ReactToastify.css';
 
 import Header from '~/ui/Header'
 import Footer from "~/ui/Footer";
 import InfoBox from '~/ui/InfoBox'
+import BottomNav from '~/ui/nav/BottomNav'
 
 import cssMain from "~/main.css";
 import cssTailwind from "~/tailwind.css";
-import cssToastify from 'react-toastify/dist/ReactToastify.css';
 
 // if (typeof document !== "undefined") {
 //   const faro = initializeFaro({
@@ -117,6 +118,7 @@ export default function App() {
           </AnimatePresence>
         </div>
         <Footer />
+        <BottomNav />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

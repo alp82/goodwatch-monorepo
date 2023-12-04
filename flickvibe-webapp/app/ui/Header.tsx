@@ -33,7 +33,7 @@ export default function Header() {
                 </a>
                 <div className="hidden lg:ml-6 lg:block">
                   <div className="flex space-x-4">
-                    <a href="/discover" className={`rounded-md px-3 py-2 text-sm font-medium ${isDiscover ? 'text-white bg-gray-900' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>
+                    <a href="/discover" className={`rounded-md px-3 py-2 text-sm font-medium ${isDiscover ? 'text-white bg-indigo-800' : 'text-gray-300'} hover:bg-indigo-900 hover:text-white`}>
                       Discover
                     </a>
                   </div>
