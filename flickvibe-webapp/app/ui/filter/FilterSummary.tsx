@@ -24,7 +24,10 @@ export default function FilterSummary({ params, onToggle }: FilterSummaryParams)
   const streamingProviders = providersFetcher.data?.streamingProviders || []
 
   const enabledStreamingProviders = streamingProviders
-    .filter((provider) => params.withStreamingProviders.split(',').includes(provider.id.toString()))
+    .filter((provider) => {
+      const streamingProviders = params.withStreamingProviders ? params.withStreamingProviders.split(',') : []
+      return streamingProviders.includes(provider.id.toString())
+    })
     .map((provider) => {
       return {
         key: provider.id,
@@ -35,7 +38,7 @@ export default function FilterSummary({ params, onToggle }: FilterSummaryParams)
 
   const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${params.country}.svg`
 
-  const genres = params.withGenres.split(',')
+  const genres = (params.withGenres || '').split(',').filter(genre => Boolean(genre))
 
   return (
     <div className="w-full py-2 px-4 flex flex-wrap items-center gap-4 lg:gap-6 text-sm truncate bg-gray-800 border-gray-900 rounded-2xl cursor-pointer hover:brightness-150" onClick={onToggle}>

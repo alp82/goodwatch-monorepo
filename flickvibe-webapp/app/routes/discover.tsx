@@ -23,10 +23,11 @@ import FilterGenres from '~/ui/filter/FilterGenres'
 import FilterKeywords from '~/ui/filter/FilterKeywords'
 import FilterSelection from '~/ui/filter/FilterSelection'
 import FilterSummary from '~/ui/filter/FilterSummary'
+import useLocale, { getLocaleFromRequest } from '~/utils/locale'
 
 export function headers() {
   return {
-    'Cache-Control': 's-maxage=60, stale-while-revalidate=119',
+    'Cache-Control': 's-maxage=60, stale-while-revalidate=3600',
   };
 }
 
@@ -43,10 +44,13 @@ export type LoaderData = {
 }
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
+  const { locale } = getLocaleFromRequest(request)
+
   const url = new URL(request.url)
   const type = (url.searchParams.get('type') || 'movie') as MediaType
   const mode = (url.searchParams.get('mode') || 'advanced') as 'advanced'
-  const country = url.searchParams.get('country') || 'DE'
+  const country = url.searchParams.get('country') || locale.country
+  const language = url.searchParams.get('language') || locale.language
   const minAgeRating = url.searchParams.get('minAgeRating') || ''
   const maxAgeRating = url.searchParams.get('maxAgeRating') || ''
   const minYear = url.searchParams.get('minYear') || ''
@@ -64,6 +68,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
     type,
     mode,
     country,
+    language,
     minAgeRating,
     maxAgeRating,
     minYear,
@@ -90,6 +95,7 @@ export default function Discover() {
   const { params, results } = useLoaderData<LoaderData>()
   const navigate = useNavigate()
   const navigation = useNavigation()
+  const { locale } = useLocale();
 
   // const watchProvidersFetcher = useFetcher()
   // useEffect(() => {

@@ -1,7 +1,7 @@
 # requirements:
 # pandas
 # psycopg2-binary
-# weaviate-client>=4.2b0
+# weaviate-client>=4.3b2
 # wmill
 from typing import TypedDict
 
@@ -53,8 +53,14 @@ def main(results):
                 uuid=generate_uuid5(movie["tmdb_id"]),
                 properties={
                     "tmdb_id": movie["tmdb_id"],
-                    "original_title": movie["original_title"],
+                    "title": movie["title"],
                     "release_year": movie["release_year"],
+                    "aggregated_overall_score_normalized_percent": movie[
+                        "aggregated_overall_score_normalized_percent"
+                    ],
+                    "aggregated_overall_score_voting_count": movie[
+                        "aggregated_overall_score_voting_count"
+                    ],
                 },
                 vector=embedding,
             )

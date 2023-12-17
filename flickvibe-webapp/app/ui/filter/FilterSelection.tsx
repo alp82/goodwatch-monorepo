@@ -129,7 +129,7 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
                             <FilterStreamingProviders
                               type={params.type}
-                              selectedProviders={params.withStreamingProviders.split(',')}
+                              selectedProviders={params.withStreamingProviders ? params.withStreamingProviders.split(',') : []}
                               onChange={(newProviders) => updateParams({
                                 ...params,
                                 withStreamingProviders: newProviders,
@@ -159,14 +159,6 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                         <div>
                           {createDivider('Release Year')}
                           <div className="flex flex-col flex-wrap items-center justify-center gap-2 sm:gap-4">
-                            <button
-                              type="button"
-                              className={`${isSelectedYear(undefined, 2023) ? 'bg-indigo-800' : 'bg-gray-800'} relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
-                              onClick={() => handleYearChange(undefined, 2023)}
-                            >
-                              All Until Today
-                            </button>
-
                             <div className="isolate inline-flex rounded-md shadow-sm">
                               <button
                                 type="button"
@@ -194,27 +186,36 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                             <div className="isolate inline-flex rounded-md shadow-sm">
                               <button
                                 type="button"
-                                className={`${isSelectedYear(2010, 2020) ? 'bg-indigo-800' : 'bg-gray-800'} relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
-                                onClick={() => handleYearChange(2010, 2020)}
-                              >
-                                2010 - 2020
-                              </button>
-                              <button
-                                type="button"
-                                className={`${isSelectedYear(2000, 2010) ? 'bg-indigo-800' : 'bg-gray-800'} relative inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
+                                className={`${isSelectedYear(2000, 2010) ? 'bg-indigo-800' : 'bg-gray-800'} relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
                                 onClick={() => handleYearChange(2000, 2010)}
                               >
                                 2000 - 2010
                               </button>
+                              <button
+                                type="button"
+                                className={`${isSelectedYear(2010, 2020) ? 'bg-indigo-800' : 'bg-gray-800'} relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
+                                onClick={() => handleYearChange(2010, 2020)}
+                              >
+                                2010 - 2020
+                              </button>
                             </div>
 
-                            <button
-                              type="button"
-                              className={`${isSelectedYear(1900, 1999) ? 'bg-indigo-800' : 'bg-gray-800'} relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
-                              onClick={() => handleYearChange(1900, 1999)}
-                            >
-                              1999 and earlier
-                            </button>
+                            <div className="isolate inline-flex rounded-md shadow-sm">
+                              <button
+                                type="button"
+                                className={`${isSelectedYear(undefined, 2023) ? 'bg-indigo-800' : 'bg-gray-800'} relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
+                                onClick={() => handleYearChange(undefined, 2023)}
+                              >
+                                All Until Today
+                              </button>
+                              <button
+                                type="button"
+                                className={`${isSelectedYear(1900, 1999) ? 'bg-indigo-800' : 'bg-gray-800'} relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
+                                onClick={() => handleYearChange(1900, 1999)}
+                              >
+                                1999 and earlier
+                              </button>
+                            </div>
 
                             <div className="mt-1 flex gap-3 items-center">
                               <NumberInput name="minYear" placeholder="Min Year" value={minYear || ''} onBlur={handleChange} onChange={(event) => setMinYear(event.target.value)} />

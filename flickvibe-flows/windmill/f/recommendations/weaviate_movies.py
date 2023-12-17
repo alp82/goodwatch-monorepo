@@ -3,7 +3,7 @@
 # openai
 # pandas
 # psycopg2-binary
-# weaviate-client==4.1b1
+# weaviate-client==4.3b2
 # wmill
 from typing import TypedDict
 

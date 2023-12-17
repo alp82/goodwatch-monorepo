@@ -1,5 +1,5 @@
 import { cached } from '~/utils/cache'
-import { MovieDetails, TVDetails } from '~/server/details.server'
+import { getCountrySpecificDetails, MovieDetails, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
 
 export type PopularPicksMovieResults = MovieDetails[]
@@ -7,9 +7,13 @@ export type PopularPicksTVResults = TVDetails[]
 
 export interface PopularPicksMovieParams {
   type: string
+  country: string
+  language: string
 }
 export interface PopularPicksTVParams {
   type: string
+  country: string
+  language: string
 }
 
 export const getPopularPicksMovies = async (params: PopularPicksMovieParams) => {
@@ -21,7 +25,7 @@ export const getPopularPicksMovies = async (params: PopularPicksMovieParams) => 
   })
 }
 
-export async function _getPopularPicksMovies({}: PopularPicksMovieParams): Promise<PopularPicksMovieResults> {
+export async function _getPopularPicksMovies({ country, language }: PopularPicksMovieParams): Promise<PopularPicksMovieResults> {
   const result = await executeQuery(`
     SELECT
       *
@@ -37,7 +41,7 @@ export async function _getPopularPicksMovies({}: PopularPicksMovieParams): Promi
     LIMIT 10;
   `);
   if (!result.rows.length) throw Error(`no popular picks for movies found`)
-  return result.rows
+  return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }
 
 export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
@@ -49,7 +53,7 @@ export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
   })
 }
 
-export async function _getPopularPicksTV({}: PopularPicksTVParams): Promise<PopularPicksTVResults> {
+export async function _getPopularPicksTV({ country, language }: PopularPicksTVParams): Promise<PopularPicksTVResults> {
   const result = await executeQuery(`
     SELECT
       *
@@ -65,5 +69,5 @@ export async function _getPopularPicksTV({}: PopularPicksTVParams): Promise<Popu
     LIMIT 10;
   `);
   if (!result.rows.length) throw Error(`no popular picks for tv shows found`)
-  return result.rows
+  return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }

@@ -299,6 +299,7 @@ export interface TVDetails extends BaseDetails {
   production_countries: ProductionCountry[]
   seasons: Season[]
   spoken_languages: SpokenLanguage[]
+  streaming_providers: StreamingProviders
   status: string
   tagline: string
   type: string
@@ -310,19 +311,36 @@ export interface TVDetails extends BaseDetails {
   keywords: Keywords
   recommendations: Recommendations
   videos: Videos
-  ['watch/providers']: StreamingProviders
 }
 
 export interface DetailsMovieParams {
   movieId: string
-  language: string
   country: string
+  language: string
 }
 
 export interface DetailsTVParams {
   tvId: string
-  language: string
   country: string
+  language: string
+}
+
+export const getCountrySpecificDetails = (details: any, country: string, language: string) => {
+  const alternative_titles = (details.alternative_titles || []).filter((title: Record<string, string>) => title.iso_3166_1 === country)
+  details.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
+  delete details.alternative_titles
+
+  // const certifications = (details.certifications || []).filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
+  // details.certifications = certifications.length ? certifications[0].release_dates : null
+  const certifications = (details.certifications || {})[country.toUpperCase()]
+  details.certifications = certifications || null
+
+  const streaming_providers = (details.streaming_providers || {})[country.toUpperCase()]
+  details.streaming_providers = streaming_providers || null
+
+  const translations = (details.translations || []).filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
+  details.translations = translations.length ? translations : null
+  return details
 }
 
 export const getDetailsForMovie = async (params: DetailsMovieParams) => {
@@ -374,21 +392,7 @@ export async function _getDetailsForMovie({ movieId, language, country }: Detail
   if (!result.rows.length) throw Error(`movie with ID "${movieId}" not found`)
 
   const movie = result.rows[0]
-
-  const alternative_titles = (movie.alternative_titles || []).filter((title: Record<string, string>) => title.iso_3166_1 === country)
-  movie.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
-  delete movie.alternative_titles
-
-  const certifications = (movie.certifications || []).filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
-  movie.certifications = certifications.length ? certifications[0].release_dates : null
-
-  const streaming_providers = (movie.streaming_providers || {})[country.toUpperCase()]
-  movie.streaming_providers = streaming_providers || null
-
-  const translations = (movie.translations || []).filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
-  movie.translations = translations.length ? translations : null
-
-  return movie
+  return getCountrySpecificDetails(movie, country, language)
 }
 
 export const getDetailsForTV = async (params: DetailsTVParams) => {
@@ -438,19 +442,5 @@ export async function _getDetailsForTV({ tvId, language, country }: DetailsTVPar
   if (!result.rows.length) throw Error(`movie with ID "${tvId}" not found`)
 
   const tv = result.rows[0]
-
-  const alternative_titles = (tv.alternative_titles || []).filter((title: Record<string, string>) => title.iso_3166_1 === country)
-  tv.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
-  delete tv.alternative_titles
-
-  const certifications = (tv.certifications || {})[country.toUpperCase()]
-  tv.certifications = certifications || null
-
-  const streaming_providers = (tv.streaming_providers || {})[country.toUpperCase()]
-  tv.streaming_providers = streaming_providers || null
-
-  const translations = (tv.translations || []).filter((translation: Record<string, string>) => translation.iso_3166_1 === country || translation.iso_639_1 === language)
-  tv.translations = translations.length ? translations : null
-
-  return tv
+  return getCountrySpecificDetails(tv, country, language)
 }

@@ -1,7 +1,7 @@
 import { cached } from '~/utils/cache'
 import { VOTE_COUNT_THRESHOLD } from "~/utils/constants";
 import { executeQuery } from '~/utils/postgres'
-import { MovieDetails, TVDetails } from '~/server/details.server'
+import { getCountrySpecificDetails, MovieDetails, TVDetails } from '~/server/details.server'
 
 export type DiscoverSortBy =
   'popularity' |
@@ -9,10 +9,11 @@ export type DiscoverSortBy =
   'release_date' |
   'title'
 
-export interface DiscoverParams<SortBy extends DiscoverSortBy> {
-  type: 'movie'
+export interface DiscoverParams<Type, SortBy extends DiscoverSortBy> {
+  type: Type
   mode: 'advanced'
   country: string
+  language: string
   minAgeRating: string
   maxAgeRating: string
   minYear: string
@@ -27,8 +28,8 @@ export interface DiscoverParams<SortBy extends DiscoverSortBy> {
   sortDirection: 'asc' | 'desc'
 }
 
-export type DiscoverMovieParams = DiscoverParams<DiscoverSortBy>
-export type DiscoverTVParams = DiscoverParams<DiscoverSortBy>
+export type DiscoverMovieParams = DiscoverParams<'movie', DiscoverSortBy>
+export type DiscoverTVParams = DiscoverParams<'tv', DiscoverSortBy>
 
 export const getDiscoverMovieResults = async (params: DiscoverMovieParams) => {
   return await cached<DiscoverMovieParams, MovieDetails[]>({
@@ -55,6 +56,7 @@ async function _getDiscoverResults<
 >({
     type,
     country,
+    language,
     minAgeRating,
     maxAgeRating,
     minYear,
@@ -152,5 +154,5 @@ async function _getDiscoverResults<
     LIMIT 20;
   `
   const result = await executeQuery(query, placeholderValues)
-  return result.rows as Result
+  return result.rows.map((row) => getCountrySpecificDetails(row, country, language)) as Result
 }

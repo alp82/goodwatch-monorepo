@@ -1,4 +1,5 @@
 from datetime import datetime
+import gc
 import json
 import pymongo
 import wmill
@@ -44,12 +45,11 @@ def prepare_data(dump_data, dump_type: DumpType):
     media_type = MediaType.MOVIE if dump_type == DumpType.MOVIES else MediaType.TV
 
     rows = dump_data.split("\n")
-    converted_rows = []
     for row in rows:
         if not len(row):
             continue
         json_row = json.loads(row)
-        tmdb_data = TmdbDailyDumpData(
+        yield TmdbDailyDumpData(
             tmdb_id=json_row.get("id"),
             type=media_type,
             original_title=json_row.get("original_title")
@@ -60,8 +60,40 @@ def prepare_data(dump_data, dump_type: DumpType):
             video=json_row.get("video", False),
             updated_at=datetime.utcnow(),
         )
-        converted_rows.append(tmdb_data)
-    return converted_rows
+
+
+def create_bulk_operations(generator, collection, dump_type: str):
+    start = 0
+    end = 0
+    operations = []
+    for tmdb_dump in generator:
+        operations.append(
+            pymongo.UpdateOne(
+                {
+                    "tmdb_id": tmdb_dump.tmdb_id,
+                    "type": tmdb_dump.type.value,
+                },
+                {
+                    "$setOnInsert": {"created_at": tmdb_dump.updated_at},
+                    "$set": tmdb_dump.to_mongo(),
+                },
+                upsert=True,
+            )
+        )
+        if len(operations) >= BATCH_SIZE:
+            end += len(operations)
+            print(f"storing {start} to {end} for {dump_type}")
+            start += len(operations)
+            collection.bulk_write(operations)
+            operations = []
+            gc.collect()
+
+    # Process any remaining operations
+    if operations:
+        collection.bulk_write(operations)
+        gc.collect()
+
+    return end + len(operations)
 
 
 def download_zip_and_store_in_db(daily_dump_availability: TmdbDailyDumpAvailability):
@@ -83,31 +115,20 @@ def download_zip_and_store_in_db(daily_dump_availability: TmdbDailyDumpAvailabil
         daily_dump_availability.save()
         raise Exception(error_message)
 
-    prepared_data = prepare_data(dump_data, dump_type=daily_dump_availability.type)
-    print(f"Storing {len(prepared_data)} rows for {daily_dump_availability.type}")
-    operations = [
-        pymongo.UpdateOne(
-            {
-                "tmdb_id": tmdb_dump.tmdb_id,
-                "type": tmdb_dump.type.value,
-            },
-            {
-                "$setOnInsert": {"created_at": tmdb_dump.updated_at},
-                "$set": tmdb_dump.to_mongo(),
-            },
-            upsert=True,
-        )
-        for tmdb_dump in prepared_data
-    ]
-    for start in range(0, len(operations), BATCH_SIZE):
-        end = min(start + BATCH_SIZE, len(operations))
-        print(f"storing {start} to {end} for {daily_dump_availability.type}")
-        batch = operations[start:end]
-        bulk_result = TmdbDailyDumpData._get_collection().bulk_write(batch)
-    print(f"Successfully saved tmdb daily dump data for {daily_dump_availability.type}")
+    collection = TmdbDailyDumpData._get_collection()
+    prepared_data_generator = prepare_data(
+        dump_data, dump_type=daily_dump_availability.type
+    )
+    count = create_bulk_operations(
+        prepared_data_generator, collection, daily_dump_availability.type
+    )
+
+    print(
+        f"Successfully saved {count} rows of tmdb daily dump data for {daily_dump_availability.type}"
+    )
 
     daily_dump_availability.finished_at = datetime.utcnow
-    daily_dump_availability.row_count = len(prepared_data)
+    daily_dump_availability.row_count = count
     daily_dump_availability.save()
 
 
@@ -119,7 +140,7 @@ def tmdb_extract_daily_dump_data():
     for daily_dump_info in daily_dump_infos:
         download_zip_and_store_in_db(daily_dump_info)
 
-    return [dict(info) for info in daily_dump_infos]
+    return [info.to_mongo() for info in daily_dump_infos]
 
 
 def main():

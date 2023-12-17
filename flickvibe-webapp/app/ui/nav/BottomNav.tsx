@@ -1,6 +1,6 @@
-import { HomeIcon } from '@heroicons/react/24/solid'
 import { ComponentType, HTMLAttributes } from 'react'
 import { useLocation } from '@remix-run/react'
+import { CubeIcon, HomeIcon } from '@heroicons/react/24/solid'
 
 export default function BottomNav() {
   const location = useLocation()
@@ -14,13 +14,13 @@ export default function BottomNav() {
       </a>
     )
   }
+
   return (
-    <div className="block lg:hidden fixed bottom-0 left-0 z-50 w-full h-16 border-t bg-gray-950 border-gray-800">
+    <div className="lg:hidden fixed bottom-0 left-0 z-50 w-full h-16 border-t bg-gray-950 border-gray-800">
       <div className="grid h-full max-w-lg grid-cols-2 mx-auto font-medium">
         {createButton('Home', HomeIcon, '/')}
-        {createButton('Discover', HomeIcon, '/discover')}
+        {createButton('Discover', CubeIcon, '/discover')}
       </div>
     </div>
-
   )
 }

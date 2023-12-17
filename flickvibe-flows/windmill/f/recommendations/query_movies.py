@@ -1,5 +1,5 @@
 # requirements:
-# weaviate-client>=4.2b0
+# weaviate-client>=4.3b2
 # wmill
 
 import weaviate

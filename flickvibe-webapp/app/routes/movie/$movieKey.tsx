@@ -14,17 +14,18 @@ import { titleToDashed } from '~/utils/helpers'
 import Collection from '~/ui/Collection'
 import Runtime from '~/ui/Runtime'
 import { extractRatings } from '~/utils/ratings'
-import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
+import RatingOverlay from '~/ui/RatingOverlay'
 import RatingBadges from '~/ui/RatingBadges'
 import StreamingBadges from '~/ui/StreamingBadges'
 import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
 import ShareButton from '~/ui/ShareButton'
 import { Poster } from '~/ui/Poster'
+import { getLocaleFromRequest } from '~/utils/locale'
 
 export function headers() {
   return {
-    'Cache-Control': 's-maxage=60, stale-while-revalidate=119',
+    'Cache-Control': 's-maxage=60, stale-while-revalidate=3600',
   };
 }
 
@@ -41,16 +42,18 @@ type LoaderData = {
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
+  const { locale } = getLocaleFromRequest(request)
+
   const url = new URL(request.url)
-  const tab = url.searchParams.get('tab') || 'details'
+  const tab = url.searchParams.get('tab') || 'about'
 
   const movieId = (params.movieKey || '').split('-')[0]
+  const country = url.searchParams.get('country') || locale.country
   const language = url.searchParams.get('language') || 'en'
-  const country = url.searchParams.get('country') || 'DE'
   const details = await getDetailsForMovie({
     movieId,
-    language,
     country,
+    language,
   })
 
   return json<LoaderData>({
@@ -68,7 +71,7 @@ export default function MovieDetails() {
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.certification) : null
 
   const [selectedTab, setSelectedTab] = useState(tab)
-  const existingTabs = ['details', 'cast', 'ratings', 'streaming', 'videos']
+  const existingTabs = ['about', 'cast', 'ratings', 'streaming', 'videos']
   const movieTabs = existingTabs.map((tab) => {
     return {
       key: tab,
@@ -83,7 +86,7 @@ export default function MovieDetails() {
 
   const mainInfo = (
     <>
-      {(selectedTab === 'details' || !existingTabs.includes(selectedTab)) && (
+      {(selectedTab === 'about' || !existingTabs.includes(selectedTab)) && (
         <>
           {tagline && <div className="mb-4">
             <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
@@ -128,11 +131,11 @@ export default function MovieDetails() {
           className="relative mb-2 flex min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]"
           style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}>
           <div className="md:hidden">
-            <RatingProgressOverlay ratings={ratings}/>
+            <RatingOverlay ratings={ratings}/>
           </div>
           <div className="p-3 flex">
             <div className="hidden md:block relative flex-none w-40 lg:w-60">
-              <RatingProgressOverlay ratings={ratings}/>
+              <RatingOverlay ratings={ratings}/>
               <Poster path={poster_path} title={title}/>
             </div>
             <div className="relative flex-1 mt-4 md:pl-4 lg:pl-8">

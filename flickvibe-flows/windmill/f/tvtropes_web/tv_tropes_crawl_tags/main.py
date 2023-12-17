@@ -1,3 +1,6 @@
+#extra_requirements:
+#playwright==1.40.0
+
 import asyncio
 import re
 from datetime import datetime
@@ -176,7 +179,7 @@ async def crawl_rotten_tomatoes_page(
 
 
 async def crawl_page(browser, page) -> TvTropesCrawlResult:
-    # Locate the score elements
+    # Locate the trope elements
     # normal movie page: https://tvtropes.org/pmwiki/pmwiki.php/Film/AmericanBeauty
     # normal tv page: https://tvtropes.org/pmwiki/pmwiki.php/Series/Jericho2006
     # with spoilers: https://tvtropes.org/pmwiki/pmwiki.php/Film/DancerInTheDark

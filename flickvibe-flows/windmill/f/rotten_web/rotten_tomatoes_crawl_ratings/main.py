@@ -1,3 +1,6 @@
+#extra_requirements:
+#playwright==1.40.0
+
 import asyncio
 from datetime import datetime
 from playwright.async_api import async_playwright, BrowserContext

@@ -1,7 +1,7 @@
 from f.db.postgres import init_postgres
 
 
-BATCH_SIZE = 500
+BATCH_SIZE = 200
 
 
 def get_movie_count(min_popularity: float):

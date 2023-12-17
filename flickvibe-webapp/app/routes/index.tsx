@@ -2,7 +2,7 @@ import React from 'react'
 import type { MetaFunction } from '@remix-run/node'
 import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData } from '@remix-run/react'
-import { ArrowSmallDownIcon, ArrowUpRightIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
+import { ArrowSmallDownIcon, ArrowUpRightIcon, CubeIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
 import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
@@ -14,10 +14,11 @@ import { MovieDetails, TVDetails } from '~/server/details.server'
 import { getTrendingMovies, getTrendingTV } from '~/server/trending.server'
 import { TvCard } from '~/ui/TvCard'
 import { getPopularPicksMovies, getPopularPicksTV } from '~/server/popular-picks.server'
+import { getLocaleFromRequest } from '~/utils/locale'
 
 export function headers() {
   return {
-    'Cache-Control': 's-maxage=60, stale-while-revalidate=119',
+    'Cache-Control': 's-maxage=60, stale-while-revalidate=3600',
   };
 }
 
@@ -36,24 +37,23 @@ type LoaderData = {
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
+  const { locale } = getLocaleFromRequest(request)
+  const apiParams = {
+    type: 'default',
+    country: locale.country,
+    language: locale.language,
+  }
+
   const [
     trendingMovies,
     trendingTV,
     popularPicksMovies,
     popularPicksTV,
   ] = await Promise.all([
-    getTrendingMovies({
-      type: 'default',
-    }),
-    getTrendingTV({
-      type: 'default',
-    }),
-    getPopularPicksMovies({
-      type: 'default',
-    }),
-    getPopularPicksTV({
-      type: 'default',
-    }),
+    getTrendingMovies(apiParams),
+    getTrendingTV(apiParams),
+    getPopularPicksMovies(apiParams),
+    getPopularPicksTV(apiParams),
   ])
 
   return json<LoaderData>({
@@ -72,6 +72,11 @@ export default function Index() {
     popularPicksTV,
   } = useLoaderData<LoaderData>()
   const numberOfItemsToShow = 11
+
+  // console.log(trendingMovies.map((a) => a.popularity).sort())
+  // console.log(trendingTV.map((a) => a.popularity).sort())
+  // console.log(popularPicksMovies.map((a) => a.popularity).sort())
+  // console.log(popularPicksTV.map((a) => a.popularity).sort())
 
   return (
     <div>
@@ -151,7 +156,7 @@ export default function Index() {
                     href="/discover"
                     className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
-                    <ArrowUpRightIcon className="h-5 w-auto" />
+                    <CubeIcon className="h-5 w-auto" />
                     Discover
                   </a>
                   <a href="#trending" className="flex items-center justify-center gap-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900">

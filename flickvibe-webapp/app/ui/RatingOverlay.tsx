@@ -1,20 +1,13 @@
-import React, { useState } from 'react'
-import InfoBox from '~/ui/InfoBox'
-import imdbLogo from '~/img/imdb-logo-250.png'
-import metacriticLogo from '~/img/metacritic-logo-250.png'
-import rottenLogo from '~/img/rotten-logo-250.png'
+import React from 'react'
 import { AllRatings } from '~/utils/ratings'
 
-const minPosition = 30
-const maxPosition = 70
-
-export interface RatingsProps {
+export interface RatingsOverlayProps {
   ratings?: AllRatings
   title?: string
   compact?: boolean
 }
 
-export default function RatingProgressOverlay({ ratings }: RatingsProps) {
+export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
   const hasScore = typeof ratings?.aggregated_overall_score_normalized_percent === "number"
   const score = hasScore ? Math.floor(ratings.aggregated_overall_score_normalized_percent) : null
   const vibeColorIndex = hasScore ? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10 : null

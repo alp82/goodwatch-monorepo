@@ -41,28 +41,49 @@ https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-d
 
 ## TODO's
 ```
-filter inspiration:
-    https://www.yidio.com/movies
-    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-discover scores
-discover age ratings
-discover actors
-discover cast
-discover budget & revenue
-disocver keywords and tropes
-localstorage: country and save streaming provider selection
+workers on home cluster
 
-do not show "0 min" (e.g. candy cane lane)
-
-moviecard show streaming icons
+postgres read replica
 
 priority scraping
 important streaming links queue
 important streaming link button
-https://www.themoviedb.org/movie/872585-oppenheimer/watch
-candy cane lane
+streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
+rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
+rotten score not up to date: http://localhost:3003/movie/961268-ballerina?tab=streaming
+    wrong link: https://www.rottentomatoes.com/m/ballerina_2023
+fury 2014, wrong rotten link: http://localhost:3003/movie/228150-fury
 
 trending load more
+discover load more
+
+populate trending score
+
+rotten wrong urls:
+    https://www.rottentomatoes.com/m/cars_2006
+ -> https://www.rottentomatoes.com/m/cars
+ => try different variants and compare years!
+ 
+ metacritic false positive:
+    http://localhost:3003/tv/121-doctor-who
+ -> should be empty
+ => compare years!
+ 
+identify title duplicates and run scraping again
+
+page transition loader
+
+filter inspiration:
+    https://www.yidio.com/movies
+    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
+discover age ratings
+discover actors
+discover cast
+discover scores
+discover budget & revenue
+disocver keywords and tropes
+discoer fix empty streaming providers
+localstorage: country and save streaming provider selection
 
 search page
 

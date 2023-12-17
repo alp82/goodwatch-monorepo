@@ -1,5 +1,5 @@
 import { cached } from '~/utils/cache'
-import { MovieDetails, TVDetails } from '~/server/details.server'
+import { getCountrySpecificDetails, MovieDetails, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
 
 export type TrendingMovieResults = MovieDetails[]
@@ -7,9 +7,13 @@ export type TrendingTVResults = TVDetails[]
 
 export interface TrendingMovieParams {
   type: string
+  country: string
+  language: string
 }
 export interface TrendingTVParams {
   type: string
+  country: string
+  language: string
 }
 
 export const getTrendingMovies = async (params: TrendingMovieParams) => {
@@ -21,7 +25,7 @@ export const getTrendingMovies = async (params: TrendingMovieParams) => {
   })
 }
 
-export async function _getTrendingMovies({}: TrendingMovieParams): Promise<TrendingMovieResults> {
+export async function _getTrendingMovies({ country, language }: TrendingMovieParams): Promise<TrendingMovieResults> {
   const trendingResults = await fetch(
     `https://api.themoviedb.org/3/trending/movie/day?api_key=${process.env.TMDB_API_KEY}`
   ).then((res) => res.json())
@@ -40,7 +44,7 @@ export async function _getTrendingMovies({}: TrendingMovieParams): Promise<Trend
       popularity;
   `);
   if (!result.rows.length) throw Error(`no trending movies found`)
-  return result.rows
+  return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }
 
 export const getTrendingTV = async (params: TrendingTVParams) => {
@@ -52,7 +56,7 @@ export const getTrendingTV = async (params: TrendingTVParams) => {
   })
 }
 
-export async function _getTrendingTV({}: TrendingTVParams): Promise<TrendingTVResults> {
+export async function _getTrendingTV({ country, language }: TrendingTVParams): Promise<TrendingTVResults> {
   const trendingResults = await fetch(
     `https://api.themoviedb.org/3/trending/tv/day?api_key=${process.env.TMDB_API_KEY}`
   ).then((res) => res.json())
@@ -71,5 +75,5 @@ export async function _getTrendingTV({}: TrendingTVParams): Promise<TrendingTVRe
       popularity;
   `);
   if (!result.rows.length) throw Error(`no trending tv shows found`)
-  return result.rows
+  return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }

@@ -1,10 +1,11 @@
 import { PrefetchPageLinks } from '@remix-run/react'
 import { titleToDashed } from '~/utils/helpers'
-import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
+import RatingOverlay from '~/ui/RatingOverlay'
 import React from 'react'
 import { extractRatings } from '~/utils/ratings'
 import { MovieDetails } from '~/server/details.server'
 import { Poster } from '~/ui/Poster'
+import StreamingOverlay from '~/ui/StreamingOverlay'
 
 interface MovieCardProps {
   movie: MovieDetails
@@ -19,7 +20,8 @@ export function MovieCard({ movie, prefetch = false }: MovieCardProps) {
       href={`/movie/${movie.tmdb_id}-${titleToDashed(movie.title)}`}
     >
       <div className="relative">
-        <RatingProgressOverlay ratings={ratings} />
+        <RatingOverlay ratings={ratings} />
+        <StreamingOverlay providers={movie.streaming_providers} />
         <Poster path={movie.poster_path} title={movie.title} />
       </div>
       <div className="my-2 px-2">

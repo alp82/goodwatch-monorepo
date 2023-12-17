@@ -24,7 +24,7 @@ export interface AutocompleteProps<RenderItem extends AutocompleteItem> {
   autocompleteItems: RenderItem[]
   renderItem: (renderItemParams: RenderItemParams<RenderItem>) => ReactNode
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
-  onSelect: (selectedItem: RenderItem) => void
+  onSelect?: (selectedItem: RenderItem) => void
 }
 
 export default function Autocomplete<RenderItem extends AutocompleteItem>({
@@ -46,7 +46,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
   }) : autocompleteItems
 
   useEffect(() => {
-    if (!selectedItem) return
+    if (!selectedItem || !onSelect) return
     onSelect(selectedItem)
     handleReset()
   }, [selectedItem])

@@ -1,10 +1,11 @@
 import { titleToDashed } from '~/utils/helpers'
-import RatingProgressOverlay from '~/ui/RatingProgressOverlay'
+import RatingOverlay from '~/ui/RatingOverlay'
 import React from 'react'
 import { extractRatings } from '~/utils/ratings'
 import { TVDetails } from '~/server/details.server'
 import { Poster } from '~/ui/Poster'
 import { PrefetchPageLinks } from '@remix-run/react'
+import StreamingOverlay from '~/ui/StreamingOverlay'
 
 interface TvCardProps {
   tv: TVDetails
@@ -19,7 +20,8 @@ export function TvCard({ tv, prefetch = false }: TvCardProps) {
       href={`/tv/${tv.tmdb_id}-${titleToDashed(tv.title)}`}
     >
       <div className="relative">
-        <RatingProgressOverlay ratings={ratings} />
+        <RatingOverlay ratings={ratings} />
+        <StreamingOverlay providers={tv.streaming_providers} />
         <Poster path={tv.poster_path} title={tv.title}/>
       </div>
       <div className="my-2 px-2">
