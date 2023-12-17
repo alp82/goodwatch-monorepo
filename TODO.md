@@ -1,9 +1,5 @@
 # TODO's
 ```
-workers on home cluster
-
-postgres read replica
-
 priority scraping
 important streaming links queue
 important streaming link button
@@ -43,6 +39,8 @@ discover budget & revenue
 disocver keywords and tropes
 discoer fix empty streaming providers
 localstorage: country and save streaming provider selection
+
+postgres read replica
 
 search page
 

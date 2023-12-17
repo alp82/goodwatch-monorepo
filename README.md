@@ -6,8 +6,7 @@ See it running here: https://www.goodwatch.app
 
 1. Checkout this repository
 2. Register for [TMDB API Key](https://developers.themoviedb.org/3/getting-started/introduction)
-3. Create [supabase account](https://app.supabase.com/)
-4. Copy `.env.example` to `.env` from `/goodwatch-webapp` and fill out the required secrets.
+3. Copy `.env.example` to `.env` from `/goodwatch-webapp` and fill out the required secrets.
 
 You are now ready to run it locally:
 ```shell
@@ -15,6 +14,14 @@ cd goodwatch-webapp
 npm install
 npm run dev
 ```
+
+## Databases
+
+TODO
+
+## Windmill Server & Workers
+
+TODO
 
 ## Deployment
 
