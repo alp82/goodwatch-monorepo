@@ -277,7 +277,7 @@ class ReleaseDate(EmbeddedDocument):
     descriptors = ListField(StringField())
     iso_639_1 = StringField()
     note = StringField()
-    release_date = DateField()
+    release_date = DateTimeField()
     type = IntField()
 
 
@@ -445,6 +445,10 @@ class TmdbMovieDetails(BaseTmdbDetails):
     meta = {
         "indexes": [
             "imdb_id",
+            "popularity",
+            "selected_at",
+            "updated_at",
+            ("selected_at", "updated_at", "-popularity"),
         ],
     }
 

@@ -1,3 +1,6 @@
+ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
+(results.release_dates.release_date.cannot parse date "2023-10-07T00:00:00.000Z": ['release_dates'])
+
 # TODO's
 ```
 priority scraping

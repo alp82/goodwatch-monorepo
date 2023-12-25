@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime
-from mongoengine import EmbeddedDocumentField, EmbeddedDocumentListField
-import requests
 from typing import Union
+
+from mongoengine import EmbeddedDocumentField, EmbeddedDocumentListField
+from pydantic import BaseModel
+import requests
 import wmill
 
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
@@ -10,7 +12,7 @@ from f.data_source.common import prepare_next_entries
 from f.db.mongodb import init_mongodb
 
 
-BATCH_SIZE = 50
+BATCH_SIZE = 30
 BUFFER_SELECTED_AT_MINUTES = 10
 TMDB_API_KEY = wmill.get_variable("u/Alp/TMDB_API_KEY")
 
@@ -89,9 +91,12 @@ async def convert_and_save_details(
             setattr(next_entry, key, value)
 
     next_entry.updated_at = datetime.utcnow()
-    next_entry.save()
+    try:
+        next_entry.save()
+    except Exception as e:
+        print(e)
     print(
-        f"details saved for tmdb_id: {next_entry.tmdb_id} (popularity: {next_entry.popularity})"
+        f"details saved for {next_entry.title} (id: {next_entry.tmdb_id}) (popularity: {next_entry.popularity})"
     )
 
     return converted_details
@@ -214,3 +219,6 @@ async def tmdb_fetch_details_from_api():
 
 def main():
     return asyncio.run(tmdb_fetch_details_from_api())
+
+if __name__ == '__main__':
+    main()
