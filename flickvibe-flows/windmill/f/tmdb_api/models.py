@@ -448,7 +448,6 @@ class TmdbMovieDetails(BaseTmdbDetails):
             "popularity",
             "selected_at",
             "updated_at",
-            ("selected_at", "updated_at", "-popularity"),
         ],
     }
 

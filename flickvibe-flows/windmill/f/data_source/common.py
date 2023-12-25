@@ -1,6 +1,73 @@
 from datetime import datetime, timedelta
 
 from mongoengine import Document, Q
+from pydantic import BaseModel
+
+
+class IdsParameter(BaseModel):
+    movie_ids: list[int]
+    tv_ids: list[int]
+
+
+def retrieve_next_entry_ids(
+    count: int,
+    buffer_minutes: int,
+    movie_model: Document,
+    tv_model: Document,
+) -> IdsParameter:
+    next_entries = prepare_next_entries(
+        movie_model=movie_model,
+        tv_model=tv_model,
+        count=count,
+        buffer_minutes=buffer_minutes,
+    )
+    ids = get_ids_for_documents(
+        next_entries=next_entries,
+        movie_model=movie_model,
+        tv_model=tv_model,
+    )
+    return ids
+
+
+# helper methods for param conversions
+
+
+def get_ids_for_documents(
+    next_entries: list[Document], movie_model: Document, tv_model: Document
+) -> IdsParameter:
+    movie_entries = [
+        next_entry for next_entry in next_entries if isinstance(next_entry, movie_model)
+    ]
+    tv_entries = [
+        next_entry for next_entry in next_entries if isinstance(next_entry, tv_model)
+    ]
+    movie_ids = [movie.tmdb_id for movie in movie_entries]
+    tv_ids = [tv.tmdb_id for tv in tv_entries]
+    return IdsParameter(
+        movie_ids=movie_ids,
+        tv_ids=tv_ids,
+    )
+
+
+def get_documents_for_ids(
+    next_ids: dict, movie_model: Document, tv_model: Document
+) -> list[Document]:
+    ids = IdsParameter(
+        movie_ids=next_ids.get("movie_ids", []),
+        tv_ids=next_ids.get("tv_ids", []),
+    )
+    movie_results = list(
+        movie_model.objects(tmdb_id__in=ids.movie_ids).order_by(
+            "selected_at", "-popularity"
+        )
+    )
+    tv_results = list(
+        tv_model.objects(tmdb_id__in=ids.tv_ids).order_by("selected_at", "-popularity")
+    )
+    return movie_results + tv_results
+
+
+# helper methods to fetch next entries in queue
 
 
 def completeness_queue(
@@ -105,7 +172,7 @@ def update_selected_for_next_entries(
 def prepare_next_entries(
     movie_model: Document, tv_model: Document, count: int, buffer_minutes: int
 ) -> list[Document]:
-    return priority_queue(movie_model, tv_model, count, buffer_minutes)
+    return completeness_queue(movie_model, tv_model, count, buffer_minutes)
 
 
 def main():

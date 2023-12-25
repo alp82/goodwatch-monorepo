@@ -1,9 +1,13 @@
 summary: ''
 description: ''
 lock:
+  - annotated-types==0.6.0
   - dnspython==2.4.2
   - mongoengine==0.27.0
+  - pydantic==2.5.3
+  - pydantic-core==2.14.6
   - pymongo==4.6.1
+  - typing-extensions==4.9.0
 is_template: false
 kind: trigger
 schema:

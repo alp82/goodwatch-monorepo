@@ -1,3 +1,4 @@
+from typing import Optional
 from mongoengine import (
     DateTimeField,
     StringField,
@@ -6,6 +7,24 @@ from mongoengine import (
     IntField,
     ListField,
 )
+from pydantic import BaseModel
+
+
+# Pydantic Models
+
+
+class RottenTomatoesCrawlResult(BaseModel):
+    url: Optional[str]
+    tomato_score_original: Optional[float]
+    tomato_score_normalized_percent: Optional[float]
+    tomato_score_vote_count: Optional[int]
+    audience_score_original: Optional[float]
+    audience_score_normalized_percent: Optional[float]
+    audience_score_vote_count: Optional[int]
+    rate_limit_reached: bool
+
+
+# Database Models
 
 
 class BaseRottenTomatoesRating(Document):

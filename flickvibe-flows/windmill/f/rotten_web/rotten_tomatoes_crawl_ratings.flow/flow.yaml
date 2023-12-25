@@ -2,12 +2,19 @@ summary: Crawl Rotten Tomatoes pages to get rating data
 description: Crawl Rotten Tomatoes pages to get rating data and persist it.
 value:
   modules:
-    - id: a
+    - id: b
       value:
         type: script
         input_transforms: {}
-        path: f/rotten_web/rotten_tomatoes_crawl_ratings/main
-      timeout: 300
+        path: f/rotten_web/rotten_tomatoes_crawl_ratings/next
+    - id: c
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: results.b
+        path: f/rotten_web/rotten_tomatoes_crawl_ratings/fetch
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

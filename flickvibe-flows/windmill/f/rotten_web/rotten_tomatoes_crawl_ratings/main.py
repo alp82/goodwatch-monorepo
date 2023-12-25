@@ -1,5 +1,5 @@
-#extra_requirements:
-#playwright==1.40.0
+# extra_requirements:
+# playwright==1.40.0
 
 import asyncio
 from datetime import datetime
@@ -78,7 +78,7 @@ async def crawl_tv_rating(
 
 
 async def crawl_rotten_tomatoes_page(
-    next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating],
+    next_entry: list[Union[RottenTomatoesMovieRating, RottenTomatoesTvRating]],
     type: str,
     browser: BrowserContext,
 ) -> RottenTomatoesCrawlResult:
@@ -91,7 +91,8 @@ async def crawl_rotten_tomatoes_page(
             for title in next_entry.title_variations
             for i in range(2)
         ]
-        if next_entry.release_year and is_ambiguous_title(next_entry.original_title, type)
+        if next_entry.release_year
+        and is_ambiguous_title(next_entry.original_title, type)
         else next_entry.title_variations
     )
     all_urls = [f"{base_url}/{title}" for title in all_variations]
@@ -192,14 +193,15 @@ async def crawl_rotten_tomatoes_page(
     )
 
 
-def is_ambiguous_title(
-    original_title: str,
-    type: str
-) -> bool:
+def is_ambiguous_title(original_title: str, type: str) -> bool:
     if type == "m":
-        count_with_same_title = RottenTomatoesMovieRating.objects(original_title=original_title).count()
+        count_with_same_title = RottenTomatoesMovieRating.objects(
+            original_title=original_title
+        ).count()
     else:
-        count_with_same_title = RottenTomatoesTvRating.objects(original_title=original_title).count()
+        count_with_same_title = RottenTomatoesTvRating.objects(
+            original_title=original_title
+        ).count()
 
     return count_with_same_title > 1
 
@@ -246,11 +248,12 @@ def store_result(
     next_entry.save()
 
 
-async def rotten_tomatoes_crawl_ratings():
+async def rotten_tomatoes_crawl_ratings(
+    next_entries: list[Union[RottenTomatoesMovieRating, RottenTomatoesTvRating]]
+):
     print("Fetch ratings from Rotten Tomatoes pages")
     init_mongodb()
 
-    next_entries = retrieve_next_entries(count=BATCH_SIZE)
     if not next_entries:
         print(f"warning: no entries to fetch in Rotten Tomatoes ratings")
         return
@@ -283,8 +286,8 @@ async def rotten_tomatoes_crawl_ratings():
     }
 
 
-def main():
-    return asyncio.run(rotten_tomatoes_crawl_ratings())
+def main(next_entries: list[Union[RottenTomatoesMovieRating, RottenTomatoesTvRating]]):
+    return asyncio.run(rotten_tomatoes_crawl_ratings(next_entries))
 
 
 async def debug():
@@ -296,6 +299,7 @@ async def debug():
         context.set_default_timeout(BROWSER_TIMEOUT)
         result = await crawl_data(next_entry, context)
         await browser.close()
+
 
 if __name__ == "__main__":
     # main()
