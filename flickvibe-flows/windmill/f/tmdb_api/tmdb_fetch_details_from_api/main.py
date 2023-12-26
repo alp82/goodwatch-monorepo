@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import requests
 import wmill
 
-from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
+from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails, ReleaseDate
 from f.data_source.common import prepare_next_entries
 from f.db.mongodb import init_mongodb
 
@@ -79,13 +79,11 @@ async def convert_and_save_details(
             field_type = type(fields[key])
 
             if issubclass(field_type, EmbeddedDocumentListField) and value:
-                EmbeddedDoc = fields[
-                    key
-                ].field.document_type  # Get the EmbeddedDocument type
+                EmbeddedDoc = fields[key].field.document_type
                 value = [EmbeddedDoc(**clean_empty_strings(item)) for item in value]
 
             elif issubclass(field_type, EmbeddedDocumentField) and value:
-                EmbeddedDoc = fields[key].document_type  # Get the EmbeddedDocument type
+                EmbeddedDoc = fields[key].document_type
                 value = EmbeddedDoc(**clean_empty_strings(value))
 
             setattr(next_entry, key, value)
@@ -93,11 +91,15 @@ async def convert_and_save_details(
     next_entry.updated_at = datetime.utcnow()
     try:
         next_entry.save()
+        print(
+            f"details saved for {next_entry.title} (id: {next_entry.tmdb_id}) (popularity: {next_entry.popularity})"
+        )
     except Exception as e:
+        print(f"error for {next_entry.title} (id: {next_entry.tmdb_id})")
         print(e)
-    print(
-        f"details saved for {next_entry.title} (id: {next_entry.tmdb_id}) (popularity: {next_entry.popularity})"
-    )
+        print(next_entry.release_dates.to_mongo().to_dict())
+        print(details.get("release_dates"))
+        raise e
 
     return converted_details
 
@@ -108,6 +110,19 @@ def convert_movie_details(details: dict) -> dict:
         details["alternative_titles"] = details["alternative_titles"]["titles"]
     if details.get("keywords", None):
         details["keywords"] = details["keywords"]["keywords"]
+    if details.get("release_dates", None):
+        for i, release_dates_result in enumerate(details["release_dates"]["results"]):
+            for j, release_date_result in enumerate(
+                release_dates_result["release_dates"]
+            ):
+                print(release_date_result)
+                release_date = release_date_result.get("release_date")
+                if release_date:
+                    details["release_dates"]["results"][i]["release_dates"][j][
+                        "release_date"
+                    ] = datetime.fromisoformat(
+                        release_date.replace("Z", "+00:00")
+                    ).date()
     return details
 
 
@@ -220,5 +235,6 @@ async def tmdb_fetch_details_from_api():
 def main():
     return asyncio.run(tmdb_fetch_details_from_api())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

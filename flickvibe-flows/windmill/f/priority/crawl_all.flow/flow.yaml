@@ -1,0 +1,81 @@
+summary: Crawl all data sources for prioritized movies and tv shows
+description: Crawl all data sources for prioritized movies and tv shows
+value:
+  modules:
+    - id: g
+      value:
+        type: script
+        input_transforms: {}
+        path: f/priority/next
+    - id: b
+      summary: ''
+      value:
+        type: branchall
+        branches:
+          - summary: IMDB
+            modules:
+              - id: a
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/imdb_web/imdb_crawl_ratings/fetch
+            parallel: true
+            skip_failure: false
+          - summary: Metacritic
+            modules:
+              - id: c
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/metacritic_web/metacritic_crawl_ratings/fetch
+            parallel: true
+            skip_failure: false
+          - summary: Rotten Tomatoes
+            modules:
+              - id: d
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/rotten_web/rotten_tomatoes_crawl_ratings/fetch
+            parallel: true
+            skip_failure: false
+          - summary: TV Tropes
+            modules:
+              - id: e
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/tvtropes_web/tv_tropes_crawl_tags/fetch
+            parallel: true
+            skip_failure: false
+          - summary: TMDB Streaming
+            modules:
+              - id: h
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/tmdb_web/tmdb_crawl_providers/fetch
+            parallel: true
+            skip_failure: false
+        parallel: true
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+ws_error_handler_muted: false
