@@ -36,8 +36,7 @@ export const getDiscoverMovieResults = async (params: DiscoverMovieParams) => {
     name: 'discover-movie',
     target: _getDiscoverResults<DiscoverMovieParams, MovieDetails[]>,
     params,
-    // ttlMinutes: 60 * 2,
-    ttlMinutes: 0,
+    ttlMinutes: 60 * 2,
   })
 }
 
