@@ -6,11 +6,13 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 priority scraping
 important streaming links queue
 important streaming link button
+deal with rate limits (error + retries?)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
 rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
 rotten score not up to date: http://localhost:3003/movie/961268-ballerina?tab=streaming
     wrong link: https://www.rottentomatoes.com/m/ballerina_2023
 fury 2014, wrong rotten link: http://localhost:3003/movie/228150-fury
+my fault, 0 rotten critics score but should be null? http://localhost:3003/movie/1010581-my-fault
 
 trending load more
 discover load more

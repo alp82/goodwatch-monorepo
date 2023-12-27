@@ -52,7 +52,7 @@ def fetch_collections_by_tmdb_id(pg):
     return collections_by_id
 
 
-def copy_movies(pg):
+def copy_movies(pg, query_selector: dict = {}):
     pg_cursor = pg.cursor()
     mongo_db = get_db()
 
@@ -139,7 +139,7 @@ def copy_movies(pg):
 
         tmdb_details_batch = list(
             # mongo_db.tmdb_movie_details.find({"original_title": "The Matrix"})
-            mongo_db.tmdb_movie_details.find()
+            mongo_db.tmdb_movie_details.find(query_selector)
             .skip(start)
             .limit(BATCH_SIZE)
         )

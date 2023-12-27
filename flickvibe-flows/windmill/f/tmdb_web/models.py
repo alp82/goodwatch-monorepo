@@ -1,3 +1,4 @@
+from typing import Optional, Literal
 from mongoengine import (
     DateTimeField,
     StringField,
@@ -7,6 +8,37 @@ from mongoengine import (
     IntField,
     EmbeddedDocumentListField,
 )
+from pydantic import BaseModel
+
+
+# Pydantic Models
+
+
+StreamType = (
+    Literal["flatrate"]
+    | Literal["free"]
+    | Literal["ads"]
+    | Literal["rent"]
+    | Literal["buy"]
+)
+
+
+class StreamingLink(BaseModel):
+    stream_url: Optional[str]
+    stream_type: Optional[StreamType]
+    provider_name: Optional[str]
+    price_dollar: Optional[float]
+    quality: Optional[str]
+
+
+class TmdbStreamingCrawlResult(BaseModel):
+    url: Optional[str]
+    country_code: Optional[str]
+    streaming_links: Optional[list[StreamingLink]]
+    rate_limit_reached: bool
+
+
+# Database Models
 
 
 class StreamingLinkDoc(EmbeddedDocument):
@@ -38,6 +70,9 @@ class BaseTmdbProviders(Document):
         "indexes": [
             "tmdb_id",
             "tmdb_watch_url",
+            "popularity",
+            "selected_at",
+            "updated_at",
         ],
     }
 
@@ -50,5 +85,5 @@ class TmdbTvProviders(BaseTmdbProviders):
     pass
 
 
-if __name__ == "__main__":
+def main():
     pass

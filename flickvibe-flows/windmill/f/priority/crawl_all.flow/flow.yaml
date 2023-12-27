@@ -1,5 +1,5 @@
-summary: Crawl all data sources for prioritized movies and tv shows
-description: Crawl all data sources for prioritized movies and tv shows
+summary: Crawl all data sources for prioritized movies and tv shows and update database
+description: Crawl all data sources for prioritized movies and tv shows and update database
 value:
   modules:
     - id: g
@@ -7,6 +7,14 @@ value:
         type: script
         input_transforms: {}
         path: f/priority/next
+    - id: i
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: results.g
+        path: f/tmdb_api/tmdb_fetch_details_from_api/fetch
     - id: b
       summary: ''
       value:
@@ -14,6 +22,14 @@ value:
         branches:
           - summary: IMDB
             modules:
+              - id: n
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/imdb_web/imdb_init_ratings/update
               - id: a
                 value:
                   type: script
@@ -26,6 +42,14 @@ value:
             skip_failure: false
           - summary: Metacritic
             modules:
+              - id: m
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/metacritic_web/metacritic_init_ratings/update
               - id: c
                 value:
                   type: script
@@ -38,6 +62,14 @@ value:
             skip_failure: false
           - summary: Rotten Tomatoes
             modules:
+              - id: l
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/rotten_web/rotten_tomatoes_init_ratings/update
               - id: d
                 value:
                   type: script
@@ -50,6 +82,14 @@ value:
             skip_failure: false
           - summary: TV Tropes
             modules:
+              - id: k
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/tvtropes_web/tvtropes_init_tags/update
               - id: e
                 value:
                   type: script
@@ -62,6 +102,14 @@ value:
             skip_failure: false
           - summary: TMDB Streaming
             modules:
+              - id: j
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/tmdb_web/tmdb_init_providers/update
               - id: h
                 value:
                   type: script
@@ -70,6 +118,48 @@ value:
                       type: javascript
                       expr: results.g
                   path: f/tmdb_web/tmdb_crawl_providers/fetch
+            parallel: true
+            skip_failure: false
+        parallel: true
+    - id: o
+      summary: ''
+      value:
+        type: branchall
+        branches:
+          - summary: Copy movies
+            modules:
+              - id: p
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/combine_data/copy_movies/update
+            parallel: true
+            skip_failure: false
+          - summary: Copy tv
+            modules:
+              - id: q
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/combine_data/copy_tv/update
+            parallel: true
+            skip_failure: false
+          - summary: Copy streaming links
+            modules:
+              - id: r
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g
+                  path: f/combine_data/copy_streaming_provider_links/update
             parallel: true
             skip_failure: false
         parallel: true

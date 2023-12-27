@@ -27,7 +27,7 @@ def fetch_documents_in_batch(tmdb_ids, collection):
     }
 
 
-def copy_tv(pg):
+def copy_tv(pg, query_selector: dict = {}):
     pg_cursor = pg.cursor()
     mongo_db = get_db()
 
@@ -122,7 +122,7 @@ def copy_tv(pg):
 
         tmdb_details_batch = list(
             # mongo_db.tmdb_tv_details.find({"original_title": "Breaking Bad"})
-            mongo_db.tmdb_tv_details.find()
+            mongo_db.tmdb_tv_details.find(query_selector)
             .skip(start)
             .limit(BATCH_SIZE)
         )

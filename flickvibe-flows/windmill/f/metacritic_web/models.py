@@ -1,3 +1,4 @@
+from typing import Optional
 from mongoengine import (
     DateTimeField,
     StringField,
@@ -6,6 +7,23 @@ from mongoengine import (
     IntField,
     ListField,
 )
+from pydantic import BaseModel
+
+
+# Pydantic models
+
+
+class MetacriticCrawlResult(BaseModel):
+    url: Optional[str]
+    meta_score_original: Optional[float]
+    meta_score_normalized_percent: Optional[float]
+    meta_score_vote_count: Optional[int]
+    user_score_original: Optional[float]
+    user_score_normalized_percent: Optional[float]
+    user_score_vote_count: Optional[int]
+
+
+# Database models
 
 
 class BaseMetacriticRating(Document):
@@ -34,6 +52,9 @@ class BaseMetacriticRating(Document):
         "abstract": True,
         "indexes": [
             "tmdb_id",
+            "popularity",
+            "selected_at",
+            "updated_at",
         ],
     }
 

@@ -53,6 +53,9 @@ class BaseRottenTomatoesRating(Document):
         "abstract": True,
         "indexes": [
             "tmdb_id",
+            "popularity",
+            "selected_at",
+            "updated_at",
         ],
     }
 

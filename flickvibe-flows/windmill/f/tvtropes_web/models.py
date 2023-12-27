@@ -1,3 +1,4 @@
+from typing import Optional
 from mongoengine import (
     DateTimeField,
     StringField,
@@ -8,6 +9,25 @@ from mongoengine import (
     EmbeddedDocument,
     EmbeddedDocumentListField,
 )
+from pydantic import BaseModel
+
+
+# Pydantic Models
+
+
+class Trope(BaseModel):
+    name: str
+    url: str
+    html: str
+
+
+class TvTropesCrawlResult(BaseModel):
+    url: Optional[str]
+    tropes: list[Trope]
+    rate_limit_reached: bool
+
+
+# Database Models
 
 
 class TropeData(EmbeddedDocument):
@@ -37,6 +57,9 @@ class BaseTvTropesTags(Document):
         "abstract": True,
         "indexes": [
             "tmdb_id",
+            "popularity",
+            "selected_at",
+            "updated_at",
         ],
     }
 

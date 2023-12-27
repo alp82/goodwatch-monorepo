@@ -1,5 +1,5 @@
 summary: ''
-description: Retrieve next batch of entries to fetch details from TMDB API
+description: Fetch details from TMDB API
 lock:
   - annotated-types==0.6.0
   - anyio==4.2.0
@@ -19,11 +19,16 @@ lock:
   - typing-extensions==4.9.0
   - urllib3==2.1.0
   - wmill==1.230.0
-concurrency_time_window_s: 0
 is_template: false
 kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
-  required: []
+  properties:
+    next_ids:
+      type: object
+      description: ''
+      default: null
+      properties: {}
+  required:
+    - next_ids

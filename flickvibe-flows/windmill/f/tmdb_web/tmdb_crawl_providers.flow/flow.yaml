@@ -6,8 +6,15 @@ value:
       value:
         type: script
         input_transforms: {}
-        path: f/tmdb_web/tmdb_crawl_providers/main
-      timeout: 300
+        path: f/tmdb_web/tmdb_crawl_providers/next
+    - id: b
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: results.a
+        path: f/tmdb_web/tmdb_crawl_providers/fetch
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

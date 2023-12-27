@@ -20,7 +20,9 @@ def init_postgres_tables(pg):
     pg.commit()
 
 
-def copy_streaming_provider_links(pg, pg_cursor, media_type, mongo_collection):
+def copy_streaming_provider_links(
+    pg_cursor, media_type, mongo_collection, query_selector: dict = {}
+):
     mongo_db = get_db()
 
     # read provider id's and names
@@ -49,7 +51,8 @@ def copy_streaming_provider_links(pg, pg_cursor, media_type, mongo_collection):
     ]
 
     with_streaming_links = {"streaming_links": {"$exists": True, "$ne": []}}
-    count = mongo_db[mongo_collection].count_documents(with_streaming_links)
+    query = with_streaming_links | query_selector
+    count = mongo_db[mongo_collection].count_documents(query)
     print(f"found {count} streaming providers with one or more links to copy")
 
     for i in range(0, count, BATCH_SIZE):
@@ -57,7 +60,7 @@ def copy_streaming_provider_links(pg, pg_cursor, media_type, mongo_collection):
         print(f"processing {i} to {end} streaming provider links")
         providers = (
             mongo_db[mongo_collection]
-            .find(with_streaming_links)
+            .find(query)
             .skip(i)
             .limit(BATCH_SIZE)
         )
@@ -109,11 +112,9 @@ def main():
     pg_cursor.execute(f"TRUNCATE TABLE {table_name}")
 
     total_movie_count = copy_streaming_provider_links(
-        pg, pg_cursor, "movie", "tmdb_movie_providers"
+        pg_cursor, "movie", "tmdb_movie_providers"
     )
-    total_tv_count = copy_streaming_provider_links(
-        pg, pg_cursor, "tv", "tmdb_tv_providers"
-    )
+    total_tv_count = copy_streaming_provider_links(pg_cursor, "tv", "tmdb_tv_providers")
 
     pg.commit()
     pg_cursor.close()

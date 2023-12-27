@@ -6,8 +6,15 @@ value:
       value:
         type: script
         input_transforms: {}
-        path: f/metacritic_web/metacritic_crawl_ratings/main
-      timeout: 300
+        path: f/metacritic_web/metacritic_crawl_ratings/next
+    - id: b
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: results.a
+        path: f/metacritic_web/metacritic_crawl_ratings/fetch
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
