@@ -3,21 +3,28 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-priority scraping
-important streaming links queue
-important streaming link button
 deal with rate limits (error + retries?)
+    rotten tomatoes
+    tmdb_web providers
+do not refetch stale data
+    tv tropes
+
+populate trending score 1-500
+trending yesterday
+trending difference
+
+priority flag
+last_prioritized_at
+
+trending load more
+discover load more
+
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
 rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
 rotten score not up to date: http://localhost:3003/movie/961268-ballerina?tab=streaming
     wrong link: https://www.rottentomatoes.com/m/ballerina_2023
 fury 2014, wrong rotten link: http://localhost:3003/movie/228150-fury
 my fault, 0 rotten critics score but should be null? http://localhost:3003/movie/1010581-my-fault
-
-trending load more
-discover load more
-
-populate trending score
 
 rotten wrong urls:
     https://www.rottentomatoes.com/m/cars_2006
@@ -31,14 +38,17 @@ rotten wrong urls:
  
 identify title duplicates and run scraping again
 
-page transition loader
+report missing ratings
+report missing streaming providers
+report missing info
+extra link for multiple in same year: https://www.rottentomatoes.com/m/nowhere_2023_2
 
 filter inspiration:
     https://www.yidio.com/movies
     https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
 discover age ratings
 discover actors
-discover cast
+discover director
 discover scores
 discover budget & revenue
 disocver keywords and tropes
@@ -47,32 +57,28 @@ localstorage: country and save streaming provider selection
 
 postgres read replica
 
-search page
-
-random full screen: album cover (good roulette)
-
-parallax scrolling landing page
-best rated picks animation
-stagger animation for rating progress bars
-show picks on mobile too
-
 description full text toggle
 score explanations
 streaming explanations
 autocomplete dark style
 
+search page
+
+random full screen: album cover (good roulette)
+
+page transition loader
+parallax scrolling landing page
+best rated picks animation
+stagger animation for rating progress bars
+show picks on mobile too
+
 explore button for media titles (prefilled discover, map feature)
 
 show generic recommendations
 
-android app
-
 decide together: watch party / good swipe / swipe watch
 
-report missing ratings
-report missing streaming providers
-report missing info
-extra link for multiple in same year: https://www.rottentomatoes.com/m/nowhere_2023_2
+android app
 
 data source: existing crawlers use existing url instead of guessing
 data source: allmovie sub-genres, moods, themes, attributes, flags (https://www.allmovie.com/movie/fargo-vm422651)
@@ -95,6 +101,8 @@ issue: videos not available or not a real trailer (ip man: kung fu master, plane
 https://blog.logrocket.com/guide-adding-google-login-react-app/
 https://github.com/MomenSherif/react-oauth
 authentication and user profiles
+
+combined watchlist
 connect accounts
 notification when streaming is available
 alerts for new search results
