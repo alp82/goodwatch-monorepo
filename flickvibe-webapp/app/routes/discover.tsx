@@ -1,33 +1,21 @@
-import React, { ChangeEventHandler, useState } from 'react'
+import React, { useState } from 'react'
 import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData, useNavigate, useNavigation } from '@remix-run/react'
 import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { AnimatePresence, motion } from 'framer-motion'
-import {
-  DiscoverMovieParams,
-  DiscoverMovieSortBy,
-  DiscoverTVParams,
-  getDiscoverMovieResults,
-} from '~/server/discover.server'
-import { Keyword } from '~/server/keywords.server'
-import { Genre } from '~/server/genres.server'
+import { DiscoverMovieParams, DiscoverTVParams, getDiscoverMovieResults } from '~/server/discover.server'
 import { MediaType } from '~/server/search.server'
 import Tabs, { Tab } from '~/ui/Tabs'
 import { MovieDetails, TVDetails } from '~/server/details.server'
 import { MovieCard } from '~/ui/MovieCard'
 import { TvCard } from '~/ui/TvCard'
-import FilterCountries from '~/ui/filter/FilterCountries'
-import FilterStreamingProviders from '~/ui/filter/FilterStreamingProviders'
-import NumberInput from '~/ui/form/NumberInput'
-import FilterGenres from '~/ui/filter/FilterGenres'
-import FilterKeywords from '~/ui/filter/FilterKeywords'
 import FilterSelection from '~/ui/filter/FilterSelection'
 import FilterSummary from '~/ui/filter/FilterSummary'
 import useLocale, { getLocaleFromRequest } from '~/utils/locale'
 
 export function headers() {
   return {
-    "Cache-Control": "s-max-age=60, stale-while-revalidate=3600, stale-if-error=86400",
+    "Cache-Control": "max-age=300, s-max-age=1800, stale-while-revalidate=7200, stale-if-error=86400",
   };
 }
 

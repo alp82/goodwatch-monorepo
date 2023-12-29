@@ -1,6 +1,6 @@
 import React from 'react'
 import type { MetaFunction } from '@remix-run/node'
-import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
+import { json, HeadersFunction, LoaderArgs, LoaderFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData } from '@remix-run/react'
 import { ArrowSmallDownIcon, ArrowUpRightIcon, CubeIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
 import imdbLogo from '~/img/imdb-logo-250.png'
@@ -16,9 +16,9 @@ import { TvCard } from '~/ui/TvCard'
 import { getPopularPicksMovies, getPopularPicksTV } from '~/server/popular-picks.server'
 import { getLocaleFromRequest } from '~/utils/locale'
 
-export function headers() {
+export const headers: HeadersFunction = () => {
   return {
-    "Cache-Control": "s-max-age=60, stale-while-revalidate=3600, stale-if-error=86400",
+    "Cache-Control": "max-age=300, s-max-age=1800, stale-while-revalidate=7200, stale-if-error=86400",
   };
 }
 
