@@ -25,7 +25,7 @@ import { getLocaleFromRequest } from '~/utils/locale'
 
 export function headers() {
   return {
-    "Cache-Control": "max-age=300, s-max-age=1800, stale-while-revalidate=7200, stale-if-error=86400",
+    "Cache-Control": "max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
   };
 }
 

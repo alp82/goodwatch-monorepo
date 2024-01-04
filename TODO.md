@@ -10,14 +10,20 @@ do not refetch stale data
     tv tropes
 
 populate trending score 1-500
+save trending scores per day
 trending yesterday
 trending difference
+
+show countries in which movie is available
+discover: unselect country?
 
 priority flag
 last_prioritized_at
 
 trending load more
 discover load more
+
+fix vercel caching
 
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
 rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
