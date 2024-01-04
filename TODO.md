@@ -3,6 +3,8 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
+invalidate redis caches after update
+
 deal with rate limits (error + retries?)
     rotten tomatoes
     tmdb_web providers
@@ -22,8 +24,6 @@ last_prioritized_at
 
 trending load more
 discover load more
-
-fix vercel caching
 
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
 rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
