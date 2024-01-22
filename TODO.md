@@ -4,13 +4,11 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 # TODO's
 ```
 invalidate redis caches after update
+    https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
 
-deal with rate limits (error + retries?)
-    rotten tomatoes
-    tmdb_web providers
 do not refetch stale data
     tv tropes
-
+    
 populate trending score 1-500
 save trending scores per day
 trending yesterday
@@ -25,6 +23,7 @@ last_prioritized_at
 trending load more
 discover load more
 
+wrong tropes: the little mermaid (tmdb_id = 10144)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
 rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
 rotten score not up to date: http://localhost:3003/movie/961268-ballerina?tab=streaming

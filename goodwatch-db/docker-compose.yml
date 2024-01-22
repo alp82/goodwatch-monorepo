@@ -21,29 +21,6 @@ services:
     volumes:
       - mongodb:/data/db
 
-  postgres:
-    image: postgres:15
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASS}
-      POSTGRES_DB: ${POSTGRES_DB:-flickvibe}
-      PGDATA: /data/postgres
-    volumes:
-      - postgres:/data/postgres
-    ports:
-      - "${POSTGRES_PORT:-6432}:5432"
-    networks:
-      - postgres
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-
   pgadmin:
     image: dpage/pgadmin4:7.1
     environment:
@@ -54,8 +31,6 @@ services:
       - pgadmin:/var/lib/pgadmin
     ports:
       - "${PGADMIN_PORT:-6080}:80"
-    networks:
-      - postgres
     restart: unless-stopped
 
   weaviate:
@@ -83,13 +58,8 @@ services:
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       QUERY_DEFAULTS_LIMIT: 10
 
-networks:
-  postgres:
-    driver: bridge
-
 volumes:
   redis_data:
   mongodb:
-  postgres:
   pgadmin:
   weaviate_data:
