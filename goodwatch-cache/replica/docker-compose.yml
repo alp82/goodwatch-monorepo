@@ -8,8 +8,8 @@ services:
     ports:
       - "6379:6379"
     environment:
-      - 'REDIS_PASSWORD=6Sdfg3bcxs'
       - 'REDIS_NODES=78.46.209.172 168.119.242.21'
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
 
 volumes:
   redis-data:

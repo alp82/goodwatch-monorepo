@@ -8,9 +8,9 @@ services:
     ports:
       - "6379:6379"
     environment:
-      - 'REDIS_PASSWORD=6Sdfg3bcxs'
       - 'REDIS_NODES=78.46.209.172 168.119.242.21'
-      - 'REDISCLI_AUTH=bitnami'
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
+      - 'REDISCLI_AUTH=${REDIS_PASSWORD}'
       - 'REDIS_CLUSTER_REPLICAS=1'
       - 'REDIS_CLUSTER_CREATOR=yes'
 
