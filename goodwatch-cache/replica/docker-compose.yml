@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  redis-replica:
+    image: docker.io/bitnami/redis-cluster:7.2
+    volumes:
+      - redis-data:/bitnami/redis/data
+    environment:
+      - 'REDIS_PASSWORD=6Sdfg3bcxs'
+      - 'REDIS_NODES=78.46.209.172 168.119.242.21'
+
+volumes:
+  redis-data:
+    driver: local
