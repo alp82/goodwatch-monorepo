@@ -5,6 +5,7 @@ services:
     image: docker.io/bitnami/redis-cluster:7.2
     volumes:
       - redis-data:/bitnami/redis/data
+    network_mode: host
     ports:
       - "6379:6379"
       - "16379:16379"
