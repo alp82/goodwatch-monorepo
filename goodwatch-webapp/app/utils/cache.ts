@@ -1,14 +1,24 @@
 import crypto from 'crypto'
 import Redis from 'ioredis'
 
-const redisConfig = {
+const port = parseInt(process.env.REDIS_PORT || '')
+const password = process.env.REDIS_PASS || ''
+const redisConfig = [{
   host: process.env.REDIS_HOST || '',
-  port: parseInt(process.env.REDIS_PORT || ''),
-  password: process.env.REDIS_PASS || '',
-}
+  port,
+  password,
+}, {
+  host: process.env.REDIS_HOST2 || '',
+  port,
+  password,
+}, {
+  host: process.env.REDIS_HOST3 || '',
+  port,
+  password,
+}]
 
 // Create a new Redis client instance
-const redis = new Redis(redisConfig)
+const cluster = new Redis.Cluster(redisConfig)
 
 interface JsonData {
   [key: string]: any
@@ -35,12 +45,12 @@ async function cacheSet<CacheData extends JsonData>(namespace: string, key: stri
     data,
     timestamp,
   })
-  await redis.setex(namespaceKey, ttl || 1, jsonData)
+  await cluster.setex(namespaceKey, ttl || 1, jsonData)
 }
 
 async function cacheGet<CacheData extends JsonData>(namespace: string, key: string): Promise<CacheData | null> {
   const namespaceKey = `${namespace}:${key}`
-  const result = await redis.get(namespaceKey)
+  const result = await cluster.get(namespaceKey)
   return result ? JSON.parse(result) : null
 }
 
