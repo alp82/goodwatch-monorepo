@@ -14,6 +14,10 @@ services:
     environment:
       - 'REDIS_NODES=78.46.209.172 168.119.242.21 91.107.208.205'
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
+    command:
+      - redis-server
+      - --cluster-announce-ip
+      - "${REDIS_HOST_IP}"
 
 volumes:
   redis-data:
