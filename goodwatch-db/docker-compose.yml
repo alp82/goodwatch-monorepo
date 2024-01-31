@@ -1,14 +1,6 @@
 version: '3.9'
 
 services:
-  redis:
-    image: redis:7
-    command: redis-server --requirepass ${REDIS_PASS}
-    ports:
-      - '${REDIS_PORT:-7379}:6379'
-    volumes:
-      - redis_data:/data
-
   mongodb:
     image: mongo:7
     restart: always
@@ -59,7 +51,6 @@ services:
       QUERY_DEFAULTS_LIMIT: 10
 
 volumes:
-  redis_data:
   mongodb:
   pgadmin:
   weaviate_data:
