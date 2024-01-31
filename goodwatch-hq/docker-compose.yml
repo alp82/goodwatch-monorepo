@@ -27,12 +27,13 @@ services:
     image: ${WM_IMAGE}
     pull_policy: always
     deploy:
-      replicas: 1
+      replicas: 2
     restart: unless-stopped
     expose:
       - 8000
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - JOB_RETENTION_SECS=${JOB_RETENTION_SECS}
       - RUST_LOG=info
       ## You can set the number of workers to 1 and not need any separate worker service but not recommended
       - NUM_WORKERS=0
@@ -57,6 +58,9 @@ services:
         limits:
           cpus: "1"
           memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 1024M
     restart: unless-stopped
     environment:
       - DATABASE_URL=${DATABASE_URL}
