@@ -12,7 +12,7 @@ services:
       - "16380:16380"
       - "16381:16381"
     environment:
-      - 'REDIS_NODES=78.46.209.172 168.119.242.21'
+      - 'REDIS_NODES=78.46.209.172 168.119.242.21 91.107.208.205'
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
 
 volumes:
