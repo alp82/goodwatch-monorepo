@@ -1,24 +1,31 @@
 import crypto from 'crypto'
 import Redis from 'ioredis'
+import { ClusterOptions } from 'ioredis/built/cluster/ClusterOptions'
+import { ClusterNode } from 'ioredis/built/cluster'
 
-const port = parseInt(process.env.REDIS_PORT || '')
-const password = process.env.REDIS_PASS || ''
-const redisConfig = [{
+const clusterNodes: ClusterNode[] = [{
   host: process.env.REDIS_HOST || '',
-  port,
-  password,
+  port: parseInt(process.env.REDIS_PORT || ''),
 }, {
   host: process.env.REDIS_HOST2 || '',
-  port,
-  password,
+  port: parseInt(process.env.REDIS_PORT || ''),
 }, {
   host: process.env.REDIS_HOST3 || '',
-  port,
-  password,
+  port: parseInt(process.env.REDIS_PORT || ''),
 }]
+const redisOptions: ClusterOptions = {
+  dnsLookup: (address, callback) => callback(null, address),
+  redisOptions: {
+    password:  process.env.REDIS_PASS || '',
+  }
+}
 
 // Create a new Redis client instance
-const cluster = new Redis.Cluster(redisConfig)
+const cluster = new Redis.Cluster(clusterNodes, redisOptions)
+
+cluster.on('error', (err) => {
+  console.error('Redis Cluster Error:', err);
+});
 
 interface JsonData {
   [key: string]: any
