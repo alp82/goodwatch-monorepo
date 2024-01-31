@@ -18,7 +18,7 @@ services:
       - 'REDIS_CLUSTER_REPLICAS=0'
       - 'REDIS_CLUSTER_CREATOR=yes'
     command:
-      - redis-server
+      - /opt/bitnami/scripts/redis-cluster/run.sh
       - --cluster-announce-ip
       - "${REDIS_HOST_IP}"
 
