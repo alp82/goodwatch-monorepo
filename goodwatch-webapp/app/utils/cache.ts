@@ -15,7 +15,7 @@ const clusterNodes: ClusterNode[] = [{
 }]
 const redisOptions: ClusterOptions = {
   dnsLookup: (address, callback) => callback(null, address),
-  redisOptions: {/
+  redisOptions: {
     password:  process.env.REDIS_PASS || '',
   }
 }
