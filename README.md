@@ -15,10 +15,18 @@ npm install
 npm run dev
 ```
 
-## Databases
+## Database Cluster
 
 https://github.com/vitabaks/postgresql_cluster
 
+
+## Cache Cluster
+
+https://github.com/bitnami/containers/blob/main/bitnami/redis/README.md
+
+```
+redis-cli --cluster create 78.46.209.172:6379 168.119.242.21:6379 91.107.208.205:6379 --cluster-replicas 0 -a <REDIS_PASSWORD>
+```
 
 
 ## Windmill Server & Workers

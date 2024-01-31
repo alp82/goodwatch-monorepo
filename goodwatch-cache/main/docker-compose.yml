@@ -17,6 +17,10 @@ services:
       - 'REDISCLI_AUTH=${REDIS_PASSWORD}'
       - 'REDIS_CLUSTER_REPLICAS=0'
       - 'REDIS_CLUSTER_CREATOR=yes'
+    command:
+      - redis-server
+      - --cluster-announce-ip
+      - "${REDIS_HOST_IP}"
 
 volumes:
   redis-data:
