@@ -67,7 +67,7 @@ export default function MovieDetails() {
   const { tab, details } = useLoaderData()
   const ratings = extractRatings(details)
 
-  const { backdrop_path, cast, certifications, crew, collection, keywords, genres = [], original_title, poster_path, release_year, runtime, streaming_links, synopsis, tagline, title, videos } = details
+  const { backdrop_path, cast, certifications, crew, collection, keywords, genres = [], poster_path, release_year, runtime, streaming_links, synopsis, tagline, title, videos } = details
   const ageRating = (certifications || []).length > 0 ? certifications.find((release: ReleaseDate) => release.certification) : null
 
   const [selectedTab, setSelectedTab] = useState(tab)

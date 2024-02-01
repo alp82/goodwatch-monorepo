@@ -84,6 +84,11 @@ export const cached = async <Params extends Partial<Record<keyof Params, unknown
   if (cachedResult) {
     const { timestamp, data } = cachedResult
     if ((Date.now() - timestamp) < 1000 * 60 * ttlMinutes) {
+      const sizeKB = Math.round(Buffer.byteLength(JSON.stringify(data)) / 1024)
+      const size = sizeKB < 1000 ? `${sizeKB} KB` : `${(sizeKB / 1024).toFixed(2)} MB`
+      if (sizeKB >= 300) {
+        console.warn({ cacheName, cacheKey, size })
+      }
       return data as Return
     }
   }

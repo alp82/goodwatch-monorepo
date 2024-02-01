@@ -6,9 +6,10 @@ import { TVDetails } from '~/server/details.server'
 import { Poster } from '~/ui/Poster'
 import { PrefetchPageLinks } from '@remix-run/react'
 import StreamingOverlay from '~/ui/StreamingOverlay'
+import { DiscoverTV } from '~/server/discover.server'
 
 interface TvCardProps {
-  tv: TVDetails
+  tv: TVDetails | DiscoverTV
   prefetch?: boolean
 }
 

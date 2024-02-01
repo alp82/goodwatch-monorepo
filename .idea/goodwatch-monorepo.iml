@@ -2,8 +2,6 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/flickvibe-data-pipeline" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/flickvibe-data-pipeline/__pypackages__/3.11/lib" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/goodwatch-flows/windmill" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />
       <excludeFolder url="file://$MODULE_DIR$/goodwatch-webapp/.cache" />

@@ -1,7 +1,8 @@
 import { cached } from '~/utils/cache'
-import { VOTE_COUNT_THRESHOLD } from "~/utils/constants";
+import { VOTE_COUNT_THRESHOLD } from '~/utils/constants'
 import { executeQuery } from '~/utils/postgres'
-import { getCountrySpecificDetails, MovieDetails, TVDetails } from '~/server/details.server'
+import { getCountrySpecificDetails, StreamingProviders } from '~/server/details.server'
+import { AllRatings, getRatingKeys } from '~/utils/ratings'
 
 export type DiscoverSortBy =
   'popularity' |
@@ -31,19 +32,33 @@ export interface DiscoverParams<Type, SortBy extends DiscoverSortBy> {
 export type DiscoverMovieParams = DiscoverParams<'movie', DiscoverSortBy>
 export type DiscoverTVParams = DiscoverParams<'tv', DiscoverSortBy>
 
+export interface DiscoverMovie extends AllRatings {
+  tmdb_id: number
+  poster_path: string
+  title: string
+  streaming_providers: StreamingProviders
+}
+
+export interface DiscoverTV extends AllRatings {
+  tmdb_id: number
+  poster_path: string
+  title: string
+  streaming_providers: StreamingProviders
+}
+
 export const getDiscoverMovieResults = async (params: DiscoverMovieParams) => {
-  return await cached<DiscoverMovieParams, MovieDetails[]>({
+  return await cached<DiscoverMovieParams, DiscoverMovie[]>({
     name: 'discover-movie',
-    target: _getDiscoverResults<DiscoverMovieParams, MovieDetails[]>,
+    target: _getDiscoverResults<DiscoverMovieParams, DiscoverMovie[]>,
     params,
     ttlMinutes: 60 * 2,
   })
 }
 
 export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
-  return await cached<DiscoverTVParams, TVDetails[]>({
+  return await cached<DiscoverTVParams, DiscoverTV[]>({
     name: 'discover-tv',
-    target: _getDiscoverResults<DiscoverTVParams, TVDetails[]>,
+    target: _getDiscoverResults<DiscoverTVParams, DiscoverTV[]>,
     params,
     ttlMinutes: 60 * 2,
   })
@@ -51,7 +66,7 @@ export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
 
 async function _getDiscoverResults<
   Params extends DiscoverMovieParams | DiscoverTVParams,
-  Result extends MovieDetails[] | TVDetails[]
+  Result extends DiscoverMovie[] | DiscoverTV[]
 >({
     type,
     country,
@@ -140,7 +155,11 @@ async function _getDiscoverResults<
   // TODO random sort
   const query = `
     SELECT
-      m.*
+      m.tmdb_id,
+      m.title,
+      m.poster_path,
+      m.streaming_providers,
+      ${getRatingKeys().map((key) => `m.${key}`).join(', ')}
     FROM
       ${type === 'movie' ? 'movies' : 'tv'} m
     --TABLESAMPLE BERNOULLI(1)

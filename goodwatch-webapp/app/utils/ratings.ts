@@ -1,4 +1,5 @@
 import { MovieDetails, TVDetails } from '~/server/details.server'
+import { DiscoverMovie, DiscoverTV } from '~/server/discover.server'
 
 export interface AllRatings {
   tmdb_url: string
@@ -15,14 +16,14 @@ export interface AllRatings {
   metacritic_user_score_rating_count: number
   metacritic_meta_score_original: number
   metacritic_meta_score_normalized_percent: number
-  metacritic_meta_score_rating_count: number
+  metacritic_meta_score_review_count: number
   rotten_tomatoes_url: string
   rotten_tomatoes_audience_score_original: number
   rotten_tomatoes_audience_score_normalized_percent: number
   rotten_tomatoes_audience_score_rating_count: number
   rotten_tomatoes_tomato_score_original: number
   rotten_tomatoes_tomato_score_normalized_percent: number
-  rotten_tomatoes_tomato_score_rating_count: number
+  rotten_tomatoes_tomato_score_review_count: number
   aggregated_user_score_normalized_percent: number
   aggregated_user_score_rating_count: number
   aggregated_official_score_normalized_percent: number
@@ -31,7 +32,7 @@ export interface AllRatings {
   aggregated_overall_score_voting_count: number
 }
 
-export const extractRatings = (details: MovieDetails | TVDetails) => {
+export const getRatingKeys = () => {
   const keys: (keyof AllRatings)[] = [
     'tmdb_url',
     'tmdb_user_score_original',
@@ -47,14 +48,14 @@ export const extractRatings = (details: MovieDetails | TVDetails) => {
     'metacritic_user_score_rating_count',
     'metacritic_meta_score_original',
     'metacritic_meta_score_normalized_percent',
-    'metacritic_meta_score_rating_count',
+    'metacritic_meta_score_review_count',
     'rotten_tomatoes_url',
     'rotten_tomatoes_audience_score_original',
     'rotten_tomatoes_audience_score_normalized_percent',
     'rotten_tomatoes_audience_score_rating_count',
     'rotten_tomatoes_tomato_score_original',
     'rotten_tomatoes_tomato_score_normalized_percent',
-    'rotten_tomatoes_tomato_score_rating_count',
+    'rotten_tomatoes_tomato_score_review_count',
     'aggregated_user_score_normalized_percent',
     'aggregated_user_score_rating_count',
     'aggregated_official_score_normalized_percent',
@@ -62,6 +63,11 @@ export const extractRatings = (details: MovieDetails | TVDetails) => {
     'aggregated_overall_score_normalized_percent',
     'aggregated_overall_score_voting_count',
   ]
+  return keys
+}
+
+export const extractRatings = (details: MovieDetails | TVDetails | DiscoverMovie | DiscoverTV) => {
+  const keys = getRatingKeys()
   return keys.reduce((acc, key) => {
     return {
       ...acc,

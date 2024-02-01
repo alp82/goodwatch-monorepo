@@ -1,5 +1,6 @@
 import { cached } from '~/utils/cache'
 import { executeQuery } from '~/utils/postgres'
+import { AllRatings } from '~/utils/ratings'
 
 export interface Collection {
   id:            number
@@ -10,7 +11,7 @@ export interface Collection {
   movie_ids:      number[]
 }
 
-export interface BaseDetails {
+export interface BaseDetails extends AllRatings {
   title_dashed: string
   title_underscored: string
   year: string

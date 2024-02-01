@@ -3,10 +3,15 @@ import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData, useNavigate, useNavigation } from '@remix-run/react'
 import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { AnimatePresence, motion } from 'framer-motion'
-import { DiscoverMovieParams, DiscoverTVParams, getDiscoverMovieResults } from '~/server/discover.server'
+import {
+  DiscoverMovieParams,
+  DiscoverMovie,
+  DiscoverTV,
+  DiscoverTVParams,
+  getDiscoverMovieResults,
+} from '~/server/discover.server'
 import { MediaType } from '~/server/search.server'
 import Tabs, { Tab } from '~/ui/Tabs'
-import { MovieDetails, TVDetails } from '~/server/details.server'
 import { MovieCard } from '~/ui/MovieCard'
 import { TvCard } from '~/ui/TvCard'
 import FilterSelection from '~/ui/filter/FilterSelection'
@@ -28,7 +33,7 @@ export const meta: MetaFunction = () => {
 
 export type LoaderData = {
   params: DiscoverMovieParams | DiscoverTVParams,
-  results: MovieDetails[] | TVDetails[],
+  results: DiscoverMovie[] | DiscoverTV[],
 }
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
@@ -202,7 +207,7 @@ export default function Discover() {
               No results. Try to change your search filters.
             </div>
           )}
-          {results.length > 0 && navigation.state === 'idle' && results.map((result: MovieDetails | TVDetails, index) => {
+          {results.length > 0 && navigation.state === 'idle' && results.map((result: DiscoverMovie | DiscoverTV, index) => {
             return (
               <div key={result.tmdb_id}>
                 <motion.div
@@ -212,8 +217,8 @@ export default function Discover() {
                   exit={{y: `${Math.floor(Math.random()*10) + 5}%`, opacity: 0}}
                   transition={{duration: 0.5, type: 'tween'}}
                 >
-                  {currentParams.type === 'movie' && <MovieCard movie={result as MovieDetails} prefetch={index < 6} />}
-                  {currentParams.type === 'tv' && <TvCard tv={result as TVDetails} prefetch={index < 6} />}
+                  {currentParams.type === 'movie' && <MovieCard movie={result as DiscoverMovie} prefetch={index < 6} />}
+                  {currentParams.type === 'tv' && <TvCard tv={result as DiscoverTV} prefetch={index < 6} />}
                 </motion.div>
               </div>
             )
