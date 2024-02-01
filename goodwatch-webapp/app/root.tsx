@@ -91,8 +91,9 @@ export function ErrorBoundary() {
       <Header />
       <div className="flex-grow mx-auto mt-12 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
         <InfoBox text="Sorry, but an error occurred" />
-        <div className="mt-6 p-3 bg-red-900 overflow-hidden">
+        <div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
           <strong>{error.message}</strong>
+          <button className="m-2 p-2 w-32 text-grey-100 bg-gray-900 hover:bg-gray-800" onClick={() => window.location.reload()}>Try Again</button>
           {error.stack && <pre className="mt-2">
             {JSON.stringify(error.stack, null, 2).replace(/\\n/g, '\n')}
           </pre>}
