@@ -3,6 +3,12 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
+mongo cluster
+
+extra table for streaming providers
+
+add streaming_links to movie/tv tables
+
 rate limiting monitoring
 
 do not refetch stale data
@@ -26,6 +32,8 @@ last_prioritized_at
 
 trending load more
 discover load more
+
+streaming providers precompute
 
 combine scripts only copy diffs to postgres
 

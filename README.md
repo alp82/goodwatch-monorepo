@@ -28,6 +28,18 @@ https://github.com/bitnami/containers/blob/main/bitnami/redis/README.md
 redis-cli --cluster create 78.46.209.172:6379 168.119.242.21:6379 91.107.208.205:6379 --cluster-replicas 0 -a <REDIS_PASSWORD>
 ```
 
+## Data Pipeline DB Cluster
+
+https://medium.com/workleap/the-only-local-mongodb-replica-set-with-docker-compose-guide-youll-ever-need-2f0b74dd8384
+
+
+https://github.com/csuka/ansible_role_mongodb_ubuntu
+
+```
+ansible-galaxy collection install community.mongodb
+ansible-galaxy install csuka.mongodb_ubuntu
+ansible-playbook -i inventory.ini playbook.yml
+```
 
 ## Windmill Server & Workers
 
