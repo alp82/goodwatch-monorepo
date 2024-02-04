@@ -6,8 +6,11 @@ services:
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     ports:
       - 28017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=goodwatch
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
     healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'49.13.133.251:28017',priority:1},{_id:1,host:'138.201.153.137:28017',priority:0.5},{_id:2,host:'128.140.63.101:28017',priority:0.5}]}) }" | mongosh --port 27017 --quiet
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'goodwatch:${MONGO_PASS}@49.13.133.251:28017',priority:1},{_id:1,host:'goodwatch:${MONGO_PASS}@138.201.153.137:28017',priority:0.5},{_id:2,host:'goodwatch:${MONGO_PASS}@128.140.63.101:28017',priority:0.5}]}) }" | mongosh --port 27017 --quiet
       interval: 5s
       timeout: 30s
       start_period: 0s
