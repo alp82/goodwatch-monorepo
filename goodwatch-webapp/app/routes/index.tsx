@@ -124,26 +124,50 @@ export default function Index() {
                 <h1 className="text-4xl font-bold tracking-tight text-gray-100 sm:text-6xl">
                   What do you want to watch next?
                 </h1>
-                <div className="mt-24 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
+                <div className="mt-14 lg:mt-20 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
                   <p className="leading-relaxed">
                     Welcome to GoodWatch. You'll find <span className="accent font-bold">everything</span> you need to know about your next favorite movie or TV show.
                   </p>
+                  <div className="mt-12 flex items-center gap-x-6">
+                    <a
+                      href="/discover"
+                      className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    >
+                      <CubeIcon className="h-5 w-auto" />
+                      Discover
+                    </a>
+                    <a href="#trending" className="flex items-center justify-center gap-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900">
+                      <ArrowSmallDownIcon className="h-5 w-auto" />
+                      What's Trending?
+                    </a>
+                  </div>
+              </div>
+                <div className="mt-24 lg:mt-32 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
+                  <h2 className="text-3xl font-bold tracking-tight text-gray-100 sm:text-4xl">
+                    How it works
+                  </h2>
                   <p className="mt-12 leading-relaxed">
                     Discover great titles on your preferred streaming providers like
                     <span className="mx-3 inline-flex flex-wrap gap-2">
-                      <span><img className="h-5 inline-block" src={netflixLogo} alt="Netflix Logo" title="Netflix Logo" /> ,</span>
-                      <span><img className="h-8 mt-1 inline-block" src={primeLogo} alt="Amazon Prime Logo" title="Amazon Prime Logo" /></span>
+                      <span><img className="h-5 inline-block" src={netflixLogo} alt="Netflix Logo"
+                                 title="Netflix Logo"/> ,</span>
+                      <span><img className="h-8 mt-1 inline-block" src={primeLogo} alt="Amazon Prime Logo"
+                                 title="Amazon Prime Logo"/></span>
                       <span>and</span>
-                      <span><img className="h-10 -mt-3 inline-block" src={disneyLogo} alt="Disney+ Logo" title="Disney+ Logo" /></span>
+                      <span><img className="h-10 -mt-3 inline-block" src={disneyLogo} alt="Disney+ Logo"
+                                 title="Disney+ Logo"/></span>
                     </span>
                   </p>
                   <p className="mt-12 leading-relaxed">
                     See all scores from
                     <span className="mx-3 inline-flex flex-wrap gap-2">
-                      <span><img className="h-5 inline-block" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" /> ,</span>
-                      <span><img className="h-6 inline-block" src={metacriticLogo} alt="Metacritic Logo" title="Metacritic Logo" /></span>
+                      <span><img className="h-5 inline-block" src={imdbLogo} alt="IMDb Logo"
+                                 title="IMDb Logo"/> ,</span>
+                      <span><img className="h-6 inline-block" src={metacriticLogo} alt="Metacritic Logo"
+                                 title="Metacritic Logo"/></span>
                       <span>and</span>
-                      <span><img className="h-5 inline-block" src={rottenLogo} alt="Rotten Tomatoes Logo" title="Rotten Tomatoes Logo" /></span>
+                      <span><img className="h-5 inline-block" src={rottenLogo} alt="Rotten Tomatoes Logo"
+                                 title="Rotten Tomatoes Logo"/></span>
                     </span>
                     combined.
                   </p>
@@ -151,21 +175,9 @@ export default function Index() {
                     It's all here.
                   </p>
                 </div>
-                <div className="mt-10 flex items-center gap-x-6">
-                  <a
-                    href="/discover"
-                    className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                  >
-                    <CubeIcon className="h-5 w-auto" />
-                    Discover
-                  </a>
-                  <a href="#trending" className="flex items-center justify-center gap-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900">
-                    <ArrowSmallDownIcon className="h-5 w-auto" />
-                    What's Trending?
-                  </a>
-                </div>
               </div>
-              <div className="hidden lg:flex mt-14 justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
+              <div
+                className="hidden lg:flex mt-14 justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
                 {/*<div className="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-none xl:pt-80">*/}
                 {/*  <MovieCard movie={bestRatedMovies[0]} />*/}
                 {/*  <MovieCard movie={bestRatedMovies[2]} />*/}
