@@ -3,9 +3,9 @@ version: "3.8"
 services:
   mongo:
     image: mongo:7.0
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--keyFile", "/data/configdb/mongodb-keyfile"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "28017", "--keyFile", "/data/configdb/mongodb-keyfile"]
     ports:
-      - "27017:27017"
+      - "28017:28017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=goodwatch
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
