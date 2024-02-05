@@ -124,11 +124,11 @@ export default function Index() {
                 <h1 className="text-4xl font-bold tracking-tight text-gray-100 sm:text-6xl">
                   What do you want to watch next?
                 </h1>
-                <div className="mt-12 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
-                  <p className="leading-8">
+                <div className="mt-24 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
+                  <p className="leading-relaxed">
                     Welcome to GoodWatch. You'll find <span className="accent font-bold">everything</span> you need to know about your next favorite movie or TV show.
                   </p>
-                  <p className="mt-6 leading-8">
+                  <p className="mt-12 leading-relaxed">
                     Discover great titles on your preferred streaming providers like
                     <span className="mx-3 inline-flex flex-wrap gap-2">
                       <span><img className="h-5 inline-block" src={netflixLogo} alt="Netflix Logo" title="Netflix Logo" /> ,</span>
@@ -137,7 +137,7 @@ export default function Index() {
                       <span><img className="h-10 -mt-3 inline-block" src={disneyLogo} alt="Disney+ Logo" title="Disney+ Logo" /></span>
                     </span>
                   </p>
-                  <p className="mt-6 leading-8">
+                  <p className="mt-12 leading-relaxed">
                     See all scores from
                     <span className="mx-3 inline-flex flex-wrap gap-2">
                       <span><img className="h-5 inline-block" src={imdbLogo} alt="IMDb Logo" title="IMDb Logo" /> ,</span>
@@ -147,7 +147,7 @@ export default function Index() {
                     </span>
                     combined.
                   </p>
-                  <p className="mt-6 leading-8 font-bold">
+                  <p className="mt-12 leading-relaxed font-bold">
                     It's all here.
                   </p>
                 </div>
