@@ -2,22 +2,21 @@ version: "3.8"
 
 services:
   mongo:
-    image: mongo:7.0
-    ports:
-      - "28017:28017"
+    image: mongo:7
+    restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ADMIN_PASS}
       - MONGO_INITDB_DATABASE=goodwatch
+    ports:
+      - "28017:28017"
     volumes:
-      - "mongo_data:/data/db"
-      - "mongo_config:/data/configdb"
-      - "./mongodb-keyfile:/data/configdb/mongodb-keyfile"
-    restart: always
-    command: mongod --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/configdb/mongodb-keyfile
+      - mongodb:/data/db
+      - "./mongodb-keyfile:/data/mongodb-keyfile"
+    command: mongod --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
   mongoinit:
-    image: mongo:7.0
+    image: mongo:7
     restart: "no"
     depends_on:
       - mongo
