@@ -32,6 +32,10 @@ redis-cli --cluster create 78.46.209.172:6379 168.119.242.21:6379 91.107.208.205
 
 https://medium.com/workleap/the-only-local-mongodb-replica-set-with-docker-compose-guide-youll-ever-need-2f0b74dd8384
 
+```
+openssl rand -base64 756 > mongodb-keyfile
+```
+
 
 https://github.com/csuka/ansible_role_mongodb_ubuntu
 
