@@ -15,6 +15,10 @@ services:
       - "./mongodb-keyfile:/data/mongodb-keyfile"
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:28017/goodwatch --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     command: mongod --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
   mongoinit:
