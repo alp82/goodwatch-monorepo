@@ -3,24 +3,50 @@ version: "3.8"
 services:
   mongo:
     image: mongo:7.0
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "28017", "--keyFile", "/data/configdb/mongodb-keyfile"]
     ports:
       - "28017:28017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=goodwatch
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
-    healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'goodwatch:${MONGO_PASS}@49.13.133.251:28017',priority:1},{_id:1,host:'goodwatch:${MONGO_PASS}@138.201.153.137:28017',priority:0.5},{_id:2,host:'goodwatch:${MONGO_PASS}@128.140.63.101:28017',priority:0.5}]}) }" | mongosh --port 28017 --quiet
-      interval: 5s
-      timeout: 30s
-      start_period: 0s
-      start_interval: 1s
-      retries: 30
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ADMIN_PASS}
+      - MONGO_INITDB_DATABASE=goodwatch
     volumes:
       - "mongo_data:/data/db"
       - "mongo_config:/data/configdb"
       - "./mongodb-keyfile:/data/configdb/mongodb-keyfile"
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/configdb/mongodb-keyfile
 
+  mongoinit:
+    image: mongo:7.0
+    restart: "no"
+    depends_on:
+      - mongo
+    command: >
+      mongo --host mongo:28017 --eval 
+      '
+      db = (new Mongo("localhost:28017")).getDB("goodwatch");
+      config = {
+        "_id": "rs0",
+        "members": [
+          {
+            "_id": 0,
+            "host": "49.13.133.251:28017",
+            "priority": 1
+          },
+          {
+            "_id": 1,
+            "host": "138.201.153.137:28017",
+            "priority": 0.5
+          },
+          {
+            "_id": 2,
+            "host": "128.140.63.101:28017",
+            "priority": 0.5
+          }
+        ]
+      };
+      rs.initiate(config);
+      '      
 
 volumes:
   mongo_data:

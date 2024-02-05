@@ -3,16 +3,14 @@ version: "3.8"
 services:
   mongo:
     image: mongo:7.0
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "28017", "--keyFile", "/data/configdb/mongodb-keyfile"]
     ports:
       - "28017:28017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=goodwatch
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
     volumes:
       - "mongo_data:/data/db"
       - "mongo_config:/data/configdb"
       - "./mongodb-keyfile:/data/configdb/mongodb-keyfile"
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/configdb/mongodb-keyfile
 
 volumes:
   mongo_data:
