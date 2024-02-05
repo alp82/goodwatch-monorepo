@@ -14,6 +14,7 @@ services:
       interval: 5s
       timeout: 30s
       start_period: 0s
+      start_interval: 1s
       retries: 30
     volumes:
       - "mongo_data:/data/db"
