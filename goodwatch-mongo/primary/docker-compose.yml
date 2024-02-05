@@ -29,7 +29,7 @@ services:
     command: >
       mongosh --host mongo:28017 --eval 
       '
-      db = (new Mongo("localhost:28017")).getDB("goodwatch");
+      db = (new Mongo("localhost:28017")).getDB("admin");
       config = {
         "_id": "rs0",
         "members": [
@@ -51,6 +51,21 @@ services:
         ]
       };
       rs.initiate(config);
+      
+      // Wait for the replica set to become available
+      while (!db.isMaster().ismaster) {
+        sleep(1000);
+      }
+
+      db = db.getSiblingDB("goodwatch");
+      db.createUser({
+        user: "goodwatch",
+        pwd: "${MONGO_GOODWATCH_PASS}",
+        roles: [
+          { role: "readWrite", db: "goodwatch" },
+          { role: "dbAdmin", db: "goodwatch" }
+        ]
+      });
       '      
 
 volumes:
