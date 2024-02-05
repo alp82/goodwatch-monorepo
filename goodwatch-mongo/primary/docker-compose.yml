@@ -29,7 +29,7 @@ services:
     command: >
       mongosh --host mongo:28017 --eval 
       '
-      db = (new Mongo("localhost:28017")).getDB("admin");
+      db = (new Mongo("mongo:28017")).getDB("admin");
       config = {
         "_id": "rs0",
         "members": [
