@@ -1,9 +1,21 @@
 import { cached } from '~/utils/cache'
-import { getCountrySpecificDetails, MovieDetails, TVDetails } from '~/server/details.server'
+import { getCountrySpecificDetails, MovieDetails, StreamingProviders, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
+import { AllRatings, getRatingKeys } from '~/utils/ratings'
 
-export type PopularPicksMovieResults = MovieDetails[]
-export type PopularPicksTVResults = TVDetails[]
+export interface PopularPicksMovie extends AllRatings {
+  tmdb_id: number
+  poster_path: string
+  title: string
+  streaming_providers: StreamingProviders
+}
+
+export interface PopularPicksTV extends AllRatings {
+  tmdb_id: number
+  poster_path: string
+  title: string
+  streaming_providers: StreamingProviders
+}
 
 export interface PopularPicksMovieParams {
   type: string
@@ -17,7 +29,7 @@ export interface PopularPicksTVParams {
 }
 
 export const getPopularPicksMovies = async (params: PopularPicksMovieParams) => {
-  return await cached<PopularPicksMovieParams, PopularPicksMovieResults>({
+  return await cached<PopularPicksMovieParams, PopularPicksMovie[]>({
     name: 'popular-picks-movie',
     target: _getPopularPicksMovies,
     params,
@@ -25,10 +37,14 @@ export const getPopularPicksMovies = async (params: PopularPicksMovieParams) => 
   })
 }
 
-export async function _getPopularPicksMovies({ country, language }: PopularPicksMovieParams): Promise<PopularPicksMovieResults> {
+export async function _getPopularPicksMovies({ country, language }: PopularPicksMovieParams): Promise<PopularPicksMovie[]> {
   const result = await executeQuery(`
     SELECT
-      *
+      tmdb_id,
+      title,
+      poster_path,
+      streaming_providers,
+      ${getRatingKeys().join(', ')}
     FROM
       movies
     WHERE
@@ -45,7 +61,7 @@ export async function _getPopularPicksMovies({ country, language }: PopularPicks
 }
 
 export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
-  return await cached<PopularPicksTVParams, PopularPicksTVResults>({
+  return await cached<PopularPicksTVParams, PopularPicksTV[]>({
     name: 'popular-picks-tv',
     target: _getPopularPicksTV,
     params,
@@ -53,10 +69,14 @@ export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
   })
 }
 
-export async function _getPopularPicksTV({ country, language }: PopularPicksTVParams): Promise<PopularPicksTVResults> {
+export async function _getPopularPicksTV({ country, language }: PopularPicksTVParams): Promise<PopularPicksTV[]> {
   const result = await executeQuery(`
     SELECT
-      *
+      tmdb_id,
+      title,
+      poster_path,
+      streaming_providers,
+      ${getRatingKeys().join(', ')}
     FROM
       tv
     WHERE

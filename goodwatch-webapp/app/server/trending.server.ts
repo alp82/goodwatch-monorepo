@@ -1,9 +1,21 @@
 import { cached } from '~/utils/cache'
-import { getCountrySpecificDetails, MovieDetails, TVDetails } from '~/server/details.server'
+import { getCountrySpecificDetails, MovieDetails, StreamingProviders, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
+import { AllRatings, getRatingKeys } from '~/utils/ratings'
 
-export type TrendingMovieResults = MovieDetails[]
-export type TrendingTVResults = TVDetails[]
+export interface TrendingMovie extends AllRatings {
+  tmdb_id: number
+  poster_path: string
+  title: string
+  streaming_providers: StreamingProviders
+}
+
+export interface TrendingTV extends AllRatings {
+  tmdb_id: number
+  poster_path: string
+  title: string
+  streaming_providers: StreamingProviders
+}
 
 export interface TrendingMovieParams {
   type: string
@@ -17,7 +29,7 @@ export interface TrendingTVParams {
 }
 
 export const getTrendingMovies = async (params: TrendingMovieParams) => {
-  return await cached<TrendingMovieParams, TrendingMovieResults>({
+  return await cached<TrendingMovieParams, TrendingMovie[]>({
     name: 'trending-movie',
     target: _getTrendingMovies,
     params,
@@ -25,7 +37,7 @@ export const getTrendingMovies = async (params: TrendingMovieParams) => {
   })
 }
 
-export async function _getTrendingMovies({ country, language }: TrendingMovieParams): Promise<TrendingMovieResults> {
+export async function _getTrendingMovies({ country, language }: TrendingMovieParams): Promise<TrendingMovie[]> {
   const trendingResults = await fetch(
     `https://api.themoviedb.org/3/trending/movie/day?api_key=${process.env.TMDB_API_KEY}`
   ).then((res) => res.json())
@@ -33,7 +45,11 @@ export async function _getTrendingMovies({ country, language }: TrendingMoviePar
 
   const result = await executeQuery(`
     SELECT
-      *
+      tmdb_id,
+      title,
+      poster_path,
+      streaming_providers,
+      ${getRatingKeys().join(', ')}
     FROM
       movies
     WHERE
@@ -48,7 +64,7 @@ export async function _getTrendingMovies({ country, language }: TrendingMoviePar
 }
 
 export const getTrendingTV = async (params: TrendingTVParams) => {
-  return await cached<TrendingTVParams, TrendingTVResults>({
+  return await cached<TrendingTVParams, TrendingTV[]>({
     name: 'trending-tv',
     target: _getTrendingTV,
     params,
@@ -56,7 +72,7 @@ export const getTrendingTV = async (params: TrendingTVParams) => {
   })
 }
 
-export async function _getTrendingTV({ country, language }: TrendingTVParams): Promise<TrendingTVResults> {
+export async function _getTrendingTV({ country, language }: TrendingTVParams): Promise<TrendingTV[]> {
   const trendingResults = await fetch(
     `https://api.themoviedb.org/3/trending/tv/day?api_key=${process.env.TMDB_API_KEY}`
   ).then((res) => res.json())
@@ -64,7 +80,11 @@ export async function _getTrendingTV({ country, language }: TrendingTVParams): P
 
   const result = await executeQuery(`
     SELECT
-      *
+      tmdb_id,
+      title,
+      poster_path,
+      streaming_providers,
+      ${getRatingKeys().join(', ')}
     FROM
       tv
     WHERE

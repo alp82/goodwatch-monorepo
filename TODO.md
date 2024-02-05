@@ -16,6 +16,10 @@ do not refetch stale data
     
 smaller payload for db results
 
+share button single click
+trailer button
+start page more organized
+
 populate trending score 1-500
 save trending scores per day
 trending yesterday

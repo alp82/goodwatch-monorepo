@@ -1,18 +1,6 @@
 version: '3.9'
 
 services:
-  mongodb:
-    image: mongo:7
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-root}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASS}
-      MONGO_INITDB_DATABASE: ${MONGODB_DB:-flickvibe}
-    ports:
-      - '${MONGODB_PORT:-29017}:27017'
-    volumes:
-      - mongodb:/data/db
-
   pgadmin:
     image: dpage/pgadmin4:7.1
     environment:
@@ -51,6 +39,5 @@ services:
       QUERY_DEFAULTS_LIMIT: 10
 
 volumes:
-  mongodb:
   pgadmin:
   weaviate_data:

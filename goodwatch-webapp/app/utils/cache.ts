@@ -87,7 +87,7 @@ export const cached = async <Params extends Partial<Record<keyof Params, unknown
       const sizeKB = Math.round(Buffer.byteLength(JSON.stringify(data)) / 1024)
       const size = sizeKB < 1000 ? `${sizeKB} KB` : `${(sizeKB / 1024).toFixed(2)} MB`
       if (sizeKB >= 300) {
-        console.warn({ cacheName, cacheKey, size })
+        console.warn({ cacheName, size, params })
       }
       return data as Return
     }
