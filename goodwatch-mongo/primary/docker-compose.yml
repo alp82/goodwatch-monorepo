@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mongo:
     image: mongo:7.0
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--auth", "--keyFile", "/data/configdb/mongodb-keyfile"]
     ports:
       - 28017:27017
     environment:
@@ -19,6 +19,7 @@ services:
     volumes:
       - "mongo_data:/data/db"
       - "mongo_config:/data/configdb"
+      - "./mongodb-keyfile:/data/configdb/mongodb-keyfile:ro"
 
 
 volumes:
