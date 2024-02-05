@@ -16,5 +16,4 @@ services:
     command: --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
 volumes:
-  mongo_data:
-  mongo_config:
+  mongodb:
