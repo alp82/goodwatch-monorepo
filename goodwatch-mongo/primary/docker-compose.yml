@@ -22,7 +22,7 @@ services:
     depends_on:
       - mongo
     command: >
-      mongo --host mongo:28017 --eval 
+      mongosh --host mongo:28017 --eval 
       '
       db = (new Mongo("localhost:28017")).getDB("goodwatch");
       config = {
