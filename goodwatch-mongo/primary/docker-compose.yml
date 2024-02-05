@@ -52,7 +52,6 @@ services:
       };
       rs.initiate(config);
       
-      // Wait for the replica set to become available
       while (!db.isMaster().ismaster) {
         sleep(1000);
       }
