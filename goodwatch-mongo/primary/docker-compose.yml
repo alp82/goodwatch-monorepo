@@ -19,7 +19,7 @@ services:
     volumes:
       - "mongo_data:/data/db"
       - "mongo_config:/data/configdb"
-      - "./mongodb-keyfile:/data/configdb/mongodb-keyfile:ro"
+      - "./mongodb-keyfile:/data/configdb/mongodb-keyfile"
 
 
 volumes:
