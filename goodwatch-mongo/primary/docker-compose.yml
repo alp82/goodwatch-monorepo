@@ -13,11 +13,13 @@ services:
     volumes:
       - mongodb:/data/db
       - "./mongodb-keyfile:/data/mongodb-keyfile"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:28017/goodwatch --quiet
     command: mongod --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
   mongoinit:
     image: mongo:7
-    restart: "no"
+    restart: no
     depends_on:
       - mongo
     command: >
