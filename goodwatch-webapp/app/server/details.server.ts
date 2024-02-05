@@ -1,6 +1,6 @@
 import { cached } from '~/utils/cache'
 import { executeQuery } from '~/utils/postgres'
-import { AllRatings } from '~/utils/ratings'
+import { AllRatings, getRatingKeys } from '~/utils/ratings'
 
 export interface Collection {
   id:            number
@@ -349,15 +349,34 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
     name: 'details-movie',
     target: _getDetailsForMovie,
     params,
-    ttlMinutes: 10,
+    ttlMinutes: 30,
   })
 }
+
+const movieFields = [
+  'tmdb_id',
+  'backdrop_path',
+  'cast',
+  'certifications',
+  'crew',
+  'collection',
+  'keywords',
+  'genres',
+  'poster_path',
+  'release_year',
+  'runtime',
+  'synopsis',
+  'tagline',
+  'title',
+  'videos',
+  ...getRatingKeys(),
+]
 
 // TODO country & language
 export async function _getDetailsForMovie({ movieId, language, country }: DetailsMovieParams): Promise<MovieDetails> {
   const result = await executeQuery(`
     SELECT
-      m.*,
+      ${movieFields.map((field) => `m.${field}`).join(', ')},
       json_agg(
         json_build_object(
           'provider_id', spl.provider_id,
@@ -401,14 +420,31 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
     name: 'details-tv',
     target: _getDetailsForTV,
     params,
-    ttlMinutes: 10,
+    ttlMinutes: 30,
   })
 }
+
+const tvFields = [
+  'tmdb_id',
+  'backdrop_path',
+  'cast',
+  'certifications',
+  'crew',
+  'keywords',
+  'genres',
+  'poster_path',
+  'release_year',
+  'synopsis',
+  'tagline',
+  'title',
+  'videos',
+  ...getRatingKeys(),
+]
 
 export async function _getDetailsForTV({ tvId, language, country }: DetailsTVParams): Promise<TVDetails> {
   const result = await executeQuery(`
     SELECT
-      t.*,
+      ${tvFields.map((field) => `t.${field}`).join(', ')},
       json_agg(
         json_build_object(
           'provider_id', spl.provider_id,

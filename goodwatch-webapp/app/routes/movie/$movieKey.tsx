@@ -97,7 +97,7 @@ export default function MovieDetails() {
           </div>}
           <Description description={synopsis} />
           <Crew crew={crew} />
-          <Collection collection={collection} movieId={details.id} />
+          <Collection collection={collection} movieId={details.tmdb_id} />
           <Keywords keywords={keywords} type="movie" />
         </>
       )}

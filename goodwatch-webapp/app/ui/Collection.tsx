@@ -33,10 +33,10 @@ export default function Collection({ collection, movieId }: CollectionProps) {
       {collection && <div className="mt-8 mb-4">
         <div className="mb-2 text-lg font-bold">Movies from same collection</div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {movies.filter((movie) => movie.tmdb_id !== movieId).map((movie) => {
+          {movies.map((movie) => {
             const url = `/movie/${movie.tmdb_id}-${titleToDashed(movie.title)}`
             return (
-              <div key={movie.tmdb_id}>
+              <div key={movie.tmdb_id} className={movie.tmdb_id === movieId ? 'opacity-50 pointer-events-none': ''}>
                 <MovieCard movie={movie} prefetch={true} />
               </div>
             )
