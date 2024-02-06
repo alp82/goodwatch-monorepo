@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
   weaviate:
-    image: semitechnologies/weaviate:1.22.2
+    image: semitechnologies/weaviate:1.23.7
     ports:
       - "${WEAVIATE_PORT:-8765}:8080"
       - "${WEAVIATE_GRPC_PORT:-50081}:50051"
