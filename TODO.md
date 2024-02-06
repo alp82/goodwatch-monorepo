@@ -3,19 +3,26 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
+details full width backdrop
+details page more organized
+trailer button
+
+start page more organized
+
 extra table for streaming providers
 
 add streaming_links to movie/tv tables
+
+cast search
+cast links to discovery (add to sidebar)
+keywords less prominent
+keywords in discovery filter sidebar
 
 rate limiting monitoring
 
 do not refetch stale data
     tv tropes
     
-share button single click
-trailer button
-start page more organized
-
 populate trending score 1-500
 save trending scores per day
 trending yesterday
@@ -43,6 +50,7 @@ rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
 rotten score not up to date: http://localhost:3003/movie/961268-ballerina?tab=streaming
     wrong link: https://www.rottentomatoes.com/m/ballerina_2023
 fury 2014, wrong rotten link: http://localhost:3003/movie/228150-fury
+avengers, wrong rotten link: http://localhost:3003/movie/24428-the-avengers
 my fault, 0 rotten critics score but should be null? http://localhost:3003/movie/1010581-my-fault
 
 rotten wrong urls:

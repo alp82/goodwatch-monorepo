@@ -85,11 +85,9 @@ export function ErrorBoundary() {
       <Meta />
       <Links />
     </head>
-    <body>
     <body className="flex flex-col h-screen bg-gray-900">
-      <Analytics />
       <Header />
-      <div className="flex-grow mx-auto mt-12 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+      <main className="relative flex-grow mx-auto mt-12 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
         <InfoBox text="Sorry, but an error occurred" />
         <div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
           <strong>{error.message}</strong>
@@ -98,12 +96,14 @@ export function ErrorBoundary() {
             {JSON.stringify(error.stack, null, 2).replace(/\\n/g, '\n')}
           </pre>}
         </div>
-      </div>
+      </main>
       <Footer />
+      <ToastContainer />
+      <BottomNav />
       <ScrollRestoration />
       <Scripts />
+      <Analytics />
       <LiveReload />
-    </body>
     </body>
     </html>
   );
@@ -121,12 +121,10 @@ export default function App() {
       </head>
       <LocaleContext.Provider value={{locale}}>
         <body className="flex flex-col h-screen bg-gray-900">
-          <Analytics />
           <Header />
-          <ToastContainer />
-          <div className="flex-grow mx-auto mt-2 pb-20 lg:pb-2 px-2 sm:px-6 w-full max-w-7xl lg:px-8 text-neutral-300">
+          <main className="relative flex-grow mx-auto mt-16 pb-20 lg:pb-2 w-full text-neutral-300">
             <AnimatePresence mode="wait">
-              <motion.main
+              <motion.div
                 key={location.pathname}
                 initial={{x: '-2%', opacity: 0}}
                 animate={{x: '0', opacity: 1}}
@@ -134,13 +132,15 @@ export default function App() {
                 transition={{duration: 0.2, type: 'tween'}}
               >
                 <Outlet />
-              </motion.main>
+              </motion.div>
             </AnimatePresence>
-          </div>
+          </main>
           <Footer />
+          <ToastContainer />
           <BottomNav />
           <ScrollRestoration />
           <Scripts />
+          <Analytics />
           <LiveReload />
         </body>
       </LocaleContext.Provider>

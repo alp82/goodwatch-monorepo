@@ -23,7 +23,7 @@ export default function RatingBadges({ ratings }: RatingsProps) {
           <InfoBox text="Ratings are currently calculated..." />
         </div>
       )}
-      <ul className={`underline-offset-2 flex gap-2 sm:gap-6  ${isComplete ? '' : 'opacity-50'}`}>
+      <ul className={`underline-offset-2 flex flex-wrap gap-2 sm:gap-6  ${isComplete ? '' : 'opacity-50'}`}>
         <a className="" href={ratings?.imdb_url} target="_blank">
           <dl className={`${ratings?.imdb_url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-black/[.3] h-full px-1 sm:px-2 bg-imdb shadow overflow-hidden text-center flex items-center gap-1 sm:gap-2`}>
             <img className="block h-4 object-contain" src={imdbLogo} alt="IMDb Logo" />

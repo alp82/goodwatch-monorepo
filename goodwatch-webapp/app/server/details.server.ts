@@ -8,13 +8,16 @@ export interface Collection {
   overview:      string
   poster_path:   string
   backdrop_path: string
-  movie_ids:      number[]
+  movie_ids:     number[]
 }
 
 export interface BaseDetails extends AllRatings {
+  genres: string[]
+  keywords: string[]
+  release_year: string
+  streaming_links: StreamingLink[]
   title_dashed: string
   title_underscored: string
-  year: string
 }
 
 export interface ProviderData {
@@ -76,10 +79,6 @@ export interface ContentRatingResult {
   rating: string
 }
 
-export interface ContentRatings {
-  results: ContentRatingResult[]
-}
-
 export enum Department {
   Acting = "Acting",
   Art = "Art",
@@ -108,20 +107,6 @@ export interface Cast {
   order?:               number
   department?:          Department
   job?:                 string
-}
-
-export interface Credits {
-  cast: Cast[]
-  crew: Cast[]
-}
-
-export interface KeywordResult {
-  name: string
-  id: number
-}
-
-export interface Keywords {
-  results: KeywordResult[]
 }
 
 export interface RecommendationResult {
@@ -158,15 +143,6 @@ export interface ReleaseDate {
   type: number
 }
 
-export interface ReleaseDatesResult {
-  iso_3166_1: string
-  release_dates: ReleaseDate[]
-}
-
-export interface ReleaseDates {
-  results: ReleaseDatesResult[]
-}
-
 export interface VideoResult {
   iso_639_1: string
   iso_3166_1: string
@@ -187,17 +163,19 @@ export interface Videos {
 }
 
 export interface MovieDetails extends BaseDetails {
+  media_type: "movie"
   tmdb_id: number
   adult: boolean
   backdrop_path: string
-  belongs_to_collection?: Collection
   budget: number
-  genres: Genre[]
+  cast: Cast[]
+  certifications?: ReleaseDate[]
+  collection?: Collection
+  crew: Cast[]
   homepage: string
   imdb_id: string
   original_language: string
   original_title: string
-  overview: string
   popularity: number
   poster_path: string
   production_companies: ProductionCompany[]
@@ -207,15 +185,13 @@ export interface MovieDetails extends BaseDetails {
   runtime: number
   spoken_languages: SpokenLanguage[]
   status: string
+  synopsis: string
   tagline: string
   title: string
   video: boolean
   vote_average: number
   vote_count: number
-  credits: Credits
-  keywords: Keywords
   recommendations: Recommendations
-  release_dates: ReleaseDates
   videos: Videos
   streaming_providers: StreamingProviders
 }
@@ -273,13 +249,17 @@ export interface ExternalIds {
 }
 
 export interface TVDetails extends BaseDetails {
+  media_type: "tv"
   tmdb_id: number
   adult: boolean
   backdrop_path: string
+  cast: Cast[]
+  certifications?: ContentRatingResult[]
   created_by: CreatedBy[]
+  crew: Cast[]
   episode_run_time: number[]
+  external_ids: ExternalIds
   first_air_date: string
-  genres: Genre[]
   homepage: string
   in_production: boolean
   languages: string[]
@@ -293,25 +273,21 @@ export interface TVDetails extends BaseDetails {
   origin_country: string[]
   original_language: string
   original_title: string
-  overview: string
   popularity: number
   poster_path: string
   production_companies: ProductionCompany[]
   production_countries: ProductionCountry[]
+  recommendations: Recommendations
   seasons: Season[]
   spoken_languages: SpokenLanguage[]
   streaming_providers: StreamingProviders
   status: string
+  synopsis: string
   tagline: string
   type: string
+  videos: Videos
   vote_average: number
   vote_count: number
-  content_ratings: ContentRatings
-  credits: Credits
-  external_ids: ExternalIds
-  keywords: Keywords
-  recommendations: Recommendations
-  videos: Videos
 }
 
 export interface DetailsMovieParams {
@@ -331,10 +307,13 @@ export const getCountrySpecificDetails = (details: any, country: string, languag
   details.alternative_title = alternative_titles.length ? alternative_titles[0].title : null
   delete details.alternative_titles
 
-  // const certifications = (details.certifications || []).filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
-  // details.certifications = certifications.length ? certifications[0].release_dates : null
-  const certifications = (details.certifications || {})[country.toUpperCase()]
-  details.certifications = certifications || null
+  if (Array.isArray(details.certifications)) {
+    const certifications = (details.certifications || []).filter((certification: Record<string, string>) => certification.iso_3166_1 === country)
+    details.certifications = certifications.length ? certifications[0].release_dates : null
+  } else {
+    const certifications = (details.certifications || {})[country.toUpperCase()]
+    details.certifications = certifications || null
+  }
 
   const streaming_providers = (details.streaming_providers || {})[country.toUpperCase()]
   details.streaming_providers = streaming_providers || null
@@ -411,7 +390,10 @@ export async function _getDetailsForMovie({ movieId, language, country }: Detail
   `);
   if (!result.rows.length) throw Error(`movie with ID "${movieId}" not found`)
 
-  const movie = result.rows[0]
+  const movie = {
+    ...result.rows[0],
+    media_type: 'movie',
+  }
   return getCountrySpecificDetails(movie, country, language)
 }
 
@@ -432,6 +414,8 @@ const tvFields = [
   'crew',
   'keywords',
   'genres',
+  'number_of_episodes',
+  'number_of_seasons',
   'poster_path',
   'release_year',
   'synopsis',
@@ -478,6 +462,10 @@ export async function _getDetailsForTV({ tvId, language, country }: DetailsTVPar
   `);
   if (!result.rows.length) throw Error(`movie with ID "${tvId}" not found`)
 
-  const tv = result.rows[0]
+  const tv = {
+    ...result.rows[0],
+    media_type: 'tv',
+  }
+
   return getCountrySpecificDetails(tv, country, language)
 }

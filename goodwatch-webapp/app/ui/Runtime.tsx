@@ -1,10 +1,14 @@
 import React from 'react'
 
 export interface RuntimeProps {
-  minutes: number
+  minutes?: number
 }
 
 export default function Runtime({ minutes }: RuntimeProps) {
+  if (!minutes) {
+    return null
+  }
+
   const h = Math.floor(minutes / 60)
   const m = isNaN(minutes) ? 0 : minutes % 60
   return (

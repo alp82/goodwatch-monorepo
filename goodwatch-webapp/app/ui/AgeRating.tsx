@@ -2,7 +2,7 @@ import React from 'react'
 import { ContentRatingResult, ReleaseDate } from '~/server/details.server'
 
 export interface AgeRatingProps {
-  ageRating: ReleaseDate & ContentRatingResult
+  ageRating?: ReleaseDate | ContentRatingResult
 }
 
 export default function AgeRating({ ageRating }: AgeRatingProps) {
