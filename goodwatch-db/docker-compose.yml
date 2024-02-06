@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   pgadmin:
-    image: dpage/pgadmin4:7.1
+    image: dpage/pgadmin4:8.2
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
