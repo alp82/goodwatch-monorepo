@@ -178,7 +178,7 @@ export default function Discover() {
   }
 
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
+    <div className="max-w-7xl mx-auto flex flex-col gap-5 sm:gap-6">
       <div>
         <Tabs tabs={discoverTypeTabs} pills={false} onSelect={handleTabSelect} />
         <PrefetchPageLinks key="discover-type" page={constructUrl({

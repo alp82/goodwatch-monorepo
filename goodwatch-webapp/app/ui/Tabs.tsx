@@ -2,9 +2,9 @@ import { JSXElementConstructor } from 'react'
 
 export interface Tab {
   key: string
-  label: string
+  label?: string
   icon?: JSXElementConstructor<any>
-  current: boolean
+  current?: boolean
 }
 
 export interface TabsProps {

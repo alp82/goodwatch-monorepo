@@ -3,10 +3,6 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-details full width backdrop
-details page more organized
-trailer button
-
 start page more organized
 
 extra table for streaming providers

@@ -199,38 +199,40 @@ export default function Index() {
         </div>
       </div>
 
-      <h2 id="trending" className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
-      {trendingMovies.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {trendingMovies.slice(0, numberOfItemsToShow).map((movie: MovieDetails) => (
-            <div key={movie.tmdb_id}>
-              <MovieCard movie={movie} prefetch={true} />
-            </div>
-          ))}
-          <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=movie">
-            <FilmIcon className="w-16 h-16" />
-            <div className="my-2 px-2">
-              <span className="font-bold text-indigo-400">Discover more Movies</span>
-            </div>
-          </a>
-        </div>
-      )}
-      <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
-      {trendingTV.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {trendingTV.slice(0, numberOfItemsToShow).map((tv: TVDetails) => (
-            <div key={tv.tmdb_id}>
-              <TvCard tv={tv} prefetch={true} />
-            </div>
-          ))}
-          <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=tv">
-            <TvIcon className="w-16 h-16" />
-            <div className="my-2 px-2">
-              <span className="font-bold text-indigo-400">Discover more TV Shows</span>
-            </div>
-          </a>
-        </div>
-      )}
+      <div className="max-w-7xl mx-auto">
+        <h2 id="trending" className="mt-12 mb-4 text-3xl font-bold">Trending Movies</h2>
+        {trendingMovies.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {trendingMovies.slice(0, numberOfItemsToShow).map((movie: MovieDetails) => (
+              <div key={movie.tmdb_id}>
+                <MovieCard movie={movie} prefetch={true} />
+              </div>
+            ))}
+            <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=movie">
+              <FilmIcon className="w-16 h-16" />
+              <div className="my-2 px-2">
+                <span className="font-bold text-indigo-400">Discover more Movies</span>
+              </div>
+            </a>
+          </div>
+        )}
+        <h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
+        {trendingTV.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {trendingTV.slice(0, numberOfItemsToShow).map((tv: TVDetails) => (
+              <div key={tv.tmdb_id}>
+                <TvCard tv={tv} prefetch={true} />
+              </div>
+            ))}
+            <a className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900" href="/discover?type=tv">
+              <TvIcon className="w-16 h-16" />
+              <div className="my-2 px-2">
+                <span className="font-bold text-indigo-400">Discover more TV Shows</span>
+              </div>
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

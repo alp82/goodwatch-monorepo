@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
-import { useFetcher, useNavigate } from '@remix-run/react'
+import React, { useState } from 'react'
+import { useNavigate } from '@remix-run/react'
 import { MovieDetails, TVDetails } from '~/server/details.server'
-import Ratings, { RatingsProps } from '~/ui/Ratings'
+import Ratings from '~/ui/Ratings'
 import Streaming from '~/ui/Streaming'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
@@ -20,6 +20,7 @@ import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
 import ShareButton from '~/ui/ShareButton'
 import { Poster } from '~/ui/Poster'
+import TrailerOverlay from '~/ui/TrailerOverlay'
 
 export interface DetailsProps {
   details: MovieDetails | TVDetails
@@ -57,7 +58,12 @@ export default function Details({ details, tab }: DetailsProps) {
   })
   const handleTabSelection = (tab: Tab) => {
     setSelectedTab(tab.key)
-    navigate(`/${media_type}/${details.tmdb_id}-${titleToDashed(title)}?tab=${tab.key}`)
+    navigate(
+      `/${media_type}/${details.tmdb_id}-${titleToDashed(title)}?tab=${tab.key}`,
+      {
+        preventScrollReset: true,
+      }
+      )
   }
 
   // const ratingsSeasonsFetcher = useFetcher()
@@ -133,6 +139,7 @@ export default function Details({ details, tab }: DetailsProps) {
         <div className="relative w-full max-w-7xl">
           <div className="p-3 flex">
             <div className="hidden md:block relative flex-none w-40 lg:w-60">
+              <TrailerOverlay videos={videos || []} handleTabSelection={handleTabSelection} />
               <RatingOverlay ratings={ratings}/>
               <Poster path={poster_path} title={title}/>
             </div>
@@ -163,6 +170,7 @@ export default function Details({ details, tab }: DetailsProps) {
         </div>
         <div className="md:hidden flex gap-4 mt-4 px-2 w-full">
           <div className="relative flex-none w-32">
+            <TrailerOverlay videos={videos || []} handleTabSelection={handleTabSelection} />
             <RatingOverlay ratings={ratings}/>
             <Poster path={poster_path} title={title}/>
           </div>

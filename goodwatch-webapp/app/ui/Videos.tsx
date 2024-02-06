@@ -4,7 +4,7 @@ import YouTube from "react-youtube";
 import {Videos, VideoResult} from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
 
-const allTypes = [
+export const allTypes = [
   'trailers',
   'teasers',
   'clips',
