@@ -18,6 +18,11 @@
         name: docker
         state: present
 
+    - name: Install docker-compose for Python
+      ansible.builtin.pip:
+        name: docker-compose
+        state: present
+
 - name: Stop and upgrade Windmill workers on remote servers
   hosts: servers
   any_errors_fatal: true
