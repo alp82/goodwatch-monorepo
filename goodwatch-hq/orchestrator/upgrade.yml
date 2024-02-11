@@ -8,8 +8,8 @@
         update_cache: yes
       changed_when: false
 
-- name: Stop and upgrade Windmill workers on all hosts
-  hosts: all
+- name: Stop and upgrade Windmill workers on remote servers
+  hosts: servers
   any_errors_fatal: true
   tasks:
     - name: Pull latest git updates
@@ -32,6 +32,30 @@
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
+- name: Stop and upgrade Windmill workers on HQ
+  hosts: local
+  any_errors_fatal: true
+  tasks:
+    - name: Pull latest git updates
+      ansible.builtin.shell: git pull
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
+
+    - name: Stop docker compose
+      ansible.builtin.shell: docker compose down
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
+
+    - name: Pull latest images
+      ansible.builtin.shell: docker compose pull
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
+
+    - name: Rebuild containers
+      ansible.builtin.shell: docker compose build
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
+
 - name: Run Windmill on HQ
   hosts: local
   any_errors_fatal: true
@@ -39,7 +63,7 @@
     - name: Start docker compose
       ansible.builtin.shell: docker compose up -d
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
 
     - name: Wait for windmill service to be ready
       uri:
