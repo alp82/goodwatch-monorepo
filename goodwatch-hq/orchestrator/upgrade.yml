@@ -1,0 +1,40 @@
+---
+- name: Stop and upgrade Windmill workers on remote servers
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Stop, pull and rebuild the latest images
+      community.docker.docker_compose:
+        project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        build: yes
+        pull: yes
+        state: absent
+
+- name: Upgrade Windmill server and workers on local machine (hq)
+  hosts: local
+  become: yes
+  tasks:
+    - name: Stop, pull, rebuild, and run the latest images
+      community.docker.docker_compose:
+        project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        build: yes
+        pull: yes
+        state: present
+
+    - name: Wait for windmill service to be ready
+      uri:
+        url: http://coinmatica.net:9000/api/version
+        status_code: 200
+      register: health_result
+      until: health_result is success
+      retries: 1000
+      delay: 10
+
+- name: Start Windmill workers on remote servers once Windmill App is up and ready
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Run the latest images
+      community.docker.docker_compose:
+        project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        state: present
