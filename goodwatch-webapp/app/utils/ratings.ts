@@ -1,5 +1,5 @@
 import { MovieDetails, TVDetails } from '~/server/details.server'
-import { DiscoverMovie, DiscoverTV } from '~/server/discover.server'
+import { DiscoverResult, DiscoverTV } from '~/server/discover.server'
 
 export interface AllRatings {
   tmdb_url: string
@@ -66,7 +66,7 @@ export const getRatingKeys = () => {
   return keys
 }
 
-export const extractRatings = (details: MovieDetails | TVDetails | DiscoverMovie | DiscoverTV) => {
+export const extractRatings = (details: MovieDetails | TVDetails | DiscoverResult | DiscoverTV) => {
   const keys = getRatingKeys()
   return keys.reduce((acc, key) => {
     return {

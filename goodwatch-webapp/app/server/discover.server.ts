@@ -3,6 +3,7 @@ import { VOTE_COUNT_THRESHOLD } from '~/utils/constants'
 import { executeQuery } from '~/utils/postgres'
 import { getCountrySpecificDetails, StreamingProviders } from '~/server/details.server'
 import { AllRatings, getRatingKeys } from '~/utils/ratings'
+import { StreamingProvider } from '~/server/streaming-providers.server'
 
 export type DiscoverSortBy =
   'popularity' |
@@ -10,8 +11,8 @@ export type DiscoverSortBy =
   'release_date' |
   'title'
 
-export interface DiscoverParams<Type, SortBy extends DiscoverSortBy> {
-  type: Type
+export interface DiscoverParams {
+  type: 'movie' | 'tv'
   mode: 'advanced'
   country: string
   language: string
@@ -27,49 +28,38 @@ export interface DiscoverParams<Type, SortBy extends DiscoverSortBy> {
   withGenres: string
   withoutGenres: string
   withStreamingProviders: string
-  sortBy: SortBy
+  sortBy: DiscoverSortBy
   sortDirection: 'asc' | 'desc'
 }
 
-export type DiscoverMovieParams = DiscoverParams<'movie', DiscoverSortBy>
-export type DiscoverTVParams = DiscoverParams<'tv', DiscoverSortBy>
-
-export interface DiscoverMovie extends AllRatings {
+export interface DiscoverResult extends AllRatings {
   tmdb_id: number
   poster_path: string
   title: string
   streaming_providers: StreamingProviders
 }
 
-export interface DiscoverTV extends AllRatings {
-  tmdb_id: number
-  poster_path: string
-  title: string
-  streaming_providers: StreamingProviders
+export interface DiscoverFilters {
+  castMembers: string[]
+  crewMembers: string[]
+  streamingProviders: StreamingProvider[]
 }
 
-export const getDiscoverMovieResults = async (params: DiscoverMovieParams) => {
-  return await cached<DiscoverMovieParams, DiscoverMovie[]>({
-    name: 'discover-movie',
-    target: _getDiscoverResults<DiscoverMovieParams, DiscoverMovie[]>,
+export interface DiscoverResults {
+  results: DiscoverResult[]
+  filters: DiscoverFilters
+}
+
+export const getDiscoverResults = async (params: DiscoverParams) => {
+  return await cached<DiscoverParams, DiscoverResults>({
+    name: 'discover-results',
+    target: _getDiscoverResults,
     params,
     ttlMinutes: 60 * 2,
   })
 }
 
-export const getDiscoverTVResults = async (params: DiscoverTVParams) => {
-  return await cached<DiscoverTVParams, DiscoverTV[]>({
-    name: 'discover-tv',
-    target: _getDiscoverResults<DiscoverTVParams, DiscoverTV[]>,
-    params,
-    ttlMinutes: 60 * 2,
-  })
-}
-
-async function _getDiscoverResults<
-  Params extends DiscoverMovieParams | DiscoverTVParams,
-  Result extends DiscoverMovie[] | DiscoverTV[]
->({
+async function _getDiscoverResults({
     type,
     country,
     language,
@@ -87,7 +77,7 @@ async function _getDiscoverResults<
     withStreamingProviders,
     sortBy,
     sortDirection,
-  }: Params): Promise<Result> {
+  }: DiscoverParams): Promise<DiscoverResults> {
   const joins = []
   const conditions = []
 
@@ -121,6 +111,14 @@ async function _getDiscoverResults<
   if(minScore) {
     conditions.push(`m.aggregated_overall_score_normalized_percent >= ${getNextPlaceholder()}`)
     placeholderValues.push(minScore)
+  }
+
+  if (withCast) {
+    const castConditions: string[] = []
+    withCast.split(',').forEach((castId) => {
+      castConditions.push(`m.cast @> '[{"id": ${castId}}]'`)
+    })
+    conditions.push(`(${castConditions.join(' OR ')})`)
   }
 
   if(withStreamingProviders) {
@@ -176,5 +174,23 @@ async function _getDiscoverResults<
     LIMIT 20;
   `
   const result = await executeQuery(query, placeholderValues)
-  return result.rows.map((row) => getCountrySpecificDetails(row, country, language)) as Result
+  const results = result.rows.map((row) => getCountrySpecificDetails(row, country, language)) as unknown as DiscoverResult[]
+
+  const castResult = await executeQuery(`SELECT DISTINCT id, name FROM "cast" WHERE id = ANY($1)`, [withCast ? withCast.split(',') : []])
+  const castMembers = castResult.rows.map((row) => row.name) as string[]
+
+  const crewMembers = [] as string[]
+
+  const streamingProviders = [] as StreamingProvider[]
+
+  const filters = {
+    castMembers,
+    crewMembers,
+    streamingProviders,
+  }
+
+  return {
+    results,
+    filters,
+  }
 }

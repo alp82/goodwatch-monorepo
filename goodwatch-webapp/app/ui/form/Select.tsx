@@ -69,7 +69,7 @@ export default function Select<RenderItem extends SelectItem>({
       {({ open }) => (
         <>
           <div className="relative mt-2">
-            <Listbox.Button className="relative w-full cursor-default rounded-md bg-gray-700 py-1.5 pl-3 pr-10 text-left text-gray-100 shadow-sm ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+            <Listbox.Button className="relative w-full rounded-md bg-gray-700 py-1.5 pl-3 pr-10 text-left text-gray-100 shadow-sm ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 cursor-pointer">
               {selectedItems ? (
                 withMultiSelection ? (
                   <div className="flex flex-wrap items-center gap-2">

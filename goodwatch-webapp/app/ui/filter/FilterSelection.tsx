@@ -2,7 +2,7 @@ import React, { ChangeEventHandler, Fragment, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { ArrowLeftIcon } from '@heroicons/react/24/solid'
 import FilterStreamingProviders from '~/ui/filter/FilterStreamingProviders'
-import { DiscoverMovieParams, DiscoverTVParams } from '~/server/discover.server'
+import { DiscoverParams } from '~/server/discover.server'
 import FilterCountries from '~/ui/filter/FilterCountries'
 import FilterGenres from '~/ui/filter/FilterGenres'
 import { Genre } from '~/server/genres.server'
@@ -10,8 +10,8 @@ import NumberInput from '~/ui/form/NumberInput'
 
 interface FilterSelectionParams {
   show: boolean
-  params: DiscoverMovieParams | DiscoverTVParams
-  updateParams: (newParams: DiscoverMovieParams | DiscoverTVParams) => void
+  params: DiscoverParams
+  updateParams: (newParams: DiscoverParams) => void
   onClose: () => void
 }
 

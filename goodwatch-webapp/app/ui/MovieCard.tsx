@@ -6,10 +6,10 @@ import { extractRatings } from '~/utils/ratings'
 import { MovieDetails } from '~/server/details.server'
 import { Poster } from '~/ui/Poster'
 import StreamingOverlay from '~/ui/StreamingOverlay'
-import { DiscoverMovie } from '~/server/discover.server'
+import { DiscoverResult } from '~/server/discover.server'
 
 interface MovieCardProps {
-  movie: MovieDetails | DiscoverMovie
+  movie: MovieDetails | DiscoverResult
   prefetch?: boolean
 }
 

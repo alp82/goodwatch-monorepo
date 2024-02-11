@@ -1,15 +1,16 @@
-import { DiscoverMovieParams, DiscoverTVParams } from '~/server/discover.server'
+import { DiscoverFilters, DiscoverParams } from '~/server/discover.server'
 import { useFetcher } from '@remix-run/react'
 import { StreamingProviderResults } from '~/server/streaming-providers.server'
 import React, { useEffect } from 'react'
 import { TagIcon } from '@heroicons/react/20/solid'
 
 interface FilterSummaryParams {
-  params: DiscoverMovieParams | DiscoverTVParams
+  params: DiscoverParams
+  filters: DiscoverFilters
   onToggle: () => void
 }
 
-export default function FilterSummary({ params, onToggle }: FilterSummaryParams) {
+export default function FilterSummary({ params, filters, onToggle }: FilterSummaryParams) {
   const providersFetcher = useFetcher<{ streamingProviders: StreamingProviderResults }>()
   const { type } = params
   useEffect(() => {
@@ -40,9 +41,12 @@ export default function FilterSummary({ params, onToggle }: FilterSummaryParams)
 
   const genres = (params.withGenres || '').split(',').filter(genre => Boolean(genre))
 
+  const cast = filters.castMembers || []
+
   return (
     <div className="w-full py-2 px-4 flex flex-wrap items-center gap-4 lg:gap-6 text-sm truncate bg-gray-800 border-gray-900 rounded-2xl cursor-pointer hover:brightness-150" onClick={onToggle}>
       <button className="bg-indigo-900 py-1 px-2 rounded text-base font-bold">Show Discover Tools</button>
+
       <div className="flex flex-wrap items-center gap-4 lg:gap-6">
         <div className="flex items-center gap-2 lg:gap-4">
           {enabledStreamingProviders.length > 0 && enabledStreamingProviders.map((provider) => (
@@ -58,6 +62,7 @@ export default function FilterSummary({ params, onToggle }: FilterSummaryParams)
           <span className="sr-only lg:not-sr-only block">{params.country}</span>
         </span>
       </div>
+
       {params.minYear && params.maxYear && (
         <span className="flex items-center gap-2 bg-gray-700 px-2 py-1 rounded">
           {params.minYear === params.maxYear ? <>
@@ -67,6 +72,7 @@ export default function FilterSummary({ params, onToggle }: FilterSummaryParams)
           </>}
         </span>
       )}
+
       {genres.length > 0 && (
         <span className="flex items-center gap-2 bg-gray-700 px-2 py-1 rounded">
           <TagIcon className="h-5 w-5 flex-shrink-0" />
@@ -74,6 +80,16 @@ export default function FilterSummary({ params, onToggle }: FilterSummaryParams)
             <>{genres.length} Genres</>
           ): (
             <>{genres.join(', ')}</>
+          )}
+        </span>
+      )}
+
+      {cast.length > 0 && (
+        <span className="flex items-center gap-2 bg-gray-700 px-2 py-1 rounded">
+          {cast.length > 2 ? (
+            <>{cast.length} cast members</>
+          ): (
+            <>{cast.join(', ')}</>
           )}
         </span>
       )}

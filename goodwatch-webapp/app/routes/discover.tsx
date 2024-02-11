@@ -4,11 +4,11 @@ import { PrefetchPageLinks, useLoaderData, useNavigate, useNavigation } from '@r
 import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  DiscoverMovieParams,
-  DiscoverMovie,
-  DiscoverTV,
-  DiscoverTVParams,
-  getDiscoverMovieResults, DiscoverSortBy,
+  DiscoverParams,
+  DiscoverResult,
+  DiscoverResults,
+  DiscoverSortBy,
+  getDiscoverResults,
 } from '~/server/discover.server'
 import { MediaType } from '~/server/search.server'
 import Tabs, { Tab } from '~/ui/Tabs'
@@ -32,8 +32,8 @@ export const meta: MetaFunction = () => {
 }
 
 export type LoaderData = {
-  params: DiscoverMovieParams | DiscoverTVParams,
-  results: DiscoverMovie[] | DiscoverTV[],
+  params: DiscoverParams,
+  results: DiscoverResults,
 }
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
@@ -80,7 +80,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
     sortDirection,
   }
 
-  const results = await getDiscoverMovieResults(params)
+  const results = await getDiscoverResults(params)
 
   return json<LoaderData>({
     params,
@@ -89,7 +89,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 }
 
 export default function Discover() {
-  const { params, results } = useLoaderData<LoaderData>()
+  const { params, results: { results, filters } } = useLoaderData<LoaderData>()
   const navigate = useNavigate()
   const navigation = useNavigation()
   const { locale } = useLocale();
@@ -143,9 +143,9 @@ export default function Discover() {
     setFiltersOpen((isOpen) => !isOpen)
   }
 
-  const getNonEmptyParams = (newParams: Record<string, string>) => {
+  const getNonEmptyParams = (newParams: DiscoverParams) => {
     return Object.keys(newParams).sort().reduce((result, key) => {
-      const value = newParams[key]
+      const value = newParams[key as keyof DiscoverParams]
       if (!value) return result
       return {
         ...result,
@@ -154,12 +154,12 @@ export default function Discover() {
     }, {}) as LoaderData["params"]
   }
 
-  const constructUrl = (newParams: Record<string, string>) => {
+  const constructUrl = (newParams: DiscoverParams) => {
     const nonEmptyNewParams = getNonEmptyParams(newParams)
-    return `/discover?${new URLSearchParams(nonEmptyNewParams).toString()}`
+    return `/discover?${new URLSearchParams(nonEmptyNewParams as unknown as Record<string, string>).toString()}`
   }
 
-  const updateParams = (newParams: Record<string, string>) => {
+  const updateParams = (newParams: DiscoverParams) => {
     const nonEmptyNewParams = getNonEmptyParams(newParams)
     setCurrentParams(nonEmptyNewParams)
     navigate(constructUrl(newParams))
@@ -168,7 +168,7 @@ export default function Discover() {
   const handleTabSelect = (tab: Tab) => {
     const newParams = {
       ...currentParams,
-      type: tab.key,
+      type: tab.key as DiscoverParams['type'],
     }
     updateParams(newParams)
   }
@@ -176,7 +176,7 @@ export default function Discover() {
   const handleSortBySelect = (tab: Tab) => {
     const newParams = {
       ...currentParams,
-      sortBy: tab.key,
+      sortBy: tab.key as DiscoverParams['sortBy'],
     }
     updateParams(newParams)
   }
@@ -190,14 +190,14 @@ export default function Discover() {
           type: params.type === 'movie' ? 'tv' : 'movie',
         })} />
       </div>
-      <FilterSummary params={currentParams} onToggle={toggleFilters} />
+      <FilterSummary params={currentParams} filters={filters} onToggle={toggleFilters} />
       <FilterSelection show={filtersOpen} params={currentParams} updateParams={updateParams} onClose={() => setFiltersOpen(false)} />
       <div className="mt-2">
         <Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
         {sortByTabs.filter((tab) => !tab.current).map((tab) => (
           <PrefetchPageLinks key={tab.key} page={constructUrl({
             ...currentParams,
-            sortBy: tab.key,
+            sortBy: tab.key as DiscoverParams['sortBy'],
           })} />
         ))}
       </div>
@@ -211,7 +211,7 @@ export default function Discover() {
               No results. Try to change your search filters.
             </div>
           )}
-          {results.length > 0 && navigation.state === 'idle' && results.map((result: DiscoverMovie | DiscoverTV, index) => {
+          {results.length > 0 && navigation.state === 'idle' && results.map((result: DiscoverResult, index) => {
             return (
               <div key={result.tmdb_id}>
                 <motion.div
@@ -221,8 +221,8 @@ export default function Discover() {
                   exit={{y: `${Math.floor(Math.random()*10) + 5}%`, opacity: 0}}
                   transition={{duration: 0.5, type: 'tween'}}
                 >
-                  {currentParams.type === 'movie' && <MovieCard movie={result as DiscoverMovie} prefetch={index < 6} />}
-                  {currentParams.type === 'tv' && <TvCard tv={result as DiscoverTV} prefetch={index < 6} />}
+                  {currentParams.type === 'movie' && <MovieCard movie={result as DiscoverResult} prefetch={index < 6} />}
+                  {currentParams.type === 'tv' && <TvCard tv={result as DiscoverResult} prefetch={index < 6} />}
                 </motion.div>
               </div>
             )
