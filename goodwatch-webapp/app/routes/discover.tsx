@@ -8,7 +8,7 @@ import {
   DiscoverMovie,
   DiscoverTV,
   DiscoverTVParams,
-  getDiscoverMovieResults,
+  getDiscoverMovieResults, DiscoverSortBy,
 } from '~/server/discover.server'
 import { MediaType } from '~/server/search.server'
 import Tabs, { Tab } from '~/ui/Tabs'
@@ -50,12 +50,14 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
   // const maxYear = url.searchParams.get('maxYear') || new Date().getFullYear().toString()
   const maxYear = url.searchParams.get('maxYear') || ''
   const minScore = url.searchParams.get('minScore') || ''
+  const withCast = url.searchParams.get('withCast') || ''
+  const withCrew = url.searchParams.get('withCrew') || ''
   const withKeywords = url.searchParams.get('withKeywords') || ''
   const withoutKeywords = url.searchParams.get('withoutKeywords') || ''
   const withGenres = url.searchParams.get('withGenres') || ''
   const withoutGenres = url.searchParams.get('withoutGenres') || ''
   const withStreamingProviders = url.searchParams.get('withStreamingProviders') || '8,9,337'
-  const sortBy = (url.searchParams.get('sortBy') || 'popularity') as DiscoverMovieSortBy
+  const sortBy = (url.searchParams.get('sortBy') || 'popularity') as DiscoverSortBy
   const sortDirection = (url.searchParams.get('sortDirection') || 'desc') as 'asc' | 'desc'
   const params = {
     type,
@@ -67,6 +69,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
     minYear,
     maxYear,
     minScore,
+    withCast,
+    withCrew,
     withKeywords,
     withoutKeywords,
     withGenres,
@@ -178,7 +182,7 @@ export default function Discover() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto flex flex-col gap-5 sm:gap-6">
+    <div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
       <div>
         <Tabs tabs={discoverTypeTabs} pills={false} onSelect={handleTabSelect} />
         <PrefetchPageLinks key="discover-type" page={constructUrl({

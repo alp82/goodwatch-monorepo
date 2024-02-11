@@ -3,18 +3,21 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-start page more organized
-
-extra table for streaming providers
-
-add streaming_links to movie/tv tables
-
-cast search
 cast links to discovery (add to sidebar)
 keywords less prominent
 keywords in discovery filter sidebar
 
-rate limiting monitoring
+show countries in which movie is available
+discover: unselect country?
+
+streaming providers precompute
+extra table for streaming providers
+
+add streaming_links to movie/tv tables
+
+copy/combine scripts only copy diffs to postgres
+
+rate limit monitoring
 
 do not refetch stale data
     tv tropes
@@ -27,18 +30,14 @@ trending difference
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
 
-show countries in which movie is available
-discover: unselect country?
-
 priority flag
 last_prioritized_at
 
 trending load more
 discover load more
 
-streaming providers precompute
-
-combine scripts only copy diffs to postgres
+search page
+-> cast
 
 wrong tropes: the little mermaid (tmdb_id = 10144)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch

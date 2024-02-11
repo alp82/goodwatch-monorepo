@@ -67,10 +67,10 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
   const createDivider = (title: string) => (
     <div className="relative my-2 sm:my-4">
       <div className="absolute inset-0 flex items-center" aria-hidden="true">
-        <div className="w-full border-t border-gray-500" />
+        <div className="w-full border-t border-slate-500" />
       </div>
       <div className="relative flex justify-center">
-        <span className="bg-indigo-950 px-2 text-sm text-gray-200 uppercase">{title}</span>
+        <span className="bg-slate-950 px-2 text-sm text-slate-200 uppercase">{title}</span>
       </div>
     </div>
   )
@@ -93,10 +93,10 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                 leaveTo="-translate-x-full"
               >
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-2xl">
-                  <form className="flex flex-col h-full bg-indigo-950 shadow-xl">
+                  <form className="flex flex-col h-full bg-slate-900 shadow-xl">
                     <div className="flex-1 text-gray-100">
                       {/* Header */}
-                      <div className="bg-indigo-900 px-4 py-6 sm:px-6">
+                      <div className="mt-16 px-4 py-6 sm:px-6 bg-slate-950">
                         <div className="flex items-start justify-between space-x-3">
                           <div className="space-y-1">
                             <Dialog.Title className="text-base font-semibold leading-6">
@@ -232,13 +232,11 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                         {/*    <FilterKeywords withKeywords={params.withKeywords} withoutKeywords={params.withoutKeywords} onChange={handleKeywordsChange} />*/}
                         {/*  </div>*/}
                         {/*</div>*/}
-
-
                       </div>
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex-shrink-0 bg-indigo-900 px-4 py-5 sm:px-6">
+                    <div className="flex-shrink-0 bg-slate-950 px-4 py-5 sm:px-6">
                       <div className="flex justify-end space-x-3">
                         <button
                           type="button"

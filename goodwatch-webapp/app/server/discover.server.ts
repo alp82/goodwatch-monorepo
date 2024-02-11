@@ -20,6 +20,8 @@ export interface DiscoverParams<Type, SortBy extends DiscoverSortBy> {
   minYear: string
   maxYear: string
   minScore: string
+  withCast: string
+  withCrew: string
   withKeywords: string
   withoutKeywords: string
   withGenres: string
@@ -76,6 +78,8 @@ async function _getDiscoverResults<
     minYear,
     maxYear,
     minScore,
+    withCast,
+    withCrew,
     withKeywords,
     withoutKeywords,
     withGenres,
