@@ -27,6 +27,11 @@
   hosts: servers
   any_errors_fatal: true
   tasks:
+    - name: Pull latest updates from Git repository
+      ansible.builtin.shell: git pull
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+
     - name: Stop, pull and rebuild the latest images
       community.docker.docker_compose:
         project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
@@ -38,6 +43,11 @@
   hosts: local
   any_errors_fatal: true
   tasks:
+    - name: Pull latest updates from Git repository
+      ansible.builtin.shell: git pull
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+
     - name: Stop, pull, rebuild, and run the latest images
       community.docker.docker_compose:
         project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
