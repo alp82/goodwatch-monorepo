@@ -1,7 +1,18 @@
 ---
-- name: Install Docker SDK for Python on all targets
+- name: Install Docker SDK for Python on all hosts
   hosts: all
+  any_errors_fatal: true
   tasks:
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Install pip
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+
     - name: Install Docker SDK for Python
       ansible.builtin.pip:
         name: docker
