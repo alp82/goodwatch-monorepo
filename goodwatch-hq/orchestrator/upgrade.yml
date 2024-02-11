@@ -8,52 +8,38 @@
         update_cache: yes
       changed_when: false
 
-    - name: Install pip
-      ansible.builtin.apt:
-        name: python3-pip
-        state: present
-
-    - name: Install Docker SDK for Python
-      ansible.builtin.pip:
-        name: docker
-        state: present
-
-    - name: Install docker-compose for Python
-      ansible.builtin.pip:
-        name: docker-compose
-        state: present
-
-- name: Stop and upgrade Windmill workers on remote servers
-  hosts: servers
+- name: Stop and upgrade Windmill workers on all hosts
+  hosts: all
   any_errors_fatal: true
   tasks:
-    - name: Pull latest updates from Git repository
+    - name: Pull latest git updates
       ansible.builtin.shell: git pull
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
-    - name: Stop, pull and rebuild the latest images
-      community.docker.docker_compose:
-        project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
-        build: yes
-        pull: yes
-        state: absent
+    - name: Stop docker compose
+      ansible.builtin.shell: docker compose down
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
-- name: Upgrade Windmill server and workers on local machine (hq)
+    - name: Pull latest images
+      ansible.builtin.shell: docker compose pull
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+
+    - name: Rebuild containers
+      ansible.builtin.shell: docker compose build
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+
+- name: Run Windmill on HQ
   hosts: local
   any_errors_fatal: true
   tasks:
-    - name: Pull latest updates from Git repository
-      ansible.builtin.shell: git pull
+    - name: Start docker compose
+      ansible.builtin.shell: docker compose up -d
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
-
-    - name: Stop, pull, rebuild, and run the latest images
-      community.docker.docker_compose:
-        project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
-        build: yes
-        pull: yes
-        state: present
 
     - name: Wait for windmill service to be ready
       uri:
@@ -68,7 +54,7 @@
   hosts: servers
   any_errors_fatal: true
   tasks:
-    - name: Run the latest images
-      community.docker.docker_compose:
-        project_src: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
-        state: present
+    - name: Start docker compose
+      ansible.builtin.shell: docker compose up -d
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
