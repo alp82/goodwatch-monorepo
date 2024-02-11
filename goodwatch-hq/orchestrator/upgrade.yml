@@ -20,6 +20,7 @@
 
 - name: Stop and upgrade Windmill workers on remote servers
   hosts: servers
+  any_errors_fatal: true
   tasks:
     - name: Stop, pull and rebuild the latest images
       community.docker.docker_compose:
@@ -30,6 +31,7 @@
 
 - name: Upgrade Windmill server and workers on local machine (hq)
   hosts: local
+  any_errors_fatal: true
   tasks:
     - name: Stop, pull, rebuild, and run the latest images
       community.docker.docker_compose:
@@ -49,6 +51,7 @@
 
 - name: Start Windmill workers on remote servers once Windmill App is up and ready
   hosts: servers
+  any_errors_fatal: true
   tasks:
     - name: Run the latest images
       community.docker.docker_compose:
