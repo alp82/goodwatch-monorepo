@@ -8,5 +8,4 @@ upgrade:
 .PHONY: upgrade-all
 upgrade-all:
 	@echo "Upgrading to latest windmill version on all hosts..."
-	cd orchestrator
-	ansible-playbook -i hosts.ini upgrade.yml
+	cd orchestrator && ansible-playbook -i hosts.ini upgrade.yml
