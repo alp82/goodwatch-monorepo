@@ -6,6 +6,7 @@ from mongoengine import (
     EmbeddedDocument,
     FloatField,
     IntField,
+    BooleanField,
     EmbeddedDocumentListField,
 )
 from pydantic import BaseModel
@@ -60,6 +61,7 @@ class BaseTmdbProviders(Document):
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
+    is_selected = BooleanField(default=False)
 
     country_code = StringField()
     streaming_links = EmbeddedDocumentListField(StreamingLinkDoc)
@@ -73,6 +75,7 @@ class BaseTmdbProviders(Document):
             "popularity",
             "selected_at",
             "updated_at",
+            "is_selected",
         ],
     }
 

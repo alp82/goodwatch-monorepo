@@ -17,10 +17,8 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
     for next_entry in next_entries:
         print(f"copying {next_entry.title} ({next_entry.tmdb_id}) streaming data")
         tmdb_watch_results = next_entry.watch_providers.results
-        tmdb_watch_url = next(
-            (v["link"] for v in tmdb_watch_results.values() if "link" in v), None
-        )
-        if tmdb_watch_url:
+        tmdb_watch_urls = [v["link"] for v in tmdb_watch_results.values() if "link" in v]
+        for tmdb_watch_url in tmdb_watch_urls:
             operation = build_operation(
                 {
                     "tmdb_id": next_entry.tmdb_id,

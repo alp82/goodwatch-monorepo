@@ -1,5 +1,12 @@
 from typing import Optional
-from mongoengine import DateTimeField, StringField, Document, FloatField, IntField
+from mongoengine import (
+    DateTimeField,
+    StringField,
+    Document,
+    FloatField,
+    IntField,
+    BooleanField,
+)
 from pydantic import BaseModel
 
 
@@ -11,6 +18,7 @@ class ImdbCrawlResult(BaseModel):
     user_score_original: Optional[float]
     user_score_normalized_percent: Optional[float]
     user_score_vote_count: Optional[int]
+    rate_limit_reached: bool
 
 
 # Database models
@@ -27,6 +35,7 @@ class BaseImdbRating(Document):
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
+    is_selected = BooleanField(default=False)
 
     user_score_original = FloatField()
     user_score_normalized_percent = FloatField()
@@ -39,6 +48,7 @@ class BaseImdbRating(Document):
             "popularity",
             "selected_at",
             "updated_at",
+            "is_selected",
         ],
     }
 

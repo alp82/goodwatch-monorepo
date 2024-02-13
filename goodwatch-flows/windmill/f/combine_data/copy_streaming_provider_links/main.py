@@ -7,7 +7,7 @@ from f.db.mongodb import init_mongodb
 from f.db.postgres import init_postgres, generate_insert_query
 
 
-BATCH_SIZE = 50000
+BATCH_SIZE = 5000
 
 
 def init_postgres_tables(pg):
@@ -51,18 +51,20 @@ def copy_streaming_provider_links(
     ]
 
     with_streaming_links = {"streaming_links": {"$exists": True, "$ne": []}}
-    query = with_streaming_links | query_selector
-    count = mongo_db[mongo_collection].count_documents(query)
-    print(f"found {count} streaming providers with one or more links to copy")
+    query_filter = with_streaming_links | query_selector
+    count = mongo_db[mongo_collection].count_documents(query_filter)
+
+    if count:
+        print(f"found {count} streaming links to copy")
+    else:
+        print(f"no streaming links found")
+        print(f"query: {query_filter}")
 
     for i in range(0, count, BATCH_SIZE):
         end = min(count, i + BATCH_SIZE)
         print(f"processing {i} to {end} streaming provider links")
         providers = (
-            mongo_db[mongo_collection]
-            .find(query)
-            .skip(i)
-            .limit(BATCH_SIZE)
+            mongo_db[mongo_collection].find(query_filter).skip(i).limit(BATCH_SIZE)
         )
         now = datetime.utcnow()
 
@@ -96,8 +98,8 @@ def copy_streaming_provider_links(
                     # print(f"provider with name '{provider_name}' not found!")
                     pass
 
-        query = generate_insert_query(table_name, columns)
-        execute_values(pg_cursor, query, batch_data)
+        insert_query = generate_insert_query(table_name, columns)
+        execute_values(pg_cursor, insert_query, batch_data)
 
     return count
 

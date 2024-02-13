@@ -1,7 +1,14 @@
 from datetime import datetime, timedelta
+from typing import Union, Literal
 
 from mongoengine import Document, Q
 from pydantic import BaseModel
+
+
+class IdParameter(BaseModel):
+    id: str
+    tmdb_id: int
+    type: Union[Literal["movie"], Literal["tv"]]
 
 
 class IdsParameter(BaseModel):
@@ -41,8 +48,8 @@ def get_ids_for_documents(
     tv_entries = [
         next_entry for next_entry in next_entries if isinstance(next_entry, tv_model)
     ]
-    movie_ids = [movie.tmdb_id for movie in movie_entries]
-    tv_ids = [tv.tmdb_id for tv in tv_entries]
+    movie_ids = list({movie.tmdb_id for movie in movie_entries})
+    tv_ids = list({tv.tmdb_id for tv in tv_entries})
     return IdsParameter(
         movie_ids=movie_ids,
         tv_ids=tv_ids,
@@ -67,6 +74,18 @@ def get_documents_for_ids(
     return movie_results + tv_results
 
 
+def get_document_for_id(
+    next_id: dict, movie_model: Document, tv_model: Document
+) -> list[Document]:
+    id_param = IdParameter(
+        id=next_id.get("id"),
+        tmdb_id=next_id.get("tmdb_id"),
+        type=next_id.get("type"),
+    )
+    model = movie_model if id_param.type == "movie" else tv_model
+    return model.objects.get(id=id_param.id)
+
+
 # helper methods to fetch next entries in queue
 
 
@@ -80,13 +99,9 @@ def completeness_queue(
     movies_no_fetch = list(
         movie_model.objects(
             Q(selected_at=None)
-            | Q(
-                __raw__={
-                    "$and": [
-                        {"$expr": {"$gt": ["$selected_at", "$updated_at"]}},
-                        {"selected_at": {"$lt": buffer_time_for_selected_entries}},
-                    ]
-                }
+            | (
+                Q(is_selected=True)
+                & Q(selected_at__lt=buffer_time_for_selected_entries)
             )
         )
         .order_by("-popularity")
@@ -95,13 +110,9 @@ def completeness_queue(
     tvs_no_fetch = list(
         tv_model.objects(
             Q(selected_at=None)
-            | Q(
-                __raw__={
-                    "$and": [
-                        {"$expr": {"$gt": ["$selected_at", "$updated_at"]}},
-                        {"selected_at": {"$lt": buffer_time_for_selected_entries}},
-                    ]
-                }
+            | (
+                Q(is_selected=True)
+                & Q(selected_at__lt=buffer_time_for_selected_entries)
             )
         )
         .order_by("-popularity")
@@ -153,7 +164,7 @@ def priority_queue(
 def update_selected_for_next_entries(
     movie_model: Document, tv_model: Document, next_entries: list[Document]
 ):
-    # Update "selected_at" field to reserve these for this worker
+    # Update "selected_at" and "is_selected" fields to reserve these for this worker
     movie_ids_to_update = [
         entry.id for entry in next_entries if isinstance(entry, movie_model)
     ]
@@ -163,10 +174,14 @@ def update_selected_for_next_entries(
 
     if movie_ids_to_update:
         movie_model.objects(id__in=movie_ids_to_update).update(
-            selected_at=datetime.utcnow()
+            selected_at=datetime.utcnow(),
+            is_selected=True,
         )
     if tv_ids_to_update:
-        tv_model.objects(id__in=tv_ids_to_update).update(selected_at=datetime.utcnow())
+        tv_model.objects(id__in=tv_ids_to_update).update(
+            selected_at=datetime.utcnow(),
+            is_selected=True,
+        )
 
 
 def prepare_next_entries(

@@ -6,6 +6,7 @@ from mongoengine import (
     FloatField,
     IntField,
     ListField,
+    BooleanField,
     EmbeddedDocument,
     EmbeddedDocumentListField,
 )
@@ -46,6 +47,7 @@ class BaseTvTropesTags(Document):
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
+    is_selected = BooleanField(default=False)
 
     title_variations = ListField(StringField())
     release_year = IntField()
@@ -60,6 +62,7 @@ class BaseTvTropesTags(Document):
             "popularity",
             "selected_at",
             "updated_at",
+            "is_selected",
         ],
     }
 

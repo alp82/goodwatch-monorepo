@@ -7,7 +7,7 @@ from datetime import datetime
 from playwright.async_api import async_playwright, BrowserContext
 from typing import Union
 
-from f.data_source.common import get_documents_for_ids
+from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb
 from f.tvtropes_web.models import (
     TvTropesCrawlResult,
@@ -257,67 +257,46 @@ def store_result(
         next_entry.updated_at = datetime.utcnow()
         print(f"saving {len(result.tropes or [])} tags for {next_entry.original_title}")
 
+    next_entry.is_selected = False
     next_entry.save()
 
 
-async def tvtropes_crawl_tags(
-    next_entries: list[Union[TvTropesMovieTags, TvTropesTvTags]]
-):
+async def tvtropes_crawl_tags(next_entry: Union[TvTropesMovieTags, TvTropesTvTags]):
     print("Fetch semantic tags from TV Tropes pages")
 
-    if not next_entries:
+    if not next_entry:
         print(f"warning: no entries to fetch in TV Tropes tags")
         return
 
-    for next_entry in next_entries:
-        print(
-            f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity})"
-        )
+    print(
+        f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity})"
+    )
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         context = await browser.new_context()
         context.set_default_timeout(BROWSER_TIMEOUT)
-        list_of_crawl_results = await asyncio.gather(
-            *[crawl_data(next_entry, context) for next_entry in next_entries]
-        )
+        (crawl_result, _) = await crawl_data(next_entry, context)
         await context.close()
 
+    if crawl_result.rate_limit_reached:
+        raise Exception(
+            f"Rate limit reached for {next_entry.original_title}, retrying."
+        )
+
     return {
-        "count_new_tropes": len(next_entries),
-        "entries": [
-            {
-                "tmdb_id": next_entry.tmdb_id,
-                "original_title": next_entry.original_title,
-                "popularity": next_entry.popularity,
-                "trope_count": len(crawl_result.tropes) if crawl_result else None,
-            }
-            for crawl_result, next_entry in list_of_crawl_results
-        ],
+        "tmdb_id": next_entry.tmdb_id,
+        "original_title": next_entry.original_title,
+        "popularity": next_entry.popularity,
+        "trope_count": len(crawl_result.tropes) if crawl_result else None,
     }
 
 
-def main(next_ids: dict):
+def main(next_id: dict):
     init_mongodb()
-    next_entries = get_documents_for_ids(
-        next_ids=next_ids,
+    next_entry = get_document_for_id(
+        next_id=next_id,
         movie_model=TvTropesMovieTags,
         tv_model=TvTropesTvTags,
     )
-    return asyncio.run(tvtropes_crawl_tags(next_entries))
-
-
-async def debug():
-    init_mongodb()
-    next_entry = TvTropesMovieTags.objects.get(tmdb_id=680)
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        context = await browser.new_context()
-        context.set_default_timeout(BROWSER_TIMEOUT)
-        result = await crawl_data(next_entry, context)
-        await browser.close()
-
-
-if __name__ == "__main__":
-    # r = main()
-    asyncio.run(debug())
+    return asyncio.run(tvtropes_crawl_tags(next_entry))

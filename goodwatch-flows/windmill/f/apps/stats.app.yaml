@@ -121,8 +121,6 @@ value:
   unusedInlineScripts: []
 policy:
   execution_mode: publisher
-  on_behalf_of: u/Alp
-  on_behalf_of_email: alportac@gmail.com
   triggerables:
     'a:script/f/scripts/counts': {}
     'c:script/f/scripts/counts': {}

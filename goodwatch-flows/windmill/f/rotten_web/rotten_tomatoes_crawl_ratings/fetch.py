@@ -7,7 +7,7 @@ from playwright.async_api import async_playwright, BrowserContext
 import re
 from typing import Union
 
-from f.data_source.common import get_documents_for_ids
+from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb
 from f.rotten_web.models import (
     RottenTomatoesCrawlResult,
@@ -69,7 +69,9 @@ async def crawl_rotten_tomatoes_page(
             for i in range(2)
         ]
         if next_entry.release_year
-        and is_ambiguous_title(next_entry.original_title, type)
+        # TODO oppenheimer has 2023 without ambigiouty
+        #      maybe because from some point on, all movies get the year suffix?
+        # and is_ambiguous_title(next_entry.original_title, type)
         else next_entry.title_variations
     )
     all_urls = [f"{base_url}/{title}" for title in all_variations]
@@ -222,68 +224,48 @@ def store_result(
             f"saving rating for {next_entry.original_title}: {result.tomato_score_original} ({result.tomato_score_vote_count}) / {result.audience_score_original} ({result.audience_score_vote_count})"
         )
 
+    next_entry.is_selected = False
     next_entry.save()
 
 
 async def rotten_tomatoes_crawl_ratings(
-    next_entries: list[Union[RottenTomatoesMovieRating, RottenTomatoesTvRating]]
+    next_entry: Union[RottenTomatoesMovieRating, RottenTomatoesTvRating],
 ):
-    print("Fetch ratings from Rotten Tomatoes pages")
-    #init_mongodb()
+    print("Fetch rating from Rotten Tomatoes page")
 
-    if not next_entries:
+    if not next_entry:
         print(f"warning: no entries to fetch in Rotten Tomatoes ratings")
         return
 
-    for next_entry in next_entries:
-        print(
-            f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity})"
-        )
+    print(
+        f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity})"
+    )
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         context = await browser.new_context()
         context.set_default_timeout(BROWSER_TIMEOUT)
-        list_of_crawl_results = await asyncio.gather(
-            *[crawl_data(next_entry, context) for next_entry in next_entries]
-        )
+        (crawl_result, _) = await crawl_data(next_entry, context)
         await browser.close()
 
+    if crawl_result.rate_limit_reached:
+        raise Exception(
+            f"Rate limit reached for {next_entry.original_title}, retrying."
+        )
+
     return {
-        "count_new_ratings": len(next_entries),
-        "entries": [
-            {
-                "tmdb_id": next_entry.tmdb_id,
-                "original_title": next_entry.original_title,
-                "popularity": next_entry.popularity,
-                "ratings": crawl_result.model_dump() if crawl_result else None,
-            }
-            for crawl_result, next_entry in list_of_crawl_results
-        ],
+        "tmdb_id": next_entry.tmdb_id,
+        "original_title": next_entry.original_title,
+        "popularity": next_entry.popularity,
+        "ratings": crawl_result.model_dump() if crawl_result else None,
     }
 
 
-def main(next_ids: dict):
+def main(next_id: dict):
     init_mongodb()
-    next_entries = get_documents_for_ids(
-        next_ids=next_ids,
+    next_entry = get_document_for_id(
+        next_id=next_id,
         movie_model=RottenTomatoesMovieRating,
         tv_model=RottenTomatoesTvRating,
     )
-    return asyncio.run(rotten_tomatoes_crawl_ratings(next_entries))
-
-
-async def debug():
-    init_mongodb()
-    next_entry = RottenTomatoesMovieRating.objects.get(tmdb_id=680)
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        context = await browser.new_context()
-        context.set_default_timeout(BROWSER_TIMEOUT)
-        result = await crawl_data(next_entry, context)
-        await browser.close()
-
-
-if __name__ == "__main__":
-    # main()
-    asyncio.run(debug())
+    return asyncio.run(rotten_tomatoes_crawl_ratings(next_entry))

@@ -30,14 +30,14 @@ value:
                       type: javascript
                       expr: results.g
                   path: f/imdb_web/imdb_init_ratings/update
-              - id: a
+              - id: x
                 value:
-                  type: script
+                  type: flow
                   input_transforms:
                     next_ids:
                       type: javascript
                       expr: results.g
-                  path: f/imdb_web/imdb_crawl_ratings/fetch
+                  path: f/imdb_web/crawl_all_by_id
             parallel: true
             skip_failure: false
           - summary: Metacritic
@@ -50,14 +50,14 @@ value:
                       type: javascript
                       expr: results.g
                   path: f/metacritic_web/metacritic_init_ratings/update
-              - id: c
+              - id: w
                 value:
-                  type: script
+                  type: flow
                   input_transforms:
                     next_ids:
                       type: javascript
                       expr: results.g
-                  path: f/metacritic_web/metacritic_crawl_ratings/fetch
+                  path: f/metacritic_web/crawl_all_by_id
             parallel: true
             skip_failure: false
           - summary: Rotten Tomatoes
@@ -70,14 +70,14 @@ value:
                       type: javascript
                       expr: results.g
                   path: f/rotten_web/rotten_tomatoes_init_ratings/update
-              - id: d
+              - id: t
                 value:
-                  type: script
+                  type: flow
                   input_transforms:
                     next_ids:
                       type: javascript
                       expr: results.g
-                  path: f/rotten_web/rotten_tomatoes_crawl_ratings/fetch
+                  path: f/rotten_web/crawl_all_by_id
             parallel: true
             skip_failure: false
           - summary: TV Tropes
@@ -90,14 +90,14 @@ value:
                       type: javascript
                       expr: results.g
                   path: f/tvtropes_web/tvtropes_init_tags/update
-              - id: e
+              - id: v
                 value:
-                  type: script
+                  type: flow
                   input_transforms:
                     next_ids:
                       type: javascript
                       expr: results.g
-                  path: f/tvtropes_web/tv_tropes_crawl_tags/fetch
+                  path: f/tvtropes_web/crawl_all_by_id
             parallel: true
             skip_failure: false
           - summary: TMDB Streaming
@@ -110,14 +110,14 @@ value:
                       type: javascript
                       expr: results.g
                   path: f/tmdb_web/tmdb_init_providers/update
-              - id: h
+              - id: u
                 value:
-                  type: script
+                  type: flow
                   input_transforms:
                     next_ids:
                       type: javascript
                       expr: results.g
-                  path: f/tmdb_web/tmdb_crawl_providers/fetch
+                  path: f/tmdb_web/crawl_all_by_id
             parallel: true
             skip_failure: false
         parallel: true

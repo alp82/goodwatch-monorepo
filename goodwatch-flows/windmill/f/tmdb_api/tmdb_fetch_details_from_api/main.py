@@ -89,6 +89,7 @@ async def convert_and_save_details(
             setattr(next_entry, key, value)
 
     next_entry.updated_at = datetime.utcnow()
+    next_entry.is_selected = False
     try:
         next_entry.save()
         print(

@@ -6,6 +6,7 @@ from mongoengine import (
     FloatField,
     IntField,
     ListField,
+    BooleanField,
 )
 from pydantic import BaseModel
 
@@ -21,6 +22,7 @@ class MetacriticCrawlResult(BaseModel):
     user_score_original: Optional[float]
     user_score_normalized_percent: Optional[float]
     user_score_vote_count: Optional[int]
+    rate_limit_reached: bool
 
 
 # Database models
@@ -36,6 +38,7 @@ class BaseMetacriticRating(Document):
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
+    is_selected = BooleanField(default=False)
 
     title_variations = ListField(StringField())
     release_year = IntField()
@@ -55,6 +58,7 @@ class BaseMetacriticRating(Document):
             "popularity",
             "selected_at",
             "updated_at",
+            "is_selected",
         ],
     }
 

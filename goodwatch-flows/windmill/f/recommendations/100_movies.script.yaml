@@ -1,49 +1,48 @@
 summary: ''
 description: ''
-lock:
-  - aiohttp==3.8.6
-  - aiosignal==1.3.1
-  - anyio==4.0.0
-  - async-timeout==4.0.3
-  - attrs==23.1.0
-  - certifi==2023.7.22
-  - charset-normalizer==3.3.2
-  - frozenlist==1.4.0
-  - h11==0.14.0
-  - httpcore==0.17.3
-  - httpx==0.24.1
-  - idna==3.4
-  - joblib==1.3.2
-  - kaleido==0.2.1
-  - llvmlite==0.41.1
-  - multidict==6.0.4
-  - np==1.0.2
-  - numba==0.58.1
-  - numpy==1.26.1
-  - openai==0.28.1
-  - packaging==23.2
-  - pandas==2.1.2
-  - plotly==5.18.0
-  - psycopg2-binary==2.9.9
-  - pynndescent==0.5.10
-  - python-dateutil==2.8.2
-  - pytz==2023.3.post1
-  - requests==2.31.0
-  - scikit-learn==1.3.2
-  - scipy==1.11.3
-  - six==1.16.0
-  - sniffio==1.3.0
-  - tbb==2021.10.0
-  - tenacity==8.2.3
-  - threadpoolctl==3.2.0
-  - tqdm==4.66.1
-  - tzdata==2023.3
-  - umap-learn==0.5.4
-  - urllib3==2.0.7
-  - windmill-api==1.197.1
-  - wmill==1.197.1
-  - yarl==1.9.2
-is_template: false
+lock: |-
+  aiohttp==3.8.6
+  aiosignal==1.3.1
+  anyio==4.0.0
+  async-timeout==4.0.3
+  attrs==23.1.0
+  certifi==2023.7.22
+  charset-normalizer==3.3.2
+  frozenlist==1.4.0
+  h11==0.14.0
+  httpcore==0.17.3
+  httpx==0.24.1
+  idna==3.4
+  joblib==1.3.2
+  kaleido==0.2.1
+  llvmlite==0.41.1
+  multidict==6.0.4
+  np==1.0.2
+  numba==0.58.1
+  numpy==1.26.1
+  openai==0.28.1
+  packaging==23.2
+  pandas==2.1.2
+  plotly==5.18.0
+  psycopg2-binary==2.9.9
+  pynndescent==0.5.10
+  python-dateutil==2.8.2
+  pytz==2023.3.post1
+  requests==2.31.0
+  scikit-learn==1.3.2
+  scipy==1.11.3
+  six==1.16.0
+  sniffio==1.3.0
+  tbb==2021.10.0
+  tenacity==8.2.3
+  threadpoolctl==3.2.0
+  tqdm==4.66.1
+  tzdata==2023.3
+  umap-learn==0.5.4
+  urllib3==2.0.7
+  windmill-api==1.197.1
+  wmill==1.197.1
+  yarl==1.9.2
 kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

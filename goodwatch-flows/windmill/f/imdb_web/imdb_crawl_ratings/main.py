@@ -125,6 +125,7 @@ def store_result(
     if type(result.user_score_vote_count) == int:
         next_entry.user_score_vote_count = result.user_score_vote_count
     next_entry.updated_at = datetime.utcnow()
+    next_entry.is_selected = False
     next_entry.save()
 
 

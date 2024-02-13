@@ -1,0 +1,78 @@
+summary: Request with proxy
+description: ''
+value:
+  modules:
+    - id: d
+      value:
+        type: rawscript
+        content: '!inline inline_script_0.inline_script.py'
+        input_transforms: {}
+        lock: |-
+          certifi==2024.2.2
+          charset-normalizer==3.3.2
+          idna==3.6
+          lxml==5.1.0
+          requests==2.31.0
+          urllib3==2.2.0
+        language: python3
+        tag: ''
+    - id: c
+      value:
+        type: rawscript
+        content: '!inline inline_script_1.inline_script.py'
+        input_transforms: {}
+        lock: |-
+          certifi==2024.2.2
+          charset-normalizer==3.3.2
+          idna==3.6
+          requests==2.31.0
+          urllib3==2.2.0
+        language: python3
+        tag: ''
+    - id: a
+      value:
+        type: rawscript
+        content: '!inline inline_script_2.inline_script.py'
+        input_transforms: {}
+        lock: |-
+          certifi==2024.2.2
+          charset-normalizer==3.3.2
+          idna==3.6
+          requests==2.31.0
+          urllib3==2.2.0
+        language: python3
+        tag: ''
+      cache_ttl: 600
+    - id: b
+      value:
+        type: rawscript
+        content: '!inline inline_script_3.inline_script.py'
+        input_transforms:
+          proxy_list:
+            type: javascript
+            expr: results.a
+          url:
+            type: javascript
+            expr: '`${flow_input.url}`'
+        lock: |-
+          certifi==2024.2.2
+          charset-normalizer==3.3.2
+          idna==3.6
+          requests==2.31.0
+          urllib3==2.2.0
+        language: python3
+        tag: ''
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order:
+    - url
+  properties:
+    url:
+      type: string
+      description: ''
+      default: ''
+      format: ''
+  required:
+    - url
+ws_error_handler_muted: false

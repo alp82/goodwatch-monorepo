@@ -17,6 +17,7 @@ export async function main(db: Postgresql) {
     `CREATE INDEX IF NOT EXISTS idx_streaming_provider_links_tmdb_id ON streaming_provider_links (tmdb_id);`,
     `CREATE INDEX IF NOT EXISTS idx_streaming_provider_links_on_tmdb_id_media_type_country_code ON streaming_provider_links (tmdb_id, media_type, country_code);`,
     `CREATE INDEX IF NOT EXISTS idx_streaming_provider_links_discover_filter ON streaming_provider_links (media_type, country_code, stream_type, provider_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_streaming_provider_links_provider_id ON streaming_provider_links (provider_id);`,
   ];
 
   const results = [];

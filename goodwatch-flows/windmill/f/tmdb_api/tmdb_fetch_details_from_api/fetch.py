@@ -17,7 +17,7 @@ TMDB_API_KEY = wmill.get_variable("u/Alp/TMDB_API_KEY")
 
 
 async def fetch_api_data(
-    next_entry: Union[TmdbMovieDetails, TmdbTvDetails]
+    next_entry: Union[TmdbMovieDetails, TmdbTvDetails],
 ) -> tuple[dict, Union[TmdbMovieDetails, TmdbTvDetails]]:
     if isinstance(next_entry, TmdbMovieDetails):
         return fetch_movie_data(next_entry)
@@ -78,6 +78,7 @@ async def convert_and_save_details(
             setattr(next_entry, key, value)
 
     next_entry.updated_at = datetime.utcnow()
+    next_entry.is_selected = False
     try:
         next_entry.save()
         print(
@@ -180,7 +181,7 @@ def clean_empty_strings(data):
 
 
 async def tmdb_fetch_details_from_api(
-    next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]]
+    next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]],
 ):
     print("Fetch detailed data from TMDB API")
 

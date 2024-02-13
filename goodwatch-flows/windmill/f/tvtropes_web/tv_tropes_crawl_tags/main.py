@@ -278,6 +278,7 @@ def store_result(
         next_entry.updated_at = datetime.utcnow()
         print(f"saving {len(result.tropes or [])} tags for {next_entry.original_title}")
 
+    next_entry.is_selected = False
     next_entry.save()
 
 

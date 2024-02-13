@@ -12,6 +12,7 @@ value:
             type: static
             value: '$res:u/Alp/resource/postgresql'
         path: f/combine_data/copy_movies/create_movies_table
+        tag_override: null
     - id: d
       value:
         type: rawscript
@@ -22,7 +23,7 @@ value:
             value: '$res:u/Alp/resource/postgresql'
         lock: |
           {
-            "version": "2",
+            "version": "3",
             "remote": {
               "https://deno.land/std@0.160.0/_util/assert.ts": "e94f2eb37cebd7f199952e242c77654e43333c1ac4c5c700e929ea3aa5489f74",
               "https://deno.land/std@0.160.0/_util/os.ts": "8a33345f74990e627b9dfe2de9b040004b08ea5146c7c9e8fe9a29070d193934",
@@ -189,11 +190,13 @@ value:
           }
         language: deno
         path: hub/1457/postgresql/execute_query_and_return_results
+        tag: ''
     - id: b
       value:
         type: script
         input_transforms: {}
         path: f/combine_data/copy_movies/main
+        tag_override: null
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

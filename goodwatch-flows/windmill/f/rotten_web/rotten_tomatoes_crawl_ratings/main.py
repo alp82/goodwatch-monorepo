@@ -245,6 +245,7 @@ def store_result(
             f"saving rating for {next_entry.original_title}: {result.tomato_score_original} ({result.tomato_score_vote_count}) / {result.audience_score_original} ({result.audience_score_vote_count})"
         )
 
+    next_entry.is_selected = False
     next_entry.save()
 
 

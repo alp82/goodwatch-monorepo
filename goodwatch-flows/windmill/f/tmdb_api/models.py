@@ -401,11 +401,16 @@ class BaseTmdbDetails(Document):
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
+    is_selected = BooleanField(default=False)
 
     meta = {
         "abstract": True,
         "indexes": [
             "tmdb_id",
+            "popularity",
+            "selected_at",
+            "updated_at",
+            "is_selected",
         ],
     }
 
@@ -445,9 +450,6 @@ class TmdbMovieDetails(BaseTmdbDetails):
     meta = {
         "indexes": [
             "imdb_id",
-            "popularity",
-            "selected_at",
-            "updated_at",
         ],
     }
 
@@ -496,11 +498,9 @@ class TmdbTvDetails(BaseTmdbDetails):
     meta = {
         "indexes": [
             "external_ids.imdb_id",
-            "popularity",
-            "selected_at",
-            "updated_at",
         ],
     }
+
 
 def main():
     pass

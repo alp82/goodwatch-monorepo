@@ -3,7 +3,7 @@ from f.db.mongodb import init_mongodb
 from f.tmdb_web.models import TmdbMovieProviders, TmdbTvProviders
 
 
-BATCH_SIZE = 50
+BATCH_SIZE = 5
 BUFFER_SELECTED_AT_MINUTES = 30
 
 

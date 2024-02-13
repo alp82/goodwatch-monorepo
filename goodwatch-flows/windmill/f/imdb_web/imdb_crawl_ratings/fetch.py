@@ -6,12 +6,12 @@ from ssl import SSLError
 from typing import Union
 
 from f.imdb_web.models import ImdbCrawlResult, ImdbMovieRating, ImdbTvRating
-from f.data_source.common import get_documents_for_ids
+from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb
 
 
-async def crawl_data(
-    next_entry: Union[ImdbMovieRating, ImdbTvRating]
+def crawl_data(
+    next_entry: Union[ImdbMovieRating, ImdbTvRating],
 ) -> tuple[ImdbCrawlResult, Union[ImdbMovieRating, ImdbTvRating]]:
     if isinstance(next_entry, ImdbMovieRating):
         return crawl_movie_rating(next_entry), next_entry
@@ -87,6 +87,7 @@ def crawl_imdb_page(imdb_id: str) -> ImdbCrawlResult:
         user_score_original=score,
         user_score_normalized_percent=score * 10 if score else None,
         user_score_vote_count=vote_count,
+        rate_limit_reached=False,
     )
 
 
@@ -104,44 +105,41 @@ def store_result(
     if type(result.user_score_vote_count) == int:
         next_entry.user_score_vote_count = result.user_score_vote_count
     next_entry.updated_at = datetime.utcnow()
+    next_entry.is_selected = False
     next_entry.save()
 
 
-async def imdb_crawl_ratings(next_entries: list[Union[ImdbMovieRating, ImdbTvRating]]):
+async def imdb_crawl_ratings(next_entry: Union[ImdbMovieRating, ImdbTvRating]):
     print("Fetch ratings from IMDB pages")
 
-    if not next_entries:
+    if not next_entry:
         print(f"warning: no entries to fetch in imdb ratings")
         return
 
-    for next_entry in next_entries:
-        print(
-            f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity})"
-        )
-
-    list_of_crawl_results = await asyncio.gather(
-        *[crawl_data(next_entry) for next_entry in next_entries]
+    print(
+        f"next entry is: {next_entry.original_title} (popularity: {next_entry.popularity})"
     )
 
+    (crawl_result, _) = crawl_data(next_entry)
+
+    if crawl_result.rate_limit_reached:
+        raise Exception(
+            f"Rate limit reached for {next_entry.original_title}, retrying."
+        )
+
     return {
-        "count_new_ratings": len(next_entries),
-        "entries": [
-            {
-                "tmdb_id": next_entry.tmdb_id,
-                "original_title": next_entry.original_title,
-                "popularity": next_entry.popularity,
-                "ratings": crawl_result.dict(),
-            }
-            for crawl_result, next_entry in list_of_crawl_results
-        ],
+        "tmdb_id": next_entry.tmdb_id,
+        "original_title": next_entry.original_title,
+        "popularity": next_entry.popularity,
+        "ratings": crawl_result.dict(),
     }
 
 
-def main(next_ids: dict):
+def main(next_id: dict):
     init_mongodb()
-    next_entries = get_documents_for_ids(
-        next_ids=next_ids,
+    next_entry = get_document_for_id(
+        next_id=next_id,
         movie_model=ImdbMovieRating,
         tv_model=ImdbTvRating,
     )
-    return asyncio.run(imdb_crawl_ratings(next_entries))
+    return asyncio.run(imdb_crawl_ratings(next_entry))

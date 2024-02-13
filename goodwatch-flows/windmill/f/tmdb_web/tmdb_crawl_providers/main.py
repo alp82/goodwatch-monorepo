@@ -190,6 +190,7 @@ def store_result(
             f"saving streaming provider for {next_entry.original_title} in {result.country_code}: {len(result.streaming_links)} links"
         )
 
+    next_entry.is_selected = False
     next_entry.save()
 
 

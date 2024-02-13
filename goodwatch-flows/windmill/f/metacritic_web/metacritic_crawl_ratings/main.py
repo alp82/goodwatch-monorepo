@@ -189,6 +189,7 @@ def store_result(
         next_entry.user_score_vote_count = result.user_score_vote_count
 
     next_entry.updated_at = datetime.utcnow()
+    next_entry.is_selected = False
     next_entry.save()
 
 

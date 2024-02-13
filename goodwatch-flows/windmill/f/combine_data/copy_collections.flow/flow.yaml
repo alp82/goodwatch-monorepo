@@ -12,11 +12,13 @@ value:
             type: static
             value: '$res:u/Alp/resource/postgresql'
         path: f/combine_data/copy_collections/create_collections_table
+        tag_override: null
     - id: b
       value:
         type: script
         input_transforms: {}
         path: f/combine_data/copy_collections/main
+        tag_override: null
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

@@ -1,0 +1,53 @@
+summary: ''
+description: Crawl multiple TV Tropes pages by id
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: flow_input.next_ids
+        path: f/tvtropes_web/tv_tropes_crawl_tags/iterate
+        tag_override: null
+    - id: b
+      value:
+        type: forloopflow
+        modules:
+          - id: c
+            value:
+              type: script
+              input_transforms:
+                next_id:
+                  type: javascript
+                  expr: flow_input.iter.value
+              path: f/tvtropes_web/tv_tropes_crawl_tags/fetch
+              tag_override: null
+            retry:
+              constant:
+                attempts: 0
+                seconds: 0
+              exponential:
+                attempts: 4
+                multiplier: 6
+                random_factor: 50
+                seconds: 2
+        iterator:
+          type: javascript
+          expr: results.a
+        parallel: false
+        skip_failures: true
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    next_ids:
+      type: object
+      description: ''
+      default: null
+      format: ''
+      properties: {}
+  required:
+    - next_ids
+ws_error_handler_muted: false

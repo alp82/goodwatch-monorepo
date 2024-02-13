@@ -7,14 +7,15 @@ value:
         type: script
         input_transforms: {}
         path: f/imdb_web/imdb_crawl_ratings/next
+        tag_override: null
     - id: b
       value:
-        type: script
+        type: flow
         input_transforms:
           next_ids:
             type: javascript
             expr: results.a
-        path: f/imdb_web/imdb_crawl_ratings/fetch
+        path: f/imdb_web/crawl_all_by_id
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
