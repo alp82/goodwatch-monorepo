@@ -1,6 +1,6 @@
 # GoodWatch
 
-See it running here: https://www.goodwatch.app
+See it running here: https://goodwatch.app/
 
 ## Getting started
 
