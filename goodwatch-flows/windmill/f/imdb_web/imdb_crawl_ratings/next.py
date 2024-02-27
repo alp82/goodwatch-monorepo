@@ -3,7 +3,7 @@ from f.db.mongodb import init_mongodb
 from f.imdb_web.models import ImdbMovieRating, ImdbTvRating
 
 
-BATCH_SIZE = 30
+BATCH_SIZE = 15
 BUFFER_SELECTED_AT_MINUTES = 10
 
 

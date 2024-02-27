@@ -3,12 +3,14 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-cast links to discovery (add to sidebar)
+crew links to discovery
 keywords less prominent
-keywords in discovery filter sidebar
 
 show countries in which movie is available
+discover: unselect streaming?
 discover: unselect country?
+
+details: select country for streaming info
 
 streaming providers precompute
 extra table for streaming providers
@@ -29,6 +31,7 @@ trending difference
 
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
+invalidate vercel caches after update
 
 priority flag
 last_prioritized_at
@@ -36,8 +39,8 @@ last_prioritized_at
 trending load more
 discover load more
 
-search page
--> cast
+disover sidebar redesign with all options 
+search/explore page
 
 wrong tropes: the little mermaid (tmdb_id = 10144)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch

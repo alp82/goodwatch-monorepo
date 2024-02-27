@@ -3,7 +3,7 @@ from f.db.mongodb import init_mongodb
 from f.metacritic_web.models import MetacriticMovieRating, MetacriticTvRating
 
 
-BATCH_SIZE = 20
+BATCH_SIZE = 10
 BUFFER_SELECTED_AT_MINUTES = 10
 
 

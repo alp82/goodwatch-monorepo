@@ -3,7 +3,7 @@ from f.db.mongodb import init_mongodb
 from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRating
 
 
-BATCH_SIZE = 1
+BATCH_SIZE = 5
 BUFFER_SELECTED_AT_MINUTES = 30
 
 

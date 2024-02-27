@@ -48,8 +48,8 @@ def get_ids_for_documents(
     tv_entries = [
         next_entry for next_entry in next_entries if isinstance(next_entry, tv_model)
     ]
-    movie_ids = list({movie.tmdb_id for movie in movie_entries})
-    tv_ids = list({tv.tmdb_id for tv in tv_entries})
+    movie_ids = list({movie.id for movie in movie_entries})
+    tv_ids = list({tv.id for tv in tv_entries})
     return IdsParameter(
         movie_ids=movie_ids,
         tv_ids=tv_ids,
@@ -64,12 +64,12 @@ def get_documents_for_ids(
         tv_ids=next_ids.get("tv_ids", []),
     )
     movie_results = list(
-        movie_model.objects(tmdb_id__in=ids.movie_ids).order_by(
+        movie_model.objects(id__in=ids.movie_ids).order_by(
             "selected_at", "-popularity"
         )
     )
     tv_results = list(
-        tv_model.objects(tmdb_id__in=ids.tv_ids).order_by("selected_at", "-popularity")
+        tv_model.objects(id__in=ids.tv_ids).order_by("selected_at", "-popularity")
     )
     return movie_results + tv_results
 

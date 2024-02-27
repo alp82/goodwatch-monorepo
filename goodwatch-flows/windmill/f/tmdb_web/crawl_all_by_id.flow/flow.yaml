@@ -36,7 +36,8 @@ value:
         iterator:
           type: javascript
           expr: results.a
-        parallel: false
+        parallel: true
+        parallelism: 3
         skip_failures: true
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

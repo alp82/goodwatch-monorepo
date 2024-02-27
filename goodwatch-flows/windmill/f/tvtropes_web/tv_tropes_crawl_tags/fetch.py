@@ -288,6 +288,8 @@ async def tvtropes_crawl_tags(next_entry: Union[TvTropesMovieTags, TvTropesTvTag
         "tmdb_id": next_entry.tmdb_id,
         "original_title": next_entry.original_title,
         "popularity": next_entry.popularity,
+        "rate_limit_reached": crawl_result.rate_limit_reached if crawl_result else None,
+        "trope_url": crawl_result.url if crawl_result else None,
         "trope_count": len(crawl_result.tropes) if crawl_result else None,
     }
 

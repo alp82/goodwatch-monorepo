@@ -8,7 +8,7 @@ from f.db.mongodb import init_mongodb
 from f.db.postgres import init_postgres, generate_upsert_query
 
 
-BATCH_SIZE = 5000
+BATCH_SIZE = 1000
 
 
 def init_postgres_tables(pg):

@@ -3,7 +3,7 @@ from f.db.mongodb import init_mongodb
 from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags
 
 
-BATCH_SIZE = 10
+BATCH_SIZE = 8
 BUFFER_SELECTED_AT_MINUTES = 30
 
 
