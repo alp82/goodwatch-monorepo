@@ -1,58 +1,34 @@
-import React, { createContext } from 'react'
-import type { LinksFunction, LoaderFunction, MetaFunction } from '@remix-run/node'
+import React from 'react'
+import type { LinksFunction, LoaderFunction } from '@remix-run/node'
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration, useLoaderData, useLocation, useRouteError,
+  ScrollRestoration,
+  useLoaderData,
+  useLocation,
+  useRouteError,
 } from '@remix-run/react'
 import { Analytics } from '@vercel/analytics/react'
-import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
-import { TracingInstrumentation } from '@grafana/faro-web-tracing';
 import { AnimatePresence, motion } from 'framer-motion'
 import { ToastContainer } from 'react-toastify'
-import cssToastify from 'react-toastify/dist/ReactToastify.css'
-import acceptLanguage from 'accept-language-parser'
 
 import Header from '~/ui/Header'
-import Footer from "~/ui/Footer";
+import Footer from '~/ui/Footer'
 import InfoBox from '~/ui/InfoBox'
 import BottomNav from '~/ui/nav/BottomNav'
-import { defaultLocale, getLocaleFromRequest, LocaleContext } from '~/utils/locale'
+import { getLocaleFromRequest, LocaleContext } from '~/utils/locale'
 
-import cssMain from "~/main.css";
-import cssTailwind from "~/tailwind.css";
-
-// if (typeof document !== "undefined") {
-//   const faro = initializeFaro({
-//     url: 'https://faro-collector-prod-eu-west-2.grafana.net/collect/4adfc01553e8f9e34abb2a702a8b9103',
-//     app: {
-//       name: 'GoodWatch WebApp',
-//       version: '1.0.0',
-//       environment: 'production'
-//     },
-//     instrumentations: [
-//       // Mandatory, overwriting the instrumentations array would cause the default instrumentations to be omitted
-//       ...getWebInstrumentations(),
-//
-//       // Initialization of the tracing package.
-//       // This packages is optional because it increases the bundle size noticeably. Only add it if you want tracing data.
-//       new TracingInstrumentation(),
-//     ],
-//   });
-// }
-
-export const meta: MetaFunction = () => ({
-  charset: "utf-8",
-  title: "GoodWatch",
-  viewport: "width=device-width,initial-scale=1",
-});
+import cssMain from '~/main.css?url'
+import cssTailwind from '~/tailwind.css?url'
+import cssToastify from 'react-toastify/dist/ReactToastify.css?url'
+import cssRemixDevTools from 'remix-development-tools/index.css?url'
 
 export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: cssTailwind },
+  ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),
   { rel: "stylesheet", href: cssMain },
+  { rel: "stylesheet", href: cssTailwind },
   { rel: "stylesheet", href: cssToastify },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
@@ -66,7 +42,6 @@ type LoaderData = {
   }
 }
 
-
 export const loader: LoaderFunction = ({ request }) => {
   const { locale } = getLocaleFromRequest(request)
 
@@ -76,18 +51,24 @@ export const loader: LoaderFunction = ({ request }) => {
 }
 
 export function ErrorBoundary() {
+  // TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
   const error = useRouteError()
   console.error(error);
   return (
     <html>
     <head>
       <title>Oh no!</title>
-      <Meta />
-      <Links />
+      <meta charSet="utf-8"/>
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+      />
+      <Meta/>
+      <Links/>
     </head>
     <body className="flex flex-col h-screen bg-gray-900">
-      <Header />
-      <main className="relative flex-grow mx-auto mt-12 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+    <Header/>
+    <main className="relative flex-grow mx-auto mt-12 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
         <InfoBox text="Sorry, but an error occurred" />
         <div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
           <strong>{error.message}</strong>
@@ -103,7 +84,6 @@ export function ErrorBoundary() {
       <ScrollRestoration />
       <Scripts />
       <Analytics />
-      <LiveReload />
     </body>
     </html>
   );
@@ -141,7 +121,6 @@ export default function App() {
           <ScrollRestoration />
           <Scripts />
           <Analytics />
-          <LiveReload />
         </body>
       </LocaleContext.Provider>
     </html>

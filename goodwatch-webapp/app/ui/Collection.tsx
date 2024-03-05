@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react'
 import { useFetcher } from '@remix-run/react'
 import { titleToDashed } from '~/utils/helpers'
-import { Collection } from '~/server/details.server'
+import { Collection as CollectionType } from '~/server/details.server'
 import { MoviesInCollection } from '~/server/collection.server'
 import { MovieCard } from '~/ui/MovieCard'
 
 export interface CollectionProps {
-  collection: Collection
+  collection: CollectionType
   movieId: number
 }
 

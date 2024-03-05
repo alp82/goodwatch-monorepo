@@ -1,5 +1,4 @@
 import React from 'react'
-import { Keywords } from '~/server/details.server'
 import {MediaType} from "~/server/search.server";
 
 export interface KeywordsProps {

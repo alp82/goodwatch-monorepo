@@ -1,11 +1,11 @@
-import { json, LoaderArgs, LoaderFunction } from '@remix-run/node'
+import { json, LoaderFunctionArgs, LoaderFunction } from '@remix-run/node'
 import { getSearchResults, SearchResults } from '~/server/search.server'
 
 type LoaderData = {
   searchResults: Awaited<SearchResults>
 }
 
-export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
+export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const language = url.searchParams.get('language') || 'en_US'
   const query = url.searchParams.get('query') || ''

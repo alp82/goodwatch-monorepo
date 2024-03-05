@@ -5,33 +5,20 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 ```
 crew links to discovery
 keywords less prominent
-
-show countries in which movie is available
-discover: unselect streaming?
-discover: unselect country?
+trailer link opens modal
+score progress bar number 1px up
 
 details: select country for streaming info
+show countries in which movie is available
 
 streaming providers precompute
-extra table for streaming providers
-
+    extra table for streaming providers
 add streaming_links to movie/tv tables
 
-copy/combine scripts only copy diffs to postgres
-
-rate limit monitoring
-
-do not refetch stale data
-    tv tropes
-    
 populate trending score 1-500
 save trending scores per day
 trending yesterday
 trending difference
-
-invalidate redis caches after update
-    https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
-invalidate vercel caches after update
 
 priority flag
 last_prioritized_at
@@ -39,8 +26,35 @@ last_prioritized_at
 trending load more
 discover load more
 
-disover sidebar redesign with all options 
-search/explore page
+copy/combine scripts only copy diffs to postgres
+
+discover sidebar redesign
+filter inspiration:
+    https://www.yidio.com/movies
+    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
+discover age ratings
+discover cast / crew
+discover director
+discover scores
+discover budget & revenue
+disocver keywords and tropes
+discover: unselect streaming?
+discover: unselect country?
+localstorage: country and save streaming provider selection
+
+stuck scripts monitoring
+rate limit monitoring
+
+do not refetch stale data
+    tv tropes
+    
+invalidate redis caches after update
+    https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
+invalidate vercel caches after update
+
+search page
+explore button for media titles (prefilled discover, map feature)
+random full screen: album cover (good roulette)
 
 wrong tropes: the little mermaid (tmdb_id = 10144)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
@@ -50,6 +64,8 @@ rotten score not up to date: http://localhost:3003/movie/961268-ballerina?tab=st
 fury 2014, wrong rotten link: http://localhost:3003/movie/228150-fury
 avengers, wrong rotten link: http://localhost:3003/movie/24428-the-avengers
 my fault, 0 rotten critics score but should be null? http://localhost:3003/movie/1010581-my-fault
+fringe, missing streaming: https://goodwatch.app/tv/1705-fringe
+extra link for multiple in same year: https://www.rottentomatoes.com/m/nowhere_2023_2
 
 rotten wrong urls:
     https://www.rottentomatoes.com/m/cars_2006
@@ -66,38 +82,17 @@ identify title duplicates and run scraping again
 report missing ratings
 report missing streaming providers
 report missing info
-extra link for multiple in same year: https://www.rottentomatoes.com/m/nowhere_2023_2
-
-filter inspiration:
-    https://www.yidio.com/movies
-    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-discover age ratings
-discover actors
-discover director
-discover scores
-discover budget & revenue
-disocver keywords and tropes
-discoer fix empty streaming providers
-localstorage: country and save streaming provider selection
-
-postgres read replica
 
 description full text toggle
 score explanations
 streaming explanations
 autocomplete dark style
 
-search page
-
-random full screen: album cover (good roulette)
-
 page transition loader
 parallax scrolling landing page
 best rated picks animation
 stagger animation for rating progress bars
 show picks on mobile too
-
-explore button for media titles (prefilled discover, map feature)
 
 show generic recommendations
 

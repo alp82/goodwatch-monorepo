@@ -1,6 +1,6 @@
 import React from 'react'
 import type { MetaFunction } from '@remix-run/node'
-import { json, HeadersFunction, LoaderArgs, LoaderFunction } from '@remix-run/node'
+import { json, HeadersFunction, LoaderFunctionArgs, LoaderFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData } from '@remix-run/react'
 import { ArrowSmallDownIcon, ArrowUpRightIcon, CubeIcon, FilmIcon, TvIcon } from '@heroicons/react/24/solid'
 import imdbLogo from '~/img/imdb-logo-250.png'
@@ -22,11 +22,11 @@ export const headers: HeadersFunction = () => {
   };
 }
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'GoodWatch',
-    description: 'What do you want to watch next? All movie and tv show ratings and streaming providers on one page.',
-  }
+export const meta: MetaFunction<typeof loader> = () => {
+  return [
+    {title: 'GoodWatch'},
+    {description: 'What do you want to watch next? All movie and tv show ratings and streaming providers on one page.'},
+  ]
 }
 
 type LoaderData = {
@@ -36,7 +36,7 @@ type LoaderData = {
   popularPicksTV: TVDetails[]
 }
 
-export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
+export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
   const { locale } = getLocaleFromRequest(request)
   const apiParams = {
     type: 'default',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
+import { json, LoaderFunctionArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData, useNavigate, useNavigation } from '@remix-run/react'
 import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -24,11 +24,11 @@ export function headers() {
   };
 }
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Discover | GoodWatch',
-    description: 'All movie and tv show ratings and streaming providers on the same page',
-  }
+export const meta: MetaFunction<typeof loader> = () => {
+  return [
+    {title: 'Discover | GoodWatch'},
+    {description: 'All movie and tv show ratings and streaming providers on the same page'},
+  ]
 }
 
 export type LoaderData = {
@@ -36,7 +36,7 @@ export type LoaderData = {
   results: DiscoverResults,
 }
 
-export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
+export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) => {
   const { locale } = getLocaleFromRequest(request)
 
   const url = new URL(request.url)

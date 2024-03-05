@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import Tabs, {Tab} from "~/ui/Tabs";
 import YouTube from "react-youtube";
-import {Videos, VideoResult} from "~/server/details.server";
+import {Videos as VideosType} from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
 
 export const allTypes = [
@@ -15,7 +15,7 @@ export const allTypes = [
 ]
 
 export interface VideosProps {
-  videos: Videos
+  videos: VideosType
 }
 
 export default function Videos({ videos }: VideosProps) {

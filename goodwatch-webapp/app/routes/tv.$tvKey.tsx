@@ -1,6 +1,6 @@
 import React from 'react'
 import { useLoaderData } from '@remix-run/react'
-import { json, LoaderArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
+import { json, LoaderFunctionArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
 import { getDetailsForTV, TVDetails } from '~/server/details.server'
 import { getLocaleFromRequest } from '~/utils/locale'
 import Details from '~/ui/Details'
@@ -11,11 +11,11 @@ export function headers() {
   };
 }
 
-export const meta: MetaFunction = ({ data }) => {
-  return {
-    title: `${data.details.title} (${data.details.release_year}) | TV Show | GoodWatch`,
-    description: 'All movie and tv show ratings and streaming providers on the same page',
-  }
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [
+    {title: `${data.details.title} (${data.details.release_year}) | TV Show | GoodWatch`},
+    {description: `Learn all about the TV show "${data.details.title} (${data.details.release_year})". Scores, where to watch it and much more.`},
+  ]
 }
 
 type LoaderData = {
@@ -23,7 +23,7 @@ type LoaderData = {
   tab: string
 }
 
-export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) => {
+export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
   const { locale } = getLocaleFromRequest(request)
 
   const url = new URL(request.url)
@@ -44,8 +44,8 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderArgs) =>
   })
 }
 
-export default function TVDetails() {
-  const { details, tab } = useLoaderData()
+export default function DetailsTV() {
+  const { details, tab } = useLoaderData<LoaderData>()
 
   return (
     <Details details={details} tab={tab} />
