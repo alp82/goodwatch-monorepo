@@ -3,13 +3,11 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-crew links to discovery
-keywords less prominent
-trailer link opens modal
-score progress bar number 1px up
-
 details: select country for streaming info
 show countries in which movie is available
+box office
+awards
+crew links to discovery
 
 streaming providers precompute
     extra table for streaming providers

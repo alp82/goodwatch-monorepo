@@ -18,8 +18,8 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
       {hasScore && (
         <>
           <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} absolute -top-1 h-6 px-2 rounded-md flex items-center justify-center gap-2 text-gray-100 text-lg`} style={{left: `${progressPosition}%`, transform: `translateX(-${progressPosition}%)`}}>
-            <small>Score:</small>
-            <strong className="-top-2">{score}</strong>
+            <span className="text-sm">Score:</span>
+            <span className="font-bold">{score}</span>
           </div>
           <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} h-full rounded-tl-md`} style={{width: `${progressPosition}%`}}></div>
         </>

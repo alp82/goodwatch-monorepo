@@ -139,7 +139,7 @@ export default function Details({ details, tab }: DetailsProps) {
         <div className="relative w-full max-w-7xl">
           <div className="p-3 flex">
             <div className="hidden md:block relative flex-none w-40 lg:w-60">
-              <TrailerOverlay videos={videos || []} handleTabSelection={handleTabSelection} />
+              <TrailerOverlay videos={videos || []} />
               <RatingOverlay ratings={ratings}/>
               <Poster path={poster_path} title={title}/>
             </div>
@@ -170,7 +170,7 @@ export default function Details({ details, tab }: DetailsProps) {
         </div>
         <div className="md:hidden flex gap-4 mt-4 px-2 w-full">
           <div className="relative flex-none w-32">
-            <TrailerOverlay videos={videos || []} handleTabSelection={handleTabSelection} />
+            <TrailerOverlay videos={videos || []} />
             <RatingOverlay ratings={ratings}/>
             <Poster path={poster_path} title={title}/>
           </div>
