@@ -7,13 +7,13 @@ import rottenLogo from '~/img/rotten-logo-250.png'
 import rottenLogoIcon from '~/img/rotten-logo-icon-250.png'
 import { AllRatings } from '~/utils/ratings'
 
-export interface RatingsProps {
+export interface RatingBadgesProps {
   ratings?: AllRatings
   title?: string
   compact?: boolean
 }
 
-export default function RatingBadges({ ratings }: RatingsProps) {
+export default function RatingBadges({ ratings }: RatingBadgesProps) {
   const isComplete = Boolean(ratings)
 
   return (

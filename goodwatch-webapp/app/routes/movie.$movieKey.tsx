@@ -21,6 +21,8 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 type LoaderData = {
   details: Awaited<MovieDetails>
   tab: string
+  country: string
+  language: string
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
@@ -41,13 +43,15 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
   return json<LoaderData>({
     details,
     tab,
+    country,
+    language,
   })
 }
 
 export default function DetailsMovie() {
-  const { details, tab } = useLoaderData<LoaderData>()
+  const { details, tab, country, language } = useLoaderData<LoaderData>()
 
   return (
-    <Details details={details} tab={tab} />
+    <Details details={details} tab={tab} country={country} language={language} />
   )
 }

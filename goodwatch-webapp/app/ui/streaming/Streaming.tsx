@@ -98,10 +98,10 @@ export default function Streaming({ links, countryCodes = [] }: StreamingProps) 
           </div>
           <div className="flex flex-wrap gap-6">
             {countryCodes.map((countryCode) => (
-              <span key={countryCode} className="inline-flex items-center gap-2 px-2 h-4 text-sm">
-                <img src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} alt={`Flag of ${countryCode}`}/>
-                {countryCode}
-              </span>
+              <a key={countryCode} href={`?country=${countryCode}&tab=streaming`} className="flex items-center gap-2 w-16 px-1 py-1 border-2 border-gray-600 bg-gray-800 text-sm hover:bg-gray-700">
+                <img src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} alt={`Flag of ${countryCode}`} className="h-4" />
+                <span className="font-bold">{countryCode}</span>
+              </a>
             ))}
           </div>
         </div>

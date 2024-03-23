@@ -4,7 +4,6 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 # TODO's
 ```
 details:
-select country for streaming info
 box office
 crew links to discovery
 awards

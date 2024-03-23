@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from '@remix-run/react'
 import { MovieDetails, TVDetails } from '~/server/details.server'
-import Ratings from '~/ui/Ratings'
-import Streaming from '~/ui/Streaming'
+import Ratings from '~/ui/ratings/Ratings'
+import Streaming from '~/ui/streaming/Streaming'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
 import AgeRating from '~/ui/AgeRating'
@@ -13,9 +13,9 @@ import { titleToDashed } from '~/utils/helpers'
 import Collection from '~/ui/Collection'
 import Runtime from '~/ui/Runtime'
 import { extractRatings } from '~/utils/ratings'
-import RatingOverlay from '~/ui/RatingOverlay'
-import RatingBadges from '~/ui/RatingBadges'
-import StreamingBadges from '~/ui/StreamingBadges'
+import RatingOverlay from '~/ui/ratings/RatingOverlay'
+import RatingBlock from '~/ui/ratings/RatingBlock'
+import StreamingBlock from '~/ui/streaming/StreamingBlock'
 import Cast from '~/ui/Cast'
 import Crew from '~/ui/Crew'
 import ShareButton from '~/ui/ShareButton'
@@ -25,9 +25,11 @@ import TrailerOverlay from '~/ui/TrailerOverlay'
 export interface DetailsProps {
   details: MovieDetails | TVDetails
   tab: string
+  country: string
+  language: string
 }
 
-export default function Details({ details, tab }: DetailsProps) {
+export default function Details({ details, tab, country, language }: DetailsProps) {
   const navigate = useNavigate()
   const ratings = extractRatings(details)
 
@@ -164,24 +166,10 @@ export default function Details({ details, tab }: DetailsProps) {
                 </div> : null}
               </div>
               <div className="hidden md:block mb-4">
-                <div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
-                  <div className="px-4 py-2 sm:px-6 font-bold">
-                    <a className="text-indigo-400 hover:underline" href="?tab=ratings">Ratings</a>
-                  </div>
-                  <div className="px-4 py-2 sm:p-6">
-                    <RatingBadges ratings={ratings}/>
-                  </div>
-                </div>
+                <RatingBlock ratings={ratings}/>
               </div>
               <div className="hidden md:block mb-4">
-                <div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
-                  <div className="px-4 py-2 sm:px-6 font-bold">
-                    <a className="text-indigo-400 hover:underline" href="?tab=streaming">Streaming</a>
-                  </div>
-                  <div className="px-4 py-2 sm:p-6">
-                    <StreamingBadges links={streaming_links} countryCodes={streaming_country_codes} />
-                  </div>
-                </div>
+                <StreamingBlock media_type={media_type} links={streaming_links} countryCodes={streaming_country_codes} currentCountryCode={country} />
               </div>
             </div>
           </div>
@@ -190,26 +178,10 @@ export default function Details({ details, tab }: DetailsProps) {
         <div className="md:hidden flex gap-4 mt-4 px-2 w-full">
           <div className="relative flex-1 mt-2">
             <div className="mb-4">
-              <div
-                className="w-full divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
-                <div className="px-4 py-1 sm:px-6 font-bold">
-                  <a className="text-indigo-400 hover:underline" href="?tab=ratings">Ratings</a>
-                </div>
-                <div className="px-4 py-1 sm:p-6">
-                  <RatingBadges ratings={ratings}/>
-                </div>
-              </div>
+              <RatingBlock ratings={ratings}/>
             </div>
             <div className="mb-4">
-              <div
-                className="w-full divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
-                <div className="px-4 py-1 sm:px-6 font-bold">
-                  <a className="text-indigo-400 hover:underline" href="?tab=streaming">Streaming</a>
-                </div>
-                <div className="px-4 py-12 sm:p-6">
-                  <StreamingBadges links={streaming_links} countryCodes={streaming_country_codes}/>
-                </div>
-              </div>
+              <StreamingBlock media_type={media_type} links={streaming_links} countryCodes={streaming_country_codes} currentCountryCode={country} />
             </div>
           </div>
         </div>

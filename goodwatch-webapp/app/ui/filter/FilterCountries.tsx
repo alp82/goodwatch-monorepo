@@ -8,10 +8,11 @@ import { Country } from '~/server/countries.server'
 export interface FilterCountriesProps {
   type: 'movie' | 'tv'
   selectedCountry: string
+  availableCountryCodes?: string[]
   onChange: (country: string) => void
 }
 
-export default function FilterCountries({ type, selectedCountry, onChange }: FilterCountriesProps) {
+export default function FilterCountries({ type, selectedCountry, availableCountryCodes, onChange }: FilterCountriesProps) {
   const countriesFetcher = useFetcher<{countries: Country[]}>()
   useEffect(() => {
     countriesFetcher.submit(
@@ -31,6 +32,8 @@ export default function FilterCountries({ type, selectedCountry, onChange }: Fil
       icon: `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`,
     }
   }).sort((a, b) => {
+    if ((availableCountryCodes || []).includes(a.key)) return -1
+
     if (a.label < b.label) {
       return -1
     }
@@ -44,12 +47,18 @@ export default function FilterCountries({ type, selectedCountry, onChange }: Fil
     onChange(selectedItem.key)
   }
 
-  return <div className="w-72">
-    <Select<SelectItem>
-      selectItems={selectItems}
-      selectedItems={selectItems.find((item) => item.key === selectedCountry)}
-      withSearch={true}
-      onSelect={handleSelect}
-    />
+  return <div className="w-72 relative">
+    {countriesFetcher.state === 'idle' ? (
+      <Select<SelectItem>
+        selectItems={selectItems}
+        selectedItems={selectItems.find((item) => item.key === selectedCountry)}
+        withSearch={true}
+        onSelect={handleSelect}
+      />
+    ) : (
+      <span className="text-sm">
+        Loading countries...
+      </span>
+    )}
   </div>
 }

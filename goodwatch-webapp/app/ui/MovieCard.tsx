@@ -1,11 +1,11 @@
 import { PrefetchPageLinks } from '@remix-run/react'
 import { titleToDashed } from '~/utils/helpers'
-import RatingOverlay from '~/ui/RatingOverlay'
+import RatingOverlay from '~/ui/ratings/RatingOverlay'
 import React from 'react'
 import { extractRatings } from '~/utils/ratings'
 import { MovieDetails } from '~/server/details.server'
 import { Poster } from '~/ui/Poster'
-import StreamingOverlay from '~/ui/StreamingOverlay'
+import StreamingOverlay from '~/ui/streaming/StreamingOverlay'
 import { DiscoverResult } from '~/server/discover.server'
 
 interface MovieCardProps {
