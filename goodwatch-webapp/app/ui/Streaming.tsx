@@ -6,9 +6,10 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/solid'
 
 export interface StreamingProps {
   links: StreamingLink[]
+  countryCodes: string[]
 }
 
-export default function Streaming({ links }: StreamingProps) {
+export default function Streaming({ links, countryCodes = [] }: StreamingProps) {
   const flatrateLinks = (links || []).filter((link: StreamingLink) => link.stream_type == "flatrate")
   const buyLinks = (links || []).filter((link: StreamingLink) => link.stream_type == "buy")
   const rentLinks = (links || []).filter((link: StreamingLink) => link.stream_type == "rent")
@@ -18,9 +19,12 @@ export default function Streaming({ links }: StreamingProps) {
   const hasRent = Boolean(rentLinks.length)
   const hasNothing = !hasFlatrate && !hasBuy && !hasRent
 
+  const onlyOtherCountries = hasNothing && countryCodes.length
+  const countryCount = onlyOtherCountries ? countryCodes.length : countryCodes.length - 1
+
   return (
     <>
-      {hasNothing && (
+      {hasNothing && !countryCount && (
         <div className="mt-6">
           <InfoBox text="This title is currently not available on any streaming platform" />
         </div>
@@ -81,6 +85,24 @@ export default function Streaming({ links }: StreamingProps) {
                 </a>
               )
             })}
+          </div>
+        </div>
+      )}
+      {countryCount > 0 && (
+        <div className="mt-6">
+          <div className="mb-4 text-lg font-bold">
+            Available in&nbsp;
+            <span className="text-indigo-300">{countryCount}</span>&nbsp;
+            {onlyOtherCountries ? 'other' : ''}&nbsp;
+            {countryCount === 1 ? 'country' : 'countries'}
+          </div>
+          <div className="flex flex-wrap gap-6">
+            {countryCodes.map((countryCode) => (
+              <span key={countryCode} className="inline-flex items-center gap-2 px-2 h-4 text-sm">
+                <img src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`} alt={`Flag of ${countryCode}`}/>
+                {countryCode}
+              </span>
+            ))}
           </div>
         </div>
       )}

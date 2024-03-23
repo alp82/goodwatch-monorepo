@@ -3,15 +3,12 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-details: select country for streaming info
+details:
 show countries in which movie is available
+select country for streaming info
 box office
 awards
 crew links to discovery
-
-streaming providers precompute
-    extra table for streaming providers
-add streaming_links to movie/tv tables
 
 populate trending score 1-500
 save trending scores per day
@@ -25,6 +22,15 @@ trending load more
 discover load more
 
 copy/combine scripts only copy diffs to postgres
+
+grab movie/tv awards from API/WEB
+
+combined collection score
+
+tv seasons:
+get episodes
+get ratings
+show in details
 
 discover sidebar redesign
 filter inspiration:

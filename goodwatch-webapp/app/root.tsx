@@ -95,12 +95,16 @@ export default function App() {
   const { locale } = useLoaderData<LoaderData>()
   return (
     <html lang="en" className="scroll-smooth">
-      <head>
-        <Meta />
-        <Links />
-      </head>
-      <LocaleContext.Provider value={{locale}}>
-        <body className="flex flex-col h-screen bg-gray-900">
+    <head>
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+      />
+      <Meta/>
+      <Links/>
+    </head>
+    <LocaleContext.Provider value={{locale}}>
+      <body className="flex flex-col h-screen bg-gray-900">
           <Header />
           <main className="relative flex-grow mx-auto mt-16 pb-20 lg:pb-2 w-full text-neutral-300">
             <AnimatePresence mode="wait">

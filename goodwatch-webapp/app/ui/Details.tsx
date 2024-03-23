@@ -31,7 +31,7 @@ export default function Details({ details, tab }: DetailsProps) {
   const navigate = useNavigate()
   const ratings = extractRatings(details)
 
-  const { backdrop_path, cast, crew, genres, keywords, media_type, poster_path, release_year, streaming_links, synopsis, tagline, title, videos } = details
+  const { backdrop_path, cast, crew, genres, keywords, media_type, poster_path, release_year, streaming_country_codes, streaming_links, synopsis, tagline, title, videos } = details
   let ageRating
   let collection
   let number_of_episodes
@@ -86,6 +86,11 @@ export default function Details({ details, tab }: DetailsProps) {
     <>
       {(selectedTab === 'about' || !existingTabs.includes(selectedTab)) && (
         <>
+          <div className="md:hidden mt-8 mr-8 sm:float-left relative flex-none w-32">
+            <TrailerOverlay videos={videos || []}/>
+            <RatingOverlay ratings={ratings}/>
+            <Poster path={poster_path} title={title}/>
+          </div>
           {tagline && <div className="mb-4">
             <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
               <p className="text-white italic sm:text-xl">
@@ -93,20 +98,20 @@ export default function Details({ details, tab }: DetailsProps) {
               </p>
             </blockquote>
           </div>}
-          <Description description={synopsis} />
-          <Crew crew={crew} />
-          {collection && <Collection collection={collection} movieId={details.tmdb_id} />}
-          <Keywords keywords={keywords} type={media_type} />
+          <Description description={synopsis}/>
+          <Crew crew={crew}/>
+          {collection && <Collection collection={collection} movieId={details.tmdb_id}/>}
+          <Keywords keywords={keywords} type={media_type}/>
         </>
       )}
       {selectedTab === 'cast' && (
         <>
-          <Cast cast={cast} />
+          <Cast cast={cast}/>
         </>
       )}
       {selectedTab === 'ratings' && (
         <>
-          <Ratings ratings={ratings} />
+          <Ratings ratings={ratings}/>
           {/*{ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">*/}
           {/*  <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer hover:text-indigo-100 hover:bg-indigo-900">*/}
           {/*    {showSeasonRatings ? 'Hide' : 'Show'} Ratings per Season*/}
@@ -119,7 +124,7 @@ export default function Details({ details, tab }: DetailsProps) {
       )}
       {selectedTab === 'streaming' && (
         <>
-          <Streaming links={streaming_links} />
+          <Streaming links={streaming_links} countryCodes={streaming_country_codes} />
         </>
       )}
       {selectedTab === 'videos' && (
@@ -137,8 +142,8 @@ export default function Details({ details, tab }: DetailsProps) {
         style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}
       >
         <div className="relative w-full max-w-7xl">
-          <div className="p-3 flex">
-            <div className="hidden md:block relative flex-none w-40 lg:w-60">
+          <div className="p-3 flex items-center">
+            <div className="hidden md:block relative flex-none w-40 md:w-60">
               <TrailerOverlay videos={videos || []} />
               <RatingOverlay ratings={ratings}/>
               <Poster path={poster_path} title={title}/>
@@ -147,8 +152,8 @@ export default function Details({ details, tab }: DetailsProps) {
               <h2 className="mb-2 mr-12 text-2xl">
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
-              <Genres genres={genres} type={media_type} />
-              <div className="flex gap-4 items-center mb-4 ml-1">
+              <Genres genres={genres} type={media_type}/>
+              <div className="flex gap-4 items-center mb-4 ml-">
                 <AgeRating ageRating={ageRating}/>
                 {runtime ? <Runtime minutes={runtime}/> : null}
                 {number_of_episodes && number_of_seasons ? <div className="flex gap-1">
@@ -159,27 +164,52 @@ export default function Details({ details, tab }: DetailsProps) {
                 </div> : null}
               </div>
               <div className="hidden md:block mb-4">
-                <RatingBadges ratings={ratings}/>
+                <div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
+                  <div className="px-4 py-2 sm:px-6 font-bold">
+                    Ratings
+                  </div>
+                  <div className="px-4 py-2 sm:p-6">
+                    <RatingBadges ratings={ratings}/>
+                  </div>
+                </div>
               </div>
               <div className="hidden md:block mb-4">
-                <StreamingBadges links={streaming_links}/>
+                <div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
+                  <div className="px-4 py-2 sm:px-6 font-bold">
+                    Streaming
+                  </div>
+                  <div className="px-4 py-2 sm:p-6">
+                    <StreamingBadges links={streaming_links} countryCodes={streaming_country_codes} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           <ShareButton/>
         </div>
         <div className="md:hidden flex gap-4 mt-4 px-2 w-full">
-          <div className="relative flex-none w-32">
-            <TrailerOverlay videos={videos || []} />
-            <RatingOverlay ratings={ratings}/>
-            <Poster path={poster_path} title={title}/>
-          </div>
           <div className="relative flex-1 mt-2">
             <div className="mb-4">
-              <RatingBadges ratings={ratings}/>
+              <div
+                className="w-full divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
+                <div className="px-4 py-1 sm:px-6 font-bold">
+                  Ratings
+                </div>
+                <div className="px-4 py-1 sm:p-6">
+                  <RatingBadges ratings={ratings}/>
+                </div>
+              </div>
             </div>
             <div className="mb-4">
-              <StreamingBadges links={streaming_links}/>
+              <div
+                className="w-full divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
+                <div className="px-4 py-1 sm:px-6 font-bold">
+                  Streaming
+                </div>
+                <div className="px-4 py-12 sm:p-6">
+                  <StreamingBadges links={streaming_links} countryCodes={streaming_country_codes}/>
+                </div>
+              </div>
             </div>
           </div>
         </div>

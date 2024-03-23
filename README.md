@@ -2,6 +2,13 @@
 
 See it running here: https://goodwatch.app/
 
+## What's unique about GoodWatch?
+
+1. Discover page tailored to your needs
+2. See all ratings at one place
+3. See all streaming services at one place (similar to JustWatch)
+4. See score for whole series of movies at one glance
+
 ## Getting started
 
 1. Checkout this repository

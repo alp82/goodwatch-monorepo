@@ -16,6 +16,7 @@ export interface BaseDetails extends AllRatings {
   keywords: string[]
   release_year: string
   streaming_links: StreamingLink[]
+  streaming_country_codes: string[]
   title_dashed: string
   title_underscored: string
 }
@@ -328,7 +329,8 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
     name: 'details-movie',
     target: _getDetailsForMovie,
     params,
-    ttlMinutes: 30,
+    // ttlMinutes: 30,
+    ttlMinutes: 0,
   })
 }
 
@@ -344,6 +346,7 @@ const movieFields = [
   'poster_path',
   'release_year',
   'runtime',
+  'streaming_country_codes',
   'synopsis',
   'tagline',
   'title',
@@ -402,7 +405,8 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
     name: 'details-tv',
     target: _getDetailsForTV,
     params,
-    ttlMinutes: 30,
+    // ttlMinutes: 30,
+    ttlMinutes: 0,
   })
 }
 
@@ -418,6 +422,7 @@ const tvFields = [
   'number_of_seasons',
   'poster_path',
   'release_year',
+  'streaming_country_codes',
   'synopsis',
   'tagline',
   'title',

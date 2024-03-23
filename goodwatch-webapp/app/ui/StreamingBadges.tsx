@@ -4,9 +4,10 @@ import { titleToDashed } from '~/utils/helpers'
 
 export interface StreamingBadgesProps {
   links: StreamingLink[]
+  countryCodes: string[]
 }
 
-export default function StreamingBadges({ links = [] }: StreamingBadgesProps) {
+export default function StreamingBadges({ links = [], countryCodes = [] }: StreamingBadgesProps) {
   const flatrateLinks = links.filter((link: StreamingLink) => link.stream_type == "flatrate")
   const buyLinks = links.filter((link: StreamingLink) => link.stream_type == "buy")
 
@@ -14,9 +15,11 @@ export default function StreamingBadges({ links = [] }: StreamingBadgesProps) {
   const hasBuy = Boolean(buyLinks.length)
   if (!hasFlatrate) {
     return hasBuy ? (
-      <div className="text-xl">only available for streaming to <a className="text-indigo-400 hover:underline" href="?tab=streaming">buy or rent</a></div>
+      <div className="text-lg">only available for streaming to <a className="text-indigo-400 hover:underline" href="?tab=streaming">buy or rent</a></div>
+    ) : countryCodes.length ? (
+      <div className="text-lg">only available for streaming in <a className="text-indigo-400 hover:underline" href="?tab=streaming">other countries</a></div>
     ) : (
-      <div className="text-xl">not available for streaming</div>
+      <div className="text-lg">not available for streaming</div>
     )
   }
 

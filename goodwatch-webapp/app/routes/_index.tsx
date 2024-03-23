@@ -25,7 +25,10 @@ export const headers: HeadersFunction = () => {
 }
 
 export const meta: MetaFunction<typeof loader> = () => {
-  return [{title: 'GoodWatch'}, {description: 'What do you want to watch next? All movie and tv show ratings and streaming providers on one page.'}]
+  return [
+    {title: 'GoodWatch'},
+    {description: 'What do you want to watch next? All movie and tv show ratings and streaming providers on one page.'},
+  ]
 }
 
 type LoaderData = {
