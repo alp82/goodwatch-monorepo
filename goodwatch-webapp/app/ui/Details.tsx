@@ -166,7 +166,7 @@ export default function Details({ details, tab }: DetailsProps) {
               <div className="hidden md:block mb-4">
                 <div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
                   <div className="px-4 py-2 sm:px-6 font-bold">
-                    Ratings
+                    <a className="text-indigo-400 hover:underline" href="?tab=ratings">Ratings</a>
                   </div>
                   <div className="px-4 py-2 sm:p-6">
                     <RatingBadges ratings={ratings}/>
@@ -176,7 +176,7 @@ export default function Details({ details, tab }: DetailsProps) {
               <div className="hidden md:block mb-4">
                 <div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
                   <div className="px-4 py-2 sm:px-6 font-bold">
-                    Streaming
+                    <a className="text-indigo-400 hover:underline" href="?tab=streaming">Streaming</a>
                   </div>
                   <div className="px-4 py-2 sm:p-6">
                     <StreamingBadges links={streaming_links} countryCodes={streaming_country_codes} />
@@ -193,7 +193,7 @@ export default function Details({ details, tab }: DetailsProps) {
               <div
                 className="w-full divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
                 <div className="px-4 py-1 sm:px-6 font-bold">
-                  Ratings
+                  <a className="text-indigo-400 hover:underline" href="?tab=ratings">Ratings</a>
                 </div>
                 <div className="px-4 py-1 sm:p-6">
                   <RatingBadges ratings={ratings}/>
@@ -204,7 +204,7 @@ export default function Details({ details, tab }: DetailsProps) {
               <div
                 className="w-full divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
                 <div className="px-4 py-1 sm:px-6 font-bold">
-                  Streaming
+                  <a className="text-indigo-400 hover:underline" href="?tab=streaming">Streaming</a>
                 </div>
                 <div className="px-4 py-12 sm:p-6">
                   <StreamingBadges links={streaming_links} countryCodes={streaming_country_codes}/>
