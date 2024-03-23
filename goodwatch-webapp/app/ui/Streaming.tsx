@@ -19,8 +19,8 @@ export default function Streaming({ links, countryCodes = [] }: StreamingProps) 
   const hasRent = Boolean(rentLinks.length)
   const hasNothing = !hasFlatrate && !hasBuy && !hasRent
 
-  const onlyOtherCountries = hasNothing && countryCodes.length
-  const countryCount = onlyOtherCountries ? countryCodes.length : countryCodes.length - 1
+  const onlyOtherCountries = hasNothing && countryCodes?.length
+  const countryCount = onlyOtherCountries ? countryCodes?.length : countryCodes?.length - 1
 
   return (
     <>
@@ -93,7 +93,7 @@ export default function Streaming({ links, countryCodes = [] }: StreamingProps) 
           <div className="mb-4 text-lg font-bold">
             Available in&nbsp;
             <span className="text-indigo-300">{countryCount}</span>&nbsp;
-            {onlyOtherCountries ? 'other' : ''}&nbsp;
+            {onlyOtherCountries ? 'other ' : ''}
             {countryCount === 1 ? 'country' : 'countries'}
           </div>
           <div className="flex flex-wrap gap-6">

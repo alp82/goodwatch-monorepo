@@ -16,7 +16,7 @@ export default function StreamingBadges({ links = [], countryCodes = [] }: Strea
   if (!hasFlatrate) {
     return hasBuy ? (
       <div className="text-lg">only available for streaming to <a className="text-indigo-400 hover:underline" href="?tab=streaming">buy or rent</a></div>
-    ) : countryCodes.length ? (
+    ) : countryCodes?.length ? (
       <div className="text-lg">only available for streaming in <a className="text-indigo-400 hover:underline" href="?tab=streaming">other countries</a></div>
     ) : (
       <div className="text-lg">not available for streaming</div>

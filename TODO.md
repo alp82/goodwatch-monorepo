@@ -4,11 +4,10 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 # TODO's
 ```
 details:
-show countries in which movie is available
 select country for streaming info
 box office
-awards
 crew links to discovery
+awards
 
 populate trending score 1-500
 save trending scores per day
