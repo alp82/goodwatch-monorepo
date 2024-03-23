@@ -154,7 +154,6 @@ export default function Details({ details, tab, country, language }: DetailsProp
               <h2 className="mb-2 mr-12 text-2xl">
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
-              <Genres genres={genres} type={media_type}/>
               <div className="flex gap-4 items-center mb-4 ml-">
                 <AgeRating ageRating={ageRating}/>
                 {runtime ? <Runtime minutes={runtime}/> : null}
@@ -165,6 +164,7 @@ export default function Details({ details, tab, country, language }: DetailsProp
                   Season{number_of_seasons === 1 ? '' : 's'}
                 </div> : null}
               </div>
+              <Genres genres={genres} type={media_type}/>
               <div className="hidden md:block mb-4">
                 <RatingBlock ratings={ratings}/>
               </div>
