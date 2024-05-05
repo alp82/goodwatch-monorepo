@@ -18,7 +18,8 @@ export const getStreamingProviders = async (params: StreamingProviderParams) => 
     name: 'streaming-providers',
     target: _getStreamingProviders,
     params,
-    ttlMinutes: 60 * 24,
+    // ttlMinutes: 60 * 24,
+    ttlMinutes: 0,
   })
 }
 
@@ -26,17 +27,13 @@ export async function _getStreamingProviders({ type }: StreamingProviderParams):
   const mediaType = type === 'tv' ? 'tv' : 'movie'
   const query = `
       SELECT
-        sp.id, sp.name, sp.logo_path, COUNT(spl.provider_id) as provider_count
+        id, name, logo_path
       FROM
-        streaming_providers sp
-      LEFT JOIN
-        streaming_provider_links spl ON sp.id = spl.provider_id
+        streaming_provider_ranking
       --WHERE
       --  spl.media_type = '${mediaType}'
-      GROUP BY
-        sp.id, sp.name, sp.logo_path
       ORDER BY
-        provider_count DESC;
+        link_count DESC;
   `
   const result = await executeQuery(query)
   return result.rows.map((row) => ({

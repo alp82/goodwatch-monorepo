@@ -3,10 +3,10 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-details:
-box office
-crew links to discovery
-awards
+impressum
+about page
+
+service monitoring
 
 populate trending score 1-500
 save trending scores per day
@@ -43,6 +43,11 @@ disocver keywords and tropes
 discover: unselect streaming?
 discover: unselect country?
 localstorage: country and save streaming provider selection
+
+details:
+box office
+crew links to discovery
+awards
 
 stuck scripts monitoring
 rate limit monitoring
