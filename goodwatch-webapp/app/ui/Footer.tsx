@@ -1,7 +1,6 @@
 import React from 'react'
 import tmdbLogo from '~/img/tmdb-logo.svg'
 import discordWhite from '~/img/discord-mark-white.svg'
-import discordBlue from '~/img/discord-mark-blue.svg'
 
 const navigation = {
   main: [
@@ -88,13 +87,29 @@ export default function Footer({}: FooterProps) {
     <footer className="hidden lg:block mt-8 bg-gray-950">
       <div className="mx-auto max-w-7xl overflow-hidden py-12 px-6 sm:py-16 lg:px-8">
         <nav className="-mb-6 columns-2 flex justify-center space-x-12" aria-label="Footer">
-          {navigation.main.map((item) => (
-            <div key={item.name} className="pb-6">
-              <a href={item.href} className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100">
-                {item.name}
+          <div>
+            {navigation.main.map((item) => (
+              <div key={item.name} className="pb-2">
+                <a href={item.href} className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100">
+                  {item.name}
+                </a>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div className="mb-2">
+              <a href="/about"
+                 className="text-sm leading-6 text-gray-400 hover:text-gray-100">
+                About
               </a>
             </div>
-          ))}
+            <div className="mb-2">
+              <a href="/disclaimer"
+                 className="text-sm leading-6 text-gray-400 hover:text-gray-100">
+                Disclaimer
+              </a>
+            </div>
+          </div>
         </nav>
         <div className="mt-10 flex justify-center space-x-10">
           {navigation.social.map((item) => (

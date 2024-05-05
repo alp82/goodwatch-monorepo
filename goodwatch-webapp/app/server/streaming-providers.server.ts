@@ -18,8 +18,7 @@ export const getStreamingProviders = async (params: StreamingProviderParams) => 
     name: 'streaming-providers',
     target: _getStreamingProviders,
     params,
-    // ttlMinutes: 60 * 24,
-    ttlMinutes: 0,
+    ttlMinutes: 60 * 24,
   })
 }
 
