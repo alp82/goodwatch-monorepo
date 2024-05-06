@@ -3,10 +3,9 @@ ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
 
 # TODO's
 ```
-impressum
-about page
-
 service monitoring
+
+GW API
 
 populate trending score 1-500
 save trending scores per day
