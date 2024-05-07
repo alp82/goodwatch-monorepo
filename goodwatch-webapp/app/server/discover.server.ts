@@ -1,7 +1,7 @@
 import { cached } from '~/utils/cache'
 import { VOTE_COUNT_THRESHOLD } from '~/utils/constants'
 import { executeQuery } from '~/utils/postgres'
-import { getCountrySpecificDetails, StreamingProviders } from '~/server/details.server'
+import { getCountrySpecificDetails, StreamingLink, StreamingProviders } from '~/server/details.server'
 import { AllRatings, getRatingKeys } from '~/utils/ratings'
 import { StreamingProvider } from '~/server/streaming-providers.server'
 
@@ -37,6 +37,7 @@ export interface DiscoverResult extends AllRatings {
   poster_path: string
   title: string
   streaming_providers: StreamingProviders
+  streaming_links: StreamingLink[]
 }
 
 export interface DiscoverFilters {
@@ -133,6 +134,10 @@ async function _getDiscoverResults({
     `)
     placeholderValues.push(type)
     placeholderValues.push(country)
+    joins.push(`INNER JOIN
+      streaming_providers sp
+      ON sp.id = spl.provider_id
+    `)
   }
 
   let orderBy
@@ -161,6 +166,14 @@ async function _getDiscoverResults({
       m.title,
       m.poster_path,
       m.streaming_providers,
+      json_agg(json_build_object(
+        'provider_id', spl.provider_id,
+        'provider_name', sp.name,
+        'provider_logo_path', sp.logo_path,
+        'media_type', spl.media_type,
+        'country_code', spl.country_code,
+        'stream_type', spl.stream_type
+      )) AS streaming_links,
       ${getRatingKeys().map((key) => `m.${key}`).join(', ')}
     FROM
       ${type === 'movie' ? 'movies' : 'tv'} m
@@ -171,7 +184,7 @@ async function _getDiscoverResults({
       m.tmdb_id
     ORDER BY
       ${orderBy}
-    LIMIT 20;
+    LIMIT 120;
   `
   const result = await executeQuery(query, placeholderValues)
   const results = result.rows.map((row) => getCountrySpecificDetails(row, country, language)) as unknown as DiscoverResult[]

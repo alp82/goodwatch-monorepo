@@ -1,6 +1,3 @@
-ValidationError: ValidationError (TmdbMovieDetails:656fbe42b583701d22b20712)
-(results.release_dates.release_date.cannot parse date "2023-10-07T00:00:00.000Z": ['release_dates'])
-
 # TODO's
 ```
 service monitoring
@@ -18,7 +15,7 @@ last_prioritized_at
 trending load more
 discover load more
 
-copy/combine scripts only copy diffs to postgres
+ kwinss kwinkcopy/combine scripts only copy diffs to postgres
 
 grab movie/tv awards from API/WEB
 
@@ -138,6 +135,7 @@ personalized recommendation engine:
 * movielens
 ```
 
+# Search
 ```
 https://leandronsp.com/a-powerful-full-text-search-in-postgresql-in-less-than-20-lines
 https://rachbelaid.com/postgres-full-text-search-is-good-enough/

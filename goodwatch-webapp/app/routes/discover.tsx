@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { json, LoaderFunctionArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
-import { PrefetchPageLinks, useLoaderData, useNavigate, useNavigation } from '@remix-run/react'
+import { ClientLoaderFunction, PrefetchPageLinks, useLoaderData, useNavigate, useNavigation } from '@remix-run/react'
 import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -93,6 +93,15 @@ export default function Discover() {
   const navigate = useNavigate()
   const navigation = useNavigation()
   const { locale } = useLocale();
+
+  useEffect(() => {
+    const withStreamingProviders = localStorage.getItem('withStreamingProviders') || '8,9,337'
+    const newParams = {
+      ...currentParams,
+      withStreamingProviders,
+    }
+    updateParams(newParams)
+  }, [])
 
   // const watchProvidersFetcher = useFetcher()
   // useEffect(() => {

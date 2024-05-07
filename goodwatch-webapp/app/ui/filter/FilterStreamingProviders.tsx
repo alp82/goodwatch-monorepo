@@ -31,7 +31,9 @@ export default function FilterStreamingProviders({ type, selectedProviders, onCh
   })
 
   const handleSelect = (selectedItems: SelectItem[]) => {
-    onChange(selectedItems.map((item) => item.key).join(','))
+    const withStreamingProviders = selectedItems.map((item) => item.key).join(',')
+    onChange(withStreamingProviders)
+    localStorage.setItem('withStreamingProviders', withStreamingProviders)
   }
 
   return <div className="w-52">

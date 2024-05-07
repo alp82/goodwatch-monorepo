@@ -22,7 +22,7 @@ export function TvCard({ tv, prefetch = false }: TvCardProps) {
     >
       <div className="relative">
         <RatingOverlay ratings={ratings} />
-        <StreamingOverlay providers={tv.streaming_providers} />
+        <StreamingOverlay links={tv.streaming_links} />
         <Poster path={tv.poster_path} title={tv.title}/>
       </div>
       <div className="my-2 px-2">
