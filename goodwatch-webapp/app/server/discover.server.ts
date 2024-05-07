@@ -122,23 +122,21 @@ async function _getDiscoverResults({
     conditions.push(`(${castConditions.join(' OR ')})`)
   }
 
-  if(withStreamingProviders) {
-    const streamingProviderIds = withStreamingProviders.split(',').map((id) => parseInt(id)).join(',')
-    joins.push(`INNER JOIN
-      streaming_provider_links spl
-      ON spl.tmdb_id = m.tmdb_id
-      AND spl.media_type = ${getNextPlaceholder()}
-      AND spl.country_code = ${getNextPlaceholder()}
-      AND spl.stream_type = 'flatrate'
-      AND spl.provider_id IN (${streamingProviderIds})
-    `)
-    placeholderValues.push(type)
-    placeholderValues.push(country)
-    joins.push(`INNER JOIN
-      streaming_providers sp
-      ON sp.id = spl.provider_id
-    `)
-  }
+  const streamingProviderIds = withStreamingProviders ? withStreamingProviders.split(',').map((id) => parseInt(id)).join(',') : null
+  joins.push(`INNER JOIN
+    streaming_provider_links spl
+    ON spl.tmdb_id = m.tmdb_id
+    AND spl.media_type = ${getNextPlaceholder()}
+    AND spl.country_code = ${getNextPlaceholder()}
+    AND spl.stream_type = 'flatrate'
+    ${streamingProviderIds ? `AND spl.provider_id IN (${streamingProviderIds})` : ''}
+  `)
+  placeholderValues.push(type)
+  placeholderValues.push(country)
+  joins.push(`INNER JOIN
+    streaming_providers sp
+    ON sp.id = spl.provider_id
+  `)
 
   let orderBy
   if (sortBy === 'release_date') {
