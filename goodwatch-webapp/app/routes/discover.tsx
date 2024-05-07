@@ -56,7 +56,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
   const withoutKeywords = url.searchParams.get('withoutKeywords') || ''
   const withGenres = url.searchParams.get('withGenres') || ''
   const withoutGenres = url.searchParams.get('withoutGenres') || ''
-  const withStreamingProviders = url.searchParams.get('withStreamingProviders') || '8,9,337'
+  const withStreamingProviders = url.searchParams.get('withStreamingProviders') || ''
   const sortBy = (url.searchParams.get('sortBy') || 'popularity') as DiscoverSortBy
   const sortDirection = (url.searchParams.get('sortDirection') || 'desc') as 'asc' | 'desc'
   const params = {
@@ -95,12 +95,14 @@ export default function Discover() {
   const { locale } = useLocale();
 
   useEffect(() => {
-    const withStreamingProviders = localStorage.getItem('withStreamingProviders') || '8,9,337'
-    const newParams = {
-      ...currentParams,
-      withStreamingProviders,
+    if (params.withStreamingProviders === '') {
+      const withStreamingProviders = localStorage.getItem('withStreamingProviders') || '8,9,337'
+      const newParams = {
+        ...currentParams,
+        withStreamingProviders,
+      }
+      updateParams(newParams)
     }
-    updateParams(newParams)
   }, [])
 
   // const watchProvidersFetcher = useFetcher()
