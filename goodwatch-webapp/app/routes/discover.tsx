@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { json, LoaderFunctionArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
-import { ClientLoaderFunction, PrefetchPageLinks, useLoaderData, useNavigate, useNavigation } from '@remix-run/react'
+import { json, LoaderFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
+import { PrefetchPageLinks, useLoaderData, useNavigation } from '@remix-run/react'
 import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -17,6 +17,7 @@ import { TvCard } from '~/ui/TvCard'
 import FilterSelection from '~/ui/filter/FilterSelection'
 import FilterSummary from '~/ui/filter/FilterSummary'
 import useLocale, { getLocaleFromRequest } from '~/utils/locale'
+import { useUpdateUrlParams } from '~/hooks/updateUrlParams'
 
 export function headers() {
   return {
@@ -42,7 +43,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
   const url = new URL(request.url)
   const type = (url.searchParams.get('type') || 'movie') as MediaType
   const mode = (url.searchParams.get('mode') || 'advanced') as 'advanced'
-  const country = url.searchParams.get('country') || locale.country
+  const country = url.searchParams.get('country') || ''
   const language = url.searchParams.get('language') || locale.language
   const minAgeRating = url.searchParams.get('minAgeRating') || ''
   const maxAgeRating = url.searchParams.get('maxAgeRating') || ''
@@ -90,35 +91,33 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
 
 export default function Discover() {
   const { params, results: { results, filters } } = useLoaderData<LoaderData>()
-  const navigate = useNavigate()
   const navigation = useNavigation()
   const { locale } = useLocale();
 
+  const { currentParams, constructUrl, updateParams } = useUpdateUrlParams({
+    params,
+  })
+
   useEffect(() => {
-    if (params.withStreamingProviders === '') {
-      const withStreamingProviders = localStorage.getItem('withStreamingProviders') || '8,9,337'
+    if (params.country === '' || params.withStreamingProviders === '') {
+      let country = locale.country
+      if (params.country === '' || params.withStreamingProviders === '') {
+        country = localStorage.getItem('country') || country
+      }
+
+      let withStreamingProviders = '8,9,337'
+      if (params.withStreamingProviders === '') {
+        withStreamingProviders = localStorage.getItem('withStreamingProviders') || withStreamingProviders
+      }
+
       const newParams = {
         ...currentParams,
+        country,
         withStreamingProviders,
       }
       updateParams(newParams)
     }
   }, [])
-
-  // const watchProvidersFetcher = useFetcher()
-  // useEffect(() => {
-  //   watchProvidersFetcher.submit(
-  //     params,
-  //     {
-  //       method: 'get',
-  //       action: `/api/watch-providers/${params.type}`,
-  //     }
-  //   )
-  // }, [params.type])
-  // const watchProviders = watchProvidersFetcher.data?.watchProviders || []
-  // const availableWatchProviders = watchProviders.filter((watchProvider: WatchProvider) => '8,9,337,2,3'.split(',').includes(watchProvider.provider_id.toString()))
-
-  const [currentParams, setCurrentParams] = useState(params)
 
   const discoverTypeTabs: Tab[] = [{
     key: 'movie',
@@ -152,28 +151,6 @@ export default function Discover() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const toggleFilters = () => {
     setFiltersOpen((isOpen) => !isOpen)
-  }
-
-  const getNonEmptyParams = (newParams: DiscoverParams) => {
-    return Object.keys(newParams).sort().reduce((result, key) => {
-      const value = newParams[key as keyof DiscoverParams]
-      if (!value) return result
-      return {
-        ...result,
-        [key]: value,
-      }
-    }, {}) as LoaderData["params"]
-  }
-
-  const constructUrl = (newParams: DiscoverParams) => {
-    const nonEmptyNewParams = getNonEmptyParams(newParams)
-    return `/discover?${new URLSearchParams(nonEmptyNewParams as unknown as Record<string, string>).toString()}`
-  }
-
-  const updateParams = (newParams: DiscoverParams) => {
-    const nonEmptyNewParams = getNonEmptyParams(newParams)
-    setCurrentParams(nonEmptyNewParams)
-    navigate(constructUrl(newParams))
   }
 
   const handleTabSelect = (tab: Tab) => {

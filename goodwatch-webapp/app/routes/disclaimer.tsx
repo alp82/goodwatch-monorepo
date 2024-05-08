@@ -1,3 +1,19 @@
+import { MetaFunction } from '@remix-run/node'
+import { loader } from '~/routes/discover'
+
+export function headers() {
+  return {
+    "Cache-Control": "max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+  };
+}
+
+export const meta: MetaFunction<typeof loader> = () => {
+  return [
+    {title: 'Disclaimer | GoodWatch'},
+    {description: 'All movie and tv show ratings and streaming providers on the same page'},
+  ]
+}
+
 export default function Disclaimer() {
   return (
     <div className="flex flex-col items-center mt-0 py-2 md:py-4 lg:py-8">

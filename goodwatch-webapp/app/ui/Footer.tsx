@@ -89,7 +89,7 @@ export default function Footer({}: FooterProps) {
         <nav className="-mb-6 columns-2 flex justify-center space-x-12" aria-label="Footer">
           <div>
             {navigation.main.map((item) => (
-              <div key={item.name} className="pb-2">
+              <div key={item.name} className="mb-2">
                 <a href={item.href} className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100">
                   {item.name}
                 </a>
@@ -98,6 +98,12 @@ export default function Footer({}: FooterProps) {
           </div>
           <div>
             <div className="mb-2">
+              <a href="https://dev.to/t/goodwatch"
+                 className="text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
+                Blog
+              </a>
+            <div className="mb-2">
+            </div>
               <a href="/about"
                  className="text-sm leading-6 text-gray-400 hover:text-gray-100">
                 About

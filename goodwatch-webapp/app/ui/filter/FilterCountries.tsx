@@ -44,7 +44,9 @@ export default function FilterCountries({ type, selectedCountry, availableCountr
   })
 
   const handleSelect = (selectedItem: SelectItem) => {
-    onChange(selectedItem.key)
+    const country = selectedItem.key
+    onChange(country)
+    localStorage.setItem('country', country)
   }
 
   return <div className="w-72 relative">

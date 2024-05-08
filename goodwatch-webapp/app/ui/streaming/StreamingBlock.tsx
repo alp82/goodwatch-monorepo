@@ -21,7 +21,7 @@ export default function StreamingBlock({ media_type, links = [], countryCodes = 
   }
 
   return (
-    <div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-50 shadow">
+    <div className="divide-y divide-gray-600 overflow-visible rounded-lg bg-gray-900 bg-opacity-50 shadow">
       <div className="flex gap-2 items-center px-4 py-2 sm:px-6 font-bold">
         <a className="text-indigo-400 hover:underline" href="?tab=streaming">Streaming</a> in
         {editing ? (
