@@ -95,6 +95,12 @@ export default function Footer({}: FooterProps) {
                 </a>
               </div>
             ))}
+            <div className="mb-2">
+              <a href="http://coinmatica.net:4801/status/goodwatch"
+                 className="text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
+                Status Page
+              </a>
+            </div>
           </div>
           <div>
             <div className="mb-2">
@@ -102,8 +108,8 @@ export default function Footer({}: FooterProps) {
                  className="text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
                 Blog
               </a>
-            <div className="mb-2">
             </div>
+            <div className="mb-2">
               <a href="/about"
                  className="text-sm leading-6 text-gray-400 hover:text-gray-100">
                 About

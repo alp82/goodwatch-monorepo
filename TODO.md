@@ -1,9 +1,5 @@
 # TODO's
 ```
-service monitoring
-
-GW API
-
 populate trending score 1-500
 save trending scores per day
 trending yesterday
@@ -12,10 +8,20 @@ trending difference
 priority flag
 last_prioritized_at
 
+stats
+# of movies
+# of tv shows
+# of ratings
+# of streaming links
+avg rating per provider
+oldest fetch date
+
+GW API
+
 trending load more
 discover load more
 
- kwinss kwinkcopy/combine scripts only copy diffs to postgres
+copy/combine scripts only copy diffs to postgres
 
 grab movie/tv awards from API/WEB
 
@@ -38,7 +44,6 @@ discover budget & revenue
 disocver keywords and tropes
 discover: unselect streaming?
 discover: unselect country?
-localstorage: country and save streaming provider selection
 
 details:
 box office

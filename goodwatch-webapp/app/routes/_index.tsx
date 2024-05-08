@@ -10,7 +10,6 @@ import netflixLogo from '~/img/netflix-logo.svg'
 import primeLogo from '~/img/primevideo-logo.svg'
 import disneyLogo from '~/img/disneyplus-logo.svg'
 import { MovieCard } from '~/ui/MovieCard'
-import { MovieDetails, TVDetails } from '~/server/details.server'
 import { getTrendingMovies, getTrendingTV, TrendingMovie, TrendingTV } from '~/server/trending.server'
 import { TvCard } from '~/ui/TvCard'
 import {
@@ -184,7 +183,7 @@ export default function Index() {
             <MovieCard movie={movie} prefetch={true}/>
           </div>))}
           <a
-            className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
+            className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
             href="/discover?type=movie">
             <FilmIcon className="w-16 h-16"/>
             <div className="my-2 px-2">
@@ -199,7 +198,7 @@ export default function Index() {
             <TvCard tv={tv} prefetch={true}/>
           </div>))}
           <a
-            className="flex flex-col text-center justify-center items-center w-36 border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
+            className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
             href="/discover?type=tv">
             <TvIcon className="w-16 h-16"/>
             <div className="my-2 px-2">
