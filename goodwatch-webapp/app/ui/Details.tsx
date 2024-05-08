@@ -61,7 +61,7 @@ export default function Details({ details, tab, country, language }: DetailsProp
   const handleTabSelection = (tab: Tab) => {
     setSelectedTab(tab.key)
     navigate(
-      `/${media_type}/${details.tmdb_id}-${titleToDashed(title)}?tab=${tab.key}`,
+      `/${media_type}/${details.tmdb_id}-${titleToDashed(title)}?tab=${tab.key}&country=${country}`,
       {
         preventScrollReset: true,
       }
