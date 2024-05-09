@@ -66,8 +66,9 @@ def main(next_ids: dict):
     )
     docs = initialize_documents(next_entries)
     close_mongodb()
-    return docs
 
-
-
-
+    print(docs)
+    return {
+        "movie_ids": docs["upserted_movie_ids"],
+        "tv_ids": docs["upserted_tv_ids"],
+    }
