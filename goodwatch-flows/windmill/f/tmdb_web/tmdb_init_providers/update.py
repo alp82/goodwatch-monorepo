@@ -13,6 +13,8 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
 
     count_new_movies = 0
     count_new_tv = 0
+    upserted_movie_ids = []
+    upserted_tv_ids = []
 
     for next_entry in next_entries:
         print(f"copying {next_entry.title} ({next_entry.tmdb_id}) streaming data")
@@ -28,11 +30,21 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
                 }
             )
             if isinstance(next_entry, TmdbMovieDetails):
-                count_new_movies += store_copies(
-                    [operation], mongo_db.tmdb_movie_providers
+                movie_upserts = store_copies(
+                    [operation],
+                    mongo_db.tmdb_movie_providers,
                 )
+                count_new_movies += movie_upserts.get("count_new_documents")
+                upserted_movie_ids += movie_upserts.get("upserted_ids")
+
             elif isinstance(next_entry, TmdbTvDetails):
-                count_new_tv += store_copies([operation], mongo_db.tmdb_tv_providers)
+                tv_upserts = store_copies(
+                    [operation],
+                    mongo_db.tmdb_tv_providers,
+                )
+                count_new_tv += tv_upserts.get("count_new_documents")
+                upserted_tv_ids += tv_upserts.get("upserted_ids")
+
             else:
                 raise Exception(
                     f"next_entry has an unexpected type: {type(next_entry)}"
@@ -41,6 +53,8 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
     return {
         "count_new_movies": count_new_movies,
         "count_new_tv": count_new_tv,
+        "upserted_movie_ids": upserted_movie_ids,
+        "upserted_tv_ids": upserted_tv_ids,
     }
 
 

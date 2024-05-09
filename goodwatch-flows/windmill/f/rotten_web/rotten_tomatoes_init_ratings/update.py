@@ -14,6 +14,8 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
 
     count_new_movies = 0
     count_new_tv = 0
+    upserted_movie_ids = []
+    upserted_tv_ids = []
 
     for next_entry in next_entries:
         print(f"copying {next_entry.title} ({next_entry.tmdb_id}) rating")
@@ -22,27 +24,35 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
                 tmdb_entry=next_entry.to_mongo().to_dict(),
                 type=DumpType.MOVIES,
             )
-            count_new_movies += store_copies(
+            movie_upserts = store_copies(
                 operations=[operation],
                 collection=mongo_db.rotten_tomatoes_movie_rating,
                 label_plural="movies",
             )
+            count_new_movies += movie_upserts.get("count_new_documents")
+            upserted_movie_ids += movie_upserts.get("upserted_ids")
+
         elif isinstance(next_entry, TmdbTvDetails):
             operation = build_operation(
                 tmdb_entry=next_entry.to_mongo().to_dict(),
                 type=DumpType.TV_SERIES,
             )
-            count_new_tv += store_copies(
+            tv_upserts = store_copies(
                 operations=[operation],
                 collection=mongo_db.rotten_tomatoes_tv_rating,
                 label_plural="tv series",
             )
+            count_new_tv += tv_upserts.get("count_new_documents")
+            upserted_tv_ids += tv_upserts.get("upserted_ids")
+
         else:
             raise Exception(f"next_entry has an unexpected type: {type(next_entry)}")
 
     return {
         "count_new_movies": count_new_movies,
         "count_new_tv": count_new_tv,
+        "upserted_movie_ids": upserted_movie_ids,
+        "upserted_tv_ids": upserted_tv_ids,
     }
 
 

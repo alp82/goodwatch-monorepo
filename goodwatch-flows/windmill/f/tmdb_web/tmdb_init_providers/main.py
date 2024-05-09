@@ -38,6 +38,8 @@ def initialize_documents():
 
     count_new_movies = 0
     count_new_tv = 0
+    upserted_movie_ids = []
+    upserted_tv_ids = []
 
     for offset in range(0, movie_count, BATCH_SIZE):
         print(f"copying {offset} to {offset + BATCH_SIZE} streaming data for movies")
@@ -53,7 +55,9 @@ def initialize_documents():
             })
             for doc in movie_cursor
         ]
-        count_new_movies += store_copies(movie_operations, mongo_db.tmdb_movie_providers)
+        movie_upserts = store_copies(movie_operations, mongo_db.tmdb_movie_providers)
+        count_new_movies += movie_upserts.get("count_new_documents")
+        upserted_movie_ids += movie_upserts.get("upserted_ids")
 
     for offset in range(0, tv_count, BATCH_SIZE):
         print(f"copying {offset} to {offset + BATCH_SIZE} streaming data for tv shows")
@@ -69,11 +73,15 @@ def initialize_documents():
             })
             for doc in tv_cursor
         ]
-        count_new_tv += store_copies(tv_operations, mongo_db.tmdb_tv_providers)
+        tv_upserts = store_copies(tv_operations, mongo_db.tmdb_tv_providers)
+        count_new_tv += tv_upserts.get("count_new_documents")
+        upserted_tv_ids += tv_upserts.get("upserted_ids")
 
     return {
         "count_new_movies": count_new_movies,
         "count_new_tv": count_new_tv,
+        "upserted_movie_ids": upserted_movie_ids,
+        "upserted_tv_ids": upserted_tv_ids,
     }
 
 
@@ -105,13 +113,24 @@ def build_operation(tmdb_data: dict):
 def store_copies(
     operations: list[UpdateOne],
     collection: Collection,
-) -> int:
+) -> dict:
     count_new_documents = 0
+    upserted_ids = []
+
     if operations:
         bulk_result = collection.bulk_write(operations)
         count_new_documents += bulk_result.upserted_count
 
-    return count_new_documents
+        for op in operations:
+            criteria = op._filter
+            found_docs = collection.find(criteria)
+            for doc in found_docs:
+                upserted_ids.append(doc['_id'])
+
+    return {
+        "count_new_documents": count_new_documents,
+        "upserted_ids": upserted_ids,
+    }
 
 
 def imdb_init_details():

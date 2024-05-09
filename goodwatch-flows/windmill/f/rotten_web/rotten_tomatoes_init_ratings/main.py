@@ -65,22 +65,26 @@ def initialize_documents():
         f"Storing copies of {len(movie_operations)} movies and {len(tv_operations)} tv series"
     )
 
-    count_new_movies = 0
-    count_new_tv = 0
+    movie_upserts = {}
+    tv_upserts = {}
     if movie_operations:
-        count_new_movies = store_copies(
+        movie_upserts = store_copies(
             movie_operations,
             collection=rotten_tomatoes_movie_collection,
             label_plural="movies",
         )
     if tv_operations:
-        count_new_tv = store_copies(
-            tv_operations, collection=rotten_tomatoes_tv_collection, label_plural="tv series"
+        tv_upserts = store_copies(
+            tv_operations,
+            collection=rotten_tomatoes_tv_collection,
+            label_plural="tv series",
         )
 
     return {
-        "count_new_movies": count_new_movies,
-        "count_new_tv": count_new_tv,
+        "count_new_movies": movie_upserts.get("count_new_documents"),
+        "count_new_tv": tv_upserts.get("count_new_documents"),
+        "upserted_movie_ids": movie_upserts.get("upserted_ids"),
+        "upserted_tv_ids": tv_upserts.get("upserted_ids"),
     }
 
 
@@ -130,8 +134,10 @@ def store_copies(
     operations: list[UpdateOne],
     collection: Collection,
     label_plural: str,
-) -> int:
+) -> dict:
     count_new_documents = 0
+    upserted_ids = []
+
     for start in range(0, len(operations), BATCH_SIZE):
         end = min(start + BATCH_SIZE, len(operations))
         print(f"copying {start} to {end} {label_plural}")
@@ -139,12 +145,21 @@ def store_copies(
         bulk_result = collection.bulk_write(batch)
         count_new_documents += bulk_result.upserted_count
 
+        for op in batch:
+            criteria = op._filter
+            found_docs = collection.find(criteria)
+            for doc in found_docs:
+                upserted_ids.append(doc['_id'])
+
     if count_new_documents:
         print(
             f"Added {count_new_documents} new documents for fetching Rotten Tomatoes {label_plural} ratings"
         )
 
-    return count_new_documents
+    return {
+        "count_new_documents": count_new_documents,
+        "upserted_ids": upserted_ids,
+    }
 
 
 def rotten_tomatoes_init_details():
