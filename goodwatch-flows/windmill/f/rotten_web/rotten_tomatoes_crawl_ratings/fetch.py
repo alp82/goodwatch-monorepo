@@ -8,7 +8,7 @@ import re
 from typing import Union
 
 from f.data_source.common import get_document_for_id
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.rotten_web.models import (
     RottenTomatoesCrawlResult,
     RottenTomatoesMovieRating,
@@ -268,4 +268,6 @@ def main(next_id: dict):
         movie_model=RottenTomatoesMovieRating,
         tv_model=RottenTomatoesTvRating,
     )
-    return asyncio.run(rotten_tomatoes_crawl_ratings(next_entry))
+    result = asyncio.run(rotten_tomatoes_crawl_ratings(next_entry))
+    close_mongodb()
+    return result

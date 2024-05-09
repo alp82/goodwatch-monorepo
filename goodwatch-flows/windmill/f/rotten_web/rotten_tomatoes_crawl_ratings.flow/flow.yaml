@@ -8,6 +8,7 @@ value:
         input_transforms: {}
         path: f/rotten_web/rotten_tomatoes_crawl_ratings/next
         tag_override: null
+      timeout: 60
     - id: b
       value:
         type: flow
@@ -16,6 +17,7 @@ value:
             type: javascript
             expr: results.a
         path: f/rotten_web/crawl_all_by_id
+      timeout: 300
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

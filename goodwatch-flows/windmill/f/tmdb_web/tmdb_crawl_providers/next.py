@@ -1,5 +1,5 @@
 from f.data_source.common import retrieve_next_entry_ids
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_web.models import TmdbMovieProviders, TmdbTvProviders
 
 
@@ -15,6 +15,7 @@ def main():
         movie_model=TmdbMovieProviders,
         tv_model=TmdbTvProviders,
     )
+    close_mongodb()
     return ids.model_dump()
 
 

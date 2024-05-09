@@ -1,9 +1,9 @@
 from f.data_source.common import retrieve_next_entry_ids
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.rotten_web.models import RottenTomatoesMovieRating, RottenTomatoesTvRating
 
 
-BATCH_SIZE = 5
+BATCH_SIZE = 3
 BUFFER_SELECTED_AT_MINUTES = 30
 
 
@@ -15,6 +15,7 @@ def main():
         movie_model=RottenTomatoesMovieRating,
         tv_model=RottenTomatoesTvRating,
     )
+    close_mongodb()
     return ids.model_dump()
 
 

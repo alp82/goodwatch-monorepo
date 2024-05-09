@@ -4,7 +4,7 @@ from typing_extensions import Optional, TypedDict
 import wmill
 
 from f.tmdb_daily.models import DumpType, TmdbDailyDumpAvailability
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.utils.web import url_exists
 
 baseUrl = "http://files.tmdb.org/p/exports"
@@ -87,6 +87,7 @@ def tmdb_check_daily_dump_availability():
     print(f"Latest dumps: {latest_dumps}")
     store_result(latest_dumps=latest_dumps)
 
+    close_mongodb()
     return latest_dumps
 
 

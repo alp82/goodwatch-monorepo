@@ -1,5 +1,5 @@
 from f.data_source.common import get_documents_for_ids, IdParameter
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.metacritic_web.models import (
     MetacriticMovieRating,
     MetacriticTvRating,
@@ -31,4 +31,5 @@ def main(next_ids: dict):
             ).model_dump()
         )
 
+    close_mongodb()
     return entries_to_fetch

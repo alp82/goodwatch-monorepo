@@ -8,6 +8,7 @@ value:
         input_transforms: {}
         path: f/tmdb_api/tmdb_fetch_details_from_api/next
         tag_override: null
+      timeout: 60
     - id: b
       value:
         type: script
@@ -17,6 +18,7 @@ value:
             expr: results.a
         path: f/tmdb_api/tmdb_fetch_details_from_api/fetch
         tag_override: null
+      timeout: 300
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

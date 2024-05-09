@@ -12,8 +12,8 @@ class IdParameter(BaseModel):
 
 
 class IdsParameter(BaseModel):
-    movie_ids: list[int]
-    tv_ids: list[int]
+    movie_ids: list[str]
+    tv_ids: list[str]
 
 
 def retrieve_next_entry_ids(
@@ -48,8 +48,8 @@ def get_ids_for_documents(
     tv_entries = [
         next_entry for next_entry in next_entries if isinstance(next_entry, tv_model)
     ]
-    movie_ids = list({movie.id for movie in movie_entries})
-    tv_ids = list({tv.id for tv in tv_entries})
+    movie_ids = list({str(movie.id) for movie in movie_entries})
+    tv_ids = list({str(tv.id) for tv in tv_entries})
     return IdsParameter(
         movie_ids=movie_ids,
         tv_ids=tv_ids,
@@ -64,9 +64,7 @@ def get_documents_for_ids(
         tv_ids=next_ids.get("tv_ids", []),
     )
     movie_results = list(
-        movie_model.objects(id__in=ids.movie_ids).order_by(
-            "selected_at", "-popularity"
-        )
+        movie_model.objects(id__in=ids.movie_ids).order_by("selected_at", "-popularity")
     )
     tv_results = list(
         tv_model.objects(id__in=ids.tv_ids).order_by("selected_at", "-popularity")

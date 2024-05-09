@@ -1,5 +1,9 @@
-from mongoengine import connect
+from mongoengine import connect, disconnect
 import wmill
+
+
+CONNECTION_ALIAS = "default"
+MAX_IDLE_TIME_MS = 60000
 
 
 def init_mongodb():
@@ -17,8 +21,19 @@ def init_mongodb():
             username=db_user,
             password=db_pass,
             authentication_source="admin",
-            alias="default",
+            alias=CONNECTION_ALIAS,
+            maxIdleTimeMS=MAX_IDLE_TIME_MS,
         )
         print(f"Successfully initialized mongodb")
     except Exception as error:
         print(f"Failed mongodb initialization: ", error)
+
+
+def close_mongodb():
+    disconnect(alias=CONNECTION_ALIAS)
+
+
+def build_query_selector_for_object_ids(ids: list[str] = []) -> dict:
+    from bson.objectid import ObjectId
+    query_ids = [ObjectId(id) for id in ids]
+    return {"_id": {"$in": query_ids}}

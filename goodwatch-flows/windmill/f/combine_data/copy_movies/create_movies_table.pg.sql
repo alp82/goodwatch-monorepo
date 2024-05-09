@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS movies (
     original_language_code CHAR(2),
     spoken_language_codes CHAR(2)[],
     production_country_codes CHAR(2)[],
+    streaming_country_codes CHAR(2)[],
     translations JSONB,
 
     -- tags

@@ -4,7 +4,7 @@ from pymongo import UpdateOne
 from pymongo.collection import Collection
 import wmill
 
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_daily.models import DumpType
 from f.utils.string import to_pascal_case
 
@@ -150,7 +150,9 @@ def store_copies(
 def tvtropes_init_details():
     print("Prepare fetching semantic tags from TV Tropes")
     init_mongodb()
-    return initialize_documents()
+    docs = initialize_documents()
+    close_mongodb()
+    return docs
 
 
 def main():

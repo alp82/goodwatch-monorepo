@@ -11,6 +11,7 @@ value:
             expr: flow_input.next_ids
         path: f/tmdb_web/tmdb_crawl_providers/iterate
         tag_override: null
+      timeout: 30
     - id: b
       value:
         type: forloopflow
@@ -33,6 +34,7 @@ value:
                 multiplier: 6
                 random_factor: 0
                 seconds: 2
+            timeout: 30
         iterator:
           type: javascript
           expr: results.a

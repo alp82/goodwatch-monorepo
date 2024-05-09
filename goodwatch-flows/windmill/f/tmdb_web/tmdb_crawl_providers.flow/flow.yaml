@@ -8,6 +8,7 @@ value:
         input_transforms: {}
         path: f/tmdb_web/tmdb_crawl_providers/next
         tag_override: null
+      timeout: 60
     - id: b
       value:
         type: flow
@@ -25,6 +26,7 @@ value:
           multiplier: 1
           random_factor: 50
           seconds: 2
+      timeout: 300
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

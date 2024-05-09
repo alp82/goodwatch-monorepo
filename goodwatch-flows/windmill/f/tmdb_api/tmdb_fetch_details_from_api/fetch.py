@@ -6,9 +6,9 @@ from mongoengine import EmbeddedDocumentField, EmbeddedDocumentListField
 import requests
 import wmill
 
-from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 from f.data_source.common import get_documents_for_ids
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
+from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 
 BATCH_SIZE = 30
@@ -227,4 +227,6 @@ def main(next_ids: dict):
         movie_model=TmdbMovieDetails,
         tv_model=TmdbTvDetails,
     )
-    return asyncio.run(tmdb_fetch_details_from_api(next_entries))
+    result = asyncio.run(tmdb_fetch_details_from_api(next_entries))
+    close_mongodb()
+    return result

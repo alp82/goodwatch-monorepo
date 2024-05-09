@@ -1,9 +1,9 @@
 summary: ''
 description: ''
 lock: |-
-  dnspython==2.5.0
-  mongoengine==0.27.0
-  pymongo==4.6.1
+  dnspython==2.6.1
+  mongoengine==0.28.2
+  pymongo==4.7.1
 kind: trigger
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

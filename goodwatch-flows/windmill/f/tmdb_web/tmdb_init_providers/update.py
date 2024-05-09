@@ -2,7 +2,7 @@ from typing import Union
 from mongoengine import get_db
 
 from f.data_source.common import get_documents_for_ids
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 from f.tmdb_web.tmdb_init_providers.main import build_operation, store_copies
 
@@ -52,4 +52,6 @@ def main(next_ids: dict):
         movie_model=TmdbMovieDetails,
         tv_model=TmdbTvDetails,
     )
-    return initialize_documents(next_entries)
+    docs = initialize_documents(next_entries)
+    close_mongodb()
+    return docs

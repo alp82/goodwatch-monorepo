@@ -144,6 +144,7 @@ class CreatedBy(EmbeddedDocument):
     id = IntField()
     credit_id = StringField()
     name = StringField()
+    original_name = StringField()
     gender = IntField()
     profile_path = StringField()
 

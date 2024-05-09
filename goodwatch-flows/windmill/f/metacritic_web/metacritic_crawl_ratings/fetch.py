@@ -7,7 +7,7 @@ from ssl import SSLError
 from typing import Union
 
 from f.data_source.common import get_document_for_id
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.metacritic_web.models import (
     MetacriticMovieRating,
     MetacriticTvRating,
@@ -220,4 +220,6 @@ def main(next_id: dict):
         movie_model=MetacriticMovieRating,
         tv_model=MetacriticTvRating,
     )
-    return asyncio.run(metacritic_crawl_ratings(next_entry))
+    result = asyncio.run(metacritic_crawl_ratings(next_entry))
+    close_mongodb()
+    return result

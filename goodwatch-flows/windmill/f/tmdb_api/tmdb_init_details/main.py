@@ -5,7 +5,7 @@ from pymongo.collection import Collection
 import wmill
 
 from f.data_source.models import MediaType
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 
 BATCH_SIZE = 50000
 
@@ -88,7 +88,9 @@ def store_copies(
 def tmdb_init_details():
     print("Prepare fetching details from TMDB API")
     init_mongodb()
-    return initialize_documents()
+    docs = initialize_documents()
+    close_mongodb()
+    return docs
 
 
 def main():

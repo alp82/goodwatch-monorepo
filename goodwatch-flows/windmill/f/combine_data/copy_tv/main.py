@@ -4,7 +4,7 @@ from collections import defaultdict
 from mongoengine import get_db
 from psycopg2.extras import execute_values
 
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.db.postgres import init_postgres, generate_upsert_query
 
 
@@ -424,6 +424,7 @@ def main():
     pg = init_postgres()
     result = copy_tv(pg)
     pg.close()
+    close_mongodb()
     return result
 
 

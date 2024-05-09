@@ -1,5 +1,5 @@
 from f.data_source.common import retrieve_next_entry_ids
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags
 
 
@@ -15,6 +15,7 @@ def main():
         movie_model=TvTropesMovieTags,
         tv_model=TvTropesTvTags,
     )
+    close_mongodb()
     return ids.model_dump()
 
 

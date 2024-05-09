@@ -4,7 +4,7 @@ from collections import defaultdict
 from mongoengine import get_db
 from psycopg2.extras import execute_values
 
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.db.postgres import init_postgres, generate_upsert_query
 
 
@@ -129,6 +129,7 @@ def copy_movies(pg, query_selector: dict = {}):
         "updated_at",
     ]
 
+    print("prepare by fetching all collections...")
     collections_by_tmdb_id = fetch_collections_by_tmdb_id(pg)
 
     start = 0
@@ -417,6 +418,7 @@ def main():
     pg = init_postgres()
     result = copy_movies(pg)
     pg.close()
+    close_mongodb()
     return result
 
 

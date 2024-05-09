@@ -4,7 +4,7 @@ from pymongo import UpdateOne
 from pymongo.collection import Collection
 import wmill
 
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_daily.models import DumpType
 from f.utils.string import to_underscored
 
@@ -150,7 +150,9 @@ def store_copies(
 def rotten_tomatoes_init_details():
     print("Prepare fetching ratings from Rotten Tomatoes")
     init_mongodb()
-    return initialize_documents()
+    docs = initialize_documents()
+    close_mongodb()
+    return docs
 
 
 def main():

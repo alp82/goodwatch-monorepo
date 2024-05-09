@@ -4,7 +4,7 @@ from pymongo import UpdateOne
 from pymongo.collection import Collection
 import wmill
 
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_daily.models import DumpType
 
 
@@ -111,12 +111,20 @@ def store_copies(
     label_plural: str,
 ) -> int:
     count_new_documents = 0
+    upserted_ids = []
     for start in range(0, len(operations), BATCH_SIZE):
         end = min(start + BATCH_SIZE, len(operations))
         print(f"copying {start} to {end} {label_plural}")
         batch = operations[start:end]
         bulk_result = collection.bulk_write(batch)
         count_new_documents += bulk_result.upserted_count
+
+        # Find the IDs based on upsert criteria - this assumes you can recreate the query conditions
+        for op in batch:
+            criteria = op._filter
+            found_docs = collection.find(criteria)
+            for doc in found_docs:
+                upserted_ids.append(doc['_id'])
 
     if count_new_documents:
         print(
@@ -129,7 +137,9 @@ def store_copies(
 def imdb_init_details():
     print("Prepare fetching ratings from IMDB")
     init_mongodb()
-    return initialize_documents()
+    docs = initialize_documents()
+    close_mongodb()
+    return docs
 
 
 def main():

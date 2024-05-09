@@ -4,7 +4,7 @@ from mongoengine import get_db
 from pymongo import UpdateOne
 from pymongo.collection import Collection
 
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 
 BATCH_SIZE = 100000
 
@@ -117,7 +117,9 @@ def store_copies(
 def imdb_init_details():
     print("Prepare fetching streaming data from TMDB")
     init_mongodb()
-    return initialize_documents()
+    docs = initialize_documents()
+    close_mongodb()
+    return docs
 
 
 def main():

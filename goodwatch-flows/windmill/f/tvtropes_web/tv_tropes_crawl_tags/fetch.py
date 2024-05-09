@@ -8,7 +8,7 @@ from playwright.async_api import async_playwright, BrowserContext
 from typing import Union
 
 from f.data_source.common import get_document_for_id
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tvtropes_web.models import (
     TvTropesCrawlResult,
     TvTropesMovieTags,
@@ -301,4 +301,6 @@ def main(next_id: dict):
         movie_model=TvTropesMovieTags,
         tv_model=TvTropesTvTags,
     )
-    return asyncio.run(tvtropes_crawl_tags(next_entry))
+    result = asyncio.run(tvtropes_crawl_tags(next_entry))
+    close_mongodb()
+    return result

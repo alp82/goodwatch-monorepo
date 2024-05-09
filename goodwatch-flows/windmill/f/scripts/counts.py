@@ -134,7 +134,7 @@ def count_tv_tropes_tags():
 
 def main():
     init_mongodb()
-    return {
+    result = {
         "tmdb_details": count_tmdb_details(),
         "tmdb_providers": count_tmdb_providers(),
         "imdb_ratings": count_imdb_ratings(),
@@ -142,3 +142,5 @@ def main():
         "rotten_ratings": count_rotten_tomatoes_ratings(),
         "tvtropes_tags": count_tv_tropes_tags(),
     }
+    close_mongodb()
+    return result

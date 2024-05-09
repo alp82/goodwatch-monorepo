@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 import requests
 
 from f.data_source.common import get_document_for_id
-from f.db.mongodb import init_mongodb
+from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_web.models import (
     TmdbStreamingCrawlResult,
     TmdbMovieProviders,
@@ -201,4 +201,6 @@ def main(next_id: dict):
         movie_model=TmdbMovieProviders,
         tv_model=TmdbTvProviders,
     )
-    return asyncio.run(tmdb_crawl_streaming_providers(next_entry))
+    result = asyncio.run(tmdb_crawl_streaming_providers(next_entry))
+    close_mongodb()
+    return result
