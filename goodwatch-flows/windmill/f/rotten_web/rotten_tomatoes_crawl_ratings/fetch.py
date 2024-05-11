@@ -3,9 +3,11 @@
 
 import asyncio
 from datetime import datetime
-from playwright.async_api import async_playwright, BrowserContext
+import json
 import re
 from typing import Union
+
+from playwright.async_api import async_playwright, BrowserContext
 
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
@@ -39,6 +41,7 @@ async def crawl_movie_rating(
     result = await crawl_rotten_tomatoes_page(
         next_entry=next_entry, type="m", browser=browser
     )
+    print(result)
     store_result(next_entry=next_entry, result=result)
     return result
 
@@ -50,6 +53,7 @@ async def crawl_tv_rating(
     result = await crawl_rotten_tomatoes_page(
         next_entry=next_entry, type="tv", browser=browser
     )
+    print(result)
     store_result(next_entry=next_entry, result=result)
     return result
 
@@ -88,6 +92,7 @@ async def crawl_rotten_tomatoes_page(
         page = await browser.new_page()
         response = await page.goto(url)
         if response.status == 403:
+            print("403: Rate limit reached")
             return RottenTomatoesCrawlResult(
                 url=None,
                 tomato_score_original=None,
@@ -99,9 +104,19 @@ async def crawl_rotten_tomatoes_page(
                 rate_limit_reached=True,
             )
         elif response.status == 200:
+            print(f"valid url: {url}")
             break
 
-    if not response or response.status != 200:
+    # Locate the score elements
+    print("locating score elements...")
+    
+    json_data = await page.evaluate('''() => {
+        const scriptTag = document.querySelector('script[id="media-scorecard-json"]');
+        return scriptTag ? scriptTag.textContent : null;
+    }''')
+
+    if not response or response.status != 200 or not json_data:
+        print(f"no result for url: {url}")
         return RottenTomatoesCrawlResult(
             url=None,
             tomato_score_original=None,
@@ -113,52 +128,21 @@ async def crawl_rotten_tomatoes_page(
             rate_limit_reached=False,
         )
 
-    # Locate the score elements
-    tomato_score_element = page.locator("score-details-critics-deprecated")
-    audience_score_element = page.locator("score-details-audience-deprecated")
+    data = json.loads(json_data)
 
-    tomato_score_raw = await tomato_score_element.get_attribute("value")
-    audience_score_raw = await audience_score_element.get_attribute("value")
-    tomato_score_vote_count_raw = await tomato_score_element.get_attribute(
-        "reviewcount"
-    )
-    audience_score_vote_count_raw = await audience_score_element.get_attribute(
-        "ratingcount"
-    )
+    # Extract critic score details
+    tomato_data = data['criticsScore']
+    tomato_score = tomato_data['score']
+    tomato_score_vote_count = tomato_data['ratingCount']
+    print("Tomatometer rating:", tomato_score)
+    print("Number of critic reviews:", tomato_score_vote_count)
 
-    # Extract and format the scores
-    tomato_score = None
-    if tomato_score_raw:
-        try:
-            tomato_score = float(tomato_score_raw)
-        except ValueError:
-            pass
-
-    audience_score = None
-    if audience_score_raw:
-        try:
-            audience_score = float(audience_score_raw)
-        except ValueError:
-            pass
-
-    # Extract and format the vote counts
-    tomato_score_vote_count = None
-    if tomato_score_vote_count_raw:
-        try:
-            match = re.search(r"[\d,]+", tomato_score_vote_count_raw)
-            if match:
-                tomato_score_vote_count = int(match.group().replace(",", ""))
-        except ValueError:
-            pass
-
-    audience_score_vote_count = None
-    if audience_score_vote_count_raw:
-        try:
-            match = re.search(r"[\d,]+", audience_score_vote_count_raw)
-            if match:
-                audience_score_vote_count = int(match.group().replace(",", ""))
-        except ValueError:
-            pass
+    # Extract audience score details
+    audience_data = data['overlay']['audienceAll']
+    audience_score = audience_data['score']
+    audience_score_vote_count = audience_data['likedCount'] + audience_data['notLikedCount']
+    print("Audience score:", audience_score)
+    print("Number of audience ratings:", audience_score_vote_count)
 
     return RottenTomatoesCrawlResult(
         url=url,

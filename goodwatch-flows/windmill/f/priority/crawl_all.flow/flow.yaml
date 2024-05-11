@@ -39,7 +39,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.n
                   path: f/imdb_web/crawl_all_by_id
             parallel: true
             skip_failure: false
@@ -60,7 +60,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.m
                   path: f/metacritic_web/crawl_all_by_id
             parallel: true
             skip_failure: false
@@ -81,7 +81,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.l
                   path: f/rotten_web/crawl_all_by_id
             parallel: true
             skip_failure: false
@@ -102,7 +102,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.k
                   path: f/tvtropes_web/crawl_all_by_id
             parallel: true
             skip_failure: false
@@ -123,7 +123,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.j
                   path: f/tmdb_web/crawl_all_by_id
             parallel: true
             skip_failure: false
@@ -178,4 +178,5 @@ schema:
   type: object
   properties: {}
   required: []
+visible_to_runner_only: false
 ws_error_handler_muted: false

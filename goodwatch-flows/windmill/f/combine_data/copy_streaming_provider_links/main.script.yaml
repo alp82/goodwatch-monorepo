@@ -17,11 +17,5 @@ kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties:
-    next_ids:
-      type: object
-      description: ''
-      default: null
-      properties: {}
-  required:
-    - next_ids
+  properties: {}
+  required: []

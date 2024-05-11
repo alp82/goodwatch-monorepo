@@ -71,6 +71,17 @@ def crawl_tmdb_watch_page(
     html = response.text
     soup = BeautifulSoup(html, "html.parser")
 
+    title_tag = soup.find('title')
+    if title_tag:
+        title_text = title_tag.get_text()
+        if "Request Error (403)" in title_text:
+            return TmdbStreamingCrawlResult(
+                url=url,
+                country_code=country_code,
+                streaming_links=None,
+                rate_limit_reached=True,
+            )
+
     provider_blocks = soup.select(".ott_provider")
 
     streaming_links = []
@@ -119,7 +130,7 @@ def crawl_tmdb_watch_page(
                     quality=quality,
                 )
             )
-
+    
     return TmdbStreamingCrawlResult(
         url=url,
         country_code=country_code,
