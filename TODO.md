@@ -52,20 +52,22 @@ box office
 crew links to discovery
 awards
 
+invalidate redis caches after update
+    https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
+invalidate vercel caches after update
+
+decide together: watch party / good swipe / swipe watch
+
+search page
+explore button for media titles (prefilled discover, map feature)
+random full screen: album cover (good roulette)
+
 stuck scripts monitoring
 rate limit monitoring
 
 do not refetch stale data
     tv tropes
     
-invalidate redis caches after update
-    https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
-invalidate vercel caches after update
-
-search page
-explore button for media titles (prefilled discover, map feature)
-random full screen: album cover (good roulette)
-
 wrong tropes: the little mermaid (tmdb_id = 10144)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
 rotten ratings missing: http://localhost:3003/movie/1022964-candy-cane-lane
@@ -98,15 +100,12 @@ score explanations
 streaming explanations
 autocomplete dark style
 
-page transition loader
 parallax scrolling landing page
 best rated picks animation
 stagger animation for rating progress bars
 show picks on mobile too
 
 show generic recommendations
-
-decide together: watch party / good swipe / swipe watch
 
 android app
 
@@ -127,7 +126,10 @@ fix certification longer than 50 chars: 12 éven aluliak számára a megtekinté
 issue: breaking bad streaming missing -> justwatch streaming data
 issue: tmdb imagery redundant -> justwatch imagery
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
+```
 
+# Auth
+```
 https://blog.logrocket.com/guide-adding-google-login-react-app/
 https://github.com/MomenSherif/react-oauth
 authentication and user profiles
@@ -140,6 +142,9 @@ alerts for new search results
 personalized recommendation engine:
 * criticker
 * movielens
+
+rate movies
+
 ```
 
 # Search
@@ -192,4 +197,16 @@ WHERE
 ORDER BY
   weighted_rank DESC NULLS LAST
 LIMIT 20;
+```
+
+# Blog
+```
+data pipeline with windmill: grow data and keep it up to date
+    ansible for worker upgrades
+db architecture: performance and scalability
+caching strategy
+remix: keep it simple with tailwind
+monorepo design
+deployment with docker compose
+monitoring with uptime kuma
 ```
