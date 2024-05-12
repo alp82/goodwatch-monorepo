@@ -78,6 +78,14 @@ CREATE TABLE IF NOT EXISTS movies (
     aggregated_overall_score_normalized_percent FLOAT,
     aggregated_overall_score_voting_count FLOAT,
 
+    -- updated_at
+    tmdb_details_updated_at DATE,
+    tmdb_providers_updated_at DATE,
+    imdb_ratings_updated_at DATE,
+    metacritic_ratings_updated_at DATE,
+    rotten_tomatoes_ratings_updated_at DATE,
+    tvtropes_tags_updated_at DATE,
+
     -- relations
     collection JSONB,
     tmdb_recommendation_ids INTEGER[],

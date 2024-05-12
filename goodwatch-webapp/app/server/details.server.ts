@@ -1,6 +1,10 @@
 import { cached } from '~/utils/cache'
 import { executeQuery } from '~/utils/postgres'
 import { AllRatings, getRatingKeys } from '~/utils/ratings'
+import {
+  increasePriorityForMovies,
+  increasePriorityForTVs,
+} from '~/server/utils/priority'
 
 export interface Collection {
   id:            number
@@ -353,8 +357,8 @@ const movieFields = [
   ...getRatingKeys(),
 ]
 
-// TODO country & language
-export async function _getDetailsForMovie({ movieId, language, country }: DetailsMovieParams): Promise<MovieDetails> {
+// TODO language
+export async function _getDetailsForMovie({ movieId, country, language }: DetailsMovieParams): Promise<MovieDetails> {
   const result = await executeQuery(`
     SELECT
       ${movieFields.map((field) => `m.${field}`).join(', ')},
@@ -392,10 +396,13 @@ export async function _getDetailsForMovie({ movieId, language, country }: Detail
   `);
   if (!result.rows.length) throw Error(`movie with ID "${movieId}" not found`)
 
+
   const movie = {
     ...result.rows[0],
     media_type: 'movie',
   }
+  increasePriorityForMovies([movie.tmdb_id])
+
   return getCountrySpecificDetails(movie, country, language)
 }
 
@@ -428,7 +435,8 @@ const tvFields = [
   ...getRatingKeys(),
 ]
 
-export async function _getDetailsForTV({ tvId, language, country }: DetailsTVParams): Promise<TVDetails> {
+// TODO language
+export async function _getDetailsForTV({ tvId, country, language }: DetailsTVParams): Promise<TVDetails> {
   const result = await executeQuery(`
     SELECT
       ${tvFields.map((field) => `t.${field}`).join(', ')},
@@ -469,6 +477,7 @@ export async function _getDetailsForTV({ tvId, language, country }: DetailsTVPar
     ...result.rows[0],
     media_type: 'tv',
   }
+  increasePriorityForTVs([tv.tmdb_id])
 
   return getCountrySpecificDetails(tv, country, language)
 }

@@ -99,6 +99,12 @@ def copy_tv(pg, query_selector: dict = {}):
         "aggregated_official_score_review_count",
         "aggregated_overall_score_normalized_percent",
         "aggregated_overall_score_voting_count",
+        "tmdb_details_updated_at",
+        "tmdb_providers_updated_at",
+        "imdb_ratings_updated_at",
+        "metacritic_ratings_updated_at",
+        "rotten_tomatoes_ratings_updated_at",
+        "tvtropes_tags_updated_at",
         "tmdb_recommendation_ids",
         "tmdb_similar_ids",
         "homepage",
@@ -122,9 +128,7 @@ def copy_tv(pg, query_selector: dict = {}):
 
         tmdb_details_batch = list(
             # mongo_db.tmdb_tv_details.find({"original_title": "Breaking Bad"})
-            mongo_db.tmdb_tv_details.find(query_selector)
-            .skip(start)
-            .limit(BATCH_SIZE)
+            mongo_db.tmdb_tv_details.find(query_selector).skip(start).limit(BATCH_SIZE)
         )
         if not tmdb_details_batch:
             break
@@ -139,6 +143,9 @@ def copy_tv(pg, query_selector: dict = {}):
             tmdb_ids, mongo_db.rotten_tomatoes_tv_rating
         )
         tv_tropes_tags = fetch_documents_in_batch(tmdb_ids, mongo_db.tv_tropes_tv_tags)
+        tmdb_providers = fetch_documents_in_batch(
+            tmdb_ids, mongo_db.tmdb_movie_providers
+        )
 
         for tmdb_details in tmdb_details_batch:
             tmdb_id = tmdb_details["tmdb_id"]
@@ -158,6 +165,7 @@ def copy_tv(pg, query_selector: dict = {}):
                 video_type = f"{video.get('type', 'unknown').lower()}s"
                 grouped_videos[video_type].append(video)
 
+            # ratings
             tmdb_user_score = tmdb_details.get("vote_average")
             imdb_rating = imdb_ratings.get(tmdb_id, {})
             imdb_id = imdb_rating.get("imdb_id", None)
@@ -255,6 +263,18 @@ def copy_tv(pg, query_selector: dict = {}):
                     aggregated_user_score_rating_count,
                     aggregated_official_score_review_count,
                 ]
+            )
+
+            # updated at
+            tmdb_details_updated_at = tmdb_details.get("updated_at")
+            imdb_ratings_updated_at = imdb_rating.get("updated_at")
+            metacritic_ratings_updated_at = metacritic_rating.get("updated_at")
+            rotten_tomatoes_ratings_updated_at = rotten_tomatoes_rating.get(
+                "updated_at"
+            )
+            tvtropes_tags_updated_at = tv_tropes_tags.get(tmdb_id, {}).get("updated_at")
+            tmdb_providers_updated_at = tmdb_providers.get(tmdb_id, {}).get(
+                "updated_at"
             )
 
             data = (
@@ -378,6 +398,12 @@ def copy_tv(pg, query_selector: dict = {}):
                 aggregated_official_score_review_count,
                 aggregated_overall_score_normalized_percent,
                 aggregated_overall_score_voting_count,
+                tmdb_details_updated_at,
+                tmdb_providers_updated_at,
+                imdb_ratings_updated_at,
+                metacritic_ratings_updated_at,
+                rotten_tomatoes_ratings_updated_at,
+                tvtropes_tags_updated_at,
                 [
                     tv.get("id")
                     for tv in tmdb_details.get("recommendations", {}).get("results", [])

@@ -2,6 +2,7 @@ import { cached } from '~/utils/cache'
 import { getCountrySpecificDetails, MovieDetails, StreamingProviders, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
 import { AllRatings, getRatingKeys } from '~/utils/ratings'
+import { increasePriorityForMovies, increasePriorityForTVs } from '~/server/utils/priority'
 
 export interface TrendingMovie extends AllRatings {
   tmdb_id: number
@@ -60,6 +61,8 @@ export async function _getTrendingMovies({ country, language }: TrendingMoviePar
       popularity;
   `);
   if (!result.rows.length) throw Error(`no trending movies found`)
+
+  increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
   return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }
 
@@ -95,5 +98,7 @@ export async function _getTrendingTV({ country, language }: TrendingTVParams): P
       popularity;
   `);
   if (!result.rows.length) throw Error(`no trending tv shows found`)
+
+  increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
   return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }

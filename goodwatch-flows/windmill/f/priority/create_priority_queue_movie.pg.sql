@@ -1,0 +1,7 @@
+CREATE TABLE priority_queue_movie (
+    tmdb_id INTEGER UNIQUE,
+    priority INTEGER NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    reset_at TIMESTAMP WITHOUT TIME ZONE
+);

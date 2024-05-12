@@ -1,12 +1,26 @@
 # TODO's
 ```
+streaming: show flatrate countries in ratingblock and streaming tab
+ratings: show last updated time
+
+date of first streaming link / new to stream
+
+GW API
+
+trending load more
+discover load more
+
+copy/combine scripts only copy diffs to postgres
+
+tv seasons:
+get episodes
+get ratings
+show in details
+
 populate trending score 1-500
 save trending scores per day
 trending yesterday
 trending difference
-
-priority flag
-last_prioritized_at
 
 stats
 # of movies
@@ -16,21 +30,9 @@ stats
 avg rating per provider
 oldest fetch date
 
-GW API
-
-trending load more
-discover load more
-
-copy/combine scripts only copy diffs to postgres
-
 grab movie/tv awards from API/WEB
 
 combined collection score
-
-tv seasons:
-get episodes
-get ratings
-show in details
 
 discover sidebar redesign
 filter inspiration:

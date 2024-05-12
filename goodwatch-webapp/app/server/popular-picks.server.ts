@@ -2,6 +2,7 @@ import { cached } from '~/utils/cache'
 import { getCountrySpecificDetails, MovieDetails, StreamingProviders, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
 import { AllRatings, getRatingKeys } from '~/utils/ratings'
+import { increasePriorityForMovies, increasePriorityForTVs } from '~/server/utils/priority'
 
 export interface PopularPicksMovie extends AllRatings {
   tmdb_id: number
@@ -57,6 +58,8 @@ export async function _getPopularPicksMovies({ country, language }: PopularPicks
     LIMIT 10;
   `);
   if (!result.rows.length) throw Error(`no popular picks for movies found`)
+
+  increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
   return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }
 
@@ -89,5 +92,7 @@ export async function _getPopularPicksTV({ country, language }: PopularPicksTVPa
     LIMIT 10;
   `);
   if (!result.rows.length) throw Error(`no popular picks for tv shows found`)
+
+  increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
   return result.rows.map((row) => getCountrySpecificDetails(row, country, language))
 }

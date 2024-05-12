@@ -1,5 +1,5 @@
 summary: ''
-description: Retrieve next priority batch for crawling all data
+description: Reset fully processed priority batch
 lock: |-
   annotated-types==0.6.0
   anyio==4.3.0
@@ -21,5 +21,11 @@ kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
-  required: []
+  properties:
+    next_ids:
+      type: object
+      description: ''
+      default: null
+      properties: {}
+  required:
+    - next_ids

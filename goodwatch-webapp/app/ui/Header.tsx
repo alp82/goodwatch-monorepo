@@ -139,43 +139,81 @@ export default function Header() {
                 Discover
               </Disclosure.Button>
             </div>
+            <div className="border-t border-gray-700 pt-4 pb-3">
+              <div className="space-y-1 px-2 pt-2 pb-3">
+                <Disclosure.Button
+                  as="a"
+                  href="https://dev.to/t/goodwatch"
+                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  Blog
+                </Disclosure.Button>
+              </div>
+              <div className="space-y-1 px-2 pt-2 pb-3">
+                <Disclosure.Button
+                  as="a"
+                  href="/about"
+                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  About
+                </Disclosure.Button>
+              </div>
+              <div className="space-y-1 px-2 pt-2 pb-3">
+                <Disclosure.Button
+                  as="a"
+                  href="/disclaimer"
+                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  Disclaimer
+                </Disclosure.Button>
+              </div>
+              <div className="space-y-1 px-2 pt-2 pb-3">
+                <Disclosure.Button
+                  as="a"
+                  href="http://coinmatica.net:4801/status/goodwatch"
+                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  Status Page
+                </Disclosure.Button>
+              </div>
+            </div>
             {/*<div className="border-t border-gray-700 pt-4 pb-3">*/}
-              {/*<div className="flex items-center px-5">*/}
-              {/*  <div className="flex-shrink-0">*/}
-              {/*    <img*/}
-              {/*      className="h-10 w-10 rounded-full"*/}
-              {/*      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"*/}
-              {/*      alt=""*/}
-              {/*    />*/}
-              {/*  </div>*/}
-              {/*  <div className="ml-3">*/}
-              {/*    <div className="text-base font-medium text-white">Username</div>*/}
-              {/*    <div className="text-sm font-medium text-gray-400">User Title</div>*/}
-              {/*  </div>*/}
-              {/*</div>*/}
-              {/*<div className="mt-3 space-y-1 px-2">*/}
-              {/*  <Disclosure.Button*/}
-              {/*    as="a"*/}
-              {/*    href="#"*/}
-              {/*    className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
-              {/*  >*/}
-              {/*    Your Profile*/}
-              {/*  </Disclosure.Button>*/}
-              {/*  <Disclosure.Button*/}
-              {/*    as="a"*/}
-              {/*    href="#"*/}
-              {/*    className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
-              {/*  >*/}
-              {/*    Settings*/}
-              {/*  </Disclosure.Button>*/}
-              {/*  <Disclosure.Button*/}
-              {/*    as="a"*/}
-              {/*    href="#"*/}
-              {/*    className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
-              {/*  >*/}
-              {/*    Sign out*/}
-              {/*  </Disclosure.Button>*/}
-              {/*</div>*/}
+            {/*  <div className="flex items-center px-5">*/}
+            {/*    <div className="flex-shrink-0">*/}
+            {/*      <img*/}
+            {/*        className="h-10 w-10 rounded-full"*/}
+            {/*        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"*/}
+            {/*        alt=""*/}
+            {/*      />*/}
+            {/*    </div>*/}
+            {/*    <div className="ml-3">*/}
+            {/*      <div className="text-base font-medium text-white">Username</div>*/}
+            {/*      <div className="text-sm font-medium text-gray-400">User Title</div>*/}
+            {/*    </div>*/}
+            {/*  </div>*/}
+            {/*  <div className="mt-3 space-y-1 px-2">*/}
+            {/*    <Disclosure.Button*/}
+            {/*      as="a"*/}
+            {/*      href="#"*/}
+            {/*      className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
+            {/*    >*/}
+            {/*      Your Profile*/}
+            {/*    </Disclosure.Button>*/}
+            {/*    <Disclosure.Button*/}
+            {/*      as="a"*/}
+            {/*      href="#"*/}
+            {/*      className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
+            {/*    >*/}
+            {/*      Settings*/}
+            {/*    </Disclosure.Button>*/}
+            {/*    <Disclosure.Button*/}
+            {/*      as="a"*/}
+            {/*      href="#"*/}
+            {/*      className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"*/}
+            {/*    >*/}
+            {/*      Sign out*/}
+            {/*    </Disclosure.Button>*/}
+            {/*  </div>*/}
             {/*</div>*/}
           </Disclosure.Panel>
         </>
