@@ -55,6 +55,7 @@ awards
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
 invalidate vercel caches after update
+WS pubsub for updates
 
 decide together: watch party / good swipe / swipe watch
 
@@ -209,4 +210,6 @@ remix: keep it simple with tailwind
 monorepo design
 deployment with docker compose
 monitoring with uptime kuma
+authentication
+recommendation engine
 ```
