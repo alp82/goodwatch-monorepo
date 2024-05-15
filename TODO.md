@@ -1,6 +1,12 @@
 # TODO's
 ```
+watchlist / watch again
+already watched
+own score
+
 streaming: show flatrate countries in ratingblock and streaming tab
+reduce costs: show best streaming bundles for my likings
+
 ratings: show last updated time
 
 date of first streaming link / new to stream
@@ -62,6 +68,10 @@ decide together: watch party / good swipe / swipe watch
 search page
 explore button for media titles (prefilled discover, map feature)
 random full screen: album cover (good roulette)
+genre guides
+international / indie guides
+
+notify if title gets available
 
 stuck scripts monitoring
 rate limit monitoring

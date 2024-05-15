@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { SupabaseClient } from '@supabase/supabase-js'
-import { Session } from '@supabase/auth-js'
+import { Session, User } from '@supabase/auth-js'
 import { useFetcher } from '@remix-run/react'
 
 interface AuthContext {
@@ -38,8 +38,8 @@ export const useSession = () => {
   return session
 }
 
-export const useFetchAuthToken = (session: Session | null) => {
-  const fetcher = useFetcher();
+export const useVerifyAuthToken = (session: Session | null) => {
+  const fetcher = useFetcher<{ user: User; error?: string }>();
 
   useEffect(() => {
     if (session?.access_token) {
@@ -48,24 +48,12 @@ export const useFetchAuthToken = (session: Session | null) => {
   }, [session]);
 
   return {
-    data: session ? fetcher.data : undefined,
+    authTokenIsValid: Boolean(fetcher.data?.user?.aud),
     loading: fetcher.state === 'loading',
-    error: fetcher.data?.error // Assume error handling is managed by your API response
   };
 }
 
-// export const getCookieAuthToken = async (supabaseUrl: string) => {
-//   const { createCookie } = await import('@remix-run/node');
-//
-//   const cookieName = supabaseUrl
-//     .replace('https://', 'sb-')
-//     .replace('.supabase.co', '-auth-token.0')
-//   return createCookie(cookieName)
-// }
-
 export const getUser = async (token: string, supabase: SupabaseClient) =>{
-  console.log({ token })
-
   if (!token) {
     return { error: 'No token provided' }
   }

@@ -3,7 +3,7 @@ name = ""
 version = ""
 description = ""
 authors = [
-    {name = "Alper Ortac", email = "alportac@gmail.com"},
+    {name = "Alper Ortac", email = "hello@goodwatch.app"},
 ]
 dependencies = [
     "wmill>=1.181.0",

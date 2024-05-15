@@ -21,6 +21,8 @@ import Crew from '~/ui/Crew'
 import ShareButton from '~/ui/ShareButton'
 import { Poster } from '~/ui/Poster'
 import TrailerOverlay from '~/ui/TrailerOverlay'
+import WatchStatusBlock from './user/WatchStatusBlock'
+import ScoreSelector from '~/ui/user/ScoreSelector'
 
 export interface DetailsProps {
   details: MovieDetails | TVDetails
@@ -88,12 +90,7 @@ export default function Details({ details, tab, country, language }: DetailsProp
     <>
       {(selectedTab === 'about' || !existingTabs.includes(selectedTab)) && (
         <>
-          <div className="md:hidden mt-8 mr-8 sm:float-left relative flex-none w-32">
-            <TrailerOverlay videos={videos || []}/>
-            <RatingOverlay ratings={ratings}/>
-            <Poster path={poster_path} title={title}/>
-          </div>
-          {tagline && <div className="mb-4">
+          {tagline && <div className="mt-8 mb-6">
             <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
               <p className="text-white italic sm:text-xl">
                 {tagline}
@@ -140,17 +137,17 @@ export default function Details({ details, tab, country, language }: DetailsProp
   return (
     <>
       <div
-        className="relative flex flex-col items-center mt-0 py-2 md:py-4 lg:py-8 min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]"
+        className="relative flex flex-col items-center mt-0 py-2 sm:py-4 lg:py-8 min-h-64 lg:min-h-96 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.68]"
         style={{backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`}}
       >
         <div className="relative w-full max-w-7xl">
-          <div className="p-3 flex items-center">
-            <div className="hidden md:block relative flex-none w-40 md:w-60">
+          <div className="p-3 flex items-start">
+            <div className="hidden sm:block relative flex-none mt-8 w-32 md:w-60">
               <TrailerOverlay videos={videos || []} />
               <RatingOverlay ratings={ratings}/>
               <Poster path={poster_path} title={title}/>
             </div>
-            <div className="relative flex-1 mt-2 md:mt-4 md:pl-4 lg:pl-8">
+            <div className="relative flex-1 mt-2 sm:mt-4 sm:pl-4 lg:pl-8">
               <h2 className="mb-2 mr-12 text-2xl">
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
@@ -165,11 +162,21 @@ export default function Details({ details, tab, country, language }: DetailsProp
                 </div> : null}
               </div>
               <Genres genres={genres} type={media_type}/>
+              <div className="sm:hidden mt-8 mb-4 mr-8 relative flex-none w-52">
+                <TrailerOverlay videos={videos || []}/>
+                <RatingOverlay ratings={ratings}/>
+                <Poster path={poster_path} title={title}/>
+              </div>
+              <div className="hidden md:block mb-4">
+                <WatchStatusBlock />
+                <ScoreSelector />
+              </div>
               <div className="hidden md:block mb-4">
                 <RatingBlock ratings={ratings}/>
               </div>
               <div className="hidden md:block mb-4">
-                <StreamingBlock media_type={media_type} links={streaming_links} countryCodes={streaming_country_codes} currentCountryCode={country} />
+                <StreamingBlock media_type={media_type} links={streaming_links} countryCodes={streaming_country_codes}
+                                currentCountryCode={country}/>
               </div>
             </div>
           </div>
@@ -178,10 +185,15 @@ export default function Details({ details, tab, country, language }: DetailsProp
         <div className="md:hidden flex gap-4 mt-4 px-2 w-full">
           <div className="relative flex-1 mt-2">
             <div className="mb-4">
+              <WatchStatusBlock/>
+              <ScoreSelector/>
+            </div>
+            <div className="mb-4">
               <RatingBlock ratings={ratings}/>
             </div>
             <div className="mb-4">
-              <StreamingBlock media_type={media_type} links={streaming_links} countryCodes={streaming_country_codes} currentCountryCode={country} />
+              <StreamingBlock media_type={media_type} links={streaming_links} countryCodes={streaming_country_codes}
+                              currentCountryCode={country}/>
             </div>
           </div>
         </div>

@@ -25,7 +25,7 @@ import cssToastify from 'react-toastify/dist/ReactToastify.css?url'
 import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from '~/main.css?url'
 import cssTailwind from '~/tailwind.css?url'
-import { AuthContext, useFetchAuthToken, useSession } from './utils/auth'
+import { AuthContext, useVerifyAuthToken, useSession } from './utils/auth'
 
 export const links: LinksFunction = () => [
   ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),

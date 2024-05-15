@@ -24,7 +24,9 @@ export default function Disclaimer() {
         <p>
           <div>Alper Ortac</div>
           <div>Kassel, Germany</div>
-          <div> alportac@gmail.com</div>
+          <div>
+            <a href="mailto:hello@goodwatch.app">hello@goodwatch.app</a>
+          </div>
         </p>
       </section>
 
