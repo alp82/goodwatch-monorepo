@@ -61,26 +61,29 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
 
   return (
     <div className="py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow">
-      <div className="flex px-4 py-2 md:py-4 transition duration-150 ease-in-out">
+      <div className="flex px-4 transition duration-150 ease-in-out">
         {Array.from({length: 10}, (_, i) => (
           <div
             key={i + 1}
-            className={`h-6 w-full border-2 border-gray-800 rounded-md transition duration-200 ease-in-out transform hover:scale-y-125 ${getColorForIndex(i + 1)} cursor-pointer`}
-            onMouseEnter={() => handleMouseEnter(i + 1)}
-            onMouseLeave={() => handleMouseLeave(i + 1)}
+            className="w-full md:pt-4 md:pb-10 transition duration-200 ease-in-out transform origin-[50%_35%] hover:scale-y-125 cursor-pointer"
+            onPointerEnter={() => handleMouseEnter(i + 1)}
+            onPointerLeave={() => handleMouseLeave(i + 1)}
             onClick={() => handleClick(i + 1)}
-          />
+          >
+            <div
+              className={`h-6 w-full border-2 border-gray-800 rounded-md ${getColorForIndex(i + 1)}`}
+            />
+          </div>
         ))}
       </div>
-      <div className="flex items-center justify-center px-4">
-        <span className="flex gap-2 text-lg">
-          Your score:
-          <span className="font-semibold">
-            {getLabelText()}
-          </span>
-        </span>
+      <div className="flex items-center justify-center px-4 -mt-8 pointer-events-none">
+    <span className="flex gap-2 text-lg">
+      Your score:
+      <span className="font-semibold">
+        {getLabelText()}
+      </span>
+    </span>
       </div>
     </div>
-
   )
 }
