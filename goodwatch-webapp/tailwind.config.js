@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 const colors = require('tailwindcss/colors')
+const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}"],
@@ -9,6 +10,10 @@ module.exports = {
     require('@tailwindcss/typography'),
   ],
   theme: {
+    screens: {
+      xs: '475px',
+      ...defaultTheme.screens,
+    },
     extend: {
       colors: {
         gray: {

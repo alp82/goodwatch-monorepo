@@ -142,12 +142,17 @@ export default function Details({ details, tab, country, language }: DetailsProp
       >
         <div className="relative w-full max-w-7xl">
           <div className="p-3 flex items-start">
-            <div className="hidden sm:block relative flex-none mt-8 w-32 md:w-60">
-              <TrailerOverlay videos={videos || []} />
-              <RatingOverlay ratings={ratings}/>
-              <Poster path={poster_path} title={title}/>
+            <div className="hidden sm:block w-48 md:w-72">
+              <div className="relative flex-none mt-8 w-full">
+                <TrailerOverlay videos={videos || []} />
+                <RatingOverlay ratings={ratings}/>
+                <Poster path={poster_path} title={title}/>
+              </div>
+              <div className="sm:hidden md:block mt-4">
+                <WatchStatusBlock />
+              </div>
             </div>
-            <div className="relative flex-1 mt-2 sm:mt-4 sm:pl-4 lg:pl-8">
+            <div className="relative flex-1 mt-2 sm:mt-4 sm:pl-6 lg:pl-8">
               <h2 className="mb-2 mr-12 text-2xl">
                 <span className="text-3xl font-bold pr-2">{title}</span> ({release_year})
               </h2>
@@ -162,14 +167,18 @@ export default function Details({ details, tab, country, language }: DetailsProp
                 </div> : null}
               </div>
               <Genres genres={genres} type={media_type}/>
-              <div className="sm:hidden mt-8 mb-4 mr-8 relative flex-none w-52">
-                <TrailerOverlay videos={videos || []}/>
-                <RatingOverlay ratings={ratings}/>
-                <Poster path={poster_path} title={title}/>
+              <div className="sm:hidden mt-8 flex flex-wrap gap-4 w-full">
+                <div className="mt-2 mr-4 relative flex-none max-w-full sm:w-52">
+                  <TrailerOverlay videos={videos || []}/>
+                  <RatingOverlay ratings={ratings}/>
+                  <Poster path={poster_path} title={title}/>
+                </div>
+                <div className="w-full">
+                  <WatchStatusBlock/>
+                </div>
               </div>
               <div className="hidden md:block mb-4">
-                <WatchStatusBlock />
-                <ScoreSelector />
+                <ScoreSelector/>
               </div>
               <div className="hidden md:block mb-4">
                 <RatingBlock ratings={ratings}/>
@@ -182,10 +191,12 @@ export default function Details({ details, tab, country, language }: DetailsProp
           </div>
           <ShareButton/>
         </div>
-        <div className="md:hidden flex gap-4 mt-4 px-2 w-full">
+        <div className="md:hidden flex gap-4 px-3 w-full">
           <div className="relative flex-1 mt-2">
-            <div className="mb-4">
+            <div className="hidden sm:block mb-4">
               <WatchStatusBlock/>
+            </div>
+            <div className="mb-4">
               <ScoreSelector/>
             </div>
             <div className="mb-4">

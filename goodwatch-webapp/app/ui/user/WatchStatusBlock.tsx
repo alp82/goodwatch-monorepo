@@ -27,11 +27,11 @@ export default function WatchStatusBlock({}: WatchStatusBlockProps) {
   const favoriteAction = isFavorite ? 'Remove from Favorites' : 'Favorite'
 
   return (
-    <div className="mb-4 md:divide-y divide-gray-600 overflow-hidden py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-evenly px-4 py-2 md:py-4">
+    <div className="overflow-hidden py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow">
+      <div className="flex flex-col gap-4 items-center justify-evenly px-4 py-2 md:py-4">
         <a
           href="#"
-          className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+          className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
           onPointerEnter={() => setActiveButton("wishList")}
           onPointerLeave={() => setActiveButton(null)}
         >
@@ -40,18 +40,16 @@ export default function WatchStatusBlock({}: WatchStatusBlockProps) {
         </a>
         <a
           href="#"
-          className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+          className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
           onPointerEnter={() => setActiveButton("watchHistory")}
           onPointerLeave={() => setActiveButton(null)}
         >
           <WatchHistoryIcon className={`h-5 w-auto ${watchHistoryColor}`} />
           {activeButton === "watchHistory" ? watchHistoryAction : watchHistoryText}
         </a>
-      </div>
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-evenly px-4 py-2 md:py-4">
         <a
           href="#"
-          className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-lg font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+          className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
           onPointerEnter={() => setActiveButton("favorite")}
           onPointerLeave={() => setActiveButton(null)}
         >

@@ -41,8 +41,8 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
 
   const getLabelText = () => {
     if (hoveredScore !== clearedScore) {
-      if (hoveredScore) return scoreLabels[hoveredScore]
-      if (score) return scoreLabels[score]
+      if (hoveredScore) return `${scoreLabels[hoveredScore]} (${hoveredScore})`
+      if (score) return `${scoreLabels[score]} (${score})`
     }
     return scoreLabels[0]
   }
@@ -60,12 +60,20 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
   }
 
   return (
-    <div className="py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow">
+    <div className="divide-y divide-gray-600 py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow">
+      <div className="px-6 py-2">
+        <span className="flex gap-2">
+          Your score:
+          <span className="font-semibold">
+            {getLabelText()}
+          </span>
+        </span>
+      </div>
       <div className="flex px-4 transition duration-150 ease-in-out">
         {Array.from({length: 10}, (_, i) => (
           <div
             key={i + 1}
-            className="w-full md:pt-4 md:pb-10 transition duration-200 ease-in-out transform origin-[50%_35%] hover:scale-y-125 cursor-pointer"
+            className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
             onPointerEnter={() => handleMouseEnter(i + 1)}
             onPointerLeave={() => handleMouseLeave(i + 1)}
             onClick={() => handleClick(i + 1)}
@@ -75,14 +83,6 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
             />
           </div>
         ))}
-      </div>
-      <div className="flex items-center justify-center px-4 -mt-8 pointer-events-none">
-    <span className="flex gap-2 text-lg">
-      Your score:
-      <span className="font-semibold">
-        {getLabelText()}
-      </span>
-    </span>
       </div>
     </div>
   )
