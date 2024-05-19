@@ -21,8 +21,8 @@ import Crew from '~/ui/Crew'
 import ShareButton from '~/ui/ShareButton'
 import { Poster } from '~/ui/Poster'
 import TrailerOverlay from '~/ui/TrailerOverlay'
-import WatchStatusBlock from './user/WatchStatusBlock'
-import ScoreSelector from '~/ui/user/ScoreSelector'
+import ScoreSelector from '~/ui/actions/ScoreSelector'
+import WatchStatusBlock from '~/ui/actions/WatchStatusBlock'
 
 export interface DetailsProps {
   details: MovieDetails | TVDetails

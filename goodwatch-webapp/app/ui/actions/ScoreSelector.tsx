@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import UserAction from '~/ui/auth/UserAction'
 
 interface ScoreSelectorProps {
 }
@@ -30,11 +31,11 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
     return 'bg-gray-600'
   }
 
-  const handleMouseEnter = (index: number | null) => {
+  const handlePointerEnter = (index: number | null) => {
     setHoveredScore(index)
   }
 
-  const handleMouseLeave = (index: number | null) => {
+  const handlePointerLeave = (index: number | null) => {
     setHoveredScore(score)
     setClearedScore(null)
   }
@@ -71,17 +72,19 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
       </div>
       <div className="flex px-4 transition duration-150 ease-in-out">
         {Array.from({length: 10}, (_, i) => (
-          <div
-            key={i + 1}
-            className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
-            onPointerEnter={() => handleMouseEnter(i + 1)}
-            onPointerLeave={() => handleMouseLeave(i + 1)}
-            onClick={() => handleClick(i + 1)}
-          >
+          <UserAction instructions={<>Rate movies and tv shows to get better recommendations.</>}>
             <div
-              className={`h-6 w-full border-2 border-gray-800 rounded-md ${getColorForIndex(i + 1)}`}
-            />
-          </div>
+              key={i + 1}
+              className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
+              onPointerEnter={() => handlePointerEnter(i + 1)}
+              onPointerLeave={() => handlePointerLeave(i + 1)}
+              onClick={() => handleClick(i + 1)}
+            >
+              <div
+                className={`h-6 w-full border-2 border-gray-800 rounded-md ${getColorForIndex(i + 1)}`}
+              />
+            </div>
+          </UserAction>
         ))}
       </div>
     </div>

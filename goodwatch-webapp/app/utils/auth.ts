@@ -38,6 +38,12 @@ export const useSession = () => {
   return session
 }
 
+export const useUser = () => {
+  const session = useSession()
+  const { user } = session || {}
+  return user
+}
+
 export const useVerifyAuthToken = (session: Session | null) => {
   const fetcher = useFetcher<{ user: User; error?: string }>();
 

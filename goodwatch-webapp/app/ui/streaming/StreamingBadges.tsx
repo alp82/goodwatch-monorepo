@@ -1,6 +1,6 @@
 import React from 'react'
 import { StreamingLink } from '~/server/details.server'
-import { titleToDashed } from '~/utils/helpers'
+import tmdb_logo from '~/img/tmdb-logo.svg'
 
 export interface StreamingBadgesProps {
   links: StreamingLink[]
@@ -11,15 +11,36 @@ export default function StreamingBadges({ links = [], countryCodes = [] }: Strea
   const flatrateLinks = links.filter((link: StreamingLink) => link.stream_type == "flatrate")
   const buyLinks = links.filter((link: StreamingLink) => link.stream_type == "buy")
 
+  const PoweredBy = () => {
+    return <>
+      <div className="mt-6 h-3 flex gap-2 items-center">
+        <small>Powered by</small>
+        <a href={links.length ? links[0].tmdb_url : 'https://www.themoviedb.org/'} target="_blank" className="">
+          <img alt="TMDB" className="h-2 w-auto" src={tmdb_logo} />
+        </a>
+        <small>and</small>
+        <a href="https://justwatch.com" target="_blank" className="ml-0.5 scale-105" data-original="https://www.justwatch.com">
+          <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
+        </a>
+      </div>
+    </>
+  }
+
   const hasFlatrate = Boolean(flatrateLinks.length)
   const hasBuy = Boolean(buyLinks.length)
   if (!hasFlatrate) {
     return hasBuy ? (
-      <div className="text-lg">only available for streaming to <a className="text-indigo-400 hover:underline" href="?tab=streaming">buy or rent</a></div>
+      <div>
+        <div className="textsm md:text-lg">only available for streaming to <a className="text-indigo-400 hover:underline" href="?tab=streaming">buy or rent</a></div>
+        <PoweredBy />
+      </div>
     ) : countryCodes?.length ? (
-      <div className="text-lg">only available for streaming in <a className="text-indigo-400 hover:underline" href="?tab=streaming">other countries</a></div>
+      <div>
+        <div className="textsm md:text-lg">only available for streaming in <a className="text-indigo-400 hover:underline" href="?tab=streaming">other countries</a></div>
+        <PoweredBy />
+      </div>
     ) : (
-      <div className="text-lg">not available for streaming</div>
+      <div className="textsm md:text-lg">not available for streaming yet</div>
     )
   }
 
@@ -42,6 +63,7 @@ export default function StreamingBadges({ links = [], countryCodes = [] }: Strea
             )
           })}
         </div>
+        <PoweredBy />
       </div>
     </>
   )

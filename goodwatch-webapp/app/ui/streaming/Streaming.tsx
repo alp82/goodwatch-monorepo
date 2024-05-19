@@ -113,7 +113,7 @@ export default function Streaming({ links, countryCodes = [] }: StreamingProps) 
             <img alt="TMDB" className="h-3 w-auto" src={tmdb_logo} />
           </a>
           <small>and</small>
-          <a href="https://justwatch.com" target="_blank" className="scale-125 ml-2" data-original="https://www.justwatch.com">
+          <a href="https://justwatch.com" target="_blank" className="scale-150 ml-5" data-original="https://www.justwatch.com">
             <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
           </a>
         </div>
