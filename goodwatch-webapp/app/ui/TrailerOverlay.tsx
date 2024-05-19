@@ -30,8 +30,8 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
     <>
       {hasTrailers ? (
         <>
-          <a className="absolute flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-0 hover:bg-opacity-50 cursor-pointer" onClick={handleShowTrailer}>
-            <PlayCircleIcon className="relative bottom-4 w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 mx-auto opacity-80" />
+          <a className="absolute flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-0 hover:bg-opacity-50 cursor-pointer group" onClick={handleShowTrailer}>
+            <PlayCircleIcon className="relative bottom-4 w-24 h-24 md:w-32 md:h-32 lg:w-24 lg:h-24 xl:w-32 xl:h-32 mx-auto opacity-80 transition duration-300 ease-in-out group-hover:scale-110" />
             <p className="absolute bottom-3 py-2 w-full bg-black bg-opacity-80 font-bold text-center">Play Trailer</p>
           </a>
           <Transition.Root show={open} as={Fragment}>
