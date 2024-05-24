@@ -9,15 +9,20 @@ const loadingProps = {
 interface UseSubmitProps<Params> {
   url: `/api/${string}`
   params: Params
+  onClick?: () => void
 }
 
-export const useAPIAction = <Params extends {}, Result extends {}>({ url, params }: UseSubmitProps<Params>) => {
+export const useAPIAction = <Params extends {}, Result extends {}>({ url, params, onClick }: UseSubmitProps<Params>) => {
   let revalidator = useRevalidator();
 
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
 
   const handleSubmit = async () => {
+    console.log({params})
+    if (onClick) {
+      onClick()
+    }
     setResult(null)
     setSubmitting(true)
     const response = await fetch(url, {

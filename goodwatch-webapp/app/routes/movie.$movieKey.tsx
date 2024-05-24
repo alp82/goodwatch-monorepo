@@ -11,6 +11,7 @@ import { getWishList, GetWishListResult, WishListItem } from '~/server/wishList.
 import { getUserFromRequest } from '~/utils/auth'
 import { getWatchHistory, GetWatchHistoryResult } from '~/server/watchHistory.server'
 import { getFavorites, GetFavoritesResult } from '~/server/favorites.server'
+import { getScores, GetScoresResult } from '~/server/scores.server'
 
 export function headers() {
   return {
@@ -35,6 +36,7 @@ export type LoaderData = {
   wishList?: GetWishListResult
   watchHistory?: GetWatchHistoryResult
   favorites?: GetFavoritesResult
+  scores?: GetScoresResult
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
@@ -55,6 +57,7 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
   const wishList = await getWishList({ user_id: user?.id })
   const watchHistory = await getWatchHistory({ user_id: user?.id })
   const favorites = await getFavorites({ user_id: user?.id })
+  const scores = await getScores({ user_id: user?.id })
 
   return json<LoaderData>({
     details,
@@ -66,6 +69,7 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
     wishList,
     watchHistory,
     favorites,
+    scores,
   })
 }
 

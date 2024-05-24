@@ -5,6 +5,11 @@ import { getDetailsForTV, TVDetails } from '~/server/details.server'
 import useLocale, { getLocaleFromRequest } from '~/utils/locale'
 import Details from '~/ui/Details'
 import { useUpdateUrlParams } from '~/hooks/updateUrlParams'
+import { getUserFromRequest } from '~/utils/auth'
+import { getWishList, GetWishListResult } from '~/server/wishList.server'
+import { getWatchHistory, GetWatchHistoryResult } from '~/server/watchHistory.server'
+import { getFavorites, GetFavoritesResult } from '~/server/favorites.server'
+import { getScores, GetScoresResult } from '~/server/scores.server'
 
 export function headers() {
   return {
@@ -26,6 +31,10 @@ type LoaderData = {
     country: string
     language: string
   }
+  wishList?: GetWishListResult
+  watchHistory?: GetWatchHistoryResult
+  favorites?: GetFavoritesResult
+  scores?: GetScoresResult
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
@@ -41,6 +50,12 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
     language,
   })
 
+  const user = await getUserFromRequest({ request })
+  const wishList = await getWishList({ user_id: user?.id })
+  const watchHistory = await getWatchHistory({ user_id: user?.id })
+  const favorites = await getFavorites({ user_id: user?.id })
+  const scores = await getScores({ user_id: user?.id })
+
   return json<LoaderData>({
     details,
     params: {
@@ -48,6 +63,10 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
       country,
       language,
     },
+    wishList,
+    watchHistory,
+    favorites,
+    scores,
   })
 }
 

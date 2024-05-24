@@ -1,15 +1,28 @@
-import React, { useState } from 'react'
-import UserAction from '~/ui/auth/UserAction'
+import React, { useEffect, useState } from 'react'
 import { MovieDetails, TVDetails } from '~/server/details.server'
+import { useLoaderData } from '@remix-run/react'
+import { LoaderData } from '~/routes/movie.$movieKey'
+import ScoreAction from '~/ui/actions/ScoreAction'
+import { Score } from '~/server/scores.server'
 
 interface ScoreSelectorProps {
   details: MovieDetails | TVDetails
 }
 
-export default function ScoreSelector({}: ScoreSelectorProps) {
-  const [score, setScore] = useState<number | null>(null)
-  const [hoveredScore, setHoveredScore] = useState<number | null>(null)
-  const [clearedScore, setClearedScore] = useState<number | null>(null)
+export default function ScoreSelector({ details }: ScoreSelectorProps) {
+  const { tmdb_id, media_type } = details
+
+  const { scores } = useLoaderData<LoaderData>()
+  const userScore = scores?.[media_type]?.[tmdb_id]?.score || null
+  const [score, setScore] = useState<Score | null>(userScore)
+  useEffect(() => {
+    console.log({score, userScore})
+    if (score === userScore) return
+    setScore(userScore)
+  }, [userScore])
+
+  const [hoveredScore, setHoveredScore] = useState<Score | null>(null)
+  const [clearedScore, setClearedScore] = useState<Score | null>(null)
 
   const scoreLabels = [
     "Not Rated",
@@ -25,32 +38,35 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
     "Must Watch",
   ]
 
-  const getColorForIndex = (index: number | null) => {
-    if (index && hoveredScore && index <= hoveredScore && !clearedScore) {
-      const vibeColorIndex = hoveredScore * 10
+  const getColorForIndex = (index: Score | null) => {
+    const hovered = index && hoveredScore && index <= hoveredScore
+    const scored = index && !hoveredScore && score && index <= score
+
+    if ((hovered || scored) && !clearedScore) {
+      const vibeColorIndex = (hoveredScore || score || -1) * 10
       return `bg-vibe-${vibeColorIndex}`
     }
     return 'bg-gray-600'
   }
 
-  const handlePointerEnter = (index: number | null) => {
-    setHoveredScore(index)
-  }
-
-  const handlePointerLeave = (index: number | null) => {
-    setHoveredScore(score)
-    setClearedScore(null)
-  }
-
   const getLabelText = () => {
-    if (hoveredScore !== clearedScore) {
+    if (score || hoveredScore !== clearedScore) {
       if (hoveredScore) return `${scoreLabels[hoveredScore]} (${hoveredScore})`
       if (score) return `${scoreLabels[score]} (${score})`
     }
     return scoreLabels[0]
   }
 
-  const handleClick = (index: number | null) => {
+  const handlePointerEnter = (index: Score | null) => {
+    setHoveredScore(index)
+  }
+
+  const handlePointerLeave = (index: Score | null) => {
+    setHoveredScore(score)
+    setClearedScore(null)
+  }
+
+  const handleClick = (index: Score | null) => {
     setScore((previousScore) => {
       const clearingScore = previousScore == index
       if (clearingScore) {
@@ -73,23 +89,27 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
         </span>
       </div>
       <div className="flex px-4 transition duration-150 ease-in-out">
-        {Array.from({length: 10}, (_, i) => (
-          <UserAction
-            key={i + 1}
-            instructions={<>Rate movies and tv shows to get better recommendations.</>}
-          >
-            <div
-              className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
-              onPointerEnter={() => handlePointerEnter(i + 1)}
-              onPointerLeave={() => handlePointerLeave(i + 1)}
-              onClick={() => handleClick(i + 1)}
+        {Array.from({length: 10}, (_, i) => {
+          const scoreIndex = i + 1 as Score
+          return (
+            <ScoreAction
+              details={details}
+              score={scoreIndex !== score ? scoreIndex : null}
+              key={i + 1}
             >
               <div
-                className={`h-6 w-full border-2 border-gray-800 rounded-md ${getColorForIndex(i + 1)}`}
-              />
-            </div>
-          </UserAction>
-        ))}
+                className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
+                onPointerEnter={() => handlePointerEnter(scoreIndex)}
+                onPointerLeave={() => handlePointerLeave(scoreIndex)}
+                onClick={() => handleClick(scoreIndex)}
+              >
+                <div
+                  className={`h-6 w-full border-2 border-gray-800 rounded-md ${getColorForIndex(scoreIndex)}`}
+                />
+              </div>
+            </ScoreAction>
+          )
+        })}
       </div>
     </div>
   )
