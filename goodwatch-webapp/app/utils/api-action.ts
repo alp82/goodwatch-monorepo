@@ -1,5 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRevalidator } from '@remix-run/react'
+
+const loadingProps = {
+  pointerEvents: "none",
+  opacity: 0.7,
+}
 
 interface UseSubmitProps<Params> {
   url: `/api/${string}`
@@ -13,6 +18,7 @@ export const useAPIAction = <Params extends {}, Result extends {}>({ url, params
   const [result, setResult] = useState<Result | null>(null)
 
   const handleSubmit = async () => {
+    setResult(null)
     setSubmitting(true)
     const response = await fetch(url, {
       method: "POST",
@@ -20,19 +26,25 @@ export const useAPIAction = <Params extends {}, Result extends {}>({ url, params
     })
     const result: Result = await response.json()
     setResult(result)
-    setSubmitting(false)
     revalidator.revalidate()
   }
 
+  useEffect(() => {
+    if (revalidator.state === "idle") {
+      setSubmitting(false)
+    }
+  }, [revalidator.state])
+
+  const isLoading = submitting/* || revalidator.state === "loading"*/
   const submitProps = {
     onClick: handleSubmit,
-    disabled: submitting || null,
-    style: submitting ? { pointerEvents: "none", opacity: 0.5 } : {},
+    disabled: isLoading || null,
+    style: isLoading ? loadingProps : {},
   }
 
   return {
     result,
-    submitting,
+    isLoading,
     submitProps,
   };
 };

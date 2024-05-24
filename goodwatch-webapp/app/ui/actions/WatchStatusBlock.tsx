@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { PlusCircleIcon, MinusCircleIcon, EyeIcon, EyeSlashIcon, HeartIcon } from '@heroicons/react/24/solid'
-import UserAction from '~/ui/auth/UserAction'
+import { EyeIcon, EyeSlashIcon, HeartIcon, MinusCircleIcon, PlusCircleIcon } from '@heroicons/react/24/solid'
 import { MovieDetails, TVDetails } from '~/server/details.server'
 import WishListAction from '~/ui/actions/WishListAction'
 import { useLoaderData } from '@remix-run/react'
 import { LoaderData } from '~/routes/movie.$movieKey'
 import WatchHistoryAction from '~/ui/actions/WatchHistoryAction'
+import FavoriteAction from '~/ui/actions/FavoriteAction'
 
 export interface WatchStatusBlockProps {
   details: MovieDetails | TVDetails
@@ -14,11 +14,11 @@ export interface WatchStatusBlockProps {
 export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
   const [activeButton, setActiveButton] = useState<"wishList" | "watchHistory" | "favorite" | null>(null)
 
-  const { wishList, watchHistory } = useLoaderData<LoaderData>()
+  const { wishList, watchHistory, favorites } = useLoaderData<LoaderData>()
   const { tmdb_id, media_type } = details
   const isInWishList = wishList?.[media_type]?.[tmdb_id]?.onWishList
   const isInWatchHistory = watchHistory?.[media_type]?.[tmdb_id]?.onWatchHistory
-  const isFavorite = false
+  const isFavorite = favorites?.[media_type]?.[tmdb_id]?.onFavorites
 
   const WishListIcon = isInWishList && activeButton === 'wishList' ? MinusCircleIcon : PlusCircleIcon
   const wishListColor = isInWishList && activeButton !== 'wishList' ? 'text-green-500' : 'text-gray-400'
@@ -60,18 +60,17 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
             {activeButton === "watchHistory" ? watchHistoryAction : watchHistoryText}
           </button>
         </WatchHistoryAction>
-        <UserAction instructions={<>Save your all-time favorites.</>}>
-          <a
-            href="#"
+        <FavoriteAction details={details}>
+          <button
+            type="submit"
             className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
-            onClick={() => console.log("click favorite")}
             onPointerEnter={() => setActiveButton("favorite")}
             onPointerLeave={() => setActiveButton(null)}
           >
             <FavoriteIcon className={`h-5 w-auto ${favoriteColor}`} />
             {activeButton === "favorite" ? favoriteAction : favoriteText}
-          </a>
-        </UserAction>
+          </button>
+        </FavoriteAction>
       </div>
     </div>
   )
