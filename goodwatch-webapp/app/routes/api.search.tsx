@@ -21,5 +21,3 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
     searchResults: sortedResults,
   })
 }
-
-export default function Search() {}

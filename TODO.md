@@ -221,5 +221,7 @@ monorepo design
 deployment with docker compose
 monitoring with uptime kuma
 authentication
+    https://www.dusanstam.com/posts/remix-supabase-authentication
+remix component example: rating
 recommendation engine
 ```

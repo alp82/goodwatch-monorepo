@@ -9,10 +9,10 @@ const pool = new Pool({
     database: process.env.POSTGRES_DB,
 })
 
-export async function executeQuery(query: string, params?: any[]) {
+export async function executeQuery<T extends {}>(query: string, params?: any[]) {
     const start = Date.now();
     try {
-        const res = await pool.query(query, params)
+        const res = await pool.query<T>(query, params)
         const duration = Date.now() - start
         console.log('executed query', { query, duration, rowCount: res.rowCount })
         return res

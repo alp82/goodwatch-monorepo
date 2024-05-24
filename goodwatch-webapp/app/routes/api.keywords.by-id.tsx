@@ -16,5 +16,3 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
     keywords,
   })
 }
-
-export default function KeywordsById() {}

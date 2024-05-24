@@ -14,5 +14,3 @@ export const loader: LoaderFunction = async () => {
     genres,
   })
 }
-
-export default function Movie() {}

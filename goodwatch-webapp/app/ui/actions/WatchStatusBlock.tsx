@@ -1,20 +1,24 @@
 import React, { useState } from 'react'
 import { PlusCircleIcon, MinusCircleIcon, EyeIcon, EyeSlashIcon, HeartIcon } from '@heroicons/react/24/solid'
-import { useUser } from '~/utils/auth'
 import UserAction from '~/ui/auth/UserAction'
+import { MovieDetails, TVDetails } from '~/server/details.server'
+import WishListAction from '~/ui/actions/WishListAction'
+import { useLoaderData } from '@remix-run/react'
+import { LoaderData } from '~/routes/movie.$movieKey'
+import WatchHistoryAction from '~/ui/actions/WatchHistoryAction'
 
 export interface WatchStatusBlockProps {
+  details: MovieDetails | TVDetails
 }
 
-export default function WatchStatusBlock({}: WatchStatusBlockProps) {
-  const user = useUser()
-  const isLoggedIn = Boolean(user)
-
+export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
   const [activeButton, setActiveButton] = useState<"wishList" | "watchHistory" | "favorite" | null>(null)
 
-  const isInWishList = true
-  const isInWatchHistory = true
-  const isFavorite = true
+  const { wishList, watchHistory } = useLoaderData<LoaderData>()
+  const { tmdb_id, media_type } = details
+  const isInWishList = wishList?.[media_type]?.[tmdb_id]?.onWishList
+  const isInWatchHistory = watchHistory?.[media_type]?.[tmdb_id]?.onWatchHistory
+  const isFavorite = false
 
   const WishListIcon = isInWishList && activeButton === 'wishList' ? MinusCircleIcon : PlusCircleIcon
   const wishListColor = isInWishList && activeButton !== 'wishList' ? 'text-green-500' : 'text-gray-400'
@@ -34,30 +38,28 @@ export default function WatchStatusBlock({}: WatchStatusBlockProps) {
   return (
     <div className="overflow-hidden py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow">
       <div className="flex flex-col gap-4 items-center justify-evenly px-4 py-2 md:py-4">
-        <UserAction instructions={<>Curate your wishlist to track what you want to watch.</>}>
-          <a
-            href="#"
+        <WishListAction details={details}>
+          <button
+            type="submit"
             className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
-            onClick={() => console.log("click wishlist")}
             onPointerEnter={() => setActiveButton("wishList")}
             onPointerLeave={() => setActiveButton(null)}
           >
             <WishListIcon className={`h-5 w-auto ${wishListColor}`} />
             {activeButton === "wishList" ? wishlistAction : wishlistText}
-          </a>
-        </UserAction>
-        <UserAction instructions={<>Your history shows every title you ever have watched.</>}>
-          <a
-            href="#"
+          </button>
+        </WishListAction>
+        <WatchHistoryAction details={details}>
+          <button
+            type="submit"
             className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
-            onClick={() => console.log("click watchhistory")}
             onPointerEnter={() => setActiveButton("watchHistory")}
             onPointerLeave={() => setActiveButton(null)}
           >
             <WatchHistoryIcon className={`h-5 w-auto ${watchHistoryColor}`} />
             {activeButton === "watchHistory" ? watchHistoryAction : watchHistoryText}
-          </a>
-        </UserAction>
+          </button>
+        </WatchHistoryAction>
         <UserAction instructions={<>Save your all-time favorites.</>}>
           <a
             href="#"

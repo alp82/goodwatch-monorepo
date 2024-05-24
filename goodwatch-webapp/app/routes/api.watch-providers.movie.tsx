@@ -18,5 +18,3 @@ export const loader: LoaderFunction = async () => {
     watchProviders,
   })
 }
-
-export default function Movie() {}

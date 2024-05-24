@@ -1,6 +1,6 @@
 import React, {useState} from 'react'
+import ReactPlayer from 'react-player/youtube'
 import Tabs, {Tab} from "~/ui/Tabs";
-import YouTube from "react-youtube";
 import {Videos as VideosType} from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
 
@@ -71,7 +71,16 @@ export default function Videos({ videos }: VideosProps) {
             <Tabs tabs={numberTabs} pills={true} onSelect={handleNumberSelection} />
           </div>}
           <div className="aspect-w-16 aspect-h-9">
-            <YouTube videoId={selectedVideos[selectedNumber].key} opts={videoOpts} />
+            <ReactPlayer
+              url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
+              width="100%"
+              height="100%"
+              config={{
+                playerVars: {
+                  autoplay: 1,
+                },
+              }}
+            />
           </div>
         </>
       ) : (

@@ -91,7 +91,7 @@ export default function Details({ details, tab, country, language }: DetailsProp
       {(selectedTab === 'about' || !existingTabs.includes(selectedTab)) && (
         <>
           {tagline && <div className="mt-8 mb-6">
-            <blockquote className="relative border-l-4 border-gray-700 pl-4 sm:pl-6">
+            <blockquote className="relative border-l-4 lg:border-l-8 border-gray-600 bg-gray-800 py-2 pl-4 sm:pl-6">
               <p className="text-white italic sm:text-xl">
                 {tagline}
               </p>
@@ -149,7 +149,7 @@ export default function Details({ details, tab, country, language }: DetailsProp
                 <Poster path={poster_path} title={title}/>
               </div>
               <div className="sm:hidden md:block mt-4">
-                <WatchStatusBlock />
+                <WatchStatusBlock details={details} />
               </div>
             </div>
             <div className="relative flex-1 mt-2 sm:mt-4 sm:pl-6 lg:pl-8">
@@ -174,11 +174,11 @@ export default function Details({ details, tab, country, language }: DetailsProp
                   <Poster path={poster_path} title={title}/>
                 </div>
                 <div className="w-full">
-                  <WatchStatusBlock/>
+                  <WatchStatusBlock details={details} />
                 </div>
               </div>
               <div className="hidden md:block mb-4">
-                <ScoreSelector/>
+                <ScoreSelector details={details} />
               </div>
               <div className="hidden md:block mb-4">
                 <RatingBlock ratings={ratings}/>
@@ -194,10 +194,10 @@ export default function Details({ details, tab, country, language }: DetailsProp
         <div className="md:hidden flex gap-4 px-3 w-full">
           <div className="relative flex-1 mt-2">
             <div className="hidden sm:block mb-4">
-              <WatchStatusBlock/>
+              <WatchStatusBlock details={details} />
             </div>
             <div className="mb-4">
-              <ScoreSelector/>
+              <ScoreSelector details={details} />
             </div>
             <div className="mb-4">
               <RatingBlock ratings={ratings}/>

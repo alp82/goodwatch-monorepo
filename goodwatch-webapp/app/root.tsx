@@ -11,6 +11,7 @@ import {
   useRouteError,
 } from '@remix-run/react'
 import { createBrowserClient } from '@supabase/ssr'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Analytics } from '@vercel/analytics/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ToastContainer } from 'react-toastify'
@@ -22,13 +23,13 @@ import BottomNav from '~/ui/nav/BottomNav'
 import { getLocaleFromRequest, LocaleContext } from '~/utils/locale'
 
 import cssToastify from 'react-toastify/dist/ReactToastify.css?url'
-import cssRemixDevTools from 'remix-development-tools/index.css?url'
+// import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from '~/main.css?url'
 import cssTailwind from '~/tailwind.css?url'
-import { AuthContext, useVerifyAuthToken, useSession } from './utils/auth'
+import { AuthContext } from './utils/auth'
 
 export const links: LinksFunction = () => [
-  ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),
+  // ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),
   { rel: "stylesheet", href: cssMain },
   { rel: "stylesheet", href: cssTailwind },
   { rel: "stylesheet", href: cssToastify },
@@ -104,9 +105,23 @@ export function ErrorBoundary() {
 
 
 export default function App() {
-  const location = useLocation()
   const { locale, env } = useLoaderData<LoaderData>()
+  const location = useLocation()
+
   const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
+
+  const [queryClient] = React.useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // With SSR, we usually want to set some default staleTime
+            // above 0 to avoid refetching immediately on the client
+            staleTime: 60 * 1000,
+          },
+        },
+      }),
+  )
 
   return (
     <html lang="en" className="scroll-smooth">
@@ -119,31 +134,33 @@ export default function App() {
         <Links/>
       </head>
       <body className="flex flex-col h-screen bg-gray-900">
-        <AuthContext.Provider value={{supabase}}>
-          <LocaleContext.Provider value={{locale}}>
-            <Header/>
-            <main className="relative flex-grow mx-auto mt-16 pb-20 lg:pb-2 w-full text-neutral-300">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={location.pathname}
-                  initial={{x: '-2%', opacity: 0}}
-                  animate={{x: '0', opacity: 1}}
-                  exit={{x: '2%', opacity: 0}}
-                  transition={{duration: 0.2, type: 'tween'}}
-                >
-                  <Outlet/>
-                </motion.div>
-              </AnimatePresence>
-            </main>
-            <Footer/>
-            <ToastContainer/>
-            <BottomNav/>
-            <ScrollRestoration/>
-            <Scripts/>
-            <Analytics/>
-            <script src="https://accounts.google.com/gsi/client" async></script>
-          </LocaleContext.Provider>
-        </AuthContext.Provider>
+        <QueryClientProvider client={queryClient}>
+          <AuthContext.Provider value={{supabase}}>
+            <LocaleContext.Provider value={{locale}}>
+              <Header/>
+              <main className="relative flex-grow mx-auto mt-16 pb-20 lg:pb-2 w-full text-neutral-300">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{x: '-2%', opacity: 0}}
+                    animate={{x: '0', opacity: 1}}
+                    exit={{x: '2%', opacity: 0}}
+                    transition={{duration: 0.2, type: 'tween'}}
+                  >
+                    <Outlet/>
+                  </motion.div>
+                </AnimatePresence>
+              </main>
+              <Footer/>
+              <ToastContainer/>
+              <BottomNav/>
+              <ScrollRestoration/>
+              <Scripts/>
+              <Analytics/>
+              <script src="https://accounts.google.com/gsi/client" async></script>
+            </LocaleContext.Provider>
+          </AuthContext.Provider>
+        </QueryClientProvider>
       </body>
     </html>
   );

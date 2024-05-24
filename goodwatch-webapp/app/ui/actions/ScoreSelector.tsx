@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import UserAction from '~/ui/auth/UserAction'
+import { MovieDetails, TVDetails } from '~/server/details.server'
 
 interface ScoreSelectorProps {
+  details: MovieDetails | TVDetails
 }
 
 export default function ScoreSelector({}: ScoreSelectorProps) {
@@ -72,9 +74,11 @@ export default function ScoreSelector({}: ScoreSelectorProps) {
       </div>
       <div className="flex px-4 transition duration-150 ease-in-out">
         {Array.from({length: 10}, (_, i) => (
-          <UserAction instructions={<>Rate movies and tv shows to get better recommendations.</>}>
+          <UserAction
+            key={i + 1}
+            instructions={<>Rate movies and tv shows to get better recommendations.</>}
+          >
             <div
-              key={i + 1}
               className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
               onPointerEnter={() => handlePointerEnter(i + 1)}
               onPointerLeave={() => handlePointerLeave(i + 1)}

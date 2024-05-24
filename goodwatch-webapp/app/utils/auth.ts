@@ -1,7 +1,40 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { Session } from '@supabase/auth-js'
 import { SupabaseClient } from '@supabase/supabase-js'
-import { Session, User } from '@supabase/auth-js'
-import { useFetcher } from '@remix-run/react'
+import { createServerClient, parse, serialize } from '@supabase/ssr'
+
+// server
+
+export const getUserFromRequest = async({ request }: { request: Request }) => {
+  const cookies = parse(request.headers.get('Cookie') ?? '')
+  const headers = new Headers()
+  const supabase = createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(key) {
+          return cookies[key]
+        },
+        set(key, value, options) {
+          headers.append('Set-Cookie', serialize(key, value, options))
+        },
+        remove(key, options) {
+          headers.append('Set-Cookie', serialize(key, '', options))
+        },
+      },
+    },
+  )
+  const { data: { user }, error } = await supabase.auth.getUser();
+  return user
+}
+
+export const getUserIdFromRequest = async({ request }: { request: Request }) => {
+  const user = await getUserFromRequest({ request })
+  return user?.id
+}
+
+// client
 
 interface AuthContext {
   supabase?: SupabaseClient
@@ -42,41 +75,4 @@ export const useUser = () => {
   const session = useSession()
   const { user } = session || {}
   return user
-}
-
-export const useVerifyAuthToken = (session: Session | null) => {
-  const fetcher = useFetcher<{ user: User; error?: string }>();
-
-  useEffect(() => {
-    if (session?.access_token) {
-      fetcher.load(`/api/auth/verify?auth_token=${encodeURIComponent(session.access_token)}`);
-    }
-  }, [session]);
-
-  return {
-    authTokenIsValid: Boolean(fetcher.data?.user?.aud),
-    loading: fetcher.state === 'loading',
-  };
-}
-
-export const getUser = async (token: string, supabase: SupabaseClient) =>{
-  if (!token) {
-    return { error: 'No token provided' }
-  }
-
-  try {
-    const { data: user, error } = await supabase.auth.getUser(token)
-
-    if (error) {
-      throw error
-    }
-
-    if (user) {
-      return { user }
-    } else {
-      return { error: 'Invalid session' }
-    }
-  } catch (error) {
-    return { error: error.message || 'Failed to verify token' }
-  }
 }

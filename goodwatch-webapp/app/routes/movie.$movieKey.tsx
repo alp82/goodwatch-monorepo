@@ -1,10 +1,15 @@
 import React, { useEffect } from 'react'
 import { useLoaderData } from '@remix-run/react'
 import { json, LoaderFunctionArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
+import { createClient } from '@supabase/supabase-js'
+import { createServerClient, parse, serialize } from '@supabase/ssr'
 import { getDetailsForMovie, MovieDetails } from '~/server/details.server'
 import useLocale, { getLocaleFromRequest } from '~/utils/locale'
 import Details from '~/ui/Details'
 import { useUpdateUrlParams } from '~/hooks/updateUrlParams'
+import { getWishList, GetWishListResult, WishListItem } from '~/server/wishList.server'
+import { getUserFromRequest } from '~/utils/auth'
+import { getWatchHistory, GetWatchHistoryResult } from '~/server/watchHistory.server'
 
 export function headers() {
   return {
@@ -19,13 +24,15 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   ]
 }
 
-type LoaderData = {
+export type LoaderData = {
   details: Awaited<MovieDetails>
   params: {
     tab: string
     country: string
     language: string
-  }
+  },
+  wishList?: GetWishListResult
+  watchHistory?: GetWatchHistoryResult
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
@@ -42,6 +49,10 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
     language,
   })
 
+  const user = await getUserFromRequest({ request })
+  const wishList = await getWishList({ user_id: user?.id })
+  const watchHistory = await getWatchHistory({ user_id: user?.id })
+
   return json<LoaderData>({
     details,
     params: {
@@ -49,6 +60,8 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
       country,
       language,
     },
+    wishList,
+    watchHistory,
   })
 }
 

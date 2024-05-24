@@ -18,5 +18,3 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
 
   return json<LoaderData>(moviesInCollection)
 }
-
-export default function MoviesInCollection() {}

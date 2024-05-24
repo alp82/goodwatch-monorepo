@@ -1,18 +1,8 @@
 import React, { Fragment, useState } from 'react'
 import { PlayCircleIcon } from '@heroicons/react/24/solid'
 import { Videos } from '~/server/details.server'
-import { Tab } from '~/ui/Tabs'
 import { Dialog, Transition } from '@headlessui/react'
-import YouTube from 'react-youtube'
-
-const videoOpts = {
-  width: '100%',
-  height: '100%',
-  playerVars: {
-    // https://developers.google.com/youtube/player_parameters
-    autoplay: 1,
-  },
-}
+import ReactPlayer from 'react-player/youtube'
 
 export interface TrailerOverlayProps {
   videos: Videos
@@ -61,7 +51,16 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
                   >
                     <Dialog.Panel className="relative mt-12 w-full transform overflow-hidden rounded-lg bg-slate-700 p-4 shadow-xl transition-all">
                       <div className="aspect-w-16 aspect-h-9">
-                        <YouTube videoId={videos.trailers[0].key} opts={videoOpts} />
+                        <ReactPlayer
+                          url={`https://www.youtube.com/watch?v=${videos.trailers[0].key}`}
+                          width="100%"
+                          height="100%"
+                          config={{
+                            playerVars: {
+                              autoplay: 1,
+                            },
+                          }}
+                        />
                       </div>
                     </Dialog.Panel>
                   </Transition.Child>
