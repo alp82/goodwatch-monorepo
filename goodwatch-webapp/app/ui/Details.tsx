@@ -148,7 +148,7 @@ export default function Details({ details, tab, country, language }: DetailsProp
                 <RatingOverlay ratings={ratings}/>
                 <Poster path={poster_path} title={title}/>
               </div>
-              <div className="sm:hidden md:block mt-4">
+              <div className="hidden md:block mt-4">
                 <WatchStatusBlock details={details} />
               </div>
             </div>
@@ -167,18 +167,15 @@ export default function Details({ details, tab, country, language }: DetailsProp
                 </div> : null}
               </div>
               <Genres genres={genres} type={media_type}/>
-              <div className="sm:hidden mt-8 flex flex-wrap gap-4 w-full">
+              <div className="sm:hidden mt-8 flex flex-wrap justify-center gap-4 w-full">
                 <div className="mt-2 mr-4 relative flex-none max-w-full sm:w-52">
                   <TrailerOverlay videos={videos || []}/>
                   <RatingOverlay ratings={ratings}/>
                   <Poster path={poster_path} title={title}/>
                 </div>
-                <div className="w-full">
-                  <WatchStatusBlock details={details} />
-                </div>
               </div>
               <div className="hidden md:block mb-4">
-                <ScoreSelector details={details} />
+                <ScoreSelector details={details}/>
               </div>
               <div className="hidden md:block mb-4">
                 <RatingBlock ratings={ratings}/>
@@ -193,11 +190,8 @@ export default function Details({ details, tab, country, language }: DetailsProp
         </div>
         <div className="md:hidden flex gap-4 px-3 w-full">
           <div className="relative flex-1 mt-2">
-            <div className="hidden sm:block mb-4">
-              <WatchStatusBlock details={details} />
-            </div>
             <div className="mb-4">
-              <ScoreSelector details={details} />
+              <ScoreSelector details={details}/>
             </div>
             <div className="mb-4">
               <RatingBlock ratings={ratings}/>
@@ -205,6 +199,9 @@ export default function Details({ details, tab, country, language }: DetailsProp
             <div className="mb-4">
               <StreamingBlock media_type={media_type} links={streaming_links} countryCodes={streaming_country_codes}
                               currentCountryCode={country}/>
+            </div>
+            <div className="md:hidden mb-4">
+              <WatchStatusBlock details={details}/>
             </div>
           </div>
         </div>
