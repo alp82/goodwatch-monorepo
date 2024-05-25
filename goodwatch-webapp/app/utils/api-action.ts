@@ -19,7 +19,6 @@ export const useAPIAction = <Params extends {}, Result extends {}>({ url, params
   const [result, setResult] = useState<Result | null>(null)
 
   const handleSubmit = async () => {
-    console.log({params})
     if (onClick) {
       onClick()
     }

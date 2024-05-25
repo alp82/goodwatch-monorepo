@@ -12,11 +12,10 @@ interface ScoreSelectorProps {
 export default function ScoreSelector({ details }: ScoreSelectorProps) {
   const { tmdb_id, media_type } = details
 
-  const { scores } = useLoaderData<LoaderData>()
-  const userScore = scores?.[media_type]?.[tmdb_id]?.score || null
+  const { userData } = useLoaderData<LoaderData>()
+  const userScore = userData?.[media_type]?.[tmdb_id]?.score || null
   const [score, setScore] = useState<Score | null>(userScore)
   useEffect(() => {
-    console.log({score, userScore})
     if (score === userScore) return
     setScore(userScore)
   }, [userScore])
@@ -50,7 +49,7 @@ export default function ScoreSelector({ details }: ScoreSelectorProps) {
   }
 
   const getLabelText = () => {
-    if (score || hoveredScore !== clearedScore) {
+    if (score !== clearedScore || hoveredScore !== clearedScore) {
       if (hoveredScore) return `${scoreLabels[hoveredScore]} (${hoveredScore})`
       if (score) return `${scoreLabels[score]} (${score})`
     }

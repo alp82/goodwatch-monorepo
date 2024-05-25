@@ -61,6 +61,11 @@ async function cacheGet<CacheData extends JsonData>(namespace: string, key: stri
   return result ? JSON.parse(result) : null
 }
 
+async function cacheDelete(namespace: string, key: string): Promise<number> {
+  const namespaceKey = `${namespace}:${key}`
+  return await cluster.del(namespaceKey)
+}
+
 export type TargetFunction<Params, Return> = (args: Params) => Promise<Return>
 
 export interface CachedParams<Params, Return> {
@@ -104,4 +109,18 @@ export const cached = async <Params extends Partial<Record<keyof Params, unknown
   }
 
   return results
+}
+
+interface ResetCacheParams {
+  params: JsonData
+  name: string
+}
+
+export const resetCache = async ({
+  params,
+  name,
+}: ResetCacheParams): Promise<number> => {
+  const cacheName = `cached-${name}`
+  const cacheKey = generateCacheKey(params)
+  return await cacheDelete(cacheName, cacheKey)
 }

@@ -1,4 +1,5 @@
 import { executeQuery } from '~/utils/postgres'
+import { resetUserDataCache } from '~/server/userData.server'
 
 interface UpdateFavoritesParams {
   user_id?: string
@@ -41,55 +42,9 @@ export const updateFavorites = async ({
   `
   const params = [user_id, tmdb_id, media_type];
   const result = await executeQuery(query, params)
+  await resetUserDataCache({ user_id })
 
   return {
     status: result.rowCount === 1 ? "success" : "failed"
   }
-}
-
-
-interface GetFavoritesParams {
-  user_id?: string
-}
-
-export interface FavoritesItem {
-  user_id: string
-  tmdb_id: string
-  media_type: "movie" | "tv"
-  updated_at: Date
-}
-
-export type GetFavoritesResult = {
-  [key in 'movie' | 'tv']: {
-    [key: string]: {
-      onFavorites: true;
-    }
-  }
-}
-
-export const getFavorites = async ({
-  user_id,
-}: GetFavoritesParams): Promise<GetFavoritesResult> => {
-  if (!user_id) {
-    return {} as GetFavoritesResult
-  }
-
-  const query = `
-    SELECT * FROM user_favorites
-    WHERE user_id = $1;
-  `
-  const params = [user_id];
-  const result = await executeQuery<FavoritesItem>(query, params)
-
-  return result.rows.reduce((resultMap, row) => {
-    return {
-      ...resultMap,
-      [row.media_type]: {
-        ...(resultMap[row.media_type] || {}),
-        [row.tmdb_id]: {
-          onFavorites: true,
-        }
-      }
-    }
-  }, {} as GetFavoritesResult)
 }

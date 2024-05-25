@@ -15,13 +15,13 @@ export interface WishListActionProps {
 export default function WishListAction({ children, details }: WishListActionProps) {
   const { tmdb_id, media_type } = details
 
-  const { wishList } = useLoaderData<LoaderData>()
-  const action = wishList?.[media_type]?.[tmdb_id]?.onWishList ? "remove" : "add"
+  const { userData } = useLoaderData<LoaderData>()
+  const action = userData?.[media_type]?.[tmdb_id]?.onWishList ? "remove" : "add"
 
   const {
     submitProps
   } = useAPIAction<UpdateWishListPayload, UpdateWishListResult>({
-    url: "/api/wish-list",
+    url: "/api/update-wish-list",
     params: {
       tmdb_id,
       media_type,

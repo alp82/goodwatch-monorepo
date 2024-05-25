@@ -15,13 +15,13 @@ export interface FavoriteActionProps {
 export default function FavoriteAction({ children, details }: FavoriteActionProps) {
   const { tmdb_id, media_type } = details
 
-  const { favorites } = useLoaderData<LoaderData>()
-  const action = favorites?.[media_type]?.[tmdb_id]?.onFavorites ? "remove" : "add"
+  const { userData } = useLoaderData<LoaderData>()
+  const action = userData?.[media_type]?.[tmdb_id]?.onFavorites ? "remove" : "add"
 
   const {
     submitProps
   } = useAPIAction<UpdateFavoritesPayload, UpdateFavoritesResult>({
-    url: "/api/favorites",
+    url: "/api/update-favorites",
     params: {
       tmdb_id,
       media_type,

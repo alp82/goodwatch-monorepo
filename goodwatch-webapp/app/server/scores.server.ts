@@ -1,4 +1,5 @@
 import { executeQuery } from '~/utils/postgres'
+import { resetUserDataCache } from '~/server/userData.server'
 
 export type Score = 1|2|3|4|5|6|7|8|9|10
 
@@ -51,59 +52,9 @@ export const updateScores = async ({
     params = [...params, score, review]
   }
   const result = await executeQuery(query, params)
+  await resetUserDataCache({ user_id })
 
   return {
     status: result.rowCount === 1 ? "success" : "failed"
   }
-}
-
-
-interface GetScoresParams {
-  user_id?: string
-}
-
-export interface ScoresItem {
-  user_id: string
-  tmdb_id: string
-  media_type: "movie" | "tv"
-  score?: Score
-  review?: string
-  updated_at: Date
-}
-
-export type GetScoresResult = {
-  [key in 'movie' | 'tv']: {
-    [key: string]: {
-      score?: Score
-      review?: string
-    }
-  }
-}
-
-export const getScores = async ({
-  user_id,
-}: GetScoresParams): Promise<GetScoresResult> => {
-  if (!user_id) {
-    return {} as GetScoresResult
-  }
-
-  const query = `
-    SELECT * FROM user_scores
-    WHERE user_id = $1;
-  `
-  const params = [user_id];
-  const result = await executeQuery<ScoresItem>(query, params)
-
-  return result.rows.reduce((resultMap, row) => {
-    return {
-      ...resultMap,
-      [row.media_type]: {
-        ...(resultMap[row.media_type] || {}),
-        [row.tmdb_id]: {
-          score: row.score,
-          review: row.review,
-        }
-      }
-    }
-  }, {} as GetScoresResult)
 }

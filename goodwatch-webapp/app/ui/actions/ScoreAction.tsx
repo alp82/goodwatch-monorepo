@@ -17,7 +17,7 @@ export default function ScoreAction({ children, details, score }: ScoreActionPro
   const {
     submitProps
   } = useAPIAction<UpdateScoresPayload, UpdateScoresResult>({
-    url: "/api/scores",
+    url: "/api/update-scores",
     params: {
       tmdb_id,
       media_type,

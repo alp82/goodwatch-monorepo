@@ -15,13 +15,13 @@ export interface WatchHistoryActionProps {
 export default function WatchHistoryAction({ children, details }: WatchHistoryActionProps) {
   const { tmdb_id, media_type } = details
 
-  const { watchHistory } = useLoaderData<LoaderData>()
-  const action = watchHistory?.[media_type]?.[tmdb_id]?.onWatchHistory ? "remove" : "add"
+  const { userData } = useLoaderData<LoaderData>()
+  const action = userData?.[media_type]?.[tmdb_id]?.onWatchHistory ? "remove" : "add"
 
   const {
     submitProps
   } = useAPIAction<UpdateWatchHistoryPayload, UpdateWatchHistoryResult>({
-    url: "/api/watch-history",
+    url: "/api/update-watch-history",
     params: {
       tmdb_id,
       media_type,

@@ -14,11 +14,12 @@ export interface WatchStatusBlockProps {
 export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
   const [activeButton, setActiveButton] = useState<"wishList" | "watchHistory" | "favorite" | null>(null)
 
-  const { wishList, watchHistory, favorites } = useLoaderData<LoaderData>()
   const { tmdb_id, media_type } = details
-  const isInWishList = wishList?.[media_type]?.[tmdb_id]?.onWishList
-  const isInWatchHistory = watchHistory?.[media_type]?.[tmdb_id]?.onWatchHistory
-  const isFavorite = favorites?.[media_type]?.[tmdb_id]?.onFavorites
+  const { userData } = useLoaderData<LoaderData>()
+  const userDataItem = userData?.[media_type]?.[tmdb_id]
+  const isInWishList = userDataItem?.onWishList
+  const isInWatchHistory = userDataItem?.onWatchHistory
+  const isFavorite = userDataItem?.onFavorites
 
   const WishListIcon = isInWishList && activeButton === 'wishList' ? MinusCircleIcon : PlusCircleIcon
   const wishListColor = isInWishList && activeButton !== 'wishList' ? 'text-green-500' : 'text-gray-400'
@@ -41,7 +42,7 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
         <WishListAction details={details}>
           <button
             type="submit"
-            className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+            className={`${isInWishList ? 'bg-slate-700' : 'bg-zinc-700'} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700`}
             onPointerEnter={() => setActiveButton("wishList")}
             onPointerLeave={() => setActiveButton(null)}
           >
@@ -52,7 +53,7 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
         <WatchHistoryAction details={details}>
           <button
             type="submit"
-            className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+            className={`${isInWatchHistory ? 'bg-slate-700' : 'bg-zinc-700'} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700`}
             onPointerEnter={() => setActiveButton("watchHistory")}
             onPointerLeave={() => setActiveButton(null)}
           >
@@ -63,7 +64,7 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
         <FavoriteAction details={details}>
           <button
             type="submit"
-            className="rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm bg-slate-700 hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+            className={`${isFavorite ? 'bg-slate-700' : 'bg-zinc-700'} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700`}
             onPointerEnter={() => setActiveButton("favorite")}
             onPointerLeave={() => setActiveButton(null)}
           >

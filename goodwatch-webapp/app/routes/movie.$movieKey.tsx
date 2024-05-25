@@ -1,17 +1,12 @@
 import React, { useEffect } from 'react'
 import { useLoaderData } from '@remix-run/react'
-import { json, LoaderFunctionArgs, LoaderFunction, MetaFunction } from '@remix-run/node'
-import { createClient } from '@supabase/supabase-js'
-import { createServerClient, parse, serialize } from '@supabase/ssr'
+import { json, LoaderFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
 import { getDetailsForMovie, MovieDetails } from '~/server/details.server'
-import useLocale, { getLocaleFromRequest } from '~/utils/locale'
+import useLocale from '~/utils/locale'
 import Details from '~/ui/Details'
 import { useUpdateUrlParams } from '~/hooks/updateUrlParams'
-import { getWishList, GetWishListResult, WishListItem } from '~/server/wishList.server'
 import { getUserFromRequest } from '~/utils/auth'
-import { getWatchHistory, GetWatchHistoryResult } from '~/server/watchHistory.server'
-import { getFavorites, GetFavoritesResult } from '~/server/favorites.server'
-import { getScores, GetScoresResult } from '~/server/scores.server'
+import { getUserData, GetUserDataResult } from '~/server/userData.server'
 
 export function headers() {
   return {
@@ -33,10 +28,7 @@ export type LoaderData = {
     country: string
     language: string
   },
-  wishList?: GetWishListResult
-  watchHistory?: GetWatchHistoryResult
-  favorites?: GetFavoritesResult
-  scores?: GetScoresResult
+  userData?: GetUserDataResult
 }
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
@@ -54,10 +46,7 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
   })
 
   const user = await getUserFromRequest({ request })
-  const wishList = await getWishList({ user_id: user?.id })
-  const watchHistory = await getWatchHistory({ user_id: user?.id })
-  const favorites = await getFavorites({ user_id: user?.id })
-  const scores = await getScores({ user_id: user?.id })
+  const userData = await getUserData({ user_id: user?.id })
 
   return json<LoaderData>({
     details,
@@ -66,10 +55,7 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
       country,
       language,
     },
-    wishList,
-    watchHistory,
-    favorites,
-    scores,
+    userData,
   })
 }
 
