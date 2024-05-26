@@ -1,5 +1,6 @@
 import React from 'react'
 import { AllRatings } from '~/utils/ratings'
+import gwLogo from '~/img/goodwatch-logo.png'
 
 export interface RatingsOverlayProps {
   ratings?: AllRatings
@@ -17,7 +18,11 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
     <div className="absolute -top-1 w-full rounded-t-md bg-gray-800 h-4">
       {hasScore && (
         <>
-          <div className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} absolute -top-1 h-6 px-2 rounded-md flex items-center justify-center gap-2 text-gray-100 text-lg`} style={{left: `${progressPosition}%`, transform: `translateX(-${progressPosition}%)`}}>
+          <div
+            className={`${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} absolute -top-1 h-6 px-4 rounded-md flex items-center justify-center gap-2 text-gray-100 text-lg`}
+            style={{left: `${progressPosition}%`, transform: `translateX(-${progressPosition}%)`}}
+          >
+            <img className="h-4" src={gwLogo} alt="GoodWatch Logo"/>
             <span className="text-sm">Score:</span>
             <span className="font-bold">{score}</span>
           </div>

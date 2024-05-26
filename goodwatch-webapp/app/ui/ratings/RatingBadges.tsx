@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import InfoBox from '~/ui/InfoBox'
+import gwLogo from '~/img/goodwatch-logo.png'
 import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import metacriticLogoIcon from '~/img/metacritic-logo-icon-250.png'
@@ -15,6 +16,7 @@ export interface RatingBadgesProps {
 
 export default function RatingBadges({ ratings }: RatingBadgesProps) {
   const isComplete = Boolean(ratings)
+  const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10 : null
 
   return (
     <div className="relative">
@@ -23,7 +25,14 @@ export default function RatingBadges({ ratings }: RatingBadgesProps) {
           <InfoBox text="Ratings are currently calculated..." />
         </div>
       )}
-      <ul className={`underline-offset-2 flex flex-wrap gap-2 sm:gap-6  ${isComplete ? '' : 'opacity-50'}`}>
+      <ul className={`underline-offset-2 flex flex-wrap gap-2 md:gap-4 lg:gap-6  ${isComplete ? '' : 'opacity-50'}`}>
+        <a>
+          <dl className={`${ratings?.aggregated_overall_score_normalized_percent ? '' : 'opacity-60'} rounded-lg border-4 border-black/[.3] h-full px-1 sm:px-2 ${vibeColorIndex == null ? 'bg-gray-700' : `bg-vibe-${vibeColorIndex}`} shadow-2xl overflow-hidden text-center flex items-center gap-1 sm:gap-2`}>
+            <img className="block h-3 md:h-5 object-contain" src={gwLogo} alt="GoodWatch Logo" />
+            <dd className={`text-sm md:text-lg font-semibold tracking-tight ${vibeColorIndex == null ? 'text-gray-300' : 'text-gray-100'}`}>{ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings?.aggregated_overall_score_normalized_percent) : '-'}</dd>
+          </dl>
+        </a>
+
         <a className="" href={ratings?.imdb_url} target="_blank">
           <dl className={`${ratings?.imdb_url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-black/[.3] h-full px-1 sm:px-2 bg-imdb shadow-2xl overflow-hidden text-center flex items-center gap-1 sm:gap-2`}>
             <img className="block h-4 md:h-6 object-contain" src={imdbLogo} alt="IMDb Logo" />
