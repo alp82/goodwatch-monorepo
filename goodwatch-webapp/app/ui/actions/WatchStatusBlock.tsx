@@ -23,7 +23,7 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
 
   const WishListIcon = isInWishList && activeButton === 'wishList' ? MinusCircleIcon : PlusCircleIcon
   const wishListColor = isInWishList && activeButton !== 'wishList' ? 'text-green-500' : 'text-gray-400'
-  const wishlistText = isInWishList ? 'On Wishlist' : 'Add to Wishlist'
+  const wishlistText = isInWishList ? 'On Wishlist' : isInWatchHistory ? 'Watch Again' : 'Add to Wishlist'
   const wishlistAction = isInWishList ? 'Remove from Wishlist' : 'Add to Wishlist'
 
   const WatchHistoryIcon = isInWatchHistory && activeButton === 'watchHistory' ? EyeSlashIcon : EyeIcon

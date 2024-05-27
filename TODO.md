@@ -1,17 +1,22 @@
 # TODO's
 ```
-watchlist / watch again
-already watched
-own score
+wishlist page (with search)
+watched page (with search)
+favorites page (with search)
+
+poster: inline scoring / watched / wish 
 
 streaming: show flatrate countries in ratingblock and streaming tab
 reduce costs: show best streaming bundles for my likings
 
+movie genome
+
+show movies and shows on map (production country + places in film)
+    where to show space and fantasy places
+
 ratings: show last updated time
 
 date of first streaming link / new to stream
-
-GW API
 
 trending load more
 discover load more
@@ -23,6 +28,8 @@ get episodes
 get ratings
 show in details
 
+combined collection score
+
 populate trending score 1-500
 save trending scores per day
 trending yesterday
@@ -31,14 +38,18 @@ trending difference
 stats
 # of movies
 # of tv shows
-# of ratings
+# of ratings per site
 # of streaming links
+# of tropes
 avg rating per provider
 oldest fetch date
 
-grab movie/tv awards from API/WEB
+details:
+box office
+crew links to discovery
+awards (grab from API)
 
-combined collection score
+GW API
 
 discover sidebar redesign
 filter inspiration:
@@ -53,17 +64,12 @@ disocver keywords and tropes
 discover: unselect streaming?
 discover: unselect country?
 
-details:
-box office
-crew links to discovery
-awards
-
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
 invalidate vercel caches after update
 WS pubsub for updates
 
-decide together: watch party / good swipe / swipe watch
+decide together: watch party / watch together / good together / good swipe / swipe watch
 
 search page
 explore button for media titles (prefilled discover, map feature)
@@ -137,14 +143,13 @@ fix certification longer than 50 chars: 12 éven aluliak számára a megtekinté
 issue: breaking bad streaming missing -> justwatch streaming data
 issue: tmdb imagery redundant -> justwatch imagery
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
+
+memes (knowyourmeme, urbandictionary, etc.9
+social media content (tiktok, ig, yt shorts, reddit, twitter, etc.)
 ```
 
 # Auth
 ```
-https://blog.logrocket.com/guide-adding-google-login-react-app/
-https://github.com/MomenSherif/react-oauth
-authentication and user profiles
-
 combined watchlist
 connect accounts
 notification when streaming is available
@@ -154,8 +159,10 @@ personalized recommendation engine:
 * criticker
 * movielens
 
-rate movies
-
+onboarding:
+* select streaming services
+* ratings + favs
+* watched + wishlist
 ```
 
 # Search
@@ -223,5 +230,7 @@ monitoring with uptime kuma
 authentication
     https://www.dusanstam.com/posts/remix-supabase-authentication
 remix component example: rating
+from vercel to coolify
+    too many open files
 recommendation engine
 ```
