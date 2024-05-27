@@ -41,7 +41,6 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
       <div className="flex flex-col gap-4 items-center justify-evenly px-4 py-2 md:py-4">
         <WishListAction details={details}>
           <button
-            type="submit"
             className={`${isInWishList ? 'bg-slate-700' : 'bg-zinc-700'} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700`}
             onPointerEnter={() => setActiveButton("wishList")}
             onPointerLeave={() => setActiveButton(null)}
@@ -52,7 +51,6 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
         </WishListAction>
         <WatchHistoryAction details={details}>
           <button
-            type="submit"
             className={`${isInWatchHistory ? 'bg-slate-700' : 'bg-zinc-700'} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700`}
             onPointerEnter={() => setActiveButton("watchHistory")}
             onPointerLeave={() => setActiveButton(null)}
@@ -63,7 +61,6 @@ export default function WatchStatusBlock({ details }: WatchStatusBlockProps) {
         </WatchHistoryAction>
         <FavoriteAction details={details}>
           <button
-            type="submit"
             className={`${isFavorite ? 'bg-slate-700' : 'bg-zinc-700'} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700`}
             onPointerEnter={() => setActiveButton("favorite")}
             onPointerLeave={() => setActiveButton(null)}

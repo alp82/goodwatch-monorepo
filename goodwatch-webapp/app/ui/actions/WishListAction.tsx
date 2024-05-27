@@ -31,9 +31,7 @@ export default function WishListAction({ children, details }: WishListActionProp
 
   return (
     <UserAction instructions={<>Curate your wishlist to track what you want to watch.</>}>
-      <>
-        {React.cloneElement(children, { ...submitProps })}
-      </>
+      {React.cloneElement(children, { ...submitProps })}
     </UserAction>
   )
 }

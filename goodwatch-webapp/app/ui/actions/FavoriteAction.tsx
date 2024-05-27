@@ -31,9 +31,7 @@ export default function FavoriteAction({ children, details }: FavoriteActionProp
 
   return (
     <UserAction instructions={<>Save your all-time favorites.</>}>
-      <>
-        {React.cloneElement(children, { ...submitProps })}
-      </>
+      {React.cloneElement(children, { ...submitProps })}
     </UserAction>
   )
 }

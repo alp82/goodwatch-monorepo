@@ -30,9 +30,7 @@ export default function ScoreAction({ children, details, score }: ScoreActionPro
     <UserAction
       instructions={<>Rate movies and tv shows to get better recommendations.</>}
     >
-      <>
-        {React.cloneElement(children, { ...submitProps })}
-      </>
+      {React.cloneElement(children, { ...submitProps })}
     </UserAction>
   )
 }

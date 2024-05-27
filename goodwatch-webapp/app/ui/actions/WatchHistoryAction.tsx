@@ -31,9 +31,7 @@ export default function WatchHistoryAction({ children, details }: WatchHistoryAc
 
   return (
     <UserAction instructions={<>Your history shows every title you ever have watched.</>}>
-      <>
-        {React.cloneElement(children, { ...submitProps })}
-      </>
+      {React.cloneElement(children, { ...submitProps })}
     </UserAction>
   )
 }
