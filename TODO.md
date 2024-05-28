@@ -1,6 +1,5 @@
 # TODO's
 ```
-user/session flickering
 fix rating on mobile with touch/slide/drag
 fix discover history (doubled)
 

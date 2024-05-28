@@ -98,8 +98,10 @@ export default function ScoreSelector({ details }: ScoreSelectorProps) {
             >
               <div
                 className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
-                onPointerEnter={() => handlePointerEnter(scoreIndex)}
-                onPointerLeave={() => handlePointerLeave(scoreIndex)}
+                onMouseEnter={() => handlePointerEnter(scoreIndex)}
+                onMouseLeave={() => handlePointerLeave(scoreIndex)}
+                onTouchStart={() => handlePointerEnter(scoreIndex)}
+                onTouchEnd={() => handlePointerLeave(scoreIndex)}
                 onClick={() => handleClick(scoreIndex)}
               >
                 <div
