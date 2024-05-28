@@ -12,7 +12,6 @@ import {
 } from '@remix-run/react'
 import { createBrowserClient } from '@supabase/ssr'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Analytics } from '@vercel/analytics/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ToastContainer } from 'react-toastify'
 
@@ -96,7 +95,6 @@ export function ErrorBoundary() {
         <BottomNav/>
         <ScrollRestoration/>
         <Scripts/>
-        <Analytics/>
         <Footer/>
       </body>
     </html>
@@ -156,7 +154,6 @@ export default function App() {
               <BottomNav/>
               <ScrollRestoration/>
               <Scripts/>
-              <Analytics/>
               <script src="https://accounts.google.com/gsi/client" async></script>
             </LocaleContext.Provider>
           </AuthContext.Provider>
