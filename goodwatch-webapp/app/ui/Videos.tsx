@@ -75,6 +75,7 @@ export default function Videos({ videos }: VideosProps) {
               url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
               width="100%"
               height="100%"
+              controls={true}
               config={{
                 playerVars: {
                   autoplay: 1,

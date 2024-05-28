@@ -14,7 +14,7 @@ export default function StreamingBadges({ links = [], countryCodes = [] }: Strea
   const PoweredBy = () => {
     return <>
       <div className="mt-6 h-3 flex gap-2 items-center">
-        <small>Powered by</small>
+        <small>streaming data from</small>
         <a href={links.length ? links[0].tmdb_url : 'https://www.themoviedb.org/'} target="_blank" className="">
           <img alt="TMDB" className="h-2 w-auto" src={tmdb_logo} />
         </a>

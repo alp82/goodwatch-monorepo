@@ -1,5 +1,9 @@
 # TODO's
 ```
+user/session flickering
+fix rating on mobile with touch/slide/drag
+fix discover history (doubled)
+
 wishlist page (with search)
 watched page (with search)
 favorites page (with search)

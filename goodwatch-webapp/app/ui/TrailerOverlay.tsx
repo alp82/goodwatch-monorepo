@@ -55,6 +55,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
                           url={`https://www.youtube.com/watch?v=${videos.trailers[0].key}`}
                           width="100%"
                           height="100%"
+                          controls={true}
                           config={{
                             playerVars: {
                               autoplay: 1,
