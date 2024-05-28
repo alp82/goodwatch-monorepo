@@ -25,7 +25,7 @@ export const getUserFromRequest = async({ request }: { request: Request }) => {
       },
     },
   )
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { data: { user }, error } = await supabase.auth.getUser()
   return user
 }
 
@@ -42,37 +42,41 @@ interface AuthContext {
 
 export const AuthContext = createContext<AuthContext>({
   supabase: undefined,
-});
+})
 
 export function useSupabase() {
-  return useContext(AuthContext);
+  return useContext(AuthContext)
 }
 
 export const useSession = () => {
   const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const { supabase } = useSupabase()
   useEffect(() => {
     if (!supabase) return
 
-    supabase.auth.getSession().then(({data: {session}}) => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
-    })
+      setLoading(false)
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    fetchSession()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
   }, [supabase])
 
-  return session
+  return { session, loading }
 }
 
 export const useUser = () => {
-  const session = useSession()
+  const { session, loading } = useSession()
   const { user } = session || {}
-  return user
+  return { user, loading }
 }

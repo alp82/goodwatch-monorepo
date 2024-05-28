@@ -1,5 +1,5 @@
 import React from 'react'
-import { useSupabase, useUser } from '~/utils/auth'
+import { useSupabase } from '~/utils/auth'
 
 const googleLogo = (
   <svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24">
@@ -26,7 +26,6 @@ interface GoogleSignInButtonProps {}
 
 export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
   const {supabase} = useSupabase()
-  const user = useUser()
 
   const handleSignInWithGoogle = () => {
     if (!supabase) return

@@ -4,7 +4,7 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 
 import Search from '~/ui/Search'
-import { useSupabase, useUser } from '~/utils/auth'
+import { useUser } from '~/utils/auth'
 
 import logo from '~/img/goodwatch-logo.png'
 import { GoogleSignInButton } from '~/ui/auth/GoogleSignInButton'
@@ -14,26 +14,7 @@ export default function Header() {
   const location = useLocation()
   const isDiscover = location.pathname == '/discover'
 
-  const {supabase} = useSupabase()
-  const user = useUser()
-
-  const handleSignInWithGoogle = () => {
-    if (!supabase) return
-
-    supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.href,
-      },
-    })
-  }
-
-  const handleSignOut = async () => {
-    if (!supabase) return
-
-    const {error} = await supabase.auth.signOut()
-    if (error) console.error(error)
-  }
+  const { user, loading } = useUser()
 
   return (
     <Disclosure as="nav" className="bg-gray-800 fixed top-0 z-50 w-full">
@@ -82,7 +63,7 @@ export default function Header() {
               </div>
               <div className="lg:ml-4">
                 <div className="flex items-center">
-                  {user ? (
+                  {loading ? <></>: user ? (
                     <>
                       {/* Profile dropdown */}
                       <Menu as="div" className="relative ml-4 flex-shrink-0">

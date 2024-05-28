@@ -10,7 +10,7 @@ export interface UserActionProps {
 }
 
 export default function UserAction({ children, instructions }: UserActionProps) {
-  const user = useUser()
+  const { user } = useUser()
   const isLoggedIn = Boolean(user)
 
   const [isOpen, setIsOpen] = useState(false)
