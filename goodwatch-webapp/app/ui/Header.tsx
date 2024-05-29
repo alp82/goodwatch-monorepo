@@ -12,7 +12,7 @@ import { SignOutLink } from '~/ui/auth/SignOutLink'
 
 export default function Header() {
   const location = useLocation()
-  const isDiscover = location.pathname == '/discover'
+  const isPage = (pathname: string) => location.pathname === pathname
 
   const { user, loading } = useUser()
 
@@ -50,7 +50,7 @@ export default function Header() {
                 <div className="hidden lg:ml-6 lg:block">
                   <div className="flex space-x-4">
                     <a href="/discover"
-                       className={`rounded-md px-3 py-2 text-md font-semibold ${isDiscover ? 'text-white bg-indigo-800' : 'text-gray-300'} hover:bg-indigo-900 hover:text-white`}>
+                       className={`rounded-md px-3 py-2 text-md font-semibold ${isPage('/discover') ? 'text-white bg-indigo-800' : 'text-gray-300'} hover:bg-indigo-900 hover:text-white`}>
                       Discover
                     </a>
                   </div>
@@ -132,12 +132,19 @@ export default function Header() {
             </div>
           </div>
 
-          <Disclosure.Panel className="lg:hidden">
+          <Disclosure.Panel className="lg:hidden text-lg">
             <div className="space-y-1 px-2 pt-2 pb-3">
               <Disclosure.Button
                 as="a"
+                href="/"
+                className={`block rounded-md px-3 py-2 font-medium ${isPage('/') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+              >
+                Home
+              </Disclosure.Button>
+              <Disclosure.Button
+                as="a"
                 href="/discover"
-                className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                className={`block rounded-md px-3 py-2 font-medium ${isPage('/discover') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
               >
                 Discover
               </Disclosure.Button>
@@ -147,34 +154,28 @@ export default function Header() {
                 <Disclosure.Button
                   as="a"
                   href="https://dev.to/t/goodwatch"
-                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/blog') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                 >
                   Blog
                 </Disclosure.Button>
-              </div>
-              <div className="space-y-1 px-2 pt-2 pb-3">
                 <Disclosure.Button
                   as="a"
                   href="/about"
-                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/about') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                 >
                   About
                 </Disclosure.Button>
-              </div>
-              <div className="space-y-1 px-2 pt-2 pb-3">
                 <Disclosure.Button
                   as="a"
                   href="/disclaimer"
-                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/disclaimer') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                 >
                   Disclaimer
                 </Disclosure.Button>
-              </div>
-              <div className="space-y-1 px-2 pt-2 pb-3">
                 <Disclosure.Button
                   as="a"
                   href="http://coinmatica.net:4801/status/goodwatch"
-                  className={`block rounded-md px-3 py-2 text-base font-medium ${isDiscover ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/status') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                 >
                   Status Page
                 </Disclosure.Button>
