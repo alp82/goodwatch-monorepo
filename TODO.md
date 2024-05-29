@@ -1,6 +1,5 @@
 # TODO's
 ```
-fix rating on mobile with touch/slide/drag
 fix discover history (doubled)
 
 wishlist page (with search)
@@ -48,7 +47,7 @@ avg rating per provider
 oldest fetch date
 
 details:
-box office
+box office (e.g. Google)
 crew links to discovery
 awards (grab from API)
 
@@ -70,7 +69,10 @@ discover: unselect country?
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
 invalidate vercel caches after update
-WS pubsub for updates
+
+report missing/wrong ratings
+report missing/wrong streaming providers
+report missing/wrong DNA
 
 decide together: watch party / watch together / good together / good swipe / swipe watch
 
@@ -86,6 +88,7 @@ stuck scripts monitoring
 rate limit monitoring
 
 do not refetch stale data
+    streaming links
     tv tropes
     
 wrong tropes: the little mermaid (tmdb_id = 10144)
@@ -111,10 +114,6 @@ rotten wrong urls:
  
 identify title duplicates and run scraping again
 
-report missing ratings
-report missing streaming providers
-report missing info
-
 description full text toggle
 score explanations
 streaming explanations
@@ -127,28 +126,32 @@ show picks on mobile too
 
 show generic recommendations
 
+rating on mobile with touch/slide/drag
+
 android app
 
 data source: existing crawlers use existing url instead of guessing
+data-source: letterboxd scores
+data-source: filmstarts scores
+data-source: filmstarts scores
 data source: allmovie sub-genres, moods, themes, attributes, flags (https://www.allmovie.com/movie/fargo-vm422651)
 data source: allmovie tones (https://www.allmovie.com/advanced-search)
 data source: seasons ratings and details (flickvibe-webapp/app/routes/api/ratings/tv-seasons.tsx)
 data source: imdb plotsummary + keywords
-data source: letterboxd ratings
+data source: user reviews (all above, flickfilosopher) 
 data source: tmdb people api
 data source: moviespoiler + moviepooper
+data source: memes (knowyourmeme, urbandictionary, etc.9
+data source: social media content (tiktok, ig, yt shorts, reddit, twitter, etc.)
+data source: based on / adapted from (books, comics, ...)
 
-realtime updates
-https://github.com/supabase/realtime
+socket.io updates
 
 fix certification longer than 50 chars: 12 éven aluliak számára a megtekintése nagykorú felügyelete mellett ajánlott
 
 issue: breaking bad streaming missing -> justwatch streaming data
-issue: tmdb imagery redundant -> justwatch imagery
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
 
-memes (knowyourmeme, urbandictionary, etc.9
-social media content (tiktok, ig, yt shorts, reddit, twitter, etc.)
 ```
 
 # Auth

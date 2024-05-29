@@ -44,28 +44,66 @@ async function _getUserData({ user_id }: GetUserDataParams): Promise<GetUserData
 
   const query = `
     SELECT 
-      COALESCE(scores.media_type, wishlist.media_type, watchhistory.media_type, favorites.media_type) AS media_type,
-      COALESCE(scores.tmdb_id, wishlist.tmdb_id, watchhistory.tmdb_id, favorites.tmdb_id) AS tmdb_id,
-      scores.score,
-      scores.review,
-      CASE WHEN wishlist.tmdb_id IS NOT NULL THEN TRUE ELSE FALSE END AS on_wishlist,
-      CASE WHEN watchhistory.tmdb_id IS NOT NULL THEN TRUE ELSE FALSE END AS on_watch_history,
-      CASE WHEN favorites.tmdb_id IS NOT NULL THEN TRUE ELSE FALSE END AS on_favorites
-    FROM user_scores AS scores
-    FULL OUTER JOIN user_wishlist AS wishlist ON
-      wishlist.user_id = scores.user_id
-      AND wishlist.media_type = scores.media_type
-      AND wishlist.tmdb_id = scores.tmdb_id
-    FULL OUTER JOIN user_watch_history AS watchhistory ON
-      watchhistory.user_id = scores.user_id
-      AND watchhistory.media_type = scores.media_type
-      AND watchhistory.tmdb_id = scores.tmdb_id
-    FULL OUTER JOIN user_favorites AS favorites ON
-      favorites.user_id = scores.user_id
-      AND favorites.media_type = scores.media_type
-      AND favorites.tmdb_id = scores.tmdb_id
-    WHERE
-      COALESCE(scores.user_id, wishlist.user_id, watchhistory.user_id, favorites.user_id) = $1
+        media_type,
+        tmdb_id,
+        MAX(score) AS score,
+        MAX(review) AS review,
+        MAX(on_wishlist::int)::boolean AS on_wishlist,
+        MAX(on_watch_history::int)::boolean AS on_watch_history,
+        MAX(on_favorites::int)::boolean AS on_favorites
+    FROM (
+        SELECT 
+            scores.media_type,
+            scores.tmdb_id,
+            scores.score,
+            scores.review,
+            FALSE AS on_wishlist,
+            FALSE AS on_watch_history,
+            FALSE AS on_favorites
+        FROM user_scores AS scores
+        WHERE scores.user_id = $1
+    
+        UNION ALL
+    
+        SELECT 
+            wishlist.media_type,
+            wishlist.tmdb_id,
+            NULL AS score,
+            NULL AS review,
+            TRUE AS on_wishlist,
+            FALSE AS on_watch_history,
+            FALSE AS on_favorites
+        FROM user_wishlist AS wishlist
+        WHERE wishlist.user_id = $1
+    
+        UNION ALL
+    
+        SELECT 
+            watchhistory.media_type,
+            watchhistory.tmdb_id,
+            NULL AS score,
+            NULL AS review,
+            FALSE AS on_wishlist,
+            TRUE AS on_watch_history,
+            FALSE AS on_favorites
+        FROM user_watch_history AS watchhistory
+        WHERE watchhistory.user_id = $1
+    
+        UNION ALL
+    
+        SELECT 
+            favorites.media_type,
+            favorites.tmdb_id,
+            NULL AS score,
+            NULL AS review,
+            FALSE AS on_wishlist,
+            FALSE AS on_watch_history,
+            TRUE AS on_favorites
+        FROM user_favorites AS favorites
+        WHERE favorites.user_id = $1
+    ) AS combined
+    GROUP BY media_type, tmdb_id
+    ORDER BY tmdb_id;
   `
   const params = [user_id]
   const result = await executeQuery<UserDataRow>(query, params)
