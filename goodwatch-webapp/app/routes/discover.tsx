@@ -115,7 +115,7 @@ export default function Discover() {
         country,
         withStreamingProviders,
       }
-      updateParams(newParams)
+      updateParams(newParams, true)
     }
   }, [])
 

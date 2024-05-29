@@ -1,7 +1,5 @@
 # TODO's
 ```
-fix discover history (doubled)
-
 wishlist page (with search)
 watched page (with search)
 favorites page (with search)

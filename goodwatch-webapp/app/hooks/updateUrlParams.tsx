@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from '@remix-run/react'
 
 import { LoaderData } from '~/routes/discover'
@@ -11,6 +11,10 @@ export const useUpdateUrlParams = <T extends {},>({ params }: UseUpdateUrlParams
   const [currentParams, setCurrentParams] = useState(params)
   const { pathname } = useLocation()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    setCurrentParams(params)
+  }, [params])
 
   const getNonEmptyParams = (newParams: T) => {
     return Object.keys(newParams).sort().reduce<T>((result, key) => {
@@ -28,10 +32,10 @@ export const useUpdateUrlParams = <T extends {},>({ params }: UseUpdateUrlParams
     return `${pathname}?${new URLSearchParams(nonEmptyNewParams as unknown as Record<string, string>).toString()}`
   }
 
-  const updateParams = (newParams: T) => {
+  const updateParams = (newParams: T, replace: boolean = false) => {
     const nonEmptyNewParams = getNonEmptyParams(newParams)
     setCurrentParams(nonEmptyNewParams)
-    navigate(constructUrl(newParams))
+    navigate(constructUrl(newParams), { replace })
   }
 
   return {

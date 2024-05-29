@@ -145,7 +145,7 @@ export default function App() {
                     exit={{x: '2%', opacity: 0}}
                     transition={{duration: 0.2, type: 'tween'}}
                   >
-                    <Outlet/>
+                    <Outlet />
                   </motion.div>
                 </AnimatePresence>
               </main>
