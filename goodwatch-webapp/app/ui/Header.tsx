@@ -102,19 +102,19 @@ export default function Header() {
                             {/*    </a>*/}
                             {/*  )}*/}
                             {/*</Menu.Item>*/}
-                            {/*<Menu.Item>*/}
-                            {/*  {({active}) => (*/}
-                            {/*    <a*/}
-                            {/*      href="#"*/}
-                            {/*      className={classNames(*/}
-                            {/*        active ? 'bg-gray-100' : '',*/}
-                            {/*        'block px-4 py-2 text-sm text-gray-700'*/}
-                            {/*      )}*/}
-                            {/*    >*/}
-                            {/*      Settings*/}
-                            {/*    </a>*/}
-                            {/*  )}*/}
-                            {/*</Menu.Item>*/}
+                            <Menu.Item>
+                              {({active}) => (
+                                <a
+                                  href="/wishlist"
+                                  className={`
+                                    ${isPage('/wishlist') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                                    block px-4 py-2 text-base
+                                  `}
+                                >
+                                  Wishlist
+                                </a>
+                              )}
+                            </Menu.Item>
                             <Menu.Item>
                               {({active}) => (
                                 <SignOutLink active={active} />

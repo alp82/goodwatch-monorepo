@@ -36,6 +36,7 @@ export interface DiscoverResult extends AllRatings {
   tmdb_id: number
   poster_path: string
   title: string
+  // TODO remove streaming_providers
   streaming_providers: StreamingProviders
   streaming_links: StreamingLink[]
 }

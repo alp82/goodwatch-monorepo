@@ -22,7 +22,7 @@ export const SignOutLink = ({ active }: SignOutLinkProps) => {
       onClick={handleSignOut}
       className={`
         ${active ? 'text-white' : 'text-gray-300'}
-        block px-4 py-2 text-sm hover:bg-gray-800 hover:text-white
+        block px-4 py-2 text-base hover:bg-gray-800 hover:text-white
       `}
     >
       Sign out

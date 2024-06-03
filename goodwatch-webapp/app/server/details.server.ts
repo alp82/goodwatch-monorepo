@@ -394,8 +394,13 @@ export async function _getDetailsForMovie({ movieId, country, language }: Detail
     ORDER BY
       MIN(sp.display_priority);
   `);
-  if (!result.rows.length) throw Error(`movie with ID "${movieId}" not found`)
+  // TODO use sql query params to avoid sql injection
 
+  if (!result.rows.length) {
+    // TODO fallback page
+    increasePriorityForMovies([movieId], 100)
+    throw Error(`movie with ID "${movieId}" not found`)
+  }
 
   const movie = {
     ...result.rows[0],
@@ -471,7 +476,13 @@ export async function _getDetailsForTV({ tvId, country, language }: DetailsTVPar
     ORDER BY
       MIN(sp.display_priority);
   `);
-  if (!result.rows.length) throw Error(`movie with ID "${tvId}" not found`)
+  // TODO use sql query params to avoid sql injection
+
+  if (!result.rows.length) {
+    // TODO fallback page
+    increasePriorityForTVs([tvId], 100)
+    throw Error(`tv show with ID "${tvId}" not found`)
+  }
 
   const tv = {
     ...result.rows[0],
