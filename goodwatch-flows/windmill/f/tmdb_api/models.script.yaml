@@ -1,9 +1,6 @@
 summary: ''
 description: ''
-lock: |-
-  dnspython==2.6.1
-  mongoengine==0.28.2
-  pymongo==4.7.1
+lock: '!inline f/tmdb_api/models.script.lock'
 kind: trigger
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

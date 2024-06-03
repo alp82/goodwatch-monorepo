@@ -133,6 +133,7 @@ class CrewItemTv(BasePerson):
 class CreditsMovie(EmbeddedDocument):
     cast = EmbeddedDocumentListField(CastItemMovie)
     crew = EmbeddedDocumentListField(CrewItemMovie)
+    posters = DictField()
 
 
 class CreditsTv(EmbeddedDocument):
@@ -222,6 +223,8 @@ class Network(EmbeddedDocument):
 class MovieResult(EmbeddedDocument):
     adult = BooleanField(default=False)
     backdrop_path = StringField()
+    cast = DictField()
+    crew = DictField()
     id = IntField()
     genre_ids = ListField(IntField())
     media_type = StringField()
@@ -242,11 +245,15 @@ class RecommendationsMovie(EmbeddedDocument):
     results = EmbeddedDocumentListField(MovieResult)
     total_pages = IntField()
     total_results = IntField()
+    cast = DictField()
+    crew = DictField()
 
 
 class TvResult(EmbeddedDocument):
     adult = BooleanField(default=False)
     backdrop_path = StringField()
+    cast = DictField()
+    crew = DictField()
     id = IntField()
     first_air_date = DateField()
     genre_ids = ListField(IntField())
@@ -267,6 +274,8 @@ class RecommendationsTv(EmbeddedDocument):
     results = EmbeddedDocumentListField(TvResult)
     total_pages = IntField()
     total_results = IntField()
+    cast = DictField()
+    crew = DictField()
 
 
 # Release Dates

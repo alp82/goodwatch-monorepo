@@ -14,7 +14,7 @@ value:
         input_transforms:
           next_ids:
             type: javascript
-            expr: results.g
+            expr: results.g.ids
         path: f/tmdb_api/tmdb_fetch_details_from_api/fetch
         tag_override: null
     - id: b
@@ -30,7 +30,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/imdb_web/imdb_init_ratings/update
                   tag_override: null
               - id: x
@@ -51,7 +51,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/metacritic_web/metacritic_init_ratings/update
                   tag_override: null
               - id: w
@@ -72,7 +72,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/rotten_web/rotten_tomatoes_init_ratings/update
                   tag_override: null
               - id: t
@@ -93,7 +93,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/tvtropes_web/tvtropes_init_tags/update
                   tag_override: null
               - id: v
@@ -114,7 +114,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/tmdb_web/tmdb_init_providers/update
                   tag_override: null
               - id: u
@@ -141,7 +141,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/combine_data/copy_movies/update
                   tag_override: null
             parallel: true
@@ -154,7 +154,7 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/combine_data/copy_tv/update
                   tag_override: null
             parallel: true
@@ -167,12 +167,21 @@ value:
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g
+                      expr: results.g.ids
                   path: f/combine_data/copy_streaming_provider_links/update
                   tag_override: null
             parallel: true
             skip_failure: false
         parallel: true
+    - id: y
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: results.g.tmdb_ids
+        path: f/priority/reset
+        tag_override: null
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

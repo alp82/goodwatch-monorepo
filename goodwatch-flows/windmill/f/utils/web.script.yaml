@@ -1,11 +1,6 @@
 summary: ''
 description: ''
-lock: |-
-  certifi==2023.7.22
-  charset-normalizer==3.3.0
-  idna==3.4
-  requests==2.31.0
-  urllib3==2.0.6
+lock: '!inline f/utils/web.script.lock'
 kind: trigger
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

@@ -1,0 +1,15 @@
+summary: ''
+description: ''
+lock: '!inline f/user/create_user_indexes.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    db:
+      type: object
+      description: ''
+      default: null
+      format: resource-postgresql
+  required:
+    - db

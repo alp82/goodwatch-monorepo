@@ -1,18 +1,6 @@
 summary: ''
 description: ''
-lock: |-
-  anyio==4.3.0
-  certifi==2024.2.2
-  dnspython==2.6.1
-  h11==0.14.0
-  httpcore==0.17.3
-  httpx==0.24.1
-  idna==3.6
-  mongoengine==0.28.2
-  psycopg2-binary==2.9.9
-  pymongo==4.6.2
-  sniffio==1.3.1
-  wmill==1.294.0
+lock: '!inline f/combine_data/copy_crew/main.script.lock'
 kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

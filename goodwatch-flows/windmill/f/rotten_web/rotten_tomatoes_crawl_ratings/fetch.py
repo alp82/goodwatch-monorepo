@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime
 import json
 import re
-from typing import Union
+from typing import Optional, Union
 
 from playwright.async_api import async_playwright, BrowserContext
 
@@ -18,6 +18,12 @@ from f.rotten_web.models import (
 )
 
 BROWSER_TIMEOUT = 180000
+
+
+def extract_numeric_value(banded_rating_count) -> Optional[int]:
+    match = re.search(r'(\d+)', banded_rating_count)
+    if match:
+        return int(match.group(1))
 
 
 async def crawl_data(
@@ -131,16 +137,31 @@ async def crawl_rotten_tomatoes_page(
     data = json.loads(json_data)
 
     # Extract critic score details
-    tomato_data = data['criticsScore']
-    tomato_score = tomato_data['score']
-    tomato_score_vote_count = tomato_data['ratingCount']
+    tomato_score = None
+    tomato_score_vote_count = None
+    audience_score = None
+    audience_score_vote_count = None
+
+    tomato_data = data.get('criticsScore')
+    if tomato_data:
+        tomato_score = tomato_data['score']
+        tomato_score_vote_count = tomato_data['ratingCount']
     print("Tomatometer rating:", tomato_score)
     print("Number of critic reviews:", tomato_score_vote_count)
 
     # Extract audience score details
-    audience_data = data['overlay']['audienceAll']
-    audience_score = audience_data['score']
-    audience_score_vote_count = audience_data['likedCount'] + audience_data['notLikedCount']
+    audience_all_data = data.get('overlay', {}).get('audienceAll')
+    audience_data = data.get('audienceScore')
+    if audience_all_data:
+        audience_score = audience_all_data['score']
+        if 'likedCount' in audience_data and 'notLikedCount' in audience_data:
+            audience_score_vote_count = audience_all_data['likedCount'] + audience_all_data['notLikedCount']
+    if audience_data:
+        if not audience_score:
+            audience_score = audience_data['score']
+        if not audience_score_vote_count:
+            banded_rating_count = audience_data.get('bandedRatingCount', '')
+            audience_score_vote_count = extract_numeric_value(banded_rating_count)
     print("Audience score:", audience_score)
     print("Number of audience ratings:", audience_score_vote_count)
 

@@ -47,9 +47,9 @@ def get_next_ids(
     SELECT tmdb_id
     FROM priority_queue_{type}
     WHERE priority > 0
-    AND (reset_at IS NULL OR reset_at AT TIME ZONE 'UTC' < NOW() AT TIME ZONE 'UTC' - INTERVAL '1 day')
+    AND (reset_at IS NULL OR reset_at AT TIME ZONE 'UTC' < NOW() AT TIME ZONE 'UTC' - INTERVAL '1 week')
     ORDER BY priority DESC
-    LIMIT 5;
+    LIMIT 1;
     """
     pg_cursor.execute(query)
     rows = pg_cursor.fetchall()

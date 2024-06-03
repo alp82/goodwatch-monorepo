@@ -1,0 +1,8 @@
+certifi==2023.7.22
+charset-normalizer==3.3.0
+dnspython==2.4.2
+idna==3.4
+mongoengine==0.27.0
+pymongo==4.5.0
+requests==2.31.0
+urllib3==2.0.6

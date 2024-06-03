@@ -1,13 +1,20 @@
 # TODO's
 ```
+replace url for details when country changes
+
+lightweight user data
+
+hover effect when scrolling on mobile
+
 wishlist page (with search)
 watched page (with search)
 favorites page (with search)
 
+show similar/related movies
+
 poster: inline scoring / watched / wish 
 
 streaming: show flatrate countries in ratingblock and streaming tab
-reduce costs: show best streaming bundles for my likings
 
 movie genome
 
@@ -35,6 +42,11 @@ save trending scores per day
 trending yesterday
 trending difference
 
+onboarding:
+* select streaming services
+* ratings + favs
+* watched + wishlist
+
 stats
 # of movies
 # of tv shows
@@ -55,14 +67,14 @@ discover sidebar redesign
 filter inspiration:
     https://www.yidio.com/movies
     https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
+discover: unselect streaming
+discover: unselect country
 discover age ratings
 discover cast / crew
 discover director
 discover scores
 discover budget & revenue
 disocver keywords and tropes
-discover: unselect streaming?
-discover: unselect country?
 
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
@@ -73,6 +85,8 @@ report missing/wrong streaming providers
 report missing/wrong DNA
 
 decide together: watch party / watch together / good together / good swipe / swipe watch
+
+reduce costs: show best streaming bundles for my likings
 
 search page
 explore button for media titles (prefilled discover, map feature)
@@ -154,19 +168,12 @@ issue: videos not available or not a real trailer (ip man: kung fu master, plane
 
 # Auth
 ```
-combined watchlist
-connect accounts
 notification when streaming is available
 alerts for new search results
 
 personalized recommendation engine:
 * criticker
 * movielens
-
-onboarding:
-* select streaming services
-* ratings + favs
-* watched + wishlist
 ```
 
 # Search

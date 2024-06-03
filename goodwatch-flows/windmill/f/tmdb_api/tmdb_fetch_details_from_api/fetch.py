@@ -95,7 +95,7 @@ async def convert_and_save_details(
 def convert_movie_details(details: dict) -> dict:
     details = convert_common_fields(details)
     if details.get("alternative_titles", None):
-        details["alternative_titles"] = details["alternative_titles"]["titles"]
+        details["alternative_titles"] = details["alternative_titles"].get("titles")
     if details.get("keywords", None):
         details["keywords"] = details["keywords"]["keywords"]
     if details.get("release_dates", None):
@@ -117,7 +117,7 @@ def convert_movie_details(details: dict) -> dict:
 def convert_tv_details(details: dict) -> dict:
     details = convert_common_fields(details)
     if details.get("alternative_titles", None):
-        details["alternative_titles"] = details["alternative_titles"]["results"]
+        details["alternative_titles"] = details["alternative_titles"].get("results")
     if details.get("content_ratings", None):
         details["content_ratings"] = details["content_ratings"]["results"]
     if details.get("keywords", None):

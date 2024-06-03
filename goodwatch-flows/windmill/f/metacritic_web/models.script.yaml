@@ -1,13 +1,6 @@
 summary: ''
 description: Mongoengine documents for storing metacritic rating crawling results
-lock: |-
-  annotated-types==0.6.0
-  dnspython==2.5.0
-  mongoengine==0.27.0
-  pydantic==2.6.1
-  pydantic-core==2.16.2
-  pymongo==4.6.1
-  typing-extensions==4.9.0
+lock: '!inline f/metacritic_web/models.script.lock'
 kind: trigger
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

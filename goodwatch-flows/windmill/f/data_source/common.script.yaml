@@ -1,13 +1,6 @@
 summary: ''
 description: ''
-lock: |-
-  annotated-types==0.6.0
-  dnspython==2.6.1
-  mongoengine==0.28.2
-  pydantic==2.7.1
-  pydantic-core==2.18.2
-  pymongo==4.7.2
-  typing-extensions==4.11.0
+lock: '!inline f/data_source/common.script.lock'
 kind: trigger
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

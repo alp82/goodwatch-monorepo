@@ -1,10 +1,6 @@
 summary: Visit GoodWatch and populate cache
 description: ''
-lock: |-
-  greenlet==3.0.1
-  playwright==1.40.0
-  pyee==11.0.1
-  typing-extensions==4.10.0
+lock: '!inline f/utils/visit_goodwatch_and_populate_cache.script.lock'
 kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
