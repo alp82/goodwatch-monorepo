@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react'
 import {CheckIcon, ChevronUpDownIcon, XMarkIcon} from '@heroicons/react/20/solid'
-import { Combobox } from '@headlessui/react'
+import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import { classNames } from '~/utils/helpers'
 
 export type AutocompleteMode = 'select' | 'search'
@@ -71,7 +71,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           {icon}
         </div>
-        <Combobox.Input
+        <ComboboxInput
           className="block w-full rounded-md border border-transparent bg-gray-700 py-2 pl-10 pr-3 leading-5 text-gray-300 placeholder-gray-400 focus:border-gray-400 focus:bg-slate-700 focus:text-gray-100 focus:outline-none focus:ring-gray-400 sm:text-sm"
           name={name}
           placeholder={placeholder}
@@ -80,17 +80,17 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
           displayValue={(item: AutocompleteItem) => item?.label}
           onChange={handleChange}
         />
-        {isDirty && <Combobox.Button className="absolute inset-y-0 right-6 flex items-center px-2" onClickCapture={handleReset}>
+        {isDirty && <ComboboxButton className="absolute inset-y-0 right-6 flex items-center px-2" onClickCapture={handleReset}>
           <XMarkIcon className="h-5 w-5 text-gray-400 hover:text-gray-200" aria-hidden="true" />
-        </Combobox.Button>}
-        <Combobox.Button className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
+        </ComboboxButton>}
+        <ComboboxButton className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
           <ChevronUpDownIcon className="h-5 w-5 text-gray-400 hover:text-gray-200" aria-hidden="true" />
-        </Combobox.Button>
+        </ComboboxButton>
 
         {autocompleteMatches?.length > 0 && (
-          <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+          <ComboboxOptions className="absolute z-10 mt-1 max-h-96 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
             {autocompleteMatches.map((item) => (
-              <Combobox.Option
+              <ComboboxOption
                 key={item.key}
                 value={item}
                 className={({ active }) =>
@@ -118,9 +118,9 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
                     )}
                   </>
                 )}
-              </Combobox.Option>
+              </ComboboxOption>
             ))}
-          </Combobox.Options>
+          </ComboboxOptions>
         )}
       </div>
     </Combobox>

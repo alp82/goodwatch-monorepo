@@ -26,16 +26,21 @@ export default function Search() {
     }
   })
 
-  const renderItem = ({ item, selected }: RenderItemParams<SearchAutocompleteItem>) => {
+  const navigate = useNavigate()
+  const handleClickSearchResult = (item: SearchAutocompleteItem) => {
     const title = titleToDashed(item.label)
+    navigate(`/${item.mediaType}/${item.key}-${title}`)
+  }
+
+  const renderItem = ({ item, selected }: RenderItemParams<SearchAutocompleteItem>) => {
     return (
-      <a href={`/${item.mediaType}/${item.key}-${title}`} className="w-full flex items-center">
+      <div className="w-full flex items-center">
         <img src={item.imageUrl} alt="" className="h-16 w-12 flex-shrink-0" />
         <div>
           <div className={classNames('ml-3 text-lg truncate font-bold')}>{item.label}</div>
           <div className={classNames('ml-3 truncate', selected ? 'font-semibold' : '')}>{item.mediaType} ({item.year})</div>
         </div>
-      </a>
+      </div>
     )
   }
 
@@ -53,6 +58,7 @@ export default function Search() {
         autocompleteItems={autocompleteItems}
         renderItem={renderItem}
         onChange={(event) => fetcher.submit(event.target.form)}
+        onSelect={handleClickSearchResult}
       />
     </fetcher.Form>
     {autocompleteItems.slice(0, 4).map((item) => (
