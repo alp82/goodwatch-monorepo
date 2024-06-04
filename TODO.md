@@ -2,8 +2,6 @@
 ```
 copy/combine scripts only copy diffs to postgres
 
-video can't be paused in video tab (mayor)
-
 replace url for details when country changes
 
 lightweight user data
