@@ -14,6 +14,7 @@ export default defineConfig({
   plugins: [
     // remixDevTools(),
     remix({
+      serverMinify: false,
       // ignoredRouteFiles: ["**/.*"],
       // TODO remove
       // serverModuleFormat: "cjs",
