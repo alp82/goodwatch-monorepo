@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Dialog } from '@headlessui/react'
+import React, { useState } from 'react'
+import { Description, Dialog, DialogDescription, DialogPanel, DialogTitle } from '@headlessui/react'
 
 import { useUser } from '~/utils/auth'
 import { GoogleSignInButton } from '~/ui/auth/GoogleSignInButton'
@@ -51,18 +51,18 @@ export default function UserAction({ children, instructions }: UserActionProps) 
       {React.cloneElement(children, { onClick: handleClick })}
       {!isLoggedIn && isOpen && (
         <Dialog open={isOpen} onClose={() => setIsOpen(false)}>
-          <Dialog.Overlay className="fixed inset-0 bg-black opacity-50" />
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
           <div
             className="absolute w-[400px] p-8 z-10 bg-gray-700 border-8 border-gray-600 rounded-lg shadow-2xl"
-            style={{ top: modalPosition.top, left: modalPosition.left }}
+            style={{top: modalPosition.top, left: modalPosition.left}}
           >
-            <Dialog.Title className="text-xl font-medium text-gray-100">Please Sign In</Dialog.Title>
-            <Dialog.Description className="mt-4 text-lg text-gray-300 leading-6">
+            <DialogTitle className="text-xl font-medium text-gray-100">Please Sign In</DialogTitle>
+            <Description className="mt-4 text-lg text-gray-300 leading-6">
               {instructions}
-            </Dialog.Description>
-            <Dialog.Panel className="mt-8">
-              <GoogleSignInButton />
-            </Dialog.Panel>
+            </Description>
+            <DialogPanel className="mt-8">
+              <GoogleSignInButton/>
+            </DialogPanel>
           </div>
         </Dialog>
       )}
