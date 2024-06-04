@@ -1,14 +1,25 @@
 # TODO's
 ```
+copy/combine scripts only copy diffs to postgres
+
+video can't be paused in video tab (mayor)
+
 replace url for details when country changes
 
 lightweight user data
 
 hover effect when scrolling on mobile
 
-wishlist page (with search)
+wishlist with search
 watched page (with search)
 favorites page (with search)
+
+tv seasons:
+get episodes
+get ratings
+show in details
+
+combined collection score
 
 show similar/related movies
 
@@ -18,8 +29,9 @@ streaming: show flatrate countries in ratingblock and streaming tab
 
 movie genome
 
-show movies and shows on map (production country + places in film)
-    where to show space and fantasy places
+tv: watched vs currently watching (finished show)
+
+watched / score sync page
 
 ratings: show last updated time
 
@@ -28,14 +40,8 @@ date of first streaming link / new to stream
 trending load more
 discover load more
 
-copy/combine scripts only copy diffs to postgres
-
-tv seasons:
-get episodes
-get ratings
-show in details
-
-combined collection score
+show movies and shows on map (production country + places in film)
+    where to show space and fantasy places
 
 populate trending score 1-500
 save trending scores per day
