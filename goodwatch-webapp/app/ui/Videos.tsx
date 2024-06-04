@@ -77,9 +77,7 @@ export default function Videos({ videos }: VideosProps) {
               height="100%"
               controls={true}
               config={{
-                playerVars: {
-                  autoplay: 1,
-                },
+                playerVars: {},
               }}
             />
           </div>

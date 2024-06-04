@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Description, Dialog, DialogDescription, DialogPanel, DialogTitle } from '@headlessui/react'
+import { Description, Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 
 import { useUser } from '~/utils/auth'
 import { GoogleSignInButton } from '~/ui/auth/GoogleSignInButton'
