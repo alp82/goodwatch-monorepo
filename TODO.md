@@ -1,12 +1,21 @@
 # TODO's
 ```
+"other countries" link should scroll down
+replace url for details when country changes
+better discover url handling with new hook
+
+fix headlessui deprecated components
+
+react-query
+offline support
+
 copy/combine scripts only copy diffs to postgres
 
-replace url for details when country changes
+show title in current language
 
-lightweight user data
+details: images tab
 
-hover effect when scrolling on mobile
+bug: hover effect when scrolling on mobile
 
 wishlist with search
 watched page (with search)
@@ -50,6 +59,8 @@ onboarding:
 * select streaming services
 * ratings + favs
 * watched + wishlist
+
+more lightweight user data
 
 stats
 # of movies
@@ -167,6 +178,8 @@ fix certification longer than 50 chars: 12 éven aluliak számára a megtekinté
 
 issue: breaking bad streaming missing -> justwatch streaming data
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
+
+analyze subtitles
 
 ```
 

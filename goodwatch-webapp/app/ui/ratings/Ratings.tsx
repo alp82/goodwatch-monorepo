@@ -17,7 +17,7 @@ export default function Ratings({ ratings, title = 'Ratings', compact = false }:
   const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent ? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10 : null
 
   return (
-    <div className="relative">
+    <div id="tab-details-ratings" className="relative">
       {!isComplete && (
         <div className="absolute top-16 left-6 z-10">
           <InfoBox text="Ratings are currently calculated..." />

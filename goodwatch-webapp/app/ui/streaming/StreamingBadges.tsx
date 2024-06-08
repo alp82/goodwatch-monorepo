@@ -1,6 +1,7 @@
 import React from 'react'
 import { StreamingLink } from '~/server/details.server'
 import tmdb_logo from '~/img/tmdb-logo.svg'
+import { useDetailsTab, useTabLink } from '~/utils/navigation'
 
 export interface StreamingBadgesProps {
   links: StreamingLink[]
@@ -8,6 +9,8 @@ export interface StreamingBadgesProps {
 }
 
 export default function StreamingBadges({ links = [], countryCodes = [] }: StreamingBadgesProps) {
+  const { handleStreamingTab } = useDetailsTab()
+
   const flatrateLinks = links.filter((link: StreamingLink) => link.stream_type == "flatrate")
   const buyLinks = links.filter((link: StreamingLink) => link.stream_type == "buy")
 
@@ -31,12 +34,12 @@ export default function StreamingBadges({ links = [], countryCodes = [] }: Strea
   if (!hasFlatrate) {
     return hasBuy ? (
       <div>
-        <div className="textsm md:text-lg">only available for streaming to <a className="text-indigo-400 hover:underline" href="?tab=streaming">buy or rent</a></div>
+        <div className="textsm md:text-lg">only available for streaming to <a className="text-indigo-400 hover:underline" onClick={handleStreamingTab}>buy or rent</a></div>
         <PoweredBy />
       </div>
     ) : countryCodes?.length ? (
       <div>
-        <div className="textsm md:text-lg">only available for streaming in <a className="text-indigo-400 hover:underline" href="?tab=streaming">other countries</a></div>
+        <div className="textsm md:text-lg">only available for streaming in <a className="text-indigo-400 hover:underline" onClick={handleStreamingTab}>other countries</a></div>
         <PoweredBy />
       </div>
     ) : (

@@ -22,7 +22,9 @@ export default function Disclaimer() {
       <h2 className="mt-8 mb-4 text-2xl font-bold">Why?</h2>
       <section className="prose prose-invert lg:prose-xl mx-auto">
         <p>
-          I wanted a website that would help me discover new movies and TV shows. Main requirements were to have a list of all streaming services and their ratings.
+          I wanted a website that would help me discover new movies and TV shows.
+          I used to visit IMDb, Metacritic, Rotten Tomatoes and JustWatch to determine what I want to watch next.
+          I didn't like the overhead of jumping between those pages and looked for pages that aggregate all this information.
         </p>
         <p>
           There are plenty of other websites and apps that offer similar features. None of them had exactly what I needed. That's why I built GoodWatch.
@@ -35,7 +37,7 @@ export default function Disclaimer() {
           GoodWatch is the only site (that I know of) that combines:
           <ol>
             <li>streaming information from most services (e.g. Netflix, Prime, etc.)</li>
-            <li>scores from popular rating pages (e.g. IMDb, Metacritic, etc.)</li>
+            <li>scores from popular rating pages (e.g. IMDb, Metacritic, Rotten Tomatoes)</li>
           </ol>
         </p>
       </section>

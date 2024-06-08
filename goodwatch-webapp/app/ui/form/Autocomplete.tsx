@@ -72,6 +72,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
           {icon}
         </div>
         <ComboboxInput
+          id="search-input"
           className="block w-full rounded-md border border-transparent bg-gray-700 py-2 pl-10 pr-3 leading-5 text-gray-300 placeholder-gray-400 focus:border-gray-400 focus:bg-slate-700 focus:text-gray-100 focus:outline-none focus:ring-gray-400 sm:text-sm"
           name={name}
           placeholder={placeholder}
@@ -80,10 +81,17 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
           displayValue={(item: AutocompleteItem) => item?.label}
           onChange={handleChange}
         />
-        {isDirty && <ComboboxButton className="absolute inset-y-0 right-6 flex items-center px-2" onClickCapture={handleReset}>
+        {isDirty && <ComboboxButton
+          id="search-reset"
+          className="absolute inset-y-0 right-6 flex items-center px-2"
+          onClickCapture={handleReset}
+        >
           <XMarkIcon className="h-5 w-5 text-gray-400 hover:text-gray-200" aria-hidden="true" />
         </ComboboxButton>}
-        <ComboboxButton className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
+        <ComboboxButton
+          id="search-toggle-dropdown"
+          className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none"
+        >
           <ChevronUpDownIcon className="h-5 w-5 text-gray-400 hover:text-gray-200" aria-hidden="true" />
         </ComboboxButton>
 

@@ -1,20 +1,20 @@
 import { JSXElementConstructor } from 'react'
 
-export interface Tab {
-  key: string
+export interface Tab<T> {
+  key: T
   label?: string
   icon?: JSXElementConstructor<any>
   current?: boolean
 }
 
-export interface TabsProps {
+export interface TabsProps<T> {
   title?: string
-  tabs: Tab[]
+  tabs: Tab<T>[]
   pills: boolean
-  onSelect: (tab: Tab) => void
+  onSelect: (tab: Tab<T>) => void
 }
 
-export default function Tabs({ title, tabs, pills, onSelect }: TabsProps) {
+export default function Tabs<T extends string>({ title, tabs, pills, onSelect }: TabsProps<T>) {
   const renderedTabs = (
     <div className="flex flex-wrap items-center gap-2 font-medium text-xs sm:text-sm md:text-md lg:text-lg">
       {title && <span className="mx-2 text-xs text-gray-300">{title}</span>}

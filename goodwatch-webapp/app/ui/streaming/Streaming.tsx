@@ -23,7 +23,7 @@ export default function Streaming({ links, countryCodes = [] }: StreamingProps) 
   const countryCount = onlyOtherCountries ? countryCodes?.length : countryCodes?.length - 1
 
   return (
-    <>
+    <div id="tab-details-streaming">
       {hasNothing && !countryCount && (
         <div className="mt-6">
           <InfoBox text="This title is currently not available on any streaming platform" />
@@ -119,6 +119,6 @@ export default function Streaming({ links, countryCodes = [] }: StreamingProps) 
         </div>
       )}
 
-    </>
+    </div>
   )
 }

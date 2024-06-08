@@ -23,6 +23,7 @@ import { Poster } from '~/ui/Poster'
 import TrailerOverlay from '~/ui/TrailerOverlay'
 import ScoreSelector from '~/ui/actions/ScoreSelector'
 import WatchStatusBlock from '~/ui/actions/WatchStatusBlock'
+import { DetailsTab, useDetailsTab } from '~/utils/navigation'
 
 export interface DetailsProps {
   details: MovieDetails | TVDetails
@@ -51,24 +52,19 @@ export default function Details({ details, tab, country, language }: DetailsProp
     number_of_seasons = details.number_of_seasons
   }
 
-  const [selectedTab, setSelectedTab] = useState(tab)
-  const existingTabs = ['about', 'cast', 'ratings', 'streaming', 'videos']
+  const { activeTab, handleSwitchToTab } = useDetailsTab()
+  const handleTabSelection = (tab: Tab<DetailsTab>) => {
+    handleSwitchToTab(tab.key)
+  }
+
+  const existingTabs: DetailsTab[] = ['about', 'cast', 'ratings', 'streaming', 'videos']
   const detailsTabs = existingTabs.map((tab) => {
     return {
       key: tab,
       label: tab.charAt(0).toUpperCase() + tab.slice(1),
-      current: tab === selectedTab,
+      current: tab === activeTab,
     }
   })
-  const handleTabSelection = (tab: Tab) => {
-    setSelectedTab(tab.key)
-    navigate(
-      `/${media_type}/${details.tmdb_id}-${titleToDashed(title)}?tab=${tab.key}&country=${country}`,
-      {
-        preventScrollReset: true,
-      }
-      )
-  }
 
   // const ratingsSeasonsFetcher = useFetcher()
   // useEffect(() => {
@@ -88,7 +84,7 @@ export default function Details({ details, tab, country, language }: DetailsProp
 
   const mainInfo = (
     <>
-      {(selectedTab === 'about' || !existingTabs.includes(selectedTab)) && (
+      {(activeTab === 'about' || !existingTabs.includes(activeTab)) && (
         <>
           {tagline && <div className="mt-8 mb-6">
             <blockquote className="relative border-l-4 lg:border-l-8 border-gray-600 bg-gray-800 py-2 pl-4 sm:pl-6">
@@ -103,12 +99,12 @@ export default function Details({ details, tab, country, language }: DetailsProp
           <Keywords keywords={keywords} type={media_type}/>
         </>
       )}
-      {selectedTab === 'cast' && (
+      {activeTab === 'cast' && (
         <>
           <Cast cast={cast}/>
         </>
       )}
-      {selectedTab === 'ratings' && (
+      {activeTab === 'ratings' && (
         <>
           <Ratings ratings={ratings}/>
           {/*{ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">*/}
@@ -121,12 +117,12 @@ export default function Details({ details, tab, country, language }: DetailsProp
           {/*</div>}*/}
         </>
       )}
-      {selectedTab === 'streaming' && (
+      {activeTab === 'streaming' && (
         <>
           <Streaming links={streaming_links} countryCodes={streaming_country_codes} />
         </>
       )}
-      {selectedTab === 'videos' && (
+      {activeTab === 'videos' && (
         <>
           <Videos videos={videos || []} />
         </>
@@ -209,14 +205,9 @@ export default function Details({ details, tab, country, language }: DetailsProp
       <div className="flex flex-col items-center mt-2 md:mt-4">
         <div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
           <div className="my-4">
-            <Tabs tabs={detailsTabs} pills={true} onSelect={handleTabSelection}/>
+            <Tabs<DetailsTab> tabs={detailsTabs} pills={true} onSelect={handleTabSelection}/>
           </div>
-          <div className="hidden lg:block">
-            {mainInfo}
-          </div>
-          <div className="block lg:hidden">
-            {mainInfo}
-          </div>
+          {mainInfo}
         </div>
       </div>
     </>

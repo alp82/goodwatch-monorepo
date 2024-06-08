@@ -3,6 +3,7 @@ import { StreamingLink } from '~/server/details.server'
 import StreamingBadges from '~/ui/streaming/StreamingBadges'
 import FilterCountries from '~/ui/filter/FilterCountries'
 import { useNavigate } from '@remix-run/react'
+import { useDetailsTab } from '~/utils/navigation'
 
 export interface StreamingBlockProps {
   media_type: "movie" | "tv"
@@ -12,6 +13,8 @@ export interface StreamingBlockProps {
 }
 
 export default function StreamingBlock({ media_type, links = [], countryCodes = [], currentCountryCode }: StreamingBlockProps) {
+  const { handleStreamingTab } = useDetailsTab()
+
   const [editing, setEditing] = useState(false)
   const toggleEditing = () => setEditing(!editing)
 
@@ -23,7 +26,7 @@ export default function StreamingBlock({ media_type, links = [], countryCodes = 
   return (
     <div className="divide-y divide-gray-600 overflow-visible rounded-lg bg-gray-900 bg-opacity-50 shadow">
       <div className="flex gap-2 items-center px-4 py-2 sm:px-6 font-bold">
-        <a className="text-indigo-400 hover:underline" href="?tab=streaming">Streaming</a> in
+        <a className="text-indigo-400 hover:underline" onClick={handleStreamingTab}>Streaming</a> in
         {editing ? (
           <FilterCountries
             type={media_type}

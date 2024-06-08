@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from '@remix-run/react'
 
-import { LoaderData } from '~/routes/discover'
+// TODO delete this file
 
 interface UseUpdateUrlParams<T> {
   params: T
