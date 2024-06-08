@@ -1,5 +1,5 @@
 import React, { ChangeEventHandler, Fragment, useState } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
 import { ArrowLeftIcon } from '@heroicons/react/24/solid'
 import FilterStreamingProviders from '~/ui/filter/FilterStreamingProviders'
 import { DiscoverParams } from '~/server/discover.server'
@@ -76,14 +76,14 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
   )
 
   return (
-    <Transition.Root show={show} as={Fragment}>
+    <Transition show={show} as={Fragment}>
       <Dialog as="div" className="relative z-10 opacity-95" onClose={onClose}>
         <div className="fixed inset-0" />
 
         <div className="fixed inset-0 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="pointer-events-none fixed inset-y-0 left-0 flex max-w-full pr-10 sm:pr-16">
-              <Transition.Child
+              <TransitionChild
                 as={Fragment}
                 enter="transform transition ease-in-out duration-500 sm:duration-700"
                 enterFrom="-translate-x-full"
@@ -92,16 +92,16 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                 leaveFrom="translate-x-0"
                 leaveTo="-translate-x-full"
               >
-                <Dialog.Panel className="pointer-events-auto w-screen max-w-2xl">
+                <DialogPanel className="pointer-events-auto w-screen max-w-2xl">
                   <form className="flex flex-col h-full bg-slate-900 shadow-xl">
                     <div className="flex-1 text-gray-100">
                       {/* Header */}
                       <div className="mt-16 px-4 py-6 sm:px-6 bg-slate-950">
                         <div className="flex items-start justify-between space-x-3">
                           <div className="space-y-1">
-                            <Dialog.Title className="text-base font-semibold leading-6">
+                            <DialogTitle className="text-base font-semibold leading-6">
                               Discover Tools
-                            </Dialog.Title>
+                            </DialogTitle>
                             <p className="text-sm text-gray-300">
                               Narrow down results to your liking
                             </p>
@@ -248,12 +248,12 @@ export default function FilterSelection({ show, params, updateParams, onClose }:
                       </div>
                     </div>
                   </form>
-                </Dialog.Panel>
-              </Transition.Child>
+                </DialogPanel>
+              </TransitionChild>
             </div>
           </div>
         </div>
       </Dialog>
-    </Transition.Root>
+    </Transition>
   )
 }

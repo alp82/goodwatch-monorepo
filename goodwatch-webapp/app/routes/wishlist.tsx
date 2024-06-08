@@ -8,7 +8,6 @@ import { TvCard } from '~/ui/TvCard'
 import { getUserData, GetUserDataResult } from '~/server/userData.server'
 import { getUserFromRequest } from '~/utils/auth'
 import { StreamingLink } from '~/server/details.server'
-import { Radio, RadioGroup } from '@headlessui/react'
 import WishlistFilter, { FilterByStreaming, SortBy } from '~/ui/filter/WishlistFilter'
 
 export function headers() {

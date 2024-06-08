@@ -1,9 +1,5 @@
 # TODO's
 ```
-"other countries" link should scroll down
-replace url for details when country changes
-better discover url handling with new hook
-
 fix headlessui deprecated components
 
 react-query
@@ -46,6 +42,9 @@ date of first streaming link / new to stream
 
 trending load more
 discover load more
+
+replace url for details when country changes
+better discover url handling with new hook
 
 show movies and shows on map (production country + places in film)
     where to show space and fantasy places

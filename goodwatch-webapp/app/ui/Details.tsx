@@ -1,5 +1,4 @@
-import React, { useState } from 'react'
-import { useNavigate } from '@remix-run/react'
+import React from 'react'
 import { MovieDetails, TVDetails } from '~/server/details.server'
 import Ratings from '~/ui/ratings/Ratings'
 import Streaming from '~/ui/streaming/Streaming'
@@ -9,7 +8,6 @@ import AgeRating from '~/ui/AgeRating'
 import Description from '~/ui/Description'
 import Tabs, { Tab } from '~/ui/Tabs'
 import Videos from '~/ui/Videos'
-import { titleToDashed } from '~/utils/helpers'
 import Collection from '~/ui/Collection'
 import Runtime from '~/ui/Runtime'
 import { extractRatings } from '~/utils/ratings'
@@ -33,7 +31,6 @@ export interface DetailsProps {
 }
 
 export default function Details({ details, tab, country, language }: DetailsProps) {
-  const navigate = useNavigate()
   const ratings = extractRatings(details)
 
   const { backdrop_path, cast, crew, genres, keywords, media_type, poster_path, release_year, streaming_country_codes, streaming_links, synopsis, tagline, title, videos } = details
