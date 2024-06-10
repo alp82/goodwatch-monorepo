@@ -199,11 +199,15 @@ export default function Details({ details, tab, country, language }: DetailsProp
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center mt-2 md:mt-4">
-        <div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
-          <div className="my-4">
-            <Tabs<DetailsTab> tabs={detailsTabs} pills={true} onSelect={handleTabSelection}/>
+      <div className="flex flex-col items-center">
+        <div className="w-full p-4 mb-4 bg-black bg-opacity-70">
+          <div className="flex flex-col items-center">
+            <div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
+              <Tabs<DetailsTab> tabs={detailsTabs} pills={true} onSelect={handleTabSelection}/>
+            </div>
           </div>
+        </div>
+        <div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
           {mainInfo}
         </div>
       </div>

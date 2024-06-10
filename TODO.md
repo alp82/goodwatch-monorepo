@@ -1,13 +1,11 @@
 # TODO's
 ```
-fix headlessui deprecated components
-
-react-query
-offline support
-
 copy/combine scripts only copy diffs to postgres
 
 show title in current language
+
+react-query
+offline support
 
 details: images tab
 
@@ -21,8 +19,11 @@ tv seasons:
 get episodes
 get ratings
 show in details
+when last season/episode was released
 
 combined collection score
+
+user favs: actors, directors, writers
 
 show similar/related movies
 
@@ -33,8 +34,6 @@ streaming: show flatrate countries in ratingblock and streaming tab
 movie genome
 
 tv: watched vs currently watching (finished show)
-
-watched / score sync page
 
 ratings: show last updated time
 

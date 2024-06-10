@@ -16,7 +16,7 @@ export interface TabsProps<T> {
 
 export default function Tabs<T extends string>({ title, tabs, pills, onSelect }: TabsProps<T>) {
   const renderedTabs = (
-    <div className="flex flex-wrap items-center gap-2 font-medium text-xs sm:text-sm md:text-md lg:text-lg">
+    <div className="flex flex-wrap items-center gap-2 font-medium text-sm sm:text-base md:text-lg">
       {title && <span className="mx-2 text-xs text-gray-300">{title}</span>}
       {tabs.map((tab) => (
         <span
