@@ -9,8 +9,6 @@ offline support
 
 details: images tab
 
-bug: hover effect when scrolling on mobile
-
 wishlist with search
 watched page (with search)
 favorites page (with search)
