@@ -17,6 +17,7 @@ import { useUser } from '~/utils/auth'
 import logo from '~/img/goodwatch-logo.png'
 import { GoogleSignInButton } from '~/ui/auth/GoogleSignInButton'
 import { SignOutLink } from '~/ui/auth/SignOutLink'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid'
 
 export default function Header() {
   const location = useLocation()
@@ -32,7 +33,7 @@ export default function Header() {
             <div className="relative flex h-16 items-center justify-between">
               <div className="flex lg:hidden">
                 {/* Mobile menu button */}
-                <div
+                <DisclosureButton
                   className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
@@ -40,7 +41,7 @@ export default function Header() {
                   ) : (
                     <Bars3Icon className="block h-6 w-6" aria-hidden="true"/>
                   )}
-                </div>
+                </DisclosureButton>
               </div>
               <div className="flex items-center px-2 lg:px-0">
                 <div className="flex-shrink-0">
@@ -75,17 +76,15 @@ export default function Header() {
                     <>
                       {/* Profile dropdown */}
                       <Menu as="div" className="relative ml-4 flex-shrink-0">
-                        <div>
-                          <MenuButton
-                            className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                            <span className="sr-only">Open user menu</span>
-                            <img
-                              className="h-8 w-8 rounded-full"
-                              src={user.user_metadata.avatar_url}
-                              alt=""
-                            />
-                          </MenuButton>
-                        </div>
+                        <MenuButton
+                          className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                          <span className="sr-only">Open user menu</span>
+                          <img
+                            className="h-8 w-8 rounded-full"
+                            src={user.user_metadata.avatar_url}
+                            alt=""
+                          />
+                        </MenuButton>
                         <Transition
                           as={Fragment}
                           enter="transition ease-out duration-100"
@@ -96,37 +95,22 @@ export default function Header() {
                           leaveTo="transform opacity-0 scale-95"
                         >
                           <MenuItems
-                            className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            {/*<MenuItem>*/}
-                            {/*  {({active}) => (*/}
-                            {/*    <a*/}
-                            {/*      href="#"*/}
-                            {/*      className={classNames(*/}
-                            {/*        active ? 'bg-gray-100' : '',*/}
-                            {/*        'block px-4 py-2 text-sm text-gray-700'*/}
-                            {/*      )}*/}
-                            {/*    >*/}
-                            {/*      Your Profile*/}
-                            {/*    </a>*/}
-                            {/*  )}*/}
-                            {/*</MenuItem>*/}
+                            anchor="bottom"
+                            className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          >
                             <MenuItem>
-                              {({active}) => (
-                                <a
-                                  href="/wishlist"
-                                  className={`
-                                    ${isPage('/wishlist') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
-                                    block px-4 py-2 text-base
-                                  `}
-                                >
-                                  Wishlist
-                                </a>
-                              )}
+                              <a
+                                href="/wishlist"
+                                className={`
+                                  ${isPage('/wishlist') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                                  block px-4 py-2 text-base
+                                `}
+                              >
+                                Wishlist
+                              </a>
                             </MenuItem>
                             <MenuItem>
-                              {({active}) => (
-                                <SignOutLink active={active} />
-                              )}
+                              <SignOutLink active={false} />
                             </MenuItem>
                           </MenuItems>
                         </Transition>
@@ -140,56 +124,61 @@ export default function Header() {
             </div>
           </div>
 
-          <DisclosurePanel className="lg:hidden text-lg">
-            <div className="space-y-1 px-2 pt-2 pb-3">
-              <DisclosureButton
-                as="a"
-                href="/"
-                className={`block rounded-md px-3 py-2 font-medium ${isPage('/') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-              >
-                Home
-              </DisclosureButton>
-              <DisclosureButton
-                as="a"
-                href="/discover"
-                className={`block rounded-md px-3 py-2 font-medium ${isPage('/discover') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-              >
-                Discover
-              </DisclosureButton>
-            </div>
-            <div className="border-t border-gray-700 pt-4 pb-3">
+          <Transition
+            enter="duration-200 ease-out"
+            enterFrom="opacity-0 -translate-y-6"
+            enterTo="opacity-100 translate-y-0"
+            leave="duration-300 ease-out"
+            leaveFrom="opacity-100 translate-y-0"
+            leaveTo="opacity-0 -translate-y-6"
+          >
+            <DisclosurePanel className="lg:hidden text-lg">
               <div className="space-y-1 px-2 pt-2 pb-3">
-                <DisclosureButton
-                  as="a"
-                  href="https://dev.to/t/goodwatch"
-                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/blog') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                <a
+                  href="/"
+                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                 >
-                  Blog
-                </DisclosureButton>
-                <DisclosureButton
-                  as="a"
-                  href="/about"
-                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/about') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  Home
+                </a>
+                <a
+                  href="/discover"
+                  className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/discover') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                 >
-                  About
-                </DisclosureButton>
-                <DisclosureButton
-                  as="a"
-                  href="/disclaimer"
-                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/disclaimer') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-                >
-                  Disclaimer
-                </DisclosureButton>
-                <DisclosureButton
-                  as="a"
-                  href="http://coinmatica.net:4801/status/goodwatch"
-                  className={`block rounded-md px-3 py-2 font-medium ${isPage('/status') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-                >
-                  Status Page
-                </DisclosureButton>
+                  Discover
+                </a>
               </div>
-            </div>
-          </DisclosurePanel>
+              <div className="border-t border-gray-700 pt-4 pb-3">
+                <div className="space-y-1 px-2 pt-2 pb-3">
+                  <a
+                    href="https://dev.to/t/goodwatch"
+                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/blog') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  >
+                    Blog
+                    <ArrowTopRightOnSquareIcon className="ml-2 h-5 w-5" />
+                  </a>
+                  <a
+                    href="/about"
+                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/about') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  >
+                    About
+                  </a>
+                  <a
+                    href="/disclaimer"
+                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/disclaimer') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  >
+                    Disclaimer
+                  </a>
+                  <a
+                    href="http://coinmatica.net:4801/status/goodwatch"
+                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/status') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                  >
+                    Status Page
+                    <ArrowTopRightOnSquareIcon className="ml-2 h-5 w-5" />
+                  </a>
+                </div>
+              </div>
+            </DisclosurePanel>
+          </Transition>
         </>
       )}
     </Disclosure>
