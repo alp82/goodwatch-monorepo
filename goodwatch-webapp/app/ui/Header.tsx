@@ -147,40 +147,40 @@ export default function Header() {
                   Discover
                 </a>
               </div>
-              <div className="border-t border-gray-700 pt-4 pb-3">
-                <div className="space-y-1 px-2 pt-2 pb-3">
-                  <a
-                    href="https://dev.to/t/goodwatch"
-                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/blog') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-                  >
-                    Blog
-                    <ArrowTopRightOnSquareIcon className="ml-2 h-5 w-5" />
-                  </a>
-                  <a
-                    href="/about"
-                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/about') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-                  >
-                    About
-                  </a>
-                  <a
-                    href="/disclaimer"
-                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/disclaimer') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-                  >
-                    Disclaimer
-                  </a>
-                  <a
-                    href="http://coinmatica.net:4801/status/goodwatch"
-                    className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/status') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-                  >
-                    Status Page
-                    <ArrowTopRightOnSquareIcon className="ml-2 h-5 w-5" />
-                  </a>
-                </div>
+              <div className="border-t border-gray-500 space-y-1 px-2 pt-2 pb-3">
+                <a
+                  href="/about"
+                  className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/about') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  About
+                </a>
+                <a
+                  href="/disclaimer"
+                  className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/disclaimer') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  Disclaimer
+                </a>
+              </div>
+              <div className="border-t border-gray-500 space-y-1 px-2 pt-2 pb-3">
+                <a
+                  href="https://dev.to/t/goodwatch"
+                  className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/blog') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  Blog
+                  <ArrowTopRightOnSquareIcon className="ml-2 h-5 w-5"/>
+                </a>
+                <a
+                  href="http://coinmatica.net:4801/status/goodwatch"
+                  className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/status') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                >
+                  Status Page
+                  <ArrowTopRightOnSquareIcon className="ml-2 h-5 w-5"/>
+                </a>
               </div>
             </DisclosurePanel>
           </Transition>
         </>
-      )}
+        )}
     </Disclosure>
   )
 }
