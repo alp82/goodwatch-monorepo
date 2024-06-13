@@ -1,6 +1,7 @@
 import React from 'react'
 import tmdbLogo from '~/img/tmdb-logo.svg'
 import discordWhite from '~/img/discord-mark-white.svg'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid'
 
 const navigation = {
   main: [
@@ -97,28 +98,30 @@ export default function Footer({}: FooterProps) {
             ))}
             <div className="mb-2">
               <a href="http://coinmatica.net:4801/status/goodwatch"
-                 className="text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
+                 className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
                 Status Page
+                <ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4"/>
               </a>
             </div>
           </div>
           <div>
             <div className="mb-2">
-              <a href="https://dev.to/t/goodwatch"
-                 className="text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
-                Blog
-              </a>
-            </div>
-            <div className="mb-2">
               <a href="/about"
-                 className="text-sm leading-6 text-gray-400 hover:text-gray-100">
+                 className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100">
                 About
               </a>
             </div>
             <div className="mb-2">
               <a href="/disclaimer"
-                 className="text-sm leading-6 text-gray-400 hover:text-gray-100">
+                 className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100">
                 Disclaimer
+              </a>
+            </div>
+            <div className="mb-2">
+              <a href="https://dev.to/t/goodwatch"
+                 className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
+                Blog
+                <ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4"/>
               </a>
             </div>
           </div>
