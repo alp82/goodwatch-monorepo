@@ -97,7 +97,7 @@ export default function Footer({}: FooterProps) {
               </div>
             ))}
             <div className="mb-2">
-              <a href="http://coinmatica.net:4801/status/goodwatch"
+              <a href="https://status.goodwatch.app/status/services"
                  className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
                 Status Page
                 <ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4"/>

@@ -170,7 +170,7 @@ export default function Header() {
                   <ArrowTopRightOnSquareIcon className="ml-2 h-5 w-5"/>
                 </a>
                 <a
-                  href="http://coinmatica.net:4801/status/goodwatch"
+                  href="https://status.goodwatch.app/status/services"
                   className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage('/status') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                 >
                   Status Page
