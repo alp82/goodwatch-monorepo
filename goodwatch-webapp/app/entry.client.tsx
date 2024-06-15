@@ -5,6 +5,8 @@ import posthog from "posthog-js";
 
 function PosthogInit() {
   useEffect(() => {
+    if (!document.cookie.includes("cookieConsent=true")) return
+
     posthog.init('phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq', {
       // api_host: 'https://eu.i.posthog.com',
       api_host: 'https://a.goodwatch.app',

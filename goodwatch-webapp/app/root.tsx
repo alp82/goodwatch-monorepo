@@ -26,6 +26,7 @@ import cssToastify from 'react-toastify/dist/ReactToastify.css?url'
 import cssMain from '~/main.css?url'
 import cssTailwind from '~/tailwind.css?url'
 import { AuthContext } from './utils/auth'
+import CookieConsent from '~/ui/CookieConsent'
 
 export const links: LinksFunction = () => [
   // ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),
@@ -78,10 +79,10 @@ export function ErrorBoundary() {
       </head>
       <body className="flex flex-col h-screen bg-gray-900">
         <Header/>
-        <main className="relative flex-grow mx-auto mt-12 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+        <main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
           <InfoBox text="Sorry, but an error occurred"/>
           <div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
-            <strong>{error.message}</strong>
+            <strong>{error.message || error.data}</strong>
             <button className="m-2 p-2 w-32 text-grey-100 bg-gray-900 hover:bg-gray-800"
                     onClick={() => window.location.reload()}>Try Again
             </button>
@@ -95,7 +96,6 @@ export function ErrorBoundary() {
         <BottomNav/>
         <ScrollRestoration/>
         <Scripts/>
-        <Footer/>
       </body>
     </html>
   );
@@ -150,11 +150,11 @@ export default function App() {
                 </AnimatePresence>
               </main>
               <Footer/>
+              <CookieConsent />
               <ToastContainer/>
               <BottomNav/>
               <ScrollRestoration/>
               <Scripts/>
-              <script src="https://accounts.google.com/gsi/client" async></script>
             </LocaleContext.Provider>
           </AuthContext.Provider>
         </QueryClientProvider>
