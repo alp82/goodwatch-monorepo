@@ -1,13 +1,48 @@
 # TODO's
 ```
-copy/combine scripts only copy diffs to postgres
-
 genome flow
 
-show title in current language
+errors with double footer
+
+error handling: http://localhost:3003/tv/252146-who-killed-him
+    fallback?
+    priority?
+    https://www.themoviedb.org/tv/252146-quien-lo-mato
+
+onboarding:
+* select streaming services
+* ratings + favs
+* watched + wishlist
 
 react-query
 offline support
+
+redistribute weight for gw score
+
+more lightweight user data
+
+copy/combine scripts only copy diffs to postgres
+
+stats
+# of movies
+# of tv shows
+# of ratings per site
+# of streaming links
+# of tropes
+avg rating per provider
+oldest fetch date
+
+all titles from a-z (search page?)
+    difference between search, explore, discover, watch next, etc.?
+
+similarity vectors flow
+
+guides
+    by genre
+    by mood
+    etc.
+
+show title in current language
 
 details: images tab
 
@@ -31,8 +66,6 @@ poster: inline scoring / watched / wish
 
 streaming: show flatrate countries in ratingblock and streaming tab
 
-movie genome
-
 tv: watched vs currently watching (finished show)
 
 ratings: show last updated time
@@ -53,28 +86,10 @@ save trending scores per day
 trending yesterday
 trending difference
 
-onboarding:
-* select streaming services
-* ratings + favs
-* watched + wishlist
-
-more lightweight user data
-
-stats
-# of movies
-# of tv shows
-# of ratings per site
-# of streaming links
-# of tropes
-avg rating per provider
-oldest fetch date
-
 details:
 box office (e.g. Google)
 crew links to discovery
 awards (grab from API)
-
-GW API
 
 discover sidebar redesign
 filter inspiration:
@@ -97,20 +112,20 @@ report missing/wrong ratings
 report missing/wrong streaming providers
 report missing/wrong DNA
 
-decide together: watch party / watch together / good together / good swipe / swipe watch
+decide together: watch party / watch together / swipe and watch
 
 reduce costs: show best streaming bundles for my likings
 
 search page
 explore button for media titles (prefilled discover, map feature)
 random full screen: album cover (good roulette)
-genre guides
 international / indie guides
-
-notify if title gets available
 
 stuck scripts monitoring
 rate limit monitoring
+
+notification when streaming is available
+alerts for new search results
 
 do not refetch stale data
     streaming links
@@ -149,8 +164,6 @@ best rated picks animation
 stagger animation for rating progress bars
 show picks on mobile too
 
-show generic recommendations
-
 rating on mobile with touch/slide/drag
 
 android app
@@ -170,6 +183,8 @@ data source: memes (knowyourmeme, urbandictionary, etc.9
 data source: social media content (tiktok, ig, yt shorts, reddit, twitter, etc.)
 data source: based on / adapted from (books, comics, ...)
 
+GW API
+
 socket.io updates
 
 fix certification longer than 50 chars: 12 éven aluliak számára a megtekintése nagykorú felügyelete mellett ajánlott
@@ -179,16 +194,6 @@ issue: videos not available or not a real trailer (ip man: kung fu master, plane
 
 analyze subtitles
 
-```
-
-# Auth
-```
-notification when streaming is available
-alerts for new search results
-
-personalized recommendation engine:
-* criticker
-* movielens
 ```
 
 # Search
@@ -258,5 +263,6 @@ authentication
 remix component example: rating
 from vercel to coolify
     too many open files
+genome with LLM's
 recommendation engine
 ```
