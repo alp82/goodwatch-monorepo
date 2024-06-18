@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { usePostHog } from "posthog-js/react";
+import posthog from 'posthog-js'
 
 type CookieConsent = 'undecided' | 'yes' | 'no'
 
@@ -13,7 +13,6 @@ export function cookieConsentGiven(): CookieConsent {
 
 export default function CookieConsent() {
   const [consentGiven, setConsentGiven] = useState<CookieConsent | ''>('');
-  const posthog = usePostHog();
 
   useEffect(() => {
     // We want this to only run once the client loads

@@ -10,10 +10,11 @@ import {
   useLocation,
   useRouteError,
 } from '@remix-run/react'
-import { createBrowserClient } from '@supabase/ssr'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'framer-motion'
 import { ToastContainer } from 'react-toastify'
+import { AnimatePresence, motion } from 'framer-motion'
+import { createBrowserClient } from '@supabase/ssr'
+import posthog from 'posthog-js'
 
 import Header from '~/ui/Header'
 import Footer from '~/ui/Footer'
@@ -27,9 +28,6 @@ import cssMain from '~/main.css?url'
 import cssTailwind from '~/tailwind.css?url'
 import { AuthContext, useUser } from './utils/auth'
 import CookieConsent, { cookieConsentGiven } from '~/ui/CookieConsent'
-import { PostHogProvider } from 'posthog-js/react'
-import posthog from 'posthog-js'
-import { post } from 'axios'
 
 export const links: LinksFunction = () => [
   // ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),
@@ -64,11 +62,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderFunctionArgs) =>
   }
 }
 
-interface PostHogWrapperProps {
-  children: React.ReactNode
-}
-
-const PostHogWrapper = ({ children }: PostHogWrapperProps) => {
+const PostHogInit = () => {
   const { user } = useUser()
 
   const [posthogInitialized, setPosthogInitialized] = React.useState(false)
@@ -105,11 +99,7 @@ const PostHogWrapper = ({ children }: PostHogWrapperProps) => {
     });
   }, []);
 
-  return (
-    <PostHogProvider client={posthog}>
-      {children}
-    </PostHogProvider>
-  )
+  return null
 }
 
 export function ErrorBoundary() {
@@ -129,26 +119,26 @@ export function ErrorBoundary() {
         <Links/>
       </head>
       <body className="flex flex-col h-screen bg-gray-900">
-        <PostHogWrapper>
-          <Header/>
-          <main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-            <InfoBox text="Sorry, but an error occurred"/>
-            <div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
-              <strong>{error.message || error.data}</strong>
-              <button className="m-2 p-2 w-32 text-grey-100 bg-gray-900 hover:bg-gray-800"
-                      onClick={() => window.location.reload()}>Try Again
-              </button>
-              {error.stack && <pre className="mt-2">
-                  {JSON.stringify(error.stack, null, 2).replace(/\\n/g, '\n')}
-                </pre>}
-            </div>
-          </main>
-          <Footer/>
-          <ToastContainer/>
-          <BottomNav/>
-          <ScrollRestoration/>
-          <Scripts/>
-        </PostHogWrapper>
+        <Header/>
+        <main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+          <InfoBox text="Sorry, but an error occurred"/>
+          <div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
+            <strong>{error.message || error.data}</strong>
+            <button className="m-2 p-2 w-32 text-grey-100 bg-gray-900 hover:bg-gray-800"
+                    onClick={() => window.location.reload()}>Try Again
+            </button>
+            {error.stack && <pre className="mt-2">
+                {JSON.stringify(error.stack, null, 2).replace(/\\n/g, '\n')}
+              </pre>}
+          </div>
+        </main>
+        <Footer/>
+        <BottomNav/>
+        <ToastContainer/>
+        <CookieConsent />
+        <PostHogInit />
+        <ScrollRestoration/>
+        <Scripts/>
       </body>
     </html>
   );
@@ -188,28 +178,27 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <AuthContext.Provider value={{supabase}}>
             <LocaleContext.Provider value={{locale}}>
-              <PostHogWrapper>
-                <Header/>
-                <main className="relative flex-grow mx-auto mt-16 pb-20 lg:pb-2 w-full text-neutral-300">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={location.pathname}
-                      initial={{x: '-2%', opacity: 0}}
-                      animate={{x: '0', opacity: 1}}
-                      exit={{x: '2%', opacity: 0}}
-                      transition={{duration: 0.2, type: 'tween'}}
-                    >
-                      <Outlet />
-                    </motion.div>
-                  </AnimatePresence>
-                </main>
-                <Footer/>
-                <CookieConsent />
-                <ToastContainer/>
-                <BottomNav/>
-                <ScrollRestoration/>
-                <Scripts/>
-              </PostHogWrapper>
+              <Header/>
+              <main className="relative flex-grow mx-auto mt-16 pb-20 lg:pb-2 w-full text-neutral-300">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{x: '-2%', opacity: 0}}
+                    animate={{x: '0', opacity: 1}}
+                    exit={{x: '2%', opacity: 0}}
+                    transition={{duration: 0.2, type: 'tween'}}
+                  >
+                    <Outlet />
+                  </motion.div>
+                </AnimatePresence>
+              </main>
+              <Footer/>
+              <BottomNav/>
+              <ToastContainer/>
+              <CookieConsent />
+              <PostHogInit />
+              <ScrollRestoration/>
+              <Scripts/>
             </LocaleContext.Provider>
           </AuthContext.Provider>
         </QueryClientProvider>
