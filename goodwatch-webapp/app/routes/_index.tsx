@@ -141,7 +141,7 @@ export default function Index() {
                       <img className="h-5 inline-block" src={imdbLogo} alt="IMDb" title="IMDb"/>,
                       <img className="h-5 inline-block" src={metacriticLogo} alt="Metacritic" title="Metacritic"/>
                       and
-                      <img className="h-5 inline-block" src={rottenLogo} alt="Rotten Tomatoes" title="Rotten Tomatoes"/>.
+                      <img className="h-5 inline-block" src={rottenLogo} alt="Rotten Tomatoes" title="Rotten Tomatoes"/>
                     </span>
                     combined.
                   </p>
