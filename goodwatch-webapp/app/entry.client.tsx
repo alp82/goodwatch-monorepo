@@ -21,7 +21,7 @@ Sentry.init({
     posthog.sentryIntegration({
         organization: 'goodwatch',
         projectId: 'webapp',
-        severityAllowList: ['error', 'info'] // optional: here is set to handle captureMessage (info) and captureException (error)
+        // severityAllowList: ['error', 'fatal']
       }
     )
   ]

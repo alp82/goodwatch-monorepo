@@ -1,5 +1,7 @@
 # TODO's
 ```
+check all sql injection targets
+
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
 
