@@ -1,3 +1,4 @@
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { vitePlugin as remix } from "@remix-run/dev";
 import { installGlobals } from "@remix-run/node";
 import { defineConfig } from "vite";
@@ -11,6 +12,7 @@ export default defineConfig({
   server: {
     port: 3003,
   },
+
   plugins: [
     // remixDevTools(),
     remix({
@@ -30,5 +32,13 @@ export default defineConfig({
         client: ["fs-extra", /^node:/],
       },
     }),
+    sentryVitePlugin({
+      org: "goodwatch",
+      project: "webapp"
+    }),
   ],
+
+  build: {
+    sourcemap: true
+  }
 });

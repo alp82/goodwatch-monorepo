@@ -1,20 +1,5 @@
 # TODO's
 ```
-posthog memory mode
-    https://posthog.com/tutorials/nextjs-cookie-banner#controlling-posthog-persistence-based-on-consent
-
-posthog custom events
-    https://posthog.com/tutorials/remix-analytics#capturing-custom-events
-
-hugchat invalid login
-    http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
-
-tvtropes number to string conversion
-    https://chatgpt.com/g/g-FZtypBX5c-goodwatch-ai/c/9871cbb0-ca78-46a6-8cd1-732519e36f6e
-
-copy movie/tv genome filter:
-    None, N/A
-
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
 
@@ -25,7 +10,18 @@ genome display
     plot spoilers: https://github.com/molefrog/spoiled
     https://www.iconfinder.com/search?q=genome&price=free
 
-errors with double footer
+hugchat invalid login
+    http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
+
+tvtropes number to string conversion
+    https://chatgpt.com/g/g-FZtypBX5c-goodwatch-ai/c/9871cbb0-ca78-46a6-8cd1-732519e36f6e
+
+copy movie/tv genome filter:
+    None, N/A
+    capitalize
+    
+posthog custom events
+    https://posthog.com/tutorials/remix-analytics#capturing-custom-events
 
 error handling: http://localhost:3003/tv/252146-who-killed-him
     fallback?

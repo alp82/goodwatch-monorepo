@@ -1,3 +1,4 @@
+import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix";
 import React, { useEffect } from 'react'
 import type { LinksFunction, LoaderFunction, LoaderFunctionArgs } from '@remix-run/node'
 import {
@@ -106,8 +107,9 @@ export function ErrorBoundary() {
   // TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
   const error = useRouteError()
   console.error(error);
+  captureRemixErrorBoundaryError(error);
   return (
-    <html>
+    (<html>
       <head>
         <title>Oh no!</title>
         <meta charSet="utf-8"/>
@@ -140,12 +142,12 @@ export function ErrorBoundary() {
         <ScrollRestoration/>
         <Scripts/>
       </body>
-    </html>
+    </html>)
   );
 }
 
 
-export default function App() {
+function App() {
   const { locale, env } = useLoaderData<LoaderData>()
   const location = useLocation()
 
@@ -206,3 +208,6 @@ export default function App() {
     </html>
   );
 }
+
+
+export default withSentry(App);
