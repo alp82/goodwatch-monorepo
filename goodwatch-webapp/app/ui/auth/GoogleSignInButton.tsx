@@ -22,7 +22,7 @@ const googleLogo = (
   </svg>
 )
 
-interface GoogleSignInButtonProps {}
+type GoogleSignInButtonProps = {}
 
 export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
   const {supabase} = useSupabase()

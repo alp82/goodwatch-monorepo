@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import ReactPlayer from 'react-player/youtube'
-import Tabs, {Tab} from "~/ui/Tabs";
-import {Videos as VideosType} from "~/server/details.server";
+import Tabs, {type Tab} from "~/ui/Tabs";
+import type {Videos as VideosType} from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
 
 export const allTypes = [
@@ -47,7 +47,7 @@ export default function Videos({ videos }: VideosProps) {
   }
 
   const handleNumberSelection = (tab: Tab) => {
-    setSelectedNumber(parseInt(tab.key) - 1)
+    setSelectedNumber(Number.parseInt(tab.key) - 1)
   }
 
   const videoOpts = {

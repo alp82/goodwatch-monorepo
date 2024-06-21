@@ -1,5 +1,5 @@
 import React from 'react'
-import { StreamingLink } from '~/server/details.server'
+import type { StreamingLink } from '~/server/details.server'
 import tmdb_logo from '~/img/tmdb-logo.svg'
 import { useDetailsTab, useTabLink } from '~/utils/navigation'
 
@@ -18,11 +18,11 @@ export default function StreamingBadges({ links = [], countryCodes = [] }: Strea
     return <>
       <div className="mt-6 h-3 flex gap-2 items-center">
         <small>streaming data from</small>
-        <a href={links.length ? links[0].tmdb_url : 'https://www.themoviedb.org/'} target="_blank" className="">
+        <a href={links.length ? links[0].tmdb_url : 'https://www.themoviedb.org/'} target="_blank" className="" rel="noreferrer">
           <img alt="TMDB" className="h-2 w-auto" src={tmdb_logo} />
         </a>
         <small>and</small>
-        <a href="https://justwatch.com" target="_blank" className="ml-0.5 scale-105" data-original="https://www.justwatch.com">
+        <a href="https://justwatch.com" target="_blank" className="ml-0.5 scale-105" data-original="https://www.justwatch.com" rel="noreferrer">
           <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
         </a>
       </div>
@@ -53,7 +53,7 @@ export default function StreamingBadges({ links = [], countryCodes = [] }: Strea
         <div className="flex flex-wrap items-center gap-3 sm:gap-6">
           {flatrateLinks.map((link, index) => {
             return (
-              <a key={link.display_priority} href={link.stream_url} target="_blank" className="flex items-center gap-2 bg-gray-700 text-sm font-semibold shadow-2xl rounded-xl border-4 border-gray-600 hover:border-gray-500">
+              <a key={link.display_priority} href={link.stream_url} target="_blank" className="flex items-center gap-2 bg-gray-700 text-sm font-semibold shadow-2xl rounded-xl border-4 border-gray-600 hover:border-gray-500" rel="noreferrer">
                 <img
                   className="w-8 h-8 rounded-lg"
                   src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}

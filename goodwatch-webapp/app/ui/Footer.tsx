@@ -80,8 +80,7 @@ const navigation = {
   ],
 }
 
-export interface FooterProps {
-}
+export type FooterProps = {}
 
 export default function Footer({}: FooterProps) {
   return (
@@ -98,7 +97,7 @@ export default function Footer({}: FooterProps) {
             ))}
             <div className="mb-2">
               <a href="https://status.goodwatch.app/status/services"
-                 className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
+                 className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank" rel="noreferrer">
                 Status Page
                 <ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4"/>
               </a>
@@ -119,7 +118,7 @@ export default function Footer({}: FooterProps) {
             </div>
             <div className="mb-2">
               <a href="https://dev.to/t/goodwatch"
-                 className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank">
+                 className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100" target="_blank" rel="noreferrer">
                 Blog
                 <ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4"/>
               </a>
@@ -128,7 +127,7 @@ export default function Footer({}: FooterProps) {
         </nav>
         <div className="mt-10 flex justify-center space-x-10">
           {navigation.social.map((item) => (
-            <a key={item.name} href={item.href} className="text-gray-500 hover:text-gray-400" target="_blank">
+            <a key={item.name} href={item.href} className="text-gray-500 hover:text-gray-400" target="_blank" rel="noreferrer">
               <span className="sr-only">{item.name}</span>
               <item.icon className="h-12 w-12" aria-hidden="true" />
             </a>
@@ -136,11 +135,11 @@ export default function Footer({}: FooterProps) {
         </div>
         <div className="mt-10 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
           <small>powered by</small>
-          <a href="https://www.themoviedb.org" target="_blank" className="">
+          <a href="https://www.themoviedb.org" target="_blank" className="" rel="noreferrer">
             <img alt="TMDB" className="h-3 w-auto" src={tmdbLogo} />
           </a>
           <small>and</small>
-          <a href="https://justwatch.com" target="_blank" className="scale-125 ml-2" data-original="https://www.justwatch.com">
+          <a href="https://justwatch.com" target="_blank" className="scale-125 ml-2" data-original="https://www.justwatch.com" rel="noreferrer">
             <img alt="JustWatch" className="h-3 w-16" src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg" />
           </a>
         </div>

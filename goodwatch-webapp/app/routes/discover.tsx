@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import { json, LoaderFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
+import { json, type LoaderFunction, type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { PrefetchPageLinks, useLoaderData, useNavigation } from '@remix-run/react'
 import { ClockIcon, FilmIcon, FireIcon, StarIcon, TvIcon } from '@heroicons/react/20/solid'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  DiscoverParams,
-  DiscoverResult,
-  DiscoverResults,
-  DiscoverSortBy,
+  type DiscoverParams,
+  type DiscoverResult,
+  type DiscoverResults,
+  type DiscoverSortBy,
   getDiscoverResults,
 } from '~/server/discover.server'
-import { MediaType } from '~/server/search.server'
-import Tabs, { Tab } from '~/ui/Tabs'
+import type { MediaType } from '~/server/search.server'
+import Tabs, { type Tab } from '~/ui/Tabs'
 import { MovieCard } from '~/ui/MovieCard'
 import { TvCard } from '~/ui/TvCard'
 import FilterSelection from '~/ui/filter/FilterSelection'

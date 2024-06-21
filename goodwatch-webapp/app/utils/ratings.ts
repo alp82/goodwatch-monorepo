@@ -1,5 +1,5 @@
-import { MovieDetails, TVDetails } from '~/server/details.server'
-import { DiscoverResult, DiscoverTV } from '~/server/discover.server'
+import type { MovieDetails, TVDetails } from '~/server/details.server'
+import type { DiscoverResult, DiscoverTV } from '~/server/discover.server'
 
 export interface AllRatings {
   tmdb_url: string

@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react'
 import { useLoaderData } from '@remix-run/react'
-import { json, LoaderFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
-import { getDetailsForMovie, MovieDetails } from '~/server/details.server'
+import { json, type LoaderFunction, type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
+import { getDetailsForMovie, type MovieDetails } from '~/server/details.server'
 import useLocale from '~/utils/locale'
 import Details from '~/ui/Details'
 import { useUpdateUrlParams } from '~/hooks/updateUrlParams'
 import { getUserFromRequest } from '~/utils/auth'
-import { getUserData, GetUserDataResult } from '~/server/userData.server'
+import { getUserData, type GetUserDataResult } from '~/server/userData.server'
 
 export function headers() {
   return {

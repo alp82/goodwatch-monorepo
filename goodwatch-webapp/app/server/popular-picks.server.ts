@@ -1,7 +1,7 @@
 import { cached } from '~/utils/cache'
-import { getCountrySpecificDetails, MovieDetails, StreamingProviders, TVDetails } from '~/server/details.server'
+import { getCountrySpecificDetails, MovieDetails, type StreamingProviders, TVDetails } from '~/server/details.server'
 import { executeQuery } from '~/utils/postgres'
-import { AllRatings, getRatingKeys } from '~/utils/ratings'
+import { type AllRatings, getRatingKeys } from '~/utils/ratings'
 import { increasePriorityForMovies, increasePriorityForTVs } from '~/server/utils/priority'
 
 export interface PopularPicksMovie extends AllRatings {

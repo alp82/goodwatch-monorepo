@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
-import { json, LoaderFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
+import { json, type LoaderFunction, type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node'
 import { useLoaderData, useNavigation } from '@remix-run/react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { DiscoverResult } from '~/server/discover.server'
+import type { DiscoverResult } from '~/server/discover.server'
 import { MovieCard } from '~/ui/MovieCard'
 import { TvCard } from '~/ui/TvCard'
-import { getUserData, GetUserDataResult } from '~/server/userData.server'
+import { getUserData, type GetUserDataResult } from '~/server/userData.server'
 import { getUserFromRequest } from '~/utils/auth'
-import { StreamingLink } from '~/server/details.server'
-import WishlistFilter, { FilterByStreaming, SortBy } from '~/ui/filter/WishlistFilter'
+import type { StreamingLink } from '~/server/details.server'
+import WishlistFilter, { type FilterByStreaming, type SortBy } from '~/ui/filter/WishlistFilter'
 
 export function headers() {
   return {

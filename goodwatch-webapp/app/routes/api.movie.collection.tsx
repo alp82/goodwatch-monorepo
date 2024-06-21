@@ -1,6 +1,6 @@
-import {json, LoaderFunctionArgs, LoaderFunction} from '@remix-run/node'
+import {json, type LoaderFunctionArgs, type LoaderFunction} from '@remix-run/node'
 import { getMoviesInCollection } from '~/server/collection.server'
-import { MovieDetails } from '~/server/details.server'
+import type { MovieDetails } from '~/server/details.server'
 
 type LoaderData = {
   collectionId: string

@@ -1,4 +1,4 @@
-import { JSXElementConstructor } from 'react'
+import type { JSXElementConstructor } from 'react'
 
 export interface Tab<T> {
   key: T

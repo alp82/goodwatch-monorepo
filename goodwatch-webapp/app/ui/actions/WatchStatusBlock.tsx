@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { EyeIcon, EyeSlashIcon, HeartIcon, MinusCircleIcon, PlusCircleIcon } from '@heroicons/react/24/solid'
-import { MovieDetails, TVDetails } from '~/server/details.server'
+import type { MovieDetails, TVDetails } from '~/server/details.server'
 import WishListAction from '~/ui/actions/WishListAction'
 import { useLoaderData } from '@remix-run/react'
-import { LoaderData } from '~/routes/movie.$movieKey'
+import type { LoaderData } from '~/routes/movie.$movieKey'
 import WatchHistoryAction from '~/ui/actions/WatchHistoryAction'
 import FavoriteAction from '~/ui/actions/FavoriteAction'
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import {MediaType} from "~/server/search.server";
+import type {MediaType} from "~/server/search.server";
 
 export interface GenresProps {
   genres: string[]

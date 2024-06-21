@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, ActionFunction } from '@remix-run/node'
+import type { ActionFunctionArgs, ActionFunction } from '@remix-run/node'
 import { updateWatchHistory } from '~/server/watchHistory.server'
 import { getUserIdFromRequest } from '~/utils/auth'
 

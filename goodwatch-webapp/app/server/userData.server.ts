@@ -1,7 +1,7 @@
-import { Score } from '~/server/scores.server'
+import type { Score } from '~/server/scores.server'
 import { executeQuery } from '~/utils/postgres'
 import { cached, resetCache } from '~/utils/cache'
-import { StreamingLink } from '~/server/details.server'
+import type { StreamingLink } from '~/server/details.server'
 
 interface UserDataRow {
   media_type: string

@@ -1,5 +1,5 @@
-import { MetaFunction } from '@remix-run/node'
-import { loader } from '~/routes/discover'
+import type { MetaFunction } from '@remix-run/node'
+import type { loader } from '~/routes/discover'
 
 export function headers() {
   return {

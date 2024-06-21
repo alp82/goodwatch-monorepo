@@ -1,5 +1,5 @@
 import React from 'react'
-import { AllRatings } from '~/utils/ratings'
+import type { AllRatings } from '~/utils/ratings'
 import gwLogo from '~/img/goodwatch-logo.png'
 
 export interface RatingsOverlayProps {

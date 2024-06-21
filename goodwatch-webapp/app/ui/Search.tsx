@@ -1,8 +1,8 @@
 import React from 'react'
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { PrefetchPageLinks, useFetcher, useNavigate } from '@remix-run/react'
-import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/form/Autocomplete'
-import { MediaType, SearchResult } from '~/server/search.server'
+import Autocomplete, { type AutocompleteItem, type RenderItemParams } from '~/ui/form/Autocomplete'
+import type { MediaType, SearchResult } from '~/server/search.server'
 import { classNames, titleToDashed } from '~/utils/helpers'
 import placeholder from '~/img/placeholder-poster.png'
 

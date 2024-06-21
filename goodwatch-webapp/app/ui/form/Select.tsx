@@ -1,4 +1,5 @@
-import React, { Fragment, useState } from 'react'
+import type React from 'react'
+import { Fragment, useState } from 'react'
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 

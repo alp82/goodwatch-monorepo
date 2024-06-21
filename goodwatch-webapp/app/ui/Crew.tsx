@@ -1,5 +1,5 @@
 import React from 'react'
-import { Cast } from '~/server/details.server'
+import type { Cast } from '~/server/details.server'
 import { MegaphoneIcon, PencilSquareIcon } from '@heroicons/react/24/solid'
 
 export interface CrewProps {

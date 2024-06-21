@@ -32,7 +32,7 @@ export const useUpdateUrlParams = <T extends {},>({ params }: UseUpdateUrlParams
     return `${pathname}?${new URLSearchParams(nonEmptyNewParams as unknown as Record<string, string>).toString()}`
   }
 
-  const updateParams = (newParams: T, replace: boolean = false) => {
+  const updateParams = (newParams: T, replace = false) => {
     const nonEmptyNewParams = getNonEmptyParams(newParams)
     setCurrentParams(nonEmptyNewParams)
     navigate(constructUrl(newParams), { replace })

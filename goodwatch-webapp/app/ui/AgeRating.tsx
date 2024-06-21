@@ -1,5 +1,5 @@
 import React from 'react'
-import { ContentRatingResult, ReleaseDate } from '~/server/details.server'
+import type { ContentRatingResult, ReleaseDate } from '~/server/details.server'
 
 export interface AgeRatingProps {
   ageRating?: ReleaseDate | ContentRatingResult

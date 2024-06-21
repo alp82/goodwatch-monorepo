@@ -1,9 +1,9 @@
 import { cached } from '~/utils/cache'
 import { VOTE_COUNT_THRESHOLD } from '~/utils/constants'
 import { executeQuery } from '~/utils/postgres'
-import { getCountrySpecificDetails, StreamingLink, StreamingProviders } from '~/server/details.server'
-import { AllRatings, getRatingKeys } from '~/utils/ratings'
-import { StreamingProvider } from '~/server/streaming-providers.server'
+import { getCountrySpecificDetails, type StreamingLink, type StreamingProviders } from '~/server/details.server'
+import { type AllRatings, getRatingKeys } from '~/utils/ratings'
+import type { StreamingProvider } from '~/server/streaming-providers.server'
 
 export type DiscoverSortBy =
   'popularity' |
@@ -131,7 +131,7 @@ async function _getDiscoverResults({
     withStreamingProviders
       .split(',')
       .filter((id) => Number.isInteger(id))
-      .map((id) => parseInt(id))
+      .map((id) => Number.parseInt(id))
       .join(',')
     : null
   joins.push(`INNER JOIN

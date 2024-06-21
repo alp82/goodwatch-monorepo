@@ -3,7 +3,7 @@ import InfoBox from '~/ui/InfoBox'
 import imdbLogo from '~/img/imdb-logo-250.png'
 import metacriticLogo from '~/img/metacritic-logo-250.png'
 import rottenLogo from '~/img/rotten-logo-250.png'
-import { AllRatings } from '~/utils/ratings'
+import type { AllRatings } from '~/utils/ratings'
 import logo from '~/img/goodwatch-logo.png'
 
 export interface RatingsProps {
@@ -37,7 +37,7 @@ export default function Ratings({ ratings, title = 'Ratings', compact = false }:
           </dt>
         </dl>
 
-        <a className="" href={ratings?.imdb_url} target="_blank">
+        <a className="" href={ratings?.imdb_url} target="_blank" rel="noreferrer">
           <dl className={`${ratings?.imdb_url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-black/[.3] w-24 p-3 bg-imdb shadow overflow-hidden text-center flex flex-col justify-center`}>
             <img className="h-6 object-contain" src={imdbLogo} alt="IMDb Logo" />
             <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{ratings?.imdb_user_score_original ? ratings?.imdb_user_score_original.toFixed(1) : '--'}</dd>
@@ -45,7 +45,7 @@ export default function Ratings({ ratings, title = 'Ratings', compact = false }:
           </dl>
         </a>
 
-        <a className="" href={ratings?.metacritic_url} target="_blank">
+        <a className="" href={ratings?.metacritic_url} target="_blank" rel="noreferrer">
           <dl className={`${ratings?.metacritic_url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-white/[.2] w-56 p-3 bg-metacritic shadow overflow-hidden text-center flex flex-col justify-center`}>
             <img className="h-6 object-contain" src={metacriticLogo} alt="Metacritic Logo" />
             <div className="flex justify-center gap-8">
@@ -61,7 +61,7 @@ export default function Ratings({ ratings, title = 'Ratings', compact = false }:
           </dl>
         </a>
 
-        <a className="" href={ratings?.rotten_tomatoes_url} target="_blank">
+        <a className="" href={ratings?.rotten_tomatoes_url} target="_blank" rel="noreferrer">
           <dl className={`${ratings?.rotten_tomatoes_url ? 'hover:border-white/[.45] active:border-white/[.45]' : 'opacity-60'} rounded-lg border-4 border-black/[.3] w-56 p-3 bg-rotten shadow overflow-hidden text-center flex flex-col align-middle`}>
             <img className="h-6 object-contain" src={rottenLogo} alt="Rotten Tomatoes Logo" />
             <div className="flex justify-center gap-8">

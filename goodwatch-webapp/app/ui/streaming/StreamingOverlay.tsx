@@ -1,5 +1,5 @@
 import React from 'react'
-import { StreamingLink, StreamingProviders } from '~/server/details.server'
+import { type StreamingLink, StreamingProviders } from '~/server/details.server'
 
 export interface StreamingOverlayProps {
   links?: StreamingLink[]

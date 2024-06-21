@@ -13,7 +13,7 @@ interface UseSubmitProps<Params> {
 }
 
 export const useAPIAction = <Params extends {}, Result extends {}>({ url, params, onClick }: UseSubmitProps<Params>) => {
-  let revalidator = useRevalidator();
+  const revalidator = useRevalidator();
 
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<Result | null>(null)

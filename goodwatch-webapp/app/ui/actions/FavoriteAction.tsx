@@ -1,9 +1,9 @@
 import React from 'react'
 import { useLoaderData } from '@remix-run/react'
 import UserAction from '~/ui/auth/UserAction'
-import { LoaderData } from '~/routes/movie.$movieKey'
-import { MovieDetails, TVDetails } from '~/server/details.server'
-import { UpdateFavoritesPayload, UpdateFavoritesResult } from '~/server/favorites.server'
+import type { LoaderData } from '~/routes/movie.$movieKey'
+import type { MovieDetails, TVDetails } from '~/server/details.server'
+import type { UpdateFavoritesPayload, UpdateFavoritesResult } from '~/server/favorites.server'
 import { useAPIAction } from '~/utils/api-action'
 
 

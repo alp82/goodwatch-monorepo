@@ -1,4 +1,4 @@
-import { ComponentType, HTMLAttributes } from 'react'
+import type { ComponentType, HTMLAttributes } from 'react'
 import { useLocation } from '@remix-run/react'
 import { CubeIcon, HomeIcon } from '@heroicons/react/24/solid'
 

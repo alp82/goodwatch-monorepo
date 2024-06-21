@@ -1,5 +1,5 @@
-import { json, LoaderFunctionArgs, LoaderFunction } from '@remix-run/node'
-import { getKeywords, Keyword } from '~/server/keywords.server'
+import { json, type LoaderFunctionArgs, type LoaderFunction } from '@remix-run/node'
+import { getKeywords, type Keyword } from '~/server/keywords.server'
 
 type LoaderData = {
   keywords: Awaited<Keyword[]>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Cast as CastType } from '~/server/details.server'
+import type { Cast as CastType } from '~/server/details.server'
 
 export interface CastProps {
   cast: CastType[]

@@ -3,10 +3,10 @@ import { titleToDashed } from '~/utils/helpers'
 import RatingOverlay from '~/ui/ratings/RatingOverlay'
 import React from 'react'
 import { extractRatings } from '~/utils/ratings'
-import { MovieDetails } from '~/server/details.server'
+import type { MovieDetails } from '~/server/details.server'
 import { Poster } from '~/ui/Poster'
 import StreamingOverlay from '~/ui/streaming/StreamingOverlay'
-import { DiscoverResult } from '~/server/discover.server'
+import type { DiscoverResult } from '~/server/discover.server'
 
 interface MovieCardProps {
   movie: MovieDetails | DiscoverResult

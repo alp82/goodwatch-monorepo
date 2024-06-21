@@ -1,12 +1,12 @@
 import React from 'react'
-import { MovieDetails, TVDetails } from '~/server/details.server'
+import type { MovieDetails, TVDetails } from '~/server/details.server'
 import Ratings from '~/ui/ratings/Ratings'
 import Streaming from '~/ui/streaming/Streaming'
 import Keywords from '~/ui/Keywords'
 import Genres from '~/ui/Genres'
 import AgeRating from '~/ui/AgeRating'
 import Description from '~/ui/Description'
-import Tabs, { Tab } from '~/ui/Tabs'
+import Tabs, { type Tab } from '~/ui/Tabs'
 import Videos from '~/ui/Videos'
 import Collection from '~/ui/Collection'
 import Runtime from '~/ui/Runtime'
@@ -21,7 +21,7 @@ import { Poster } from '~/ui/Poster'
 import TrailerOverlay from '~/ui/TrailerOverlay'
 import ScoreSelector from '~/ui/actions/ScoreSelector'
 import WatchStatusBlock from '~/ui/actions/WatchStatusBlock'
-import { DetailsTab, useDetailsTab } from '~/utils/navigation'
+import { type DetailsTab, useDetailsTab } from '~/utils/navigation'
 
 export interface DetailsProps {
   details: MovieDetails | TVDetails

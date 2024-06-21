@@ -1,4 +1,4 @@
-import { ActionFunction, ActionFunctionArgs, json } from '@remix-run/node'
+import { type ActionFunction, type ActionFunctionArgs, json } from '@remix-run/node'
 
 const SENTRY_HOST = "o4507456417169408.ingest.de.sentry.io"
 const SENTRY_PROJECT_IDS = ["4507456420184144"]

@@ -1,11 +1,11 @@
-import React, { ChangeEventHandler, Fragment, useState } from 'react'
+import React, { type ChangeEventHandler, Fragment, useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
 import { ArrowLeftIcon } from '@heroicons/react/24/solid'
 import FilterStreamingProviders from '~/ui/filter/FilterStreamingProviders'
-import { DiscoverParams } from '~/server/discover.server'
+import type { DiscoverParams } from '~/server/discover.server'
 import FilterCountries from '~/ui/filter/FilterCountries'
 import FilterGenres from '~/ui/filter/FilterGenres'
-import { Genre } from '~/server/genres.server'
+import type { Genre } from '~/server/genres.server'
 import NumberInput from '~/ui/form/NumberInput'
 
 interface FilterSelectionParams {

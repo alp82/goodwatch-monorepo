@@ -1,17 +1,17 @@
 import crypto from 'crypto'
 import Redis from 'ioredis'
-import { ClusterOptions } from 'ioredis/built/cluster/ClusterOptions'
-import { ClusterNode } from 'ioredis/built/cluster'
+import type { ClusterOptions } from 'ioredis/built/cluster/ClusterOptions'
+import type { ClusterNode } from 'ioredis/built/cluster'
 
 const clusterNodes: ClusterNode[] = [{
   host: process.env.REDIS_HOST || '',
-  port: parseInt(process.env.REDIS_PORT || ''),
+  port: Number.parseInt(process.env.REDIS_PORT || ''),
 }, {
   host: process.env.REDIS_HOST2 || '',
-  port: parseInt(process.env.REDIS_PORT || ''),
+  port: Number.parseInt(process.env.REDIS_PORT || ''),
 }, {
   host: process.env.REDIS_HOST3 || '',
-  port: parseInt(process.env.REDIS_PORT || ''),
+  port: Number.parseInt(process.env.REDIS_PORT || ''),
 }]
 const redisOptions: ClusterOptions = {
   dnsLookup: (address, callback) => callback(null, address),

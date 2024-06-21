@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import { BookmarkIcon, HashtagIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import { useFetcher } from '@remix-run/react'
-import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/form/Autocomplete'
-import { Genre } from '~/server/genres.server'
+import Autocomplete, { type AutocompleteItem, type RenderItemParams } from '~/ui/form/Autocomplete'
+import type { Genre } from '~/server/genres.server'
 
 export interface FilterGenresProps {
   type: 'movie' | 'tv'
@@ -37,7 +37,7 @@ export default function FilterGenres({ type, withGenres = '', withoutGenres = ''
 
   const handleSelect = (selectedItem: AutocompleteItem) => {
     const updatedGenresToInclude: Genre[] = [...genresToInclude, {
-      id: parseInt(selectedItem.key),
+      id: Number.parseInt(selectedItem.key),
       name: selectedItem.label,
     }]
     onChange(updatedGenresToInclude, genresToExclude)

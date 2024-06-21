@@ -1,5 +1,5 @@
-import { MetaFunction } from '@remix-run/node'
-import { loader } from '~/routes/discover'
+import type { MetaFunction } from '@remix-run/node'
+import type { loader } from '~/routes/discover'
 
 export function headers() {
   return {
@@ -24,7 +24,7 @@ export default function About() {
         information when You use the Service and tells You about Your privacy rights and how the law protects You.</p>
       <p>We use Your Personal data to provide and improve the Service. By using the Service, You agree to the collection
         and use of information in accordance with this Privacy Policy. This Privacy Policy has been created with the
-        help of the <a href="https://www.termsfeed.com/privacy-policy-generator/" target="_blank">Privacy Policy
+        help of the <a href="https://www.termsfeed.com/privacy-policy-generator/" target="_blank" rel="noreferrer">Privacy Policy
           Generator</a>.</p>
       <h2 className="mt-12 mb-4 text-2xl font-bold">Interpretation and Definitions</h2>
       <h3 className="mt-8 mb-2 text-xl font-bold">Interpretation</h3>
@@ -82,7 +82,7 @@ export default function About() {
         </li>
         <li>
           <p><strong>Website</strong> refers to GoodWatch, accessible from <a href="https://goodwatch.app"
-                                                                              rel="external nofollow noopener"
+                                                                              rel="noreferrer external nofollow noopener"
                                                                               target="_blank">https://goodwatch.app</a>
           </p>
         </li>
@@ -155,7 +155,7 @@ export default function About() {
       <p>Cookies can be &quot;Persistent&quot; or &quot;Session&quot; Cookies. Persistent Cookies remain on Your
         personal computer or mobile device when You go offline, while Session Cookies are deleted as soon as You close
         Your web browser. You can learn more about cookies on <a
-          href="https://www.termsfeed.com/blog/cookies/#What_Are_Cookies" target="_blank">TermsFeed website</a> article.
+          href="https://www.termsfeed.com/blog/cookies/#What_Are_Cookies" target="_blank" rel="noreferrer">TermsFeed website</a> article.
       </p>
       <p>We use both Session and Persistent Cookies for the purposes set out below:</p>
       <ul>

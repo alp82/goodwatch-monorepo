@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import { ArrowPathIcon, HashtagIcon, TagIcon, XCircleIcon } from '@heroicons/react/20/solid'
 import { useFetcher } from '@remix-run/react'
-import Autocomplete, { AutocompleteItem, RenderItemParams } from '~/ui/form/Autocomplete'
-import { Keyword } from '~/server/keywords.server'
+import Autocomplete, { type AutocompleteItem, type RenderItemParams } from '~/ui/form/Autocomplete'
+import type { Keyword } from '~/server/keywords.server'
 
 export interface FilterKeywordsProps {
   withKeywords?: string
@@ -45,7 +45,7 @@ export default function FilterKeywords({ withKeywords = '', withoutKeywords = ''
 
   const handleSelect = (selectedItem: AutocompleteItem) => {
     const updatedKeywordsToInclude = [...keywordsToInclude, {
-      id: parseInt(selectedItem.key),
+      id: Number.parseInt(selectedItem.key),
       name: selectedItem.label,
     }]
     onChange(updatedKeywordsToInclude, keywordsToExclude)

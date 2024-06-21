@@ -1,5 +1,5 @@
-import { json, LoaderFunctionArgs, LoaderFunction } from '@remix-run/node'
-import { getStreamingProviders, StreamingProviderResults } from '~/server/streaming-providers.server'
+import { json, type LoaderFunctionArgs, type LoaderFunction } from '@remix-run/node'
+import { getStreamingProviders, type StreamingProviderResults } from '~/server/streaming-providers.server'
 
 export type LoaderData = {
   streamingProviders: StreamingProviderResults,

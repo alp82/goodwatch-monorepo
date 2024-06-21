@@ -1,5 +1,5 @@
 import React from 'react'
-import { AllRatings } from '~/utils/ratings'
+import type { AllRatings } from '~/utils/ratings'
 import RatingBadges from '~/ui/ratings/RatingBadges'
 import { useDetailsTab } from '~/utils/navigation'
 

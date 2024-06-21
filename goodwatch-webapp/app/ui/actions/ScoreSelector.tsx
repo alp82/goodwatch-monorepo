@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { MovieDetails, TVDetails } from '~/server/details.server'
+import type { MovieDetails, TVDetails } from '~/server/details.server'
 import { useLoaderData } from '@remix-run/react'
-import { LoaderData } from '~/routes/movie.$movieKey'
+import type { LoaderData } from '~/routes/movie.$movieKey'
 import ScoreAction from '~/ui/actions/ScoreAction'
-import { Score } from '~/server/scores.server'
+import type { Score } from '~/server/scores.server'
 
 interface ScoreSelectorProps {
   details: MovieDetails | TVDetails

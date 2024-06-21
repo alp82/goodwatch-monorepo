@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { StreamingLink } from '~/server/details.server'
+import type { StreamingLink } from '~/server/details.server'
 import StreamingBadges from '~/ui/streaming/StreamingBadges'
 import FilterCountries from '~/ui/filter/FilterCountries'
 import { useNavigate } from '@remix-run/react'

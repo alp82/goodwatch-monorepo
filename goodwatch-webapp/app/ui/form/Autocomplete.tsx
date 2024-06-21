@@ -1,4 +1,5 @@
-import React, { ReactNode, useEffect, useState } from 'react'
+import type React from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import {CheckIcon, ChevronUpDownIcon, XMarkIcon} from '@heroicons/react/20/solid'
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import { classNames } from '~/utils/helpers'

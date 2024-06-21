@@ -1,5 +1,5 @@
-import { json, LoaderFunctionArgs, LoaderFunction } from '@remix-run/node'
-import { CountriesResults, getCountries } from '~/server/countries.server'
+import { json, type LoaderFunctionArgs, type LoaderFunction } from '@remix-run/node'
+import { type CountriesResults, getCountries } from '~/server/countries.server'
 
 export type LoaderData = {
   countries: CountriesResults,

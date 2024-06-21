@@ -1,6 +1,6 @@
 import { cached } from '~/utils/cache'
 import { executeQuery } from '~/utils/postgres'
-import { AllRatings, getRatingKeys } from '~/utils/ratings'
+import { type AllRatings, getRatingKeys } from '~/utils/ratings'
 import {
   increasePriorityForMovies,
   increasePriorityForTVs,
@@ -32,8 +32,7 @@ export interface ProviderData {
   display_priority: number
 }
 
-export interface ProviderData {
-}
+export type ProviderData = {}
 
 export interface StreamingProviders {
   buy: ProviderData[]

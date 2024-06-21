@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react'
 import { PlayCircleIcon } from '@heroicons/react/24/solid'
-import { Videos } from '~/server/details.server'
+import type { Videos } from '~/server/details.server'
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react'
 import ReactPlayer from 'react-player/youtube'
 
