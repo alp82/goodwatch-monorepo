@@ -1,6 +1,6 @@
 # TODO's
 ```
-check all sql injection targets
+linting, prettier
 
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
@@ -37,6 +37,8 @@ onboarding:
 
 react-query
 offline support
+
+playwright tests
 
 redistribute weight for gw score
 

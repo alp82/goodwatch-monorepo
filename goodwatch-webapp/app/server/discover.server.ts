@@ -58,6 +58,7 @@ export const getDiscoverResults = async (params: DiscoverParams) => {
     target: _getDiscoverResults,
     params,
     ttlMinutes: 60 * 2,
+    // ttlMinutes: 0,
   })
 }
 
@@ -117,13 +118,22 @@ async function _getDiscoverResults({
 
   if (withCast) {
     const castConditions: string[] = []
-    withCast.split(',').forEach((castId) => {
-      castConditions.push(`m.cast @> '[{"id": ${castId}}]'`)
-    })
+    withCast
+      .split(',')
+      .filter((castId) => Number.isInteger(castId))
+      .forEach((castId) => {
+        castConditions.push(`m.cast @> '[{"id": ${castId}}]'`)
+      })
     conditions.push(`(${castConditions.join(' OR ')})`)
   }
 
-  const streamingProviderIds = withStreamingProviders ? withStreamingProviders.split(',').map((id) => parseInt(id)).join(',') : null
+  const streamingProviderIds = withStreamingProviders ?
+    withStreamingProviders
+      .split(',')
+      .filter((id) => Number.isInteger(id))
+      .map((id) => parseInt(id))
+      .join(',')
+    : null
   joins.push(`INNER JOIN
     streaming_provider_links spl
     ON spl.tmdb_id = m.tmdb_id

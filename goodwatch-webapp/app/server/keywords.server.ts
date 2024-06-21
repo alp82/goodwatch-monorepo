@@ -30,11 +30,9 @@ export const getKeywordSearchResults = async (params: KeywordSearchParams): Prom
 }
 
 async function _getKeywordSearchResults({ query }: KeywordSearchParams): Promise<KeywordsResults> {
-  const keywordsResults = await fetch(
+  return await fetch(
     `https://api.themoviedb.org/3/search/keyword?api_key=${process.env.TMDB_API_KEY}&query=${query}`
   ).then((res) => res.json())
-
-  return keywordsResults
 }
 
 export const getKeywords = async ({ keywordIds }: KeywordsParams): Promise<Keyword[]> => {

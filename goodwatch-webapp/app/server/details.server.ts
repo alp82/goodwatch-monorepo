@@ -360,7 +360,7 @@ const movieFields = [
 
 // TODO language
 export async function _getDetailsForMovie({ movieId, country, language }: DetailsMovieParams): Promise<MovieDetails> {
-  const result = await executeQuery(`
+  const query = `
     SELECT
       ${movieFields.map((field) => `m.${field}`).join(', ')},
       json_agg(
@@ -383,19 +383,19 @@ export async function _getDetailsForMovie({ movieId, country, language }: Detail
     ON
       spl.tmdb_id = m.tmdb_id
       AND spl.media_type = 'movie'
-      AND spl.country_code = '${country}'
+      AND spl.country_code = $1
     LEFT JOIN
       streaming_providers sp
     ON
       spl.provider_id = sp.id
     WHERE
-      m.tmdb_id = ${movieId}
+      m.tmdb_id = $2
     GROUP BY
       m.tmdb_id
     ORDER BY
       MIN(sp.display_priority);
-  `);
-  // TODO use sql query params to avoid sql injection
+  `
+  const result = await executeQuery(query, [country, movieId])
 
   if (!result.rows.length) {
     // TODO fallback page
@@ -444,7 +444,7 @@ const tvFields = [
 
 // TODO language
 export async function _getDetailsForTV({ tvId, country, language }: DetailsTVParams): Promise<TVDetails> {
-  const result = await executeQuery(`
+  const query = `
     SELECT
       ${tvFields.map((field) => `t.${field}`).join(', ')},
       json_agg(
@@ -466,19 +466,19 @@ export async function _getDetailsForTV({ tvId, country, language }: DetailsTVPar
     ON
       spl.tmdb_id = t.tmdb_id
       AND spl.media_type = 'tv'
-      AND spl.country_code = '${country}'
+      AND spl.country_code = $1
     LEFT JOIN
       streaming_providers sp
     ON
       spl.provider_id = sp.id
     WHERE
-      t.tmdb_id = ${tvId}
+      t.tmdb_id = $2
     GROUP BY
       t.tmdb_id
     ORDER BY
       MIN(sp.display_priority);
-  `);
-  // TODO use sql query params to avoid sql injection
+  `
+  const result = await executeQuery(query, [country, tvId]);
 
   if (!result.rows.length) {
     // TODO fallback page
