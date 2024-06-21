@@ -1,6 +1,6 @@
+import type { MovieDetails } from "~/server/details.server";
 import { cached } from "~/utils/cache";
 import { executeQuery } from "~/utils/postgres";
-import type { MovieDetails } from "~/server/details.server";
 
 export interface MoviesInCollection {
 	collectionId: string;

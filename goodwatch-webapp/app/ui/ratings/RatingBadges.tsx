@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import InfoBox from "~/ui/InfoBox";
 import gwLogo from "~/img/goodwatch-logo.png";
 import imdbLogo from "~/img/imdb-logo-250.png";
 import metacriticLogo from "~/img/metacritic-logo-250.png";
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png";
 import rottenLogo from "~/img/rotten-logo-250.png";
 import rottenLogoIcon from "~/img/rotten-logo-icon-250.png";
+import InfoBox from "~/ui/InfoBox";
 import type { AllRatings } from "~/utils/ratings";
 
 export interface RatingBadgesProps {

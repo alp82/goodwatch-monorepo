@@ -1,7 +1,7 @@
-import type { Score } from "~/server/scores.server";
-import { executeQuery } from "~/utils/postgres";
-import { cached, resetCache } from "~/utils/cache";
 import type { StreamingLink } from "~/server/details.server";
+import type { Score } from "~/server/scores.server";
+import { cached, resetCache } from "~/utils/cache";
+import { executeQuery } from "~/utils/postgres";
 
 interface UserDataRow {
 	media_type: string;

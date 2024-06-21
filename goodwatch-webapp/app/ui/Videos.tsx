@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import ReactPlayer from "react-player/youtube";
-import Tabs, { type Tab } from "~/ui/Tabs";
 import type { Videos as VideosType } from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
+import Tabs, { type Tab } from "~/ui/Tabs";
 
 export const allTypes = [
 	"trailers",

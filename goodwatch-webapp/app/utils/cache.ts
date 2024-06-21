@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import Redis from "ioredis";
-import type { ClusterOptions } from "ioredis/built/cluster/ClusterOptions";
 import type { ClusterNode } from "ioredis/built/cluster";
+import type { ClusterOptions } from "ioredis/built/cluster/ClusterOptions";
 
 const clusterNodes: ClusterNode[] = [
 	{

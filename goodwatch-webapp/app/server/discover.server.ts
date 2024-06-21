@@ -1,13 +1,13 @@
+import {
+	type StreamingLink,
+	type StreamingProviders,
+	getCountrySpecificDetails,
+} from "~/server/details.server";
+import type { StreamingProvider } from "~/server/streaming-providers.server";
 import { cached } from "~/utils/cache";
 import { VOTE_COUNT_THRESHOLD } from "~/utils/constants";
 import { executeQuery } from "~/utils/postgres";
-import {
-	getCountrySpecificDetails,
-	type StreamingLink,
-	type StreamingProviders,
-} from "~/server/details.server";
 import { type AllRatings, getRatingKeys } from "~/utils/ratings";
-import type { StreamingProvider } from "~/server/streaming-providers.server";
 
 export type DiscoverSortBy =
 	| "popularity"

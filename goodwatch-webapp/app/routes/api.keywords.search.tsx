@@ -1,11 +1,11 @@
 import {
-	json,
-	type LoaderFunctionArgs,
 	type LoaderFunction,
+	type LoaderFunctionArgs,
+	json,
 } from "@remix-run/node";
 import {
-	getKeywordSearchResults,
 	type KeywordsResults,
+	getKeywordSearchResults,
 } from "~/server/keywords.server";
 
 type LoaderData = {

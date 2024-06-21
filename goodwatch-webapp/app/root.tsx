@@ -1,5 +1,3 @@
-import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix";
-import React, { useEffect } from "react";
 import type {
 	LinksFunction,
 	LoaderFunction,
@@ -15,24 +13,26 @@ import {
 	useLocation,
 	useRouteError,
 } from "@remix-run/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ToastContainer } from "react-toastify";
-import { AnimatePresence, motion } from "framer-motion";
+import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix";
 import { createBrowserClient } from "@supabase/ssr";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import posthog from "posthog-js";
+import React, { useEffect } from "react";
+import { ToastContainer } from "react-toastify";
 
-import Header from "~/ui/Header";
 import Footer from "~/ui/Footer";
+import Header from "~/ui/Header";
 import InfoBox from "~/ui/InfoBox";
 import BottomNav from "~/ui/nav/BottomNav";
-import { getLocaleFromRequest, LocaleContext } from "~/utils/locale";
+import { LocaleContext, getLocaleFromRequest } from "~/utils/locale";
 
 import cssToastify from "react-toastify/dist/ReactToastify.css?url";
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url";
 import cssTailwind from "~/tailwind.css?url";
-import { AuthContext, useUser } from "./utils/auth";
 import CookieConsent, { cookieConsentGiven } from "~/ui/CookieConsent";
+import { AuthContext, useUser } from "./utils/auth";
 
 export const links: LinksFunction = () => [
 	// ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),

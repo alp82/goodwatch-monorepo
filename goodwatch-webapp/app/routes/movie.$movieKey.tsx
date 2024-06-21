@@ -1,17 +1,17 @@
-import React, { useEffect } from "react";
-import { useLoaderData } from "@remix-run/react";
 import {
-	json,
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	type MetaFunction,
+	json,
 } from "@remix-run/node";
-import { getDetailsForMovie, type MovieDetails } from "~/server/details.server";
-import useLocale from "~/utils/locale";
-import Details from "~/ui/Details";
+import { useLoaderData } from "@remix-run/react";
+import React, { useEffect } from "react";
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams";
+import { type MovieDetails, getDetailsForMovie } from "~/server/details.server";
+import { type GetUserDataResult, getUserData } from "~/server/userData.server";
+import Details from "~/ui/Details";
 import { getUserFromRequest } from "~/utils/auth";
-import { getUserData, type GetUserDataResult } from "~/server/userData.server";
+import useLocale from "~/utils/locale";
 
 export function headers() {
 	return {

@@ -1,5 +1,3 @@
-import React, { Fragment } from "react";
-import { useLocation } from "react-router";
 import {
 	Disclosure,
 	DisclosureButton,
@@ -11,14 +9,16 @@ import {
 	Transition,
 } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import React, { Fragment } from "react";
+import { useLocation } from "react-router";
 
 import Search from "~/ui/Search";
 import { useUser } from "~/utils/auth";
 
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
 import logo from "~/img/goodwatch-logo.png";
 import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
 import { SignOutLink } from "~/ui/auth/SignOutLink";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
 
 export default function Header() {
 	const location = useLocation();

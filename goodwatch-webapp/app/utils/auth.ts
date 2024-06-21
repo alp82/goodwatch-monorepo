@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
 import type { Session } from "@supabase/auth-js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, parse, serialize } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState } from "react";
 
 // server
 

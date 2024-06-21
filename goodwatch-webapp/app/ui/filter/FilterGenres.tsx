@@ -1,15 +1,15 @@
-import React, { useEffect } from "react";
 import {
 	BookmarkIcon,
 	HashtagIcon,
 	XCircleIcon,
 } from "@heroicons/react/20/solid";
 import { useFetcher } from "@remix-run/react";
+import React, { useEffect } from "react";
+import type { Genre } from "~/server/genres.server";
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
 } from "~/ui/form/Autocomplete";
-import type { Genre } from "~/server/genres.server";
 
 export interface FilterGenresProps {
 	type: "movie" | "tv";

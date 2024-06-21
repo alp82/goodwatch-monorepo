@@ -1,13 +1,13 @@
-import React, { Fragment, useState } from "react";
-import { PlayCircleIcon } from "@heroicons/react/24/solid";
-import type { Videos } from "~/server/details.server";
 import {
 	Dialog,
 	DialogPanel,
 	Transition,
 	TransitionChild,
 } from "@headlessui/react";
+import { PlayCircleIcon } from "@heroicons/react/24/solid";
+import React, { Fragment, useState } from "react";
 import ReactPlayer from "react-player/youtube";
+import type { Videos } from "~/server/details.server";
 
 export interface TrailerOverlayProps {
 	videos: Videos;

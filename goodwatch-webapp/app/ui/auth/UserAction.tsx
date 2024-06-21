@@ -1,13 +1,13 @@
-import React, { useState } from "react";
 import {
 	Description,
 	Dialog,
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react";
+import React, { useState } from "react";
 
-import { useUser } from "~/utils/auth";
 import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
+import { useUser } from "~/utils/auth";
 
 export interface UserActionProps {
 	children: React.ReactElement;

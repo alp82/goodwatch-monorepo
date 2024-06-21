@@ -1,7 +1,7 @@
 import {
-	json,
-	type LoaderFunctionArgs,
 	type LoaderFunction,
+	type LoaderFunctionArgs,
+	json,
 } from "@remix-run/node";
 import { getMoviesInCollection } from "~/server/collection.server";
 import type { MovieDetails } from "~/server/details.server";

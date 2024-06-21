@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
-import { titleToDashed } from "~/utils/helpers";
-import type { Collection as CollectionType } from "~/server/details.server";
+import React, { useEffect } from "react";
 import type { MoviesInCollection } from "~/server/collection.server";
+import type { Collection as CollectionType } from "~/server/details.server";
 import { MovieCard } from "~/ui/MovieCard";
+import { titleToDashed } from "~/utils/helpers";
 
 export interface CollectionProps {
 	collection: CollectionType;

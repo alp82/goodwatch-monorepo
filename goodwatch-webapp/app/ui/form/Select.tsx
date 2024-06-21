@@ -1,5 +1,3 @@
-import type React from "react";
-import { Fragment, useState } from "react";
 import {
 	Listbox,
 	ListboxButton,
@@ -8,6 +6,8 @@ import {
 	Transition,
 } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import type React from "react";
+import { Fragment, useState } from "react";
 
 export interface SelectItem {
 	key: string;

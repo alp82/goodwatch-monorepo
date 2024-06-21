@@ -1,5 +1,5 @@
-import { executeQuery } from "~/utils/postgres";
 import { resetUserDataCache } from "~/server/userData.server";
+import { executeQuery } from "~/utils/postgres";
 
 export type Score = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 

@@ -1,7 +1,7 @@
-import React from "react";
-import tmdbLogo from "~/img/tmdb-logo.svg";
-import discordWhite from "~/img/discord-mark-white.svg";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
+import React from "react";
+import discordWhite from "~/img/discord-mark-white.svg";
+import tmdbLogo from "~/img/tmdb-logo.svg";
 
 const navigation = {
 	main: [

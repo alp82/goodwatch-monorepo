@@ -1,6 +1,6 @@
 import React from "react";
-import type { StreamingLink } from "~/server/details.server";
 import tmdb_logo from "~/img/tmdb-logo.svg";
+import type { StreamingLink } from "~/server/details.server";
 import { useDetailsTab, useTabLink } from "~/utils/navigation";
 
 export interface StreamingBadgesProps {

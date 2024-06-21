@@ -1,12 +1,12 @@
-import { titleToDashed } from "~/utils/helpers";
-import RatingOverlay from "~/ui/ratings/RatingOverlay";
-import React from "react";
-import { extractRatings } from "~/utils/ratings";
-import type { TVDetails } from "~/server/details.server";
-import { Poster } from "~/ui/Poster";
 import { PrefetchPageLinks } from "@remix-run/react";
-import StreamingOverlay from "~/ui/streaming/StreamingOverlay";
+import React from "react";
+import type { TVDetails } from "~/server/details.server";
 import type { DiscoverResult } from "~/server/discover.server";
+import { Poster } from "~/ui/Poster";
+import RatingOverlay from "~/ui/ratings/RatingOverlay";
+import StreamingOverlay from "~/ui/streaming/StreamingOverlay";
+import { titleToDashed } from "~/utils/helpers";
+import { extractRatings } from "~/utils/ratings";
 
 interface TvCardProps {
 	tv: TVDetails | DiscoverResult;

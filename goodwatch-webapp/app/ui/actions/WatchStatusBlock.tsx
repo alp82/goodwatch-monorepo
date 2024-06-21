@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
 	EyeIcon,
 	EyeSlashIcon,
@@ -6,12 +5,13 @@ import {
 	MinusCircleIcon,
 	PlusCircleIcon,
 } from "@heroicons/react/24/solid";
-import type { MovieDetails, TVDetails } from "~/server/details.server";
-import WishListAction from "~/ui/actions/WishListAction";
 import { useLoaderData } from "@remix-run/react";
+import React, { useState } from "react";
 import type { LoaderData } from "~/routes/movie.$movieKey";
-import WatchHistoryAction from "~/ui/actions/WatchHistoryAction";
+import type { MovieDetails, TVDetails } from "~/server/details.server";
 import FavoriteAction from "~/ui/actions/FavoriteAction";
+import WatchHistoryAction from "~/ui/actions/WatchHistoryAction";
+import WishListAction from "~/ui/actions/WishListAction";
 
 export interface WatchStatusBlockProps {
 	details: MovieDetails | TVDetails;

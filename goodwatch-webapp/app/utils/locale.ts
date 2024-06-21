@@ -1,5 +1,5 @@
-import { createContext, useContext } from "react";
 import acceptLanguage from "accept-language-parser";
+import { createContext, useContext } from "react";
 
 export const defaultLocale = {
 	language: "en",

@@ -1,5 +1,5 @@
-import { executeQuery } from "~/utils/postgres";
 import { resetUserDataCache } from "~/server/userData.server";
+import { executeQuery } from "~/utils/postgres";
 
 interface UpdateFavoritesParams {
 	user_id?: string;

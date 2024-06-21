@@ -1,10 +1,3 @@
-import type React from "react";
-import { type ReactNode, useEffect, useState } from "react";
-import {
-	CheckIcon,
-	ChevronUpDownIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid";
 import {
 	Combobox,
 	ComboboxButton,
@@ -12,6 +5,13 @@ import {
 	ComboboxOption,
 	ComboboxOptions,
 } from "@headlessui/react";
+import {
+	CheckIcon,
+	ChevronUpDownIcon,
+	XMarkIcon,
+} from "@heroicons/react/20/solid";
+import type React from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { classNames } from "~/utils/helpers";
 
 export type AutocompleteMode = "select" | "search";

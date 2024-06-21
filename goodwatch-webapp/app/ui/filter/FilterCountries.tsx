@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
-import Select, { type SelectItem } from "~/ui/form/Select";
+import React, { useEffect } from "react";
 import type { Country } from "~/server/countries.server";
+import Select, { type SelectItem } from "~/ui/form/Select";
 
 export interface FilterCountriesProps {
 	type: "movie" | "tv";

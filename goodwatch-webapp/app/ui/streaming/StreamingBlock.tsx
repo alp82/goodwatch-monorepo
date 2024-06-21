@@ -1,8 +1,8 @@
+import { useNavigate } from "@remix-run/react";
 import React, { useState } from "react";
 import type { StreamingLink } from "~/server/details.server";
-import StreamingBadges from "~/ui/streaming/StreamingBadges";
 import FilterCountries from "~/ui/filter/FilterCountries";
-import { useNavigate } from "@remix-run/react";
+import StreamingBadges from "~/ui/streaming/StreamingBadges";
 import { useDetailsTab } from "~/utils/navigation";
 
 export interface StreamingBlockProps {

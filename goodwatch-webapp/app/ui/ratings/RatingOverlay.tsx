@@ -1,6 +1,6 @@
 import React from "react";
-import type { AllRatings } from "~/utils/ratings";
 import gwLogo from "~/img/goodwatch-logo.png";
+import type { AllRatings } from "~/utils/ratings";
 
 export interface RatingsOverlayProps {
 	ratings?: AllRatings;

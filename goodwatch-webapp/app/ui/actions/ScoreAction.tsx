@@ -1,11 +1,11 @@
 import React from "react";
-import UserAction from "~/ui/auth/UserAction";
 import type { MovieDetails, TVDetails } from "~/server/details.server";
 import type {
 	Score,
 	UpdateScoresPayload,
 	UpdateScoresResult,
 } from "~/server/scores.server";
+import UserAction from "~/ui/auth/UserAction";
 import { useAPIAction } from "~/utils/api-action";
 
 export interface ScoreActionProps {

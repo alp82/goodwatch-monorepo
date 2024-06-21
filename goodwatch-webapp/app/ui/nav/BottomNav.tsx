@@ -1,6 +1,6 @@
-import type { ComponentType, HTMLAttributes } from "react";
-import { useLocation } from "@remix-run/react";
 import { CubeIcon, HomeIcon } from "@heroicons/react/24/solid";
+import { useLocation } from "@remix-run/react";
+import type { ComponentType, HTMLAttributes } from "react";
 
 export default function BottomNav() {
 	const location = useLocation();

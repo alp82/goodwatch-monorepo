@@ -1,4 +1,3 @@
-import React, { type ChangeEventHandler, Fragment, useState } from "react";
 import {
 	Dialog,
 	DialogPanel,
@@ -7,11 +6,12 @@ import {
 	TransitionChild,
 } from "@headlessui/react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import FilterStreamingProviders from "~/ui/filter/FilterStreamingProviders";
+import React, { type ChangeEventHandler, Fragment, useState } from "react";
 import type { DiscoverParams } from "~/server/discover.server";
+import type { Genre } from "~/server/genres.server";
 import FilterCountries from "~/ui/filter/FilterCountries";
 import FilterGenres from "~/ui/filter/FilterGenres";
-import type { Genre } from "~/server/genres.server";
+import FilterStreamingProviders from "~/ui/filter/FilterStreamingProviders";
 import NumberInput from "~/ui/form/NumberInput";
 
 interface FilterSelectionParams {

@@ -1,9 +1,9 @@
-import React from "react";
-import { useLocation } from "@remix-run/react";
 import {
 	ClipboardDocumentCheckIcon,
 	ShareIcon,
 } from "@heroicons/react/24/solid";
+import { useLocation } from "@remix-run/react";
+import React from "react";
 import { toast } from "react-toastify";
 
 const isBrowser = typeof window !== "undefined";

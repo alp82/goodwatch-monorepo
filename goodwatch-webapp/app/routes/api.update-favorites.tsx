@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs, ActionFunction } from "@remix-run/node";
+import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node";
 import { updateFavorites } from "~/server/favorites.server";
 import { getUserIdFromRequest } from "~/utils/auth";
 

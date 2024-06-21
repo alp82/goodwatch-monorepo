@@ -1,13 +1,13 @@
-import React from "react";
 import { ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { PrefetchPageLinks, useFetcher, useNavigate } from "@remix-run/react";
+import React from "react";
+import placeholder from "~/img/placeholder-poster.png";
+import type { MediaType, SearchResult } from "~/server/search.server";
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
 } from "~/ui/form/Autocomplete";
-import type { MediaType, SearchResult } from "~/server/search.server";
 import { classNames, titleToDashed } from "~/utils/helpers";
-import placeholder from "~/img/placeholder-poster.png";
 
 export interface SearchAutocompleteItem extends AutocompleteItem {
 	mediaType: MediaType;

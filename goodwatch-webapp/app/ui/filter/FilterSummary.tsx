@@ -1,8 +1,8 @@
-import type { DiscoverFilters, DiscoverParams } from "~/server/discover.server";
-import { useFetcher } from "@remix-run/react";
-import type { StreamingProviderResults } from "~/server/streaming-providers.server";
-import React, { useEffect } from "react";
 import { TagIcon } from "@heroicons/react/20/solid";
+import { useFetcher } from "@remix-run/react";
+import React, { useEffect } from "react";
+import type { DiscoverFilters, DiscoverParams } from "~/server/discover.server";
+import type { StreamingProviderResults } from "~/server/streaming-providers.server";
 
 interface FilterSummaryParams {
 	params: DiscoverParams;

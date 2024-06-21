@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@remix-run/react";
+import { useEffect, useRef, useState } from "react";
 
 export type DetailsTab = "about" | "cast" | "ratings" | "streaming" | "videos";
 

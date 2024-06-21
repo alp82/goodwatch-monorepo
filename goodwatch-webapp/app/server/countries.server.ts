@@ -1,6 +1,6 @@
+import { getCountryName } from "~/server/resources/country-names";
 import { cached } from "~/utils/cache";
 import { executeQuery } from "~/utils/postgres";
-import { getCountryName } from "~/server/resources/country-names";
 
 export interface Country {
 	code: string;

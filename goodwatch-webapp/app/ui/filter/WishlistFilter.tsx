@@ -1,6 +1,6 @@
+import { Radio, RadioGroup } from "@headlessui/react";
 import React, { useState } from "react";
 import { SelectItem } from "~/ui/form/Select";
-import { Radio, RadioGroup } from "@headlessui/react";
 
 export type SortBy =
 	| "most_recently_added"

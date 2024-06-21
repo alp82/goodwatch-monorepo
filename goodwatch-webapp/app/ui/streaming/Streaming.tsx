@@ -1,8 +1,8 @@
+import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
 import React from "react";
+import tmdb_logo from "~/img/tmdb-logo.svg";
 import type { StreamingLink } from "~/server/details.server";
 import InfoBox from "~/ui/InfoBox";
-import tmdb_logo from "~/img/tmdb-logo.svg";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
 
 export interface StreamingProps {
 	links: StreamingLink[];

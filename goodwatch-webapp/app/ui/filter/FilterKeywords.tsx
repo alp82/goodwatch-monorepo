@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import {
 	ArrowPathIcon,
 	HashtagIcon,
@@ -6,11 +5,12 @@ import {
 	XCircleIcon,
 } from "@heroicons/react/20/solid";
 import { useFetcher } from "@remix-run/react";
+import React, { useEffect } from "react";
+import type { Keyword } from "~/server/keywords.server";
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
 } from "~/ui/form/Autocomplete";
-import type { Keyword } from "~/server/keywords.server";
 
 export interface FilterKeywordsProps {
 	withKeywords?: string;

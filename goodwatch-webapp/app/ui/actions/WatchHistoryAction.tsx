@@ -1,12 +1,12 @@
-import React from "react";
 import { useLoaderData } from "@remix-run/react";
-import UserAction from "~/ui/auth/UserAction";
+import React from "react";
 import type { LoaderData } from "~/routes/movie.$movieKey";
 import type { MovieDetails, TVDetails } from "~/server/details.server";
 import type {
 	UpdateWatchHistoryPayload,
 	UpdateWatchHistoryResult,
 } from "~/server/watchHistory.server";
+import UserAction from "~/ui/auth/UserAction";
 import { useAPIAction } from "~/utils/api-action";
 
 export interface WatchHistoryActionProps {

@@ -1,5 +1,5 @@
-import { json, type LoaderFunction } from "@remix-run/node";
-import { getGenresMovie, type GenresResults } from "~/server/genres.server";
+import { type LoaderFunction, json } from "@remix-run/node";
+import { type GenresResults, getGenresMovie } from "~/server/genres.server";
 
 type LoaderData = {
 	genres: Awaited<GenresResults>;

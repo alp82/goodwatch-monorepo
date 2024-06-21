@@ -1,15 +1,3 @@
-import React, { useEffect, useState } from "react";
-import {
-	json,
-	type LoaderFunction,
-	type LoaderFunctionArgs,
-	type MetaFunction,
-} from "@remix-run/node";
-import {
-	PrefetchPageLinks,
-	useLoaderData,
-	useNavigation,
-} from "@remix-run/react";
 import {
 	ClockIcon,
 	FilmIcon,
@@ -17,7 +5,20 @@ import {
 	StarIcon,
 	TvIcon,
 } from "@heroicons/react/20/solid";
+import {
+	type LoaderFunction,
+	type LoaderFunctionArgs,
+	type MetaFunction,
+	json,
+} from "@remix-run/node";
+import {
+	PrefetchPageLinks,
+	useLoaderData,
+	useNavigation,
+} from "@remix-run/react";
 import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { useUpdateUrlParams } from "~/hooks/updateUrlParams";
 import {
 	type DiscoverParams,
 	type DiscoverResult,
@@ -26,13 +27,12 @@ import {
 	getDiscoverResults,
 } from "~/server/discover.server";
 import type { MediaType } from "~/server/search.server";
-import Tabs, { type Tab } from "~/ui/Tabs";
 import { MovieCard } from "~/ui/MovieCard";
+import Tabs, { type Tab } from "~/ui/Tabs";
 import { TvCard } from "~/ui/TvCard";
 import FilterSelection from "~/ui/filter/FilterSelection";
 import FilterSummary from "~/ui/filter/FilterSummary";
 import useLocale, { getLocaleFromRequest } from "~/utils/locale";
-import { useUpdateUrlParams } from "~/hooks/updateUrlParams";
 
 export function headers() {
 	return {

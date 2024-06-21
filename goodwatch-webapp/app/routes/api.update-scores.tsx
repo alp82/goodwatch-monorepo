@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs, ActionFunction } from "@remix-run/node";
+import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node";
 import { updateScores } from "~/server/scores.server";
 import { getUserIdFromRequest } from "~/utils/auth";
 

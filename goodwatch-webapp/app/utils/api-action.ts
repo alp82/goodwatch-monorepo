@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useRevalidator } from "@remix-run/react";
+import { useEffect, useState } from "react";
 
 const loadingProps = {
 	pointerEvents: "none",

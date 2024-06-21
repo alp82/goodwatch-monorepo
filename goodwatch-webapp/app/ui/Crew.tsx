@@ -1,6 +1,6 @@
+import { MegaphoneIcon, PencilSquareIcon } from "@heroicons/react/24/solid";
 import React from "react";
 import type { Cast } from "~/server/details.server";
-import { MegaphoneIcon, PencilSquareIcon } from "@heroicons/react/24/solid";
 
 export interface CrewProps {
 	crew: Cast[];

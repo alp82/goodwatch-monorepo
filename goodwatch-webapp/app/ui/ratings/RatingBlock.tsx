@@ -1,7 +1,7 @@
 import React from "react";
-import type { AllRatings } from "~/utils/ratings";
 import RatingBadges from "~/ui/ratings/RatingBadges";
 import { useDetailsTab } from "~/utils/navigation";
+import type { AllRatings } from "~/utils/ratings";
 
 export interface RatingBlockProps {
 	ratings?: AllRatings;

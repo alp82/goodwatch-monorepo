@@ -1,22 +1,22 @@
-import React, { useState } from "react";
 import {
-	json,
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	type MetaFunction,
+	json,
 } from "@remix-run/node";
 import { useLoaderData, useNavigation } from "@remix-run/react";
 import { AnimatePresence, motion } from "framer-motion";
+import React, { useState } from "react";
+import type { StreamingLink } from "~/server/details.server";
 import type { DiscoverResult } from "~/server/discover.server";
+import { type GetUserDataResult, getUserData } from "~/server/userData.server";
 import { MovieCard } from "~/ui/MovieCard";
 import { TvCard } from "~/ui/TvCard";
-import { getUserData, type GetUserDataResult } from "~/server/userData.server";
-import { getUserFromRequest } from "~/utils/auth";
-import type { StreamingLink } from "~/server/details.server";
 import WishlistFilter, {
 	type FilterByStreaming,
 	type SortBy,
 } from "~/ui/filter/WishlistFilter";
+import { getUserFromRequest } from "~/utils/auth";
 
 export function headers() {
 	return {

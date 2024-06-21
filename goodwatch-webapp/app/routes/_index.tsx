@@ -1,38 +1,38 @@
-import React from "react";
-import type { MetaFunction } from "@remix-run/node";
-import {
-	type HeadersFunction,
-	json,
-	type LoaderFunction,
-	type LoaderFunctionArgs,
-} from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
 import {
 	ArrowDownIcon,
 	CubeIcon,
 	FilmIcon,
 	TvIcon,
 } from "@heroicons/react/24/solid";
+import type { MetaFunction } from "@remix-run/node";
+import {
+	type HeadersFunction,
+	type LoaderFunction,
+	type LoaderFunctionArgs,
+	json,
+} from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+import React from "react";
+import disneyLogo from "~/img/disneyplus-logo.svg";
 import imdbLogo from "~/img/imdb-logo-250.png";
 import metacriticLogo from "~/img/metacritic-logo-250.png";
-import rottenLogo from "~/img/rotten-logo-250.png";
 import netflixLogo from "~/img/netflix-logo.svg";
 import primeLogo from "~/img/primevideo-logo.svg";
-import disneyLogo from "~/img/disneyplus-logo.svg";
-import { MovieCard } from "~/ui/MovieCard";
+import rottenLogo from "~/img/rotten-logo-250.png";
 import {
-	getTrendingMovies,
-	getTrendingTV,
-	type TrendingMovie,
-	type TrendingTV,
-} from "~/server/trending.server";
-import { TvCard } from "~/ui/TvCard";
-import {
-	getPopularPicksMovies,
-	getPopularPicksTV,
 	type PopularPicksMovie,
 	type PopularPicksTV,
+	getPopularPicksMovies,
+	getPopularPicksTV,
 } from "~/server/popular-picks.server";
+import {
+	type TrendingMovie,
+	type TrendingTV,
+	getTrendingMovies,
+	getTrendingTV,
+} from "~/server/trending.server";
+import { MovieCard } from "~/ui/MovieCard";
+import { TvCard } from "~/ui/TvCard";
 import { getLocaleFromRequest } from "~/utils/locale";
 
 export const headers: HeadersFunction = () => {

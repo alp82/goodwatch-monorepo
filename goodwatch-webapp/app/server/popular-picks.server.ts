@@ -1,16 +1,16 @@
-import { cached } from "~/utils/cache";
 import {
-	getCountrySpecificDetails,
 	MovieDetails,
 	type StreamingProviders,
 	TVDetails,
+	getCountrySpecificDetails,
 } from "~/server/details.server";
-import { executeQuery } from "~/utils/postgres";
-import { type AllRatings, getRatingKeys } from "~/utils/ratings";
 import {
 	increasePriorityForMovies,
 	increasePriorityForTVs,
 } from "~/server/utils/priority";
+import { cached } from "~/utils/cache";
+import { executeQuery } from "~/utils/postgres";
+import { type AllRatings, getRatingKeys } from "~/utils/ratings";
 
 export interface PopularPicksMovie extends AllRatings {
 	tmdb_id: number;

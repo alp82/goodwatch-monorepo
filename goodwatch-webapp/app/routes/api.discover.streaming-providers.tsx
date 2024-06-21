@@ -1,11 +1,11 @@
 import {
-	json,
-	type LoaderFunctionArgs,
 	type LoaderFunction,
+	type LoaderFunctionArgs,
+	json,
 } from "@remix-run/node";
 import {
-	getStreamingProviders,
 	type StreamingProviderResults,
+	getStreamingProviders,
 } from "~/server/streaming-providers.server";
 
 export type LoaderData = {
