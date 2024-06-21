@@ -322,7 +322,7 @@ export const getCountrySpecificDetails = (
 	details.alternative_title = alternative_titles.length
 		? alternative_titles[0].title
 		: null;
-	delete details.alternative_titles;
+	details.alternative_titles = undefined;
 
 	if (Array.isArray(details.certifications)) {
 		const certifications = (details.certifications || []).filter(
@@ -333,15 +333,12 @@ export const getCountrySpecificDetails = (
 			? certifications[0].release_dates
 			: null;
 	} else {
-		const certifications = (details.certifications || {})[
-			country.toUpperCase()
-		];
+		const certifications = details.certifications?.[country.toUpperCase()];
 		details.certifications = certifications || null;
 	}
 
-	const streaming_providers = (details.streaming_providers || {})[
-		country.toUpperCase()
-	];
+	const streaming_providers =
+		details.streaming_providers?.[country.toUpperCase()];
 	details.streaming_providers = streaming_providers || null;
 
 	const translations = (details.translations || []).filter(

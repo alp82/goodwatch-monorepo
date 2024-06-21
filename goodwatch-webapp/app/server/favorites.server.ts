@@ -31,7 +31,7 @@ export const updateFavorites = async ({
 	}
 
 	const query =
-		action == "add"
+		action === "add"
 			? `
     INSERT INTO user_favorites (user_id, tmdb_id, media_type, updated_at)
     VALUES ($1, $2, $3, NOW())

@@ -14,13 +14,13 @@ export default function Streaming({
 	countryCodes = [],
 }: StreamingProps) {
 	const flatrateLinks = (links || []).filter(
-		(link: StreamingLink) => link.stream_type == "flatrate",
+		(link: StreamingLink) => link.stream_type === "flatrate",
 	);
 	const buyLinks = (links || []).filter(
-		(link: StreamingLink) => link.stream_type == "buy",
+		(link: StreamingLink) => link.stream_type === "buy",
 	);
 	const rentLinks = (links || []).filter(
-		(link: StreamingLink) => link.stream_type == "rent",
+		(link: StreamingLink) => link.stream_type === "rent",
 	);
 
 	const hasFlatrate = Boolean(flatrateLinks.length);

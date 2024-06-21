@@ -10,7 +10,7 @@ export default function Runtime({ minutes }: RuntimeProps) {
 	}
 
 	const h = Math.floor(minutes / 60);
-	const m = isNaN(minutes) ? 0 : minutes % 60;
+	const m = Number.isNaN(minutes) ? 0 : minutes % 60;
 	return (
 		<>
 			{(h > 0 || m > 0) && (

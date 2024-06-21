@@ -31,7 +31,7 @@ export const updateWatchHistory = async ({
 	}
 
 	const query =
-		action == "add"
+		action === "add"
 			? `
     INSERT INTO user_watch_history (user_id, tmdb_id, media_type, updated_at)
     VALUES ($1, $2, $3, NOW())

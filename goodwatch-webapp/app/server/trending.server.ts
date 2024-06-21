@@ -71,7 +71,7 @@ export async function _getTrendingMovies({
     ORDER BY
       popularity;
   `);
-	if (!result.rows.length) throw Error(`no trending movies found`);
+	if (!result.rows.length) throw Error("no trending movies found");
 
 	increasePriorityForMovies(result.rows.map((row) => row.tmdb_id));
 	return result.rows.map((row) =>
@@ -113,7 +113,7 @@ export async function _getTrendingTV({
     ORDER BY
       popularity;
   `);
-	if (!result.rows.length) throw Error(`no trending tv shows found`);
+	if (!result.rows.length) throw Error("no trending tv shows found");
 
 	increasePriorityForTVs(result.rows.map((row) => row.tmdb_id));
 	return result.rows.map((row) =>

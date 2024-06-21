@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import Redis from "ioredis";
 import type { ClusterNode } from "ioredis/built/cluster";
 import type { ClusterOptions } from "ioredis/built/cluster/ClusterOptions";

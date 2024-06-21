@@ -10,7 +10,7 @@ export default function BottomNav() {
 		Icon: ComponentType<HTMLAttributes<SVGElement>>,
 		url: string,
 	) => {
-		const isActive = location.pathname == url;
+		const isActive = location.pathname === url;
 		return (
 			<a
 				href={url}

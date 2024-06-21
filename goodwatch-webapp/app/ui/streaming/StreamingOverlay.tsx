@@ -10,7 +10,7 @@ export interface StreamingOverlayProps {
 
 export default function StreamingOverlay({ links }: StreamingOverlayProps) {
 	// const hasProviders = providers?.flatrate && providers.flatrate.length > 0
-	const hasProviders = links && links.length;
+	const hasProviders = links?.length;
 
 	return (
 		<div className="absolute bottom-1 left-1 w-full overflow-hidden flex items-center gap-1 opacity-80">

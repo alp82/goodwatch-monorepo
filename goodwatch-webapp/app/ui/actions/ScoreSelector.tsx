@@ -67,7 +67,7 @@ export default function ScoreSelector({ details }: ScoreSelectorProps) {
 
 	const handleClick = (index: Score | null) => {
 		setScore((previousScore) => {
-			const clearingScore = previousScore == index;
+			const clearingScore = previousScore === index;
 			if (clearingScore) {
 				setClearedScore(index);
 				return null;

@@ -37,7 +37,7 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 					<div
 						className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} h-full rounded-tl-md`}
 						style={{ width: `${progressPosition}%` }}
-					></div>
+					/>
 				</>
 			)}
 		</div>

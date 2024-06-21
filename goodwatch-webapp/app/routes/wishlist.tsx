@@ -122,13 +122,14 @@ export default function Wishlist() {
 				new Date(b.onWishListSince).getTime() -
 				new Date(a.onWishListSince).getTime()
 			);
-		} else if (a.onWishListSince && !b.onWishListSince) {
-			return -1;
-		} else if (!a.onWishListSince && b.onWishListSince) {
-			return 1;
-		} else {
-			return 0;
 		}
+		if (a.onWishListSince && !b.onWishListSince) {
+			return -1;
+		}
+		if (!a.onWishListSince && b.onWishListSince) {
+			return 1;
+		}
+		return 0;
 	});
 
 	wishlist.forEach((result: WishListItem) => {
@@ -166,7 +167,9 @@ export default function Wishlist() {
 			/>
 
 			<div
-				className={`relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4`}
+				className={
+					"relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+				}
 			>
 				<AnimatePresence initial={false}>
 					{navigation.state === "loading" && (
