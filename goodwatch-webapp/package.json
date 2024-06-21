@@ -33,6 +33,7 @@
     "react-toastify": "^10.0.4"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.8.2",
     "@remix-run/dev": "^2.9.2",
     "@remix-run/eslint-config": "^2.9.2",
     "@tailwindcss/aspect-ratio": "^0.4.2",
