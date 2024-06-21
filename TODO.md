@@ -1,7 +1,5 @@
 # TODO's
 ```
-linting, prettier
-
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
 
@@ -78,6 +76,8 @@ show in details
 when last season/episode was released
 
 combined collection score
+
+fix all linting errors
 
 user favs: actors, directors, writers
 

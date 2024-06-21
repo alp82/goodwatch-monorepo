@@ -70,7 +70,7 @@ export async function _getPopularPicksMovies({
       RANDOM()
     LIMIT 10;
   `);
-	if (!result.rows.length) throw Error(`no popular picks for movies found`);
+	if (!result.rows.length) throw Error("no popular picks for movies found");
 
 	increasePriorityForMovies(result.rows.map((row) => row.tmdb_id));
 	return result.rows.map((row) =>
@@ -109,7 +109,7 @@ export async function _getPopularPicksTV({
       RANDOM()
     LIMIT 10;
   `);
-	if (!result.rows.length) throw Error(`no popular picks for tv shows found`);
+	if (!result.rows.length) throw Error("no popular picks for tv shows found");
 
 	increasePriorityForTVs(result.rows.map((row) => row.tmdb_id));
 	return result.rows.map((row) =>
