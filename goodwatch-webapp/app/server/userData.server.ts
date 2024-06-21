@@ -1,66 +1,68 @@
-import type { Score } from '~/server/scores.server'
-import { executeQuery } from '~/utils/postgres'
-import { cached, resetCache } from '~/utils/cache'
-import type { StreamingLink } from '~/server/details.server'
+import type { Score } from "~/server/scores.server";
+import { executeQuery } from "~/utils/postgres";
+import { cached, resetCache } from "~/utils/cache";
+import type { StreamingLink } from "~/server/details.server";
 
 interface UserDataRow {
-  media_type: string
-  tmdb_id: number
-  on_wishlist: boolean
-  on_watch_history: boolean
-  on_favorites: boolean
-  score: Score | null
-  review: string | null
-  updated_at_wishlist: Date | null
-  updated_at_watch_history: Date | null
-  updated_at_favorites: Date | null
-  updated_at_scores: Date | null
-  title: string
-  poster_path: string
-  aggregated_overall_score_normalized_percent: number | null
-  streaming_links: StreamingLink[]
+	media_type: string;
+	tmdb_id: number;
+	on_wishlist: boolean;
+	on_watch_history: boolean;
+	on_favorites: boolean;
+	score: Score | null;
+	review: string | null;
+	updated_at_wishlist: Date | null;
+	updated_at_watch_history: Date | null;
+	updated_at_favorites: Date | null;
+	updated_at_scores: Date | null;
+	title: string;
+	poster_path: string;
+	aggregated_overall_score_normalized_percent: number | null;
+	streaming_links: StreamingLink[];
 }
 
 type GetUserDataParams = {
-  user_id?: string
-}
+	user_id?: string;
+};
 
 export type GetUserDataResult = {
-  [media_type: string]: {
-    [tmdb_id: string]: {
-      onWishList: boolean
-      onWatchHistory: boolean
-      onFavorites: boolean
-      score: Score | null
-      review: string | null
-      onWishListSince: Date | null
-      onWatchHistorySince: Date | null
-      onFavoritesSince: Date | null
-      onScoresSince: Date | null
-      title: string
-      poster_path: string
-      aggregated_overall_score_normalized_percent: number | null
-      streaming_links: StreamingLink[]
-    }
-  }
-}
+	[media_type: string]: {
+		[tmdb_id: string]: {
+			onWishList: boolean;
+			onWatchHistory: boolean;
+			onFavorites: boolean;
+			score: Score | null;
+			review: string | null;
+			onWishListSince: Date | null;
+			onWatchHistorySince: Date | null;
+			onFavoritesSince: Date | null;
+			onScoresSince: Date | null;
+			title: string;
+			poster_path: string;
+			aggregated_overall_score_normalized_percent: number | null;
+			streaming_links: StreamingLink[];
+		};
+	};
+};
 
 export const getUserData = async (params: GetUserDataParams) => {
-  return await cached<GetUserDataParams, GetUserDataResult>({
-    name: 'user-data',
-    target: _getUserData,
-    params,
-    ttlMinutes: 10,
-    // ttlMinutes: 0,
-  })
-}
+	return await cached<GetUserDataParams, GetUserDataResult>({
+		name: "user-data",
+		target: _getUserData,
+		params,
+		ttlMinutes: 10,
+		// ttlMinutes: 0,
+	});
+};
 
-async function _getUserData({ user_id }: GetUserDataParams): Promise<GetUserDataResult> {
-  if (!user_id) {
-    return {} as GetUserDataResult
-  }
+async function _getUserData({
+	user_id,
+}: GetUserDataParams): Promise<GetUserDataResult> {
+	if (!user_id) {
+		return {} as GetUserDataResult;
+	}
 
-  const query = `
+	const query = `
 WITH combined AS (
     SELECT 
         scores.media_type,
@@ -187,71 +189,80 @@ GROUP BY
   movies.aggregated_overall_score_normalized_percent,
   tv.aggregated_overall_score_normalized_percent
 ORDER BY combined.tmdb_id DESC;
-  `
+  `;
 
-  // TODO country param
-  const params = [user_id, 'DE']
-  const result = await executeQuery<UserDataRow>(query, params)
+	// TODO country param
+	const params = [user_id, "DE"];
+	const result = await executeQuery<UserDataRow>(query, params);
 
-  const userData = {} as GetUserDataResult
+	const userData = {} as GetUserDataResult;
 
-  result.rows.forEach((row) => {
-    const {
-      media_type,
-      tmdb_id,
-      on_wishlist,
-      on_watch_history,
-      on_favorites,
-      score,
-      review,
-      updated_at_wishlist,
-      updated_at_watch_history,
-      updated_at_favorites,
-      updated_at_scores,
-    } = row
+	result.rows.forEach((row) => {
+		const {
+			media_type,
+			tmdb_id,
+			on_wishlist,
+			on_watch_history,
+			on_favorites,
+			score,
+			review,
+			updated_at_wishlist,
+			updated_at_watch_history,
+			updated_at_favorites,
+			updated_at_scores,
+		} = row;
 
-    if (!userData[media_type]) {
-      userData[media_type] = {}
-    }
+		if (!userData[media_type]) {
+			userData[media_type] = {};
+		}
 
-    const providerTypeKeys = row.streaming_links.map(
-      (link) => `${link.provider_id}-${link.streaming_type}`
-    )
-    const streaming_links = row.streaming_links.filter(
-      (link, index) => index === providerTypeKeys.indexOf(`${link.provider_id}-${link.streaming_type}`)
-    )
+		const providerTypeKeys = row.streaming_links.map(
+			(link) => `${link.provider_id}-${link.streaming_type}`,
+		);
+		const streaming_links = row.streaming_links.filter(
+			(link, index) =>
+				index ===
+				providerTypeKeys.indexOf(`${link.provider_id}-${link.streaming_type}`),
+		);
 
-    userData[media_type][tmdb_id] = {
-      onWishList: on_wishlist,
-      onWatchHistory: on_watch_history,
-      onFavorites: on_favorites,
-      score,
-      review,
-      onWishListSince: updated_at_wishlist ? new Date(updated_at_wishlist) : null,
-      onWatchHistorySince: updated_at_watch_history ? new Date(updated_at_watch_history) : null,
-      onFavoritesSince: updated_at_favorites ? new Date(updated_at_favorites) : null,
-      onScoresSince: updated_at_scores ? new Date(updated_at_scores) : null,
-      title: row.title,
-      poster_path: row.poster_path,
-      aggregated_overall_score_normalized_percent: row.aggregated_overall_score_normalized_percent,
-      streaming_links,
-    }
-  })
+		userData[media_type][tmdb_id] = {
+			onWishList: on_wishlist,
+			onWatchHistory: on_watch_history,
+			onFavorites: on_favorites,
+			score,
+			review,
+			onWishListSince: updated_at_wishlist
+				? new Date(updated_at_wishlist)
+				: null,
+			onWatchHistorySince: updated_at_watch_history
+				? new Date(updated_at_watch_history)
+				: null,
+			onFavoritesSince: updated_at_favorites
+				? new Date(updated_at_favorites)
+				: null,
+			onScoresSince: updated_at_scores ? new Date(updated_at_scores) : null,
+			title: row.title,
+			poster_path: row.poster_path,
+			aggregated_overall_score_normalized_percent:
+				row.aggregated_overall_score_normalized_percent,
+			streaming_links,
+		};
+	});
 
-  return userData
+	return userData;
 }
 
 type ResetUserDataCacheParams = {
-  user_id?: string
-}
+	user_id?: string;
+};
 
 export const resetUserDataCache = async (params: ResetUserDataCacheParams) => {
-  if (!params.user_id) {
-    return 0
-  }
+	if (!params.user_id) {
+		return 0;
+	}
 
-  return await resetCache({
-    name: 'user-data',
-    params,
-  })
-}
+	return await resetCache({
+		name: "user-data",
+		params,
+	});
+};

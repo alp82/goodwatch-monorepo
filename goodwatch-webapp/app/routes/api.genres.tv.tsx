@@ -1,16 +1,16 @@
-import { json, type LoaderFunction } from '@remix-run/node'
-import { getGenresTV, type GenresResults } from '~/server/genres.server'
+import { json, type LoaderFunction } from "@remix-run/node";
+import { getGenresTV, type GenresResults } from "~/server/genres.server";
 
 type LoaderData = {
-  genres: Awaited<GenresResults>
+	genres: Awaited<GenresResults>;
 };
 
 export const loader: LoaderFunction = async () => {
-  const genres = await getGenresTV({
-    type: 'default',
-  })
+	const genres = await getGenresTV({
+		type: "default",
+	});
 
-  return json<LoaderData>({
-    genres,
-  })
-}
+	return json<LoaderData>({
+		genres,
+	});
+};
