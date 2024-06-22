@@ -6,10 +6,6 @@ streaming providers from tmdb api with all country ranks
 init scripts only insert new and ignore existing ids
 copy/combine scripts only copy diffs to postgres
 
-genome display
-    plot spoilers: https://github.com/molefrog/spoiled
-    https://www.iconfinder.com/search?q=genome&price=free
-
 hugchat invalid login
     http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
 
@@ -19,6 +15,7 @@ tvtropes number to string conversion
 copy movie/tv genome filter:
     None, N/A
     capitalize
+    order categories
     
 posthog custom events
     https://posthog.com/tutorials/remix-analytics#capturing-custom-events
@@ -281,6 +278,7 @@ db architecture: performance and scalability
 caching strategy
 remix: keep it simple with tailwind
 monorepo design
+linting with biomejs
 deployment with docker compose
 monitoring with uptime kuma
 authentication

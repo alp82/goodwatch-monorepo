@@ -15,7 +15,10 @@ export interface Collection {
 	movie_ids: number[];
 }
 
+export type DNA = Record<string, Record<string, string[]>>;
+
 export interface BaseDetails extends AllRatings {
+	dna: DNA;
 	genres: string[];
 	keywords: string[];
 	release_year: string;
@@ -31,8 +34,6 @@ export interface ProviderData {
 	provider_name: string;
 	display_priority: number;
 }
-
-export type ProviderData = {};
 
 export interface StreamingProviders {
 	buy: ProviderData[];
@@ -354,8 +355,8 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 		name: "details-movie",
 		target: _getDetailsForMovie,
 		params,
-		ttlMinutes: 30,
-		// ttlMinutes: 0,
+		// ttlMinutes: 30,
+		ttlMinutes: 0,
 	});
 };
 
@@ -366,6 +367,7 @@ const movieFields = [
 	"certifications",
 	"crew",
 	"collection",
+	"dna",
 	"keywords",
 	"genres",
 	"poster_path",
@@ -453,6 +455,7 @@ const tvFields = [
 	"cast",
 	"certifications",
 	"crew",
+	"dna",
 	"keywords",
 	"genres",
 	"number_of_episodes",

@@ -1,33 +1,39 @@
-import React from "react";
-import type { MovieDetails, TVDetails } from "~/server/details.server";
-import AgeRating from "~/ui/AgeRating";
-import Cast from "~/ui/Cast";
-import Collection from "~/ui/Collection";
-import Crew from "~/ui/Crew";
-import Description from "~/ui/Description";
-import Genres from "~/ui/Genres";
-import Keywords from "~/ui/Keywords";
-import { Poster } from "~/ui/Poster";
-import Runtime from "~/ui/Runtime";
-import ShareButton from "~/ui/ShareButton";
-import Tabs, { type Tab } from "~/ui/Tabs";
-import TrailerOverlay from "~/ui/TrailerOverlay";
-import Videos from "~/ui/Videos";
-import ScoreSelector from "~/ui/actions/ScoreSelector";
-import WatchStatusBlock from "~/ui/actions/WatchStatusBlock";
-import RatingBlock from "~/ui/ratings/RatingBlock";
-import RatingOverlay from "~/ui/ratings/RatingOverlay";
-import Ratings from "~/ui/ratings/Ratings";
-import Streaming from "~/ui/streaming/Streaming";
-import StreamingBlock from "~/ui/streaming/StreamingBlock";
-import { type DetailsTab, useDetailsTab } from "~/utils/navigation";
-import { extractRatings } from "~/utils/ratings";
+import React from "react"
+import type {
+	ContentRatingResult,
+	MovieDetails,
+	ReleaseDate,
+	TVDetails,
+} from "~/server/details.server"
+import AgeRating from "~/ui/AgeRating"
+import Cast from "~/ui/Cast"
+import Collection from "~/ui/Collection"
+import Crew from "~/ui/Crew"
+import DNADisplay from "~/ui/DNADisplay"
+import Description from "~/ui/Description"
+import Genres from "~/ui/Genres"
+import Keywords from "~/ui/Keywords"
+import { Poster } from "~/ui/Poster"
+import Runtime from "~/ui/Runtime"
+import ShareButton from "~/ui/ShareButton"
+import Tabs, { type Tab } from "~/ui/Tabs"
+import TrailerOverlay from "~/ui/TrailerOverlay"
+import Videos from "~/ui/Videos"
+import ScoreSelector from "~/ui/actions/ScoreSelector"
+import WatchStatusBlock from "~/ui/actions/WatchStatusBlock"
+import RatingBlock from "~/ui/ratings/RatingBlock"
+import RatingOverlay from "~/ui/ratings/RatingOverlay"
+import Ratings from "~/ui/ratings/Ratings"
+import Streaming from "~/ui/streaming/Streaming"
+import StreamingBlock from "~/ui/streaming/StreamingBlock"
+import { type DetailsTab, useDetailsTab } from "~/utils/navigation"
+import { extractRatings } from "~/utils/ratings"
 
 export interface DetailsProps {
-	details: MovieDetails | TVDetails;
-	tab: string;
-	country: string;
-	language: string;
+	details: MovieDetails | TVDetails
+	tab: string
+	country: string
+	language: string
 }
 
 export default function Details({
@@ -36,12 +42,13 @@ export default function Details({
 	country,
 	language,
 }: DetailsProps) {
-	const ratings = extractRatings(details);
+	const ratings = extractRatings(details)
 
 	const {
 		backdrop_path,
 		cast,
 		crew,
+		dna,
 		genres,
 		keywords,
 		media_type,
@@ -53,30 +60,29 @@ export default function Details({
 		tagline,
 		title,
 		videos,
-	} = details;
-	let ageRating;
-	let collection;
-	let number_of_episodes;
-	let number_of_seasons;
-	let runtime;
+	} = details
+
+	let ageRating: ContentRatingResult | ReleaseDate | undefined
+	let collection: MovieDetails["collection"] | undefined
+	let number_of_episodes: number | undefined
+	let number_of_seasons: number | undefined
+	let runtime: number | undefined
 	if (media_type === "movie") {
 		ageRating = (details.certifications || []).find(
 			(release) => release.certification,
-		);
-		collection = details.collection;
-		runtime = details.runtime;
+		)
+		collection = details.collection
+		runtime = details.runtime
 	} else {
-		ageRating = (details.certifications || []).find(
-			(release) => release.rating,
-		);
-		number_of_episodes = details.number_of_episodes;
-		number_of_seasons = details.number_of_seasons;
+		ageRating = (details.certifications || []).find((release) => release.rating)
+		number_of_episodes = details.number_of_episodes
+		number_of_seasons = details.number_of_seasons
 	}
 
-	const { activeTab, handleSwitchToTab } = useDetailsTab();
+	const { activeTab, handleSwitchToTab } = useDetailsTab()
 	const handleTabSelection = (tab: Tab<DetailsTab>) => {
-		handleSwitchToTab(tab.key);
-	};
+		handleSwitchToTab(tab.key)
+	}
 
 	const existingTabs: DetailsTab[] = [
 		"about",
@@ -84,14 +90,14 @@ export default function Details({
 		"ratings",
 		"streaming",
 		"videos",
-	];
+	]
 	const detailsTabs = existingTabs.map((tab) => {
 		return {
 			key: tab,
 			label: tab.charAt(0).toUpperCase() + tab.slice(1),
 			current: tab === activeTab,
-		};
-	});
+		}
+	})
 
 	// const ratingsSeasonsFetcher = useFetcher()
 	// useEffect(() => {
@@ -160,7 +166,7 @@ export default function Details({
 				</>
 			)}
 		</>
-	);
+	)
 
 	return (
 		<>
@@ -199,7 +205,10 @@ export default function Details({
 									</div>
 								) : null}
 							</div>
-							<Genres genres={genres} type={media_type} />
+							<div className="mb-4 flex items-center gap-4">
+								<DNADisplay dna={dna} />
+								<Genres genres={genres} type={media_type} />
+							</div>
 							<div className="sm:hidden mt-8 flex flex-wrap justify-center gap-4 w-full">
 								<div className="mt-2 mr-4 relative flex-none max-w-full sm:w-52">
 									<TrailerOverlay videos={videos || []} />
@@ -262,5 +271,5 @@ export default function Details({
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">{mainInfo}</div>
 			</div>
 		</>
-	);
+	)
 }
