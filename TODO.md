@@ -1,5 +1,38 @@
 # TODO's
 ```
+discover
+    with cast error
+    return count: "showing first 100 results"
+
+genome tab
+
+react-query
+offline support
+
+server resource monitoring
+    https://grafana.com/orgs/coinmatica/stacks/800134
+
+discover sidebar redesign
+    https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
+    filter inspiration:
+        https://www.yidio.com/movies
+        https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
+    discover: unselect streaming
+    discover: unselect country
+    discover age ratings
+    discover cast / crew
+    discover director
+    discover scores
+    discover budget & revenue
+    disocver keywords and tropes
+    
+backups
+    db's
+    configs
+
+cookie consent update
+    inspiration: https://www.smashingmagazine.com
+    
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
 
@@ -13,7 +46,7 @@ tvtropes number to string conversion
     https://chatgpt.com/g/g-FZtypBX5c-goodwatch-ai/c/9871cbb0-ca78-46a6-8cd1-732519e36f6e
 
 copy movie/tv genome filter:
-    None, N/A
+    filter empty values: None, N/A, ""
     capitalize
     order categories
     
@@ -29,10 +62,6 @@ onboarding:
 * select streaming services
 * ratings + favs
 * watched + wishlist
-
-react-query
-offline support
-
 playwright tests
 
 redistribute weight for gw score
@@ -108,19 +137,6 @@ details:
 box office (e.g. Google)
 crew links to discovery
 awards (grab from API)
-
-discover sidebar redesign
-filter inspiration:
-    https://www.yidio.com/movies
-    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-discover: unselect streaming
-discover: unselect country
-discover age ratings
-discover cast / crew
-discover director
-discover scores
-discover budget & revenue
-disocver keywords and tropes
 
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/

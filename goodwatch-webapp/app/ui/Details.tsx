@@ -9,7 +9,6 @@ import AgeRating from "~/ui/AgeRating"
 import Cast from "~/ui/Cast"
 import Collection from "~/ui/Collection"
 import Crew from "~/ui/Crew"
-import DNADisplay from "~/ui/DNADisplay"
 import Description from "~/ui/Description"
 import Genres from "~/ui/Genres"
 import Keywords from "~/ui/Keywords"
@@ -21,6 +20,7 @@ import TrailerOverlay from "~/ui/TrailerOverlay"
 import Videos from "~/ui/Videos"
 import ScoreSelector from "~/ui/actions/ScoreSelector"
 import WatchStatusBlock from "~/ui/actions/WatchStatusBlock"
+import DNADisplay from "~/ui/dna/DNADisplay"
 import RatingBlock from "~/ui/ratings/RatingBlock"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import Ratings from "~/ui/ratings/Ratings"
@@ -28,6 +28,7 @@ import Streaming from "~/ui/streaming/Streaming"
 import StreamingBlock from "~/ui/streaming/StreamingBlock"
 import { type DetailsTab, useDetailsTab } from "~/utils/navigation"
 import { extractRatings } from "~/utils/ratings"
+import DNA from "./dna/DNA"
 
 export interface DetailsProps {
 	details: MovieDetails | TVDetails
@@ -84,17 +85,18 @@ export default function Details({
 		handleSwitchToTab(tab.key)
 	}
 
-	const existingTabs: DetailsTab[] = [
-		"about",
-		"cast",
-		"ratings",
-		"streaming",
-		"videos",
-	]
-	const detailsTabs = existingTabs.map((tab) => {
+	const existingTabs: Record<DetailsTab, string> = {
+		about: "About",
+		dna: "DNA",
+		cast: "Cast",
+		ratings: "Ratings",
+		streaming: "Streaming",
+		videos: "Videos",
+	}
+	const detailsTabs = Object.keys(existingTabs).map((tab: DetailsTab) => {
 		return {
 			key: tab,
-			label: tab.charAt(0).toUpperCase() + tab.slice(1),
+			label: existingTabs[tab],
 			current: tab === activeTab,
 		}
 	})
@@ -117,7 +119,8 @@ export default function Details({
 
 	const mainInfo = (
 		<>
-			{(activeTab === "about" || !existingTabs.includes(activeTab)) && (
+			{(activeTab === "about" ||
+				!Object.keys(existingTabs).includes(activeTab)) && (
 				<>
 					{tagline && (
 						<div className="mt-8 mb-6">
@@ -132,6 +135,11 @@ export default function Details({
 						<Collection collection={collection} movieId={details.tmdb_id} />
 					)}
 					<Keywords keywords={keywords} type={media_type} />
+				</>
+			)}
+			{activeTab === "dna" && (
+				<>
+					<DNA dna={dna} />
 				</>
 			)}
 			{activeTab === "cast" && (
@@ -206,8 +214,10 @@ export default function Details({
 								) : null}
 							</div>
 							<div className="mb-4 flex items-center gap-4">
-								<DNADisplay dna={dna} />
 								<Genres genres={genres} type={media_type} />
+							</div>
+							<div className="mb-4 flex items-center gap-4">
+								<DNADisplay dna={dna} />
 							</div>
 							<div className="sm:hidden mt-8 flex flex-wrap justify-center gap-4 w-full">
 								<div className="mt-2 mr-4 relative flex-none max-w-full sm:w-52">
