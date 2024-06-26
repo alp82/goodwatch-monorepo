@@ -10,7 +10,7 @@ export interface DNAProps {
 	dna: DNA
 }
 
-export default function DNADisplay({ dna }: DNAProps) {
+export default function DNADisplay({ dna = {} }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 
 	const { handleDNATab } = useDetailsTab()

@@ -1,6 +1,7 @@
 import React from "react"
 import { Spoiler } from "spoiled"
 import type { DNA } from "~/server/details.server"
+import InfoBox from "~/ui/InfoBox"
 import {
 	getCategoryColor,
 	getSortedCategories,
@@ -11,7 +12,7 @@ export interface DNAProps {
 	dna: DNA
 }
 
-export default function DNADisplay({ dna }: DNAProps) {
+export default function DNADisplay({ dna = {} }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 	const sortedCategories = getSortedCategories(dna)
 
@@ -28,7 +29,7 @@ export default function DNADisplay({ dna }: DNAProps) {
 
 	return (
 		<>
-			{hasDNA && (
+			{hasDNA ? (
 				<div className="">
 					{sortedCategories.map((category) => (
 						<dl key={category} className="divide-y divide-white/10">
@@ -69,6 +70,8 @@ export default function DNADisplay({ dna }: DNAProps) {
 						</dl>
 					))}
 				</div>
+			) : (
+				<InfoBox text="No DNA found for this title. Please try again later, we are working on it." />
 			)}
 		</>
 	)

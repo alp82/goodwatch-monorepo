@@ -93,6 +93,7 @@ export default function Details({
 		streaming: "Streaming",
 		videos: "Videos",
 	}
+
 	const detailsTabs = Object.keys(existingTabs).map((tab: DetailsTab) => {
 		return {
 			key: tab,
