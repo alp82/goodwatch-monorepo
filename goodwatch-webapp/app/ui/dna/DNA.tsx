@@ -28,9 +28,9 @@ export default function DNADisplay({ dna = {} }: DNAProps) {
 	}
 
 	return (
-		<>
+		<div id="tab-details-dna">
 			{hasDNA ? (
-				<div className="">
+				<>
 					{sortedCategories.map((category) => (
 						<dl key={category} className="divide-y divide-white/10">
 							<div className="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
@@ -69,10 +69,10 @@ export default function DNADisplay({ dna = {} }: DNAProps) {
 							</div>
 						</dl>
 					))}
-				</div>
+				</>
 			) : (
 				<InfoBox text="No DNA found for this title. Please try again later, we are working on it." />
 			)}
-		</>
+		</div>
 	)
 }
