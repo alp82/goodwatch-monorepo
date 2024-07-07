@@ -5,6 +5,7 @@ const sortedDNACategories = [
 	"Mood/Attitudes",
 	"Memorable Moments",
 	"Plot",
+	"Target Audience",
 	"Place",
 	"Time/Period",
 	"Pacing",
@@ -16,7 +17,6 @@ const sortedDNACategories = [
 	"Cinematic Techniques",
 	"Costume and Set Design",
 	"Key Objects/Props",
-	"Target Audience",
 	"Flag",
 ]
 

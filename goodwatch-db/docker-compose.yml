@@ -13,31 +13,5 @@ services:
       - "${PGADMIN_PORT:-6080}:80"
     restart: unless-stopped
 
-  weaviate:
-    image: semitechnologies/weaviate:1.23.7
-    ports:
-      - "${WEAVIATE_PORT:-8765}:8080"
-      - "${WEAVIATE_GRPC_PORT:-50081}:50051"
-    command:
-      - --host
-      - 0.0.0.0
-      - --port
-      - '8080'
-      - --scheme
-      - http
-    volumes:
-      - weaviate_data:/var/lib/weaviate
-    restart: on-failure
-    environment:
-      ASYNC_INDEXING: 'true'
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      CLUSTER_HOSTNAME: 'node1'
-      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
-      ENABLE_MODULES: 'text2vec-openai,generative-openai'
-      OPENAI_APIKEY: ${OPENAI_APIKEY}
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      QUERY_DEFAULTS_LIMIT: 10
-
 volumes:
   pgadmin:
-  weaviate_data:

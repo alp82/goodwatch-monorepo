@@ -4,14 +4,6 @@ discover
     with cast error
     return count: "showing first 100 results"
 
-genome tab
-
-react-query
-offline support
-
-server resource monitoring
-    https://grafana.com/orgs/coinmatica/stacks/800134
-
 discover sidebar redesign
     https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
     filter inspiration:
@@ -26,11 +18,20 @@ discover sidebar redesign
     discover budget & revenue
     disocver keywords and tropes
     
+react-query
+offline support
+
+server resource monitoring
+    https://grafana.com/orgs/coinmatica/stacks/800134
+
 backups
     db's
     configs
 
+discover loading animation with skeletons
+
 cookie consent update
+    centered
     inspiration: https://www.smashingmagazine.com
     
 streaming providers from tmdb api with all country ranks
@@ -101,6 +102,9 @@ get ratings
 show in details
 when last season/episode was released
 
+notification when streaming is available (country + streaming)
+alerts for new search results
+
 combined collection score
 
 fix all linting errors
@@ -157,9 +161,6 @@ international / indie guides
 
 stuck scripts monitoring
 rate limit monitoring
-
-notification when streaming is available
-alerts for new search results
 
 do not refetch stale data
     streaming links
@@ -231,6 +232,8 @@ issue: breaking bad streaming missing -> justwatch streaming data
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
 
 analyze subtitles
+
+books?
 
 ```
 
