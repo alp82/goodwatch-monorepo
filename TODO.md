@@ -1,5 +1,11 @@
 # TODO's
 ```
+weaviate authentication
+
+secret handling
+
+project documentation
+
 discover
     with cast error
     return count: "showing first 100 results"
