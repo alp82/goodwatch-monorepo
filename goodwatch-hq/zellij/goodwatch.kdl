@@ -1,0 +1,143 @@
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+    tab name="hq" focus=true {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@coinmatica.net"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@coinmatica.net" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="abio" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@abusive"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@abusive" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="db1" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-db1"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="db2" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-db2"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="cache1" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-cache1"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-cache1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="cache2" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-cache2"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-cache2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="cache3" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-cache3"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-cache3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="mongo1" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-mongo1"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-mongo1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="mongo2" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-mongo2"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-mongo2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="mongo3" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-mongo3"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-mongo3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+    tab name="vector1" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-vector1"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-vector1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+            }
+        }
+    }
+}
