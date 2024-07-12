@@ -1,0 +1,17 @@
+summary: ''
+description: ''
+lock: >-
+  !inline
+  f/combine_data/copy_streaming_providers/postgresql/create_streaming_provider_tables.script.lock
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    pg_resource:
+      type: object
+      description: ''
+      default: null
+      format: resource-postgresql
+  required:
+    - pg_resource

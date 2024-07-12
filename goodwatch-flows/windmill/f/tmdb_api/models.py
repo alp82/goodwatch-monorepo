@@ -9,6 +9,7 @@ from mongoengine import (
     EmbeddedDocument,
     EmbeddedDocumentField,
     EmbeddedDocumentListField,
+    DynamicField,
     ListField,
     DictField,
 )
@@ -73,81 +74,6 @@ class AlternativeTitle(EmbeddedDocument):
     title = StringField()
     type = StringField()
 
-
-# Credits
-# -------
-
-
-class BasePerson(EmbeddedDocument):
-    adult = BooleanField()
-    gender = IntField()
-    id = IntField()
-    known_for_department = StringField()
-    name = StringField()
-    original_name = StringField()
-    popularity = FloatField()
-    profile_path = StringField()
-
-    meta = {
-        "abstract": True,
-    }
-
-
-class Role(EmbeddedDocument):
-    credit_id = StringField()
-    character = StringField()
-    episode_count = IntField()
-
-
-class Job(EmbeddedDocument):
-    credit_id = StringField()
-    job = StringField()
-    episode_count = IntField()
-
-
-class CastItemMovie(BasePerson):
-    cast_id = IntField()
-    character = StringField()
-    credit_id = StringField()
-    order = IntField()
-
-
-class CrewItemMovie(BasePerson):
-    credit_id = StringField()
-    department = StringField()
-    job = StringField()
-
-
-class CastItemTv(BasePerson):
-    roles = EmbeddedDocumentListField(Role)
-    total_episode_count = IntField()
-    order = IntField()
-
-
-class CrewItemTv(BasePerson):
-    jobs = EmbeddedDocumentListField(Job)
-    total_episode_count = IntField()
-    department = StringField()
-
-
-class CreditsMovie(EmbeddedDocument):
-    cast = EmbeddedDocumentListField(CastItemMovie)
-    crew = EmbeddedDocumentListField(CrewItemMovie)
-    posters = DictField()
-
-
-class CreditsTv(EmbeddedDocument):
-    cast = EmbeddedDocumentListField(CastItemTv)
-    crew = EmbeddedDocumentListField(CrewItemTv)
-
-
-class CreatedBy(EmbeddedDocument):
-    id = IntField()
-    credit_id = StringField()
-    name = StringField()
-    original_name = StringField()
-    gender = IntField()
-    profile_path = StringField()
 
 
 # Content Ratings
@@ -226,9 +152,13 @@ class MovieResult(EmbeddedDocument):
     cast = DictField()
     crew = DictField()
     id = IntField()
+    first_air_date = DateField()
     genre_ids = ListField(IntField())
     media_type = StringField()
+    name = StringField()
+    origin_country = ListField(StringField())
     original_language = StringField()
+    original_name = StringField()
     original_title = StringField()
     overview = StringField()
     popularity = FloatField()
@@ -241,12 +171,18 @@ class MovieResult(EmbeddedDocument):
 
 
 class RecommendationsMovie(EmbeddedDocument):
-    page = IntField()
     results = EmbeddedDocumentListField(MovieResult)
+    page = IntField()
     total_pages = IntField()
     total_results = IntField()
+    keywords = ListField(StringField())
     cast = DictField()
     crew = DictField()
+    wikidata_id = StringField()
+    freebase_id = StringField()
+    freebase_mid = StringField()
+    tvdb_id = StringField()
+    tvrage_id = StringField()
 
 
 class TvResult(EmbeddedDocument):
@@ -270,12 +206,18 @@ class TvResult(EmbeddedDocument):
 
 
 class RecommendationsTv(EmbeddedDocument):
-    page = IntField()
     results = EmbeddedDocumentListField(TvResult)
+    page = IntField()
     total_pages = IntField()
     total_results = IntField()
+    keywords = ListField(StringField())
     cast = DictField()
     crew = DictField()
+    wikidata_id = StringField()
+    freebase_id = StringField()
+    freebase_mid = StringField()
+    tvdb_id = StringField()
+    tvrage_id = StringField()
 
 
 # Release Dates
@@ -298,6 +240,10 @@ class ReleaseDatesResult(EmbeddedDocument):
 
 class ReleaseDates(EmbeddedDocument):
     results = EmbeddedDocumentListField(ReleaseDatesResult)
+    keywords = ListField(StringField())
+    page = IntField()
+    total_pages = IntField()
+    total_results = IntField()
 
 
 # Seasons
@@ -391,9 +337,113 @@ class ProviderData(EmbeddedDocument):
 
 
 class WatchProviders(EmbeddedDocument):
-    results = DictField(field=EmbeddedDocumentField(ProviderData))
+    results = DynamicField(field=EmbeddedDocumentField(ProviderData))
+    page = IntField()
+    total_pages = IntField()
+    total_results = IntField()
 
 
+# Credits
+# -------
+
+
+class BasePerson(EmbeddedDocument):
+    adult = BooleanField()
+    gender = IntField()
+    id = IntField()
+    known_for_department = StringField()
+    name = StringField()
+    original_name = StringField()
+    popularity = FloatField()
+    profile_path = StringField()
+
+    meta = {
+        "abstract": True,
+    }
+
+
+class Role(EmbeddedDocument):
+    credit_id = StringField()
+    character = StringField()
+    episode_count = IntField()
+
+
+class Job(EmbeddedDocument):
+    credit_id = StringField()
+    job = StringField()
+    episode_count = IntField()
+
+
+class CastItemMovie(BasePerson):
+    cast_id = IntField()
+    character = StringField()
+    credit_id = StringField()
+    order = IntField()
+
+
+class CrewItemMovie(BasePerson):
+    credit_id = StringField()
+    department = StringField()
+    job = StringField()
+
+
+class CastItemTv(BasePerson):
+    roles = EmbeddedDocumentListField(Role)
+    total_episode_count = IntField()
+    order = IntField()
+
+
+class CrewItemTv(BasePerson):
+    jobs = EmbeddedDocumentListField(Job)
+    total_episode_count = IntField()
+    department = StringField()
+
+
+class CreditsMovie(EmbeddedDocument):
+    adult = BooleanField()
+    backdrop_path = StringField()
+    belongs_to_collection = EmbeddedDocumentField(BelongsToCollection)
+    budget = IntField()
+    cast = EmbeddedDocumentListField(CastItemMovie)
+    crew = EmbeddedDocumentListField(CrewItemMovie)
+    genres = EmbeddedDocumentListField(Genre)
+    homepage = StringField()
+    imdb_id = StringField()
+    origin_country = StringField()
+    original_language = StringField()
+    original_title = StringField()
+    overview = StringField()
+    popularity = IntField()
+    poster_path = StringField()
+    posters = DictField()
+    production_companies = EmbeddedDocumentListField(ProductionCompany)
+    production_countries = EmbeddedDocumentListField(ProductionCountry)
+    release_date = EmbeddedDocumentField(ReleaseDate)
+    revenue = IntField()
+    runtime = IntField()
+    spoken_languages = EmbeddedDocumentListField(SpokenLanguage)
+    status = StringField()
+    tagline = StringField()
+    title = StringField()
+    video = EmbeddedDocumentField(Video)
+    vote_average = FloatField()
+    vote_count = IntField()
+
+
+class CreditsTv(EmbeddedDocument):
+    cast = EmbeddedDocumentListField(CastItemTv)
+    crew = EmbeddedDocumentListField(CrewItemTv)
+
+
+class CreatedBy(EmbeddedDocument):
+    id = IntField()
+    credit_id = StringField()
+    name = StringField()
+    original_name = StringField()
+    gender = IntField()
+    profile_path = StringField()
+    
+    
 # =================
 # Details documents
 # =================

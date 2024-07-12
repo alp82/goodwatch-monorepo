@@ -98,12 +98,11 @@ def convert_movie_details(details: dict) -> dict:
         details["alternative_titles"] = details["alternative_titles"].get("titles")
     if details.get("keywords", None):
         details["keywords"] = details["keywords"]["keywords"]
-    if details.get("release_dates", None):
+    if details.get("release_dates", {}).get("results", None):
         for i, release_dates_result in enumerate(details["release_dates"]["results"]):
             for j, release_date_result in enumerate(
                 release_dates_result["release_dates"]
             ):
-                print(release_date_result)
                 release_date = release_date_result.get("release_date")
                 if release_date:
                     details["release_dates"]["results"][i]["release_dates"][j][
@@ -157,10 +156,13 @@ def convert_tv_details(details: dict) -> dict:
 
 
 def convert_common_fields(details: dict) -> dict:
-    details = {k: v for k, v in details.items() if k != "id"}
-    if details.get("translations", None):
+    if details.get("id", None):
+        details["tmdb_id"] = details.pop("id")
+    if details.get("translations") and "translations" in details["translations"]:
         details["translations"] = details["translations"]["translations"]
-    if details.get("videos", None):
+    if details.get("images") and "results" in details["images"]:
+        details["images"] = details["images"]["results"]
+    if details.get("videos") and "results" in details["videos"]:
         details["videos"] = details["videos"]["results"]
     if details.get("watch/providers", None):
         details["watch_providers"] = details.pop("watch/providers")

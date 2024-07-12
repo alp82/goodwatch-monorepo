@@ -72,6 +72,22 @@ def get_documents_for_ids(
     return movie_results + tv_results
 
 
+def get_documents_for_tmdb_ids(
+    next_ids: dict, movie_model: Document, tv_model: Document
+) -> list[Document]:
+    ids = IdsParameter(
+        movie_ids=next_ids.get("movie_ids", []),
+        tv_ids=next_ids.get("tv_ids", []),
+    )
+    movie_results = list(
+        movie_model.objects(tmdb_id__in=ids.movie_ids).order_by("selected_at", "-popularity")
+    )
+    tv_results = list(
+        tv_model.objects(tmdb_id__in=ids.tv_ids).order_by("selected_at", "-popularity")
+    )
+    return movie_results + tv_results
+
+
 def get_document_for_id(
     next_id: dict, movie_model: Document, tv_model: Document
 ) -> list[Document]:

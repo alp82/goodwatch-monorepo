@@ -88,6 +88,7 @@ def copy_movies(pg, query_selector: dict = {}):
         "keywords",
         "trope_names",
         "tropes",
+        "dna",
         "streaming_providers",
         "tmdb_url",
         "tmdb_user_score_original",
@@ -123,6 +124,7 @@ def copy_movies(pg, query_selector: dict = {}):
         "metacritic_ratings_updated_at",
         "rotten_tomatoes_ratings_updated_at",
         "tvtropes_tags_updated_at",
+        "dna_updated_at",
         "collection",
         "tmdb_recommendation_ids",
         "tmdb_similar_ids",
@@ -164,6 +166,9 @@ def copy_movies(pg, query_selector: dict = {}):
         )
         tv_tropes_tags = fetch_documents_in_batch(
             tmdb_ids, mongo_db.tv_tropes_movie_tags
+        )
+        genomes = fetch_documents_in_batch(
+            tmdb_ids, mongo_db.genome_movie
         )
         tmdb_providers = fetch_documents_in_batch(
             tmdb_ids, mongo_db.tmdb_movie_providers
@@ -290,6 +295,7 @@ def copy_movies(pg, query_selector: dict = {}):
                 "updated_at"
             )
             tvtropes_tags_updated_at = tv_tropes_tags.get(tmdb_id, {}).get("updated_at")
+            dna_updated_at = genomes.get(tmdb_id, {}).get("updated_at")
             tmdb_providers_updated_at = tmdb_providers.get(tmdb_id, {}).get(
                 "updated_at"
             )
@@ -368,6 +374,7 @@ def copy_movies(pg, query_selector: dict = {}):
                     for trope in tv_tropes_tags.get(tmdb_id, {}).get("tropes", [])
                 ],
                 json.dumps(tv_tropes_tags.get(tmdb_id, {}).get("tropes", [])),
+                json.dumps(genomes.get(tmdb_id, {}).get("dna", {})),
                 json.dumps(tmdb_details.get("watch_providers", {}).get("results", {})),
                 f"https://www.themoviedb.org/movie/{tmdb_id}",
                 tmdb_user_score,
@@ -403,6 +410,7 @@ def copy_movies(pg, query_selector: dict = {}):
                 metacritic_ratings_updated_at,
                 rotten_tomatoes_ratings_updated_at,
                 tvtropes_tags_updated_at,
+                dna_updated_at,
                 json.dumps(collection) if collection else None,
                 [
                     movie.get("id")

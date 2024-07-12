@@ -5,7 +5,13 @@ value:
     - id: g
       value:
         type: script
-        input_transforms: {}
+        input_transforms:
+          movie_tmdb_id:
+            type: javascript
+            expr: flow_input.movie_tmdb_id
+          tv_tmdb_id:
+            type: javascript
+            expr: flow_input.tv_tmdb_id
         path: f/priority/next
         tag_override: null
     - id: i
@@ -85,7 +91,7 @@ value:
                   path: f/rotten_web/crawl_all_by_id
             parallel: true
             skip_failure: false
-          - summary: TV Tropes
+          - summary: TV Tropes & Genome
             modules:
               - id: k
                 value:
@@ -104,6 +110,23 @@ value:
                       type: javascript
                       expr: results.k
                   path: f/tvtropes_web/crawl_all_by_id
+              - id: z
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g.tmdb_ids
+                  path: f/genome/init/update
+                  tag_override: null
+              - id: aa
+                value:
+                  type: flow
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.z
+                  path: f/genome/crawl_all_by_id
             parallel: true
             skip_failure: false
           - summary: TMDB Streaming
@@ -185,7 +208,22 @@ value:
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
+  order:
+    - movie_tmdb_id
+    - tv_tmdb_id
+  properties:
+    movie_tmdb_id:
+      type: string
+      description: ''
+      default: ''
+      format: ''
+      password: false
+    tv_tmdb_id:
+      type: string
+      description: ''
+      default: ''
+      format: ''
+      password: false
   required: []
 visible_to_runner_only: false
 ws_error_handler_muted: false

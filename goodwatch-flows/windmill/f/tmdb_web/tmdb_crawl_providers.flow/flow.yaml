@@ -8,7 +8,8 @@ value:
         input_transforms: {}
         path: f/tmdb_web/tmdb_crawl_providers/next
         tag_override: null
-      timeout: 60
+      continue_on_error: false
+      timeout: 180
     - id: b
       value:
         type: flow
@@ -32,4 +33,5 @@ schema:
   type: object
   properties: {}
   required: []
+visible_to_runner_only: false
 ws_error_handler_muted: false

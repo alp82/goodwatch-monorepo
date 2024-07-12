@@ -276,8 +276,11 @@ async def tvtropes_crawl_tags(next_entry: Union[TvTropesMovieTags, TvTropesTvTag
         browser = await p.chromium.launch()
         context = await browser.new_context()
         context.set_default_timeout(BROWSER_TIMEOUT)
-        (crawl_result, _) = await crawl_data(next_entry, context)
-        await context.close()
+        try:
+            (crawl_result, _) = await crawl_data(next_entry, context)
+        finally:
+            await context.close()
+            await browser.close()        
 
     if crawl_result.rate_limit_reached:
         raise Exception(

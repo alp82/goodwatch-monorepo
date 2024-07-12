@@ -70,6 +70,7 @@ def copy_tv(pg, query_selector: dict = {}):
         "keywords",
         "trope_names",
         "tropes",
+        "dna",
         "streaming_providers",
         "tmdb_url",
         "tmdb_user_score_original",
@@ -105,6 +106,7 @@ def copy_tv(pg, query_selector: dict = {}):
         "metacritic_ratings_updated_at",
         "rotten_tomatoes_ratings_updated_at",
         "tvtropes_tags_updated_at",
+        "dna_updated_at",
         "tmdb_recommendation_ids",
         "tmdb_similar_ids",
         "homepage",
@@ -143,8 +145,11 @@ def copy_tv(pg, query_selector: dict = {}):
             tmdb_ids, mongo_db.rotten_tomatoes_tv_rating
         )
         tv_tropes_tags = fetch_documents_in_batch(tmdb_ids, mongo_db.tv_tropes_tv_tags)
+        genomes = fetch_documents_in_batch(
+            tmdb_ids, mongo_db.genome_tv
+        )
         tmdb_providers = fetch_documents_in_batch(
-            tmdb_ids, mongo_db.tmdb_movie_providers
+            tmdb_ids, mongo_db.tmdb_tv_providers
         )
 
         for tmdb_details in tmdb_details_batch:
@@ -273,6 +278,7 @@ def copy_tv(pg, query_selector: dict = {}):
                 "updated_at"
             )
             tvtropes_tags_updated_at = tv_tropes_tags.get(tmdb_id, {}).get("updated_at")
+            dna_updated_at = genomes.get(tmdb_id, {}).get("updated_at")
             tmdb_providers_updated_at = tmdb_providers.get(tmdb_id, {}).get(
                 "updated_at"
             )
@@ -369,6 +375,7 @@ def copy_tv(pg, query_selector: dict = {}):
                     for trope in tv_tropes_tags.get(tmdb_id, {}).get("tropes", [])
                 ],
                 json.dumps(tv_tropes_tags.get(tmdb_id, {}).get("tropes", [])),
+                json.dumps(genomes.get(tmdb_id, {}).get("dna", {})),
                 json.dumps(tmdb_details.get("watch_providers", {}).get("results", {})),
                 f"https://www.themoviedb.org/tv/{tmdb_id}",
                 tmdb_user_score,
@@ -404,6 +411,7 @@ def copy_tv(pg, query_selector: dict = {}):
                 metacritic_ratings_updated_at,
                 rotten_tomatoes_ratings_updated_at,
                 tvtropes_tags_updated_at,
+                dna_updated_at,
                 [
                     tv.get("id")
                     for tv in tmdb_details.get("recommendations", {}).get("results", [])

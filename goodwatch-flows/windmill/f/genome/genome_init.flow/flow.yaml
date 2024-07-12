@@ -1,0 +1,17 @@
+summary: Initialize all entries for Genome Generation
+description: Initialize all entries for Hugchat generations by copying tv tropes entries.
+value:
+  modules:
+    - id: b
+      value:
+        type: script
+        input_transforms: {}
+        path: f/genome/init/main
+        tag_override: null
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []
+visible_to_runner_only: false
+ws_error_handler_muted: false

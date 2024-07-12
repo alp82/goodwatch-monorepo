@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS tv (
     keywords VARCHAR(255)[],
     trope_names VARCHAR(255)[],
     tropes JSONB,
+    dna JSONB,
 
     -- streaming
     streaming_providers JSONB,
@@ -92,6 +93,7 @@ CREATE TABLE IF NOT EXISTS tv (
     metacritic_ratings_updated_at DATE,
     rotten_tomatoes_ratings_updated_at DATE,
     tvtropes_tags_updated_at DATE,
+    genome_updated_at DATE,
     
     -- relations
     tmdb_recommendation_ids INTEGER[],

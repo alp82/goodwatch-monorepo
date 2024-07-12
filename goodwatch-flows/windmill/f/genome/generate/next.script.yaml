@@ -1,0 +1,9 @@
+summary: ''
+description: Retrieve next batch of entries for generating genomes
+lock: '!inline f/genome/generate/next.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

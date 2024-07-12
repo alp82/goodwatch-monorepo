@@ -25,13 +25,14 @@ value:
                   expr: flow_input.iter.value
               path: f/tmdb_web/tmdb_crawl_providers/fetch
               tag_override: null
+            continue_on_error: false
             retry:
               constant:
                 attempts: 0
                 seconds: 0
               exponential:
-                attempts: 4
-                multiplier: 6
+                attempts: 7
+                multiplier: 1
                 random_factor: 0
                 seconds: 2
             timeout: 30
@@ -53,4 +54,5 @@ schema:
       properties: {}
   required:
     - next_ids
+visible_to_runner_only: false
 ws_error_handler_muted: false

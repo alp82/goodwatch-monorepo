@@ -250,9 +250,12 @@ async def rotten_tomatoes_crawl_ratings(
         browser = await p.chromium.launch()
         context = await browser.new_context()
         context.set_default_timeout(BROWSER_TIMEOUT)
-        (crawl_result, _) = await crawl_data(next_entry, context)
-        await browser.close()
-
+        try:
+            (crawl_result, _) = await crawl_data(next_entry, context)
+        finally:
+            await context.close()
+            await browser.close()
+            
     if crawl_result.rate_limit_reached:
         raise Exception(
             f"Rate limit reached for {next_entry.original_title}, retrying."
