@@ -1,6 +1,6 @@
 services:
   weaviate:
-    image: cr.weaviate.io/semitechnologies/weaviate:1.25.7
+    image: cr.weaviate.io/semitechnologies/weaviate:1.25.8
     ports:
       - "${WEAVIATE_PORT:-8765}:8080"
       - "${WEAVIATE_GRPC_PORT:-50081}:50051"
