@@ -140,7 +140,7 @@ export default function Details({
 			)}
 			{activeTab === "dna" && (
 				<>
-					<DNA dna={dna} />
+					<DNA type={media_type === "movie" ? "movies" : "tv"} dna={dna} />
 				</>
 			)}
 			{activeTab === "cast" && (
@@ -218,7 +218,10 @@ export default function Details({
 								<Genres genres={genres} type={media_type} />
 							</div>
 							<div className="mb-4 flex items-center gap-4">
-								<DNADisplay dna={dna} />
+								<DNADisplay
+									type={media_type === "movie" ? "movies" : "tv"}
+									dna={dna}
+								/>
 							</div>
 							<div className="sm:hidden mt-8 flex flex-wrap justify-center gap-4 w-full">
 								<div className="mt-2 mr-4 relative flex-none max-w-full sm:w-52">

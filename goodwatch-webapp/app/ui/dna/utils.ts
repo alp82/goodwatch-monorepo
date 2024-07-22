@@ -74,3 +74,39 @@ export const getCategoryColor = (category: string) => {
 			return "text-gray-500"
 	}
 }
+
+export const mapCategoryToVectorName = (category: string) => {
+	switch (category) {
+		case "Sub-Genres":
+			return "genre"
+		case "Mood/Attitudes":
+			return "mood"
+		case "Plot":
+		case "Memorable Moments":
+			return "plot"
+		case "Target Audience":
+			return "audience"
+		case "Place":
+			return "place"
+		case "Time/Period":
+			return "time"
+		case "Pacing":
+		case "Narrative Structure":
+		case "Dialog Style":
+			return "narration"
+		case "Score and Sound Design":
+			return "sound"
+		case "Character Archetypes":
+			return "character"
+		case "Visual Style":
+		case "Cinematic Techniques":
+			return "visual"
+		case "Costume and Set Design":
+		case "Key Objects/Props":
+			return "props"
+		case "Flag":
+			return "flag"
+		default:
+			return "dna"
+	}
+}

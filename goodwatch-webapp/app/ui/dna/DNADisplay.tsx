@@ -1,16 +1,19 @@
 import React, { type ReactNode } from "react"
 import dnaIcon from "~/img/dna-icon.svg"
 import type { DNA } from "~/server/details.server"
+import type { ExploreParams } from "~/server/explore.server"
 import Sparkles from "~/ui/Sparkles"
+import { DNATag } from "~/ui/dna/DNATag"
 import { getCategoryColor, getSortedCategories } from "~/ui/dna/utils"
 import Cycle from "~/ui/list/Cycle"
 import { useDetailsTab } from "~/utils/navigation"
 
 export interface DNAProps {
+	type: ExploreParams["type"]
 	dna: DNA
 }
 
-export default function DNADisplay({ dna = {} }: DNAProps) {
+export default function DNADisplay({ type, dna = {} }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 
 	const { handleDNATab } = useDetailsTab()
@@ -23,11 +26,7 @@ export default function DNADisplay({ dna = {} }: DNAProps) {
 				...dna[category].map((label) => (
 					<div key={`${category}-${label}`} className="flex gap-2 w-full">
 						{category}:
-						<span
-							className={`${getCategoryColor(category)} text-white text-sm border-gray-600 border-2 px-2 rounded-md`}
-						>
-							{label}
-						</span>
+						<DNATag type={type} category={category} label={label} />
 					</div>
 				)),
 			]

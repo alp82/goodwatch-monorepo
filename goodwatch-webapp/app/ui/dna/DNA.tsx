@@ -1,7 +1,9 @@
 import React from "react"
 import { Spoiler } from "spoiled"
 import type { DNA } from "~/server/details.server"
+import type { ExploreParams } from "~/server/explore.server"
 import InfoBox from "~/ui/InfoBox"
+import { DNATag } from "~/ui/dna/DNATag"
 import {
 	getCategoryColor,
 	getSortedCategories,
@@ -9,18 +11,13 @@ import {
 } from "~/ui/dna/utils"
 
 export interface DNAProps {
+	type: ExploreParams["type"]
 	dna: DNA
 }
 
-export default function DNADisplay({ dna = {} }: DNAProps) {
+export default function DNADisplay({ type, dna = {} }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 	const sortedCategories = getSortedCategories(dna)
-
-	const [showDNA, setShowDNA] = React.useState(false)
-	const handleToggleDNA = () => {
-		setShowDNA(!showDNA)
-		setRevealSpoiler(false)
-	}
 
 	const [revealSpoiler, setRevealSpoiler] = React.useState(false)
 	const handleRevealSpoiler = () => {
@@ -48,9 +45,9 @@ export default function DNADisplay({ dna = {} }: DNAProps) {
 											: null
 									}
 								>
-									{dna[category].map((item) => (
+									{dna[category].map((label) => (
 										<Spoiler
-											key={item}
+											key={label}
 											hidden={
 												spoilerCategories.includes(category) && !revealSpoiler
 											}
@@ -58,11 +55,7 @@ export default function DNADisplay({ dna = {} }: DNAProps) {
 											accentColor={"#55c8f7"}
 											density={0.15}
 										>
-											<span
-												className={`${getCategoryColor(category)} text-white border-gray-600 border-2 px-2 rounded-md`}
-											>
-												{item}
-											</span>
+											<DNATag type={type} category={category} label={label} />
 										</Spoiler>
 									))}
 								</dd>
