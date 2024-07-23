@@ -4,41 +4,42 @@ import {
 	FireIcon,
 	StarIcon,
 	TvIcon,
-} from "@heroicons/react/20/solid";
+} from "@heroicons/react/20/solid"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	json,
-} from "@remix-run/node";
+} from "@remix-run/node"
 import {
 	PrefetchPageLinks,
 	useLoaderData,
 	useNavigation,
-} from "@remix-run/react";
-import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
-import { useUpdateUrlParams } from "~/hooks/updateUrlParams";
+} from "@remix-run/react"
+import { AnimatePresence, motion } from "framer-motion"
+import React, { useEffect, useState } from "react"
+import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import {
 	type DiscoverParams,
 	type DiscoverResult,
 	type DiscoverResults,
 	type DiscoverSortBy,
 	getDiscoverResults,
-} from "~/server/discover.server";
-import type { MediaType } from "~/server/search.server";
-import { MovieCard } from "~/ui/MovieCard";
-import Tabs, { type Tab } from "~/ui/Tabs";
-import { TvCard } from "~/ui/TvCard";
-import FilterSelection from "~/ui/filter/FilterSelection";
-import FilterSummary from "~/ui/filter/FilterSummary";
-import useLocale, { getLocaleFromRequest } from "~/utils/locale";
+} from "~/server/discover.server"
+import type { MediaType } from "~/server/search.server"
+import { MovieCard } from "~/ui/MovieCard"
+import { TvCard } from "~/ui/TvCard"
+import FilterSelection from "~/ui/filter/FilterSelection"
+import FilterSummary from "~/ui/filter/FilterSummary"
+import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
+import Tabs, { type Tab } from "~/ui/tabs/Tabs"
+import useLocale, { getLocaleFromRequest } from "~/utils/locale"
 
 export function headers() {
 	return {
 		"Cache-Control":
 			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	};
+	}
 }
 
 export const meta: MetaFunction<typeof loader> = () => {
@@ -48,43 +49,43 @@ export const meta: MetaFunction<typeof loader> = () => {
 			description:
 				"All movie and tv show ratings and streaming providers on the same page",
 		},
-	];
-};
+	]
+}
 
 export type LoaderData = {
-	params: DiscoverParams;
-	results: DiscoverResults;
-};
+	params: DiscoverParams
+	results: DiscoverResults
+}
 
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
-	const { locale } = getLocaleFromRequest(request);
+	const { locale } = getLocaleFromRequest(request)
 
-	const url = new URL(request.url);
-	const type = (url.searchParams.get("type") || "movie") as MediaType;
-	const mode = (url.searchParams.get("mode") || "advanced") as "advanced";
-	const country = url.searchParams.get("country") || "";
-	const language = url.searchParams.get("language") || locale.language;
-	const minAgeRating = url.searchParams.get("minAgeRating") || "";
-	const maxAgeRating = url.searchParams.get("maxAgeRating") || "";
-	const minYear = url.searchParams.get("minYear") || "";
+	const url = new URL(request.url)
+	const type = (url.searchParams.get("type") || "movie") as MediaType
+	const mode = (url.searchParams.get("mode") || "advanced") as "advanced"
+	const country = url.searchParams.get("country") || ""
+	const language = url.searchParams.get("language") || locale.language
+	const minAgeRating = url.searchParams.get("minAgeRating") || ""
+	const maxAgeRating = url.searchParams.get("maxAgeRating") || ""
+	const minYear = url.searchParams.get("minYear") || ""
 	// const maxYear = url.searchParams.get('maxYear') || new Date().getFullYear().toString()
-	const maxYear = url.searchParams.get("maxYear") || "";
-	const minScore = url.searchParams.get("minScore") || "";
-	const withCast = url.searchParams.get("withCast") || "";
-	const withCrew = url.searchParams.get("withCrew") || "";
-	const withKeywords = url.searchParams.get("withKeywords") || "";
-	const withoutKeywords = url.searchParams.get("withoutKeywords") || "";
-	const withGenres = url.searchParams.get("withGenres") || "";
-	const withoutGenres = url.searchParams.get("withoutGenres") || "";
+	const maxYear = url.searchParams.get("maxYear") || ""
+	const minScore = url.searchParams.get("minScore") || ""
+	const withCast = url.searchParams.get("withCast") || ""
+	const withCrew = url.searchParams.get("withCrew") || ""
+	const withKeywords = url.searchParams.get("withKeywords") || ""
+	const withoutKeywords = url.searchParams.get("withoutKeywords") || ""
+	const withGenres = url.searchParams.get("withGenres") || ""
+	const withoutGenres = url.searchParams.get("withoutGenres") || ""
 	const withStreamingProviders =
-		url.searchParams.get("withStreamingProviders") || "";
+		url.searchParams.get("withStreamingProviders") || ""
 	const sortBy = (url.searchParams.get("sortBy") ||
-		"popularity") as DiscoverSortBy;
+		"popularity") as DiscoverSortBy
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
 		| "asc"
-		| "desc";
+		| "desc"
 	const params = {
 		type,
 		mode,
@@ -104,67 +105,52 @@ export const loader: LoaderFunction = async ({
 		withStreamingProviders,
 		sortBy,
 		sortDirection,
-	};
+	}
 
-	const results = await getDiscoverResults(params);
+	const results = await getDiscoverResults(params)
 
 	return json<LoaderData>({
 		params,
 		results,
-	});
-};
+	})
+}
 
 export default function Discover() {
 	const {
 		params,
 		results: { results, filters },
-	} = useLoaderData<LoaderData>();
-	const navigation = useNavigation();
-	const { locale } = useLocale();
+	} = useLoaderData<LoaderData>()
+	const navigation = useNavigation()
+	const { locale } = useLocale()
 
 	const { currentParams, constructUrl, updateParams } = useUpdateUrlParams({
 		params,
-	});
+	})
 
 	useEffect(() => {
 		if (params.country === "" || params.withStreamingProviders === "") {
-			let country = locale.country;
+			let country = locale.country
 			if (params.country === "" || params.withStreamingProviders === "") {
-				country = localStorage.getItem("country") || country;
+				country = localStorage.getItem("country") || country
 			}
 
-			let withStreamingProviders = "8,9,337";
+			let withStreamingProviders = "8,9,337"
 			if (params.withStreamingProviders === "") {
 				withStreamingProviders =
 					localStorage.getItem("withStreamingProviders") ||
-					withStreamingProviders;
+					withStreamingProviders
 			}
 
 			const newParams = {
 				...currentParams,
 				country,
 				withStreamingProviders,
-			};
-			updateParams(newParams, true);
+			}
+			updateParams(newParams, true)
 		}
-	}, []);
+	}, [])
 
-	const discoverTypeTabs: Tab[] = [
-		{
-			key: "movie",
-			label: "Movies",
-			icon: FilmIcon,
-			current: currentParams.type === "movie",
-		},
-		{
-			key: "tv",
-			label: "TV Shows",
-			icon: TvIcon,
-			current: currentParams.type === "tv",
-		},
-	];
-
-	const sortByTabs: Tab[] = [
+	const sortByTabs: Tab<DiscoverSortBy>[] = [
 		{
 			key: "popularity",
 			label: "Most popular",
@@ -183,35 +169,34 @@ export default function Discover() {
 			icon: ClockIcon,
 			current: currentParams.sortBy === "release_date",
 		},
-	];
+	]
 
-	const [filtersOpen, setFiltersOpen] = useState(false);
+	const [filtersOpen, setFiltersOpen] = useState(false)
 	const toggleFilters = () => {
-		setFiltersOpen((isOpen) => !isOpen);
-	};
+		setFiltersOpen((isOpen) => !isOpen)
+	}
 
-	const handleTabSelect = (tab: Tab) => {
+	const handleTabSelect = (tab: Tab<MediaType>) => {
 		const newParams = {
 			...currentParams,
-			type: tab.key as DiscoverParams["type"],
-		};
-		updateParams(newParams);
-	};
+			type: tab.key,
+		}
+		updateParams(newParams)
+	}
 
-	const handleSortBySelect = (tab: Tab) => {
+	const handleSortBySelect = (tab: Tab<DiscoverSortBy>) => {
 		const newParams = {
 			...currentParams,
-			sortBy: tab.key as DiscoverParams["sortBy"],
-		};
-		updateParams(newParams);
-	};
+			sortBy: tab.key,
+		}
+		updateParams(newParams)
+	}
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
 			<div>
-				<Tabs
-					tabs={discoverTypeTabs}
-					pills={false}
+				<MediaTypeTabs
+					selected={currentParams.type}
 					onSelect={handleTabSelect}
 				/>
 				<PrefetchPageLinks
@@ -293,10 +278,10 @@ export default function Discover() {
 										)}
 									</motion.div>
 								</div>
-							);
+							)
 						})}
 				</AnimatePresence>
 			</div>
 		</div>
-	);
+	)
 }

@@ -4,18 +4,23 @@ import {
 	type MetaFunction,
 	json,
 } from "@remix-run/node"
-import { useLoaderData, useNavigation } from "@remix-run/react"
+import { useLoaderData, useNavigate, useNavigation } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import React from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import {
 	AVAILABLE_CATEGORIES,
+	AVAILABLE_TYPES,
 	type ExploreParams,
 	type ExploreResult,
 	getExploreResults,
 } from "~/server/explore.server"
+import type { MediaType } from "~/server/search.server"
 import { MovieCard } from "~/ui/MovieCard"
 import { TvCard } from "~/ui/TvCard"
+import { DNATag } from "~/ui/dna/DNATag"
+import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
+import type { Tab } from "~/ui/tabs/Tabs"
 import useLocale, { getLocaleFromRequest } from "~/utils/locale"
 
 export function headers() {
@@ -48,7 +53,7 @@ export const loader: LoaderFunction = async ({
 	const { locale } = getLocaleFromRequest(request)
 
 	const url = new URL(request.url)
-	const type = "movies" as ExploreParams["type"]
+	const type = (params.type || "movies") as ExploreParams["type"]
 	const category = (params.category || "dna") as ExploreParams["category"]
 	const query = params.query as ExploreParams["query"]
 
@@ -56,6 +61,13 @@ export const loader: LoaderFunction = async ({
 		type,
 		category,
 		query,
+	}
+	if (!type || !AVAILABLE_TYPES.includes(type)) {
+		return json<LoaderData>({
+			params: exploreParams,
+			results: [],
+			error: "Invalid type",
+		})
 	}
 	if (!query || !AVAILABLE_CATEGORIES.includes(category)) {
 		return json<LoaderData>({
@@ -75,14 +87,18 @@ export const loader: LoaderFunction = async ({
 
 export default function ExploreMoviesCategoryQuery() {
 	const { params, results, error } = useLoaderData<LoaderData>()
-	console.log({ params, results })
-
 	const navigation = useNavigation()
-	const { locale } = useLocale()
+	const navigate = useNavigate()
 
 	const { currentParams, constructUrl, updateParams } = useUpdateUrlParams({
 		params,
 	})
+
+	const handleTypeChange = (tab: Tab<MediaType>) => {
+		navigate(
+			`/explore/${tab.key === "movie" ? "movies" : "tv"}/${currentParams.category}/${currentParams.query}`,
+		)
+	}
 
 	if (error) {
 		return (
@@ -94,17 +110,29 @@ export default function ExploreMoviesCategoryQuery() {
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
-			<div className="w-full h-28 relative text-white">
-				<div className="absolute inset-0 pl-4 flex items-center justify-start gap-3">
+			<div className="w-full flex flex-col gap-6 text-white">
+				<div className="px-4 flex items-center justify-start gap-3">
 					<div className="text-4xl font-bold">{currentParams.query}</div>
-					<div className="text-2xl">
-						{currentParams.type === "movies" ? "Movies" : "TV Shows"}
+					<div className="opacity-20 text-gray-400 text-8xl">
+						{currentParams.category.charAt(0).toUpperCase() +
+							currentParams.category.slice(1)}
 					</div>
 				</div>
-				<div className="absolute inset-0 px-8 flex items-center justify-end opacity-20 text-gray-400 text-8xl">
-					{currentParams.category.charAt(0).toUpperCase() +
-						currentParams.category.slice(1)}
+				<div className="px-4 flex items-center justify-start gap-3">
+					<div className="text-lg text-gray-300">Other places:</div>
+					<DNATag
+						type={currentParams.type}
+						category={currentParams.category}
+						label={"London"}
+					/>
 				</div>
+			</div>
+
+			<div>
+				<MediaTypeTabs
+					selected={currentParams.type === "movies" ? "movie" : "tv"}
+					onSelect={handleTypeChange}
+				/>
 			</div>
 
 			<div

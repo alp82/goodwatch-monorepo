@@ -5,6 +5,7 @@ import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 const RESULT_LIMIT = 120
+export const AVAILABLE_TYPES = ["movies", "tv"]
 export const AVAILABLE_CATEGORIES = [
 	"dna",
 	"genre",

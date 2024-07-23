@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import ReactPlayer from "react-player/youtube";
-import type { Videos as VideosType } from "~/server/details.server";
-import InfoBox from "~/ui/InfoBox";
-import Tabs, { type Tab } from "~/ui/Tabs";
+import React, { useState } from "react"
+import ReactPlayer from "react-player/youtube"
+import type { Videos as VideosType } from "~/server/details.server"
+import InfoBox from "~/ui/InfoBox"
+import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 
 export const allTypes = [
 	"trailers",
@@ -12,19 +12,19 @@ export const allTypes = [
 	"featurettes",
 	"behind the sceness",
 	"bloopers",
-];
+]
 
 export interface VideosProps {
-	videos: VideosType;
+	videos: VideosType
 }
 
 export default function Videos({ videos }: VideosProps) {
-	const types = Object.keys(videos || {});
+	const types = Object.keys(videos || {})
 	const [selectedType, setSelectedType] = useState(
 		allTypes.find((type) => types.includes(type)) || allTypes[0],
-	);
-	const [selectedNumber, setSelectedNumber] = useState(0);
-	const selectedVideos = videos?.[selectedType] || [];
+	)
+	const [selectedNumber, setSelectedNumber] = useState(0)
+	const selectedVideos = videos?.[selectedType] || []
 
 	const typeTabs: Tab[] = allTypes
 		.filter((type) => types.includes(type))
@@ -33,26 +33,26 @@ export default function Videos({ videos }: VideosProps) {
 				key: type,
 				label: type.charAt(0).toUpperCase() + type.slice(1, -1),
 				current: type === selectedType,
-			};
-		});
+			}
+		})
 
 	const numberTabs: Tab[] = selectedVideos.map((video, index) => {
-		const number = (index + 1).toString();
+		const number = (index + 1).toString()
 		return {
 			key: number,
 			label: number,
 			current: number === (selectedNumber + 1).toString(),
-		};
-	});
+		}
+	})
 
 	const handleTypeSelection = (tab: Tab) => {
-		setSelectedType(tab.key);
-		setSelectedNumber(0);
-	};
+		setSelectedType(tab.key)
+		setSelectedNumber(0)
+	}
 
 	const handleNumberSelection = (tab: Tab) => {
-		setSelectedNumber(Number.parseInt(tab.key) - 1);
-	};
+		setSelectedNumber(Number.parseInt(tab.key) - 1)
+	}
 
 	const videoOpts = {
 		width: "100%",
@@ -61,7 +61,7 @@ export default function Videos({ videos }: VideosProps) {
 			// https://developers.google.com/youtube/player_parameters
 			autoplay: 0,
 		},
-	};
+	}
 
 	return (
 		<div className="mt-8">
@@ -96,5 +96,5 @@ export default function Videos({ videos }: VideosProps) {
 				<InfoBox text="No videos available" />
 			)}
 		</div>
-	);
+	)
 }

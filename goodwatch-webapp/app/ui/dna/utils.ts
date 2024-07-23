@@ -107,6 +107,6 @@ export const mapCategoryToVectorName = (category: string) => {
 		case "Flag":
 			return "flag"
 		default:
-			return "dna"
+			return category
 	}
 }
