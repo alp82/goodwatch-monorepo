@@ -4,40 +4,40 @@ import {
 	ListboxOption,
 	ListboxOptions,
 	Transition,
-} from "@headlessui/react";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import type React from "react";
-import { Fragment, useState } from "react";
+} from "@headlessui/react"
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid"
+import type React from "react"
+import { Fragment, useState } from "react"
 
 export interface SelectItem {
-	key: string;
-	label: string;
-	icon?: string;
-	disabled?: boolean;
+	key: string
+	label: string
+	icon?: string
+	disabled?: boolean
 }
 
 export interface SelectPropsBase<RenderItem> {
-	selectItems: RenderItem[];
-	withSearch?: boolean;
+	selectItems: RenderItem[]
+	withSearch?: boolean
 }
 
 export interface SelectPropsSingle<RenderItem>
 	extends SelectPropsBase<RenderItem> {
-	selectedItems?: RenderItem;
-	withMultiSelection?: false;
-	onSelect: (selectedItem: RenderItem) => void;
+	selectedItems?: RenderItem
+	withMultiSelection?: false
+	onSelect: (selectedItem: RenderItem) => void
 }
 
 export interface SelectPropsMulti<RenderItem>
 	extends SelectPropsBase<RenderItem> {
-	selectedItems: RenderItem[];
-	withMultiSelection: true;
-	onSelect: (selectedItem: RenderItem | RenderItem[]) => void;
+	selectedItems: RenderItem[]
+	withMultiSelection: true
+	onSelect: (selectedItem: RenderItem | RenderItem[]) => void
 }
 
 export type SelectProps<RenderItem> =
 	| SelectPropsSingle<RenderItem>
-	| SelectPropsMulti<RenderItem>;
+	| SelectPropsMulti<RenderItem>
 
 export default function Select<RenderItem extends SelectItem>({
 	selectItems,
@@ -46,39 +46,39 @@ export default function Select<RenderItem extends SelectItem>({
 	withMultiSelection,
 	onSelect,
 }: SelectProps<RenderItem>) {
-	const [query, setQuery] = useState("");
+	const [query, setQuery] = useState("")
 
 	let searchMatches = query
 		? selectItems.filter((item) => {
-				const lowercaseQuery = query.toLowerCase();
+				const lowercaseQuery = query.toLowerCase()
 				return (
 					item.key.toLowerCase().includes(lowercaseQuery) ||
 					item.label.toLowerCase().includes(lowercaseQuery)
-				);
+				)
 			})
-		: selectItems;
+		: selectItems
 
 	if (withMultiSelection) {
 		searchMatches = searchMatches.sort((a, b) => {
 			if (selectedItems.find((item) => item.key === a.key)) {
-				return -1;
+				return -1
 			}
-			return 0;
-		});
+			return 0
+		})
 	}
 
 	const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setQuery(event.target.value);
-	};
+		setQuery(event.target.value)
+	}
 
 	const handleSelect = (selectedItem: RenderItem) => {
-		onSelect(selectedItem);
-		setQuery("");
-	};
+		onSelect(selectedItem)
+		setQuery("")
+	}
 
 	const handleMultiSelect = (selectedItems: RenderItem[]) => {
-		onSelect(selectedItems);
-	};
+		onSelect(selectedItems)
+	}
 
 	return (
 		<Listbox
@@ -140,7 +140,7 @@ export default function Select<RenderItem extends SelectItem>({
 							<ListboxOptions className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md bg-gray-700 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
 								{withSearch && (
 									<div className="sticky top-0 z-10 bg-gray-700">
-										<li className="text-gray-100 cursor-default select-none relative py-2 px-3">
+										<div className="text-gray-100 cursor-default select-none relative py-2 px-3">
 											<input
 												type="search"
 												name="search"
@@ -150,7 +150,7 @@ export default function Select<RenderItem extends SelectItem>({
 												placeholder="Search"
 												onChange={handleSearch}
 											/>
-										</li>
+										</div>
 										<hr className="mb-2 h-px border-t-0 bg-gray-500" />
 									</div>
 								)}
@@ -170,7 +170,7 @@ export default function Select<RenderItem extends SelectItem>({
 												? selectedItems.find(
 														(selectedItem) => selectedItem.key === item.key,
 													)
-												: selected;
+												: selected
 											return (
 												<>
 													<div className="flex items-center">
@@ -202,7 +202,7 @@ export default function Select<RenderItem extends SelectItem>({
 														</span>
 													) : null}
 												</>
-											);
+											)
 										}}
 									</ListboxOption>
 								))}
@@ -212,5 +212,5 @@ export default function Select<RenderItem extends SelectItem>({
 				</>
 			)}
 		</Listbox>
-	);
+	)
 }
