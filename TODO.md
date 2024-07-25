@@ -1,5 +1,18 @@
 # TODO's
 ```
+explore alternatives:
+SELECT 
+    value_text, 
+    COUNT(*) AS value_count
+FROM (
+    SELECT jsonb_array_elements_text(dna->'Place') AS value_text
+    FROM movies
+    WHERE dna->'Place' IS NOT NULL
+) AS subquery
+GROUP BY value_text
+ORDER BY value_count DESC
+LIMIT 200;
+
 weaviate authentication
 
 secret handling
