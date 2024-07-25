@@ -1,13 +1,13 @@
-import { TagIcon } from "@heroicons/react/20/solid";
-import { useFetcher } from "@remix-run/react";
-import React, { useEffect } from "react";
-import type { DiscoverFilters, DiscoverParams } from "~/server/discover.server";
-import type { StreamingProviderResults } from "~/server/streaming-providers.server";
+import { TagIcon } from "@heroicons/react/20/solid"
+import { useFetcher } from "@remix-run/react"
+import React, { useEffect } from "react"
+import type { DiscoverFilters, DiscoverParams } from "~/server/discover.server"
+import type { StreamingProviderResults } from "~/server/streaming-providers.server"
 
 interface FilterSummaryParams {
-	params: DiscoverParams;
-	filters: DiscoverFilters;
-	onToggle: () => void;
+	params: DiscoverParams
+	filters: DiscoverFilters
+	onToggle: () => void
 }
 
 export default function FilterSummary({
@@ -16,9 +16,9 @@ export default function FilterSummary({
 	onToggle,
 }: FilterSummaryParams) {
 	const providersFetcher = useFetcher<{
-		streamingProviders: StreamingProviderResults;
-	}>();
-	const { type } = params;
+		streamingProviders: StreamingProviderResults
+	}>()
+	const { type } = params
 	useEffect(() => {
 		providersFetcher.submit(
 			{ type },
@@ -26,16 +26,16 @@ export default function FilterSummary({
 				method: "get",
 				action: "/api/discover/streaming-providers",
 			},
-		);
-	}, [type]);
-	const streamingProviders = providersFetcher.data?.streamingProviders || [];
+		)
+	}, [type])
+	const streamingProviders = providersFetcher.data?.streamingProviders || []
 
 	const enabledStreamingProviders = streamingProviders
 		.filter((provider) => {
 			const streamingProviders = params.withStreamingProviders
 				? params.withStreamingProviders.split(",")
-				: [];
-			return streamingProviders.includes(provider.id.toString());
+				: []
+			return streamingProviders.includes(provider.id.toString())
 		})
 		.map((provider) => {
 			return {
@@ -44,24 +44,24 @@ export default function FilterSummary({
 				icon: provider.logo_path
 					? `https://image.tmdb.org/t/p/w45${provider.logo_path}`
 					: undefined,
-			};
-		});
+			}
+		})
 
-	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${params.country}.svg`;
+	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${params.country}.svg`
 
 	const genres = (params.withGenres || "")
 		.split(",")
-		.filter((genre) => Boolean(genre));
+		.filter((genre) => Boolean(genre))
 
-	const cast = filters.castMembers || [];
+	const cast = filters.castMembers || []
 
 	return (
 		<div
-			className="w-full py-2 px-4 flex flex-wrap items-center gap-4 lg:gap-6 text-sm truncate bg-gray-800 border-gray-900 rounded-2xl cursor-pointer hover:brightness-150"
+			className="w-full py-2 px-4 flex flex-wrap items-center gap-4 lg:gap-6 text-sm truncate bg-gray-800 border-gray-900 rounded-lg cursor-pointer hover:brightness-150"
 			onClick={onToggle}
 		>
 			<button className="bg-indigo-900 py-1 px-2 rounded text-base font-bold">
-				Show Discover Tools
+				Show Filter Tools
 			</button>
 
 			<div className="flex flex-wrap items-center gap-4 lg:gap-6">
@@ -127,5 +127,5 @@ export default function FilterSummary({
 				</span>
 			)}
 		</div>
-	);
+	)
 }

@@ -109,16 +109,21 @@ async function _getExploreResults({
     FROM
       ${type === "movies" ? "movies" : "tv"} m
     INNER JOIN
-    	streaming_provider_links spl ON spl.tmdb_id = m.tmdb_id
+    	streaming_provider_links spl
+    	ON spl.tmdb_id = m.tmdb_id
+			AND spl.media_type = $1
+			AND spl.country_code = $2
 		INNER JOIN
-    	streaming_providers sp ON sp.id = spl.provider_id
+    	streaming_providers sp
+    	ON sp.id = spl.provider_id
     WHERE
-    	m.tmdb_id = ANY($1)
+    	m.tmdb_id = ANY($3)
     GROUP BY
       m.tmdb_id
     LIMIT ${RESULT_LIMIT};
   `
-	const queryParams = [tmdbIds]
+	// TODO country
+	const queryParams = [type === "movies" ? "movie" : "tv", "DE", tmdbIds]
 	const results = await executeQuery(pg_query, queryParams)
 	return {
 		results: results.rows as unknown as ExploreResult[],

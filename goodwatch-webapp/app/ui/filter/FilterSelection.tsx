@@ -4,21 +4,21 @@ import {
 	DialogTitle,
 	Transition,
 	TransitionChild,
-} from "@headlessui/react";
-import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import React, { type ChangeEventHandler, Fragment, useState } from "react";
-import type { DiscoverParams } from "~/server/discover.server";
-import type { Genre } from "~/server/genres.server";
-import FilterCountries from "~/ui/filter/FilterCountries";
-import FilterGenres from "~/ui/filter/FilterGenres";
-import FilterStreamingProviders from "~/ui/filter/FilterStreamingProviders";
-import NumberInput from "~/ui/form/NumberInput";
+} from "@headlessui/react"
+import { ArrowLeftIcon } from "@heroicons/react/24/solid"
+import React, { type ChangeEventHandler, Fragment, useState } from "react"
+import type { DiscoverParams } from "~/server/discover.server"
+import type { Genre } from "~/server/genres.server"
+import FilterCountries from "~/ui/filter/FilterCountries"
+import FilterGenres from "~/ui/filter/FilterGenres"
+import FilterStreamingProviders from "~/ui/filter/FilterStreamingProviders"
+import NumberInput from "~/ui/form/NumberInput"
 
 interface FilterSelectionParams {
-	show: boolean;
-	params: DiscoverParams;
-	updateParams: (newParams: DiscoverParams) => void;
-	onClose: () => void;
+	show: boolean
+	params: DiscoverParams
+	updateParams: (newParams: DiscoverParams) => void
+	onClose: () => void
 }
 
 export default function FilterSelection({
@@ -28,13 +28,13 @@ export default function FilterSelection({
 	onClose,
 }: FilterSelectionParams) {
 	const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-		const target = event.target;
+		const target = event.target
 		const newParams = {
 			...params,
 			[target.name]: target.value,
-		};
-		updateParams(newParams);
-	};
+		}
+		updateParams(newParams)
+	}
 
 	const handleGenresChange = (
 		genresToInclude: Genre[],
@@ -44,9 +44,9 @@ export default function FilterSelection({
 			...params,
 			withGenres: genresToInclude.map((genre) => genre.name).join(","),
 			withoutGenres: genresToExclude.map((genre) => genre.name).join(","),
-		};
-		updateParams(newParams);
-	};
+		}
+		updateParams(newParams)
+	}
 
 	// const handleKeywordsChange = (keywordsToInclude: Keyword[], keywordsToExclude: Keyword[]) => {
 	//   const newParams = {
@@ -57,26 +57,27 @@ export default function FilterSelection({
 	//   updateParams(newParams)
 	// }
 
-	const thisYear = new Date().getFullYear();
-	const [minYear, setMinYear] = useState(params.minYear);
-	const [maxYear, setMaxYear] = useState(params.maxYear);
+	const thisYear = new Date().getFullYear()
+	const [minYear, setMinYear] = useState(params.minYear)
+	const [maxYear, setMaxYear] = useState(params.maxYear)
 	const handleYearChange = (min?: number, max?: number) => {
-		const minValue = (min || "").toString();
-		const maxValue = (max || "").toString();
-		setMinYear(minValue);
-		setMaxYear(maxValue);
+		const minValue = (min || "").toString()
+		const maxValue = (max || "").toString()
+		setMinYear(minValue)
+		setMaxYear(maxValue)
 		updateParams({
 			...params,
 			minYear: minValue,
 			maxYear: maxValue,
-		});
-	};
+		})
+	}
 
+	const currentYear = new Date().getFullYear()
 	const isSelectedYear = (min?: number, max?: number) => {
-		const minValue = (min || "").toString();
-		const maxValue = (max || "").toString();
-		return minValue === minYear && maxValue === maxYear;
-	};
+		const minValue = (min || "").toString()
+		const maxValue = (max || "").toString()
+		return minValue === minYear && maxValue === maxYear
+	}
 
 	const createDivider = (title: string) => (
 		<div className="relative my-2 sm:my-4">
@@ -89,7 +90,7 @@ export default function FilterSelection({
 				</span>
 			</div>
 		</div>
-	);
+	)
 
 	return (
 		<Transition show={show} as={Fragment}>
@@ -116,7 +117,7 @@ export default function FilterSelection({
 												<div className="flex items-start justify-between space-x-3">
 													<div className="space-y-1">
 														<DialogTitle className="text-base font-semibold leading-6">
-															Discover Tools
+															Filter Tools
 														</DialogTitle>
 														<p className="text-sm text-gray-300">
 															Narrow down results to your liking
@@ -240,9 +241,9 @@ export default function FilterSelection({
 														<div className="isolate inline-flex rounded-md shadow-sm">
 															<button
 																type="button"
-																className={`${isSelectedYear(undefined, 2023) ? "bg-indigo-800" : "bg-gray-800"} relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
+																className={`${isSelectedYear(undefined, currentYear) ? "bg-indigo-800" : "bg-gray-800"} relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold text-gray-100 ring-1 ring-inset ring-gray-600 hover:bg-gray-700 focus:z-10`}
 																onClick={() =>
-																	handleYearChange(undefined, 2023)
+																	handleYearChange(undefined, currentYear)
 																}
 															>
 																All Until Today
@@ -310,5 +311,5 @@ export default function FilterSelection({
 				</div>
 			</Dialog>
 		</Transition>
-	);
+	)
 }
