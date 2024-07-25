@@ -118,14 +118,14 @@ export default function ExploreMoviesCategoryQuery() {
 							currentParams.category.slice(1)}
 					</div>
 				</div>
-				<div className="px-4 flex items-center justify-start gap-3">
-					<div className="text-lg text-gray-300">Other places:</div>
-					<DNATag
-						type={currentParams.type}
-						category={currentParams.category}
-						label={"London"}
-					/>
-				</div>
+				{/*<div className="px-4 flex items-center justify-start gap-3">*/}
+				{/*	<div className="text-lg text-gray-300">Other places:</div>*/}
+				{/*	<DNATag*/}
+				{/*		type={currentParams.type}*/}
+				{/*		category={currentParams.category}*/}
+				{/*		label={"London"}*/}
+				{/*	/>*/}
+				{/*</div>*/}
 			</div>
 
 			<div>

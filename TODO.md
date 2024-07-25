@@ -15,13 +15,10 @@ LIMIT 200;
 
 weaviate authentication
 
-secret handling
-
-project documentation
-
 discover
-    with cast error
+    with cast not working
     return count: "showing first 100 results"
+    streaming types: mine, free, buy, all
 
 discover sidebar redesign
     https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
@@ -42,6 +39,9 @@ offline support
 
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
+
+secret handling
+project documentation
 
 backups
     db's
