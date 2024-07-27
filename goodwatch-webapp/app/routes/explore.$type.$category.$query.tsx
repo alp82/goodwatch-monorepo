@@ -137,7 +137,7 @@ export default function ExploreMoviesCategoryQuery() {
 
 			<div
 				className={
-					"relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+					"relative mt-4 grid grid-cols-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 grid-flow-dense auto-rows-min gap-2"
 				}
 			>
 				<AnimatePresence initial={false}>
@@ -152,8 +152,17 @@ export default function ExploreMoviesCategoryQuery() {
 					{results.length > 0 &&
 						navigation.state === "idle" &&
 						results.map((result: ExploreResult, index) => {
+							const isSmall =
+								result.aggregated_overall_score_normalized_percent < 75
+							const cardClass = isSmall
+								? ""
+								: "row-span-1 col-span-1 sm:row-span-2 sm:col-span-3"
+
 							return (
-								<div key={result.tmdb_id}>
+								<div
+									key={result.tmdb_id}
+									className={`transform transition-transform duration-500 ${cardClass}`}
+								>
 									<motion.div
 										key={currentParams.sortBy}
 										initial={{

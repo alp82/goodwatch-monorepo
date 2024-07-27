@@ -194,13 +194,6 @@ export default function Discover() {
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
-			<div className="mt-2">
-				<FilterSummary
-					params={currentParams}
-					filters={filters}
-					onToggle={toggleFilters}
-				/>
-			</div>
 			<div>
 				<MediaTypeTabs
 					selected={currentParams.type}
@@ -214,12 +207,21 @@ export default function Discover() {
 					})}
 				/>
 			</div>
-			<FilterSelection
-				show={filtersOpen}
-				params={currentParams}
-				updateParams={updateParams}
-				onClose={() => setFiltersOpen(false)}
-			/>
+			<div>
+				<FilterSummary
+					params={currentParams}
+					filters={filters}
+					onToggle={toggleFilters}
+				/>
+			</div>
+			<div>
+				<FilterSelection
+					show={filtersOpen}
+					params={currentParams}
+					updateParams={updateParams}
+					onClose={() => setFiltersOpen(false)}
+				/>
+			</div>
 			<div className="mt-2">
 				<Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
 				{sortByTabs

@@ -15,6 +15,8 @@ LIMIT 200;
 
 weaviate authentication
 
+mobile footer
+
 discover
     with cast not working
     return count: "showing first 100 results"
@@ -36,6 +38,9 @@ discover sidebar redesign
     
 react-query
 offline support
+
+details: sidebar (scroll aware navigation)
+    https://imdb.shyakadavis.me/title#overview
 
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
@@ -110,6 +115,8 @@ guides
 show title in current language
 
 details: images tab
+    images and videos as gallery
+    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&t=DM0lDYiEkBYUsMZY-0
 
 wishlist with search
 watched page (with search)
