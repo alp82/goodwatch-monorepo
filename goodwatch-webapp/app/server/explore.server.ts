@@ -59,8 +59,8 @@ export const getExploreResults = async (params: ExploreParams) => {
 		name: "explore-results",
 		target: _getExploreResults,
 		params,
-		// ttlMinutes: 60 * 2,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 2,
+		// ttlMinutes: 0,
 	})
 }
 

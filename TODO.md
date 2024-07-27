@@ -1,6 +1,22 @@
 # TODO's
 ```
-explore alternatives:
+wishlist two sections:
+    watch now
+    rest
+
+onboarding:
+* select streaming services
+* ratings + favs
+* watched + wishlist
+
+home screen
+    anon: link to how it works
+    user: trending, watch next, etc.
+
+watched page:
+    rating stats (1-10 distribution)
+
+explore tag alternatives:
 SELECT 
     value_text, 
     COUNT(*) AS value_count
@@ -83,10 +99,6 @@ error handling: http://localhost:3003/tv/252146-who-killed-him
     priority?
     https://www.themoviedb.org/tv/252146-quien-lo-mato
 
-onboarding:
-* select streaming services
-* ratings + favs
-* watched + wishlist
 playwright tests
 
 redistribute weight for gw score

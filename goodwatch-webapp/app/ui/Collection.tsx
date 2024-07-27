@@ -1,24 +1,24 @@
-import { useFetcher } from "@remix-run/react";
-import React, { useEffect } from "react";
-import type { MoviesInCollection } from "~/server/collection.server";
-import type { Collection as CollectionType } from "~/server/details.server";
-import { MovieCard } from "~/ui/MovieCard";
-import { titleToDashed } from "~/utils/helpers";
+import { useFetcher } from "@remix-run/react"
+import React, { useEffect } from "react"
+import type { MoviesInCollection } from "~/server/collection.server"
+import type { Collection as CollectionType } from "~/server/details.server"
+import { MovieCard } from "~/ui/MovieCard"
+import { titleToDashed } from "~/utils/helpers"
 
 export interface CollectionProps {
-	collection: CollectionType;
-	movieId: number;
+	collection: CollectionType
+	movieId: number
 }
 
 export default function Collection({ collection, movieId }: CollectionProps) {
-	const collectionId = collection?.id.toString();
+	const collectionId = collection?.id.toString()
 	const movieIds = (collection?.movie_ids || [])
 		.map((movieId) => movieId.toString())
-		.join(",");
-	const moviesFetcher = useFetcher<MoviesInCollection>();
+		.join(",")
+	const moviesFetcher = useFetcher<MoviesInCollection>()
 
 	useEffect(() => {
-		if (!movieIds) return;
+		if (!movieIds) return
 
 		moviesFetcher.submit(
 			{ collectionId, movieIds },
@@ -26,20 +26,18 @@ export default function Collection({ collection, movieId }: CollectionProps) {
 				method: "get",
 				action: "/api/movie/collection",
 			},
-		);
-	}, [movieIds]);
+		)
+	}, [movieIds])
 
-	const movies = moviesFetcher.data?.movies || [];
+	const movies = moviesFetcher.data?.movies || []
 	return (
 		<>
 			{collection && (
 				<div className="mt-8 mb-4">
-					<div className="mb-2 text-lg font-bold">
-						Movies from same collection
-					</div>
+					<div className="mb-3 text-lg font-bold">Sequels and prequels</div>
 					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
 						{movies.map((movie) => {
-							const url = `/movie/${movie.tmdb_id}-${titleToDashed(movie.title)}`;
+							const url = `/movie/${movie.tmdb_id}-${titleToDashed(movie.title)}`
 							return (
 								<div
 									key={movie.tmdb_id}
@@ -51,11 +49,11 @@ export default function Collection({ collection, movieId }: CollectionProps) {
 								>
 									<MovieCard movie={movie} prefetch={true} />
 								</div>
-							);
+							)
 						})}
 					</div>
 				</div>
 			)}
 		</>
-	);
+	)
 }
