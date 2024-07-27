@@ -20,7 +20,7 @@ export default function Cycle({ items }: CycleProps) {
 			{items.map((item, index) => (
 				<span
 					key={index}
-					className={`absolute transition-opacity duration-1000 ${index !== currentIndex ? "opacity-0" : "opacity-100"}`}
+					className={`absolute transition-opacity duration-1000 ${index !== currentIndex ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
 					style={{ transition: "opacity 1s" }}
 				>
 					{item}

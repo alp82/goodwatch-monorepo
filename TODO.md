@@ -1,9 +1,5 @@
 # TODO's
 ```
-wishlist two sections:
-    watch now
-    rest
-
 onboarding:
 * select streaming services
 * ratings + favs
@@ -15,6 +11,12 @@ home screen
 
 watched page:
     rating stats (1-10 distribution)
+
+wishlist two sections:
+    watch now
+    rest
+
+weaviate authentication
 
 explore tag alternatives:
 SELECT 
@@ -28,8 +30,6 @@ FROM (
 GROUP BY value_text
 ORDER BY value_count DESC
 LIMIT 200;
-
-weaviate authentication
 
 mobile footer
 

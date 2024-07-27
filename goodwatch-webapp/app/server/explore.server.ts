@@ -5,6 +5,7 @@ import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 const RESULT_LIMIT = 120
+// Weaviate allows up to 10000 results
 const WEAVIATE_MAX_LIMIT = 2000
 
 export const AVAILABLE_TYPES = ["movies", "tv"]
