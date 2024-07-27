@@ -19,7 +19,7 @@ import TrailerOverlay from "~/ui/TrailerOverlay"
 import Videos from "~/ui/Videos"
 import ScoreSelector from "~/ui/actions/ScoreSelector"
 import WatchStatusBlock from "~/ui/actions/WatchStatusBlock"
-import DNADisplay from "~/ui/dna/DNADisplay"
+import DNAPreview from "~/ui/dna/DNAPreview"
 import RatingBlock from "~/ui/ratings/RatingBlock"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import Ratings from "~/ui/ratings/Ratings"
@@ -218,7 +218,7 @@ export default function Details({
 								<Genres genres={genres} type={media_type} />
 							</div>
 							<div className="mb-4 flex items-center gap-4">
-								<DNADisplay
+								<DNAPreview
 									type={media_type === "movie" ? "movies" : "tv"}
 									dna={dna}
 								/>
@@ -270,7 +270,7 @@ export default function Details({
 					</div>
 				</div>
 			</div>
-			<div className="flex flex-col items-center">
+			<div id="tabs-details" className="flex flex-col items-center">
 				<div className="w-full p-4 mb-4 bg-black bg-opacity-70">
 					<div className="flex flex-col items-center">
 						<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">

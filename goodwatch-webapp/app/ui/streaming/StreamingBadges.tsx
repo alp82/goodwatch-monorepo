@@ -1,25 +1,25 @@
-import React from "react";
-import tmdb_logo from "~/img/tmdb-logo.svg";
-import type { StreamingLink } from "~/server/details.server";
-import { useDetailsTab, useTabLink } from "~/utils/navigation";
+import React from "react"
+import tmdb_logo from "~/img/tmdb-logo.svg"
+import type { StreamingLink } from "~/server/details.server"
+import { useDetailsTab } from "~/utils/navigation"
 
 export interface StreamingBadgesProps {
-	links: StreamingLink[];
-	countryCodes: string[];
+	links: StreamingLink[]
+	countryCodes: string[]
 }
 
 export default function StreamingBadges({
 	links = [],
 	countryCodes = [],
 }: StreamingBadgesProps) {
-	const { handleStreamingTab } = useDetailsTab();
+	const { handleStreamingTab } = useDetailsTab()
 
 	const flatrateLinks = links.filter(
 		(link: StreamingLink) => link.stream_type === "flatrate",
-	);
+	)
 	const buyLinks = links.filter(
 		(link: StreamingLink) => link.stream_type === "buy",
-	);
+	)
 
 	const PoweredBy = () => {
 		return (
@@ -52,11 +52,11 @@ export default function StreamingBadges({
 					</a>
 				</div>
 			</>
-		);
-	};
+		)
+	}
 
-	const hasFlatrate = Boolean(flatrateLinks.length);
-	const hasBuy = Boolean(buyLinks.length);
+	const hasFlatrate = Boolean(flatrateLinks.length)
+	const hasBuy = Boolean(buyLinks.length)
 	if (!hasFlatrate) {
 		return hasBuy ? (
 			<div>
@@ -86,7 +86,7 @@ export default function StreamingBadges({
 			</div>
 		) : (
 			<div className="textsm md:text-lg">not available for streaming yet</div>
-		);
+		)
 	}
 
 	return (
@@ -113,11 +113,11 @@ export default function StreamingBadges({
 									{link.provider_name}
 								</span>
 							</a>
-						);
+						)
 					})}
 				</div>
 				<PoweredBy />
 			</div>
 		</>
-	);
+	)
 }

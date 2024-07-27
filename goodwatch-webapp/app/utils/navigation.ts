@@ -11,7 +11,7 @@ export type DetailsTab =
 
 export const useDetailsTab = () => {
 	const { activeTab, handleSwitchToTab } = useTab<DetailsTab>({
-		prefix: "details",
+		name: "details",
 		initialTab: "about",
 	})
 
@@ -28,11 +28,11 @@ export const useDetailsTab = () => {
 }
 
 interface UseTabProps<T> {
-	prefix: string
+	name: string
 	initialTab: T
 }
 
-const useTab = <T extends string>({ prefix, initialTab }: UseTabProps<T>) => {
+const useTab = <T extends string>({ name, initialTab }: UseTabProps<T>) => {
 	const [initialized, setInitialized] = useState(false)
 	const [activeTab, setActiveTab] = useState<T>(initialTab)
 
@@ -49,7 +49,7 @@ const useTab = <T extends string>({ prefix, initialTab }: UseTabProps<T>) => {
 	}, [location.search])
 
 	const scrollTabIntoView = (tab: string) => {
-		const tabElement = document.getElementById(`tab-${prefix}-${tab}`)
+		const tabElement = document.getElementById(`tabs-${name}`)
 		if (tabElement) {
 			tabElement.scrollIntoView({ behavior: "smooth" })
 		}
@@ -60,8 +60,9 @@ const useTab = <T extends string>({ prefix, initialTab }: UseTabProps<T>) => {
 		if (!initialized) return
 
 		// Scroll to the tab section
+		console.log("scroll", { activeTab })
 		scrollTabIntoView(activeTab)
-	}, [initialized, activeTab])
+	}, [activeTab])
 
 	const handleSwitchToTab = (tab: T, replace = false) => {
 		if (tab !== activeTab) {

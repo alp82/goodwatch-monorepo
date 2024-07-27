@@ -1,12 +1,12 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
-import React from "react";
-import tmdb_logo from "~/img/tmdb-logo.svg";
-import type { StreamingLink } from "~/server/details.server";
-import InfoBox from "~/ui/InfoBox";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/solid"
+import React from "react"
+import tmdb_logo from "~/img/tmdb-logo.svg"
+import type { StreamingLink } from "~/server/details.server"
+import InfoBox from "~/ui/InfoBox"
 
 export interface StreamingProps {
-	links: StreamingLink[];
-	countryCodes: string[];
+	links: StreamingLink[]
+	countryCodes: string[]
 }
 
 export default function Streaming({
@@ -15,26 +15,26 @@ export default function Streaming({
 }: StreamingProps) {
 	const flatrateLinks = (links || []).filter(
 		(link: StreamingLink) => link.stream_type === "flatrate",
-	);
+	)
 	const buyLinks = (links || []).filter(
 		(link: StreamingLink) => link.stream_type === "buy",
-	);
+	)
 	const rentLinks = (links || []).filter(
 		(link: StreamingLink) => link.stream_type === "rent",
-	);
+	)
 
-	const hasFlatrate = Boolean(flatrateLinks.length);
-	const hasBuy = Boolean(buyLinks.length);
-	const hasRent = Boolean(rentLinks.length);
-	const hasNothing = !hasFlatrate && !hasBuy && !hasRent;
+	const hasFlatrate = Boolean(flatrateLinks.length)
+	const hasBuy = Boolean(buyLinks.length)
+	const hasRent = Boolean(rentLinks.length)
+	const hasNothing = !hasFlatrate && !hasBuy && !hasRent
 
-	const onlyOtherCountries = hasNothing && countryCodes?.length;
+	const onlyOtherCountries = hasNothing && countryCodes?.length
 	const countryCount = onlyOtherCountries
 		? countryCodes?.length
-		: countryCodes?.length - 1;
+		: countryCodes?.length - 1
 
 	return (
-		<div id="tab-details-streaming">
+		<div>
 			{hasNothing && !countryCount && (
 				<div className="mt-6">
 					<InfoBox text="This title is currently not available on any streaming platform" />
@@ -64,7 +64,7 @@ export default function Streaming({
 										alt={link.provider_name}
 									/>
 								</a>
-							);
+							)
 						})}
 					</div>
 				</div>
@@ -88,7 +88,7 @@ export default function Streaming({
 										alt={link.provider_name}
 									/>
 								</a>
-							);
+							)
 						})}
 					</div>
 				</div>
@@ -112,7 +112,7 @@ export default function Streaming({
 										alt={link.provider_name}
 									/>
 								</a>
-							);
+							)
 						})}
 					</div>
 				</div>
@@ -171,5 +171,5 @@ export default function Streaming({
 				</div>
 			)}
 		</div>
-	);
+	)
 }

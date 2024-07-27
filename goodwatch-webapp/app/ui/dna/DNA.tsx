@@ -19,13 +19,13 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 	const sortedCategories = getSortedCategories(dna)
 
-	const [revealSpoiler, setRevealSpoiler] = React.useState(false)
+	const [spoilerVisible, setSpoilerVisible] = React.useState(false)
 	const handleRevealSpoiler = () => {
-		setRevealSpoiler(true)
+		setSpoilerVisible(true)
 	}
 
 	return (
-		<div id="tab-details-dna">
+		<div>
 			{hasDNA ? (
 				<>
 					{sortedCategories.map((category) => (
@@ -37,7 +37,7 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 								<dd
 									className={`
 										mt-1 text-sm leading-6 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-2
-										${spoilerCategories.includes(category) && !revealSpoiler ? "cursor-pointer" : ""}
+										${spoilerCategories.includes(category) && !spoilerVisible ? "cursor-pointer" : ""}
 									`}
 									onClick={
 										spoilerCategories.includes(category)
@@ -49,13 +49,18 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 										<Spoiler
 											key={label}
 											hidden={
-												spoilerCategories.includes(category) && !revealSpoiler
+												spoilerCategories.includes(category) && !spoilerVisible
 											}
 											theme="dark"
 											accentColor={"#55c8f7"}
 											density={0.15}
 										>
-											<DNATag type={type} category={category} label={label} />
+											<DNATag
+												type={type}
+												category={category}
+												label={label}
+												linkDisabled={!spoilerVisible}
+											/>
 										</Spoiler>
 									))}
 								</dd>
