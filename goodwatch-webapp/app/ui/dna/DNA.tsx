@@ -28,45 +28,46 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 		<div>
 			{hasDNA ? (
 				<>
-					{sortedCategories.map((category) => (
-						<dl key={category} className="divide-y divide-white/10">
-							<div className="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-								<dt className="text-sm font-medium leading-6 text-white">
-									{category}
-								</dt>
-								<dd
-									className={`
+					{sortedCategories.map((category) => {
+						const isSpoiler = spoilerCategories.includes(category)
+						return (
+							<dl key={category} className="divide-y divide-white/10">
+								<div className="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+									<dt className="text-sm font-medium leading-6 text-white">
+										{category}
+									</dt>
+									<dd
+										className={`
 										mt-1 text-sm leading-6 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-2
 										${spoilerCategories.includes(category) && !spoilerVisible ? "cursor-pointer" : ""}
 									`}
-									onClick={
-										spoilerCategories.includes(category)
-											? handleRevealSpoiler
-											: null
-									}
-								>
-									{dna[category].map((label) => (
-										<Spoiler
-											key={label}
-											hidden={
-												spoilerCategories.includes(category) && !spoilerVisible
-											}
-											theme="dark"
-											accentColor={"#55c8f7"}
-											density={0.15}
-										>
-											<DNATag
-												type={type}
-												category={category}
-												label={label}
-												linkDisabled={!spoilerVisible}
-											/>
-										</Spoiler>
-									))}
-								</dd>
-							</div>
-						</dl>
-					))}
+										onClick={
+											spoilerCategories.includes(category)
+												? handleRevealSpoiler
+												: null
+										}
+									>
+										{dna[category].map((label) => (
+											<Spoiler
+												key={label}
+												hidden={isSpoiler && !spoilerVisible}
+												theme="dark"
+												accentColor={"#55c8f7"}
+												density={0.15}
+											>
+												<DNATag
+													type={type}
+													category={category}
+													label={label}
+													linkDisabled={isSpoiler && !spoilerVisible}
+												/>
+											</Spoiler>
+										))}
+									</dd>
+								</div>
+							</dl>
+						)
+					})}
 				</>
 			) : (
 				<InfoBox text="No DNA found for this title. Please try again later, we are working on it." />

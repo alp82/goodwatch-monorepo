@@ -60,7 +60,6 @@ const useTab = <T extends string>({ name, initialTab }: UseTabProps<T>) => {
 		if (!initialized) return
 
 		// Scroll to the tab section
-		console.log("scroll", { activeTab })
 		scrollTabIntoView(activeTab)
 	}, [activeTab])
 

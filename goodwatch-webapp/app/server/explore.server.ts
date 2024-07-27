@@ -5,6 +5,8 @@ import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 const RESULT_LIMIT = 120
+const WEAVIATE_MAX_LIMIT = 2000
+
 export const AVAILABLE_TYPES = ["movies", "tv"]
 export const AVAILABLE_CATEGORIES = [
 	"dna",
@@ -79,15 +81,17 @@ async function _getExploreResults({
 		// authCredentials: new weaviate.ApiKey("WEAVIATE_INSTANCE_API_KEY"),
 	})
 
+	console.log("start")
 	const collection = await client.collections.get(type)
 	const vector_results = await collection.query.nearText(query, {
 		targetVector: `${category}_vector`,
-		limit: RESULT_LIMIT,
+		limit: WEAVIATE_MAX_LIMIT,
 		returnMetadata: ["distance"],
 	})
 	const tmdbIds = vector_results.objects.map(
 		(result) => result.properties.tmdb_id,
 	)
+	console.log("vectors done")
 
 	const pg_query = `
     SELECT
@@ -120,11 +124,14 @@ async function _getExploreResults({
     	m.tmdb_id = ANY($3)
     GROUP BY
       m.tmdb_id
+		ORDER BY
+      array_position($3, m.tmdb_id)
     LIMIT ${RESULT_LIMIT};
   `
 	// TODO country
 	const queryParams = [type === "movies" ? "movie" : "tv", "DE", tmdbIds]
 	const results = await executeQuery(pg_query, queryParams)
+	console.log("pg done")
 	return {
 		results: results.rows as unknown as ExploreResult[],
 	}
