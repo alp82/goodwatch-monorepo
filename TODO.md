@@ -16,7 +16,9 @@ wishlist two sections:
     watch now
     rest
 
-weaviate authentication
+weaviate
+    authentication
+    healthcheck
 
 explore tag alternatives:
 SELECT 

@@ -1,12 +1,12 @@
 services:
   weaviate:
     image: cr.weaviate.io/semitechnologies/weaviate:1.25.8
+    restart: unless-stopped
     ports:
       - "${WEAVIATE_PORT:-8765}:8080"
       - "${WEAVIATE_GRPC_PORT:-50081}:50051"
     volumes:
       - weaviate_data:/var/lib/weaviate
-    restart: on-failure:0
     environment:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       CLUSTER_HOSTNAME: 'node1'
@@ -25,6 +25,7 @@ services:
 
   t2v-transformers:
     image: cr.weaviate.io/semitechnologies/transformers-inference:sentence-transformers-multi-qa-MiniLM-L6-cos-v1
+    restart: unless-stopped
     environment:
       ENABLE_CUDA: '0'
 

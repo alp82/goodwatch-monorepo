@@ -3,6 +3,7 @@ version: '3'
 services:
   redis-main:
     image: docker.io/bitnami/redis-cluster:7.2
+    restart: unless-stopped
     volumes:
       - redis-data:/bitnami/redis/data
     network_mode: host
