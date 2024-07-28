@@ -2,7 +2,7 @@ import type {
 	LinksFunction,
 	LoaderFunction,
 	LoaderFunctionArgs,
-} from "@remix-run/node";
+} from "@remix-run/node"
 import {
 	Links,
 	Meta,
@@ -12,27 +12,27 @@ import {
 	useLoaderData,
 	useLocation,
 	useRouteError,
-} from "@remix-run/react";
-import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix";
-import { createBrowserClient } from "@supabase/ssr";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
-import posthog from "posthog-js";
-import React, { useEffect } from "react";
-import { ToastContainer } from "react-toastify";
+} from "@remix-run/react"
+import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix"
+import { createBrowserClient } from "@supabase/ssr"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import posthog from "posthog-js"
+import React, { useEffect } from "react"
+import { ToastContainer } from "react-toastify"
 
-import Footer from "~/ui/Footer";
-import Header from "~/ui/Header";
-import InfoBox from "~/ui/InfoBox";
-import BottomNav from "~/ui/nav/BottomNav";
-import { LocaleContext, getLocaleFromRequest } from "~/utils/locale";
+import Footer from "~/ui/Footer"
+import Header from "~/ui/Header"
+import InfoBox from "~/ui/InfoBox"
+import BottomNav from "~/ui/nav/BottomNav"
+import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 
-import cssToastify from "react-toastify/dist/ReactToastify.css?url";
+import cssToastify from "react-toastify/dist/ReactToastify.css?url"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
-import cssMain from "~/main.css?url";
-import cssTailwind from "~/tailwind.css?url";
-import CookieConsent, { cookieConsentGiven } from "~/ui/CookieConsent";
-import { AuthContext, useUser } from "./utils/auth";
+import cssMain from "~/main.css?url"
+import cssTailwind from "~/tailwind.css?url"
+import CookieConsent, { cookieConsentGiven } from "~/ui/CookieConsent"
+import { AuthContext, useUser } from "./utils/auth"
 
 export const links: LinksFunction = () => [
 	// ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),
@@ -49,23 +49,23 @@ export const links: LinksFunction = () => [
 		rel: "stylesheet",
 		href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap",
 	},
-];
+]
 
 type LoaderData = {
 	locale: {
-		language: string;
-		country: string;
-	};
+		language: string
+		country: string
+	}
 	env: {
-		SUPABASE_URL: string;
-		SUPABASE_ANON_KEY: string;
-	};
-};
+		SUPABASE_URL: string
+		SUPABASE_ANON_KEY: string
+	}
+}
 
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
-	const { locale } = getLocaleFromRequest(request);
+	const { locale } = getLocaleFromRequest(request)
 
 	return {
 		locale,
@@ -73,30 +73,30 @@ export const loader: LoaderFunction = async ({
 			SUPABASE_URL: process.env.SUPABASE_URL!,
 			SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
 		},
-	};
-};
+	}
+}
 
 const PostHogInit = () => {
-	const { user } = useUser();
+	const { user } = useUser()
 
-	const [posthogInitialized, setPosthogInitialized] = React.useState(false);
+	const [posthogInitialized, setPosthogInitialized] = React.useState(false)
 	useEffect(() => {
 		if (!user) {
 			if (posthogInitialized) {
-				posthog.reset();
-				setPosthogInitialized(false);
+				posthog.reset()
+				setPosthogInitialized(false)
 			}
-			return;
+			return
 		}
 
-		posthog.identify(user.email, user);
+		posthog.identify(user.email, user)
 
 		posthog.capture("$set", {
 			$set_once: { initial_login: new Date() },
-		});
+		})
 
-		setPosthogInitialized(true);
-	}, [user]);
+		setPosthogInitialized(true)
+	}, [user])
 
 	useEffect(() => {
 		posthog.init("phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq", {
@@ -105,17 +105,17 @@ const PostHogInit = () => {
 			persistence:
 				cookieConsentGiven() === "yes" ? "localStorage+cookie" : "memory",
 			person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
-		});
-	}, []);
+		})
+	}, [])
 
-	return null;
-};
+	return null
+}
 
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
-	const error = useRouteError();
-	console.error(error);
-	captureRemixErrorBoundaryError(error);
+	const error = useRouteError()
+	console.error(error)
+	captureRemixErrorBoundaryError(error)
 	return (
 		<html>
 			<head>
@@ -153,14 +153,14 @@ export function ErrorBoundary() {
 				<Scripts />
 			</body>
 		</html>
-	);
+	)
 }
 
 function App() {
-	const { locale, env } = useLoaderData<LoaderData>();
-	const location = useLocation();
+	const { locale, env } = useLoaderData<LoaderData>()
+	const location = useLocation()
 
-	const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+	const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
 
 	const [queryClient] = React.useState(
 		() =>
@@ -173,7 +173,7 @@ function App() {
 					},
 				},
 			}),
-	);
+	)
 
 	return (
 		<html lang="en" className="scroll-smooth">
@@ -187,7 +187,7 @@ function App() {
 					<AuthContext.Provider value={{ supabase }}>
 						<LocaleContext.Provider value={{ locale }}>
 							<Header />
-							<main className="relative flex-grow mx-auto mt-16 pb-20 lg:pb-2 w-full text-neutral-300">
+							<main className="relative flex-grow mx-auto mt-16 pb-2 w-full text-neutral-300">
 								<AnimatePresence mode="wait">
 									<motion.div
 										key={location.pathname}
@@ -212,7 +212,7 @@ function App() {
 				</QueryClientProvider>
 			</body>
 		</html>
-	);
+	)
 }
 
-export default withSentry(App);
+export default withSentry(App)

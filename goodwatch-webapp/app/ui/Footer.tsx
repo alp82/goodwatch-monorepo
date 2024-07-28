@@ -1,7 +1,8 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import React from "react";
-import discordWhite from "~/img/discord-mark-white.svg";
-import tmdbLogo from "~/img/tmdb-logo.svg";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
+import React from "react"
+import discordColor from "~/img/discord-mark-blue.svg"
+import redditColor from "~/img/reddit-color.svg"
+import tmdbLogo from "~/img/tmdb-logo.svg"
 
 const navigation = {
 	main: [
@@ -63,8 +64,19 @@ const navigation = {
 			icon: (props: Record<string, string>) => (
 				<img
 					className={`opacity-50 hover:opacity-75 ${props.className}`}
-					src={discordWhite}
+					src={discordColor}
 					alt="Join Discord Server"
+				/>
+			),
+		},
+		{
+			name: "Reddit",
+			href: "https://www.reddit.com/r/goodwatchapp/",
+			icon: (props: Record<string, string>) => (
+				<img
+					className={`opacity-50 hover:opacity-75 ${props.className}`}
+					src={redditColor}
+					alt="Join Subreddit"
 				/>
 			),
 		},
@@ -82,13 +94,13 @@ const navigation = {
 			),
 		},
 	],
-};
+}
 
-export type FooterProps = {};
+export type FooterProps = {}
 
 export default function Footer({}: FooterProps) {
 	return (
-		<footer className="hidden lg:block mt-8 bg-gray-950">
+		<footer className="mt-8 bg-gray-950">
 			<div className="mx-auto max-w-7xl overflow-hidden py-12 px-6 sm:py-16 lg:px-8">
 				<nav
 					className="-mb-6 columns-2 flex justify-center space-x-12"
@@ -147,21 +159,24 @@ export default function Footer({}: FooterProps) {
 						</div>
 					</div>
 				</nav>
-				<div className="mt-10 flex justify-center space-x-10">
-					{navigation.social.map((item) => (
-						<a
-							key={item.name}
-							href={item.href}
-							className="text-gray-500 hover:text-gray-400"
-							target="_blank"
-							rel="noreferrer"
-						>
-							<span className="sr-only">{item.name}</span>
-							<item.icon className="h-12 w-12" aria-hidden="true" />
-						</a>
-					))}
+				<div className="mt-10 flex flex-col items-center">
+					<span className="text-gray-200 mb-2">Join the community:</span>
+					<div className="flex justify-center space-x-10">
+						{navigation.social.map((item) => (
+							<a
+								key={item.name}
+								href={item.href}
+								className="text-gray-400 hover:text-gray-200"
+								target="_blank"
+								rel="noreferrer"
+							>
+								<span className="sr-only">{item.name}</span>
+								<item.icon className="h-12 w-12" aria-hidden="true" />
+							</a>
+						))}
+					</div>
 				</div>
-				<div className="mt-10 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
+				<div className="my-10 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
 					<small>powered by</small>
 					<a
 						href="https://www.themoviedb.org"
@@ -188,5 +203,5 @@ export default function Footer({}: FooterProps) {
 				</div>
 			</div>
 		</footer>
-	);
+	)
 }

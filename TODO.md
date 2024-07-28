@@ -1,16 +1,25 @@
 # TODO's
 ```
 onboarding:
-* select streaming services
-* ratings + favs
-* watched + wishlist
+    select streaming services
+    ratings + favs
+    watched + wishlist
+
+user settings
+    country_code = str
+    streaminig_provider_ids = int[]
+    onboarding_country_selection_finished = bool
+    onboarding_streaming_selection_finished = bool
+    onboarding_ratings_finished = bool
+    onboarding_completed = bool
 
 home screen
     anon: link to how it works
     user: trending, watch next, etc.
 
-watched page:
+watched/ratings page:
     rating stats (1-10 distribution)
+    easy rating for more
 
 wishlist two sections:
     watch now
