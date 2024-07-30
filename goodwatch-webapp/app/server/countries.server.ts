@@ -1,16 +1,16 @@
-import { getCountryName } from "~/server/resources/country-names";
-import { cached } from "~/utils/cache";
-import { executeQuery } from "~/utils/postgres";
+import { getCountryName } from "~/server/resources/country-names"
+import { cached } from "~/utils/cache"
+import { executeQuery } from "~/utils/postgres"
 
 export interface Country {
-	code: string;
-	name: string;
+	code: string
+	name: string
 }
 
-export type CountriesResults = Country[];
+export type CountriesResults = Country[]
 
 export interface CountriesParams {
-	type: "movie" | "tv";
+	type: "movie" | "tv"
 }
 
 export const getCountries = async (params: CountriesParams) => {
@@ -19,27 +19,28 @@ export const getCountries = async (params: CountriesParams) => {
 		target: _getCountries,
 		params,
 		ttlMinutes: 60 * 24,
-	});
-};
+		// ttlMinutes: 0,
+	})
+}
 
 export async function _getCountries({
 	type,
 }: CountriesParams): Promise<CountriesResults> {
-	const mediaType = type === "tv" ? "tv" : "movie";
+	const mediaType = type === "tv" ? "tv" : "movie"
 	const query = `
       SELECT DISTINCT
-        country_code
+        country
       FROM
-        streaming_provider_links
+        streaming_provider_rank
       --WHERE
       --  media_type = '${mediaType}'
-      --  AND provider_id IN (8,9,337)
+      --  AND streaming_provider_id IN (8,9,337)
       ORDER BY
-        country_code;
-  `;
-	const result = await executeQuery(query);
+        country;
+  `
+	const result = await executeQuery(query)
 	return result.rows.map((row) => ({
-		code: row.country_code,
-		name: getCountryName(row.country_code),
-	}));
+		code: row.country,
+		name: getCountryName(row.country),
+	}))
 }
