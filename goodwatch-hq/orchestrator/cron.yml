@@ -7,6 +7,6 @@
     - name: Ensure the cron job is present
       cron:
         name: "Kill windmill process every 24 hours"
-        minute: "0"
+        minute: "23"
         hour: "23"
         job: "/usr/bin/killall -9 windmill"
