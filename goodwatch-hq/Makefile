@@ -9,3 +9,8 @@ upgrade:
 upgrade-all:
 	@echo "Upgrading to latest windmill version on all hosts..."
 	cd orchestrator && ansible-playbook -i hosts.ini upgrade.yml
+
+.PHONY: upgrade-all
+setup-cron-all:
+	@echo "Setting up cronjobs on all hosts..."
+	cd orchestrator && ansible-playbook -i hosts.ini cron.yml
