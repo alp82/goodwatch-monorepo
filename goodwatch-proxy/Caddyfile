@@ -3,7 +3,7 @@ status.goodwatch.app {
 }
 a.goodwatch.app {
   header {
-    Access-Control-Allow-Origin https://a.goodwatch.app
+    Access-Control-Allow-Origin https://goodwatch.app
   }
   handle /static {
     reverse_proxy https://eu-assets.i.posthog.com:443 {
