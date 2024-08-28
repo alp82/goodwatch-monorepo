@@ -2,6 +2,9 @@ status.goodwatch.app {
   reverse_proxy http://coinmatica.net:4801
 }
 a.goodwatch.app {
+  header {
+    Access-Control-Allow-Origin https://a.goodwatch.app
+  }
   handle /static {
     reverse_proxy https://eu-assets.i.posthog.com:443 {
       header_up Host eu-assets.i.posthog.com
