@@ -15,10 +15,15 @@ import {
 } from "@remix-run/react"
 import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix"
 import { createBrowserClient } from "@supabase/ssr"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import {
+	HydrationBoundary,
+	QueryClient,
+	QueryClientProvider,
+} from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { AnimatePresence, motion } from "framer-motion"
 import posthog from "posthog-js"
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { ToastContainer } from "react-toastify"
 
 import Footer from "~/ui/Footer"
@@ -28,10 +33,12 @@ import BottomNav from "~/ui/nav/BottomNav"
 import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 
 import cssToastify from "react-toastify/dist/ReactToastify.css?url"
+import { useDehydratedState } from "use-dehydrated-state"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
 import cssTailwind from "~/tailwind.css?url"
 import CookieConsent, { cookieConsentGiven } from "~/ui/CookieConsent"
+import Onboarding from "~/ui/onboarding/Onboarding"
 import { AuthContext, useUser } from "./utils/auth"
 
 export const links: LinksFunction = () => [
@@ -81,7 +88,10 @@ const PostHogInit = () => {
 
 	const [posthogInitialized, setPosthogInitialized] = React.useState(false)
 	useEffect(() => {
-		if (!user) {
+		const isLocalhost =
+			window.location.hostname === "localhost" ||
+			window.location.hostname === "127.0.0.1"
+		if (!user || isLocalhost) {
 			if (posthogInitialized) {
 				posthog.reset()
 				setPosthogInitialized(false)
@@ -99,6 +109,11 @@ const PostHogInit = () => {
 	}, [user])
 
 	useEffect(() => {
+		const isLocalhost =
+			window.location.hostname === "localhost" ||
+			window.location.hostname === "127.0.0.1"
+		if (isLocalhost) return
+
 		posthog.init("phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq", {
 			// api_host: 'https://eu.i.posthog.com',
 			api_host: "https://a.goodwatch.app",
@@ -174,6 +189,7 @@ function App() {
 				},
 			}),
 	)
+	const dehydratedState = useDehydratedState()
 
 	return (
 		<html lang="en" className="scroll-smooth">
@@ -184,31 +200,36 @@ function App() {
 			</head>
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
-					<AuthContext.Provider value={{ supabase }}>
-						<LocaleContext.Provider value={{ locale }}>
-							<Header />
-							<main className="relative flex-grow mx-auto mt-16 pb-2 w-full text-neutral-300">
-								<AnimatePresence mode="wait">
-									<motion.div
-										key={location.pathname}
-										initial={{ x: "-2%", opacity: 0 }}
-										animate={{ x: "0", opacity: 1 }}
-										exit={{ x: "2%", opacity: 0 }}
-										transition={{ duration: 0.2, type: "tween" }}
-									>
-										<Outlet />
-									</motion.div>
-								</AnimatePresence>
-							</main>
-							<Footer />
-							<BottomNav />
-							<ToastContainer />
-							<CookieConsent />
-							<PostHogInit />
-							<ScrollRestoration />
-							<Scripts />
-						</LocaleContext.Provider>
-					</AuthContext.Provider>
+					<HydrationBoundary state={dehydratedState}>
+						<AuthContext.Provider value={{ supabase }}>
+							<LocaleContext.Provider value={{ locale }}>
+								<Header />
+								<main className="relative flex-grow mx-auto mt-16 pb-2 w-full text-neutral-300">
+									<AnimatePresence mode="wait">
+										<motion.div
+											key={location.pathname}
+											initial={{ x: "-2%", opacity: 0 }}
+											animate={{ x: "0", opacity: 1 }}
+											exit={{ x: "2%", opacity: 0 }}
+											transition={{ duration: 0.2, type: "tween" }}
+										>
+											<Onboarding>
+												<Outlet />
+											</Onboarding>
+										</motion.div>
+									</AnimatePresence>
+								</main>
+								<Footer />
+								<BottomNav />
+								<ToastContainer />
+								<CookieConsent />
+								<PostHogInit />
+								<ScrollRestoration />
+								<Scripts />
+							</LocaleContext.Provider>
+						</AuthContext.Provider>
+					</HydrationBoundary>
+					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>
 			</body>
 		</html>

@@ -40,11 +40,11 @@ export default function CookieConsent() {
 	return (
 		<>
 			{consentGiven === "undecided" ? (
-				<div className="fixed z-[200] bottom-0 left-0 right-0 sm:left-4 sm:bottom-4 w-full sm:max-w-md transition-transform duration-70">
+				<div className="fixed z-[200] bottom-0 left-1/2 transform -translate-x-1/2 w-full sm:max-w-md transition-transform duration-75">
 					<div className="text-gray-200 bg-slate-800 rounded-md m-2">
 						<div className="grid gap-2">
 							<div className="border-b border-slate-600 h-14 flex items-center justify-between p-4">
-								<h1 className="text-lg font-medium">We use cookies</h1>🍪
+								<h3 className="text-lg font-medium">We use cookies</h3>🍪
 							</div>
 							<div className="p-4">
 								<p className="text-sm font-normal">
@@ -66,16 +66,16 @@ export default function CookieConsent() {
 							</div>
 							<div className="flex gap-2 p-4 py-5 border-t border-slate-600 bg-background/20">
 								<button
-									onClick={handleAcceptCookies}
-									className="w-full p-2 bg-indigo-800 hover:bg-indigo-700 ring-1 ring-inset ring-gray-600 focus:z-10 font-semibold"
-								>
-									Accept
-								</button>
-								<button
 									onClick={handleDeclineCookies}
 									className="w-full p-2 bg-gray-800 hover:bg-gray-700 ring-1 ring-inset ring-gray-600 focus:z-10"
 								>
 									Decline
+								</button>
+								<button
+									onClick={handleAcceptCookies}
+									className="w-full p-2 bg-indigo-800 hover:bg-indigo-700 ring-1 ring-inset ring-gray-600 focus:z-10 font-semibold"
+								>
+									Accept
 								</button>
 							</div>
 						</div>

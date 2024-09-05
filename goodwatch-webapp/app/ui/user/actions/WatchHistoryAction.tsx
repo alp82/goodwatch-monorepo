@@ -1,29 +1,28 @@
-import { useLoaderData } from "@remix-run/react";
-import React from "react";
-import type { LoaderData } from "~/routes/movie.$movieKey";
-import type { MovieDetails, TVDetails } from "~/server/details.server";
+import React from "react"
+import { useUserData } from "~/routes/api.user-data"
 import type {
 	UpdateWatchHistoryPayload,
 	UpdateWatchHistoryResult,
-} from "~/server/watchHistory.server";
-import UserAction from "~/ui/auth/UserAction";
-import { useAPIAction } from "~/utils/api-action";
+} from "~/server/watchHistory.server"
+import UserAction from "~/ui/auth/UserAction"
+import type { UserActionDetails } from "~/ui/user/actions/types"
+import { useAPIAction } from "~/utils/api-action"
 
 export interface WatchHistoryActionProps {
-	children: React.ReactElement;
-	details: MovieDetails | TVDetails;
+	children: React.ReactElement
+	details: UserActionDetails
 }
 
 export default function WatchHistoryAction({
 	children,
 	details,
 }: WatchHistoryActionProps) {
-	const { tmdb_id, media_type } = details;
+	const { tmdb_id, media_type } = details
 
-	const { userData } = useLoaderData<LoaderData>();
+	const { data: userData } = useUserData()
 	const action = userData?.[media_type]?.[tmdb_id]?.onWatchHistory
 		? "remove"
-		: "add";
+		: "add"
 
 	const { submitProps } = useAPIAction<
 		UpdateWatchHistoryPayload,
@@ -35,7 +34,7 @@ export default function WatchHistoryAction({
 			media_type,
 			action,
 		},
-	});
+	})
 
 	return (
 		<UserAction
@@ -43,5 +42,5 @@ export default function WatchHistoryAction({
 		>
 			{React.cloneElement(children, { ...submitProps })}
 		</UserAction>
-	);
+	)
 }

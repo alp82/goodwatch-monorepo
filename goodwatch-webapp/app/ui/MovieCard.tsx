@@ -2,6 +2,8 @@ import { PrefetchPageLinks } from "@remix-run/react";
 import React from "react";
 import type { MovieDetails } from "~/server/details.server";
 import type { DiscoverResult } from "~/server/discover.server";
+import type { ExploreResult } from "~/server/explore.server";
+import type { OnboardingResult } from "~/server/onboarding-media.server";
 import { Poster } from "~/ui/Poster";
 import RatingOverlay from "~/ui/ratings/RatingOverlay";
 import StreamingOverlay from "~/ui/streaming/StreamingOverlay";
@@ -9,7 +11,7 @@ import { titleToDashed } from "~/utils/helpers";
 import { extractRatings } from "~/utils/ratings";
 
 interface MovieCardProps {
-	movie: MovieDetails | DiscoverResult;
+	movie: MovieDetails | DiscoverResult | ExploreResult | OnboardingResult;
 	prefetch?: boolean;
 }
 
@@ -22,7 +24,9 @@ export function MovieCard({ movie, prefetch = false }: MovieCardProps) {
 		>
 			<div className="relative">
 				<RatingOverlay ratings={ratings} />
-				<StreamingOverlay links={movie.streaming_links} />
+				{movie.streaming_links && (
+					<StreamingOverlay links={movie.streaming_links} />
+				)}
 				<Poster path={movie.poster_path} title={movie.title} />
 			</div>
 			<div className="my-2 px-2">

@@ -65,7 +65,7 @@ export default function FilterSummary({
 			</button>
 
 			<div className="flex flex-wrap items-center gap-4 lg:gap-6">
-				<div className="flex items-center gap-2 lg:gap-4">
+				<div className="flex flex-wrap items-center gap-2 lg:gap-4">
 					{enabledStreamingProviders.length > 0 &&
 						enabledStreamingProviders.map((provider) => (
 							<span

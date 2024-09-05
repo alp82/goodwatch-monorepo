@@ -159,7 +159,7 @@ export default function Footer({}: FooterProps) {
 						</div>
 					</div>
 				</nav>
-				<div className="mt-10 flex flex-col items-center">
+				<div className="mt-16 flex flex-col items-center">
 					<span className="text-gray-200 mb-2">Join the community:</span>
 					<div className="flex justify-center space-x-10">
 						{navigation.social.map((item) => (
@@ -176,7 +176,7 @@ export default function Footer({}: FooterProps) {
 						))}
 					</div>
 				</div>
-				<div className="my-10 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
+				<div className="my-16 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
 					<small>powered by</small>
 					<a
 						href="https://www.themoviedb.org"

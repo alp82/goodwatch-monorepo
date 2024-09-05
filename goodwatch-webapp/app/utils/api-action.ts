@@ -1,15 +1,18 @@
-import { useRevalidator } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { useRevalidator } from "@remix-run/react"
+import { useIsFetching, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
+import { queryKeyOnboardingMedia } from "~/routes/api.onboarding.media"
+import { queryKeyUserData } from "~/routes/api.user-data"
 
 const loadingProps = {
 	pointerEvents: "none",
 	opacity: 0.7,
-};
+}
 
 interface UseSubmitProps<Params> {
-	url: `/api/${string}`;
-	params: Params;
-	onClick?: () => void;
+	url: `/api/${string}`
+	params: Params
+	onClick?: () => void
 }
 
 export const useAPIAction = <Params extends {}, Result extends {}>({
@@ -17,42 +20,40 @@ export const useAPIAction = <Params extends {}, Result extends {}>({
 	params,
 	onClick,
 }: UseSubmitProps<Params>) => {
-	const revalidator = useRevalidator();
+	const queryClient = useQueryClient()
+	const isLoading = useIsFetching({ queryKey: queryKeyUserData })
 
-	const [submitting, setSubmitting] = useState(false);
-	const [result, setResult] = useState<Result | null>(null);
-
+	const [result, setResult] = useState<Result | null>(null)
 	const handleSubmit = async () => {
 		if (onClick) {
-			onClick();
+			onClick()
 		}
-		setResult(null);
-		setSubmitting(true);
+		setResult(null)
 		const response = await fetch(url, {
 			method: "POST",
 			body: JSON.stringify(params),
-		});
-		const result: Result = await response.json();
-		setResult(result);
-		revalidator.revalidate();
-	};
+		})
+		const result: Result = await response.json()
+		setResult(result)
 
-	useEffect(() => {
-		if (revalidator.state === "idle") {
-			setSubmitting(false);
-		}
-	}, [revalidator.state]);
+		// invalidate queries
+		queryClient.invalidateQueries({
+			queryKey: queryKeyUserData,
+		})
+		queryClient.invalidateQueries({
+			queryKey: queryKeyOnboardingMedia,
+		})
+	}
 
-	const isLoading = submitting; /* || revalidator.state === "loading"*/
 	const submitProps = {
 		onClick: handleSubmit,
 		disabled: isLoading || null,
 		style: isLoading ? loadingProps : {},
-	};
+	}
 
 	return {
 		result,
 		isLoading,
 		submitProps,
-	};
-};
+	}
+}

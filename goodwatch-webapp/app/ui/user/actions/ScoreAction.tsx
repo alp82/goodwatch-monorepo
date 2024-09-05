@@ -1,25 +1,27 @@
-import React from "react";
-import type { MovieDetails, TVDetails } from "~/server/details.server";
+import React from "react"
 import type {
 	Score,
 	UpdateScoresPayload,
 	UpdateScoresResult,
-} from "~/server/scores.server";
-import UserAction from "~/ui/auth/UserAction";
-import { useAPIAction } from "~/utils/api-action";
+} from "~/server/scores.server"
+import UserAction from "~/ui/auth/UserAction"
+import type { UserActionDetails } from "~/ui/user/actions/types"
+import { useAPIAction } from "~/utils/api-action"
 
 export interface ScoreActionProps {
-	children: React.ReactElement;
-	details: MovieDetails | TVDetails;
-	score: Score | null;
+	children: React.ReactElement
+	details: UserActionDetails
+	score: Score | null
+	onChange?: () => void
 }
 
 export default function ScoreAction({
 	children,
 	details,
 	score,
+	onChange,
 }: ScoreActionProps) {
-	const { tmdb_id, media_type } = details;
+	const { tmdb_id, media_type } = details
 
 	const { submitProps } = useAPIAction<UpdateScoresPayload, UpdateScoresResult>(
 		{
@@ -31,15 +33,16 @@ export default function ScoreAction({
 			},
 			onClick: children.props.onClick,
 		},
-	);
+	)
 
 	return (
 		<UserAction
 			instructions={
 				<>Rate movies and tv shows to get better recommendations.</>
 			}
+			onChange={onChange}
 		>
 			{React.cloneElement(children, { ...submitProps })}
 		</UserAction>
-	);
+	)
 }

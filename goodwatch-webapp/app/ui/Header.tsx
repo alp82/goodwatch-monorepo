@@ -54,9 +54,9 @@ export default function Header() {
 									</a>
 								</div>
 								<a href="/">
-									<h1 className="brand-header hidden md:block ml-2 text-2xl text-gray-100">
+									<div className="brand-header hidden md:block ml-2 text-2xl text-gray-100">
 										GoodWatch
-									</h1>
+									</div>
 								</a>
 								<div className="hidden lg:ml-6 lg:block">
 									<div className="flex space-x-4">

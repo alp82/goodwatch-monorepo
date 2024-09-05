@@ -3,26 +3,27 @@ import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	json,
-} from "@remix-run/node";
-import { useLoaderData, useNavigation } from "@remix-run/react";
-import { AnimatePresence, motion } from "framer-motion";
-import React, { useState } from "react";
-import type { StreamingLink } from "~/server/details.server";
-import type { DiscoverResult } from "~/server/discover.server";
-import { type GetUserDataResult, getUserData } from "~/server/userData.server";
-import { MovieCard } from "~/ui/MovieCard";
-import { TvCard } from "~/ui/TvCard";
+} from "@remix-run/node"
+import { useLoaderData, useNavigation } from "@remix-run/react"
+import { AnimatePresence, motion } from "framer-motion"
+import React from "react"
+import { useUserData } from "~/routes/api.user-data"
+import type { StreamingLink } from "~/server/details.server"
+import type { DiscoverResult } from "~/server/discover.server"
+import type { GetUserDataResult } from "~/server/userData.server"
+import { MovieCard } from "~/ui/MovieCard"
+import { TvCard } from "~/ui/TvCard"
 import WishlistFilter, {
 	type FilterByStreaming,
 	type SortBy,
-} from "~/ui/filter/WishlistFilter";
-import { getUserFromRequest } from "~/utils/auth";
+} from "~/ui/filter/WishlistFilter"
+import { type UserDataItem, getSortedUserData } from "~/utils/user-data"
 
 export function headers() {
 	return {
 		"Cache-Control":
 			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	};
+	}
 }
 
 export const meta: MetaFunction<typeof loader> = () => {
@@ -32,109 +33,49 @@ export const meta: MetaFunction<typeof loader> = () => {
 			description:
 				"All movie and tv show ratings and streaming providers on the same page",
 		},
-	];
-};
+	]
+}
 
 export type LoaderData = {
-	userData?: GetUserDataResult;
 	currentParams: {
-		sortBy: SortBy;
-		filterByStreaming: FilterByStreaming;
-	};
-};
+		sortBy: SortBy
+		filterByStreaming: FilterByStreaming
+	}
+}
 
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
-	const user = await getUserFromRequest({ request });
-	const userData = await getUserData({ user_id: user?.id });
-
-	const url = new URL(request.url);
+	const url = new URL(request.url)
 	const sortBy = (url.searchParams.get("sortBy") ||
-		"most_recently_added") as SortBy;
+		"most_recently_added") as SortBy
 	const filterByStreaming = (url.searchParams.get("filterByStreaming") ||
-		"all") as FilterByStreaming;
+		"all") as FilterByStreaming
 
 	return json<LoaderData>({
-		userData,
 		currentParams: {
 			sortBy,
 			filterByStreaming,
 		},
-	});
-};
-
-type WishListItem = {
-	media_type: string;
-	tmdb_id: string;
-	onWishList: boolean;
-	onWishListSince: Date | null;
-	title: string;
-	poster_path: string;
-	aggregated_overall_score_normalized_percent: number | null;
-	streaming_links: StreamingLink[];
-};
-
-const convertUserData = (
-	data: GetUserDataResult | undefined,
-): WishListItem[] => {
-	const result: WishListItem[] = [];
-
-	for (const media_type in data) {
-		if (data.hasOwnProperty(media_type)) {
-			for (const tmdb_id in data[media_type]) {
-				if (data[media_type].hasOwnProperty(tmdb_id)) {
-					const entry = data[media_type][tmdb_id];
-					if (entry.onWishList) {
-						result.push({
-							media_type,
-							tmdb_id,
-							onWishList: entry.onWishList,
-							onWishListSince: entry.onWishListSince,
-							title: entry.title,
-							poster_path: entry.poster_path,
-							aggregated_overall_score_normalized_percent:
-								entry.aggregated_overall_score_normalized_percent,
-							streaming_links: entry.streaming_links,
-						});
-					}
-				}
-			}
-		}
-	}
-
-	return result;
-};
+	})
+}
 
 export default function Wishlist() {
-	const { userData, currentParams } = useLoaderData<LoaderData>();
-	const { sortBy, filterByStreaming } = currentParams;
-	console.log({ userData });
+	const { currentParams } = useLoaderData<LoaderData>()
+	const { data: userData } = useUserData()
+	const { sortBy, filterByStreaming } = currentParams
 
 	const handleFilterChange = (filters) => {
-		console.log({ filters });
-	};
+		console.log({ filters })
+	}
 
-	const wishlist = convertUserData(userData as GetUserDataResult);
-	wishlist.sort((a, b) => {
-		if (a.onWishListSince && b.onWishListSince) {
-			return (
-				new Date(b.onWishListSince).getTime() -
-				new Date(a.onWishListSince).getTime()
-			);
-		}
-		if (a.onWishListSince && !b.onWishListSince) {
-			return -1;
-		}
-		if (!a.onWishListSince && b.onWishListSince) {
-			return 1;
-		}
-		return 0;
-	});
+	const sortedWishlist = getSortedUserData(userData as GetUserDataResult, [
+		"onWishListSince",
+	])
 
-	wishlist.forEach((result: WishListItem) => {
-		const streamingLinks = result.streaming_links || [];
-		const includedProviders: number[] = [];
+	sortedWishlist.forEach((result: UserDataItem) => {
+		const streamingLinks = result.streaming_links || []
+		const includedProviders: number[] = []
 		result.streaming_links = streamingLinks.reduce((links, link) => {
 			if (
 				includedProviders.includes(link.provider_id) ||
@@ -143,16 +84,16 @@ export default function Wishlist() {
 				(filterByStreaming === "mine" &&
 					!["free", "flatrate"].includes(link.stream_type))
 			) {
-				return links;
+				return links
 			}
 
-			includedProviders.push(link.provider_id);
-			return [...links, link];
-		}, [] as StreamingLink[]);
-	});
-	const wishlistToShow = wishlist.filter((item) => true);
+			includedProviders.push(link.provider_id)
+			return [...links, link]
+		}, [] as StreamingLink[])
+	})
+	const wishlistToShow = sortedWishlist.filter((item) => true)
 
-	const navigation = useNavigation();
+	const navigation = useNavigation()
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
@@ -218,10 +159,10 @@ export default function Wishlist() {
 										)}
 									</motion.div>
 								</div>
-							);
+							)
 						})}
 				</AnimatePresence>
 			</div>
 		</div>
-	);
+	)
 }

@@ -1,5 +1,6 @@
 export default {
-  plugins: {
-    tailwindcss: {},
-  },
-};
+	plugins: {
+		"tailwindcss/nesting": {},
+		tailwindcss: {},
+	},
+}

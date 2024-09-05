@@ -1,9 +1,13 @@
 # TODO's
 ```
 onboarding:
-    select streaming services
-    ratings + favs
-    watched + wishlist
+    remove score with better ux
+    serach term sql injection
+    search alternative titles
+    score should be added to "watch history" as well 
+    streaming optional
+    update localstorage for each step
+    fix wishlist
 
 user settings
     country_code = str
@@ -12,10 +16,44 @@ user settings
     onboarding_streaming_selection_finished = bool
     onboarding_ratings_finished = bool
     onboarding_completed = bool
+    
+use user's country_code
+    userData.server.ts
+
+user data refresh after login/logout
+
+cookie consent update
+    centered
+    inspiration: https://www.smashingmagazine.com
+
+streaming data pipeline with daily accuracy
+
+streaming providers from tmdb api with all country ranks
+    remove old scripts and schedules
 
 home screen
+    new design with home theater and couch
     anon: link to how it works
     user: trending, watch next, etc.
+
+header
+    main search expand
+    
+Wishlist -> To Watch
+    bookmark icon
+
+details
+    guess country
+    mobile: user action buttons below poster directly
+    all in one page with side navigation (scroll aware navigation)
+    https://imdb.shyakadavis.me/title#overview
+
+vectorize v2
+    new prompt
+    production country / studio
+    weaviate alternative
+
+letterboxd ratings
 
 watched/ratings page:
     rating stats (1-10 distribution)
@@ -25,24 +63,29 @@ wishlist two sections:
     watch now
     rest
 
+backups
+    db's
+    configs
+
 weaviate
     authentication
     healthcheck
 
 explore tag alternatives:
-SELECT 
-    value_text, 
-    COUNT(*) AS value_count
-FROM (
-    SELECT jsonb_array_elements_text(dna->'Place') AS value_text
-    FROM movies
-    WHERE dna->'Place' IS NOT NULL
-) AS subquery
-GROUP BY value_text
-ORDER BY value_count DESC
-LIMIT 200;
+    SELECT 
+        value_text, 
+        COUNT(*) AS value_count
+    FROM (
+        SELECT jsonb_array_elements_text(dna->'Place') AS value_text
+        FROM movies
+        WHERE dna->'Place' IS NOT NULL
+    ) AS subquery
+    GROUP BY value_text
+    ORDER BY value_count DESC
+    LIMIT 200;
 
-mobile footer
+react-query
+offline support
 
 discover
     with cast not working
@@ -63,30 +106,13 @@ discover sidebar redesign
     discover budget & revenue
     disocver keywords and tropes
     
-react-query
-offline support
-
-details: sidebar (scroll aware navigation)
-    https://imdb.shyakadavis.me/title#overview
+discover loading animation with skeletons
 
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
 
 secret handling
 project documentation
-
-backups
-    db's
-    configs
-
-discover loading animation with skeletons
-
-cookie consent update
-    centered
-    inspiration: https://www.smashingmagazine.com
-    
-streaming providers from tmdb api with all country ranks
-    remove old scripts and schedules
 
 init scripts only insert new and ignore existing ids
 copy/combine scripts only copy diffs to postgres
@@ -109,6 +135,12 @@ error handling: http://localhost:3003/tv/252146-who-killed-him
     fallback?
     priority?
     https://www.themoviedb.org/tv/252146-quien-lo-mato
+
+DNA tag scores
+    click on most loved/hated aspects for recommendations
+
+user notes/comments
+    use for LLM input for recommendations
 
 playwright tests
 
@@ -211,9 +243,19 @@ international / indie guides
 stuck scripts monitoring
 rate limit monitoring
 
+discord threads
+    bugs & error handling
+
+tiktok review
+    a11y
+
 do not refetch stale data
     streaming links
     tv tropes
+    
+live rating events
+    chatbox
+    countdown
     
 wrong tropes: the little mermaid (tmdb_id = 10144)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch
@@ -241,6 +283,10 @@ rotten wrong urls:
 -> searches for 2024 instead of 2023
  
 identify title duplicates and run scraping again
+
+zombie processes:
+    alternate approach: MAX_WAIT_FOR_SIGINT=1
+    https://github.com/windmill-labs/windmill/issues/4198
 
 description full text toggle
 score explanations
@@ -271,7 +317,10 @@ data source: memes (knowyourmeme, urbandictionary, etc.9
 data source: social media content (tiktok, ig, yt shorts, reddit, twitter, etc.)
 data source: based on / adapted from (books, comics, ...)
 
-GW API
+Blog Posts Page
+    https://flowbite.com/docs/components/jumbotron/#jumbotron-with-cards
+
+GoodWwatch API
 
 socket.io updates
 
@@ -356,4 +405,8 @@ from vercel to coolify
     too many open files
 genome with LLM's
 recommendation engine
+zombie processes
+    windmill -> chrome (playwright)
+    "can't start new thread"
+    "IO error: Resource temporarily unavailable (os error 11)"
 ```

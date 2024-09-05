@@ -3,44 +3,50 @@ import {
 	CubeIcon,
 	FilmIcon,
 	TvIcon,
-} from "@heroicons/react/24/solid";
-import type { MetaFunction } from "@remix-run/node";
+} from "@heroicons/react/24/solid"
+import type { MetaFunction } from "@remix-run/node"
 import {
 	type HeadersFunction,
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	json,
-} from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
-import React from "react";
-import disneyLogo from "~/img/disneyplus-logo.svg";
-import imdbLogo from "~/img/imdb-logo-250.png";
-import metacriticLogo from "~/img/metacritic-logo-250.png";
-import netflixLogo from "~/img/netflix-logo.svg";
-import primeLogo from "~/img/primevideo-logo.svg";
-import rottenLogo from "~/img/rotten-logo-250.png";
+} from "@remix-run/node"
+import { useLoaderData } from "@remix-run/react"
+import {
+	type DehydratedState,
+	QueryClient,
+	dehydrate,
+} from "@tanstack/react-query"
+import React from "react"
+import disneyLogo from "~/img/disneyplus-logo.svg"
+import imdbLogo from "~/img/imdb-logo-250.png"
+import metacriticLogo from "~/img/metacritic-logo-250.png"
+import netflixLogo from "~/img/netflix-logo.svg"
+import primeLogo from "~/img/primevideo-logo.svg"
+import rottenLogo from "~/img/rotten-logo-250.png"
 import {
 	type PopularPicksMovie,
 	type PopularPicksTV,
 	getPopularPicksMovies,
 	getPopularPicksTV,
-} from "~/server/popular-picks.server";
+} from "~/server/popular-picks.server"
 import {
 	type TrendingMovie,
 	type TrendingTV,
 	getTrendingMovies,
 	getTrendingTV,
-} from "~/server/trending.server";
-import { MovieCard } from "~/ui/MovieCard";
-import { TvCard } from "~/ui/TvCard";
-import { getLocaleFromRequest } from "~/utils/locale";
+} from "~/server/trending.server"
+import { prefetchUserData } from "~/server/userData.server"
+import { MovieCard } from "~/ui/MovieCard"
+import { TvCard } from "~/ui/TvCard"
+import { getLocaleFromRequest } from "~/utils/locale"
 
 export const headers: HeadersFunction = () => {
 	return {
 		"Cache-Control":
 			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	};
-};
+	}
+}
 
 export const meta: MetaFunction<typeof loader> = () => {
 	return [
@@ -49,26 +55,26 @@ export const meta: MetaFunction<typeof loader> = () => {
 			description:
 				"What do you want to watch next? All movie and tv show ratings and streaming providers on one page.",
 		},
-	];
-};
+	]
+}
 
 type LoaderData = {
-	trendingMovies: TrendingMovie[];
-	trendingTV: TrendingTV[];
-	popularPicksMovies: PopularPicksMovie[];
-	popularPicksTV: PopularPicksTV[];
-};
+	trendingMovies: TrendingMovie[]
+	trendingTV: TrendingTV[]
+	popularPicksMovies: PopularPicksMovie[]
+	popularPicksTV: PopularPicksTV[]
+	dehydratedState: DehydratedState
+}
 
 export const loader: LoaderFunction = async ({
-	params,
 	request,
 }: LoaderFunctionArgs) => {
-	const { locale } = getLocaleFromRequest(request);
+	const { locale } = getLocaleFromRequest(request)
 	const apiParams = {
 		type: "default",
 		country: locale.country,
 		language: locale.language,
-	};
+	}
 
 	const [trendingMovies, trendingTV, popularPicksMovies, popularPicksTV] =
 		await Promise.all([
@@ -76,20 +82,27 @@ export const loader: LoaderFunction = async ({
 			getTrendingTV(apiParams),
 			getPopularPicksMovies(apiParams),
 			getPopularPicksTV(apiParams),
-		]);
+		])
+
+	const queryClient = new QueryClient()
+	await prefetchUserData({
+		queryClient,
+		request,
+	})
 
 	return json<LoaderData>({
 		trendingMovies,
 		trendingTV,
 		popularPicksMovies,
 		popularPicksTV,
-	});
-};
+		dehydratedState: dehydrate(queryClient),
+	})
+}
 
 export default function Index() {
 	const { trendingMovies, trendingTV, popularPicksMovies, popularPicksTV } =
-		useLoaderData<LoaderData>();
-	const numberOfItemsToShow = 11;
+		useLoaderData<LoaderData>()
+	const numberOfItemsToShow = 11
 
 	return (
 		<div>
@@ -111,6 +124,7 @@ export default function Index() {
 						</pattern>
 					</defs>
 					<svg x="50%" y={-1} className="overflow-visible fill-indigo-950">
+						<title>Radial gradient</title>
 						<path
 							d="M-200 200h201v201h-201Z M600 0h201v201h-201Z M-400 400h201v201h-201Z M200 800h201v201h-201Z"
 							strokeWidth={0}
@@ -140,7 +154,11 @@ export default function Index() {
 						<div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
 							<div className="relative w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
 								<h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-100">
-									What do you want to watch next?
+									What do you want to{" "}
+									<span className="underline underline-offset-8 decoration-8 decoration-indigo-600">
+										watch next
+									</span>
+									?
 								</h1>
 								<div className="mt-14 lg:mt-20 text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 sm:max-w-md lg:max-w-none">
 									<p className="leading-relaxed">
@@ -297,5 +315,5 @@ export default function Index() {
 				)}
 			</div>
 		</div>
-	);
+	)
 }

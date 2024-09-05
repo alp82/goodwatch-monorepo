@@ -18,7 +18,8 @@
 		"@sentry/vite-plugin": "^2.18.0",
 		"@supabase/auth-ui-react": "^0.4.7",
 		"@supabase/ssr": "^0.3.0",
-		"@tanstack/react-query": "^5.37.1",
+		"@tanstack/react-query": "^5.53.3",
+		"@tanstack/react-query-devtools": "^5.54.1",
 		"@types/accept-language-parser": "^1.5.6",
 		"accept-language-parser": "^1.5.0",
 		"axios": "^1.6.7",
@@ -34,6 +35,7 @@
 		"react-toastify": "^10.0.4",
 		"remix-utils": "^7.6.0",
 		"spoiled": "^0.3.2",
+		"use-dehydrated-state": "^0.1.0",
 		"weaviate-client": "^3.0.9"
 	},
 	"devDependencies": {
@@ -43,6 +45,7 @@
 		"@tailwindcss/aspect-ratio": "^0.4.2",
 		"@tailwindcss/forms": "^0.5.7",
 		"@tailwindcss/typography": "^0.5.10",
+		"@tanstack/eslint-plugin-query": "^5.53.0",
 		"@types/pg": "^8.11.2",
 		"@types/react": "^18.3.2",
 		"@types/react-dom": "^18.3.0",
