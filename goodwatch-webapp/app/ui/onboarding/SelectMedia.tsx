@@ -18,9 +18,10 @@ import { getSortedUserData } from "~/utils/user-data"
 
 export interface SelectMediaProps {
 	onSelect: () => void
+	onBack: () => void
 }
 
-export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
+export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	// search state
 	const autoFocusRef = useAutoFocus<HTMLInputElement>()
 	const [searchTerm, setSearchTerm] = useState("")
@@ -125,8 +126,15 @@ export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
 	}
 	const didntScoreEnoughForRecommendations = sortedMedia.length < 10
 
-	const handleMediaRatingsConfirmed = () => {}
-	const handleMediaRatingsBack = () => {}
+	// handle navigation
+
+	const handleMediaRatingsConfirmed = () => {
+		onSelect()
+	}
+
+	const handleMediaRatingsBack = () => {
+		onBack()
+	}
 
 	const getMedia = (media: OnboardingResult[]) => {
 		return (
@@ -197,7 +205,7 @@ export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
 
 	return (
 		<>
-			<div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+			<div className="grid grid-cols-4 sm:grid-cols-8 gap-2 justify-end justify-items-end items-end place-items-end">
 				{sortedMedia
 					.slice(0, 8)
 					.reverse()
@@ -250,7 +258,7 @@ export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
 					onBack={handleMediaRatingsBack}
 				/>
 			</div>
-			<div className="mt-4">
+			<div className="mt-4 w-full flex items-center justify-center">
 				<TextInput
 					label="Search"
 					placeholder="Search Movies and Shows"

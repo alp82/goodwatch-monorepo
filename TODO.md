@@ -1,11 +1,13 @@
 # TODO's
 ```
 onboarding:
+    search needs to have proper fulltext relevance ordering
     score should be added to "watch history" as well 
     streaming optional
     update localstorage for each step
-    start step 0 
     fix wishlist
+    start step 0 
+    remove TTL 0
 
 user settings
     country_code = str

@@ -62,7 +62,7 @@ export default function ScoreSelector({
 	}
 
 	const handlePointerEnter = (
-		event: React.PointerEvent,
+		event: React.TouchEvent | React.MouseEvent,
 		index: Score | null,
 	) => {
 		event.preventDefault() // prevent text selection on desktop and scrolling on mobile
@@ -171,6 +171,7 @@ export default function ScoreSelector({
 								onMouseEnter={(event) => handlePointerEnter(event, scoreIndex)}
 								onMouseLeave={handlePointerLeave}
 								onClick={() => handleClick(scoreIndex)}
+								onKeyPress={() => null}
 							>
 								<div
 									className={`h-8 w-full border-2 border-gray-800 rounded-md ${getColorForIndex(

@@ -1,8 +1,8 @@
-import React from "react";
-import type { StreamingProvider } from "~/server/streaming-providers.server";
+import React from "react"
+import type { StreamingProvider } from "~/server/streaming-providers.server"
 
 interface StreamingProviderSelectionProps {
-	provider: StreamingProvider;
+	provider: StreamingProvider
 }
 
 export default function StreamingProviderSelection({
@@ -16,11 +16,13 @@ export default function StreamingProviderSelection({
 			}
 		>
 			<img
-				className="h-12 rounded-lg"
+				className="h-8 md:h-10 lg:h-12 rounded-lg"
 				src={`https://www.themoviedb.org/t/p/original/${provider.logo_path}`}
 				alt={provider.name}
 			/>
-			<span className="pl-1 pr-2 text-sm font-semibold">{provider.name}</span>
+			<span className="pl-1 pr-2 text-xs md:text-sm lg:text-base font-semibold">
+				{provider.name}
+			</span>
 		</div>
-	);
+	)
 }

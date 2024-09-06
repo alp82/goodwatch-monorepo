@@ -22,7 +22,7 @@ export default function StreamingProviderToggle({
 	return (
 		<div
 			key={provider.id}
-			className={`w-32 p-2 flex flex-col items-center gap-2 rounded-xl border-4
+			className={`w-24 md:w-32 p-2 flex flex-col items-center gap-2 rounded-xl border-4
 				${selected ? "bg-green-900 border-green-600" : "border-gray-600"}
 				${selectable ? "cursor-pointer" : ""}
 				${selectable ? (selected ? "hover:border-green-500" : "opacity-60 hover:border-gray-500") : ""}

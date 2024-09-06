@@ -68,11 +68,11 @@ export default function Onboarding({ children }: OnboardingProps) {
 		setCurrentStep(2)
 	}
 
-	// media selection
+	// media onboarding
 
-	// const [selectedMedia, setSelectedMedia] = useState<string[] | undefined>();
-	const handleSelectMedia = () => {
-		// setSelectedMedia(selected);
+	const [finalizeOnboarding, setFinalizeOnboarding] = useState(false)
+	const handleFinishOnboarding = () => {
+		setFinalizeOnboarding(true)
 	}
 
 	return (
@@ -126,14 +126,19 @@ export default function Onboarding({ children }: OnboardingProps) {
 				</div>
 			</div>
 
-			<div className="m-2 text-lg text-center leading-relaxed">
+			<div className="m-2 text-lg text-center leading-relaxed font-semibold">
 				{steps[currentStep].description}
 			</div>
 			{currentStep === 0 && <SelectCountry onSelect={handleSelectCountry} />}
 			{currentStep === 1 && (
 				<SelectStreaming onSelect={handleSelectStreaming} />
 			)}
-			{currentStep === 2 && <SelectMedia onSelect={handleSelectMedia} />}
+			{currentStep === 2 && (
+				<SelectMedia
+					onSelect={handleFinishOnboarding}
+					onBack={() => setCurrentStep(1)}
+				/>
+			)}
 		</div>
 	)
 }

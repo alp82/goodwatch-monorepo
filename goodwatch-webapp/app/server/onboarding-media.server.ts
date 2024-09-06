@@ -1,12 +1,10 @@
 import { queryKeyOnboardingMedia } from "~/routes/api.onboarding.media"
-import { queryKeyUserData } from "~/routes/api.user-data"
-import { getUserData } from "~/server/userData.server"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
-const LIMIT_PER_MEDIA_TYPE = 2
+const LIMIT_PER_MEDIA_TYPE = 3
 
 export interface OnboardingMedia extends AllRatings {
 	tmdb_id: number
@@ -41,7 +39,7 @@ export const getOnboardingMedia = async (params: OnboardingMediaParams) => {
 		name: "countries",
 		target: _getOnboardingMedia,
 		params,
-		// ttlMinutes: 5,
+		// ttlMinutes: 60 * 6,
 		ttlMinutes: 0,
 	})
 }
@@ -89,40 +87,46 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 	const mediaType = tableName === "movies" ? "movie" : "tv"
 
 	const commonQuery = `
-    SELECT
-      m.tmdb_id,
-      '${mediaType}' as media_type,
-      m.title,
-      m.release_year,
-      m.popularity,
-      m.poster_path,
-      m.backdrop_path,
-      m.genres,
-      (FLOOR(m.release_year / 10) * 10) AS decade,
-			${getRatingKeys()
-				.map((key) => `m.${key}`)
-				.join(", ")}
-    FROM
-      ${tableName} as m
-    LEFT JOIN user_scores
-      ON m.tmdb_id = user_scores.tmdb_id
-      AND user_scores.media_type = '${mediaType}'
-      AND user_scores.user_id = '${userId}'
-    LEFT JOIN user_skipped
-      ON m.tmdb_id = user_skipped.tmdb_id
-      AND user_skipped.media_type = '${mediaType}'
-      AND user_skipped.user_id = '${userId}'
-    LEFT JOIN user_wishlist
-      ON m.tmdb_id = user_wishlist.tmdb_id
-      AND user_wishlist.media_type = '${mediaType}'
-      AND user_wishlist.user_id = '${userId}'
-		WHERE
-      (%WHERE_CONDITIONS%)
-      AND user_scores.tmdb_id IS NULL
-      AND user_skipped.tmdb_id IS NULL
-      AND user_wishlist.tmdb_id IS NULL
+		WITH ranked_movies AS (
+			SELECT
+				m.tmdb_id,
+				'${mediaType}' as media_type,
+				m.title,
+				m.release_year,
+				m.popularity,
+				m.poster_path,
+				m.backdrop_path,
+				m.genres,
+				(FLOOR(m.release_year / 10) * 10) AS decade,
+				${getRatingKeys()
+					.map((key) => `m.${key}`)
+					.join(", ")}
+				%SELECTED_FIELDS%
+			FROM
+				${tableName} as m
+			LEFT JOIN user_scores
+				ON m.tmdb_id = user_scores.tmdb_id
+				AND user_scores.media_type = '${mediaType}'
+				AND user_scores.user_id = '${userId}'
+			LEFT JOIN user_skipped
+				ON m.tmdb_id = user_skipped.tmdb_id
+				AND user_skipped.media_type = '${mediaType}'
+				AND user_skipped.user_id = '${userId}'
+			LEFT JOIN user_wishlist
+				ON m.tmdb_id = user_wishlist.tmdb_id
+				AND user_wishlist.media_type = '${mediaType}'
+				AND user_wishlist.user_id = '${userId}'
+			WHERE
+				(%WHERE_CONDITIONS%)
+				AND user_scores.tmdb_id IS NULL
+				AND user_skipped.tmdb_id IS NULL
+				AND user_wishlist.tmdb_id IS NULL
+		)
+		SELECT *
+		FROM ranked_movies
     ORDER BY
-      m.popularity DESC
+			%ORDER_BY% 
+      popularity DESC
     LIMIT %LIMIT%;
   `
 
@@ -151,8 +155,20 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 			OR (${wordConditions})
 		`
 		const searchQuery = commonQuery
-			.replace("%LIMIT%", `${LIMIT_PER_MEDIA_TYPE}`)
+			.replace(
+				"%SELECTED_FIELDS%",
+				`
+				,ts_rank_cd(
+					setweight(to_tsvector(m.title), 'A') ||
+					setweight(to_tsvector(m.original_title), 'B') ||
+					setweight(to_tsvector(m.alternative_titles_text), 'C'),
+					plainto_tsquery($1)
+				) AS relevance
+			`,
+			)
 			.replace("%WHERE_CONDITIONS%", searchWhereConditions)
+			.replace("%ORDER_BY%", "relevance DESC NULLS LAST,")
+			.replace("%LIMIT%", "10")
 		const searchParams = [
 			`%${searchTerm}%`,
 			...words.map((word) => `%${word}%`),
@@ -167,8 +183,10 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 		AND m.aggregated_overall_score_normalized_percent >= 60
 	`
 	const groupQuery = commonQuery
-		.replace("%LIMIT%", "500")
+		.replace("%SELECTED_FIELDS%", "")
 		.replace("%WHERE_CONDITIONS%", groupWhereConditions)
+		.replace("%ORDER_BY%", "")
+		.replace("%LIMIT%", "500")
 	const groupedResult = await executeQuery<T>(groupQuery)
 
 	return [searchRows, groupedResult.rows]

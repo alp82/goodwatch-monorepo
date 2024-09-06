@@ -94,7 +94,7 @@ export default function SelectCountry({ onSelect }: SelectCountryProps) {
 						/>
 					</div>
 					<div className="flex flex-col gap-2">
-						<div className="font-semibold">Is this correct?</div>
+						<div className="text-center font-semibold">Is this correct?</div>
 						<YesNoButtons
 							onYes={handleCountryConfirmed}
 							onNo={handleCountryDeclined}

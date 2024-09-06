@@ -22,7 +22,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 		typeof window !== "undefined"
 			? localStorage.getItem("withStreamingProviders")
 			: undefined
-	const preselectedStreaming = (storedStreaming || "").split(",")
+	const preselectedStreaming = storedStreaming ? storedStreaming.split(",") : []
 
 	// get all providers
 	const providersFetcher = useFetcher<{
@@ -137,15 +137,13 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 							ref={autoFocusRef}
 						/>
 					</div>
-					<div className="flex flex-wrap justify-center gap-5">
+					<div className="flex flex-wrap justify-center gap-2 md:gap-5">
 						{filteredStreamingProviders.map((provider) => {
 							return (
 								<StreamingProviderToggle
 									key={provider.id}
 									provider={provider}
-									selected={
-										selectedStreaming.includes(String(provider.id)) || false
-									}
+									selected={selectedStreaming.includes(String(provider.id))}
 									onToggle={handleToggleProvider}
 								/>
 							)
@@ -156,34 +154,36 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 						onBack={handleStreamingBack}
 					/>
 				</>
-			) : userStreaming ? (
+			) : (
 				<>
 					<div className="flex flex-wrap justify-center gap-5">
-						{userStreaming.map((providerId) => {
-							const provider = streamingProviders.find(
-								(provider) => provider.id === Number.parseInt(providerId),
-							)
-							if (!provider) return null
-							return (
-								<StreamingProviderToggle
-									key={provider.id}
-									provider={provider}
-									selectable={false}
-								/>
-							)
-						})}
+						{userStreaming.length > 0 ? (
+							userStreaming.map((providerId) => {
+								const provider = streamingProviders.find(
+									(provider) => provider.id === Number.parseInt(providerId),
+								)
+								if (!provider) return null
+								return (
+									<StreamingProviderToggle
+										key={provider.id}
+										provider={provider}
+										selectable={false}
+									/>
+								)
+							})
+						) : (
+							<div className="p-2 bg-slate-800 border-2 border-slate-950 text-2xl italic">
+								No Streaming Services
+							</div>
+						)}
 					</div>
 					<div className="flex flex-col gap-2">
-						<div className="font-semibold">Is this correct?</div>
+						<div className="text-center font-semibold">Is this correct?</div>
 						<YesNoButtons
 							onYes={handleStreamingConfirmed}
 							onNo={handleStreamingDeclined}
 						/>
 					</div>
-				</>
-			) : (
-				<>
-					<div>Loading...</div>
 				</>
 			)}
 		</>
