@@ -1,19 +1,19 @@
-import { FilmIcon } from "@heroicons/react/24/solid";
-import { useFetcher } from "@remix-run/react";
-import React, { useEffect, useState } from "react";
+import { FilmIcon } from "@heroicons/react/24/solid"
+import { useFetcher } from "@remix-run/react"
+import React, { useEffect, useState } from "react"
 import type {
 	StreamingProvider,
 	StreamingProviderResults,
-} from "~/server/streaming-providers.server";
-import NextBackButtons from "~/ui/button/NextBackButtons";
-import YesNoButtons from "~/ui/button/YesNoButtons";
-import { TextInput } from "~/ui/form/TextInput";
-import StreamingProviderSelection from "~/ui/onboarding/StreamingProviderSelection";
-import StreamingProviderToggle from "~/ui/onboarding/StreamingProviderToggle";
-import { useAutoFocus } from "~/utils/form";
+} from "~/server/streaming-providers.server"
+import NextBackButtons from "~/ui/button/NextBackButtons"
+import YesNoButtons from "~/ui/button/YesNoButtons"
+import { TextInput } from "~/ui/form/TextInput"
+import StreamingProviderSelection from "~/ui/onboarding/StreamingProviderSelection"
+import StreamingProviderToggle from "~/ui/onboarding/StreamingProviderToggle"
+import { useAutoFocus } from "~/utils/form"
 
 interface SelectStreamingProps {
-	onSelect: (streamingProviderIds: string[]) => void;
+	onSelect: (streamingProviderIds: string[]) => void
 }
 
 export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
@@ -21,55 +21,55 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 	const storedStreaming =
 		typeof window !== "undefined"
 			? localStorage.getItem("withStreamingProviders")
-			: undefined;
-	const preselectedStreaming = (storedStreaming || "").split(",");
+			: undefined
+	const preselectedStreaming = (storedStreaming || "").split(",")
 
 	// get all providers
 	const providersFetcher = useFetcher<{
-		streamingProviders: StreamingProviderResults;
-	}>();
+		streamingProviders: StreamingProviderResults
+	}>()
 	useEffect(() => {
-		const type = "movie";
+		const type = "movie"
 		providersFetcher.submit(
 			{ type },
 			{
 				method: "get",
 				action: "/api/discover/streaming-providers",
 			},
-		);
-	}, []);
-	const streamingProviders = providersFetcher.data?.streamingProviders || [];
+		)
+	}, [])
+	const streamingProviders = providersFetcher.data?.streamingProviders || []
 
 	// filtered streaming providers
-	const [filterText, setFilterText] = useState("");
+	const [filterText, setFilterText] = useState("")
 	const handleFilterByName = (text: string) => {
-		setFilterText(text);
-	};
+		setFilterText(text)
+	}
 	const filteredStreamingProviders = streamingProviders.filter((provider) => {
-		return provider.name.toLowerCase().includes(filterText.toLowerCase());
-	});
+		return provider.name.toLowerCase().includes(filterText.toLowerCase())
+	})
 
 	// defaults or selection
 	const [streamingSelectionEnabled, setStreamingSelectionEnabled] =
-		useState(false);
+		useState(false)
 	const handleStreamingDeclined = () => {
-		setStreamingSelectionEnabled(true);
-		setSelectedStreaming(preselectedStreaming);
-	};
+		setStreamingSelectionEnabled(true)
+		setSelectedStreaming(preselectedStreaming)
+	}
 	const handleStreamingBack = () => {
-		setStreamingSelectionEnabled(false);
-	};
+		setStreamingSelectionEnabled(false)
+	}
 
 	// selection
-	const autoFocusRef = useAutoFocus<HTMLInputElement>();
-	const [selectedStreaming, setSelectedStreaming] = useState<string[]>([]);
+	const autoFocusRef = useAutoFocus<HTMLInputElement>()
+	const [selectedStreaming, setSelectedStreaming] = useState<string[]>([])
 
 	const handleToggleProvider = (
 		provider: StreamingProvider,
 		selected: boolean,
 	) => {
 		setSelectedStreaming((prev) => {
-			const providerId = String(provider.id);
+			const providerId = String(provider.id)
 
 			// If selected and not already in the list, add it
 			if (selected && !(prev || []).includes(providerId)) {
@@ -79,27 +79,27 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 							(prev || []).includes(String(streamingProvider.id)) ||
 							String(streamingProvider.id) === providerId,
 					)
-					.map((streamingProvider) => String(streamingProvider.id));
+					.map((streamingProvider) => String(streamingProvider.id))
 			}
 
 			// If not selected, remove it
 			if (!selected) {
-				return (prev || []).filter((id) => id !== providerId);
+				return (prev || []).filter((id) => id !== providerId)
 			}
 
-			return prev;
-		});
-	};
+			return prev
+		})
+	}
 
 	const handleStreamingConfirmed = () => {
 		onSelect(
 			streamingSelectionEnabled ? selectedStreaming : preselectedStreaming,
-		);
-	};
+		)
+	}
 
 	const userStreaming = selectedStreaming.length
 		? selectedStreaming
-		: preselectedStreaming;
+		: preselectedStreaming
 
 	return (
 		<>
@@ -109,14 +109,14 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 						{selectedStreaming.map((providerId) => {
 							const provider = streamingProviders.find(
 								(provider) => provider.id === Number.parseInt(providerId),
-							);
-							if (!provider) return null;
+							)
+							if (!provider) return null
 							return (
 								<StreamingProviderSelection
 									key={provider.id}
 									provider={provider}
 								/>
-							);
+							)
 						})}
 					</div>
 					<NextBackButtons
@@ -148,7 +148,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 									}
 									onToggle={handleToggleProvider}
 								/>
-							);
+							)
 						})}
 					</div>
 					<NextBackButtons
@@ -158,19 +158,19 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 				</>
 			) : userStreaming ? (
 				<>
-					<div className="flex flex-wrap gap-5">
+					<div className="flex flex-wrap justify-center gap-5">
 						{userStreaming.map((providerId) => {
 							const provider = streamingProviders.find(
 								(provider) => provider.id === Number.parseInt(providerId),
-							);
-							if (!provider) return null;
+							)
+							if (!provider) return null
 							return (
 								<StreamingProviderToggle
 									key={provider.id}
 									provider={provider}
 									selectable={false}
 								/>
-							);
+							)
 						})}
 					</div>
 					<div className="flex flex-col gap-2">
@@ -187,5 +187,5 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 				</>
 			)}
 		</>
-	);
+	)
 }

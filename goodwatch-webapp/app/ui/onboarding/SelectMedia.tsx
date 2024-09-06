@@ -1,6 +1,6 @@
 import { BookmarkIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { ForwardIcon } from "@heroicons/react/24/solid"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useOnboardingMedia } from "~/routes/api.onboarding.media"
 import { useUserData } from "~/routes/api.user-data"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
@@ -56,6 +56,14 @@ export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
 	const handlePreviousMediaHide = () => {
 		setPreviousMediaToDisplay(undefined)
 	}
+	const tmdb_ids = [
+		...movies.map((m) => m.tmdb_id),
+		...tv.map((m) => m.tmdb_id),
+	].join(",")
+	useEffect(() => {
+		if (!previousMediaToDisplay) return
+		handlePreviousMediaHide()
+	}, [tmdb_ids])
 
 	const allMedia = [
 		...(previousMediaToDisplay ? [previousMediaToDisplay] : []),
@@ -160,10 +168,7 @@ export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
 											</div>
 											{/*<Genres genres={details.genres} withLinks={false} />*/}
 											<div>
-												<ScoreSelector
-													details={details}
-													onChange={handlePreviousMediaHide}
-												/>
+												<ScoreSelector details={details} />
 											</div>
 											<div className="flex flex-wrap md:flex-nowrap justify-between gap-6 p-2 sm:p-4">
 												<SkipButton
@@ -187,7 +192,8 @@ export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
 	}
 
 	// show spinner until data is loaded
-	if (!movies.length || !tv.length) return <Spinner size="large" />
+	// TODO this does not work with the search for unknown reasons
+	// if (!movies.length || !tv.length) return <Spinner size="large" />
 
 	return (
 		<>
@@ -198,7 +204,7 @@ export const SelectMedia = ({ onSelect }: SelectMediaProps) => {
 					.map((details) => (
 						<div
 							key={details.tmdb_id}
-							className={`relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-500" : "border-slate-800"}`}
+							className={`relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-500" : "border-slate-800"}`}
 							onClick={() => handlePreviousMediaToggle(details)}
 							onKeyDown={() => null}
 						>

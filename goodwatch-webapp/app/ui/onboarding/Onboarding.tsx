@@ -35,6 +35,8 @@ export default function Onboarding({ children }: OnboardingProps) {
 
 	// step progress
 
+	// TODO start step 0
+	// const [currentStep, setCurrentStep] = useState(0)
 	const [currentStep, setCurrentStep] = useState(2)
 	const MIN_PROGRESS = 10
 	const normalizedProgress =
@@ -124,7 +126,9 @@ export default function Onboarding({ children }: OnboardingProps) {
 				</div>
 			</div>
 
-			<div className="text-lg">{steps[currentStep].description}</div>
+			<div className="m-2 text-lg text-center leading-relaxed">
+				{steps[currentStep].description}
+			</div>
 			{currentStep === 0 && <SelectCountry onSelect={handleSelectCountry} />}
 			{currentStep === 1 && (
 				<SelectStreaming onSelect={handleSelectStreaming} />

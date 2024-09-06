@@ -1,12 +1,10 @@
 # TODO's
 ```
 onboarding:
-    remove score with better ux
-    serach term sql injection
-    search alternative titles
     score should be added to "watch history" as well 
     streaming optional
     update localstorage for each step
+    start step 0 
     fix wishlist
 
 user settings

@@ -130,18 +130,18 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 	let searchRows: T[] = []
 	if (searchTerm) {
 		const exactMatchCondition = `
-			m.title ILIKE '%${searchTerm}%'
-			OR m.original_title ILIKE '%${searchTerm}%'
-			OR m.alternative_titles_text ILIKE '%${searchTerm}%'
+			m.title ILIKE $1
+			OR m.original_title ILIKE $1
+			OR m.alternative_titles_text ILIKE $1
 		`
 
 		const words = searchTerm.split(" ").filter(Boolean)
 		const wordConditions = words
 			.map(
-				(word) => `
-					m.title ILIKE '%${word}%'
-					OR m.original_title ILIKE '%${word}%'
-					OR m.alternative_titles_text ILIKE '%${word}%'
+				(_, index) => `
+					m.title ILIKE $${index + 2}
+					OR m.original_title ILIKE $${index + 2}
+					OR m.alternative_titles_text ILIKE $${index + 2}
 				`,
 			)
 			.join(" OR ")
@@ -153,7 +153,11 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 		const searchQuery = commonQuery
 			.replace("%LIMIT%", `${LIMIT_PER_MEDIA_TYPE}`)
 			.replace("%WHERE_CONDITIONS%", searchWhereConditions)
-		const searchResult = await executeQuery<T>(searchQuery)
+		const searchParams = [
+			`%${searchTerm}%`,
+			...words.map((word) => `%${word}%`),
+		]
+		const searchResult = await executeQuery<T>(searchQuery, searchParams)
 		searchRows = searchResult.rows
 	}
 
