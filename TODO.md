@@ -1,8 +1,6 @@
 # TODO's
 ```
 onboarding:
-    search needs to have proper fulltext relevance ordering
-    score should be added to "watch history" as well 
     streaming optional
     update localstorage for each step
     fix wishlist

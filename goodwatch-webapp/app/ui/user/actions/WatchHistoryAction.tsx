@@ -11,29 +11,36 @@ import { useAPIAction } from "~/utils/api-action"
 export interface WatchHistoryActionProps {
 	children: React.ReactElement
 	details: UserActionDetails
+	actionOverwrite?: "add" | "remove"
 }
 
 export default function WatchHistoryAction({
 	children,
 	details,
+	actionOverwrite,
 }: WatchHistoryActionProps) {
 	const { tmdb_id, media_type } = details
 
 	const { data: userData } = useUserData()
-	const action = userData?.[media_type]?.[tmdb_id]?.onWatchHistory
+	const toggleAction = userData?.[media_type]?.[tmdb_id]?.onWatchHistory
 		? "remove"
 		: "add"
+	const action = actionOverwrite ? actionOverwrite : toggleAction
 
 	const { submitProps } = useAPIAction<
 		UpdateWatchHistoryPayload,
 		UpdateWatchHistoryResult
 	>({
-		url: "/api/update-watch-history",
-		params: {
-			tmdb_id,
-			media_type,
-			action,
-		},
+		endpoints: [
+			{
+				url: "/api/update-watch-history",
+				params: {
+					tmdb_id,
+					media_type,
+					action,
+				},
+			},
+		],
 	})
 
 	return (

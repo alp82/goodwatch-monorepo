@@ -28,12 +28,16 @@ export default function SkippedAction({
 		UpdateSkippedPayload,
 		UpdateSkippedResult
 	>({
-		url: "/api/update-skipped",
-		params: {
-			tmdb_id,
-			media_type,
-			action,
-		},
+		endpoints: [
+			{
+				url: "/api/update-skipped",
+				params: {
+					tmdb_id,
+					media_type,
+					action,
+				},
+			},
+		],
 	})
 
 	return (

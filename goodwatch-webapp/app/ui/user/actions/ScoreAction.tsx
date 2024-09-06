@@ -1,9 +1,11 @@
 import React from "react"
+import { useUserData } from "~/routes/api.user-data"
 import type {
 	Score,
 	UpdateScoresPayload,
 	UpdateScoresResult,
 } from "~/server/scores.server"
+import type { UpdateWatchHistoryPayload } from "~/server/watchHistory.server"
 import UserAction from "~/ui/auth/UserAction"
 import type { UserActionDetails } from "~/ui/user/actions/types"
 import { useAPIAction } from "~/utils/api-action"
@@ -23,17 +25,34 @@ export default function ScoreAction({
 }: ScoreActionProps) {
 	const { tmdb_id, media_type } = details
 
-	const { submitProps } = useAPIAction<UpdateScoresPayload, UpdateScoresResult>(
-		{
-			url: "/api/update-scores",
-			params: {
-				tmdb_id,
-				media_type,
-				score,
+	const { data: userData } = useUserData()
+	const userScore = userData?.[media_type]?.[tmdb_id]?.score || null
+	const watchHistoryAction = score === null ? "remove" : "add"
+
+	const { submitProps } = useAPIAction<
+		UpdateScoresPayload | UpdateWatchHistoryPayload,
+		UpdateScoresResult
+	>({
+		endpoints: [
+			{
+				url: "/api/update-scores",
+				params: {
+					tmdb_id,
+					media_type,
+					score,
+				},
 			},
-			onClick: children.props.onClick,
-		},
-	)
+			{
+				url: "/api/update-watch-history",
+				params: {
+					tmdb_id,
+					media_type,
+					action: watchHistoryAction,
+				},
+			},
+		],
+		onClick: children.props.onClick,
+	})
 
 	return (
 		<UserAction

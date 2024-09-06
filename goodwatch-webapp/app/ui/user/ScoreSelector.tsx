@@ -4,6 +4,7 @@ import { useUserData } from "~/routes/api.user-data"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { Score } from "~/server/scores.server"
 import ScoreAction from "~/ui/user/actions/ScoreAction"
+import WatchHistoryAction from "~/ui/user/actions/WatchHistoryAction"
 
 interface ScoreSelectorProps {
 	details: MovieDetails | TVDetails
@@ -163,7 +164,7 @@ export default function ScoreSelector({
 						<ScoreAction
 							key={i + 1}
 							details={details}
-							score={scoreIndex !== score ? scoreIndex : null}
+							score={scoreIndex === score ? null : scoreIndex}
 						>
 							<div
 								className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
@@ -171,7 +172,7 @@ export default function ScoreSelector({
 								onMouseEnter={(event) => handlePointerEnter(event, scoreIndex)}
 								onMouseLeave={handlePointerLeave}
 								onClick={() => handleClick(scoreIndex)}
-								onKeyPress={() => null}
+								onKeyUp={() => null}
 							>
 								<div
 									className={`h-8 w-full border-2 border-gray-800 rounded-md ${getColorForIndex(

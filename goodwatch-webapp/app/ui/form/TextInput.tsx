@@ -19,12 +19,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
 		return (
 			<>
 				<label
-					htmlFor="default-search"
+					htmlFor="onboarding-search"
 					className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
 				>
 					{label}
 				</label>
-				<div className="relative max-w-96">
+				<div className="relative flex-grow max-w-md">
 					{icon && (
 						<div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
 							{icon}

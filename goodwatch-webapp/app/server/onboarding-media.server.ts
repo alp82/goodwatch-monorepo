@@ -39,8 +39,8 @@ export const getOnboardingMedia = async (params: OnboardingMediaParams) => {
 		name: "countries",
 		target: _getOnboardingMedia,
 		params,
-		// ttlMinutes: 60 * 6,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 6,
+		// ttlMinutes: 0,
 	})
 }
 

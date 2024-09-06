@@ -258,7 +258,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					onBack={handleMediaRatingsBack}
 				/>
 			</div>
-			<div className="mt-4 w-full flex items-center justify-center">
+			<div className="mt-6 w-full flex items-center justify-center">
 				<TextInput
 					label="Search"
 					placeholder="Search Movies and Shows"

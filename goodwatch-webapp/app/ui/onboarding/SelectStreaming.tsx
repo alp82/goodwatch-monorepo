@@ -123,7 +123,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 						onNext={handleStreamingConfirmed}
 						onBack={handleStreamingBack}
 					/>
-					<div className="mt-6">
+					<div className="mt-6 w-full flex items-center justify-center">
 						<TextInput
 							label="Search"
 							placeholder="Search Streaming Providers"

@@ -30,12 +30,16 @@ export default function ToWatchAction({
 		UpdateWishListPayload,
 		UpdateWishListResult
 	>({
-		url: "/api/update-wish-list",
-		params: {
-			tmdb_id,
-			media_type,
-			action,
-		},
+		endpoints: [
+			{
+				url: "/api/update-wish-list",
+				params: {
+					tmdb_id,
+					media_type,
+					action,
+				},
+			},
+		],
 	})
 
 	return (

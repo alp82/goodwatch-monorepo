@@ -9,32 +9,41 @@ const loadingProps = {
 	opacity: 0.7,
 }
 
-interface UseSubmitProps<Params> {
+interface Endpoint<Params> {
 	url: `/api/${string}`
 	params: Params
+}
+
+interface UseSubmitProps<Params> {
+	endpoints: Endpoint<Params>[]
 	onClick?: () => void
 }
 
 export const useAPIAction = <Params extends {}, Result extends {}>({
-	url,
-	params,
+	endpoints,
 	onClick,
 }: UseSubmitProps<Params>) => {
 	const queryClient = useQueryClient()
 	const isLoading = useIsFetching({ queryKey: queryKeyUserData })
 
-	const [result, setResult] = useState<Result | null>(null)
+	const [results, setResults] = useState<Result[] | null>(null)
 	const handleSubmit = async () => {
 		if (onClick) {
 			onClick()
 		}
-		setResult(null)
-		const response = await fetch(url, {
-			method: "POST",
-			body: JSON.stringify(params),
-		})
-		const result: Result = await response.json()
-		setResult(result)
+		setResults(null)
+
+		const promises = endpoints.map(({ url, params }) =>
+			fetch(url, {
+				method: "POST",
+				body: JSON.stringify(params),
+			}),
+		)
+		const responses = await Promise.all(promises)
+		const results = await Promise.all(
+			responses.map((response) => response.json()),
+		)
+		setResults(results)
 
 		// invalidate queries
 		queryClient.invalidateQueries({
@@ -52,7 +61,7 @@ export const useAPIAction = <Params extends {}, Result extends {}>({
 	}
 
 	return {
-		result,
+		results,
 		isLoading,
 		submitProps,
 	}

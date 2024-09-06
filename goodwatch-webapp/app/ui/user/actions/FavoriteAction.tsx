@@ -30,12 +30,16 @@ export default function FavoriteAction({
 		UpdateFavoritesPayload,
 		UpdateFavoritesResult
 	>({
-		url: "/api/update-favorites",
-		params: {
-			tmdb_id,
-			media_type,
-			action,
-		},
+		endpoints: [
+			{
+				url: "/api/update-favorites",
+				params: {
+					tmdb_id,
+					media_type,
+					action,
+				},
+			},
+		],
 	})
 
 	return (
