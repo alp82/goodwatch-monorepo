@@ -252,7 +252,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 			<div className="w-full flex items-center justify-center">
 				<NextBackButtons
 					nextLabel={
-						didntScoreEnoughForRecommendations ? "Skip for now" : "Next"
+						didntScoreEnoughForRecommendations ? "Skip for now" : "Finish"
 					}
 					onNext={handleMediaRatingsConfirmed}
 					onBack={handleMediaRatingsBack}
@@ -280,7 +280,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 			<div className="w-full flex items-center justify-center">
 				<NextBackButtons
 					nextLabel={
-						didntScoreEnoughForRecommendations ? "Skip for now" : "Next"
+						didntScoreEnoughForRecommendations ? "Skip for now" : "Finish"
 					}
 					onNext={handleMediaRatingsConfirmed}
 					onBack={handleMediaRatingsBack}

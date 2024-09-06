@@ -1,6 +1,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useOnboardingMedia } from "~/routes/api.onboarding.media"
+import { OnboardingSuccess } from "~/ui/onboarding/OnboardingSuccess"
 import SelectCountry from "~/ui/onboarding/SelectCountry"
 import { SelectMedia } from "~/ui/onboarding/SelectMedia"
 import SelectStreaming from "~/ui/onboarding/SelectStreaming"
@@ -68,12 +69,14 @@ export default function Onboarding({ children }: OnboardingProps) {
 		setCurrentStep(2)
 	}
 
-	// media onboarding
+	// media onboarding finished
 
 	const [finalizeOnboarding, setFinalizeOnboarding] = useState(false)
 	const handleFinishOnboarding = () => {
 		setFinalizeOnboarding(true)
 	}
+
+	if (finalizeOnboarding) return <OnboardingSuccess />
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-5 sm:gap-6">

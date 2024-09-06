@@ -1,18 +1,12 @@
 # TODO's
 ```
 onboarding:
-    streaming optional
-    update localstorage for each step
-    fix wishlist
     start step 0 
-    remove TTL 0
 
 user settings
     country_code = str
     streaminig_provider_ids = int[]
-    onboarding_country_selection_finished = bool
-    onboarding_streaming_selection_finished = bool
-    onboarding_ratings_finished = bool
+    onboarding_step = "country_selection" | "streaming_selection" | "ratings"
     onboarding_completed = bool
     
 use user's country_code
@@ -20,14 +14,20 @@ use user's country_code
 
 user data refresh after login/logout
 
+fix wishlist
+
 cookie consent update
     centered
     inspiration: https://www.smashingmagazine.com
+
+---
 
 streaming data pipeline with daily accuracy
 
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
+
+---
 
 home screen
     new design with home theater and couch
