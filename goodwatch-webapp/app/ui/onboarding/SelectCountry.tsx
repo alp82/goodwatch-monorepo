@@ -1,10 +1,12 @@
 import { useFetcher } from "@remix-run/react"
 import type React from "react"
 import { useEffect, useState } from "react"
+import { useUserSettings } from "~/routes/api.user-settings.get"
 import type { Country } from "~/server/countries.server"
 import { getCountryName } from "~/server/resources/country-names"
 import NextBackButtons from "~/ui/button/NextBackButtons"
 import YesNoButtons from "~/ui/button/YesNoButtons"
+import { CountryFlag } from "~/ui/country/CountryFlag"
 import FilterCountries from "~/ui/filter/FilterCountries"
 
 interface SelectCountryProps {
@@ -12,8 +14,16 @@ interface SelectCountryProps {
 }
 
 export default function SelectCountry({ onSelect }: SelectCountryProps) {
+	const { data: userSettings } = useUserSettings()
+
+	// pre-selection
+
 	const storedCountry =
-		typeof window !== "undefined" ? localStorage.getItem("country") : undefined
+		userSettings?.country_default || typeof window !== "undefined"
+			? localStorage.getItem("country")
+			: undefined
+
+	// get all countries
 
 	const guessCountryFetcher = useFetcher<{ country: string }>()
 	useEffect(() => {
@@ -40,7 +50,8 @@ export default function SelectCountry({ onSelect }: SelectCountryProps) {
 	}, [countriesFetcher.submit])
 	const countries = countriesFetcher.data?.countries || []
 
-	// defaults or selection
+	// selection mode
+
 	const [countrySelectionEnabled, setCountrySelectionEnabled] = useState(false)
 	const handleCountryDeclined = () => {
 		setCountrySelectionEnabled(true)
@@ -87,11 +98,7 @@ export default function SelectCountry({ onSelect }: SelectCountryProps) {
 							<strong>{getCountryName(userCountry)}</strong>
 							<span> ({userCountry})</span>
 						</div>
-						<img
-							className="w-24"
-							src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${userCountry}.svg`}
-							alt={getCountryName(userCountry)}
-						/>
+						<CountryFlag countryCode={userCountry} />
 					</div>
 					<div className="flex flex-col gap-2">
 						<div className="text-center font-semibold">Is this correct?</div>

@@ -1,10 +1,14 @@
 import type React from "react"
 import { useState } from "react"
 import { useOnboardingMedia } from "~/routes/api.onboarding.media"
+import { useUserSettings } from "~/routes/api.user-settings.get"
+import { useSetUserSettings } from "~/routes/api.user-settings.set"
+import { Spinner } from "~/ui/Spinner"
 import { OnboardingSuccess } from "~/ui/onboarding/OnboardingSuccess"
 import SelectCountry from "~/ui/onboarding/SelectCountry"
 import { SelectMedia } from "~/ui/onboarding/SelectMedia"
 import SelectStreaming from "~/ui/onboarding/SelectStreaming"
+import { useUser } from "~/utils/auth"
 
 const steps = [
 	{
@@ -27,18 +31,20 @@ interface OnboardingProps {
 }
 
 export default function Onboarding({ children }: OnboardingProps) {
-	const onboardingCompleted = false
-	if (onboardingCompleted) return children
+	const { user, loading } = useUser()
+	const { data: userSettings } = useUserSettings()
+	const setUserSettings = useSetUserSettings()
 
-	// prefetch data
+	const isLoggedIn = Boolean(user)
+	const onboardingCompleted = userSettings?.onboarding_completed
+
+	// prefetch data for last step
 
 	useOnboardingMedia({ searchTerm: "" })
 
 	// step progress
 
-	// TODO start step 0
-	// const [currentStep, setCurrentStep] = useState(0)
-	const [currentStep, setCurrentStep] = useState(2)
+	const [currentStep, setCurrentStep] = useState(0)
 	const MIN_PROGRESS = 10
 	const normalizedProgress =
 		MIN_PROGRESS +
@@ -46,36 +52,46 @@ export default function Onboarding({ children }: OnboardingProps) {
 
 	// country selection
 
-	const [selectedCountry, setSelectedCountry] = useState<string | undefined>()
 	const handleSelectCountry = (country: string) => {
 		localStorage.setItem("country", country)
+		setUserSettings.mutate({
+			country_default: country,
+		})
 
-		setSelectedCountry(country)
 		setCurrentStep(1)
 	}
 
 	// streaming selection
 
-	const [selectedStreaming, setSelectedStreaming] = useState<
-		string[] | undefined
-	>()
 	const handleSelectStreaming = (selectedProviders: string[]) => {
 		const withStreamingProviders = selectedProviders
 			.map((item) => item)
 			.join(",")
-		localStorage.setItem("withStreamingProviders", withStreamingProviders)
 
-		setSelectedStreaming(selectedProviders)
+		localStorage.setItem("withStreamingProviders", withStreamingProviders)
+		setUserSettings.mutate({
+			streaming_providers_default: withStreamingProviders,
+		})
+
 		setCurrentStep(2)
 	}
 
 	// media onboarding finished
 
+	// TODO
+	// const [finalizeOnboarding, setFinalizeOnboarding] = useState(true)
 	const [finalizeOnboarding, setFinalizeOnboarding] = useState(false)
 	const handleFinishOnboarding = () => {
 		setFinalizeOnboarding(true)
 	}
 
+	if (loading)
+		return (
+			<div className="mt-12 flex items-center justify-center">
+				<Spinner size="large" />
+			</div>
+		)
+	if (!isLoggedIn || onboardingCompleted) return children
 	if (finalizeOnboarding) return <OnboardingSuccess />
 
 	return (

@@ -27,8 +27,8 @@ import React, { useEffect, useState } from "react"
 import { ToastContainer } from "react-toastify"
 
 import Footer from "~/ui/Footer"
-import Header from "~/ui/Header"
 import InfoBox from "~/ui/InfoBox"
+import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
 import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 

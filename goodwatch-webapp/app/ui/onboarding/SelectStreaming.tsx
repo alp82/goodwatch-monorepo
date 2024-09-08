@@ -1,6 +1,7 @@
 import { FilmIcon } from "@heroicons/react/24/solid"
 import { useFetcher } from "@remix-run/react"
 import React, { useEffect, useState } from "react"
+import { useUserSettings } from "~/routes/api.user-settings.get"
 import type {
 	StreamingProvider,
 	StreamingProviderResults,
@@ -17,14 +18,18 @@ interface SelectStreamingProps {
 }
 
 export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
+	const { data: userSettings } = useUserSettings()
+
 	// pre-selection
+
 	const storedStreaming =
-		typeof window !== "undefined"
+		userSettings?.streaming_providers_default || typeof window !== "undefined"
 			? localStorage.getItem("withStreamingProviders")
 			: undefined
 	const preselectedStreaming = storedStreaming ? storedStreaming.split(",") : []
 
 	// get all providers
+
 	const providersFetcher = useFetcher<{
 		streamingProviders: StreamingProviderResults
 	}>()
@@ -41,6 +46,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 	const streamingProviders = providersFetcher.data?.streamingProviders || []
 
 	// filtered streaming providers
+
 	const [filterText, setFilterText] = useState("")
 	const handleFilterByName = (text: string) => {
 		setFilterText(text)
@@ -49,7 +55,8 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 		return provider.name.toLowerCase().includes(filterText.toLowerCase())
 	})
 
-	// defaults or selection
+	// toggle selection mode
+
 	const [streamingSelectionEnabled, setStreamingSelectionEnabled] =
 		useState(false)
 	const handleStreamingDeclined = () => {
@@ -60,7 +67,8 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 		setStreamingSelectionEnabled(false)
 	}
 
-	// selection
+	// streaming selection
+
 	const autoFocusRef = useAutoFocus<HTMLInputElement>()
 	const [selectedStreaming, setSelectedStreaming] = useState<string[]>([])
 

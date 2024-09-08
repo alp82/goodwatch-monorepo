@@ -7,24 +7,24 @@ import {
 	MenuItem,
 	MenuItems,
 	Transition,
-} from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import React, { Fragment } from "react";
-import { useLocation } from "react-router";
+} from "@headlessui/react"
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
+import React, { Fragment } from "react"
+import { useLocation } from "react-router"
 
-import Search from "~/ui/Search";
-import { useUser } from "~/utils/auth";
+import Search from "~/ui/Search"
+import { useUser } from "~/utils/auth"
 
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import logo from "~/img/goodwatch-logo.png";
-import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
-import { SignOutLink } from "~/ui/auth/SignOutLink";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
+import logo from "~/img/goodwatch-logo.png"
+import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
+import { SignOutLink } from "~/ui/auth/SignOutLink"
 
 export default function Header() {
-	const location = useLocation();
-	const isPage = (pathname: string) => location.pathname === pathname;
+	const location = useLocation()
+	const isPage = (pathname: string) => location.pathname === pathname
 
-	const { user, loading } = useUser();
+	const { user, loading } = useUser()
 
 	return (
 		<Disclosure as="nav" className="bg-gray-800 fixed top-0 z-50 w-full">
@@ -187,5 +187,5 @@ export default function Header() {
 				</>
 			)}
 		</Disclosure>
-	);
+	)
 }

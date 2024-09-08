@@ -1,15 +1,14 @@
 # TODO's
 ```
 onboarding:
+    validate user settings key and types + simplify api
+    onboarding success with proper summary
+    success background with buzz
     start step 0 
 
-user settings
-    country_code = str
-    streaminig_provider_ids = int[]
-    onboarding_step = "country_selection" | "streaming_selection" | "ratings"
-    onboarding_completed = bool
-    
-use user's country_code
+use user's country_code / streaming providers
+    details
+    discover
     userData.server.ts
 
 user data refresh after login/logout
@@ -29,6 +28,12 @@ streaming providers from tmdb api with all country ranks
 
 ---
 
+redesigned footer
+    community blocks
+    https://flowbite.com/blocks/marketing/footer/
+
+---
+
 home screen
     new design with home theater and couch
     anon: link to how it works
@@ -36,9 +41,10 @@ home screen
 
 header
     main search expand
+    subnav row with search and default filters
+        https://flowbite.com/blocks/application/navbar/#double-navigation-bar-with-search-input
     
-Wishlist -> To Watch
-    bookmark icon
+---
 
 details
     guess country
@@ -46,12 +52,18 @@ details
     all in one page with side navigation (scroll aware navigation)
     https://imdb.shyakadavis.me/title#overview
 
+---
+
 vectorize v2
     new prompt
     production country / studio
     weaviate alternative
 
+---
+
 letterboxd ratings
+
+---
 
 watched/ratings page:
     rating stats (1-10 distribution)
@@ -61,9 +73,46 @@ wishlist two sections:
     watch now
     rest
 
+---
+
+discover sidebar redesign
+    blocks with filter names and subtle bg in a grid
+    https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
+    https://flowbite.com/blocks/application/table-headers/#multi-level-table-header-with-filters
+    filter inspiration:
+        https://www.yidio.com/movies
+        https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
+    discover: unselect streaming
+    discover: unselect country
+    discover age ratings
+    discover cast / crew
+    discover director
+    discover scores
+    discover budget & revenue
+    disocver keywords and tropes
+
+discover
+    with cast not working
+    return count: "showing first 100 results"
+    streaming types: mine, free, buy, all
+    discover loading animation with skeletons
+
+---
+
+sql injection analysis
+
+---
+    
 backups
     db's
     configs
+
+---
+
+secret handling
+project documentation
+
+---
 
 weaviate
     authentication
@@ -82,35 +131,10 @@ explore tag alternatives:
     ORDER BY value_count DESC
     LIMIT 200;
 
-react-query
 offline support
-
-discover
-    with cast not working
-    return count: "showing first 100 results"
-    streaming types: mine, free, buy, all
-
-discover sidebar redesign
-    https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
-    filter inspiration:
-        https://www.yidio.com/movies
-        https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-    discover: unselect streaming
-    discover: unselect country
-    discover age ratings
-    discover cast / crew
-    discover director
-    discover scores
-    discover budget & revenue
-    disocver keywords and tropes
-    
-discover loading animation with skeletons
 
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
-
-secret handling
-project documentation
 
 init scripts only insert new and ignore existing ids
 copy/combine scripts only copy diffs to postgres

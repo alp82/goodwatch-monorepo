@@ -36,6 +36,7 @@ import {
 	getTrendingMovies,
 	getTrendingTV,
 } from "~/server/trending.server"
+import { prefetchUserSettings } from "~/server/user-settings.server"
 import { prefetchUserData } from "~/server/userData.server"
 import { MovieCard } from "~/ui/MovieCard"
 import { TvCard } from "~/ui/TvCard"
@@ -84,11 +85,12 @@ export const loader: LoaderFunction = async ({
 			getPopularPicksTV(apiParams),
 		])
 
+	// prefetch data
 	const queryClient = new QueryClient()
-	await prefetchUserData({
-		queryClient,
-		request,
-	})
+	await Promise.all([
+		prefetchUserData({ queryClient, request }),
+		prefetchUserSettings({ queryClient, request }),
+	])
 
 	return json<LoaderData>({
 		trendingMovies,
