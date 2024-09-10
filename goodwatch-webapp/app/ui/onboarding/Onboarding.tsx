@@ -40,11 +40,6 @@ export default function Onboarding({ children }: OnboardingProps) {
 	const isLoggedIn = Boolean(user)
 	const onboardingCompleted = userSettings?.onboarding_completed
 
-	// prefetch data for last step
-
-	useUserData()
-	useOnboardingMedia({ searchTerm: "" })
-
 	// step progress
 
 	const [currentStep, setCurrentStep] = useState(0)

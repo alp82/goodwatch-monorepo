@@ -7,10 +7,12 @@ import {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
+import type { GetUserDataResult } from "~/routes/api.user-data"
 import { type TVDetails, getDetailsForTV } from "~/server/details.server"
-import { type GetUserDataResult, getUserData } from "~/server/userData.server"
+import { getUserSettings } from "~/server/user-settings.server"
+import { getUserData } from "~/server/userData.server"
 import Details from "~/ui/Details"
-import { getUserFromRequest } from "~/utils/auth"
+import { getUserFromRequest, getUserIdFromRequest } from "~/utils/auth"
 import useLocale from "~/utils/locale"
 
 export function headers() {
@@ -45,20 +47,22 @@ export const loader: LoaderFunction = async ({
 	params,
 	request,
 }: LoaderFunctionArgs) => {
+	const tvId = (params.tvKey || "").split("-")[0]
+
+	const user_id = await getUserIdFromRequest({ request })
+	const userSettings = await getUserSettings({ user_id })
+	const userData = await getUserData({ user_id })
+
 	const url = new URL(request.url)
 	const tab = url.searchParams.get("tab") || "about"
-
-	const tvId = (params.tvKey || "").split("-")[0]
-	const country = url.searchParams.get("country") || ""
+	const country =
+		userSettings?.country_default || url.searchParams.get("country") || ""
 	const language = url.searchParams.get("language") || "en"
 	const details = await getDetailsForTV({
 		tvId,
 		country,
 		language,
 	})
-
-	const user = await getUserFromRequest({ request })
-	const userData = await getUserData({ user_id: user?.id })
 
 	return json<LoaderData>({
 		details,

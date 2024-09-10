@@ -1,6 +1,8 @@
 import { useFetcher } from "@remix-run/react"
 import type React from "react"
 import { useEffect, useState } from "react"
+import { useOnboardingMedia } from "~/routes/api.onboarding.media"
+import { useUserData } from "~/routes/api.user-data"
 import { useUserSettings } from "~/routes/api.user-settings.get"
 import type { Country } from "~/server/countries.server"
 import { getCountryName } from "~/server/resources/country-names"
@@ -15,6 +17,11 @@ interface SelectCountryProps {
 
 export default function SelectCountry({ onSelect }: SelectCountryProps) {
 	const { data: userSettings } = useUserSettings()
+
+	// prefetch data for last step
+
+	useUserData()
+	useOnboardingMedia({ searchTerm: "" })
 
 	// pre-selection
 

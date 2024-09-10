@@ -27,7 +27,7 @@ export default function Header() {
 	const { user, loading } = useUser()
 
 	return (
-		<Disclosure as="nav" className="bg-gray-950 fixed top-0 z-50 w-full">
+		<Disclosure as="nav" className="bg-gray-950/35 fixed top-0 z-50 w-full">
 			{({ open }) => (
 				<>
 					<div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">

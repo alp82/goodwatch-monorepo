@@ -27,12 +27,14 @@ import {
 	getDiscoverResults,
 } from "~/server/discover.server"
 import type { MediaType } from "~/server/search.server"
+import { getUserSettings } from "~/server/user-settings.server"
 import { MovieCard } from "~/ui/MovieCard"
 import { TvCard } from "~/ui/TvCard"
 import FilterSelection from "~/ui/filter/FilterSelection"
 import FilterSummary from "~/ui/filter/FilterSummary"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
+import { getUserIdFromRequest } from "~/utils/auth"
 import useLocale, { getLocaleFromRequest } from "~/utils/locale"
 
 export function headers() {
@@ -62,10 +64,14 @@ export const loader: LoaderFunction = async ({
 }: LoaderFunctionArgs) => {
 	const { locale } = getLocaleFromRequest(request)
 
+	const user_id = await getUserIdFromRequest({ request })
+	const userSettings = await getUserSettings({ user_id })
+
 	const url = new URL(request.url)
 	const type = (url.searchParams.get("type") || "movie") as MediaType
 	const mode = (url.searchParams.get("mode") || "advanced") as "advanced"
-	const country = url.searchParams.get("country") || ""
+	const country =
+		userSettings?.country_default || url.searchParams.get("country") || ""
 	const language = url.searchParams.get("language") || locale.language
 	const minAgeRating = url.searchParams.get("minAgeRating") || ""
 	const maxAgeRating = url.searchParams.get("maxAgeRating") || ""
@@ -80,7 +86,9 @@ export const loader: LoaderFunction = async ({
 	const withGenres = url.searchParams.get("withGenres") || ""
 	const withoutGenres = url.searchParams.get("withoutGenres") || ""
 	const withStreamingProviders =
-		url.searchParams.get("withStreamingProviders") || ""
+		userSettings?.streaming_providers_default ||
+		url.searchParams.get("withStreamingProviders") ||
+		""
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"popularity") as DiscoverSortBy
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as

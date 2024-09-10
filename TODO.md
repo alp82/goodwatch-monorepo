@@ -1,10 +1,5 @@
 # TODO's
 ```
-use user's country_code / streaming providers<
-    details
-    discover
-    userData.server.ts
-
 fix wishlist
 
 ---
@@ -47,6 +42,8 @@ header
 ---
 
 details
+    subheader
+    streaming section favors user selected providers
     guess country
     mobile: user action buttons below poster directly
     all in one page with side navigation (scroll aware navigation)
@@ -76,6 +73,7 @@ wishlist two sections:
 ---
 
 discover sidebar redesign
+    subheader
     blocks with filter names and subtle bg in a grid
     https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
     https://flowbite.com/blocks/application/table-headers/#multi-level-table-header-with-filters

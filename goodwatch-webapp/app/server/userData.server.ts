@@ -4,6 +4,7 @@ import {
 } from "~/routes/api.user-data"
 import type { StreamingLink } from "~/server/details.server"
 import type { Score } from "~/server/scores.server"
+import { getUserSettings } from "~/server/user-settings.server"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
 import { cached, resetCache } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
@@ -52,6 +53,8 @@ async function _getUserData({
 	if (!user_id) {
 		return {} as GetUserDataResult
 	}
+
+	const userSettings = await getUserSettings({ user_id })
 
 	const query = `
 WITH combined AS (
@@ -186,8 +189,7 @@ GROUP BY combined.media_type, combined.tmdb_id, movies.title, tv.title, movies.r
 ORDER BY combined.tmdb_id DESC;
   `
 
-	// TODO country param
-	const params = [user_id, "DE"]
+	const params = [user_id, userSettings?.country_default || "US"]
 	const result = await executeQuery<UserDataRow>(query, params)
 
 	const userData = {} as GetUserDataResult
