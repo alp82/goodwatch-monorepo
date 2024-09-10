@@ -183,7 +183,7 @@ SELECT
 FROM combined
 LEFT JOIN movies ON combined.media_type = 'movie' AND combined.tmdb_id = movies.tmdb_id
 LEFT JOIN tv ON combined.media_type = 'tv' AND combined.tmdb_id = tv.tmdb_id
-LEFT JOIN streaming_provider_links spl ON spl.tmdb_id = combined.tmdb_id AND spl.media_type = combined.media_type AND spl.country_code = $2
+LEFT JOIN streaming_provider_links spl ON spl.tmdb_id = combined.tmdb_id AND spl.media_type = combined.media_type AND spl.stream_type = 'flatrate' AND spl.country_code = $2
 LEFT JOIN streaming_providers sp ON spl.provider_id = sp.id
 GROUP BY combined.media_type, combined.tmdb_id, movies.title, tv.title, movies.release_year, tv.release_year, movies.poster_path, tv.poster_path, movies.backdrop_path, tv.backdrop_path, movies.aggregated_overall_score_normalized_percent, tv.aggregated_overall_score_normalized_percent
 ORDER BY combined.tmdb_id DESC;
