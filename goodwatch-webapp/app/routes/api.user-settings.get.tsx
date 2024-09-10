@@ -17,8 +17,8 @@ export type GetUserSettingsResult = Partial<SettingMap>
 // API endpoint
 
 export const loader: LoaderFunction = async ({ request }) => {
-	const userId = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ user_id: userId })
+	const user_id = await getUserIdFromRequest({ request })
+	const userSettings = await getUserSettings({ user_id })
 
 	return json<GetUserSettingsResult>(userSettings)
 }

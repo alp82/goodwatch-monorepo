@@ -1,0 +1,23 @@
+---
+- name: Set up cron job to periodically kill chromium zombie processes
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Set up cron job
+      cron:
+        name: "Kill windmill process every 24 hours"
+        minute: "31"
+        hour: "21"
+        job: "/usr/bin/killall -9 windmill"
+
+---
+- name: Set up cron job to periodically backup the postgres database
+  hosts: postgres1
+  tasks:
+    - name: Set up cron job
+      cron:
+        name: "PostgreSQL Backup"
+        minute: "31"
+        hour: "0"
+        job: "/root/goodwatch/goodwatch-monorepo/goodwatch-hq/ansible/scripts/pg-backup.sh"

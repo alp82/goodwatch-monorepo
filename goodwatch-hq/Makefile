@@ -1,16 +1,11 @@
 # server environment
 
-.PHONY: upgrade
-upgrade:
-	@echo "Upgrading to latest windmill version..."
-	docker compose down && docker compose pull && docker compose build && docker compose up -d
-
-.PHONY: upgrade-all
-upgrade-all:
+.PHONY: upgrade-windmill
+upgrade-windmill:
 	@echo "Upgrading to latest windmill version on all hosts..."
-	cd orchestrator && ansible-playbook -i hosts.ini upgrade.yml
+	cd ansible && ansible-playbook -i hosts.ini upgrade.yml
 
-.PHONY: upgrade-all
-setup-cron-all:
+.PHONY: setup-cronjobs
+setup-cronjobs:
 	@echo "Setting up cronjobs on all hosts..."
-	cd orchestrator && ansible-playbook -i hosts.ini cron.yml
+	cd ansible && ansible-playbook -i hosts.ini cron.yml

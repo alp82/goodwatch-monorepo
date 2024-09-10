@@ -1,14 +1,24 @@
+# Release Notes
+```
+Onboarding
+
+
+```
+
 # TODO's
 ```
----
-    
 backups
     db's
     configs
 
 ---
 
+sql injection analysis
+
+---
+
 cookie consent update
+    save consent in user settings
     centered
     inspiration: https://www.smashingmagazine.com
 
@@ -18,6 +28,11 @@ streaming data pipeline with daily accuracy
 
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
+
+---
+
+secret handling
+project documentation
 
 ---
 
@@ -64,9 +79,11 @@ watched/ratings page:
     rating stats (1-10 distribution)
     easy rating for more
 
-wishlist two sections:
-    watch now
-    rest
+wishlist
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
 
 ---
 
@@ -92,15 +109,6 @@ discover
     return count: "showing first 100 results"
     streaming types: mine, free, buy, all
     discover loading animation with skeletons
-
----
-
-sql injection analysis
-
----
-
-secret handling
-project documentation
 
 ---
 
