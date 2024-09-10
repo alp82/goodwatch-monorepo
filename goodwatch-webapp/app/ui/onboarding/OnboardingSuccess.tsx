@@ -1,41 +1,27 @@
 import { CheckCircleIcon } from "@heroicons/react/24/solid"
 import { motion } from "framer-motion"
 import React from "react"
-import { useUserSettings } from "~/routes/api.user-settings.get"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import { SubHeader } from "~/ui/main/SubHeader"
 
-const staggerContainer = {
-	hidden: { opacity: 0 },
-	show: {
-		opacity: 1,
-		transition: {
-			staggerChildren: 0.3,
-		},
-	},
-}
-
-const staggerItem = {
-	hidden: { opacity: 0, y: 50 },
-	show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-}
-
 export const OnboardingSuccess = () => {
-	const { data: userSettings } = useUserSettings()
-
-	const setUserSetting = useSetUserSettings()
+	const setUserSettings = useSetUserSettings()
 	const handleFinish = () => {
-		setUserSetting.mutate({
-			setting_key: "onboarding_completed",
-			data_type: "boolean",
-			setting_value: true,
+		setUserSettings.mutate({
+			onboarding_completed: true,
 		})
 	}
 
 	return (
 		<>
-			<SubHeader />
-			<div className="flex items-start justify-center min-h-screen bg-gradient-to-bl from-indigo-950 to-amber-950">
+			<motion.div
+				initial={{ backgroundColor: "#D97706" }} // bg-amber-600
+				animate={{ backgroundColor: ["#D97706", "#1F2937"] }} // bg-amber-600 to bg-gray-800
+				transition={{ duration: 1.2, ease: "circOut" }}
+			>
+				<SubHeader />
+			</motion.div>
+			<div className="flex items-start justify-center min-h-screen">
 				<motion.div
 					initial={{ opacity: 0, y: -50 }}
 					animate={{ opacity: 1, y: 0 }}

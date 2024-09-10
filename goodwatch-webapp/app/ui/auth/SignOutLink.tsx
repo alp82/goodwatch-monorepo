@@ -1,23 +1,34 @@
-import React from "react";
-import { useSupabase } from "~/utils/auth";
+import { useQueryClient } from "@tanstack/react-query"
+import React from "react"
+import { queryKeyUserData } from "~/routes/api.user-data"
+import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
+import { useSupabase } from "~/utils/auth"
 
 interface SignOutLinkProps {
-	active: boolean;
+	active: boolean
 }
 
 export const SignOutLink = ({ active }: SignOutLinkProps) => {
-	const { supabase } = useSupabase();
+	const { supabase } = useSupabase()
+	const queryClient = useQueryClient()
 
 	const handleSignOut = async () => {
-		if (!supabase) return;
+		if (!supabase) return
 
-		const { error } = await supabase.auth.signOut();
-		if (error) console.error(error);
-	};
+		const { error } = await supabase.auth.signOut()
+		if (error) console.error(error)
+
+		queryClient.invalidateQueries({
+			queryKey: queryKeyUserSettings,
+		})
+		queryClient.invalidateQueries({
+			queryKey: queryKeyUserData,
+		})
+	}
 
 	return (
-		<a
-			href="#"
+		<button
+			type="button"
 			onClick={handleSignOut}
 			className={`
         ${active ? "text-white" : "text-gray-300"}
@@ -25,6 +36,6 @@ export const SignOutLink = ({ active }: SignOutLinkProps) => {
       `}
 		>
 			Sign out
-		</a>
-	);
-};
+		</button>
+	)
+}

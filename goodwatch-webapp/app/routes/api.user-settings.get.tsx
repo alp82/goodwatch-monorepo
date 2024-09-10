@@ -1,5 +1,6 @@
 import { type LoaderFunction, json } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
+import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
@@ -31,5 +32,17 @@ export const useUserSettings = () => {
 	return useQuery<GetUserSettingsResult>({
 		queryKey: queryKeyUserSettings,
 		queryFn: async () => await (await fetch(url)).json(),
+	})
+}
+
+export const useUserStreamingProviders = () => {
+	const userSettings = useUserSettings()
+	const streamingProviders = useStreamingProviders()
+
+	const streamingProviderIds = (
+		userSettings.data?.streaming_providers_default || ""
+	).split(",")
+	return (streamingProviders?.data || []).filter((provider) => {
+		return streamingProviderIds.includes(provider.id.toString())
 	})
 }

@@ -23,7 +23,7 @@ import {
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { AnimatePresence, motion } from "framer-motion"
 import posthog from "posthog-js"
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { ToastContainer } from "react-toastify"
 
 import Footer from "~/ui/Footer"
@@ -38,6 +38,7 @@ import { useDehydratedState } from "use-dehydrated-state"
 import cssMain from "~/main.css?url"
 import cssTailwind from "~/tailwind.css?url"
 import CookieConsent, { cookieConsentGiven } from "~/ui/CookieConsent"
+import { AuthRedirect } from "~/ui/auth/AuthRedirect"
 import Onboarding from "~/ui/onboarding/Onboarding"
 import { AuthContext, useUser } from "./utils/auth"
 
@@ -72,8 +73,8 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
+	// get locale
 	const { locale } = getLocaleFromRequest(request)
-
 	return {
 		locale,
 		env: {
@@ -147,6 +148,7 @@ export function ErrorBoundary() {
 					<div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
 						<strong>{error.message || error.data}</strong>
 						<button
+							type="button"
 							className="m-2 p-2 w-32 text-grey-100 bg-gray-900 hover:bg-gray-800"
 							onClick={() => window.location.reload()}
 						>
@@ -213,9 +215,11 @@ function App() {
 											exit={{ x: "2%", opacity: 0 }}
 											transition={{ duration: 0.2, type: "tween" }}
 										>
-											<Onboarding>
-												<Outlet />
-											</Onboarding>
+											<AuthRedirect>
+												<Onboarding>
+													<Outlet />
+												</Onboarding>
+											</AuthRedirect>
 										</motion.div>
 									</AnimatePresence>
 								</main>

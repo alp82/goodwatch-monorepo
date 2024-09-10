@@ -1,6 +1,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useOnboardingMedia } from "~/routes/api.onboarding.media"
+import { useUserData } from "~/routes/api.user-data"
 import { useUserSettings } from "~/routes/api.user-settings.get"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import { Spinner } from "~/ui/Spinner"
@@ -32,7 +33,8 @@ interface OnboardingProps {
 
 export default function Onboarding({ children }: OnboardingProps) {
 	const { user, loading } = useUser()
-	const { data: userSettings } = useUserSettings()
+	const { data: userSettings, isFetching: userSettingsLoading } =
+		useUserSettings()
 	const setUserSettings = useSetUserSettings()
 
 	const isLoggedIn = Boolean(user)
@@ -40,6 +42,7 @@ export default function Onboarding({ children }: OnboardingProps) {
 
 	// prefetch data for last step
 
+	useUserData()
 	useOnboardingMedia({ searchTerm: "" })
 
 	// step progress
@@ -78,14 +81,12 @@ export default function Onboarding({ children }: OnboardingProps) {
 
 	// media onboarding finished
 
-	// TODO
-	// const [finalizeOnboarding, setFinalizeOnboarding] = useState(true)
 	const [finalizeOnboarding, setFinalizeOnboarding] = useState(false)
 	const handleFinishOnboarding = () => {
 		setFinalizeOnboarding(true)
 	}
 
-	if (loading)
+	if ((loading || userSettingsLoading) && currentStep === 0)
 		return (
 			<div className="mt-12 flex items-center justify-center">
 				<Spinner size="large" />

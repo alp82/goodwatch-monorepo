@@ -1,11 +1,10 @@
 import { FilmIcon } from "@heroicons/react/24/solid"
-import { useFetcher } from "@remix-run/react"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
+import {
+	type StreamingProvider,
+	useStreamingProviders,
+} from "~/routes/api.streaming-providers"
 import { useUserSettings } from "~/routes/api.user-settings.get"
-import type {
-	StreamingProvider,
-	StreamingProviderResults,
-} from "~/server/streaming-providers.server"
 import NextBackButtons from "~/ui/button/NextBackButtons"
 import YesNoButtons from "~/ui/button/YesNoButtons"
 import { TextInput } from "~/ui/form/TextInput"
@@ -30,20 +29,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 
 	// get all providers
 
-	const providersFetcher = useFetcher<{
-		streamingProviders: StreamingProviderResults
-	}>()
-	useEffect(() => {
-		const type = "movie"
-		providersFetcher.submit(
-			{ type },
-			{
-				method: "get",
-				action: "/api/discover/streaming-providers",
-			},
-		)
-	}, [])
-	const streamingProviders = providersFetcher.data?.streamingProviders || []
+	const { data: streamingProviders } = useStreamingProviders()
 
 	// filtered streaming providers
 
@@ -51,7 +37,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 	const handleFilterByName = (text: string) => {
 		setFilterText(text)
 	}
-	const filteredStreamingProviders = streamingProviders.filter((provider) => {
+	const filteredStreamingProviders = streamingProviders?.filter((provider) => {
 		return provider.name.toLowerCase().includes(filterText.toLowerCase())
 	})
 
@@ -81,7 +67,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 
 			// If selected and not already in the list, add it
 			if (selected && !(prev || []).includes(providerId)) {
-				return streamingProviders
+				return (streamingProviders || [])
 					.filter(
 						(streamingProvider) =>
 							(prev || []).includes(String(streamingProvider.id)) ||
@@ -115,7 +101,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 				<>
 					<div className="flex flex-wrap justify-center gap-5">
 						{selectedStreaming.map((providerId) => {
-							const provider = streamingProviders.find(
+							const provider = streamingProviders?.find(
 								(provider) => provider.id === Number.parseInt(providerId),
 							)
 							if (!provider) return null
@@ -146,7 +132,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 						/>
 					</div>
 					<div className="flex flex-wrap justify-center gap-2 md:gap-5">
-						{filteredStreamingProviders.map((provider) => {
+						{filteredStreamingProviders?.map((provider) => {
 							return (
 								<StreamingProviderToggle
 									key={provider.id}
@@ -167,7 +153,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 					<div className="flex flex-wrap justify-center gap-5">
 						{userStreaming.length > 0 ? (
 							userStreaming.map((providerId) => {
-								const provider = streamingProviders.find(
+								const provider = streamingProviders?.find(
 									(provider) => provider.id === Number.parseInt(providerId),
 								)
 								if (!provider) return null

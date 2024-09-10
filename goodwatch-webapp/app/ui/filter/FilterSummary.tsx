@@ -1,8 +1,7 @@
 import { TagIcon } from "@heroicons/react/20/solid"
-import { useFetcher } from "@remix-run/react"
-import React, { useEffect } from "react"
+import React from "react"
+import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import type { DiscoverFilters, DiscoverParams } from "~/server/discover.server"
-import type { StreamingProviderResults } from "~/server/streaming-providers.server"
 
 interface FilterSummaryParams {
 	params: DiscoverParams
@@ -15,22 +14,9 @@ export default function FilterSummary({
 	filters,
 	onToggle,
 }: FilterSummaryParams) {
-	const providersFetcher = useFetcher<{
-		streamingProviders: StreamingProviderResults
-	}>()
-	const { type } = params
-	useEffect(() => {
-		providersFetcher.submit(
-			{ type },
-			{
-				method: "get",
-				action: "/api/discover/streaming-providers",
-			},
-		)
-	}, [type])
-	const streamingProviders = providersFetcher.data?.streamingProviders || []
+	const { data: streamingProviders } = useStreamingProviders()
 
-	const enabledStreamingProviders = streamingProviders
+	const enabledStreamingProviders = (streamingProviders || [])
 		.filter((provider) => {
 			const streamingProviders = params.withStreamingProviders
 				? params.withStreamingProviders.split(",")
@@ -59,8 +45,12 @@ export default function FilterSummary({
 		<div
 			className="w-full py-2 px-4 flex flex-wrap items-center gap-4 lg:gap-6 text-sm truncate bg-gray-800 border-gray-900 rounded-lg cursor-pointer hover:brightness-150"
 			onClick={onToggle}
+			onKeyDown={() => null}
 		>
-			<button className="bg-indigo-900 py-1 px-2 rounded text-base font-bold">
+			<button
+				type="button"
+				className="bg-indigo-900 py-1 px-2 rounded text-base font-bold"
+			>
 				Show Filter Tools
 			</button>
 

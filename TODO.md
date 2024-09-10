@@ -1,19 +1,19 @@
 # TODO's
 ```
-onboarding:
-    validate user settings key and types + simplify api
-    onboarding success with proper summary
-    success background with buzz
-    start step 0 
-
-use user's country_code / streaming providers
+use user's country_code / streaming providers<
     details
     discover
     userData.server.ts
 
-user data refresh after login/logout
-
 fix wishlist
+
+---
+    
+backups
+    db's
+    configs
+
+---
 
 cookie consent update
     centered
@@ -100,12 +100,6 @@ discover
 ---
 
 sql injection analysis
-
----
-    
-backups
-    db's
-    configs
 
 ---
 

@@ -28,6 +28,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	const debouncedSearchTerm = useDebounce(searchTerm, 200)
 
 	const handleSearchByTerm = (term: string) => {
+		if (term.length === 1) return
 		setSearchTerm(term)
 	}
 
@@ -199,10 +200,6 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		)
 	}
 
-	// show spinner until data is loaded
-	// TODO this does not work with the search for unknown reasons
-	// if (!movies.length || !tv.length) return <Spinner size="large" />
-
 	return (
 		<>
 			<div className="grid grid-cols-4 sm:grid-cols-8 gap-2 justify-end justify-items-end items-end place-items-end">
@@ -276,7 +273,11 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					ref={autoFocusRef}
 				/>
 			</div>
-			{getMedia(allMedia)}
+			{onboardingMedia.isFetching ? (
+				<Spinner size="large" />
+			) : (
+				getMedia(allMedia)
+			)}
 			<div className="w-full flex items-center justify-center">
 				<NextBackButtons
 					nextLabel={

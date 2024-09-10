@@ -1,5 +1,8 @@
-import React from "react";
-import { useSupabase } from "~/utils/auth";
+import { useQueryClient } from "@tanstack/react-query"
+import React from "react"
+import { queryKeyUserData } from "~/routes/api.user-data"
+import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
+import { useSupabase } from "~/utils/auth"
 
 const googleLogo = (
 	<svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24">
@@ -20,32 +23,35 @@ const googleLogo = (
 			fill="#34A853"
 		/>
 	</svg>
-);
+)
 
-type GoogleSignInButtonProps = {};
+type GoogleSignInButtonProps = {}
 
 export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
-	const { supabase } = useSupabase();
+	const { supabase } = useSupabase()
+
+	const redirectHash = `#redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`
+	const redirectTo = `${window.location.origin}${redirectHash}`
 
 	const handleSignInWithGoogle = () => {
-		if (!supabase) return;
+		if (!supabase) return
 
 		supabase.auth.signInWithOAuth({
 			provider: "google",
 			options: {
-				redirectTo: window.location.href,
+				redirectTo,
 			},
-		});
-	};
+		})
+	}
 
 	return (
-		<a
-			href="#"
+		<button
+			type="button"
 			onClick={handleSignInWithGoogle}
 			className="flex w-full items-center justify-center gap-2 rounded-md bg-white px-3 py-2 font-semibold text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent"
 		>
 			{googleLogo}
 			Sign In
-		</a>
-	);
-};
+		</button>
+	)
+}
