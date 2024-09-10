@@ -7,10 +7,9 @@ import {
 import { useLoaderData, useNavigation } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import React from "react"
-import { useUserData } from "~/routes/api.user-data"
+import { type GetUserDataResult, useUserData } from "~/routes/api.user-data"
 import type { StreamingLink } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
-import type { GetUserDataResult } from "~/server/userData.server"
 import { MovieCard } from "~/ui/MovieCard"
 import { TvCard } from "~/ui/TvCard"
 import WishlistFilter, {
@@ -73,7 +72,7 @@ export default function Wishlist() {
 		"onWishListSince",
 	])
 
-	sortedWishlist.forEach((result: UserDataItem) => {
+	for (const result of sortedWishlist) {
 		const streamingLinks = result.streaming_links || []
 		const includedProviders: number[] = []
 		result.streaming_links = streamingLinks.reduce((links, link) => {
@@ -88,9 +87,10 @@ export default function Wishlist() {
 			}
 
 			includedProviders.push(link.provider_id)
-			return [...links, link]
+			links.push(link)
+			return links
 		}, [] as StreamingLink[])
-	})
+	}
 	const wishlistToShow = sortedWishlist.filter((item) => true)
 
 	const navigation = useNavigation()
@@ -116,7 +116,7 @@ export default function Wishlist() {
 					{navigation.state === "loading" && (
 						<span className="absolute top-2 left-6 animate-ping inline-flex h-8 w-8 rounded-full bg-sky-300 opacity-75" />
 					)}
-					{!wishlist.length && navigation.state === "idle" ? (
+					{!wishlistToShow.length && navigation.state === "idle" ? (
 						<div className="my-6 text-lg italic">
 							You don't have any titles in your Wishlist.
 						</div>
@@ -127,9 +127,9 @@ export default function Wishlist() {
 					) : (
 						<></>
 					)}
-					{wishlist.length > 0 &&
+					{wishlistToShow.length > 0 &&
 						navigation.state === "idle" &&
-						wishlist.map((result: WishListItem, index) => {
+						wishlistToShow.map((result, index) => {
 							return (
 								<div key={result.tmdb_id}>
 									<motion.div
