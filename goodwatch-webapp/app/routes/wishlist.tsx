@@ -61,7 +61,7 @@ export const loader: LoaderFunction = async ({
 
 export default function Wishlist() {
 	const { currentParams } = useLoaderData<LoaderData>()
-	const { data: userData } = useUserData()
+	const { data: userData, isLoading } = useUserData()
 	const { sortBy, filterByStreaming } = currentParams
 
 	const handleFilterChange = (filters) => {
@@ -113,17 +113,19 @@ export default function Wishlist() {
 				}
 			>
 				<AnimatePresence initial={false}>
-					{navigation.state === "loading" && (
+					{(navigation.state === "loading" || isLoading) && (
 						<span className="absolute top-2 left-6 animate-ping inline-flex h-8 w-8 rounded-full bg-sky-300 opacity-75" />
 					)}
-					{!wishlistToShow.length && navigation.state === "idle" ? (
+					{!wishlistToShow.length &&
+					!isLoading &&
+					navigation.state === "idle" ? (
 						<div className="my-6 text-lg italic">
 							You don't have any titles in your Wishlist.
 						</div>
-					) : !wishlistToShow.length && navigation.state === "idle" ? (
-						<div className="my-6 text-lg italic">
-							No matches with your current filter settings.
-						</div>
+						// ) : !wishlistToShow.length && navigation.state === "idle" ? (
+						// 	<div className="my-6 text-lg italic">
+						// 		No matches with your current filter settings.
+						// 	</div>
 					) : (
 						<></>
 					)}
