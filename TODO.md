@@ -1,12 +1,16 @@
-# Release Notes
-```
-Onboarding
-
-
-```
-
 # TODO's
 ```
+onboarding
+    jump to stream selection immediately if none is selected yet in localstorage
+    "1 titles"
+    ratings: german titles
+    achievements for 10, 20 etc. (level up?)
+    search more prominent
+    only favorites?
+    each step & finish -> scroll to the top
+    
+header not transparent -> new bg color (925?)
+
 backups
     db's
     configs
