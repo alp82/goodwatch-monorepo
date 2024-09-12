@@ -38,11 +38,12 @@ export default function Onboarding({ children }: OnboardingProps) {
 	const setUserSettings = useSetUserSettings()
 
 	const isLoggedIn = Boolean(user)
-	const onboardingCompleted = userSettings?.onboarding_completed
+	// const onboardingCompleted = userSettings?.onboarding_completed
+	const onboardingCompleted = false
 
 	// step progress
 
-	const [currentStep, setCurrentStep] = useState(0)
+	const [currentStep, setCurrentStep] = useState(1)
 	const MIN_PROGRESS = 10
 	const normalizedProgress =
 		MIN_PROGRESS +
