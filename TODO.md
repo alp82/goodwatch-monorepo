@@ -3,8 +3,6 @@
 onboarding
     jump to stream selection immediately if none is selected yet in localstorage
     "1 titles"
-    ratings: german titles
-    achievements for 10, 20 etc. (level up?)
     search more prominent
     only favorites?
     each step & finish -> scroll to the top
@@ -72,6 +70,18 @@ vectorize v2
     new prompt
     production country / studio
     weaviate alternative
+    
+hugchat invalid login
+    http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
+
+copy movie/tv genome filter:
+    filter empty values: None, N/A, ""
+    capitalize
+    order categories
+
+vector db
+    authentication
+    healthcheck
 
 ---
 
@@ -88,6 +98,11 @@ wishlist
     split into two sections:
         watch now
         rest
+
+---
+
+init scripts only insert new and ignore existing ids
+    copy/combine scripts only copy diffs to postgres
 
 ---
 
@@ -116,9 +131,23 @@ discover
 
 ---
 
-weaviate
-    authentication
-    healthcheck
+translated titles in current language
+    all cards
+    onboarding ratings
+    details with alternative titles block
+    search, discover and explore
+
+---
+
+offline support
+
+---
+
+achievements
+    user level + xp
+    rating count: 10, 20 etc.
+
+---
 
 explore tag alternatives:
     SELECT 
@@ -133,25 +162,12 @@ explore tag alternatives:
     ORDER BY value_count DESC
     LIMIT 200;
 
-offline support
-
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
-
-init scripts only insert new and ignore existing ids
-copy/combine scripts only copy diffs to postgres
-
-hugchat invalid login
-    http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
 
 tvtropes number to string conversion
     https://chatgpt.com/g/g-FZtypBX5c-goodwatch-ai/c/9871cbb0-ca78-46a6-8cd1-732519e36f6e
 
-copy movie/tv genome filter:
-    filter empty values: None, N/A, ""
-    capitalize
-    order categories
-    
 posthog custom events
     https://posthog.com/tutorials/remix-analytics#capturing-custom-events
 
@@ -160,7 +176,7 @@ error handling: http://localhost:3003/tv/252146-who-killed-him
     priority?
     https://www.themoviedb.org/tv/252146-quien-lo-mato
 
-DNA tag scores
+DNA tag user weights
     click on most loved/hated aspects for recommendations
 
 user notes/comments

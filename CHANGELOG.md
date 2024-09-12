@@ -2,7 +2,7 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.2.26] 2024-09-12
+## [0.2.26] 2024-09-xx
 
 ### Added
 * Onboarding: Users that are signed in are asked to select their country and streaming services. They can also rate their favorite titles.
