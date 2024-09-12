@@ -26,9 +26,10 @@ export default function SelectCountry({ onSelect }: SelectCountryProps) {
 	// pre-selection
 
 	const storedCountry =
-		userSettings?.country_default || typeof window !== "undefined"
+		userSettings?.country_default ||
+		(typeof window !== "undefined"
 			? localStorage.getItem("country")
-			: undefined
+			: undefined)
 
 	// get all countries
 

@@ -18,13 +18,15 @@ interface SelectStreamingProps {
 
 export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 	const { data: userSettings } = useUserSettings()
+	console.log({ userSettings })
 
 	// pre-selection
 
 	const storedStreaming =
-		userSettings?.streaming_providers_default || typeof window !== "undefined"
+		userSettings?.streaming_providers_default ||
+		(typeof window !== "undefined"
 			? localStorage.getItem("withStreamingProviders")
-			: undefined
+			: undefined)
 	const preselectedStreaming = storedStreaming ? storedStreaming.split(",") : []
 
 	// get all providers
@@ -43,8 +45,9 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 
 	// toggle selection mode
 
-	const [streamingSelectionEnabled, setStreamingSelectionEnabled] =
-		useState(false)
+	const [streamingSelectionEnabled, setStreamingSelectionEnabled] = useState(
+		preselectedStreaming.length === 0,
+	)
 	const handleStreamingDeclined = () => {
 		setStreamingSelectionEnabled(true)
 		setSelectedStreaming(preselectedStreaming)
@@ -56,7 +59,8 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 	// streaming selection
 
 	const autoFocusRef = useAutoFocus<HTMLInputElement>()
-	const [selectedStreaming, setSelectedStreaming] = useState<string[]>([])
+	const [selectedStreaming, setSelectedStreaming] =
+		useState<string[]>(preselectedStreaming)
 
 	const handleToggleProvider = (
 		provider: StreamingProvider,
@@ -100,18 +104,24 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 			{streamingSelectionEnabled ? (
 				<>
 					<div className="flex flex-wrap justify-center gap-5">
-						{selectedStreaming.map((providerId) => {
-							const provider = streamingProviders?.find(
-								(provider) => provider.id === Number.parseInt(providerId),
-							)
-							if (!provider) return null
-							return (
-								<StreamingProviderSelection
-									key={provider.id}
-									provider={provider}
-								/>
-							)
-						})}
+						{selectedStreaming.length > 0 ? (
+							selectedStreaming.map((providerId) => {
+								const provider = streamingProviders?.find(
+									(provider) => provider.id === Number.parseInt(providerId),
+								)
+								if (!provider) return null
+								return (
+									<StreamingProviderSelection
+										key={provider.id}
+										provider={provider}
+									/>
+								)
+							})
+						) : (
+							<div className="p-2 bg-slate-800 border-2 border-slate-950 text-2xl italic">
+								No streaming services selected
+							</div>
+						)}
 					</div>
 					<NextBackButtons
 						onNext={handleStreamingConfirmed}
@@ -167,7 +177,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 							})
 						) : (
 							<div className="p-2 bg-slate-800 border-2 border-slate-950 text-2xl italic">
-								No Streaming Services
+								No streaming services selected
 							</div>
 						)}
 					</div>

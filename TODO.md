@@ -1,8 +1,7 @@
 # TODO's
 ```
 onboarding
-    jump to stream selection immediately if none is selected yet in localstorage
-    "1 titles"
+    guide for rated enough titles
     search more prominent
     only favorites?
     each step & finish -> scroll to the top

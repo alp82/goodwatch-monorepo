@@ -77,7 +77,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		"onSkippedSince",
 		"onWishListSince",
 	])
-	const scoredMediaNumber = getSortedUserData(userData as GetUserDataResult, [
+	const scoredMediaAmount = getSortedUserData(userData as GetUserDataResult, [
 		"onScoresSince",
 	]).length
 
@@ -239,9 +239,9 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 				<span className="font-bold">
 					You rated
 					<strong className="mx-2 px-2 bg-indigo-800">
-						{scoredMediaNumber}
+						{scoredMediaAmount}
 					</strong>
-					titles.
+					{scoredMediaAmount === 1 ? "title" : "titles"}.
 				</span>
 				&nbsp;{scoreCountHint}
 			</div>
