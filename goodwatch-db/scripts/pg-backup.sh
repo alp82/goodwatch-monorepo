@@ -14,7 +14,7 @@ echo "[$(date +"%Y-%m-%d %H:%M:%S")] Starting backup"
 pg_dump -U $PGUSER $DBNAME | gzip > $BACKUP_DIR/${DBNAME}_$DATE.sql.gz
 
 # Transfer to Hetzner Storage Box
-scp -p 23 $BACKUP_DIR/${DBNAME}_$DATE.sql.gz u417661-sub1@u417661.your-storagebox.de:/
+scp -P 23 $BACKUP_DIR/${DBNAME}_$DATE.sql.gz u417661-sub1@u417661.your-storagebox.de:/
 
 # Cleanup: Remove local backups older than retention period
 find $BACKUP_DIR -type f -name "${DBNAME}_*.sql.gz" -mtime +$RETENTION_DAYS -exec rm {} \;
