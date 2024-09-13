@@ -1,5 +1,6 @@
 import type React from "react"
 import { useState } from "react"
+import logo from "~/img/goodwatch-logo.png"
 import { useOnboardingMedia } from "~/routes/api.onboarding.media"
 import { useUserData } from "~/routes/api.user-data"
 import { useUserSettings } from "~/routes/api.user-settings.get"
@@ -39,8 +40,8 @@ export default function Onboarding({ children }: OnboardingProps) {
 
 	const isLoggedIn = Boolean(user)
 	// TODO
-	const onboardingCompleted = userSettings?.onboarding_completed
-	// const onboardingCompleted = false
+	// const onboardingCompleted = userSettings?.onboarding_completed
+	const onboardingCompleted = false
 
 	// step progress
 
@@ -93,69 +94,91 @@ export default function Onboarding({ children }: OnboardingProps) {
 	if (finalizeOnboarding) return <OnboardingSuccess />
 
 	return (
-		<div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-5 sm:gap-6">
-			<div className="mt-8 text-3xl font-bold accent">
-				Hello, let's get <span className="italic">started</span>
-			</div>
+		<main className="relative flex-grow mx-auto mt-4 sm:mt-8 md:mt-16 pb-2 w-full text-neutral-300">
+			<div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-5 sm:gap-6">
+				<div className="flex flex-col items-center">
+					<div className="flex items-center gap-2 text-2xl">
+						<span className="hidden sm:block mr-2">Welcome to</span>
+						<div className="flex-shrink-0">
+							<a href="/">
+								<img className="h-10 w-auto" src={logo} alt="GoodWatch Logo" />
+							</a>
+						</div>
+						<a href="/">
+							<div className="brand-header text-gray-100">GoodWatch</div>
+						</a>
+						<img
+							className="ml-2 h-10 w-10 rounded-full"
+							src={user?.user_metadata.avatar_url}
+							alt={user?.user_metadata.name}
+							title={user?.user_metadata.name}
+						/>
+					</div>
 
-			<div aria-hidden="true" className="my-6 w-56 sm:w-72">
-				<div className="overflow-hidden rounded-full bg-gray-600">
+					<div className="mt-8 text-3xl font-bold accent">
+						Let's get <span className="italic">started</span>
+					</div>
+				</div>
+
+				<div aria-hidden="true" className="my-6 w-56 sm:w-72">
+					<div className="overflow-hidden rounded-full bg-gray-600">
+						<div
+							style={{ width: `${normalizedProgress}%` }}
+							className="h-2 rounded-full bg-amber-400 transition-all"
+						/>
+					</div>
 					<div
-						style={{ width: `${normalizedProgress}%` }}
-						className="h-2 rounded-full bg-amber-400 transition-all"
+						className={`mt-2 grid grid-cols-${steps.length} text-sm font-medium`}
+					>
+						{steps.map((step, index) => {
+							const color =
+								index < currentStep
+									? "text-indigo-300 hover:text-indigo-200"
+									: index === currentStep
+										? "text-amber-300"
+										: "text-gray-200"
+							const align =
+								index === 0
+									? "text-left"
+									: index < steps.length - 1
+										? "text-center"
+										: "text-right"
+							const font =
+								index < currentStep
+									? ""
+									: index === currentStep
+										? "font-bold"
+										: ""
+
+							return (
+								<div key={step.label} className={`${color} ${align} ${font}`}>
+									{index < currentStep ? (
+										<button type="button" onClick={() => setCurrentStep(index)}>
+											{step.label}
+										</button>
+									) : (
+										step.label
+									)}
+								</div>
+							)
+						})}
+					</div>
+				</div>
+
+				<div className="m-2 text-lg text-center leading-relaxed font-semibold">
+					{steps[currentStep].description}
+				</div>
+				{currentStep === 0 && <SelectCountry onSelect={handleSelectCountry} />}
+				{currentStep === 1 && (
+					<SelectStreaming onSelect={handleSelectStreaming} />
+				)}
+				{currentStep === 2 && (
+					<SelectMedia
+						onSelect={handleFinishOnboarding}
+						onBack={() => setCurrentStep(1)}
 					/>
-				</div>
-				<div
-					className={`mt-2 grid grid-cols-${steps.length} text-sm font-medium`}
-				>
-					{steps.map((step, index) => {
-						const color =
-							index < currentStep
-								? "text-indigo-300 hover:text-indigo-200"
-								: index === currentStep
-									? "text-amber-300"
-									: "text-gray-200"
-						const align =
-							index === 0
-								? "text-left"
-								: index < steps.length - 1
-									? "text-center"
-									: "text-right"
-						const font =
-							index < currentStep
-								? ""
-								: index === currentStep
-									? "font-bold"
-									: ""
-
-						return (
-							<div key={step.label} className={`${color} ${align} ${font}`}>
-								{index < currentStep ? (
-									<button type="button" onClick={() => setCurrentStep(index)}>
-										{step.label}
-									</button>
-								) : (
-									step.label
-								)}
-							</div>
-						)
-					})}
-				</div>
+				)}
 			</div>
-
-			<div className="m-2 text-lg text-center leading-relaxed font-semibold">
-				{steps[currentStep].description}
-			</div>
-			{currentStep === 0 && <SelectCountry onSelect={handleSelectCountry} />}
-			{currentStep === 1 && (
-				<SelectStreaming onSelect={handleSelectStreaming} />
-			)}
-			{currentStep === 2 && (
-				<SelectMedia
-					onSelect={handleFinishOnboarding}
-					onBack={() => setCurrentStep(1)}
-				/>
-			)}
-		</div>
+		</main>
 	)
 }

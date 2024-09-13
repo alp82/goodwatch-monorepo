@@ -87,7 +87,8 @@ export default function Header() {
 													<img
 														className="h-8 w-8 rounded-full"
 														src={user.user_metadata.avatar_url}
-														alt=""
+														alt={user?.user_metadata.name}
+														title={user?.user_metadata.name}
 													/>
 												</MenuButton>
 												<Transition

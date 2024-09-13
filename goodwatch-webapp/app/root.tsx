@@ -205,31 +205,33 @@ function App() {
 					<HydrationBoundary state={dehydratedState}>
 						<AuthContext.Provider value={{ supabase }}>
 							<LocaleContext.Provider value={{ locale }}>
-								<Header />
-								<main className="relative flex-grow mx-auto mt-16 pb-2 w-full text-neutral-300">
-									<AnimatePresence mode="wait">
-										<motion.div
-											key={location.pathname}
-											initial={{ x: "-2%", opacity: 0 }}
-											animate={{ x: "0", opacity: 1 }}
-											exit={{ x: "2%", opacity: 0 }}
-											transition={{ duration: 0.2, type: "tween" }}
-										>
-											<AuthRedirect>
-												<Onboarding>
+								<AuthRedirect>
+									<Onboarding>
+										<Header />
+										<main className="relative flex-grow mx-auto mt-16 pb-2 w-full text-neutral-300">
+											<AnimatePresence mode="wait">
+												<motion.div
+													key={location.pathname}
+													initial={{ x: "-2%", opacity: 0 }}
+													animate={{ x: "0", opacity: 1 }}
+													exit={{ x: "2%", opacity: 0 }}
+													transition={{ duration: 0.2, type: "tween" }}
+												>
 													<Outlet />
-												</Onboarding>
-											</AuthRedirect>
-										</motion.div>
-									</AnimatePresence>
-								</main>
-								<Footer />
-								<BottomNav />
-								<ToastContainer />
-								<CookieConsent />
-								<PostHogInit />
-								<ScrollRestoration />
-								<Scripts />
+												</motion.div>
+											</AnimatePresence>
+										</main>
+
+										<Footer />
+										<BottomNav />
+
+										<ToastContainer />
+										<CookieConsent />
+										<PostHogInit />
+										<ScrollRestoration />
+										<Scripts />
+									</Onboarding>
+								</AuthRedirect>
 							</LocaleContext.Provider>
 						</AuthContext.Provider>
 					</HydrationBoundary>
