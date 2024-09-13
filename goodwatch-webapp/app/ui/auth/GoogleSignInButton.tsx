@@ -1,7 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query"
 import React from "react"
-import { queryKeyUserData } from "~/routes/api.user-data"
-import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
 import { useSupabase } from "~/utils/auth"
 
 const googleLogo = (
@@ -30,11 +27,11 @@ type GoogleSignInButtonProps = {}
 export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
 	const { supabase } = useSupabase()
 
-	const redirectHash = `#redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`
-	const redirectTo = `${window.location.origin}${redirectHash}`
-
 	const handleSignInWithGoogle = () => {
 		if (!supabase) return
+
+		const redirectHash = `#redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`
+		const redirectTo = `${window.location.origin}${redirectHash}`
 
 		supabase.auth.signInWithOAuth({
 			provider: "google",

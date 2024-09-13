@@ -4,7 +4,7 @@ import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
-const LIMIT_PER_MEDIA_TYPE = 3
+const LIMIT_PER_MEDIA_TYPE = 1
 
 export interface OnboardingMedia extends AllRatings {
 	tmdb_id: number

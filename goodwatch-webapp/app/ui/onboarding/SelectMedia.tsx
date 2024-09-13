@@ -113,18 +113,20 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	}
 
 	let scoreCountHint = ""
-	if (sortedMedia.length > 30) {
+	let scoreCountBadgeClasses = ""
+	if (scoredMediaAmount >= 25) {
 		scoreCountHint =
-			"Keep going! The more you rate, the better your recommendations."
-	} else if (sortedMedia.length > 20) {
+			"Nice! You can finish the onboarding now or keep going. The more you rate, the better your recommendations."
+		scoreCountBadgeClasses = "bg-green-800 text-green-300"
+	} else if (scoredMediaAmount >= 10) {
 		scoreCountHint =
-			"Nice! Aim for 30 ratings and you'll get more personalized results."
-	} else if (sortedMedia.length > 10) {
-		scoreCountHint = "Good start! Rate 20+ titles for for even better results."
+			"Good start! Aim for 25 scores and you'll get more personalized results."
+		scoreCountBadgeClasses = "bg-yellow-800 text-yellow-300"
 	} else {
 		scoreCountHint = "Please rate at least 10 titles to get recommendations."
+		scoreCountBadgeClasses = "bg-red-900 text-red-300"
 	}
-	const didntScoreEnoughForRecommendations = sortedMedia.length < 10
+	const didntScoreEnoughForRecommendations = scoredMediaAmount < 10
 
 	// handle navigation
 
@@ -201,14 +203,20 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 
 	return (
 		<>
+			<div className="max-w-lg text-center font-semibold">{scoreCountHint}</div>
 			<div className="grid grid-cols-4 sm:grid-cols-8 gap-2 justify-end justify-items-end items-end place-items-end">
+				{[...Array(Math.max(0, 8 - sortedMedia.length)).keys()].map(
+					(_, index) => (
+						<div key={sortedMedia.length + index} className="invisible" />
+					),
+				)}
 				{sortedMedia
 					.slice(0, 8)
 					.reverse()
-					.map((details) => (
+					.map((details, index) => (
 						<div
 							key={details.tmdb_id}
-							className={`relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-500" : "border-slate-800"}`}
+							className={`${index < Math.min(4, sortedMedia.length - 4) ? "hidden sm:block" : ""} relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-500" : "border-slate-800"}`}
 							onClick={() => handlePreviousMediaToggle(details)}
 							onKeyDown={() => null}
 						>
@@ -235,20 +243,17 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 						</div>
 					))}
 			</div>
-			<div className="w-full flex flex-wrap items-center justify-center text-center">
-				<span className="font-bold">
-					You rated
-					<strong className="mx-2 px-2 bg-indigo-800">
-						{scoredMediaAmount}
-					</strong>
-					{scoredMediaAmount === 1 ? "title" : "titles"}.
-				</span>
-				&nbsp;{scoreCountHint}
-			</div>
 			<div className="w-full flex items-center justify-center">
 				<NextBackButtons
 					nextLabel={
 						didntScoreEnoughForRecommendations ? "Skip for now" : "Finish"
+					}
+					nextBadge={
+						<span
+							className={`text-base font-medium me-2 px-2.5 py-0.5 rounded ${scoreCountBadgeClasses}`}
+						>
+							{scoredMediaAmount}
+						</span>
 					}
 					onNext={handleMediaRatingsConfirmed}
 					onBack={handleMediaRatingsBack}

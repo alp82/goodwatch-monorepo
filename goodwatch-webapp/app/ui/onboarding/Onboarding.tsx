@@ -1,8 +1,8 @@
+"use client"
+
 import type React from "react"
 import { useState } from "react"
 import logo from "~/img/goodwatch-logo.png"
-import { useOnboardingMedia } from "~/routes/api.onboarding.media"
-import { useUserData } from "~/routes/api.user-data"
 import { useUserSettings } from "~/routes/api.user-settings.get"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import { Spinner } from "~/ui/Spinner"
@@ -24,7 +24,6 @@ const steps = [
 	},
 	{
 		label: "Ratings",
-		description: "Rate shows for personalized recommendations.",
 	},
 ]
 
@@ -39,9 +38,7 @@ export default function Onboarding({ children }: OnboardingProps) {
 	const setUserSettings = useSetUserSettings()
 
 	const isLoggedIn = Boolean(user)
-	// TODO
-	// const onboardingCompleted = userSettings?.onboarding_completed
-	const onboardingCompleted = false
+	const onboardingCompleted = userSettings?.onboarding_completed
 
 	// step progress
 
@@ -96,31 +93,42 @@ export default function Onboarding({ children }: OnboardingProps) {
 	return (
 		<main className="relative flex-grow mx-auto mt-4 sm:mt-8 md:mt-16 pb-2 w-full text-neutral-300">
 			<div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-5 sm:gap-6">
-				<div className="flex flex-col items-center">
-					<div className="flex items-center gap-2 text-2xl">
-						<span className="hidden sm:block mr-2">Welcome to</span>
-						<div className="flex-shrink-0">
+				{currentStep < 2 && (
+					<div className="flex flex-col items-center">
+						<div className="flex items-center gap-2 text-2xl">
+							<span className="hidden sm:block mr-2">Welcome to</span>
+							<div className="hidden sm:block flex-shrink-0">
+								<a href="/">
+									<img
+										className="h-10 w-auto"
+										src={logo}
+										alt="GoodWatch Logo"
+									/>
+								</a>
+							</div>
 							<a href="/">
-								<img className="h-10 w-auto" src={logo} alt="GoodWatch Logo" />
+								<div className="brand-header text-gray-100">GoodWatch</div>
 							</a>
+							<img
+								className="ml-2 h-10 w-10 rounded-full"
+								src={user?.user_metadata.avatar_url}
+								alt={user?.user_metadata.name}
+								title={user?.user_metadata.name}
+							/>
 						</div>
-						<a href="/">
-							<div className="brand-header text-gray-100">GoodWatch</div>
-						</a>
-						<img
-							className="ml-2 h-10 w-10 rounded-full"
-							src={user?.user_metadata.avatar_url}
-							alt={user?.user_metadata.name}
-							title={user?.user_metadata.name}
-						/>
-					</div>
 
-					<div className="mt-8 text-3xl font-bold accent">
-						Let's get <span className="italic">started</span>
+						{currentStep === 0 && (
+							<div className="mt-8 text-3xl font-bold accent">
+								Let's get <span className="italic">started</span>
+							</div>
+						)}
 					</div>
-				</div>
+				)}
 
-				<div aria-hidden="true" className="my-6 w-56 sm:w-72">
+				<div
+					aria-hidden="true"
+					className="my-2 sm:my-4 md:my-6 min-w-48 max-w-72 w-full sm:w-72 md:w-[100rem]"
+				>
 					<div className="overflow-hidden rounded-full bg-gray-600">
 						<div
 							style={{ width: `${normalizedProgress}%` }}
@@ -128,7 +136,7 @@ export default function Onboarding({ children }: OnboardingProps) {
 						/>
 					</div>
 					<div
-						className={`mt-2 grid grid-cols-${steps.length} text-sm font-medium`}
+						className={`mt-2 grid grid-cols-${steps.length} text-xs sm:text-sm md:text-base font-medium`}
 					>
 						{steps.map((step, index) => {
 							const color =
@@ -165,9 +173,11 @@ export default function Onboarding({ children }: OnboardingProps) {
 					</div>
 				</div>
 
-				<div className="m-2 text-lg text-center leading-relaxed font-semibold">
-					{steps[currentStep].description}
-				</div>
+				{steps[currentStep].description && (
+					<div className="text-sm sm:text-base md:text-lg text-center leading-relaxed font-semibold">
+						{steps[currentStep].description}
+					</div>
+				)}
 				{currentStep === 0 && <SelectCountry onSelect={handleSelectCountry} />}
 				{currentStep === 1 && (
 					<SelectStreaming onSelect={handleSelectStreaming} />

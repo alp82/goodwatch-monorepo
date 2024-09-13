@@ -203,8 +203,8 @@ function App() {
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
 					<HydrationBoundary state={dehydratedState}>
-						<AuthContext.Provider value={{ supabase }}>
-							<LocaleContext.Provider value={{ locale }}>
+						<LocaleContext.Provider value={{ locale }}>
+							<AuthContext.Provider value={{ supabase }}>
 								<AuthRedirect>
 									<Onboarding>
 										<Header />
@@ -221,19 +221,17 @@ function App() {
 												</motion.div>
 											</AnimatePresence>
 										</main>
-
 										<Footer />
 										<BottomNav />
-
-										<ToastContainer />
-										<CookieConsent />
-										<PostHogInit />
-										<ScrollRestoration />
-										<Scripts />
 									</Onboarding>
+									<ToastContainer />
+									<CookieConsent />
+									<PostHogInit />
+									<ScrollRestoration />
+									<Scripts />
 								</AuthRedirect>
-							</LocaleContext.Provider>
-						</AuthContext.Provider>
+							</AuthContext.Provider>
+						</LocaleContext.Provider>
 					</HydrationBoundary>
 					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>

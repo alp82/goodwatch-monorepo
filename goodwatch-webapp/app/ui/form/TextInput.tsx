@@ -32,7 +32,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
 					)}
 					<input
 						type="search"
-						className="block w-full p-4 ps-10 text-base text-white placeholder-gray-400 border border-gray-500 rounded-lg bg-gray-700 focus:ring-blue-500 focus:border-blue-500"
+						className="block w-full p-4 ps-10 text-lg text-white placeholder-gray-400 border-2 border-slate-500 rounded-lg bg-slate-700 focus:ring-blue-500 focus:border-blue-500"
 						placeholder={placeholder}
 						defaultValue={initialValue}
 						required

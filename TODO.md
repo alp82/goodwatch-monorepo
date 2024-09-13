@@ -9,10 +9,6 @@ onboarding
     only favorites?
     each step & finish -> scroll to the top
     
-backups
-    db's
-    configs
-
 ---
 
 sql injection analysis
@@ -23,6 +19,15 @@ cookie consent update
     save consent in user settings
     centered
     inspiration: https://www.smashingmagazine.com
+
+---
+
+country usage
+    new hook with user setting, guess and locale
+    details
+    explore
+    discover
+    trending
 
 ---
 
@@ -250,7 +255,7 @@ discover load more
 replace url for details when country changes
 better discover url handling with new hook
 
-show movies and shows on map (production country + places in film)
+show titles on map (production countries + places in film)
     where to show space and fantasy places
 
 populate trending score 1-500

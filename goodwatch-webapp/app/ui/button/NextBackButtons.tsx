@@ -1,8 +1,9 @@
-import React from "react"
+import type React from "react"
 
 export interface NextBackButtonProps {
 	nextLabel?: string
 	backLabel?: string
+	nextBadge?: React.ReactNode
 	onNext?: () => void
 	onBack?: () => void
 }
@@ -10,6 +11,7 @@ export interface NextBackButtonProps {
 export default function NextBackButtons({
 	nextLabel = "Next",
 	backLabel = "Back",
+	nextBadge,
 	onNext,
 	onBack,
 }: NextBackButtonProps) {
@@ -24,10 +26,11 @@ export default function NextBackButtons({
 			</button>
 			<button
 				type="button"
-				className="rounded-md bg-indigo-700 px-8 py-1.5 text-lg font-semibold text-white shadow-sm hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 cursor-pointer"
+				className="flex items-center gap-4 rounded-md bg-indigo-700 px-8 py-1.5 text-lg font-semibold text-white shadow-sm hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 cursor-pointer"
 				onClick={onNext}
 			>
 				{nextLabel}
+				{nextBadge}
 			</button>
 		</div>
 	)
