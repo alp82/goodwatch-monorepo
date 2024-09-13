@@ -1,15 +1,5 @@
 # TODO's
 ```
-header not transparent -> new bg color (925?)
-
-onboarding
-    hide header + search
-    guide for rated enough titles
-    search more prominent
-    only favorites?
-    each step & finish -> scroll to the top
-    
----
 
 sql injection analysis
 

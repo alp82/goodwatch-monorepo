@@ -2,6 +2,16 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
+## [0.2.27] 2024-09-14
+
+### Added
+
+### Changed
+* Onboarding: Better UX
+* Remove Header transparency
+
+### Fixed
+
 ## [0.2.26] 2024-09-12
 
 ### Added
