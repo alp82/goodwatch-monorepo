@@ -160,7 +160,7 @@ async function _getDiscoverResults({
     ON sp.id = spl.provider_id
   `)
 
-	let orderBy
+	let orderBy: string
 	if (sortBy === "release_date") {
 		orderBy = "m.release_date DESC"
 	} else if (sortBy === "aggregated_score") {

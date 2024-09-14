@@ -132,7 +132,7 @@ async function _getExploreResults({
 	// TODO country
 	const queryParams = [type === "movies" ? "movie" : "tv", "DE", tmdbIds]
 	const results = await executeQuery(pg_query, queryParams)
-	console.log("pg done")
+
 	return {
 		results: results.rows as unknown as ExploreResult[],
 	}

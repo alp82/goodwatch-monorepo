@@ -2,11 +2,12 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.2.28] 2024-09-xx
+## [0.2.28] 2024-09-15
 
 ### Added
 
 ### Changed
+* Secure queries to avoid SQL inkection
 
 ### Fixed
 * Do not show onboarding when it was already completed

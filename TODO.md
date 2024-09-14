@@ -1,9 +1,7 @@
 # TODO's
 ```
+after login blank screen
 
-sql injection analysis
-
----
 
 cookie consent update
     save consent in user settings
