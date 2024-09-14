@@ -8,8 +8,6 @@ export const SubHeader = () => {
 	const { data: userSettings } = useUserSettings()
 	const userStreamingProviders = useUserStreamingProviders()
 
-	console.log({ userSettings, userStreamingProviders })
-
 	const handleEditClick = () => {
 		// Logic to edit streaming services or country
 	}

@@ -127,12 +127,14 @@ async function _getDiscoverResults({
 
 	if (withCast) {
 		const castConditions: string[] = []
-		withCast
+		const filteredCast = withCast
 			.split(",")
-			.filter((castId) => Number.isInteger(castId))
-			.forEach((castId) => {
-				castConditions.push(`m.cast @> '[{"id": ${castId}}]'`)
-			})
+			.map((castId) => Number.parseInt(castId, 10)) // Convert to integer
+			.filter((castId) => !Number.isNaN(castId)) // Filter out invalid numbers
+		for (const castId of filteredCast) {
+			castConditions.push(`m.cast @> '[{"id": ${castId}}]'`)
+		}
+
 		conditions.push(`(${castConditions.join(" OR ")})`)
 	}
 

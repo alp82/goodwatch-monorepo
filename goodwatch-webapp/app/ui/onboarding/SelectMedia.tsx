@@ -81,20 +81,9 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		"onScoresSince",
 	]).length
 
-	// skip and wishlist actions
+	// user actions
 
-	const handleSkip = (media: OnboardingResult) => {
-		if (
-			media.tmdb_id !== previousMediaToDisplay?.tmdb_id ||
-			media.media_type !== previousMediaToDisplay?.media_type
-		) {
-			return
-		}
-
-		setPreviousMediaToDisplay(undefined)
-	}
-
-	const handleToWatch = (media: OnboardingResult) => {
+	const handleUserChange = (media: OnboardingResult) => {
 		if (
 			media.tmdb_id !== previousMediaToDisplay?.tmdb_id ||
 			media.media_type !== previousMediaToDisplay?.media_type
@@ -178,16 +167,19 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 											</div>
 											{/*<Genres genres={details.genres} withLinks={false} />*/}
 											<div>
-												<ScoreSelector details={details} />
+												<ScoreSelector
+													details={details}
+													onChange={() => handleUserChange(details)}
+												/>
 											</div>
 											<div className="flex flex-wrap md:flex-nowrap justify-between gap-6 p-2 sm:p-4">
 												<SkipButton
 													details={details}
-													onChange={() => handleSkip(details)}
+													onChange={() => handleUserChange(details)}
 												/>
 												<ToWatchButton
 													details={details}
-													onChange={() => handleToWatch(details)}
+													onChange={() => handleUserChange(details)}
 												/>
 											</div>
 										</div>
@@ -200,6 +192,21 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 			</div>
 		)
 	}
+
+	const nextBackButtons = (
+		<NextBackButtons
+			nextLabel={didntScoreEnoughForRecommendations ? "Skip for now" : "Finish"}
+			nextBadge={
+				<span
+					className={`text-base font-medium me-2 px-2.5 py-0.5 rounded ${scoreCountBadgeClasses}`}
+				>
+					{scoredMediaAmount}
+				</span>
+			}
+			onNext={handleMediaRatingsConfirmed}
+			onBack={handleMediaRatingsBack}
+		/>
+	)
 
 	return (
 		<>
@@ -216,7 +223,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					.map((details, index) => (
 						<div
 							key={details.tmdb_id}
-							className={`${index < Math.min(4, sortedMedia.length - 4) ? "hidden sm:block" : ""} relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-500" : "border-slate-800"}`}
+							className={`${index < Math.min(4, sortedMedia.length - 4) ? "hidden sm:block" : ""} relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-600" : "border-slate-800"}`}
 							onClick={() => handlePreviousMediaToggle(details)}
 							onKeyDown={() => null}
 						>
@@ -244,20 +251,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					))}
 			</div>
 			<div className="w-full flex items-center justify-center">
-				<NextBackButtons
-					nextLabel={
-						didntScoreEnoughForRecommendations ? "Skip for now" : "Finish"
-					}
-					nextBadge={
-						<span
-							className={`text-base font-medium me-2 px-2.5 py-0.5 rounded ${scoreCountBadgeClasses}`}
-						>
-							{scoredMediaAmount}
-						</span>
-					}
-					onNext={handleMediaRatingsConfirmed}
-					onBack={handleMediaRatingsBack}
-				/>
+				{nextBackButtons}
 			</div>
 			<div className="mt-6 w-full flex items-center justify-center">
 				<TextInput
@@ -282,14 +276,8 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 			) : (
 				getMedia(allMedia)
 			)}
-			<div className="w-full flex items-center justify-center">
-				<NextBackButtons
-					nextLabel={
-						didntScoreEnoughForRecommendations ? "Skip for now" : "Finish"
-					}
-					onNext={handleMediaRatingsConfirmed}
-					onBack={handleMediaRatingsBack}
-				/>
+			<div className="mt-8 w-full flex items-center justify-center">
+				{nextBackButtons}
 			</div>
 		</>
 	)

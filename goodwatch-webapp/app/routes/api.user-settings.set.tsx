@@ -1,7 +1,7 @@
 import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
-	type SettingMap,
+	type UserSettingsMap,
 	queryKeyUserSettings,
 } from "~/routes/api.user-settings.get"
 import { setUserSettings } from "~/server/user-settings.server"
@@ -9,7 +9,7 @@ import { getUserIdFromRequest, useUser } from "~/utils/auth"
 
 // type definitions
 
-export type SetUserSettingsParams = Partial<SettingMap>
+export type SetUserSettingsParams = Partial<UserSettingsMap>
 
 // API endpoint
 

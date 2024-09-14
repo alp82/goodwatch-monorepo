@@ -18,7 +18,6 @@ interface SelectStreamingProps {
 
 export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 	const { data: userSettings } = useUserSettings()
-	console.log({ userSettings })
 
 	// pre-selection
 

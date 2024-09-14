@@ -7,12 +7,10 @@ import {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import type { GetUserDataResult } from "~/routes/api.user-data"
 import { type TVDetails, getDetailsForTV } from "~/server/details.server"
 import { getUserSettings } from "~/server/user-settings.server"
-import { getUserData } from "~/server/userData.server"
 import Details from "~/ui/Details"
-import { getUserFromRequest, getUserIdFromRequest } from "~/utils/auth"
+import { getUserIdFromRequest } from "~/utils/auth"
 import useLocale from "~/utils/locale"
 
 export function headers() {
@@ -40,7 +38,6 @@ type LoaderData = {
 		country: string
 		language: string
 	}
-	userData?: GetUserDataResult
 }
 
 export const loader: LoaderFunction = async ({
@@ -51,7 +48,6 @@ export const loader: LoaderFunction = async ({
 
 	const user_id = await getUserIdFromRequest({ request })
 	const userSettings = await getUserSettings({ user_id })
-	const userData = await getUserData({ user_id })
 
 	const url = new URL(request.url)
 	const tab = url.searchParams.get("tab") || "about"
@@ -71,7 +67,6 @@ export const loader: LoaderFunction = async ({
 			country,
 			language,
 		},
-		userData,
 	})
 }
 

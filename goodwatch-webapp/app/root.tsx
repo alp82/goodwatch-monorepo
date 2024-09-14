@@ -6,11 +6,9 @@ import type {
 import {
 	Links,
 	Meta,
-	Outlet,
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
-	useLocation,
 	useRouteError,
 } from "@remix-run/react"
 import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix"
@@ -21,7 +19,6 @@ import {
 	QueryClientProvider,
 } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import { AnimatePresence, motion } from "framer-motion"
 import posthog from "posthog-js"
 import React, { useEffect } from "react"
 import { ToastContainer } from "react-toastify"
@@ -34,6 +31,7 @@ import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 
 import cssToastify from "react-toastify/dist/ReactToastify.css?url"
 import { useDehydratedState } from "use-dehydrated-state"
+import App from "~/app"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
 import cssTailwind from "~/tailwind.css?url"
@@ -145,19 +143,28 @@ export function ErrorBoundary() {
 				<Header />
 				<main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
 					<InfoBox text="Sorry, but an error occurred" />
-					<div className="mt-6 p-3 bg-red-900 overflow-x-auto flex flex-col gap-2">
-						<strong>{error.message || error.data}</strong>
+					<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
+						{/* Error message */}
+						<strong className="text-xl text-white">
+							{error.message || error.data}
+						</strong>
+
+						{/* Try Again button */}
 						<button
 							type="button"
-							className="m-2 p-2 w-32 text-grey-100 bg-gray-900 hover:bg-gray-800"
+							className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
 							onClick={() => window.location.reload()}
 						>
 							Try Again
 						</button>
+
+						{/* Error stack trace */}
 						{error.stack && (
-							<pre className="mt-2">
-								{JSON.stringify(error.stack, null, 2).replace(/\\n/g, "\n")}
-							</pre>
+							<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
+								<pre className="whitespace-pre-wrap break-words">
+									{error.stack}
+								</pre>
+							</div>
 						)}
 					</div>
 				</main>
@@ -173,9 +180,8 @@ export function ErrorBoundary() {
 	)
 }
 
-function App() {
+function Root() {
 	const { locale, env } = useLoaderData<LoaderData>()
-	const location = useLocation()
 
 	const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
 
@@ -206,24 +212,7 @@ function App() {
 						<LocaleContext.Provider value={{ locale }}>
 							<AuthContext.Provider value={{ supabase }}>
 								<AuthRedirect>
-									<Onboarding>
-										<Header />
-										<main className="relative flex-grow mx-auto mt-16 pb-2 w-full text-neutral-300">
-											<AnimatePresence mode="wait">
-												<motion.div
-													key={location.pathname}
-													initial={{ x: "-2%", opacity: 0 }}
-													animate={{ x: "0", opacity: 1 }}
-													exit={{ x: "2%", opacity: 0 }}
-													transition={{ duration: 0.2, type: "tween" }}
-												>
-													<Outlet />
-												</motion.div>
-											</AnimatePresence>
-										</main>
-										<Footer />
-										<BottomNav />
-									</Onboarding>
+									<App />
 									<ToastContainer />
 									<CookieConsent />
 									<PostHogInit />
@@ -240,4 +229,4 @@ function App() {
 	)
 }
 
-export default withSentry(App)
+export default withSentry(Root)

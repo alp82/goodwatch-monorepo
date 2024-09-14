@@ -1,6 +1,7 @@
 import {
 	type GetUserSettingsResult,
-	type SettingMap,
+	type UserSettingsMap,
+	UserSettingsSchema,
 	queryKeyUserSettings,
 } from "~/routes/api.user-settings.get"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
@@ -8,7 +9,7 @@ import { cached, resetCache } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 
 interface UserSettingRow {
-	key: keyof SettingMap
+	key: keyof UserSettingsMap
 	value: string
 }
 
@@ -23,8 +24,8 @@ export const getUserSettings = async (params: GetUserSettingsParams) => {
 		name: "user-settings",
 		target: _getUserSettings,
 		params,
-		// ttlMinutes: 10,
-		ttlMinutes: 0,
+		ttlMinutes: 60,
+		// ttlMinutes: 0,
 	})
 }
 
@@ -48,22 +49,28 @@ WHERE user_id = $1;
 
 	const settings: GetUserSettingsResult = {}
 	for (const row of result.rows) {
-		settings[row.key] = _convertSettingValue(row.key, row.value) // No more type error
+		const convertedSettingValue = _convertSettingValue(row.key, row.value)
+		if (convertedSettingValue !== null) {
+			settings[row.key] = convertedSettingValue
+		}
 	}
 	return settings
 }
 
 const _convertSettingValue = (
-	key: keyof SettingMap,
+	key: keyof UserSettingsMap,
 	value: string,
-): SettingMap[keyof SettingMap] => {
-	switch (key) {
-		case "country_default":
+): UserSettingsMap[keyof UserSettingsMap] | null => {
+	const schema = UserSettingsSchema[key]
+	if (!schema) return null
+
+	switch (schema.type) {
+		case "string":
 			return value
-		case "onboarding_completed":
-			return value === "true"
-		case "streaming_providers_default":
-			return value
+		case "enum":
+			return schema.options.includes(value) ? value : null
+		default:
+			return null
 	}
 }
 
@@ -71,7 +78,7 @@ const _convertSettingValue = (
 
 interface SetUserSettingsParams {
 	user_id: string | undefined
-	settings: Partial<SettingMap>
+	settings: Partial<UserSettingsMap>
 }
 
 export async function setUserSettings({
@@ -82,23 +89,11 @@ export async function setUserSettings({
 		return null
 	}
 
-	if (
-		settings?.country_default &&
-		typeof settings.country_default !== "string"
-	) {
-		return null
-	}
-	if (
-		settings?.onboarding_completed &&
-		typeof settings.onboarding_completed !== "boolean"
-	) {
-		return null
-	}
-	if (
-		settings?.streaming_providers_default &&
-		typeof settings.streaming_providers_default !== "string"
-	) {
-		return null
+	// Validate each setting against allowed settings
+	for (const [key, value] of Object.entries(settings)) {
+		if (!isValidSetting(key as keyof UserSettingsMap, value)) {
+			return null
+		}
 	}
 
 	const query = `
@@ -119,7 +114,29 @@ export async function setUserSettings({
 
 	const params = [user_id, ...Object.entries(settings).flat()]
 
-	return await executeQuery(query, params)
+	const result = await executeQuery(query, params)
+	await resetUserSettingsCache({ user_id })
+	return result
+}
+
+// validation
+
+const isValidSetting = <K extends keyof UserSettingsMap>(
+	key: K,
+	value: UserSettingsMap[K],
+): boolean => {
+	const schema = UserSettingsSchema[key]
+	if (!schema) return false
+
+	// Validate based on the type in the schema
+	switch (schema.type) {
+		case "string":
+			return typeof value === "string"
+		case "enum":
+			return schema.options.includes(value)
+		default:
+			return false
+	}
 }
 
 // cache reset

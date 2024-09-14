@@ -46,18 +46,6 @@ export default function SelectCountry({ onSelect }: SelectCountryProps) {
 	const guessedCountry = guessCountryFetcher.data?.country
 	const preselectedCountry = storedCountry || guessedCountry
 
-	const countriesFetcher = useFetcher<{ countries: Country[] }>()
-	useEffect(() => {
-		countriesFetcher.submit(
-			{},
-			{
-				method: "get",
-				action: "/api/discover/countries",
-			},
-		)
-	}, [countriesFetcher.submit])
-	const countries = countriesFetcher.data?.countries || []
-
 	// selection mode
 
 	const [countrySelectionEnabled, setCountrySelectionEnabled] = useState(false)
@@ -91,7 +79,7 @@ export default function SelectCountry({ onSelect }: SelectCountryProps) {
 				<>
 					<FilterCountries
 						type="movie"
-						selectedCountry={preselectedCountry || ""}
+						selectedCountry={userCountry || ""}
 						onChange={handleSelectCountry}
 					/>
 					<NextBackButtons
