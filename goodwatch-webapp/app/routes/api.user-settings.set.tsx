@@ -11,6 +11,10 @@ import { getUserIdFromRequest, useUser } from "~/utils/auth"
 
 export type SetUserSettingsParams = Partial<UserSettingsMap>
 
+export interface SetUserSettingsOptions {
+	ignoreUpdate?: boolean
+}
+
 // API endpoint
 
 export const action: ActionFunction = async ({
@@ -31,10 +35,17 @@ export const useSetUserSettings = () => {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: async (settings: SetUserSettingsParams) => {
+		mutationFn: async ({
+			settings,
+			options,
+		}: {
+			settings: SetUserSettingsParams
+			options?: SetUserSettingsOptions
+		}) => {
 			const url = "/api/user-settings/set"
 			const params = {
 				settings,
+				options,
 			}
 
 			return await (

@@ -69,7 +69,12 @@ export const useOnboardingRequired = () => {
 			userSettings.onboarding_status === undefined
 		) {
 			setUserSettings.mutate({
-				onboarding_status: "incomplete",
+				settings: {
+					onboarding_status: "incomplete",
+				},
+				options: {
+					ignoreUpdate: true,
+				},
 			})
 		}
 	}, [loading, userSettings, user, setUserSettings.mutate])

@@ -4,6 +4,7 @@ import {
 	UserSettingsSchema,
 	queryKeyUserSettings,
 } from "~/routes/api.user-settings.get"
+import type { SetUserSettingsOptions } from "~/routes/api.user-settings.set"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
 import { cached, resetCache } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
@@ -79,11 +80,13 @@ const _convertSettingValue = (
 interface SetUserSettingsParams {
 	user_id: string | undefined
 	settings: Partial<UserSettingsMap>
+	options?: SetUserSettingsOptions
 }
 
 export async function setUserSettings({
 	user_id,
 	settings,
+	options = {},
 }: SetUserSettingsParams) {
 	if (!user_id || !settings) {
 		return null
@@ -96,21 +99,27 @@ export async function setUserSettings({
 		}
 	}
 
+	// Build the query, conditionally adding ON CONFLICT if ignoreUpdate is falsy
 	const query = `
-			INSERT INTO user_settings (user_id, key, value, created_at, updated_at)
-			VALUES 
-			${Object.keys(settings)
-				.map(
-					(_, index) =>
-						`($1, $${index * 2 + 2}, $${index * 2 + 3}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-				)
-				.join(",")}
-			ON CONFLICT (user_id, key)
-			DO UPDATE SET
-					value = EXCLUDED.value,
-					updated_at = CURRENT_TIMESTAMP
-			RETURNING *;
-    `
+		INSERT INTO user_settings (user_id, key, value, created_at, updated_at)
+		VALUES 
+		${Object.keys(settings)
+			.map(
+				(_, index) =>
+					`($1, $${index * 2 + 2}, $${index * 2 + 3}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+			)
+			.join(",")}
+		${
+			options.ignoreUpdate
+				? ""
+				: `
+		ON CONFLICT (user_id, key)
+		DO UPDATE SET
+			value = EXCLUDED.value,
+			updated_at = CURRENT_TIMESTAMP`
+		}
+		RETURNING *;
+	`
 
 	const params = [user_id, ...Object.entries(settings).flat()]
 

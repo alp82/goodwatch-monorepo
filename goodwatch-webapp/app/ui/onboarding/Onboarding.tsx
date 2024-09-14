@@ -49,7 +49,9 @@ export default function Onboarding() {
 	const handleSelectCountry = (country: string) => {
 		localStorage.setItem("country", country)
 		setUserSettings.mutate({
-			country_default: country,
+			settings: {
+				country_default: country,
+			},
 		})
 
 		setCurrentStep(1)
@@ -64,7 +66,9 @@ export default function Onboarding() {
 
 		localStorage.setItem("withStreamingProviders", withStreamingProviders)
 		setUserSettings.mutate({
-			streaming_providers_default: withStreamingProviders,
+			settings: {
+				streaming_providers_default: withStreamingProviders,
+			},
 		})
 
 		setCurrentStep(2)

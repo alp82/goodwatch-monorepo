@@ -8,7 +8,9 @@ export const OnboardingSuccess = () => {
 	const setUserSettings = useSetUserSettings()
 	const handleFinish = () => {
 		setUserSettings.mutate({
-			onboarding_status: "finished",
+			settings: {
+				onboarding_status: "finished",
+			},
 		})
 	}
 
