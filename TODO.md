@@ -1,5 +1,11 @@
 # TODO's
 ```
+---
+
+streaming data pipeline with daily accuracy
+
+streaming providers from tmdb api with all country ranks
+    remove old scripts and schedules
 
 ---
 
@@ -9,13 +15,6 @@ country usage
     explore
     discover
     trending
-
----
-
-streaming data pipeline with daily accuracy
-
-streaming providers from tmdb api with all country ranks
-    remove old scripts and schedules
 
 ---
 

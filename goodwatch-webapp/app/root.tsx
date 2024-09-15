@@ -34,6 +34,7 @@ import { useDehydratedState } from "use-dehydrated-state"
 import App from "~/app"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
+import { useCookieConsent } from "~/routes/api.user-settings.get"
 import cssTailwind from "~/tailwind.css?url"
 import { CookieConsent } from "~/ui/CookieConsent"
 import { AuthRedirect } from "~/ui/auth/AuthRedirect"
@@ -106,6 +107,7 @@ const PostHogInit = () => {
 		setPosthogInitialized(true)
 	}, [user])
 
+	const { consentGiven } = useCookieConsent()
 	useEffect(() => {
 		const isLocalhost =
 			window.location.hostname === "localhost" ||
@@ -115,11 +117,10 @@ const PostHogInit = () => {
 		posthog.init("phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq", {
 			// api_host: 'https://eu.i.posthog.com',
 			api_host: "https://a.goodwatch.app",
-			persistence:
-				cookieConsentGiven() === "yes" ? "localStorage+cookie" : "memory",
+			persistence: consentGiven === "yes" ? "localStorage+cookie" : "memory",
 			person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
 		})
-	}, [])
+	}, [consentGiven])
 
 	return null
 }
