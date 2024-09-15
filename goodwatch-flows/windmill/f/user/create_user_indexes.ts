@@ -49,6 +49,11 @@ export async function main(db: Postgresql) {
       CREATE INDEX IF NOT EXISTS idx_user_favorites_tmdb_id ON user_favorites(tmdb_id);
       CREATE INDEX IF NOT EXISTS idx_user_favorites_media_type ON user_favorites(media_type);
       CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id_tmdb_id_media_type ON user_favorites(user_id, tmdb_id, media_type);
+
+      CREATE INDEX IF NOT EXISTS idx_user_skipped_user_id ON user_skipped(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_skipped_tmdb_id ON user_skipped(tmdb_id);
+      CREATE INDEX IF NOT EXISTS idx_user_skipped_media_type ON user_skipped(media_type);
+      CREATE INDEX IF NOT EXISTS idx_user_skipped_user_id_tmdb_id_media_type ON user_skipped(user_id, tmdb_id, media_type);
     `
     const res = await client.query(query);
 

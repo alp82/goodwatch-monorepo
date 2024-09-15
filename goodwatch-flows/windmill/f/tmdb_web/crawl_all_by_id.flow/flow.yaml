@@ -54,5 +54,3 @@ schema:
       properties: {}
   required:
     - next_ids
-visible_to_runner_only: false
-ws_error_handler_muted: false

@@ -14,9 +14,16 @@ type Postgresql = {
 
 export async function main(db: Postgresql) {
   const queries = [
+    'CREATE EXTENSION IF NOT EXISTS pg_trgm;',
     `CREATE INDEX IF NOT EXISTS idx_tv_popularity ON "tv"(popularity DESC);`,
     `CREATE INDEX IF NOT EXISTS idx_tv_popularity_tmdb_id ON "tv"(popularity DESC, tmdb_id DESC);`,
     `CREATE INDEX IF NOT EXISTS idx_tv_release_date_year ON "tv"(release_date DESC, release_year);`,
+    `CREATE INDEX IF NOT EXISTS idx_tv_title_trgm ON "tv" USING gin (title gin_trgm_ops);`,
+    `CREATE INDEX IF NOT EXISTS idx_tv_original_title_trgm ON "tv" USING gin (original_title gin_trgm_ops);`,
+    `CREATE INDEX IF NOT EXISTS idx_tv_alternative_titles_text_trgm ON "tv" USING gin(alternative_titles_text gin_trgm_ops);`,
+    `CREATE INDEX IF NOT EXISTS idx_tv_title_full_text ON tv USING GIN (to_tsvector('simple', title));`,
+    `CREATE INDEX IF NOT EXISTS idx_tv_original_title_full_text ON tv USING GIN (to_tsvector('simple', original_title));`,
+    `CREATE INDEX IF NOT EXISTS idx_tv_alternative_titles_full_text ON tv USING GIN (to_tsvector('simple', alternative_titles_text));`,
     `CREATE INDEX IF NOT EXISTS idx_tv_genres ON "tv" USING gin("genres");`,
     `CREATE INDEX IF NOT EXISTS idx_tv_keywords ON "tv" USING gin("keywords");`,
     `CREATE INDEX IF NOT EXISTS idx_tv_trope_names ON "tv" USING gin("trope_names");`,

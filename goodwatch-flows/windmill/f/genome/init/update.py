@@ -3,12 +3,12 @@ from mongoengine import get_db
 
 from f.data_source.common import get_documents_for_tmdb_ids
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.genome.models import GenomeMovie, GenomeTv
 from f.tmdb_daily.models import DumpType
+from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags
 from f.genome.init.main import build_operation, store_copies
 
 
-def initialize_documents(next_entries: list[Union[GenomeMovie, GenomeTv]]):
+def initialize_documents(next_entries: list[Union[TvTropesMovieTags, TvTropesTvTags]]):
     print("Initializing documents for Hugchat genomes")
     mongo_db = get_db()
 
@@ -19,7 +19,7 @@ def initialize_documents(next_entries: list[Union[GenomeMovie, GenomeTv]]):
 
     for next_entry in next_entries:
         print(f"copying {next_entry.original_title} ({next_entry.tmdb_id}) genome")
-        if isinstance(next_entry, GenomeMovie):
+        if isinstance(next_entry, TvTropesMovieTags):
             operation = build_operation(
                 tvtropes_entry=next_entry.to_mongo().to_dict(),
                 type=DumpType.MOVIES,
@@ -32,7 +32,7 @@ def initialize_documents(next_entries: list[Union[GenomeMovie, GenomeTv]]):
             count_new_movies += movie_upserts.get("count_new_documents")
             upserted_movie_ids += movie_upserts.get("upserted_ids")
 
-        elif isinstance(next_entry, GenomeTv):
+        elif isinstance(next_entry, TvTropesTvTags):
             operation = build_operation(
                 tvtropes_entry=next_entry.to_mongo().to_dict(),
                 type=DumpType.TV_SERIES,
@@ -61,8 +61,8 @@ def main(next_ids: dict):
     init_mongodb()
     next_entries = get_documents_for_tmdb_ids(
         next_ids=next_ids,
-        movie_model=GenomeMovie,
-        tv_model=GenomeTv,
+        movie_model=TvTropesMovieTags,
+        tv_model=TvTropesTvTags,
     )
     docs = initialize_documents(next_entries)
     close_mongodb()

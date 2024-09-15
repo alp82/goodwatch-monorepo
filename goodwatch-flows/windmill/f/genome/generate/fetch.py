@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime
 import re
 from typing import Union
@@ -50,6 +49,7 @@ The title is: {title} ({release_year})
 Analyze the following list of tropes to fill out the genome:
 {', '.join(trope_names)}
     """
+    print(prompt)
 
     message_result = chatbot.chat(prompt)
 
@@ -74,7 +74,7 @@ def store_result(next_entry: Union[GenomeMovie, GenomeTv], dna: dict):
     next_entry.save()
 
 
-async def hugchat_generate_dna(next_entry: Union[GenomeMovie, GenomeTv]):
+def hugchat_generate_dna(next_entry: Union[GenomeMovie, GenomeTv]):
     print("Generate DNA from Hugchat")
 
     if not next_entry:
@@ -116,6 +116,6 @@ def main(next_id: dict):
         movie_model=GenomeMovie,
         tv_model=GenomeTv,
     )
-    result = asyncio.run(hugchat_generate_dna(next_entry))
+    result = hugchat_generate_dna(next_entry)
     close_mongodb()
     return result

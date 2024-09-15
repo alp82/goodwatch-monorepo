@@ -1,11 +1,11 @@
 # extra_requirements:
-# playwright==1.40.0
+# playwright==1.45.1
 
 import asyncio
 from playwright.async_api import async_playwright, BrowserContext
 
 BROWSER_TIMEOUT_MS = 30000
-PAGE_SLEEP_SEC = 10
+PAGE_SLEEP_SEC = 1
 
 
 async def visit_page(url: str, browser: BrowserContext):
@@ -18,18 +18,17 @@ async def visit_page(url: str, browser: BrowserContext):
 
 
 async def visit_pages(urls: list[str]):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        context = await browser.new_context()
-        context.set_default_timeout(BROWSER_TIMEOUT_MS)
-
-        try:
-            for url in urls:
+    for url in urls:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            context = await browser.new_context()
+            context.set_default_timeout(BROWSER_TIMEOUT_MS)
+            try:
                 await visit_page(url=url, browser=browser)
                 await asyncio.sleep(PAGE_SLEEP_SEC)
-        finally:
-            await context.close()
-            await browser.close()
+            finally:
+                await context.close()
+                await browser.close()
 
 
 def main():

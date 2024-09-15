@@ -1,5 +1,5 @@
 # extra_requirements:
-# playwright==1.40.0
+# playwright==1.45.1
 
 import asyncio
 from datetime import datetime
@@ -21,7 +21,7 @@ BROWSER_TIMEOUT = 180000
 
 
 def extract_numeric_value(banded_rating_count) -> Optional[int]:
-    match = re.search(r'(\d+)', banded_rating_count)
+    match = re.search(r"(\d+)", banded_rating_count)
     if match:
         return int(match.group(1))
 
@@ -115,11 +115,11 @@ async def crawl_rotten_tomatoes_page(
 
     # Locate the score elements
     print("locating score elements...")
-    
-    json_data = await page.evaluate('''() => {
+
+    json_data = await page.evaluate("""() => {
         const scriptTag = document.querySelector('script[id="media-scorecard-json"]');
         return scriptTag ? scriptTag.textContent : null;
-    }''')
+    }""")
 
     if not response or response.status != 200 or not json_data:
         print(f"no result for url: {url}")
@@ -142,25 +142,27 @@ async def crawl_rotten_tomatoes_page(
     audience_score = None
     audience_score_vote_count = None
 
-    tomato_data = data.get('criticsScore')
+    tomato_data = data.get("criticsScore")
     if tomato_data:
-        tomato_score = tomato_data['score']
-        tomato_score_vote_count = tomato_data['ratingCount']
+        tomato_score = tomato_data["score"]
+        tomato_score_vote_count = tomato_data["ratingCount"]
     print("Tomatometer rating:", tomato_score)
     print("Number of critic reviews:", tomato_score_vote_count)
 
     # Extract audience score details
-    audience_all_data = data.get('overlay', {}).get('audienceAll')
-    audience_data = data.get('audienceScore')
+    audience_all_data = data.get("overlay", {}).get("audienceAll")
+    audience_data = data.get("audienceScore")
     if audience_all_data:
-        audience_score = audience_all_data['score']
-        if 'likedCount' in audience_data and 'notLikedCount' in audience_data:
-            audience_score_vote_count = audience_all_data['likedCount'] + audience_all_data['notLikedCount']
+        audience_score = audience_all_data["score"]
+        if "likedCount" in audience_data and "notLikedCount" in audience_data:
+            audience_score_vote_count = (
+                audience_all_data["likedCount"] + audience_all_data["notLikedCount"]
+            )
     if audience_data:
         if not audience_score:
-            audience_score = audience_data['score']
+            audience_score = audience_data["score"]
         if not audience_score_vote_count:
-            banded_rating_count = audience_data.get('bandedRatingCount', '')
+            banded_rating_count = audience_data.get("bandedRatingCount", "")
             audience_score_vote_count = extract_numeric_value(banded_rating_count)
     print("Audience score:", audience_score)
     print("Number of audience ratings:", audience_score_vote_count)
@@ -255,7 +257,7 @@ async def rotten_tomatoes_crawl_ratings(
         finally:
             await context.close()
             await browser.close()
-            
+
     if crawl_result.rate_limit_reached:
         raise Exception(
             f"Rate limit reached for {next_entry.original_title}, retrying."

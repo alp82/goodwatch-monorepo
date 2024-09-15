@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS tv (
     tagline TEXT,
     synopsis TEXT,
     alternative_titles JSONB,
+    alternative_titles_text TEXT,
 
     -- status and flags
     popularity NUMERIC NOT NULL,

@@ -14,12 +14,48 @@ value:
         input_transforms:
           next_ids:
             type: javascript
-            expr: results.a
+            expr: results.a.ids
         path: f/genome/crawl_all_by_id
+    - id: c
+      summary: ''
+      value:
+        type: branchall
+        branches:
+          - summary: Movie Vector
+            modules:
+              - id: d
+                value:
+                  type: script
+                  input_transforms:
+                    collection_name:
+                      type: static
+                      value: movies
+                    tmdb_ids:
+                      type: javascript
+                      expr: results.a.tmdb_ids.movie_ids
+                  path: f/vector/save
+            expr: ''
+            parallel: true
+            skip_failure: false
+          - summary: TV Vector
+            modules:
+              - id: e
+                value:
+                  type: script
+                  input_transforms:
+                    collection_name:
+                      type: static
+                      value: tv
+                    tmdb_ids:
+                      type: javascript
+                      expr: results.a.tmdb_ids.tv_ids
+                  path: f/vector/save
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+        parallel: true
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties: {}
   required: []
-visible_to_runner_only: false
-ws_error_handler_muted: false

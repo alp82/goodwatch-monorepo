@@ -18,6 +18,25 @@ country usage
 
 ---
 
+vectorize v2
+    new prompt
+    production country / studio
+    weaviate alternative
+    
+hugchat invalid login
+    http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
+
+copy movie/tv genome filter:
+    filter empty values: None, N/A, ""
+    capitalize
+    order categories
+
+vector db
+    authentication
+    healthcheck
+
+---
+
 secret handling
 project documentation
 
@@ -48,25 +67,6 @@ details
     mobile: user action buttons below poster directly
     all in one page with side navigation (scroll aware navigation)
     https://imdb.shyakadavis.me/title#overview
-
----
-
-vectorize v2
-    new prompt
-    production country / studio
-    weaviate alternative
-    
-hugchat invalid login
-    http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
-
-copy movie/tv genome filter:
-    filter empty values: None, N/A, ""
-    capitalize
-    order categories
-
-vector db
-    authentication
-    healthcheck
 
 ---
 

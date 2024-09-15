@@ -33,5 +33,3 @@ schema:
   type: object
   properties: {}
   required: []
-visible_to_runner_only: false
-ws_error_handler_muted: false

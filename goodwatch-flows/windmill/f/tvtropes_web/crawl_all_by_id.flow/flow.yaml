@@ -25,6 +25,7 @@ value:
                   expr: flow_input.iter.value
               path: f/tvtropes_web/tv_tropes_crawl_tags/fetch
               tag_override: null
+            continue_on_error: false
             retry:
               constant:
                 attempts: 0
@@ -34,7 +35,7 @@ value:
                 multiplier: 6
                 random_factor: 50
                 seconds: 2
-            timeout: 30
+            timeout: 300
         iterator:
           type: javascript
           expr: results.a
@@ -52,4 +53,3 @@ schema:
       properties: {}
   required:
     - next_ids
-ws_error_handler_muted: false

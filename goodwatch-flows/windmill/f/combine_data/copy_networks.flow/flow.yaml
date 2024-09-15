@@ -22,4 +22,3 @@ schema:
   type: object
   properties: {}
   required: []
-ws_error_handler_muted: false

@@ -1,9 +1,11 @@
 summary: Visit GoodWatch and populate cache
 description: ''
 lock: '!inline f/utils/visit_goodwatch_and_populate_cache.script.lock'
+concurrency_time_window_s: 0
 kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties: {}
   required: []
+timeout: 300

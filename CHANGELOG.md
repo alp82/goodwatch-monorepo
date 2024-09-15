@@ -7,7 +7,7 @@ All notable changes to GoodWatch will be documented in this file.
 ### Added
 
 ### Changed
-* Secure queries to avoid SQL inkection
+* Secure queries to avoid SQL injection
 * Nicer Cookie Consent Dialog with chosen action stored in user settings
 
 ### Fixed

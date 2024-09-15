@@ -54,4 +54,3 @@ schema:
       format: ''
   required:
     - url
-ws_error_handler_muted: false

@@ -1,5 +1,5 @@
 # extra_requirements:
-# playwright==1.40.0
+# playwright==1.45.1
 
 import asyncio
 import re
@@ -280,7 +280,7 @@ async def tvtropes_crawl_tags(next_entry: Union[TvTropesMovieTags, TvTropesTvTag
             (crawl_result, _) = await crawl_data(next_entry, context)
         finally:
             await context.close()
-            await browser.close()        
+            await browser.close()
 
     if crawl_result.rate_limit_reached:
         raise Exception(

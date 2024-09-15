@@ -36,6 +36,35 @@ def retrieve_next_entry_ids(
     return ids
 
 
+def retrieve_next_entry_ids_full(
+    count: int,
+    buffer_minutes: int,
+    movie_model: Document,
+    tv_model: Document,
+) -> dict[str, dict]:
+    next_entries = prepare_next_entries(
+        movie_model=movie_model,
+        tv_model=tv_model,
+        count=count,
+        buffer_minutes=buffer_minutes,
+    )
+    ids = get_ids_for_documents(
+        next_entries=next_entries,
+        movie_model=movie_model,
+        tv_model=tv_model,
+    )
+    tmdb_ids = get_tmdb_ids_for_documents(
+        next_entries=next_entries,
+        movie_model=movie_model,
+        tv_model=tv_model,
+    )
+    result = {
+        "ids": ids.model_dump(),
+        "tmdb_ids": tmdb_ids.model_dump(),
+    }
+    return result
+
+
 # helper methods for param conversions
 
 
@@ -50,6 +79,23 @@ def get_ids_for_documents(
     ]
     movie_ids = list({str(movie.id) for movie in movie_entries})
     tv_ids = list({str(tv.id) for tv in tv_entries})
+    return IdsParameter(
+        movie_ids=movie_ids,
+        tv_ids=tv_ids,
+    )
+
+
+def get_tmdb_ids_for_documents(
+    next_entries: list[Document], movie_model: Document, tv_model: Document
+) -> IdsParameter:
+    movie_entries = [
+        next_entry for next_entry in next_entries if isinstance(next_entry, movie_model)
+    ]
+    tv_entries = [
+        next_entry for next_entry in next_entries if isinstance(next_entry, tv_model)
+    ]
+    movie_ids = list({str(movie.tmdb_id) for movie in movie_entries})
+    tv_ids = list({str(tv.tmdb_id) for tv in tv_entries})
     return IdsParameter(
         movie_ids=movie_ids,
         tv_ids=tv_ids,

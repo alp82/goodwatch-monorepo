@@ -22,14 +22,16 @@ value:
             value: '$res:u/Alp/resource/postgresql'
         lock: '!inline inline_script_0.inline_script.lock'
         language: deno
+        tag: ''
     - id: b
       value:
         type: script
-        input_transforms: {}
+        input_transforms:
+          tv_ids:
+            type: static
         path: f/combine_data/copy_tv/main
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties: {}
   required: []
-ws_error_handler_muted: false

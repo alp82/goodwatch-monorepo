@@ -2,15 +2,14 @@ summary: ''
 description: Generate multiple genomes by id
 value:
   modules:
-    - id: a
+    - id: d
       value:
         type: script
         input_transforms:
           next_ids:
             type: javascript
             expr: flow_input.next_ids
-        path: f/genome/iterate
-        tag_override: null
+        path: f/genome/generate/iterate
     - id: b
       value:
         type: forloopflow
@@ -30,13 +29,13 @@ value:
                 attempts: 0
                 seconds: 0
               exponential:
-                attempts: 4
-                multiplier: 6
+                attempts: 5
+                multiplier: 1
                 random_factor: 0
                 seconds: 2
         iterator:
           type: javascript
-          expr: results.a
+          expr: results.d
         parallel: false
         skip_failures: true
 schema:
@@ -51,5 +50,3 @@ schema:
       properties: {}
   required:
     - next_ids
-visible_to_runner_only: false
-ws_error_handler_muted: false

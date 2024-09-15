@@ -4,7 +4,11 @@ from collections import defaultdict
 from mongoengine import get_db
 from psycopg2.extras import execute_values
 
-from f.db.mongodb import init_mongodb, close_mongodb
+from f.db.mongodb import (
+    init_mongodb,
+    close_mongodb,
+    build_query_selector_for_object_ids,
+)
 from f.db.postgres import init_postgres, generate_upsert_query
 
 
@@ -39,6 +43,7 @@ def copy_tv(pg, query_selector: dict = {}):
         "tagline",
         "synopsis",
         "alternative_titles",
+        "alternative_titles_text",
         "popularity",
         "type",
         "status",
@@ -145,12 +150,8 @@ def copy_tv(pg, query_selector: dict = {}):
             tmdb_ids, mongo_db.rotten_tomatoes_tv_rating
         )
         tv_tropes_tags = fetch_documents_in_batch(tmdb_ids, mongo_db.tv_tropes_tv_tags)
-        genomes = fetch_documents_in_batch(
-            tmdb_ids, mongo_db.genome_tv
-        )
-        tmdb_providers = fetch_documents_in_batch(
-            tmdb_ids, mongo_db.tmdb_tv_providers
-        )
+        genomes = fetch_documents_in_batch(tmdb_ids, mongo_db.genome_tv)
+        tmdb_providers = fetch_documents_in_batch(tmdb_ids, mongo_db.tmdb_tv_providers)
 
         for tmdb_details in tmdb_details_batch:
             tmdb_id = tmdb_details["tmdb_id"]
@@ -290,6 +291,11 @@ def copy_tv(pg, query_selector: dict = {}):
                 tmdb_details.get("tagline"),
                 tmdb_details.get("overview"),
                 json.dumps(tmdb_details.get("alternative_titles")),
+                "|".join(
+                    alternative_title["title"]
+                    for alternative_title in tmdb_details.get("alternative_titles", [])
+                    if "title" in alternative_title
+                ),
                 tmdb_details.get("popularity"),
                 tmdb_details.get("type"),
                 tmdb_details.get("status"),
@@ -453,10 +459,15 @@ def copy_tv(pg, query_selector: dict = {}):
     return {"total_count": total_count}
 
 
-def main():
+def main(tv_ids: list[str] = []):
     init_mongodb()
     pg = init_postgres()
-    result = copy_tv(pg)
+
+    query_selector = {}
+    if tv_ids:
+        query_selector = build_query_selector_for_object_ids(ids=tv_ids)
+
+    result = copy_tv(pg, query_selector=query_selector)
     pg.close()
     close_mongodb()
     return result

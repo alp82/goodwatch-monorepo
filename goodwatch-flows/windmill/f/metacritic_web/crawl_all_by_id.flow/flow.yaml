@@ -52,4 +52,3 @@ schema:
       properties: {}
   required:
     - next_ids
-ws_error_handler_muted: false

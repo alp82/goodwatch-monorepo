@@ -52,4 +52,3 @@ schema:
   required:
     - movie_list
     - movie_tropes
-ws_error_handler_muted: false

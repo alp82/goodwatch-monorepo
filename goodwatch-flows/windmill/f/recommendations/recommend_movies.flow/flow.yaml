@@ -100,4 +100,3 @@ schema:
       format: ''
   required:
     - min_popularity
-ws_error_handler_muted: false

@@ -5,5 +5,11 @@ kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
+  properties:
+    movie_ids:
+      type: array
+      description: ''
+      default: []
+      items:
+        type: object
   required: []

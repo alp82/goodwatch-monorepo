@@ -28,7 +28,10 @@ value:
     - id: b
       value:
         type: script
-        input_transforms: {}
+        input_transforms:
+          movie_ids:
+            type: static
+            value: []
         path: f/combine_data/copy_movies/main
         tag_override: null
 schema:
@@ -36,4 +39,3 @@ schema:
   type: object
   properties: {}
   required: []
-ws_error_handler_muted: false

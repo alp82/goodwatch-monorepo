@@ -27,55 +27,26 @@ def get_movies_df() -> pd.DataFrame:
         m.dna
     FROM
         movies m
+    WHERE
+        m.dna <> '{}'::jsonb
     ORDER BY
         m.popularity DESC
     LIMIT
-        1000;
+        10000;
     """
     df = pd.read_sql_query(sql_query, pg)
     pg.close()
 
     def parse_dna(dna):
-        keys = [
-            "Sub-Genres",
-            "Mood/Attitudes",
-            "Memorable Moments",
-            "Plot",
-            "Target Audience",
-            "Place",
-            "Time/Period",
-            "Pacing",
-            "Narrative Structure",
-            "Dialog Style",
-            "Score and Sound Design",
-            "Character Archetypes",
-            "Visual Style",
-            "Cinematic Techniques",
-            "Costume and Set Design",
-            "Key Objects/Props",
-            "Flag",
-        ]
-        parsed = {key: dna.get(key, []) for key in keys}
-        return parsed
-
-    # Parse the DNA column
-    dna_parsed = df["dna"].apply(parse_dna)
-
-    # Convert the parsed DNA into a DataFrame
-    dna_df = dna_parsed.apply(pd.Series)
-
-    # Concatenate the original DataFrame with the parsed DNA DataFrame
-    movies_df = pd.concat([df.drop(columns=["dna"]), dna_df], axis=1)
-
-    # Rename columns to match the desired structure
-    movies_df.rename(
-        columns={
-            "genres": "genre",
+        keys = {
             "Sub-Genres": "subgenre",
             "Mood/Attitudes": "mood",
             "Memorable Moments": "moment",
+            "Plot": "plot",
             "Target Audience": "audience",
+            "Place": "place",
             "Time/Period": "time",
+            "Pacing": "pacing",
             "Narrative Structure": "narrative",
             "Dialog Style": "dialog",
             "Score and Sound Design": "sound",
@@ -84,9 +55,26 @@ def get_movies_df() -> pd.DataFrame:
             "Cinematic Techniques": "cinematic",
             "Costume and Set Design": "costume",
             "Key Objects/Props": "props",
-        },
-        inplace=True,
-    )
+            "Flag": "flag",
+        }
+        parsed = {new_key: dna.get(old_key, []) for old_key, new_key in keys.items()}
+        return parsed
+
+    # Parse the DNA column
+    dna_parsed = df["dna"].apply(parse_dna)
+
+    # Convert the parsed DNA into a DataFrame
+    dna_df = dna_parsed.apply(pd.Series)
+
+    # Overwrite the 'dna' field in the original DataFrame
+    #df["dna"] = dna_df.to_dict(orient="records")
+    df["dna"] = dna_df.apply(lambda row: [item for category in row for item in category], axis=1)
+
+    # Concatenate the original DataFrame with the parsed DNA DataFrame
+    movies_df = pd.concat([df, dna_df], axis=1)
+
+    # Rename columns to match the desired structure
+    movies_df.rename(columns={"genres": "genre"}, inplace=True)
 
     # Display the final DataFrame
     print(movies_df)
@@ -95,7 +83,7 @@ def get_movies_df() -> pd.DataFrame:
 
 def get_or_create_collection(client: weaviate.Client, name: str) -> weaviate.Collection:
     # TODO don't delete collection
-    # client.collections.delete(name)
+    #client.collections.delete(name)
 
     if client.collections.exists(name=name):
         collection = client.collections.get(name)
@@ -103,6 +91,10 @@ def get_or_create_collection(client: weaviate.Client, name: str) -> weaviate.Col
         collection = client.collections.create(
             name=name,
             vectorizer_config=[
+                Configure.NamedVectors.text2vec_transformers(
+                    name="dna_vector",
+                    source_properties=["dna"],
+                ),
                 Configure.NamedVectors.text2vec_transformers(
                     name="genre_vector",
                     source_properties=["genre", "subgenre"],
@@ -162,6 +154,7 @@ def get_or_create_collection(client: weaviate.Client, name: str) -> weaviate.Col
                 Property(
                     name="release_year", data_type=DataType.INT, skip_vectorization=True
                 ),
+                Property(name="dna", data_type=DataType.TEXT_ARRAY),
                 Property(name="genre", data_type=DataType.TEXT_ARRAY),
                 Property(name="subgenre", data_type=DataType.TEXT_ARRAY),
                 Property(name="mood", data_type=DataType.TEXT_ARRAY),
@@ -195,6 +188,9 @@ def store_vectors(collection: weaviate.Collection, df: pd.DataFrame):
                 properties=record,
             )
 
+    for item in collection.batch.failed_objects:
+        print(item)
+
     # for item in collection.iterator():
     #    print(item.uuid, item.properties)
 
@@ -202,12 +198,18 @@ def store_vectors(collection: weaviate.Collection, df: pd.DataFrame):
 def query_vectors(collection: weaviate.Collection):
     queries_and_vectors = [
         ("funny animals", "character_vector"),
+        ("funny animals", "dna_vector"),
         ("revenge", "plot_vector"),
         ("dark and gritty", "mood_vector"),
         ("witty and romantic", "narration_vector"),
         ("in outer space", "place_vector"),
         ("ancient rome", "time_vector"),
         ("intense violence", "flag_vector"),
+        ("funny car chase animation", "dna_vector"),
+        ("black and white car chases", "dna_vector"),
+        ("space fantasy with huge tables", "dna_vector"),
+        ("eventful dinner", "dna_vector"),
+        ("virtual reality fight CGI", "dna_vector"),
     ]
 
     for query, vector_name in queries_and_vectors:
@@ -285,11 +287,15 @@ def process_data():
         # auth_credentials=AuthApiKey(os.getenv("WEAVIATE_API_KEY")),
     )
 
-    collection_name = "Movie"
+    collection_name = "Tv"
     collection = get_or_create_collection(
         client=weaviate_client,
         name=collection_name,
     )
+
+    aggregation = collection.aggregate.over_all(total_count=True)
+    print(aggregation.total_count)
+    return
 
     """
     movies_df = get_movies_df()
@@ -299,7 +305,7 @@ def process_data():
     )
     """
 
-    # query_vectors(collection=collection)
+    query_vectors(collection=collection)
 
     queries_and_vectors = [
         ("funny", "mood_vector"),
