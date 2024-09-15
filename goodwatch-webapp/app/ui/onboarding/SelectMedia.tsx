@@ -1,5 +1,5 @@
 import { BookmarkIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { ForwardIcon } from "@heroicons/react/24/solid"
+import { FilmIcon, ForwardIcon, TvIcon } from "@heroicons/react/24/solid"
 import React, { useEffect, useState } from "react"
 import { useOnboardingMedia } from "~/routes/api.onboarding.media"
 import { type GetUserDataResult, useUserData } from "~/routes/api.user-data"
@@ -151,7 +151,12 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 
 										<div className="w-full flex flex-col justify-between gap-2 sm:gap-4 md:gap-6 p-4 sm:p-6 md:p-8">
 											<div className="flex justify-between gap-2">
-												<div className="text-3xl md:text-4xl">
+												<div className="flex gap-2 md:gap-4 items-center text-3xl md:text-4xl">
+													{details.media_type === "movie" ? (
+														<FilmIcon className="w-8 h-8" title="Movie" />
+													) : (
+														<TvIcon className="w-8 h-8" title="TV Show" />
+													)}
 													<span className="font-bold">{details.title}</span>
 													<span className="text-slate-400">
 														{" "}

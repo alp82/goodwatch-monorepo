@@ -126,7 +126,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 		FROM ranked_movies
     ORDER BY
 			%ORDER_BY% 
-      popularity DESC
+      aggregated_overall_score_voting_count DESC
     LIMIT %LIMIT%;
   `
 
@@ -179,14 +179,15 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 
 	// grouped query
 	const groupWhereConditions = `
-		m.release_year >= 2000
+		m.release_year >= 1980
 		AND m.aggregated_overall_score_normalized_percent >= 60
+		AND m.popularity >= 50
 	`
 	const groupQuery = commonQuery
 		.replace("%SELECTED_FIELDS%", "")
 		.replace("%WHERE_CONDITIONS%", groupWhereConditions)
 		.replace("%ORDER_BY%", "")
-		.replace("%LIMIT%", "500")
+		.replace("%LIMIT%", "10")
 	const groupedResult = await executeQuery<T>(groupQuery)
 
 	return [searchRows, groupedResult.rows]

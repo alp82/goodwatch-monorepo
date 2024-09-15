@@ -131,7 +131,7 @@ export function ErrorBoundary() {
 	console.error(error)
 	captureRemixErrorBoundaryError(error)
 	return (
-		<html>
+		<html lang="en">
 			<head>
 				<title>Oh no!</title>
 				<meta charSet="utf-8" />
