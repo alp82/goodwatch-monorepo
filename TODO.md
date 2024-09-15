@@ -1,12 +1,5 @@
 # TODO's
 ```
-after login blank screen
-
-
-cookie consent update
-    save consent in user settings
-    centered
-    inspiration: https://www.smashingmagazine.com
 
 ---
 

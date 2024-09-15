@@ -35,9 +35,8 @@ import App from "~/app"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
 import cssTailwind from "~/tailwind.css?url"
-import CookieConsent, { cookieConsentGiven } from "~/ui/CookieConsent"
+import { CookieConsent } from "~/ui/CookieConsent"
 import { AuthRedirect } from "~/ui/auth/AuthRedirect"
-import Onboarding from "~/ui/onboarding/Onboarding"
 import { AuthContext, useUser } from "./utils/auth"
 
 export const links: LinksFunction = () => [
@@ -213,8 +212,8 @@ function Root() {
 							<AuthContext.Provider value={{ supabase }}>
 								<AuthRedirect>
 									<App />
-									<ToastContainer />
 									<CookieConsent />
+									<ToastContainer />
 									<PostHogInit />
 									<ScrollRestoration />
 									<Scripts />

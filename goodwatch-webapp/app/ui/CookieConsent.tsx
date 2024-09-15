@@ -1,87 +1,69 @@
-import posthog from "posthog-js";
-import { useEffect, useState } from "react";
+import { useCookieConsent } from "~/routes/api.user-settings.get"
+import { useSetUserSettings } from "~/routes/api.user-settings.set"
 
-type CookieConsent = "undecided" | "yes" | "no";
+export const CookieConsent = () => {
+	const { consentGiven, setConsentGiven } = useCookieConsent()
 
-export function cookieConsentGiven(): CookieConsent {
-	if (!localStorage.getItem("cookie_consent")) {
-		return "undecided";
+	const setUserSettings = useSetUserSettings()
+	const setConsent = (consent: "yes" | "no") => {
+		localStorage.setItem("cookie_consent", consent)
+		setUserSettings.mutate({
+			settings: {
+				cookie_consent: consent,
+			},
+		})
+		setConsentGiven(consent)
 	}
-	return localStorage.getItem("cookie_consent") as CookieConsent;
-}
-
-export default function CookieConsent() {
-	const [consentGiven, setConsentGiven] = useState<CookieConsent | "">("");
-
-	useEffect(() => {
-		// We want this to only run once the client loads
-		// or else it causes a hydration error
-		setConsentGiven(cookieConsentGiven());
-	}, []);
-
-	useEffect(() => {
-		if (consentGiven !== "") {
-			posthog.set_config({
-				persistence: consentGiven === "yes" ? "localStorage+cookie" : "memory",
-			});
-		}
-	}, [consentGiven]);
-
 	const handleAcceptCookies = () => {
-		localStorage.setItem("cookie_consent", "yes");
-		setConsentGiven("yes");
-	};
-
+		setConsent("yes")
+	}
 	const handleDeclineCookies = () => {
-		localStorage.setItem("cookie_consent", "no");
-		setConsentGiven("no");
-	};
+		setConsent("no")
+	}
 
 	return (
 		<>
 			{consentGiven === "undecided" ? (
-				<div className="fixed z-[200] bottom-0 left-1/2 transform -translate-x-1/2 w-full sm:max-w-md transition-transform duration-75">
-					<div className="text-gray-200 bg-slate-800 rounded-md m-2">
+				<div className="fixed z-[200] bottom-0 left-1/2 transform -translate-x-1/2 w-full sm:max-w-4xl transition-transform duration-75">
+					<div className=" m-2 bg-slate-900 border-4 border-slate-700 rounded-lg text-gray-200">
 						<div className="grid gap-2">
-							<div className="border-b border-slate-600 h-14 flex items-center justify-between p-4">
-								<h3 className="text-lg font-medium">We use cookies</h3>🍪
+							<div className="border-b border-slate-700 h-14 flex items-center justify-between p-4 text-2xl ">
+								<h3 className="font-medium">We use cookies</h3>
+								<span>🍪</span>
 							</div>
-							<div className="p-4">
-								<p className="text-sm font-normal">
-									We use cookies to ensure you get the best experience on our
-									website. For more information on how we use cookies, please
-									see our cookie policy.
-									<br />
-									<br />
-									<span className="text-xs">
-										By clicking "
-										<span className="font-medium opacity-80">Accept</span>", you
-										agree to our use of cookies.
-									</span>
-									<br />
-									<a href="/privacy" className="text-xs underline">
-										Learn more.
-									</a>
-								</p>
-							</div>
-							<div className="flex gap-2 p-4 py-5 border-t border-slate-600 bg-background/20">
-								<button
-									onClick={handleDeclineCookies}
-									className="w-full p-2 bg-gray-800 hover:bg-gray-700 ring-1 ring-inset ring-gray-600 focus:z-10"
-								>
-									Decline
-								</button>
-								<button
-									onClick={handleAcceptCookies}
-									className="w-full p-2 bg-indigo-800 hover:bg-indigo-700 ring-1 ring-inset ring-gray-600 focus:z-10 font-semibold"
-								>
-									Accept
-								</button>
+							<div className="flex flex-col sm:flex-row justify-between">
+								<div className="p-4">
+									<p className="flex flex-col gap-2 text-base font-normal">
+										<span>
+											This website uses cookies to ensure you get the best
+											experience on our website.
+										</span>
+										<a href="/privacy" className="text-xs underline">
+											Learn more about our privacy policy
+										</a>
+									</p>
+								</div>
+								<div className="flex flex-col sm:flex-row items-center gap-4 p-4 py-5 bg-background/20 text-lg">
+									<button
+										type="button"
+										className="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 ring-1 ring-inset ring-gray-600 focus:z-10"
+										onClick={handleDeclineCookies}
+									>
+										Decline
+									</button>
+									<button
+										type="button"
+										className="w-full py-2 px-4  bg-blue-800 hover:bg-blue-700 ring-1 ring-inset ring-gray-600 focus:z-10 font-semibold"
+										onClick={handleAcceptCookies}
+									>
+										Accept
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			) : null}
 		</>
-	);
+	)
 }

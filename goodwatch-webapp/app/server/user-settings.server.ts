@@ -38,11 +38,11 @@ async function _getUserSettings({
 	}
 
 	const query = `
-SELECT 
-    key, 
-    value
-FROM user_settings
-WHERE user_id = $1;
+		SELECT 
+			key, 
+			value
+		FROM user_settings
+		WHERE user_id = $1;
   `
 
 	const params = [user_id]
@@ -95,6 +95,7 @@ export async function setUserSettings({
 	// Validate each setting against allowed settings
 	for (const [key, value] of Object.entries(settings)) {
 		if (!isValidSetting(key as keyof UserSettingsMap, value)) {
+			console.error(`setSettings error: invalid "${key}" for value ${value}`)
 			return null
 		}
 	}
@@ -113,10 +114,10 @@ export async function setUserSettings({
 			options.ignoreUpdate
 				? ""
 				: `
-		ON CONFLICT (user_id, key)
-		DO UPDATE SET
-			value = EXCLUDED.value,
-			updated_at = CURRENT_TIMESTAMP`
+					ON CONFLICT (user_id, key)
+					DO UPDATE SET
+						value = EXCLUDED.value,
+						updated_at = CURRENT_TIMESTAMP`
 		}
 		RETURNING *;
 	`

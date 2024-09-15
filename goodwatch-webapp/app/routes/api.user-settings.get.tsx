@@ -1,6 +1,6 @@
 import { type LoaderFunction, json } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import { getUserSettings } from "~/server/user-settings.server"
@@ -9,6 +9,7 @@ import { getUserIdFromRequest, useUser } from "~/utils/auth"
 // type definitions
 
 export type UserSettingsMap = {
+	cookie_consent: "yes" | "no"
 	country_default: string
 	onboarding_status: "incomplete" | "finished"
 	streaming_providers_default: string
@@ -19,6 +20,7 @@ type EnumSetting<T extends string> = { type: "enum"; options: T[] }
 type SettingType = StringSetting | EnumSetting<string>
 
 export const UserSettingsSchema: Record<keyof UserSettingsMap, SettingType> = {
+	cookie_consent: { type: "enum", options: ["yes", "no"] },
 	country_default: { type: "string" },
 	onboarding_status: { type: "enum", options: ["incomplete", "finished"] },
 	streaming_providers_default: { type: "string" },
@@ -52,6 +54,28 @@ export const useUserSettings = () => {
 		queryFn: async () => await (await fetch(url)).json(),
 		enabled: !loading && Boolean(user?.id),
 	})
+}
+
+type CookieConsent = "undecided" | "yes" | "no"
+
+export const useCookieConsent = () => {
+	const { data: userSettings } = useUserSettings()
+
+	const [consentGiven, setConsentGiven] = useState<CookieConsent | "">("")
+	useEffect(() => {
+		// We want this to only run once the client loads
+		// or else it causes a hydration error
+		const localConsent = localStorage.getItem("cookie_consent") || ""
+		if (userSettings?.cookie_consent) {
+			setConsentGiven(userSettings.cookie_consent)
+		} else if (["yes", "no"].includes(localConsent)) {
+			setConsentGiven(localConsent as "yes" | "no")
+		} else {
+			setConsentGiven("undecided")
+		}
+	}, [userSettings?.cookie_consent])
+
+	return { consentGiven, setConsentGiven }
 }
 
 export const useOnboardingRequired = () => {

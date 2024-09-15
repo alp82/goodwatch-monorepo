@@ -2,15 +2,9 @@
 
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
-import { useEffect } from "react"
 import { useState } from "react"
 import logo from "~/img/goodwatch-logo.png"
-import {
-	useOnboardingRequired,
-	useUserSettings,
-} from "~/routes/api.user-settings.get"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
-import { Spinner } from "~/ui/Spinner"
 import { OnboardingSuccess } from "~/ui/onboarding/OnboardingSuccess"
 import SelectCountry from "~/ui/onboarding/SelectCountry"
 import { SelectMedia } from "~/ui/onboarding/SelectMedia"

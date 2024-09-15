@@ -8,10 +8,12 @@ All notable changes to GoodWatch will be documented in this file.
 
 ### Changed
 * Secure queries to avoid SQL inkection
+* Nicer Cookie Consent Dialog with chosen action stored in user settings
 
 ### Fixed
 * Do not show onboarding when it was already completed
 * Discover filter by cast was throwing an error
+* Do not cut off long descriptions on smaller screens
 
 ## [0.2.27] 2024-09-14
 
