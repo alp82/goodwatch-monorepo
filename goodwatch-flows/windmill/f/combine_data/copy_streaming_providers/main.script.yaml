@@ -1,4 +1,4 @@
-summary: ''
+summary: Store list of all streaming providers
 description: ''
 lock: '!inline f/combine_data/copy_streaming_providers/main.script.lock'
 kind: script

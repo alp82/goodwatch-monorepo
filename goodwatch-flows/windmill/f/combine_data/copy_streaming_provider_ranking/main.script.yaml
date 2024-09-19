@@ -1,4 +1,4 @@
-summary: ''
+summary: Store all streaming providers with their availability count
 description: ''
 lock: '!inline f/combine_data/copy_streaming_provider_ranking/main.script.lock'
 kind: script

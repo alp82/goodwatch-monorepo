@@ -1,4 +1,4 @@
-summary: ''
+summary: Update streaming countries in movie & /tv tables
 description: ''
 lock: '!inline f/combine_data/copy_streaming_countries/main.script.lock'
 kind: script
