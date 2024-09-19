@@ -2,7 +2,7 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.3.0] 2024-09-xx
+## [0.3.0] 2024-09-19
 
 Minor Release: **Streaming with Daily Accuracy**
 
