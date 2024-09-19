@@ -2,8 +2,11 @@
 ```
 ---
 
-streaming data pipeline with daily accuracy
-    created date!
+1. After Login blank screen 
+2. Onboarding search over both tables => 10 results
+3. Onboarding step user settings
+
+---
 
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
@@ -13,12 +16,6 @@ streaming_provider_rank
     
 filter duplicate streaming providers?
     blacklist maybe
-
----
-
-1. After Login blank screen 
-2. Onboarding search over both tables => 10 results
-3. Onboarding step user settings
 
 ---
 
