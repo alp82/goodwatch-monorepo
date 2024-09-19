@@ -2,10 +2,20 @@
 ```
 ---
 
-streaming data pipeline with daily accuracy
+1. After Login blank screen 
+2. Onboarding search over both tables => 10 results
+3. Onboarding step user settings
+
+---
 
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
+    
+streaming_provider_rank
+    rename to streaming_provider_countries
+    
+filter duplicate streaming providers?
+    blacklist maybe
 
 ---
 
@@ -20,8 +30,8 @@ country usage
 
 vectorize v2
     new prompt
-    production country / studio
-    weaviate alternative
+    production country
+    humor: memes
     
 hugchat invalid login
     http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe

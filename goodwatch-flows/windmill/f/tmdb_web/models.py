@@ -65,6 +65,8 @@ class BaseTmdbProviders(Document):
 
     country_code = StringField()
     streaming_links = EmbeddedDocumentListField(StreamingLinkDoc)
+    count_expected = IntField()
+    count_available = IntField()
     rate_limit_reached: bool
 
     meta = {
@@ -73,9 +75,12 @@ class BaseTmdbProviders(Document):
             "tmdb_id",
             "tmdb_watch_url",
             "popularity",
+            "country_code",
             "selected_at",
             "updated_at",
             "is_selected",
+            "count_expected",
+            "count_available",
         ],
     }
 

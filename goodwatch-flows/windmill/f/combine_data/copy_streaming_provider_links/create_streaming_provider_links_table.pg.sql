@@ -11,5 +11,7 @@ CREATE TABLE IF NOT EXISTS streaming_provider_links (
     display_priority INTEGER NOT NULL,
 
     -- metadata
+    obsolete_at TIMESTAMP WITH TIME ZONE
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     updated_at TIMESTAMP WITH TIME ZONE
 );
