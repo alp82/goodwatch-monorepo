@@ -1,14 +1,23 @@
 import React from "react"
 import tmdb_logo from "~/img/tmdb-logo.svg"
-import type { StreamingLink } from "~/server/details.server"
+import type {
+	MovieDetails,
+	StreamingLink,
+	TVDetails,
+} from "~/server/details.server"
 import { useDetailsTab } from "~/utils/navigation"
+import { getStreamingUrl } from "~/utils/streaming-links"
 
 export interface StreamingBadgesProps {
+	details: MovieDetails | TVDetails
+	media_type: "movie" | "tv"
 	links: StreamingLink[]
 	countryCodes: string[]
 }
 
 export default function StreamingBadges({
+	details,
+	media_type,
 	links = [],
 	countryCodes = [],
 }: StreamingBadgesProps) {
@@ -62,12 +71,13 @@ export default function StreamingBadges({
 			<div>
 				<div className="textsm md:text-lg">
 					only available for streaming to{" "}
-					<a
+					<button
+						type="button"
 						className="text-indigo-400 hover:underline"
 						onClick={handleStreamingTab}
 					>
 						buy or rent
-					</a>
+					</button>
 				</div>
 				<PoweredBy />
 			</div>
@@ -75,12 +85,13 @@ export default function StreamingBadges({
 			<div>
 				<div className="textsm md:text-lg">
 					only available for streaming in{" "}
-					<a
+					<button
+						type="button"
 						className="text-indigo-400 hover:underline"
 						onClick={handleStreamingTab}
 					>
 						other countries
-					</a>
+					</button>
 				</div>
 				<PoweredBy />
 			</div>
@@ -97,7 +108,7 @@ export default function StreamingBadges({
 						return (
 							<a
 								key={link.display_priority}
-								href={link.stream_url}
+								href={getStreamingUrl(link, details, media_type)}
 								target="_blank"
 								className="flex items-center gap-2 bg-gray-700 text-sm font-semibold shadow-2xl rounded-xl border-4 border-gray-600 hover:border-gray-500"
 								rel="noreferrer"

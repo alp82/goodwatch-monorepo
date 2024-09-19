@@ -164,6 +164,8 @@ export default function Details({
 			{activeTab === "streaming" && (
 				<>
 					<Streaming
+						details={details}
+						media_type={media_type}
 						links={streaming_links}
 						countryCodes={streaming_country_codes}
 					/>
@@ -238,6 +240,7 @@ export default function Details({
 							</div>
 							<div className="hidden md:block mb-4">
 								<StreamingBlock
+									details={details}
 									media_type={media_type}
 									links={streaming_links}
 									countryCodes={streaming_country_codes}
@@ -258,6 +261,7 @@ export default function Details({
 						</div>
 						<div className="mb-4">
 							<StreamingBlock
+								details={details}
 								media_type={media_type}
 								links={streaming_links}
 								countryCodes={streaming_country_codes}

@@ -1,15 +1,24 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid"
 import React from "react"
 import tmdb_logo from "~/img/tmdb-logo.svg"
-import type { StreamingLink } from "~/server/details.server"
+import type {
+	MovieDetails,
+	StreamingLink,
+	TVDetails,
+} from "~/server/details.server"
 import InfoBox from "~/ui/InfoBox"
+import { getStreamingUrl } from "~/utils/streaming-links"
 
 export interface StreamingProps {
+	details: MovieDetails | TVDetails
+	media_type: "movie" | "tv"
 	links: StreamingLink[]
 	countryCodes: string[]
 }
 
 export default function Streaming({
+	details,
+	media_type,
 	links,
 	countryCodes = [],
 }: StreamingProps) {
@@ -53,7 +62,7 @@ export default function Streaming({
 							return (
 								<a
 									key={link.display_priority}
-									href={link.stream_url}
+									href={getStreamingUrl(link, details, media_type)}
 									target="_blank"
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
@@ -77,7 +86,7 @@ export default function Streaming({
 							return (
 								<a
 									key={link.display_priority}
-									href={link.stream_url}
+									href={getStreamingUrl(link, details, media_type)}
 									target="_blank"
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
@@ -101,7 +110,7 @@ export default function Streaming({
 							return (
 								<a
 									key={link.display_priority}
-									href={link.stream_url}
+									href={getStreamingUrl(link, details, media_type)}
 									target="_blank"
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
