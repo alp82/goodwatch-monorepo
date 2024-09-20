@@ -2,18 +2,28 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.3.0] 2024-09-19
+## [0.3.1] 2024-09-xx
+
+### Added
+
+### Changed
+* Removed duplicate streaming providers from showing up in the UI (e.g. Netflix and Netflix with Ads)
+
+### Fixed
+
+## [0.3.0] 2024-09-20
 
 Minor Release: **Streaming with Daily Accuracy**
 
 ### Added
-* It is now saved when streaming links were first recorded in order to show new titles available
+* It is now saved when streaming links were first recorded. This can be used later in order to show new titles available for each streaming service.
 
 ### Changed
 * Streaming Availability is now shown with daily accuracy. Previously, it could be very outdated, up to weeks or even months.
 * Removed duplicate streaming providers from showing up in the UI (e.g. Netflix and Netflix with Ads)
 
 ### Fixed
+* Previously, the task that updated the streaming availability was blocking the database for around 20 minutes every night at 3am (UTC). This is now fixed.
 
 ## [0.2.28] 2024-09-15
 

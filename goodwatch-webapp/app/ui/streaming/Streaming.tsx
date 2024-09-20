@@ -22,8 +22,8 @@ export default function Streaming({
 	links,
 	countryCodes = [],
 }: StreamingProps) {
-	const flatrateLinks = (links || []).filter(
-		(link: StreamingLink) => link.stream_type === "flatrate",
+	const flatrateLinks = (links || []).filter((link: StreamingLink) =>
+		["flatrate", "free"].includes(link.stream_type),
 	)
 	const buyLinks = (links || []).filter(
 		(link: StreamingLink) => link.stream_type === "buy",

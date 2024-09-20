@@ -23,8 +23,8 @@ export default function StreamingBadges({
 }: StreamingBadgesProps) {
 	const { handleStreamingTab } = useDetailsTab()
 
-	const flatrateLinks = links.filter(
-		(link: StreamingLink) => link.stream_type === "flatrate",
+	const flatrateLinks = links.filter((link: StreamingLink) =>
+		["flatrate", "free"].includes(link.stream_type),
 	)
 	const buyLinks = links.filter(
 		(link: StreamingLink) => link.stream_type === "buy",
