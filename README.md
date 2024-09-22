@@ -26,6 +26,47 @@ npm run dev
 
 https://github.com/vitabaks/postgresql_cluster
 
+### pgvector extension
+
+https://github.com/pgvector/pgvector
+
+```
+cd /tmp
+git clone --branch v0.7.4 https://github.com/pgvector/pgvector.git
+cd pgvector
+make
+make install
+```
+
+### pgvectorscale extension
+
+https://github.com/timescale/pgvectorscale?tab=readme-ov-file#installation
+
+TODO: install cargo version 1.75.0
+
+```
+# install prerequisites
+## rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+rustup install 1.75.0
+rustup default 1.75.0
+## pgrx
+cargo install cargo-pgrx --version 0.11.4 --locked
+cargo pgrx init --pg16 pg_config
+
+#download, build and install pgvectorscale
+cd /tmp
+git clone --branch <version> https://github.com/timescale/pgvectorscale
+cd pgvectorscale/pgvectorscale
+export RUSTFLAGS="-C target-feature=+avx2,+fma"
+PGRX_IGNORE_RUST_VERSIONS=1
+cargo pgrx install --release
+```
+
+```
+CREATE EXTENSION IF NOT EXISTS vectorscale CASCADE;
+```
 
 ## Cache Cluster
 

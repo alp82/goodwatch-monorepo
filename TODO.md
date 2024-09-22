@@ -2,14 +2,15 @@
 ```
 ---
 
-1. After Login blank screen 
-2. Onboarding search over both tables => 10 results
-3. Onboarding step user settings
+vector via embeddings server
+    store in postgres
+    remove weaviate
 
 ---
 
-vector via hugface
-    store in postgres
+1. After Login blank screen 
+2. Onboarding search over both tables => 10 results
+3. Onboarding step user settings
 
 ---
 
