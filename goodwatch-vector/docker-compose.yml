@@ -1,4 +1,16 @@
 services:
+  embeddings:
+    image: michaelf34/infinity:latest
+    ports:
+      - "7997:7997"
+    volumes:
+      - embeddings_cache:/app/.cache
+    command: >
+      v2 
+      --model-id sentence-transformers/all-MiniLM-L6-v2 
+      --model-id BAAI/bge-m3 
+      --port 7997
+
   weaviate:
     image: cr.weaviate.io/semitechnologies/weaviate:1.25.8
     restart: unless-stopped
@@ -30,4 +42,5 @@ services:
       ENABLE_CUDA: '0'
 
 volumes:
+  embeddings_cache:
   weaviate_data:

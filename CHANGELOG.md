@@ -2,12 +2,22 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.3.1] 2024-09-xx
+## [0.3.2] 2024-09-xx
 
 ### Added
+* New Embedding generation for DNA
 
 ### Changed
-* Removed duplicate streaming providers from showing up in the UI (e.g. Netflix and Netflix with Ads)
+
+### Fixed
+
+## [0.3.1] 2024-09-21
+
+### Added
+* Completely revamped prompt and processing for Genome DNA generation
+* Filter invalid DNA categories and values
+
+### Changed
 
 ### Fixed
 

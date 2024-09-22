@@ -8,15 +8,21 @@
 
 ---
 
+vector via hugface
+    store in postgres
+
+---
+
+filter duplicate streaming providers?
+    blacklist maybe
+    * Removed duplicate streaming providers from showing up in the UI (e.g. Netflix and Netflix with Ads)
+    
 streaming providers from tmdb api with all country ranks
     remove old scripts and schedules
     
 streaming_provider_rank
     rename to streaming_provider_countries
     
-filter duplicate streaming providers?
-    blacklist maybe
-
 ---
 
 country usage
@@ -28,22 +34,13 @@ country usage
 
 ---
 
-vectorize v2
-    new prompt
-    production country
-    humor: memes
+postgres cluster config
+    https://github.com/vitabaks/postgresql_cluster
     
-hugchat invalid login
-    http://coinmatica.net:9000/run/019025ae-07af-79a2-e9df-00f859932da9?workspace=flickvibe
+---
 
-copy movie/tv genome filter:
-    filter empty values: None, N/A, ""
-    capitalize
-    order categories
-
-vector db
-    authentication
-    healthcheck
+mongodb backups
+    daily to hetzner storage
 
 ---
 
@@ -77,6 +74,10 @@ details
     mobile: user action buttons below poster directly
     all in one page with side navigation (scroll aware navigation)
     https://imdb.shyakadavis.me/title#overview
+
+---
+
+new page: started this week on your streaming services
 
 ---
 
