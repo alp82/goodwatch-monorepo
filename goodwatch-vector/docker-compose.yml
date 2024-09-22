@@ -1,6 +1,6 @@
 services:
   embeddings:
-    image: michaelf34/infinity:latest
+    build: ./Dockerfile
     ports:
       - "7997:7997"
     volumes:
