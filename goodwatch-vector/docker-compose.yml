@@ -1,6 +1,6 @@
 services:
   embeddings:
-    build: ./Dockerfile
+    build: .
     ports:
       - "7997:7997"
     volumes:
