@@ -1,6 +1,7 @@
 services:
   embeddings:
     image: michaelf34/infinity:latest
+    restart: unless-stopped
     ports:
       - "7997:7997"
     volumes:
