@@ -15,9 +15,8 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download the model and tokenizer
-RUN python -c "from transformers import AutoTokenizer, AutoModel; \
-               AutoTokenizer.from_pretrained('BAAI/bge-m3'); \
-               AutoModel.from_pretrained('BAAI/bge-m3')"
+RUN python -c "from sentence_transformers import SentenceTransformer; \
+               model = SentenceTransformer('jinaai/jina-embeddings-v2-small-en')"
 
 # Copy the application code
 COPY . /app/

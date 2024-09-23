@@ -10,49 +10,51 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="BAAI/bge-m3 Embeddings Server")
+app = FastAPI(title="Embeddings Server")
 
 # Constants
 MAX_TEXT_LENGTH = 8192     # Maximum tokens per text input
-MAX_BATCH_SIZE = 30        # Maximum number of texts per request
+MAX_BATCH_SIZE = 32        # Maximum number of texts per request
+
+# Device configuration
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logger.info(f"Using device: {device}")
 
 # Load the model and tokenizer
-model_name = "BAAI/bge-m3"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
+model_name = "jinaai/jina-embeddings-v2-small-en"
+model = SentenceTransformer(model_name, device=device)
 
 class TextInput(BaseModel):
     text: str
 
 def get_embedding(text: str) -> List[float]:
     try:
-        inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
-        with torch.no_grad():
-            outputs = model(**inputs)
-        embeddings = outputs.last_hidden_state.mean(dim=1).squeeze().tolist()
-        return embeddings
+        # Generate embedding
+        embedding = model.encode(text, convert_to_tensor=True, show_progress_bar=False)
+        # Convert to list
+        embedding = embedding.cpu().tolist()
+        return embedding
     except Exception as e:
         logger.error(f"Error in get_embedding: {e}")
         raise e
 
 def get_embeddings(texts: List[str]) -> List[List[float]]:
-    all_embeddings = []
-    for idx, text in enumerate(texts):
-        try:
-            logger.info(f"Processing text {idx + 1}/{len(texts)}")
-            embedding = get_embedding(text)
-            all_embeddings.append(embedding)
-        except Exception as e:
-            logger.error(f"Error processing text {idx + 1}: {e}")
-            raise e
-    return all_embeddings
+    try:
+        # Generate embeddings
+        embeddings = model.encode(texts, convert_to_tensor=True, show_progress_bar=False, batch_size=MAX_BATCH_SIZE)
+        # Convert to list
+        embeddings = embeddings.cpu().tolist()
+        return embeddings
+    except Exception as e:
+        logger.error(f"Error in get_embeddings: {e}")
+        raise e
 
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
 
 @app.post("/embedding")
-async def embedding_text(input: TextInput):
+async def embedding_single(input: TextInput):
     try:
         embedding = get_embedding(input.text)
         return {"embedding": embedding}

@@ -16,7 +16,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@coinmatica.net" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@coinmatica.net" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq && htop; exec $SHELL"
             }
         }
     }
@@ -28,7 +28,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@abusive" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@abusive" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && htop; exec $SHELL"
             }
         }
     }
@@ -40,7 +40,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db && htop; exec $SHELL"
             }
         }
     }
@@ -52,7 +52,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db && htop; exec $SHELL"
             }
         }
     }
@@ -64,7 +64,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-cache1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-cache1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
             }
         }
     }
@@ -76,7 +76,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-cache2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-cache2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
             }
         }
     }
@@ -88,7 +88,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-cache3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-cache3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
             }
         }
     }
@@ -100,7 +100,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-mongo1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-mongo1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
             }
         }
     }
@@ -112,7 +112,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-mongo2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-mongo2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
             }
         }
     }
@@ -124,7 +124,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-mongo3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-mongo3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
             }
         }
     }
@@ -136,7 +136,7 @@ layout {
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-vector1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && docker compose logs --tail 20 -f; exec $SHELL"
+                args "-t" "root@gw-vector1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector && htop; exec $SHELL"
             }
         }
     }
