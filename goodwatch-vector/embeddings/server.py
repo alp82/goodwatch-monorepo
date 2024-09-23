@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModel
 import torch
+import traceback
 from typing import Dict, List
 import logging
 
@@ -83,5 +84,5 @@ async def embeddings_batch(texts: Dict[str, str] = Body(...)):
         logger.error(f"HTTP exception in /embeddings: {http_ex.detail}")
         raise http_ex  # Re-raise HTTP exceptions
     except Exception as e:
-        logger.error(f"Unhandled exception in /embeddings: {e}")
+        logger.error(f"Unhandled exception in /embeddings: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
