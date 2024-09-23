@@ -72,11 +72,10 @@ async def embeddings_batch(texts: Dict[str, str] = Body(...)):
         keys = list(texts.keys())
         text_list = [texts[key] for key in keys]
 
-        # Check individual text lengths
+        # Optional: Check individual text lengths (in characters)
         for idx, text in enumerate(text_list):
-            tokenized_length = len(tokenizer.tokenize(text))
-            if tokenized_length > MAX_TEXT_LENGTH:
-                logger.error(f"Text {keys[idx]} exceeds the maximum allowed length.")
+            if len(text) > MAX_TEXT_LENGTH:
+                logger.error(f"Text '{keys[idx]}' exceeds the maximum allowed length.")
                 raise HTTPException(status_code=400, detail=f"Text '{keys[idx]}' exceeds the maximum allowed length.")
 
         embeddings_list = get_embeddings(text_list)
@@ -86,5 +85,5 @@ async def embeddings_batch(texts: Dict[str, str] = Body(...)):
         logger.error(f"HTTP exception in /embeddings: {http_ex.detail}")
         raise http_ex  # Re-raise HTTP exceptions
     except Exception as e:
-        logger.error(f"Unhandled exception in /embeddings: {e}\n{traceback.format_exc()}")
+        logger.error(f"Unhandled exception in /embeddings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
