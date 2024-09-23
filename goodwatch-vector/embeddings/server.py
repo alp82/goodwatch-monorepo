@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModel
+from sentence_transformers import SentenceTransformer
 import torch
 import traceback
 from typing import Dict, List
