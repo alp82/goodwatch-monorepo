@@ -2,10 +2,11 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.3.2] 2024-09-xx
+## [0.3.2] 2024-09-23
 
 ### Added
-* New Embedding generation for DNA
+* New DNA generation and storage: Self-hosted service that uses "jinaai/jina-embeddings-v2-small-en" and stores all vectors in PostgreSQL instead of Weaviate
+* Vectors can now be queried together with all existing filters 
 
 ### Changed
 
@@ -16,6 +17,27 @@ All notable changes to GoodWatch will be documented in this file.
 ### Added
 * Completely revamped prompt and processing for Genome DNA generation
 * Filter invalid DNA categories and values
+* All DNA categories:
+```
+  Sub-Genres
+  Mood
+  Themes
+  Plot
+  Cultural Impact
+  Character Types
+  Dialog
+  Narrative
+  Humor
+  Pacing
+  Time
+  Place
+  Cinematic Style
+  Score and Sound
+  Costume and Set
+  Key Props
+  Target Audience
+  Flag
+```
 
 ### Changed
 

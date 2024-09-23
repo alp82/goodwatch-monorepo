@@ -1,0 +1,19 @@
+summary: ''
+description: ''
+lock: '!inline f/vector/save_weaviate.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    collection_name:
+      type: object
+      description: ''
+      default: null
+      format: resource-COLLECTION_NAME
+    tmdb_ids:
+      type: object
+      description: ''
+      default: null
+  required:
+    - collection_name
