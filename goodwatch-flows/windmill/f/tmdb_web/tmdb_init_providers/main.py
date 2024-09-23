@@ -14,24 +14,48 @@ def initialize_documents():
     mongo_db = get_db()
 
     watch_providers_pipeline = [
-        {"$match": {"watch_providers.results": {"$exists": True, "$ne": {}}}},
-        {"$project": {
-            "watch_providers": "$watch_providers.results",
-            "tmdb_id": 1,
-            "original_title": 1,
-            "popularity": 1,
-        }},
-        {"$addFields": {"watch_providers_array": {"$objectToArray": "$watch_providers"}}},
+        {
+            "$match": {
+                "watch_providers.results": {
+                    "$exists": True,
+                    "$ne": {},
+                    "$not": {"$type": "array"},  # Ensure it's not an array
+                }
+            }
+        },
+        {
+            "$project": {
+                "watch_providers": "$watch_providers.results",
+                "tmdb_id": 1,
+                "original_title": 1,
+                "popularity": 1,
+            }
+        },
+        {
+            "$addFields": {
+                "watch_providers_array": {
+                    "$cond": {
+                        "if": {"$eq": [{"$type": "$watch_providers"}, "object"]},
+                        "then": {"$objectToArray": "$watch_providers"},
+                        "else": "$watch_providers",
+                    }
+                }
+            }
+        },
         {"$unwind": "$watch_providers_array"},
-        {"$project": {
-            "tmdb_watch_url": "$watch_providers_array.v.link",
-            "tmdb_id": 1,
-            "original_title": 1,
-            "popularity": 1,
-        }},
+        {
+            "$project": {
+                "tmdb_watch_url": "$watch_providers_array.v.link",
+                "tmdb_id": 1,
+                "original_title": 1,
+                "popularity": 1,
+            }
+        },
     ]
 
-    movie_count = get_aggregation_count(mongo_db.tmdb_movie_details, watch_providers_pipeline)
+    movie_count = get_aggregation_count(
+        mongo_db.tmdb_movie_details, watch_providers_pipeline
+    )
     tv_count = get_aggregation_count(mongo_db.tmdb_tv_details, watch_providers_pipeline)
 
     print(f"Total provider urls on TMDB: {movie_count} (movies) and {tv_count} (tv)")
@@ -47,12 +71,14 @@ def initialize_documents():
             watch_providers_pipeline + [{"$skip": offset}, {"$limit": BATCH_SIZE}]
         )
         movie_operations = [
-            build_operation({
-                "tmdb_id": doc.get("tmdb_id"),
-                "original_title": doc.get("original_title"),
-                "popularity": doc.get("popularity"),
-                "tmdb_watch_url": doc.get("tmdb_watch_url"),
-            })
+            build_operation(
+                {
+                    "tmdb_id": doc.get("tmdb_id"),
+                    "original_title": doc.get("original_title"),
+                    "popularity": doc.get("popularity"),
+                    "tmdb_watch_url": doc.get("tmdb_watch_url"),
+                }
+            )
             for doc in movie_cursor
         ]
         movie_upserts = store_copies(movie_operations, mongo_db.tmdb_movie_providers)
@@ -65,12 +91,14 @@ def initialize_documents():
             watch_providers_pipeline + [{"$skip": offset}, {"$limit": BATCH_SIZE}]
         )
         tv_operations = [
-            build_operation({
-                "tmdb_id": doc.get("tmdb_id"),
-                "original_title": doc.get("original_title"),
-                "popularity": doc.get("popularity"),
-                "tmdb_watch_url": doc.get("tmdb_watch_url"),
-            })
+            build_operation(
+                {
+                    "tmdb_id": doc.get("tmdb_id"),
+                    "original_title": doc.get("original_title"),
+                    "popularity": doc.get("popularity"),
+                    "tmdb_watch_url": doc.get("tmdb_watch_url"),
+                }
+            )
             for doc in tv_cursor
         ]
         tv_upserts = store_copies(tv_operations, mongo_db.tmdb_tv_providers)
@@ -88,7 +116,7 @@ def initialize_documents():
 def get_aggregation_count(table, pipeline):
     count_pipeline = pipeline + [{"$count": "total"}]
     result = list(table.aggregate(count_pipeline))
-    return result[0]['total'] if result else 0
+    return result[0]["total"] if result else 0
 
 
 def build_operation(tmdb_data: dict):
@@ -125,7 +153,7 @@ def store_copies(
             criteria = op._filter
             found_docs = collection.find(criteria)
             for doc in found_docs:
-                upserted_ids.append(doc['_id'])
+                upserted_ids.append(doc["_id"])
 
     return {
         "count_new_documents": count_new_documents,

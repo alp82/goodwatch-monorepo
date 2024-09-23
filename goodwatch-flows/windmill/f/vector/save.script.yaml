@@ -6,14 +6,14 @@ schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties:
-    collection_name:
-      type: object
+    media_type:
+      type: string
       description: ''
       default: null
-      format: resource-COLLECTION_NAME
+      originalType: string
     tmdb_ids:
       type: object
       description: ''
       default: null
   required:
-    - collection_name
+    - media_type

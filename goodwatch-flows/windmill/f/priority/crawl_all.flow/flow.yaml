@@ -209,13 +209,14 @@ value:
                 value:
                   type: script
                   input_transforms:
-                    collection_name:
+                    media_type:
                       type: static
                       value: movies
                     tmdb_ids:
                       type: javascript
                       expr: results.g.tmdb_ids.movie_ids
                   path: f/vector/save
+                  tag_override: ''
                 continue_on_error: false
                 retry:
                   constant:
@@ -236,13 +237,14 @@ value:
                 value:
                   type: script
                   input_transforms:
-                    collection_name:
+                    media_type:
                       type: static
                       value: tv
                     tmdb_ids:
                       type: javascript
                       expr: results.g.tmdb_ids.tv_ids
                   path: f/vector/save
+                  tag_override: ''
                 continue_on_error: false
                 retry:
                   constant:

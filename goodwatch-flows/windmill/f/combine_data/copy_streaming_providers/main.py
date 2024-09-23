@@ -1,3 +1,6 @@
+# extra_requirements:
+# pymongo==4.8.0
+
 from datetime import datetime
 
 from mongoengine import get_db
@@ -34,7 +37,13 @@ def copy_streaming_providers(pg):
     ]
 
     pipeline = [
-        {"$match": {"watch_providers.results": {"$exists": True, "$ne": {}}}},
+        {"$match": {
+            "watch_providers.results": {
+                "$exists": True, 
+                "$ne": {},
+                "$not": {"$type": "array"}  # Ensure it's not an array
+            }
+        }},
         {"$project": {
             "tmdb_id": 1,
             "watch_providers": {

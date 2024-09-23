@@ -34,9 +34,9 @@ def main(next_ids: dict):
     ]
 
     if movie_tmdb_ids:
-        print(f"resetting movie links for: {movie_tmdb_ids} ")
+        print(f"finding movie streaming links for: {movie_tmdb_ids} ")
     if tv_tmdb_ids:
-        print(f"resetting tv links for: {tv_tmdb_ids} ")
+        print(f"finding tv streaming links for: {tv_tmdb_ids} ")
 
     total_movie_count = 0
     total_tv_count = 0

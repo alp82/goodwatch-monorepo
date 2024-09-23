@@ -104,22 +104,20 @@ def copy_streaming_provider_links(
         "obsolete_at",
     ]  # 'created_at' removed since it defaults to NOW()
 
-    with_streaming_links = {"streaming_links": {"$exists": True, "$ne": []}}
-    query_filter = with_streaming_links | query_selector
-    count = mongo_db[mongo_collection].count_documents(query_filter)
+    count = mongo_db[mongo_collection].count_documents(query_selector)
 
     if count:
         print(f"Found {count} streaming links to copy.")
     else:
         print("No streaming links found.")
-        print(f"Query: {query_filter}")
+        print(f"Query: {query_selector}")
         return 0
 
     for i in range(0, count, BATCH_SIZE):
         end = min(count, i + BATCH_SIZE)
         print(f"Processing records {i} to {end}...")
         providers = list(
-            mongo_db[mongo_collection].find(query_filter).skip(i).limit(BATCH_SIZE)
+            mongo_db[mongo_collection].find(query_selector).skip(i).limit(BATCH_SIZE)
         )
         now = datetime.utcnow()
 

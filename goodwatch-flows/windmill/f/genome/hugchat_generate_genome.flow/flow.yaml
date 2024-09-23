@@ -27,13 +27,14 @@ value:
                 value:
                   type: script
                   input_transforms:
-                    collection_name:
+                    media_type:
                       type: static
                       value: movies
                     tmdb_ids:
                       type: javascript
                       expr: results.a.tmdb_ids.movie_ids
                   path: f/vector/save
+                  tag_override: ''
             expr: ''
             parallel: true
             skip_failure: false
@@ -43,13 +44,14 @@ value:
                 value:
                   type: script
                   input_transforms:
-                    collection_name:
+                    media_type:
                       type: static
                       value: tv
                     tmdb_ids:
                       type: javascript
                       expr: results.a.tmdb_ids.tv_ids
                   path: f/vector/save
+                  tag_override: ''
             expr: 'false'
             parallel: true
             skip_failure: false
