@@ -104,6 +104,10 @@ const PostHogInit = () => {
 			$set_once: { initial_login: new Date() },
 		})
 
+		posthog.capture("Pageview", {
+			full_referrer: document.referrer,
+		})
+
 		setPosthogInitialized(true)
 	}, [user])
 
