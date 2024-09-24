@@ -3,6 +3,7 @@ import type { StreamingLink, StreamingProviders } from "~/server/details.server"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
+import { ignoredProviders } from "~/utils/streaming-links"
 
 const RESULT_LIMIT = 120
 // Weaviate allows up to 10000 results
@@ -118,6 +119,7 @@ async function _getExploreResults({
     	ON spl.tmdb_id = m.tmdb_id
 			AND spl.media_type = $1
 			AND spl.country_code = $2
+			AND spl.provider_id NOT IN (${ignoredProviders.join(",")})
 		INNER JOIN
     	streaming_providers sp
     	ON sp.id = spl.provider_id

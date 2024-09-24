@@ -49,3 +49,17 @@ export const getStreamingUrl = (
 
 	return link.tmdb_url
 }
+
+export const ignoredProviders = [
+	24, // Quickflix Store
+	119, // Amazon Prime Video
+	188, // YouTube Premium
+	210, // Sky
+	235, // YouTube Free
+	350, // Apple TV Plus
+	380, // BritBox
+	390, // Disney Plus
+	524, // Discovery+
+	1796, // Netflix basic with Ads
+	2100, // Amazon Prime Video with Ads
+]

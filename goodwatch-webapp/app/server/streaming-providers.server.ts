@@ -4,6 +4,7 @@ import type {
 } from "~/routes/api.streaming-providers"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
+import { ignoredProviders } from "~/utils/streaming-links"
 
 export type StreamingProviderParams = {}
 
@@ -26,6 +27,8 @@ export async function _getStreamingProviders(
         id, name, logo_path
       FROM
         streaming_provider_ranking
+      WHERE
+      	id NOT IN (${ignoredProviders.join(",")})
       ORDER BY
         link_count DESC;
   `

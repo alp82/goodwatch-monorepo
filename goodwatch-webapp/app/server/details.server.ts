@@ -5,6 +5,7 @@ import {
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
+import { ignoredProviders } from "~/utils/streaming-links"
 
 export interface Collection {
 	id: number
@@ -436,6 +437,7 @@ export async function _getDetailsForMovie({
       spl.tmdb_id = m.tmdb_id
       AND spl.media_type = 'movie'
       AND spl.country_code = $1
+      AND spl.provider_id NOT IN (${ignoredProviders.join(",")})
     LEFT JOIN
       streaming_providers sp
     ON
@@ -493,6 +495,7 @@ export async function _getDetailsForTV({
       spl.tmdb_id = t.tmdb_id
       AND spl.media_type = 'tv'
       AND spl.country_code = $1
+      AND spl.provider_id NOT IN (${ignoredProviders.join(",")})
     LEFT JOIN
       streaming_providers sp
     ON

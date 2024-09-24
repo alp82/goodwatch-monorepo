@@ -2,10 +2,6 @@
 ```
 ---
 
-discover bug for streaming filters
-
----
-
 filter duplicate streaming providers?
     blacklist maybe
     * Removed duplicate streaming providers from showing up in the UI (e.g. Netflix and Netflix with Ads)
