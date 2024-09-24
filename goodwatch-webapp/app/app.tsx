@@ -11,9 +11,7 @@ import Onboarding from "~/ui/onboarding/Onboarding"
 function App() {
 	const location = useLocation()
 
-	// TODO
-	// const onboardingRequired = useOnboardingRequired()
-	const onboardingRequired = true
+	const onboardingRequired = useOnboardingRequired()
 	if (onboardingRequired) return <Onboarding />
 
 	return (

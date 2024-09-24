@@ -1,5 +1,8 @@
 # TODO's
 ```
+---
+
+discover bug for streaming filters
 
 ---
 
