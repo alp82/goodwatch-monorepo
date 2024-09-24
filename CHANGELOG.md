@@ -2,11 +2,20 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
+## [0.3.3] 2024-09-25
+
+### Added
+
+### Changed
+* Improved Onboarding UX for rating titles and better search display
+
+### Fixed
+
 ## [0.3.2] 2024-09-23
 
 ### Added
-* New DNA generation and storage: Self-hosted service that uses "jinaai/jina-embeddings-v2-small-en" and stores all vectors in PostgreSQL instead of Weaviate
-* Vectors can now be queried together with all existing filters 
+* New DNA generation and storage: Self-hosted service that uses `jinaai/jina-embeddings-v2-small-en` and stores all vectors in PostgreSQL instead of Weaviate
+* Vectors can now be queried together with all existing filters (not used in the UI yet)
 
 ### Changed
 

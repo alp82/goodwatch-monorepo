@@ -32,7 +32,9 @@ export default function Onboarding() {
 
 	// step progress
 
-	const [currentStep, setCurrentStep] = useState(0)
+	// TODO
+	// const [currentStep, setCurrentStep] = useState(0)
+	const [currentStep, setCurrentStep] = useState(2)
 	const MIN_PROGRESS = 10
 	const normalizedProgress =
 		MIN_PROGRESS +

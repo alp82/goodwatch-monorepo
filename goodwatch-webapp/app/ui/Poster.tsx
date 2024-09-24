@@ -1,5 +1,5 @@
 import React from "react"
-import placeholder from "~/img/placeholder-poster.png"
+import placeholder from "~/img/poster-placeholder.png"
 
 export interface PosterProps {
 	path?: string

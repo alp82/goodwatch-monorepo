@@ -1,16 +1,5 @@
 # TODO's
 ```
----
-
-vector via embeddings server
-    store in postgres
-    remove weaviate
-
----
-
-1. After Login blank screen 
-2. Onboarding search over both tables => 10 results
-3. Onboarding step user settings
 
 ---
 
@@ -35,13 +24,23 @@ country usage
 
 ---
 
-postgres cluster config
+postgres cluster config in repo
     https://github.com/vitabaks/postgresql_cluster
     
 ---
 
 mongodb backups
     daily to hetzner storage
+
+---
+
+inspiration
+    https://simkl.com/
+
+---
+
+explore v2
+    remove weaviate
 
 ---
 
@@ -95,6 +94,11 @@ wishlist
     split into two sections:
         watch now
         rest
+
+---
+
+referrer paths
+    https://chatgpt.com/c/66f241ee-6c20-8001-8b0f-aefbcaefc2bc
 
 ---
 
@@ -180,6 +184,21 @@ user notes/comments
     use for LLM input for recommendations
 
 playwright tests
+
+tvdb
+
+anime
+    https://anidb.net/
+    https://anibrain.ai/
+    
+other sites
+    https://mdblist.com/
+    https://letterboxd.com/film/beetlejuice-beetlejuice/nanogenres/
+    https://nanocrowd.com/
+    https://app.nanocrowd.com/
+    
+other api's
+    https://mdblist.docs.apiary.io/#reference/0/media-info/get-media-info
 
 redistribute weight for gw score
 

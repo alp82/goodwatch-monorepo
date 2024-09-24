@@ -5,6 +5,7 @@ import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 const LIMIT_PER_MEDIA_TYPE = 1
+const LIMIT_PER_SEARCH = 6
 
 export interface OnboardingMedia extends AllRatings {
 	tmdb_id: number
@@ -62,11 +63,9 @@ async function _getOnboardingMedia({
 	const uniqueMovies = _getUniqueByDecade(movieGroupResult)
 	const uniqueTv = _getUniqueByDecade(tvGroupResult)
 
-	const movies = [...movieSearchResult, ...uniqueMovies].slice(
-		0,
-		LIMIT_PER_MEDIA_TYPE,
-	)
-	const tv = [...tvSearchResult, ...uniqueTv].slice(0, LIMIT_PER_MEDIA_TYPE)
+	const limit = searchTerm ? LIMIT_PER_SEARCH : LIMIT_PER_MEDIA_TYPE
+	const movies = [...movieSearchResult, ...uniqueMovies].slice(0, limit)
+	const tv = [...tvSearchResult, ...uniqueTv].slice(0, limit)
 	return {
 		movies,
 		tv,
@@ -168,7 +167,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 			)
 			.replace("%WHERE_CONDITIONS%", searchWhereConditions)
 			.replace("%ORDER_BY%", "relevance DESC NULLS LAST,")
-			.replace("%LIMIT%", "10")
+			.replace("%LIMIT%", LIMIT_PER_SEARCH.toString())
 		const searchParams = [
 			`%${searchTerm}%`,
 			...words.map((word) => `%${word}%`),

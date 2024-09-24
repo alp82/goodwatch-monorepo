@@ -76,7 +76,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		"onScoresSince",
 		"onSkippedSince",
 		"onWishListSince",
-	])
+	]).slice(0, 7)
 	const scoredMediaAmount = getSortedUserData(userData as GetUserDataResult, [
 		"onScoresSince",
 	]).length
@@ -131,7 +131,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		return (
 			<div className="w-full flex flex-wrap gap-8">
 				{media.length > 0 && (
-					<div className="w-full flex flex-col gap-14">
+					<div className="w-full flex flex-col gap-4">
 						{media.map((details) => (
 							<div
 								key={details.tmdb_id}
@@ -142,14 +142,14 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 							>
 								<div className="relative">
 									<div className="flex">
-										<div className="hidden md:block self-center p-2 sm:p-4 w-80">
+										<div className="hidden md:block self-center p-2 sm:p-4 w-80 2xl:w-64">
 											<Poster
 												path={details.poster_path}
 												title={details.title}
 											/>
 										</div>
 
-										<div className="w-full flex flex-col justify-between gap-2 sm:gap-4 md:gap-6 p-4 sm:p-6 md:p-8">
+										<div className="w-full flex flex-col justify-between gap-2 sm:gap-4 md:gap-6 p-4 sm:p-6 md:p-8 2xl:p-6">
 											<div className="flex justify-between gap-2">
 												<div className="flex gap-2 md:gap-4 items-center text-3xl md:text-4xl">
 													{details.media_type === "movie" ? (
@@ -216,10 +216,57 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	return (
 		<>
 			<div className="max-w-lg text-center font-semibold">{scoreCountHint}</div>
+			<div className="w-full flex items-center justify-center">
+				{nextBackButtons}
+			</div>
+			<div className="mt-6 w-full flex items-center justify-center">
+				<TextInput
+					label="Search"
+					placeholder="Search Movies and Shows"
+					icon={
+						onboardingMedia.isLoading ? (
+							<Spinner size="small" />
+						) : (
+							<MagnifyingGlassIcon
+								className="h-5 w-5 text-gray-400"
+								aria-hidden="true"
+							/>
+						)
+					}
+					onChange={handleSearchByTerm}
+					ref={autoFocusRef}
+				/>
+			</div>
+			{onboardingMedia.isFetching ? (
+				<Spinner size="large" />
+			) : (
+				<div className="w-full flex flex-col gap-4">
+					{previousMediaToDisplay ? getMedia([previousMediaToDisplay]) : null}
+					<div className="w-full flex flex-col 2xl:flex-row gap-4">
+						<div className="w-full">
+							<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
+								Movies
+							</div>
+							{getMedia(movies)}
+						</div>
+						<div className="w-full">
+							<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
+								TV Shows
+							</div>
+							{getMedia(tv)}
+						</div>
+					</div>
+				</div>
+			)}
+			<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
+				Previously saved
+			</div>
 			<div className="grid grid-cols-4 sm:grid-cols-8 gap-2 justify-end justify-items-end items-end place-items-end">
 				{[...Array(Math.max(0, 8 - sortedMedia.length)).keys()].map(
 					(_, index) => (
-						<div key={sortedMedia.length + index} className="invisible" />
+						<div key={index} className="border-8 rounded-2xl border-slate-700">
+							<Poster />
+						</div>
 					),
 				)}
 				{sortedMedia
@@ -228,7 +275,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					.map((details, index) => (
 						<div
 							key={details.tmdb_id}
-							className={`${index < Math.min(4, sortedMedia.length - 4) ? "hidden sm:block" : ""} relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-600" : "border-slate-800"}`}
+							className={`relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-600" : "border-slate-700"}`}
 							onClick={() => handlePreviousMediaToggle(details)}
 							onKeyDown={() => null}
 						>
@@ -255,32 +302,6 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 						</div>
 					))}
 			</div>
-			<div className="w-full flex items-center justify-center">
-				{nextBackButtons}
-			</div>
-			<div className="mt-6 w-full flex items-center justify-center">
-				<TextInput
-					label="Search"
-					placeholder="Search Movies and Shows"
-					icon={
-						onboardingMedia.isLoading ? (
-							<Spinner size="small" />
-						) : (
-							<MagnifyingGlassIcon
-								className="h-5 w-5 text-gray-400"
-								aria-hidden="true"
-							/>
-						)
-					}
-					onChange={handleSearchByTerm}
-					ref={autoFocusRef}
-				/>
-			</div>
-			{onboardingMedia.isFetching ? (
-				<Spinner size="large" />
-			) : (
-				getMedia(allMedia)
-			)}
 			<div className="mt-8 w-full flex items-center justify-center">
 				{nextBackButtons}
 			</div>
