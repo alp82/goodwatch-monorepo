@@ -86,8 +86,8 @@ export const loader: LoaderFunction = async ({
 	const withGenres = url.searchParams.get("withGenres") || ""
 	const withoutGenres = url.searchParams.get("withoutGenres") || ""
 	const withStreamingProviders =
-		userSettings?.streaming_providers_default ||
 		url.searchParams.get("withStreamingProviders") ||
+		userSettings?.streaming_providers_default ||
 		""
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"popularity") as DiscoverSortBy

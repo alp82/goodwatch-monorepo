@@ -10,6 +10,7 @@ All notable changes to GoodWatch will be documented in this file.
 * Improved Onboarding UX for rating titles and better search display
 
 ### Fixed
+* Discover filter for streaming services was resetting immediately for signed in users
 
 ## [0.3.2] 2024-09-23
 
