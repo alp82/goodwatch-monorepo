@@ -1,3 +1,4 @@
+import { InformationCircleIcon } from "@heroicons/react/20/solid"
 import {
 	ArrowDownIcon,
 	CubeIcon,
@@ -17,7 +18,7 @@ import {
 	QueryClient,
 	dehydrate,
 } from "@tanstack/react-query"
-import React from "react"
+import React, { useState } from "react"
 import disneyLogo from "~/img/disneyplus-logo.svg"
 import imdbLogo from "~/img/imdb-logo-250.png"
 import metacriticLogo from "~/img/metacritic-logo-250.png"
@@ -26,7 +27,6 @@ import primeLogo from "~/img/primevideo-logo.svg"
 import rottenLogo from "~/img/rotten-logo-250.png"
 import startBackground from "~/img/start-background.png"
 import startForeground from "~/img/start-foreground.png"
-import startImage from "~/img/start-living-room.png"
 import {
 	type PopularPicksMovie,
 	type PopularPicksTV,
@@ -42,7 +42,6 @@ import {
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import { prefetchUserData } from "~/server/userData.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { TvCard } from "~/ui/TvCard"
 import { getLocaleFromRequest } from "~/utils/locale"
 
 export const headers: HeadersFunction = () => {
@@ -105,9 +104,19 @@ export const loader: LoaderFunction = async ({
 }
 
 export default function Index() {
+	const numberOfItemsToShow = 11
+
 	const { trendingMovies, trendingTV, popularPicksMovies, popularPicksTV } =
 		useLoaderData<LoaderData>()
-	const numberOfItemsToShow = 11
+
+	const [popularPicks, setPopularPicks] = useState<"movies" | "tv">("movies")
+
+	const selectPopularMovies = () => {
+		setPopularPicks("movies")
+	}
+	const selectPopularTV = () => {
+		setPopularPicks("tv")
+	}
 
 	return (
 		<div>
@@ -117,130 +126,94 @@ export default function Index() {
 					backgroundImage: `url('${startBackground}')`,
 				}}
 			>
-				<div className="flex-1 flex justify-center items-start overflow-hidden z-20">
-					<div
-						className="mt-44 flex gap-16"
-						style={{
-							minWidth: "fit-content",
-						}}
-					>
-						{/*{popularPicksTV.map((movie) => (*/}
-						{popularPicksMovies.map((movie) => (
-							<div key={movie.tmdb_id} className="w-64 group">
-								<div className="transition-transform duration-300 transform group-hover:scale-110">
-									<MovieTvCard details={movie} mediaType="movie" />
+				<div className="flex flex-col justify-start items-center z-20">
+					<div className="flex gap-8 sm:gap-16 text-gray-200 text-xl sm:text-2xl md:text-3xl font-bold">
+						<button
+							type="button"
+							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "movies" ? "bg-indigo-900" : "bg-slate-950"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
+							onClick={selectPopularMovies}
+						>
+							Movies
+						</button>
+						<button
+							type="button"
+							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "tv" ? "bg-indigo-900" : "bg-slate-950"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
+							onClick={selectPopularTV}
+						>
+							Shows
+						</button>
+					</div>
+					<div className="mt-12 flex gap-16">
+						{popularPicksMovies.map((details) => (
+							<div
+								key={details.tmdb_id}
+								className={`${popularPicks === "movies" ? "" : "hidden"} w-64 md:w-72 lg:w-80 xl:w-96`}
+							>
+								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
+									<MovieTvCard
+										details={details}
+										mediaType="movie"
+										prefetch={true}
+									/>
+								</div>
+							</div>
+						))}
+						{popularPicksTV.map((details) => (
+							<div
+								key={details.tmdb_id}
+								className={`${popularPicks === "tv" ? "" : "hidden"} w-64 md:w-72 lg:w-80 xl:w-96`}
+							>
+								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
+									<MovieTvCard
+										details={details}
+										mediaType="movie"
+										prefetch={true}
+									/>
 								</div>
 							</div>
 						))}
 					</div>
 				</div>
 				<div
-					className="absolute bottom-0 left-0 right-0 -ml-44 h-full bg-cover bg-center pointer-events-none z-20 before:bg-black/[.25]"
+					className="absolute bottom-0 left-0 right-0 -ml-44 h-full bg-cover bg-center before:bg-black/[.25] z-20 pointer-events-none"
 					style={{
 						backgroundImage: `url(${startForeground})`,
 					}}
-				>
-					<h1 className="absolute bottom-[26%] sm:bottom-[24%] md:bottom-[22%] lg:bottom-[20%] left-44 right-0 text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-center text-gray-200">
+				/>
+			</div>
+
+			<div className="relative -mt-[30em] pb-[8em] w-full bg-gradient-to-t from-black/70 to-transparent z-30">
+				<div className="px-4 text-center text-gray-200">
+					<h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold">
 						What's Good?
 					</h1>
-				</div>
-			</div>
-			<div className="overflow-hidden">
-				<div className="mx-auto max-w-7xl px-6 pb-32 pt-8 lg:px-8 lg:pt-32">
-					<div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
-						<div className="relative w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
-							<h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-100">
-								What do you want to{" "}
-								<span className="underline underline-offset-8 decoration-8 decoration-indigo-600">
-									watch next
-								</span>
-								?
-							</h1>
-							<div className="mt-14 lg:mt-20 text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 sm:max-w-md lg:max-w-none">
-								<p className="leading-relaxed">
-									Welcome to GoodWatch. You'll find{" "}
-									<span className="accent font-bold">everything</span> you need
-									to know about your next favorite movie or TV show.
-								</p>
-								<div className="mt-12 flex items-center gap-x-6">
-									<a
-										href="/discover"
-										className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-lg font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-									>
-										<CubeIcon className="h-5 w-auto" />
-										Discover
-									</a>
-									<a
-										href="#trending"
-										className="flex items-center justify-center gap-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
-									>
-										<ArrowDownIcon className="h-5 w-auto" />
-										What's Trending?
-									</a>
-								</div>
-							</div>
-							<div className="mt-24 lg:mt-32 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
-								<h2 className="font-bold tracking-tight text-gray-100 text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
-									How it works
-								</h2>
-								<div className="leading-relaxed text-md sm:text-lg md:text-xl lg:text-2xl">
-									<p className="mt-12">
-										Discover great titles on your preferred streaming providers
-										like
-										<span className="mx-3 inline-flex items-center flex-wrap gap-2">
-											<img
-												className="h-5 inline-block"
-												src={netflixLogo}
-												alt="Netflix"
-												title="Netflix"
-											/>
-											,
-											<img
-												className="h-6 inline-block"
-												src={primeLogo}
-												alt="Amazon Prime"
-												title="Amazon Prime"
-											/>
-											and
-											<img
-												className="h-8 inline-block"
-												src={disneyLogo}
-												alt="Disney+"
-												title="Disney+"
-											/>
-											.
-										</span>
-									</p>
-									<p className="mt-12">
-										See all scores from
-										<span className="mx-3 inline-flex items-center flex-wrap gap-2">
-											<img
-												className="h-5 inline-block"
-												src={imdbLogo}
-												alt="IMDb"
-												title="IMDb"
-											/>
-											,
-											<img
-												className="h-5 inline-block"
-												src={metacriticLogo}
-												alt="Metacritic"
-												title="Metacritic"
-											/>
-											and
-											<img
-												className="h-5 inline-block"
-												src={rottenLogo}
-												alt="Rotten Tomatoes"
-												title="Rotten Tomatoes"
-											/>
-										</span>
-										combined.
-									</p>
-									<p className="mt-12 font-bold">It's all here.</p>
-								</div>
-							</div>
-						</div>
+					<p className="mt-6 m-auto max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl">
+						At GoodWatch you'll find{" "}
+						<span className="accent font-bold">everything</span> you need to
+						know about your next favorite movie or TV show.
+					</p>
+					<div className="mt-10 flex items-center justify-center flex-wrap gap-6 ">
+						<a
+							href="/how-it-works"
+							className="flex items-center justify-center gap-2 p-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+						>
+							<InformationCircleIcon className="h-5 w-auto" />
+							How it works
+						</a>
+						<a
+							href="/discover"
+							className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-lg font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+						>
+							<CubeIcon className="h-5 w-auto" />
+							Discover
+						</a>
+						<a
+							href="#trending"
+							className="flex items-center justify-center gap-2 p-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+						>
+							<ArrowDownIcon className="h-5 w-auto" />
+							What's Trending?
+						</a>
 					</div>
 				</div>
 			</div>

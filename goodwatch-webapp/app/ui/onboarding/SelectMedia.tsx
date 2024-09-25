@@ -275,7 +275,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					.map((details, index) => (
 						<div
 							key={details.tmdb_id}
-							className={`relative cursor-pointer transition-all hover:scale-105 hover:rotate-3 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-600" : "border-slate-700"}`}
+							className={`relative cursor-pointer transition-all hover:scale-105 hover:rotate-2 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-600" : "border-slate-700"}`}
 							onClick={() => handlePreviousMediaToggle(details)}
 							onKeyDown={() => null}
 						>

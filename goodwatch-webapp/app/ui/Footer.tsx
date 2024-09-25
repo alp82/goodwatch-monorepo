@@ -140,6 +140,14 @@ export default function Footer({}: FooterProps) {
 						</div>
 						<div className="mb-2">
 							<a
+								href="/how-it-works"
+								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+							>
+								How it works
+							</a>
+						</div>
+						<div className="mb-2">
+							<a
 								href="/disclaimer"
 								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 							>
