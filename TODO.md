@@ -2,58 +2,6 @@
 ```
 ---
 
-filter duplicate streaming providers?
-    blacklist maybe
-    * Removed duplicate streaming providers from showing up in the UI (e.g. Netflix and Netflix with Ads)
-    
-streaming providers from tmdb api with all country ranks
-    remove old scripts and schedules
-    
-streaming_provider_rank
-    rename to streaming_provider_countries
-    
----
-
-country usage
-    new hook with user setting, guess and locale
-    details
-    explore
-    discover
-    trending
-
----
-
-postgres cluster config in repo
-    https://github.com/vitabaks/postgresql_cluster
-    
----
-
-mongodb backups
-    daily to hetzner storage
-
----
-
-inspiration
-    https://simkl.com/
-
----
-
-explore v2
-    remove weaviate
-
----
-
-secret handling
-project documentation
-
----
-
-redesigned footer
-    community blocks
-    https://flowbite.com/blocks/marketing/footer/
-
----
-
 home screen
     new design with home theater and couch
     anon: link to how it works
@@ -80,7 +28,42 @@ new page: started this week on your streaming services
 
 ---
 
+redesigned footer
+    community blocks
+    https://flowbite.com/blocks/marketing/footer/
+
+---
+
+postgres cluster config in repo
+    https://github.com/vitabaks/postgresql_cluster
+    
+---
+
+mongodb backups
+    daily to hetzner storage
+
+---
+
+explore v2
+    remove weaviate
+
+---
+
+secret handling
+project documentation
+
+---
+
 letterboxd ratings
+
+---
+
+country usage
+    new hook with user setting, guess and locale
+    details
+    explore
+    discover
+    trending
 
 ---
 
@@ -162,6 +145,16 @@ explore tag alternatives:
     ORDER BY value_count DESC
     LIMIT 200;
 
+---
+
+streaming providers from tmdb api with all country ranks
+    remove old scripts and schedules
+    
+streaming_provider_rank
+    rename to streaming_provider_countries
+    
+---
+
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
 
@@ -191,6 +184,7 @@ anime
     https://anibrain.ai/
     
 other sites
+    https://simkl.com/
     https://mdblist.com/
     https://letterboxd.com/film/beetlejuice-beetlejuice/nanogenres/
     https://nanocrowd.com/

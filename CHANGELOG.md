@@ -2,12 +2,22 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
+## [0.3.4] 2024-09-xx
+
+### Added
+* Completely revamped Landing Page design
+
+### Changed
+
+### Fixed
+
 ## [0.3.3] 2024-09-25
 
 ### Added
 
 ### Changed
 * Improved Onboarding UX for rating titles and better search display
+* Removed some streaming providers to show duplicated in the UI
 
 ### Fixed
 * Discover filter for streaming services was resetting immediately for signed in users

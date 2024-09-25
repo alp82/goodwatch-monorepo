@@ -16,12 +16,10 @@ import {
 	getExploreResults,
 } from "~/server/explore.server"
 import type { MediaType } from "~/server/search.server"
-import { MovieCard } from "~/ui/MovieCard"
-import { TvCard } from "~/ui/TvCard"
-import { DNATag } from "~/ui/dna/DNATag"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import type { Tab } from "~/ui/tabs/Tabs"
-import useLocale, { getLocaleFromRequest } from "~/utils/locale"
+import { getLocaleFromRequest } from "~/utils/locale"
 
 export function headers() {
 	return {
@@ -177,14 +175,16 @@ export default function ExploreMoviesCategoryQuery() {
 										transition={{ duration: 0.5, type: "tween" }}
 									>
 										{currentParams.type === "movies" && (
-											<MovieCard
-												movie={result as ExploreResult}
+											<MovieTvCard
+												details={result as ExploreResult}
+												mediaType="movie"
 												prefetch={index < 6}
 											/>
 										)}
 										{currentParams.type === "tv" && (
-											<TvCard
-												tv={result as ExploreResult}
+											<MovieTvCard
+												details={result as ExploreResult}
+												mediaType="tv"
 												prefetch={index < 6}
 											/>
 										)}

@@ -2,7 +2,7 @@ import { useFetcher } from "@remix-run/react"
 import React, { useEffect } from "react"
 import type { MoviesInCollection } from "~/server/collection.server"
 import type { Collection as CollectionType } from "~/server/details.server"
-import { MovieCard } from "~/ui/MovieCard"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import { titleToDashed } from "~/utils/helpers"
 
 export interface CollectionProps {
@@ -47,7 +47,11 @@ export default function Collection({ collection, movieId }: CollectionProps) {
 											: ""
 									}
 								>
-									<MovieCard movie={movie} prefetch={true} />
+									<MovieTvCard
+										details={movie}
+										mediaType="movie"
+										prefetch={true}
+									/>
 								</div>
 							)
 						})}

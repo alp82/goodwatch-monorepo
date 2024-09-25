@@ -24,6 +24,9 @@ import metacriticLogo from "~/img/metacritic-logo-250.png"
 import netflixLogo from "~/img/netflix-logo.svg"
 import primeLogo from "~/img/primevideo-logo.svg"
 import rottenLogo from "~/img/rotten-logo-250.png"
+import startBackground from "~/img/start-background.png"
+import startForeground from "~/img/start-foreground.png"
+import startImage from "~/img/start-living-room.png"
 import {
 	type PopularPicksMovie,
 	type PopularPicksTV,
@@ -38,7 +41,7 @@ import {
 } from "~/server/trending.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import { prefetchUserData } from "~/server/userData.server"
-import { MovieCard } from "~/ui/MovieCard"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TvCard } from "~/ui/TvCard"
 import { getLocaleFromRequest } from "~/utils/locale"
 
@@ -108,160 +111,133 @@ export default function Index() {
 
 	return (
 		<div>
-			<div className="relative isolate">
-				<svg
-					className="absolute inset-x-0 top-0 -z-10 h-[64rem] w-full stroke-gray-700 [mask-image:radial-gradient(32rem_32rem_at_center,white,transparent)]"
-					aria-hidden="true"
-				>
-					<defs>
-						<pattern
-							id="1f932ae7-37de-4c0a-a8b0-a6e3b4d44b84"
-							width={200}
-							height={200}
-							x="50%"
-							y={-1}
-							patternUnits="userSpaceOnUse"
-						>
-							<path d="M.5 200V.5H200" fill="none" />
-						</pattern>
-					</defs>
-					<svg x="50%" y={-1} className="overflow-visible fill-indigo-950">
-						<title>Radial gradient</title>
-						<path
-							d="M-200 200h201v201h-201Z M600 0h201v201h-201Z M-400 400h201v201h-201Z M200 800h201v201h-201Z"
-							strokeWidth={0}
-						/>
-					</svg>
-					<rect
-						width="100%"
-						height="100%"
-						strokeWidth={0}
-						fill="url(#1f932ae7-37de-4c0a-a8b0-a6e3b4d44b84)"
-					/>
-				</svg>
-				<div
-					className="absolute left-1/2 right-0 top-0 -z-10 -ml-24 transform-gpu overflow-hidden blur-3xl lg:ml-24 xl:ml-48"
-					aria-hidden="true"
-				>
+			<div
+				className="relative w-full h-screen flex flex-col bg-gray-700 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
+				style={{
+					backgroundImage: `url('${startBackground}')`,
+				}}
+			>
+				<div className="flex-1 flex justify-center items-start overflow-hidden z-20">
 					<div
-						className="aspect-[801/1036] w-[50.0625rem] bg-gradient-to-tr from-[#8c17b6] to-[#9089fc] opacity-30"
+						className="mt-44 flex gap-16"
 						style={{
-							clipPath:
-								"polygon(63.1% 29.5%, 100% 17.1%, 76.6% 3%, 48.4% 0%, 44.6% 4.7%, 54.5% 25.3%, 59.8% 49%, 55.2% 57.8%, 44.4% 57.2%, 27.8% 47.9%, 35.1% 81.5%, 0% 97.7%, 39.2% 100%, 35.2% 81.4%, 97.2% 52.8%, 63.1% 29.5%)",
+							minWidth: "fit-content",
 						}}
-					/>
-				</div>
-				<div className="overflow-hidden">
-					<div className="mx-auto max-w-7xl px-6 pb-32 pt-8 lg:px-8 lg:pt-32">
-						<div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
-							<div className="relative w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
-								<h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-100">
-									What do you want to{" "}
-									<span className="underline underline-offset-8 decoration-8 decoration-indigo-600">
-										watch next
-									</span>
-									?
-								</h1>
-								<div className="mt-14 lg:mt-20 text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 sm:max-w-md lg:max-w-none">
-									<p className="leading-relaxed">
-										Welcome to GoodWatch. You'll find{" "}
-										<span className="accent font-bold">everything</span> you
-										need to know about your next favorite movie or TV show.
-									</p>
-									<div className="mt-12 flex items-center gap-x-6">
-										<a
-											href="/discover"
-											className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-lg font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-										>
-											<CubeIcon className="h-5 w-auto" />
-											Discover
-										</a>
-										<a
-											href="#trending"
-											className="flex items-center justify-center gap-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
-										>
-											<ArrowDownIcon className="h-5 w-auto" />
-											What's Trending?
-										</a>
-									</div>
-								</div>
-								<div className="mt-24 lg:mt-32 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
-									<h2 className="font-bold tracking-tight text-gray-100 text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
-										How it works
-									</h2>
-									<div className="leading-relaxed text-md sm:text-lg md:text-xl lg:text-2xl">
-										<p className="mt-12">
-											Discover great titles on your preferred streaming
-											providers like
-											<span className="mx-3 inline-flex items-center flex-wrap gap-2">
-												<img
-													className="h-5 inline-block"
-													src={netflixLogo}
-													alt="Netflix"
-													title="Netflix"
-												/>
-												,
-												<img
-													className="h-6 inline-block"
-													src={primeLogo}
-													alt="Amazon Prime"
-													title="Amazon Prime"
-												/>
-												and
-												<img
-													className="h-8 inline-block"
-													src={disneyLogo}
-													alt="Disney+"
-													title="Disney+"
-												/>
-												.
-											</span>
-										</p>
-										<p className="mt-12">
-											See all scores from
-											<span className="mx-3 inline-flex items-center flex-wrap gap-2">
-												<img
-													className="h-5 inline-block"
-													src={imdbLogo}
-													alt="IMDb"
-													title="IMDb"
-												/>
-												,
-												<img
-													className="h-5 inline-block"
-													src={metacriticLogo}
-													alt="Metacritic"
-													title="Metacritic"
-												/>
-												and
-												<img
-													className="h-5 inline-block"
-													src={rottenLogo}
-													alt="Rotten Tomatoes"
-													title="Rotten Tomatoes"
-												/>
-											</span>
-											combined.
-										</p>
-										<p className="mt-12 font-bold">It's all here.</p>
-									</div>
+					>
+						{/*{popularPicksTV.map((movie) => (*/}
+						{popularPicksMovies.map((movie) => (
+							<div key={movie.tmdb_id} className="w-64 group">
+								<div className="transition-transform duration-300 transform group-hover:scale-110">
+									<MovieTvCard details={movie} mediaType="movie" />
 								</div>
 							</div>
-							<div className="hidden lg:flex justify-end gap-8 sm:justify-start">
-								{/*<div className="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-none xl:pt-80">*/}
-								{/*  <MovieCard movie={bestRatedMovies[0]} />*/}
-								{/*  <MovieCard movie={bestRatedMovies[2]} />*/}
-								{/*  <MovieCard movie={bestRatedMovies[4]} />*/}
-								{/*</div>*/}
-								<div className="mr-auto w-44 flex-none space-y-8 md:mr-0 md:pt-52 lg:pt-36">
-									<TvCard tv={popularPicksTV[0]} />
-									<TvCard tv={popularPicksTV[2]} />
-									<TvCard tv={popularPicksTV[1]} />
+						))}
+					</div>
+				</div>
+				<div
+					className="absolute bottom-0 left-0 right-0 -ml-44 h-full bg-cover bg-center pointer-events-none z-20 before:bg-black/[.25]"
+					style={{
+						backgroundImage: `url(${startForeground})`,
+					}}
+				>
+					<h1 className="absolute bottom-[26%] sm:bottom-[24%] md:bottom-[22%] lg:bottom-[20%] left-44 right-0 text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-center text-gray-200">
+						What's Good?
+					</h1>
+				</div>
+			</div>
+			<div className="overflow-hidden">
+				<div className="mx-auto max-w-7xl px-6 pb-32 pt-8 lg:px-8 lg:pt-32">
+					<div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
+						<div className="relative w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
+							<h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-100">
+								What do you want to{" "}
+								<span className="underline underline-offset-8 decoration-8 decoration-indigo-600">
+									watch next
+								</span>
+								?
+							</h1>
+							<div className="mt-14 lg:mt-20 text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 sm:max-w-md lg:max-w-none">
+								<p className="leading-relaxed">
+									Welcome to GoodWatch. You'll find{" "}
+									<span className="accent font-bold">everything</span> you need
+									to know about your next favorite movie or TV show.
+								</p>
+								<div className="mt-12 flex items-center gap-x-6">
+									<a
+										href="/discover"
+										className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-lg font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+									>
+										<CubeIcon className="h-5 w-auto" />
+										Discover
+									</a>
+									<a
+										href="#trending"
+										className="flex items-center justify-center gap-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+									>
+										<ArrowDownIcon className="h-5 w-auto" />
+										What's Trending?
+									</a>
 								</div>
-								<div className="w-44 flex-none space-y-8 pt-32 md:pt-0">
-									<MovieCard movie={popularPicksMovies[2]} />
-									<MovieCard movie={popularPicksMovies[0]} />
-									<MovieCard movie={popularPicksMovies[1]} />
+							</div>
+							<div className="mt-24 lg:mt-32 text-lg lg:text-2xl text-gray-300 sm:max-w-md lg:max-w-none">
+								<h2 className="font-bold tracking-tight text-gray-100 text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
+									How it works
+								</h2>
+								<div className="leading-relaxed text-md sm:text-lg md:text-xl lg:text-2xl">
+									<p className="mt-12">
+										Discover great titles on your preferred streaming providers
+										like
+										<span className="mx-3 inline-flex items-center flex-wrap gap-2">
+											<img
+												className="h-5 inline-block"
+												src={netflixLogo}
+												alt="Netflix"
+												title="Netflix"
+											/>
+											,
+											<img
+												className="h-6 inline-block"
+												src={primeLogo}
+												alt="Amazon Prime"
+												title="Amazon Prime"
+											/>
+											and
+											<img
+												className="h-8 inline-block"
+												src={disneyLogo}
+												alt="Disney+"
+												title="Disney+"
+											/>
+											.
+										</span>
+									</p>
+									<p className="mt-12">
+										See all scores from
+										<span className="mx-3 inline-flex items-center flex-wrap gap-2">
+											<img
+												className="h-5 inline-block"
+												src={imdbLogo}
+												alt="IMDb"
+												title="IMDb"
+											/>
+											,
+											<img
+												className="h-5 inline-block"
+												src={metacriticLogo}
+												alt="Metacritic"
+												title="Metacritic"
+											/>
+											and
+											<img
+												className="h-5 inline-block"
+												src={rottenLogo}
+												alt="Rotten Tomatoes"
+												title="Rotten Tomatoes"
+											/>
+										</span>
+										combined.
+									</p>
+									<p className="mt-12 font-bold">It's all here.</p>
 								</div>
 							</div>
 						</div>
@@ -278,7 +254,11 @@ export default function Index() {
 							.slice(0, numberOfItemsToShow)
 							.map((movie: TrendingMovie) => (
 								<div key={movie.tmdb_id}>
-									<MovieCard movie={movie} prefetch={true} />
+									<MovieTvCard
+										details={movie}
+										mediaType="movie"
+										prefetch={true}
+									/>
 								</div>
 							))}
 						<a
@@ -299,7 +279,7 @@ export default function Index() {
 					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
 						{trendingTV.slice(0, numberOfItemsToShow).map((tv: TrendingTV) => (
 							<div key={tv.tmdb_id}>
-								<TvCard tv={tv} prefetch={true} />
+								<MovieTvCard details={tv} mediaType="tv" prefetch={true} />
 							</div>
 						))}
 						<a

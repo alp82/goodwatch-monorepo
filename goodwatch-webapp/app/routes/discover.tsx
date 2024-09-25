@@ -1,10 +1,4 @@
-import {
-	ClockIcon,
-	FilmIcon,
-	FireIcon,
-	StarIcon,
-	TvIcon,
-} from "@heroicons/react/20/solid"
+import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -28,8 +22,7 @@ import {
 } from "~/server/discover.server"
 import type { MediaType } from "~/server/search.server"
 import { getUserSettings } from "~/server/user-settings.server"
-import { MovieCard } from "~/ui/MovieCard"
-import { TvCard } from "~/ui/TvCard"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import FilterSelection from "~/ui/filter/FilterSelection"
 import FilterSummary from "~/ui/filter/FilterSummary"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
@@ -277,14 +270,16 @@ export default function Discover() {
 										transition={{ duration: 0.5, type: "tween" }}
 									>
 										{currentParams.type === "movie" && (
-											<MovieCard
-												movie={result as DiscoverResult}
+											<MovieTvCard
+												details={result as DiscoverResult}
+												mediaType="movie"
 												prefetch={index < 6}
 											/>
 										)}
 										{currentParams.type === "tv" && (
-											<TvCard
-												tv={result as DiscoverResult}
+											<MovieTvCard
+												details={result as DiscoverResult}
+												mediaType="tv"
 												prefetch={index < 6}
 											/>
 										)}

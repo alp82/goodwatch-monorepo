@@ -10,7 +10,7 @@ import React from "react"
 import { type GetUserDataResult, useUserData } from "~/routes/api.user-data"
 import type { StreamingLink } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
-import { MovieCard } from "~/ui/MovieCard"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TvCard } from "~/ui/TvCard"
 import WishlistFilter, {
 	type FilterByStreaming,
@@ -148,14 +148,16 @@ export default function Wishlist() {
 										transition={{ duration: 0.5, type: "tween" }}
 									>
 										{result.media_type === "movie" && (
-											<MovieCard
-												movie={result as DiscoverResult}
+											<MovieTvCard
+												details={result as DiscoverResult}
+												mediaType="movie"
 												prefetch={index < 6}
 											/>
 										)}
 										{result.media_type === "tv" && (
-											<TvCard
-												tv={result as DiscoverResult}
+											<MovieTvCard
+												details={result as DiscoverResult}
+												mediaType="tv"
 												prefetch={index < 6}
 											/>
 										)}
