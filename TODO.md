@@ -14,6 +14,13 @@ header
     
 ---
 
+onboarding
+    better instructions for step 2
+    card titles above poster (better for long titles)
+    Search slow and bad at long ones like "orange is the new black"
+
+---
+
 details
     subheader
     streaming section favors user selected providers
@@ -25,6 +32,65 @@ details
 ---
 
 new page: started this week on your streaming services
+
+---
+
+WITH source_vectors AS (
+    SELECT 
+		tropes_vector,
+		cast_vector,
+		crew_vector,
+        dna_vector, 
+		subgenres_vector,
+		mood_vector,
+		themes_vector,
+		plot_vector,
+		cultural_impact_vector,
+		character_types_vector,
+		dialog_vector,
+		narrative_vector,
+		humor_vector,
+		pacing_vector,
+		time_vector,
+		place_vector,
+		cinematic_style_vector,
+		score_and_sound_vector,
+		costume_and_set_vector,
+		key_props_vector,
+		target_audience_vector,
+		flag_vector
+    FROM vectors_media 
+    WHERE tmdb_id = 603 AND media_type = 'movie'
+)
+
+SELECT 
+    CASE 
+        WHEN v.media_type = 'movie' THEN 'movie' 
+        ELSE 'tv' 
+    END AS media_type,
+    COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
+    COALESCE(m.title, t.title) AS title,
+    COALESCE(m.release_year, t.release_year) AS release_year,
+    COALESCE(m.popularity, t.popularity) AS popularity,
+    (
+		--COALESCE(v.mood_vector <=> sv.mood_vector, 0.3)
+		--COALESCE(v.themes_vector <=> sv.themes_vector, 0.3)
+		--COALESCE(v.plot_vector <=> sv.plot_vector, 0.3)
+		COALESCE(v.dna_vector <=> sv.dna_vector, 0.3)
+		--COALESCE(v.tropes_vector <=> sv.tropes_vector, 0.3)
+	) AS combined_distance,
+	v.dna_vector,
+	v.tropes_vector,
+    COALESCE(m.dna, t.dna) AS dna,
+    COALESCE(m.trope_names, t.trope_names) AS trope_names,
+    COALESCE(m.cast, t.cast) AS cast
+FROM vectors_media v
+CROSS JOIN source_vectors sv
+LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
+LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
+ORDER BY combined_distance ASC NULLS LAST, tmdb_id
+LIMIT 30;
+
 
 ---
 
@@ -189,6 +255,7 @@ other sites
     https://letterboxd.com/film/beetlejuice-beetlejuice/nanogenres/
     https://nanocrowd.com/
     https://app.nanocrowd.com/
+    https://tastedive.com/
     
 other api's
     https://mdblist.docs.apiary.io/#reference/0/media-info/get-media-info

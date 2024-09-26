@@ -130,17 +130,17 @@ export default function Index() {
 					<div className="flex gap-8 sm:gap-16 text-gray-200 text-xl sm:text-2xl md:text-3xl font-bold">
 						<button
 							type="button"
-							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "movies" ? "bg-indigo-900" : "bg-slate-950"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
+							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "movies" ? "bg-indigo-900/60" : "bg-slate-900/70"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
 							onClick={selectPopularMovies}
 						>
-							Movies
+							Popular Movies
 						</button>
 						<button
 							type="button"
-							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "tv" ? "bg-indigo-900" : "bg-slate-950"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
+							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "tv" ? "bg-indigo-900/70" : "bg-slate-900/60"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
 							onClick={selectPopularTV}
 						>
-							Shows
+							Popular Shows
 						</button>
 					</div>
 					<div className="mt-12 flex gap-16">
@@ -182,7 +182,7 @@ export default function Index() {
 				/>
 			</div>
 
-			<div className="relative -mt-[30em] pb-[8em] w-full bg-gradient-to-t from-black/70 to-transparent z-30">
+			<div className="relative -mt-[60em] sm:-mt-[50em] pt-[20em] pb-[8em] w-full h-[60em] sm:h-[50em] bg-gradient-to-t from-black/80 to-transparent z-30">
 				<div className="px-4 text-center text-gray-200">
 					<h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold">
 						What's Good?
@@ -192,24 +192,24 @@ export default function Index() {
 						<span className="accent font-bold">everything</span> you need to
 						know about your next favorite movie or TV show.
 					</p>
-					<div className="mt-10 flex items-center justify-center flex-wrap gap-6 ">
+					<div className="mt-2 sm:mt-4 md:mt-6 lg:mt-10 flex items-center justify-center flex-wrap gap-4 lg:gap-6 text-sm lg:text-lg font-semibold ">
 						<a
 							href="/how-it-works"
-							className="flex items-center justify-center gap-2 p-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+							className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
 						>
 							<InformationCircleIcon className="h-5 w-auto" />
 							How it works
 						</a>
 						<a
 							href="/discover"
-							className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm lg:text-lg font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+							className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-base lg:text-xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
 						>
 							<CubeIcon className="h-5 w-auto" />
 							Discover
 						</a>
 						<a
 							href="#trending"
-							className="flex items-center justify-center gap-2 p-2 text-lg font-semibold leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+							className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
 						>
 							<ArrowDownIcon className="h-5 w-auto" />
 							What's Trending?

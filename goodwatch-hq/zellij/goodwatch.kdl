@@ -12,7 +12,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@coinmatica.net"
+                args "-t" "root@coinmatica.net" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -24,7 +24,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@abusive"
+                args "-t" "root@abusive" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -36,7 +36,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db1"
+                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -48,7 +48,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db2"
+                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -60,7 +60,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-cache1"
+                args "-t" "root@gw-cache1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -72,7 +72,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-cache2"
+                args "-t" "root@gw-cache2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -84,7 +84,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-cache3"
+                args "-t" "root@gw-cache3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -96,7 +96,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-mongo1"
+                args "-t" "root@gw-mongo1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -108,7 +108,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-mongo2"
+                args "-t" "root@gw-mongo2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -120,7 +120,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-mongo3"
+                args "-t" "root@gw-mongo3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"
@@ -132,7 +132,7 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-vector1"
+                args "-t" "root@gw-vector1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector; git pull; exec $SHELL"
             }
             pane {
                 command "ssh"

@@ -60,7 +60,6 @@ cd /tmp
 git clone --branch <version> https://github.com/timescale/pgvectorscale
 cd pgvectorscale/pgvectorscale
 export RUSTFLAGS="-C target-feature=+avx2,+fma"
-PGRX_IGNORE_RUST_VERSIONS=1
 cargo pgrx install --release
 ```
 
