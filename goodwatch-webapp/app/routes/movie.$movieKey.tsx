@@ -34,9 +34,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 export type LoaderData = {
 	details: Awaited<MovieDetails>
 	params: {
-		tab: string
 		country: string
-		language: string
 	}
 }
 
@@ -50,7 +48,6 @@ export const loader: LoaderFunction = async ({
 	const userSettings = await getUserSettings({ user_id })
 
 	const url = new URL(request.url)
-	const tab = url.searchParams.get("tab") || "about"
 	const country =
 		userSettings?.country_default || url.searchParams.get("country") || ""
 	const language = url.searchParams.get("language") || "en"
@@ -64,16 +61,14 @@ export const loader: LoaderFunction = async ({
 	return json<LoaderData>({
 		details,
 		params: {
-			tab,
 			country,
-			language,
 		},
 	})
 }
 
 export default function DetailsMovie() {
 	const { details, params } = useLoaderData<LoaderData>()
-	const { tab, country, language } = params
+	const { country } = params
 	const { locale } = useLocale()
 
 	const { currentParams, updateParams } = useUpdateUrlParams({
@@ -92,12 +87,5 @@ export default function DetailsMovie() {
 		}
 	}, [])
 
-	return (
-		<Details
-			details={details}
-			tab={tab}
-			country={country}
-			language={language}
-		/>
-	)
+	return <Details details={details} country={country} />
 }

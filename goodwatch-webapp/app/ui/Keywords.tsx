@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import type { MediaType } from "~/server/search.server";
+import React, { useState } from "react"
+import type { MediaType } from "~/server/search.server"
 
 export interface KeywordProps {
-	keyword: string;
-	type: MediaType;
+	keyword: string
+	type: MediaType
 }
 
 const Keyword = ({ keyword, type }: KeywordProps) => {
@@ -15,19 +15,19 @@ const Keyword = ({ keyword, type }: KeywordProps) => {
 		>
 			{keyword}
 		</a>
-	);
-};
+	)
+}
 
 export interface KeywordsProps {
-	keywords: string[];
-	type: MediaType;
+	keywords: string[]
+	type: MediaType
 }
 
 export default function Keywords({ keywords, type }: KeywordsProps) {
-	const [expanded, setExpanded] = useState(false);
+	const [expanded, setExpanded] = useState(false)
 
-	const needsExpansion = keywords.length > 8;
-	const lessKeywords = keywords.slice(0, 6);
+	const needsExpansion = keywords.length > 8
+	const lessKeywords = keywords.slice(0, 6)
 
 	return (
 		<div className="mb-8">
@@ -41,8 +41,10 @@ export default function Keywords({ keywords, type }: KeywordsProps) {
 									<Keyword key={keyword} keyword={keyword} type={type} />
 								))}
 								<button
+									type="button"
 									className="px-2 py-0.5 text-xs font-medium text-sky-100 hover:text-white"
 									onClick={() => setExpanded(!expanded)}
+									onKeyDown={() => null}
 								>
 									{expanded ? "Show less" : "Show more"}...
 								</button>
@@ -58,5 +60,5 @@ export default function Keywords({ keywords, type }: KeywordsProps) {
 				</>
 			)}
 		</div>
-	);
+	)
 }

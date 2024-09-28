@@ -1,4 +1,8 @@
 export const sections = {
+	overview: {
+		id: "overview",
+		label: "Overview",
+	},
 	about: {
 		id: "about",
 		label: "About",

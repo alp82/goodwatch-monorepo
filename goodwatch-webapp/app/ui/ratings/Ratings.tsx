@@ -17,24 +17,18 @@ export default function Ratings({
 	title = "Ratings",
 	compact = false,
 }: RatingsProps) {
-	const isComplete = Boolean(ratings)
 	const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent
 		? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10
 		: null
 
 	return (
 		<div className="relative">
-			{!isComplete && (
-				<div className="absolute top-16 left-6 z-10">
-					<InfoBox text="Ratings are currently calculated..." />
-				</div>
-			)}
-			<div className={`mt-2 mb-2 font-bold ${compact ? "text-lg" : "text-xl"}`}>
+			<div
+				className={`mt-2 mb-2 font-bold ${compact ? "text-lg" : "text-2xl"}`}
+			>
 				{title}
 			</div>
-			<ul
-				className={`underline-offset-2 flex gap-4 flex-wrap ${isComplete ? "" : "opacity-50"}`}
-			>
+			<ul className="underline-offset-2 flex gap-4 flex-wrap">
 				<dl
 					className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} w-28 p-3 rounded-lg shadow overflow-hidden text-center`}
 				>

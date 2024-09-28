@@ -43,9 +43,10 @@ export default function Streaming({
 		: countryCodes?.length - 1
 
 	return (
-		<div>
+		<div className="mt-6">
+			<h2 className="text-2xl font-bold">Streaming</h2>
 			{hasNothing && !countryCount && (
-				<div className="mt-6">
+				<div className="mt-4">
 					<InfoBox text="This title is currently not available on any streaming platform" />
 				</div>
 			)}

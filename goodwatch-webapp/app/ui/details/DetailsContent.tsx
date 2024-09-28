@@ -53,11 +53,12 @@ export default function DetailsContent({
 					</div>
 				)}
 				<Description description={synopsis} />
-				<Crew crew={crew} />
 				{collection && (
 					<Collection collection={collection} movieId={details.tmdb_id} />
 				)}
-				<Keywords keywords={keywords} type={media_type} />
+			</div>
+			<div {...sectionProps.crew}>
+				<Crew crew={crew} />
 			</div>
 			<div {...sectionProps.cast}>
 				<Cast cast={cast} />

@@ -31,8 +31,9 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 
 	return (
 		<div>
+			<h2 className="text-2xl font-bold">DNA</h2>
 			{hasDNA ? (
-				<>
+				<div className="mt-4">
 					{sortedCategories.map((category) => {
 						const isSpoiler = spoilerCategories.includes(category)
 						return (
@@ -74,7 +75,7 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 							</dl>
 						)
 					})}
-				</>
+				</div>
 			) : (
 				<InfoBox text="No DNA found for this title. Please try again later, we are working on it." />
 			)}

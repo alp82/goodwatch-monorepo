@@ -1,25 +1,26 @@
-import React from "react";
-import type { Cast as CastType } from "~/server/details.server";
+import React from "react"
+import type { Cast as CastType } from "~/server/details.server"
 
 export interface CastProps {
-	cast: CastType[];
+	cast: CastType[]
 }
 
 export default function Cast({ cast }: CastProps) {
 	const castWithPhotos = (cast || []).filter(
 		(castMember) => castMember.profile_path,
-	);
+	)
 	const castWithoutPhotos = (cast || []).filter(
 		(castMember) => !castMember.profile_path,
-	);
+	)
 
-	const type = "movie";
+	const type = "movie"
 	return (
 		<>
-			<div className="flex flex-wrap gap-4">
+			<h2 className="text-2xl font-bold">Cast</h2>
+			<div className="mt-4 flex flex-wrap gap-4">
 				{(castWithPhotos || []).map((castMember) => {
 					const character =
-						castMember.character || castMember.roles?.[0].character;
+						castMember.character || castMember.roles?.[0].character
 					return (
 						<a
 							key={castMember.id}
@@ -46,13 +47,13 @@ export default function Cast({ cast }: CastProps) {
 								</p>
 							</div>
 						</a>
-					);
+					)
 				})}
 			</div>
 			<div className="mt-8 flex flex-wrap gap-4">
 				{(castWithoutPhotos || []).map((castMember) => {
 					const character =
-						castMember.character || castMember.roles?.[0].character;
+						castMember.character || castMember.roles?.[0].character
 					return (
 						<a
 							key={castMember.id}
@@ -66,9 +67,9 @@ export default function Cast({ cast }: CastProps) {
 								</>
 							)}
 						</a>
-					);
+					)
 				})}
 			</div>
 		</>
-	);
+	)
 }

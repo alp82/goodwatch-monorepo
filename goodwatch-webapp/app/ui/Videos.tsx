@@ -65,10 +65,10 @@ export default function Videos({ videos }: VideosProps) {
 
 	return (
 		<div className="mt-8">
-			<div className="mb-2 text-lg font-bold">Videos</div>
+			<h2 className="text-2xl font-bold">Videos</h2>
 			{types.length ? (
 				<>
-					<div className="mb-2">
+					<div className="mt-6 mb-2">
 						<Tabs tabs={typeTabs} pills={true} onSelect={handleTypeSelection} />
 					</div>
 					{selectedVideos.length > 1 && (
