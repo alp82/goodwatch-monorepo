@@ -9,7 +9,7 @@ import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { type MovieDetails, getDetailsForMovie } from "~/server/details.server"
 import { getUserSettings } from "~/server/user-settings.server"
-import Details from "~/ui/Details"
+import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
 import useLocale from "~/utils/locale"
 

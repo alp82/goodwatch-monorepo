@@ -1,23 +1,24 @@
-import React, { useState } from "react";
-import gwLogo from "~/img/goodwatch-logo.png";
-import imdbLogo from "~/img/imdb-logo-250.png";
-import metacriticLogo from "~/img/metacritic-logo-250.png";
-import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png";
-import rottenLogo from "~/img/rotten-logo-250.png";
-import rottenLogoIcon from "~/img/rotten-logo-icon-250.png";
-import InfoBox from "~/ui/InfoBox";
-import type { AllRatings } from "~/utils/ratings";
+import React, { useState } from "react"
+import gwLogo from "~/img/goodwatch-logo.png"
+import imdbLogo from "~/img/imdb-logo-250.png"
+import metacriticLogo from "~/img/metacritic-logo-250.png"
+import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png"
+import rottenLogo from "~/img/rotten-logo-250.png"
+import rottenLogoIcon from "~/img/rotten-logo-icon-250.png"
+import InfoBox from "~/ui/InfoBox"
+import type { AllRatings } from "~/utils/ratings"
+import type { Section } from "~/utils/scroll"
 
 export interface RatingBadgesProps {
-	ratings?: AllRatings;
-	title?: string;
-	compact?: boolean;
+	ratings?: AllRatings
+	title?: string
+	compact?: boolean
 }
 
 export default function RatingBadges({ ratings }: RatingBadgesProps) {
 	const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent
 		? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10
-		: null;
+		: null
 
 	return (
 		<div className="relative">
@@ -132,5 +133,5 @@ export default function RatingBadges({ ratings }: RatingBadgesProps) {
 				</a>
 			</ul>
 		</div>
-	);
+	)
 }

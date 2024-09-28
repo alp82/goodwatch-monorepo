@@ -5,9 +5,10 @@ import type {
 	StreamingLink,
 	TVDetails,
 } from "~/server/details.server"
+import { sections } from "~/ui/details/common"
 import FilterCountries from "~/ui/filter/FilterCountries"
 import StreamingBadges from "~/ui/streaming/StreamingBadges"
-import { useDetailsTab } from "~/utils/navigation"
+import type { Section } from "~/utils/scroll"
 
 export interface StreamingBlockProps {
 	details: MovieDetails | TVDetails
@@ -15,6 +16,7 @@ export interface StreamingBlockProps {
 	links: StreamingLink[]
 	countryCodes: string[]
 	currentCountryCode: string
+	navigateToSection: (section: Section) => void
 }
 
 export default function StreamingBlock({
@@ -23,9 +25,8 @@ export default function StreamingBlock({
 	links = [],
 	countryCodes = [],
 	currentCountryCode,
+	navigateToSection,
 }: StreamingBlockProps) {
-	const { handleStreamingTab } = useDetailsTab()
-
 	const [editing, setEditing] = useState(false)
 	const toggleEditing = () => setEditing(!editing)
 
@@ -40,7 +41,7 @@ export default function StreamingBlock({
 				<button
 					type="button"
 					className="text-indigo-400 hover:underline"
-					onClick={handleStreamingTab}
+					onClick={() => navigateToSection(sections.streaming)}
 				>
 					Streaming
 				</button>{" "}
@@ -72,6 +73,7 @@ export default function StreamingBlock({
 					media_type={media_type}
 					links={links}
 					countryCodes={countryCodes}
+					navigateToSection={navigateToSection}
 				/>
 			</div>
 		</div>

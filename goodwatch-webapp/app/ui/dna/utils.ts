@@ -2,27 +2,28 @@ import type { DNA } from "~/server/details.server"
 
 const sortedDNACategories = [
 	"Sub-Genres",
-	"Mood/Attitudes",
-	"Memorable Moments",
+	"Mood",
+	"Themes",
 	"Plot",
-	"Target Audience",
-	"Place",
-	"Time/Period",
+	"Cultural Impact",
+	"Character Types",
+	"Dialog",
+	"Narrative",
+	"Humor",
 	"Pacing",
-	"Narrative Structure",
-	"Dialog Style",
-	"Score and Sound Design",
-	"Character Archetypes",
-	"Visual Style",
-	"Cinematic Techniques",
-	"Costume and Set Design",
-	"Key Objects/Props",
+	"Time",
+	"Place",
+	"Cinematic Style",
+	"Score and Sound",
+	"Costume and Set",
+	"Key Props",
+	"Target Audience",
 	"Flag",
 ]
 
 const emptyValues = ["None", "N/A", "", null, undefined]
 
-export const spoilerCategories = ["Plot", "Memorable Moments"]
+export const spoilerCategories = ["Plot"]
 
 export const getSortedCategories = (dna: DNA, withSpoilers = true) => {
 	return sortedDNACategories.filter(
@@ -36,40 +37,42 @@ export const getSortedCategories = (dna: DNA, withSpoilers = true) => {
 
 export const getCategoryColor = (category: string) => {
 	switch (category) {
-		case "Cinematic Techniques":
-			return "bg-violet-700"
-		case "Character Archetypes":
+		case "Character Types":
 			return "bg-fuchsia-700"
-		case "Costume and Set Design":
+		case "Cinematic Style":
+			return "bg-violet-700"
+		case "Costume and Set":
 			return "bg-teal-700"
-		case "Dialog Style":
+		case "Cultural Impact":
+			return "bg-green-700"
+		case "Dialog":
 			return "bg-stone-700"
 		case "Flag":
 			return "bg-red-700"
-		case "Key Objects/Props":
+		case "Humor":
+			return "bg-yellow-700"
+		case "Key Props":
 			return "bg-zinc-700"
-		case "Memorable Moments":
-			return "bg-green-700"
-		case "Mood/Attitudes":
+		case "Mood":
 			return "bg-cyan-700"
-		case "Narrative Structure":
+		case "Narrative":
 			return "bg-indigo-700"
 		case "Pacing":
 			return "bg-purple-700"
-		case "Plot":
-			return "bg-blue-700"
 		case "Place":
 			return "bg-emerald-700"
-		case "Score and Sound Design":
+		case "Plot":
+			return "bg-blue-700"
+		case "Score and Sound":
 			return "bg-lime-700"
 		case "Sub-Genres":
 			return "bg-stone-700"
 		case "Target Audience":
 			return "bg-pink-700"
-		case "Time/Period":
-			return "bg-orange-700"
-		case "Visual Style":
+		case "Themes":
 			return "bg-amber-700"
+		case "Time":
+			return "bg-orange-700"
 		default:
 			return "text-gray-500"
 	}
@@ -77,35 +80,42 @@ export const getCategoryColor = (category: string) => {
 
 export const mapCategoryToVectorName = (category: string) => {
 	switch (category) {
-		case "Sub-Genres":
-			return "genre"
-		case "Mood/Attitudes":
-			return "mood"
-		case "Plot":
-		case "Memorable Moments":
-			return "plot"
-		case "Target Audience":
-			return "audience"
-		case "Place":
-			return "place"
-		case "Time/Period":
-			return "time"
-		case "Pacing":
-		case "Narrative Structure":
-		case "Dialog Style":
-			return "narration"
-		case "Score and Sound Design":
-			return "sound"
-		case "Character Archetypes":
-			return "character"
-		case "Visual Style":
-		case "Cinematic Techniques":
-			return "visual"
-		case "Costume and Set Design":
-		case "Key Objects/Props":
-			return "props"
+		case "Character Types":
+			return "character_types"
+		case "Cinematic Style":
+			return "cinematic_style"
+		case "Costume and Set":
+			return "costume_and_set"
+		case "Cultural Impact":
+			return "cultural_impact"
+		case "Dialog":
+			return "dialog"
 		case "Flag":
 			return "flag"
+		case "Humor":
+			return "humor"
+		case "Key Props":
+			return "key_props"
+		case "Mood":
+			return "mood"
+		case "Narrative":
+			return "narrative"
+		case "Pacing":
+			return "pacing"
+		case "Place":
+			return "place"
+		case "Plot":
+			return "plot"
+		case "Score and Sound":
+			return "score_and_sound"
+		case "Sub-Genres":
+			return "subgenres"
+		case "Target Audience":
+			return "target_audience"
+		case "Themes":
+			return "themes"
+		case "Time":
+			return "time"
 		default:
 			return category
 	}

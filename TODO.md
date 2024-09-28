@@ -14,13 +14,6 @@ header
     
 ---
 
-onboarding
-    better instructions for step 2
-    card titles above poster (better for long titles)
-    Search slow and bad at long ones like "orange is the new black"
-
----
-
 details
     subheader
     streaming section favors user selected providers
@@ -31,7 +24,23 @@ details
 
 ---
 
-new page: started this week on your streaming services
+onboarding
+    better instructions for step 2
+    card titles above poster (better for long titles)
+    Search slow and bad at long ones like "orange is the new black"
+    
+    better mobile support
+        Drag rating not working
+        Smaller text above
+        Button sticky
+        search not focused (only on mobile?) 
+        Double skip button at the bottom
+    
+    Success notification for milestones
+    
+---
+
+DNA infobox with Discord link
 
 ---
 
@@ -64,10 +73,7 @@ WITH source_vectors AS (
 )
 
 SELECT 
-    CASE 
-        WHEN v.media_type = 'movie' THEN 'movie' 
-        ELSE 'tv' 
-    END AS media_type,
+    v.media_type,
     COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
     COALESCE(m.title, t.title) AS title,
     COALESCE(m.release_year, t.release_year) AS release_year,
@@ -107,6 +113,10 @@ postgres cluster config in repo
 
 mongodb backups
     daily to hetzner storage
+
+---
+
+new page: started this week on your streaming services
 
 ---
 
@@ -195,6 +205,11 @@ offline support
 achievements
     user level + xp
     rating count: 10, 20 etc.
+
+---
+
+postgres cluster health check
+    SELECT 1 FROM pg_replication_slots WHERE active = 'true' AND slot_name = 'pgnode01';
 
 ---
 

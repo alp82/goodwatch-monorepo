@@ -44,7 +44,7 @@ export default function Collection({ collection, movieId }: CollectionProps) {
 									className={
 										movie.tmdb_id === movieId
 											? "opacity-50 pointer-events-none"
-											: ""
+											: "transition-transform duration-200 transform hover:scale-105 hover:rotate-2"
 									}
 								>
 									<MovieTvCard

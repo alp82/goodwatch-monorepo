@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Spoiler } from "spoiled"
 import type { DNA } from "~/server/details.server"
 import type { ExploreParams } from "~/server/explore.server"
@@ -16,7 +16,12 @@ export interface DNAProps {
 }
 
 export default function DNADisplay({ type, dna = {} }: DNAProps) {
-	const hasDNA = Object.keys(dna).length > 0
+	// const hasDNA = Object.keys(dna).length > 0
+	const [hasDNA, setHasDNA] = useState(false)
+
+	useEffect(() => {
+		if (Object.keys(dna).length > 0) setHasDNA(true)
+	}, [])
 	const sortedCategories = getSortedCategories(dna)
 
 	const [spoilerVisible, setSpoilerVisible] = React.useState(false)
@@ -46,6 +51,7 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 												? handleRevealSpoiler
 												: null
 										}
+										onKeyDown={() => null}
 									>
 										{dna[category].map((label) => (
 											<Spoiler

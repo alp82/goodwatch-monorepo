@@ -1,8 +1,8 @@
-import React from "react";
-import type { ContentRatingResult, ReleaseDate } from "~/server/details.server";
+import React from "react"
+import type { ContentRatingResult, ReleaseDate } from "~/server/details.server"
 
 export interface AgeRatingProps {
-	ageRating?: ReleaseDate | ContentRatingResult;
+	ageRating?: ReleaseDate | ContentRatingResult
 }
 
 export default function AgeRating({ ageRating }: AgeRatingProps) {
@@ -10,11 +10,11 @@ export default function AgeRating({ ageRating }: AgeRatingProps) {
 		<>
 			{ageRating && (
 				<>
-					<div className="inline-block align-baseline p-1 h-7 border-2 text-sm font-bold text-center">
+					<div className="inline-block md:py-1 px-1 md:px-2 leading-4 md:leading-4 border-2 text-xs md:text-md font-bold text-center">
 						{ageRating.certification || ageRating.rating}
 					</div>
 				</>
 			)}
 		</>
-	);
+	)
 }

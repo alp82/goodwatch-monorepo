@@ -3,20 +3,24 @@ import dnaIcon from "~/img/dna-icon.svg"
 import type { DNA } from "~/server/details.server"
 import type { ExploreParams } from "~/server/explore.server"
 import Sparkles from "~/ui/Sparkles"
+import { sections } from "~/ui/details/common"
 import { DNATag } from "~/ui/dna/DNATag"
 import { getCategoryColor, getSortedCategories } from "~/ui/dna/utils"
 import Cycle from "~/ui/list/Cycle"
-import { useDetailsTab } from "~/utils/navigation"
+import type { Section } from "~/utils/scroll"
 
 export interface DNAProps {
 	type: ExploreParams["type"]
 	dna: DNA
+	navigateToSection: (section: Section) => void
 }
 
-export default function DNAPreview({ type, dna = {} }: DNAProps) {
+export default function DNAPreview({
+	type,
+	dna = {},
+	navigateToSection,
+}: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
-
-	const { handleDNATab } = useDetailsTab()
 
 	const sortedCategories = getSortedCategories(dna, false)
 	const itemsToCycle = sortedCategories
@@ -40,7 +44,8 @@ export default function DNAPreview({ type, dna = {} }: DNAProps) {
 					<Sparkles>
 						<div
 							className="ml-1 h-7 accent-bg rounded-md pl-1 pr-2 flex items-center justify-center gap-2 text-sm font-semibold shadow-sm cursor-pointer"
-							onClick={handleDNATab}
+							onClick={() => navigateToSection(sections.dna)}
+							onKeyDown={() => null}
 						>
 							<img src={dnaIcon} className="h-5 w-auto" alt="DNA Icon" />
 							Show DNA

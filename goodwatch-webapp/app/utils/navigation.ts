@@ -1,31 +1,5 @@
 import { useLocation, useNavigate } from "@remix-run/react"
-import { useEffect, useRef, useState } from "react"
-
-export type DetailsTab =
-	| "about"
-	| "dna"
-	| "cast"
-	| "ratings"
-	| "streaming"
-	| "videos"
-
-export const useDetailsTab = () => {
-	const { activeTab, handleSwitchToTab } = useTab<DetailsTab>({
-		name: "details",
-		initialTab: "about",
-	})
-
-	return {
-		activeTab,
-		handleSwitchToTab,
-		handleAboutTab: () => handleSwitchToTab("about"),
-		handleDNATab: () => handleSwitchToTab("dna"),
-		handleCastTab: () => handleSwitchToTab("cast"),
-		handleRatingsTab: () => handleSwitchToTab("ratings"),
-		handleStreamingTab: () => handleSwitchToTab("streaming"),
-		handleVideosTab: () => handleSwitchToTab("videos"),
-	}
-}
+import { useEffect, useState } from "react"
 
 interface UseTabProps<T> {
 	name: string

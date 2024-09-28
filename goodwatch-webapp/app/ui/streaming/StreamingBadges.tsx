@@ -5,7 +5,8 @@ import type {
 	StreamingLink,
 	TVDetails,
 } from "~/server/details.server"
-import { useDetailsTab } from "~/utils/navigation"
+import { sections } from "~/ui/details/common"
+import type { Section } from "~/utils/scroll"
 import { getStreamingUrl } from "~/utils/streaming-links"
 
 export interface StreamingBadgesProps {
@@ -13,6 +14,7 @@ export interface StreamingBadgesProps {
 	media_type: "movie" | "tv"
 	links: StreamingLink[]
 	countryCodes: string[]
+	navigateToSection: (section: Section) => void
 }
 
 export default function StreamingBadges({
@@ -20,9 +22,8 @@ export default function StreamingBadges({
 	media_type,
 	links = [],
 	countryCodes = [],
+	navigateToSection,
 }: StreamingBadgesProps) {
-	const { handleStreamingTab } = useDetailsTab()
-
 	const flatrateLinks = links.filter((link: StreamingLink) =>
 		["flatrate", "free"].includes(link.stream_type),
 	)
@@ -74,7 +75,7 @@ export default function StreamingBadges({
 					<button
 						type="button"
 						className="text-indigo-400 hover:underline"
-						onClick={handleStreamingTab}
+						onClick={() => navigateToSection(sections.streaming)}
 					>
 						buy or rent
 					</button>
@@ -88,7 +89,7 @@ export default function StreamingBadges({
 					<button
 						type="button"
 						className="text-indigo-400 hover:underline"
-						onClick={handleStreamingTab}
+						onClick={() => navigateToSection(sections.streaming)}
 					>
 						other countries
 					</button>

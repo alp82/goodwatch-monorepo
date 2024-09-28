@@ -72,7 +72,9 @@ export default function About() {
 								favorite movie or TV show.
 							</p>
 						</div>
+
 						<hr className="border-gray-700" />
+
 						<div className="flex items-center justify-center flex-wrap gap-16">
 							<p className="max-w-sm text-center">
 								See <span className="accent">all scores</span> from different
