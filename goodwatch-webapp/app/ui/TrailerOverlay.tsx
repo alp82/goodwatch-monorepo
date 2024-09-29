@@ -3,37 +3,38 @@ import {
 	DialogPanel,
 	Transition,
 	TransitionChild,
-} from "@headlessui/react";
-import { PlayCircleIcon } from "@heroicons/react/24/solid";
-import React, { Fragment, useState } from "react";
-import ReactPlayer from "react-player/youtube";
-import type { Videos } from "~/server/details.server";
+} from "@headlessui/react"
+import { PlayCircleIcon } from "@heroicons/react/24/solid"
+import React, { Fragment, useState } from "react"
+import ReactPlayer from "react-player/youtube"
+import type { Videos } from "~/server/details.server"
 
 export interface TrailerOverlayProps {
-	videos: Videos;
+	videos: Videos
 }
 
 export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
-	const hasTrailers = videos?.trailers?.length;
-	const [open, setOpen] = useState(false);
+	const hasTrailers = videos?.trailers?.length
+	const [open, setOpen] = useState(false)
 
 	const handleShowTrailer = () => {
-		setOpen(true);
-	};
+		setOpen(true)
+	}
 
 	return (
 		<>
 			{hasTrailers ? (
 				<>
-					<a
+					<button
+						type="button"
 						className="absolute flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-0 hover:bg-opacity-50 cursor-pointer group"
 						onClick={handleShowTrailer}
 					>
-						<PlayCircleIcon className="relative bottom-4 w-24 h-24 md:w-32 md:h-32 lg:w-24 lg:h-24 xl:w-32 xl:h-32 mx-auto opacity-80 transition duration-300 ease-in-out group-hover:scale-110" />
+						<PlayCircleIcon className="relative bottom-4 w-24 h-24 md:w-32 md:h-32 lg:w-24 lg:h-24 xl:w-32 xl:h-32 mx-auto opacity-80 transition duration-300 ease-in-out group-hover:scale-125" />
 						<p className="absolute bottom-3 py-2 w-full bg-black bg-opacity-80 font-bold text-center">
 							Play Trailer
 						</p>
-					</a>
+					</button>
 					<Transition show={open} as={Fragment}>
 						<Dialog as="div" className="relative z-10" onClose={setOpen}>
 							<TransitionChild
@@ -82,5 +83,5 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 				</>
 			) : null}
 		</>
-	);
+	)
 }

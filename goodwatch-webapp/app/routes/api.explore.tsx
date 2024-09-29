@@ -9,9 +9,10 @@ import {
 	type ExploreResult,
 	getExploreResults,
 } from "~/server/explore.server"
+import type { FilterMediaType } from "~/server/search.server"
 
 export type LoaderData = {
-	type: "movies" | "tv"
+	type: FilterMediaType
 	results: ExploreResult[]
 }
 
@@ -24,10 +25,13 @@ export const loader: LoaderFunction = async ({
 	const category = (url.searchParams.get("category") ||
 		"dna") as ExploreParams["category"]
 	const query = (url.searchParams.get("query") || "") as ExploreParams["query"]
+	const country = (url.searchParams.get("country") ||
+		"US") as ExploreParams["country"]
 	const params = {
 		type,
 		category,
 		query,
+		country,
 	}
 
 	const { results } = await getExploreResults(params)

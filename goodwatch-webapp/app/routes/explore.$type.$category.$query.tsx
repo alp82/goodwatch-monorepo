@@ -15,7 +15,7 @@ import {
 	type ExploreResult,
 	getExploreResults,
 } from "~/server/explore.server"
-import type { MediaType } from "~/server/search.server"
+import type { FilterMediaType, MediaType } from "~/server/search.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import type { Tab } from "~/ui/tabs/Tabs"
@@ -54,11 +54,15 @@ export const loader: LoaderFunction = async ({
 	const type = (params.type || "movies") as ExploreParams["type"]
 	const category = (params.category || "dna") as ExploreParams["category"]
 	const query = params.query as ExploreParams["query"]
+	// TODO guess country
+	const country = (url.searchParams.get("country") ||
+		"US") as ExploreParams["country"]
 
 	const exploreParams = {
 		type,
 		category,
 		query,
+		country,
 	}
 	if (!type || !AVAILABLE_TYPES.includes(type)) {
 		return json<LoaderData>({
@@ -92,9 +96,9 @@ export default function ExploreMoviesCategoryQuery() {
 		params,
 	})
 
-	const handleTypeChange = (tab: Tab<MediaType>) => {
+	const handleTypeChange = (tab: Tab<FilterMediaType>) => {
 		navigate(
-			`/explore/${tab.key === "movie" ? "movies" : "tv"}/${currentParams.category}/${currentParams.query}`,
+			`/explore/${tab.key}/${currentParams.category}/${currentParams.query}`,
 		)
 	}
 
@@ -111,9 +115,9 @@ export default function ExploreMoviesCategoryQuery() {
 			<div className="w-full flex flex-col gap-6 text-white">
 				<div className="px-4 flex items-center justify-start gap-3">
 					<div className="text-4xl font-bold">{currentParams.query}</div>
-					<div className="opacity-20 text-gray-400 text-8xl">
+					<div className="opacity-20 text-gray-400 text-8xl font-extrabold">
 						{currentParams.category.charAt(0).toUpperCase() +
-							currentParams.category.slice(1)}
+							currentParams.category.slice(1).replace(/_/g, " ")}
 					</div>
 				</div>
 				{/*<div className="px-4 flex items-center justify-start gap-3">*/}
@@ -128,14 +132,14 @@ export default function ExploreMoviesCategoryQuery() {
 
 			<div>
 				<MediaTypeTabs
-					selected={currentParams.type === "movies" ? "movie" : "tv"}
+					selected={currentParams.type}
 					onSelect={handleTypeChange}
 				/>
 			</div>
 
 			<div
 				className={
-					"relative mt-4 grid grid-cols-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 grid-flow-dense auto-rows-min gap-2"
+					"relative mt-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 grid-flow-dense auto-rows-min gap-2"
 				}
 			>
 				<AnimatePresence initial={false}>
@@ -149,12 +153,12 @@ export default function ExploreMoviesCategoryQuery() {
 					)}
 					{results.length > 0 &&
 						navigation.state === "idle" &&
-						results.map((result: ExploreResult, index) => {
+						results.map((result, index) => {
 							const isSmall =
 								result.aggregated_overall_score_normalized_percent < 75
 							const cardClass = isSmall
-								? ""
-								: "row-span-1 col-span-1 sm:row-span-2 sm:col-span-3"
+								? "row-span-2 col-span-2 xs:row-span-1 xs:col-span-1"
+								: "row-span-2 col-span-2"
 
 							return (
 								<div
@@ -174,20 +178,11 @@ export default function ExploreMoviesCategoryQuery() {
 										}}
 										transition={{ duration: 0.5, type: "tween" }}
 									>
-										{currentParams.type === "movies" && (
-											<MovieTvCard
-												details={result as ExploreResult}
-												mediaType="movie"
-												prefetch={index < 6}
-											/>
-										)}
-										{currentParams.type === "tv" && (
-											<MovieTvCard
-												details={result as ExploreResult}
-												mediaType="tv"
-												prefetch={index < 6}
-											/>
-										)}
+										<MovieTvCard
+											details={result as ExploreResult}
+											mediaType={result.media_type}
+											prefetch={index < 6}
+										/>
 									</motion.div>
 								</div>
 							)

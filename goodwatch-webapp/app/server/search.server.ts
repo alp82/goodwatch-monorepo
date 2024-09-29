@@ -1,6 +1,7 @@
 import { cached } from "~/utils/cache"
 
 export type MediaType = "movie" | "tv"
+export type FilterMediaType = "all" | "movies" | "tv"
 
 export interface KnownFor {
 	adult: boolean

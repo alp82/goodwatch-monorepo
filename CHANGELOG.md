@@ -2,10 +2,14 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.3.4] 2024-09-xx
+## [0.4.0] 2024-09-xx
+
+Minor Release: **Similarity Engine**
 
 ### Added
+* New similarity algorithm based on DNA embeddings
 * Completely revamped Landing Page design
+* Completely revamped Details Page design
 
 ### Changed
 

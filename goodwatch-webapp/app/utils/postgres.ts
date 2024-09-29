@@ -11,7 +11,7 @@ const pool = new Pool({
 
 export async function executeQuery<T extends {}>(
 	query: string,
-	params?: any[],
+	params?: unknown[],
 ) {
 	const start = Date.now()
 	try {

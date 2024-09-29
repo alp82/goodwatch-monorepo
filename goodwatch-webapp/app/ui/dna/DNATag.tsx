@@ -30,7 +30,7 @@ export function DNATag({
 	) : (
 		<a
 			href={
-				linkDisabled ? false : `/explore/${type}/${vectorCategory}/${label}`
+				linkDisabled ? undefined : `/explore/all/${vectorCategory}/${label}`
 			}
 		>
 			{tagElement}

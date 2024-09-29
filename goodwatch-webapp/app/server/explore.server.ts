@@ -1,48 +1,40 @@
-import weaviate from "weaviate-client"
 import type { StreamingLink, StreamingProviders } from "~/server/details.server"
+import type { FilterMediaType } from "~/server/search.server"
+import { generateVectorResults } from "~/server/vector.server"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 import { ignoredProviders } from "~/utils/streaming-links"
 
 const RESULT_LIMIT = 120
-// Weaviate allows up to 10000 results
-const WEAVIATE_MAX_LIMIT = 2000
 
-export const AVAILABLE_TYPES = ["movies", "tv"]
+export const AVAILABLE_TYPES = ["all", "movies", "tv"]
 export const AVAILABLE_CATEGORIES = [
-	"dna",
-	"genre",
+	"subgenres",
 	"mood",
+	"themes",
 	"plot",
-	"audience",
-	"place",
+	"cultural_impact",
+	"character_types",
+	"dialog",
+	"narrative",
+	"humor",
+	"pacing",
 	"time",
-	"narration",
-	"sound",
-	"character",
-	"visual",
-	"props",
+	"place",
+	"cinematic_style",
+	"score_and_sound",
+	"costume_and_set",
+	"key_props",
+	"target_audience",
 	"flag",
-]
+] as const
 
 export interface ExploreParams {
-	type: "movies" | "tv"
-	category:
-		| "dna"
-		| "genre"
-		| "mood"
-		| "plot"
-		| "audience"
-		| "place"
-		| "time"
-		| "narration"
-		| "sound"
-		| "character"
-		| "visual"
-		| "props"
-		| "flag"
+	type: FilterMediaType
+	category: (typeof AVAILABLE_CATEGORIES)[number]
 	query: string
+	country: string
 }
 
 export interface ExploreResult extends AllRatings {
@@ -52,6 +44,7 @@ export interface ExploreResult extends AllRatings {
 	// TODO remove streaming_providers
 	streaming_providers: StreamingProviders
 	streaming_links: StreamingLink[]
+	media_type: "movie" | "tv"
 }
 
 export interface ExploreResults {
@@ -63,8 +56,8 @@ export const getExploreResults = async (params: ExploreParams) => {
 		name: "explore-results",
 		target: _getExploreResults,
 		params,
-		ttlMinutes: 60 * 2,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 2,
+		ttlMinutes: 0,
 	})
 }
 
@@ -72,67 +65,76 @@ async function _getExploreResults({
 	type,
 	category,
 	query,
+	country,
 }: ExploreParams): Promise<ExploreResults> {
-	const client = await weaviate.connectToCustom({
-		httpHost: process.env.WEAVIATE_HOST,
-		httpPort: Number(process.env.WEAVIATE_PORT),
-		httpSecure: false,
-		grpcHost: process.env.WEAVIATE_HOST,
-		grpcPort: Number(process.env.WEAVIATE_GRPC_PORT),
-		grpcSecure: false,
-		// authCredentials: new weaviate.ApiKey("WEAVIATE_INSTANCE_API_KEY"),
-	})
+	if (!AVAILABLE_TYPES.includes(type)) return { results: [] }
+	if (!AVAILABLE_CATEGORIES.includes(category)) return { results: [] }
 
-	console.log("start")
-	const collection = await client.collections.get(type)
-	const vector_results = await collection.query.nearText(query, {
-		targetVector: `${category}_vector`,
-		limit: WEAVIATE_MAX_LIMIT,
-		returnMetadata: ["distance"],
-	})
-	const tmdbIds = vector_results.objects.map(
-		(result) => result.properties.tmdb_id,
-	)
-	console.log("vectors done")
+	const queryText = `${category}: ${query}`
+	const { queryVectorParam } = await generateVectorResults({ queryText })
+
+	const ratingFields = getRatingKeys()
+		.map((key) =>
+			type === "all"
+				? `COALESCE(m.${key}, t.${key}) AS ${key}`
+				: `${type === "movies" ? `m.${key}` : `t.${key}`} AS ${key}`,
+		)
+		.join(", ")
 
 	const pg_query = `
     SELECT
-      m.tmdb_id,
-      m.title,
-      m.poster_path,
-      m.streaming_providers,
-      json_agg(json_build_object(
-        'provider_id', spl.provider_id,
-        'provider_name', sp.name,
-        'provider_logo_path', sp.logo_path,
-        'media_type', spl.media_type,
-        'country_code', spl.country_code,
-        'stream_type', spl.stream_type
-      )) AS streaming_links,
-      ${getRatingKeys()
-				.map((key) => `m.${key}`)
-				.join(", ")}
-    FROM
-      ${type === "movies" ? "movies" : "tv"} m
-    INNER JOIN
-    	streaming_provider_links spl
-    	ON spl.tmdb_id = m.tmdb_id
-			AND spl.media_type = $1
-			AND spl.country_code = $2
-			AND spl.provider_id NOT IN (${ignoredProviders.join(",")})
-		INNER JOIN
-    	streaming_providers sp
-    	ON sp.id = spl.provider_id
-    WHERE
-    	m.tmdb_id = ANY($3)
-    GROUP BY
-      m.tmdb_id
-		ORDER BY
-      array_position($3, m.tmdb_id)
-    LIMIT ${RESULT_LIMIT};
+      ${type === "all" ? "COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id" : `${type === "movies" ? "m.tmdb_id" : "t.tmdb_id"} AS tmdb_id`},
+      ${type === "all" ? "COALESCE(m.title, t.title) AS title" : `${type === "movies" ? "m.title" : "t.title"} AS title`},
+      ${type === "all" ? "COALESCE(m.release_year, t.release_year) AS release_year" : `${type === "movies" ? "m.release_year" : "t.release_year"} AS release_year`},
+      ${type === "all" ? "COALESCE(m.poster_path, t.poster_path) AS poster_path" : `${type === "movies" ? "m.poster_path" : "t.poster_path"} AS poster_path`},
+      ${type === "all" ? "COALESCE(m.streaming_providers, t.streaming_providers) AS streaming_providers" : `${type === "movies" ? "m.streaming_providers" : "t.streaming_providers"} AS streaming_providers`},
+      
+      ${
+				type === "all"
+					? `
+							CASE
+								WHEN m.tmdb_id IS NOT NULL THEN 'movie'
+								WHEN t.tmdb_id IS NOT NULL THEN 'tv'
+								ELSE NULL
+							END AS media_type
+						`
+					: `'${type === "movies" ? "movie" : "tv"}' AS media_type`
+			},
+			
+      (
+				SELECT json_agg(json_build_object(
+					'provider_id', spl.provider_id,
+					'provider_name', sp.name,
+					'provider_logo_path', sp.logo_path,
+					'media_type', spl.media_type,
+					'country_code', spl.country_code,
+					'stream_type', spl.stream_type
+				))
+				FROM streaming_provider_links spl
+				INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
+				WHERE spl.tmdb_id = ${type === "all" ? "COALESCE(m.tmdb_id, t.tmdb_id)" : `${type === "movies" ? "m.tmdb_id" : "t.tmdb_id"}`}
+					AND spl.media_type = v.media_type
+					AND spl.country_code = $1
+					AND spl.provider_id NOT IN (${ignoredProviders.join(",")})
+			) AS streaming_links,
+		
+      ${ratingFields}
+      
+		FROM LATERAL (
+      SELECT v.tmdb_id, v.media_type
+      FROM vectors_media v
+      WHERE v.${category}_vector IS NOT NULL
+      	${type === "movies" ? "AND v.media_type = 'movie'" : ""}
+      	${type === "tv" ? "AND v.media_type = 'tv'" : ""}
+      ORDER BY v.${category}_vector <=> $2 ASC
+      LIMIT ${RESULT_LIMIT}
+    ) v
+		
+		${["all", "movies"].includes(type) ? `LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'` : ""}
+		${["all", "tv"].includes(type) ? `LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'` : ""}
   `
-	// TODO country
-	const queryParams = [type === "movies" ? "movie" : "tv", "DE", tmdbIds]
+
+	const queryParams = [country, queryVectorParam]
 	const results = await executeQuery(pg_query, queryParams)
 
 	return {

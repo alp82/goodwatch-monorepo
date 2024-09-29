@@ -1,6 +1,6 @@
 {
 	"name": "goodwatch-webapp",
-	"version": "0.3.4",
+	"version": "0.4.0",
 	"private": true,
 	"sideEffects": false,
 	"type": "module",
@@ -37,8 +37,7 @@
 		"react-toastify": "^10.0.4",
 		"remix-utils": "^7.6.0",
 		"spoiled": "^0.3.2",
-		"use-dehydrated-state": "^0.1.0",
-		"weaviate-client": "^3.0.9"
+		"use-dehydrated-state": "^0.1.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.8.2",

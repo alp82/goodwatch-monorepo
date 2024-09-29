@@ -34,8 +34,6 @@ export default function Crew({ crew }: CrewProps) {
 	const producers = filterCrew(crew, "Producer")
 	const composers = filterCrew(crew, "Composer")
 
-	console.log({ crew })
-
 	const RenderInfo = ({ title, Icon, people }) => {
 		if (people.length === 0) return null
 

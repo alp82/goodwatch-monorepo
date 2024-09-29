@@ -2,8 +2,13 @@
 ```
 ---
 
+explore v2
+    remove weaviate
+    all / movie / tv
+
+---
+
 home screen
-    new design with home theater and couch
     anon: link to how it works
     user: trending, watch next, etc.
 
@@ -14,12 +19,21 @@ header
     
 ---
 
+vector save
+    python normalization fix 'S typos
+
+---
+
 details
-    subheader
+    fragment for scroll position (auto update)
+    share button sticky
+    empty sections:
+        http://localhost:3003/movie/1261489-betrayal
+        http://localhost:3003/movie/974995-identity 
     streaming section favors user selected providers
+    streaming section country flag button does not change selected country
     guess country
     mobile: user action buttons below poster directly
-    all in one page with side navigation (scroll aware navigation)
     https://imdb.shyakadavis.me/title#overview
 
 ---
@@ -44,59 +58,80 @@ DNA infobox with Discord link
 
 ---
 
-WITH source_vectors AS (
-    SELECT 
-		tropes_vector,
-		cast_vector,
-		crew_vector,
-        dna_vector, 
-		subgenres_vector,
-		mood_vector,
-		themes_vector,
-		plot_vector,
-		cultural_impact_vector,
-		character_types_vector,
-		dialog_vector,
-		narrative_vector,
-		humor_vector,
-		pacing_vector,
-		time_vector,
-		place_vector,
-		cinematic_style_vector,
-		score_and_sound_vector,
-		costume_and_set_vector,
-		key_props_vector,
-		target_audience_vector,
-		flag_vector
-    FROM vectors_media 
-    WHERE tmdb_id = 603 AND media_type = 'movie'
-)
+For You
+    Landing page with examples
+    Personal Recommendations by DNA category
 
-SELECT 
-    v.media_type,
-    COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
-    COALESCE(m.title, t.title) AS title,
-    COALESCE(m.release_year, t.release_year) AS release_year,
-    COALESCE(m.popularity, t.popularity) AS popularity,
-    (
-		--COALESCE(v.mood_vector <=> sv.mood_vector, 0.3)
-		--COALESCE(v.themes_vector <=> sv.themes_vector, 0.3)
-		--COALESCE(v.plot_vector <=> sv.plot_vector, 0.3)
-		COALESCE(v.dna_vector <=> sv.dna_vector, 0.3)
-		--COALESCE(v.tropes_vector <=> sv.tropes_vector, 0.3)
-	) AS combined_distance,
-	v.dna_vector,
-	v.tropes_vector,
-    COALESCE(m.dna, t.dna) AS dna,
-    COALESCE(m.trope_names, t.trope_names) AS trope_names,
-    COALESCE(m.cast, t.cast) AS cast
-FROM vectors_media v
-CROSS JOIN source_vectors sv
-LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
-LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
-ORDER BY combined_distance ASC NULLS LAST, tmdb_id
-LIMIT 30;
+---
 
+Show User Data In Movie Cards
+    Trending
+    Explore
+    Discover
+    Collections
+    etc.
+
+---
+
+use connection pooling properly
+    postgres
+    redis
+
+---
+
+similarity for movie/tv details by DNA vector category
+
+	const pg_query = `
+    SELECT
+      COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
+			COALESCE(m.title, t.title) AS title,
+			COALESCE(m.release_year, t.release_year) AS release_year,
+			COALESCE(m.poster_path, t.poster_path) AS poster_path,
+			COALESCE(m.streaming_providers, t.streaming_providers) AS streaming_providers,
+			
+      (
+				SELECT json_agg(json_build_object(
+					'provider_id', spl.provider_id,
+					'provider_name', sp.name,
+					'provider_logo_path', sp.logo_path,
+					'media_type', spl.media_type,
+					'country_code', spl.country_code,
+					'stream_type', spl.stream_type
+				))
+				FROM streaming_provider_links spl
+				INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
+				WHERE spl.tmdb_id = COALESCE(m.tmdb_id, t.tmdb_id)
+				AND spl.media_type = $1
+				AND spl.country_code = $2
+				AND spl.provider_id NOT IN (24,119,188,210,235,350,380,390,524,1796,2100)
+			) AS streaming_links,
+		
+      ${getRatingKeys()
+				.map((key) => `COALESCE(m.${key}, t.${key}) AS ${key}`)
+				.join(", ")}
+      
+    -- TODO SIMILAR FOR DETAILS
+		FROM (
+			SELECT ${category}_vector
+			FROM vectors_media
+			WHERE tmdb_id = 603 AND media_type = 'movie'
+		) sv
+	
+		CROSS JOIN LATERAL (
+			SELECT v.*
+			FROM vectors_media v
+			WHERE v.${category}_vector IS NOT NULL
+			ORDER BY v.${category}_vector <=> sv.${category}_vector ASC
+			LIMIT ${RESULT_LIMIT}
+		) v
+		
+		LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
+		LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
+  `
+
+---
+
+redis optional
 
 ---
 
@@ -117,11 +152,6 @@ mongodb backups
 ---
 
 new page: started this week on your streaming services
-
----
-
-explore v2
-    remove weaviate
 
 ---
 
@@ -155,6 +185,20 @@ wishlist
 
 ---
 
+analyze slow indexes
+
+SELECT 
+  *
+FROM 
+  pg_stat_statements 
+WHERE 
+  query LIKE '%vectors_media%'
+LIMIT 20;
+  
+
+
+---
+
 referrer paths
     https://chatgpt.com/c/66f241ee-6c20-8001-8b0f-aefbcaefc2bc
 
@@ -183,7 +227,7 @@ discover sidebar redesign
     disocver keywords and tropes
 
 discover
-    with cast not working
+    all | movies | tv
     return count: "showing first 100 results"
     streaming types: mine, free, buy, all
     discover loading animation with skeletons
