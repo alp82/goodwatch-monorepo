@@ -144,8 +144,8 @@ async def crawl_rotten_tomatoes_page(
 
     tomato_data = data.get("criticsScore")
     if tomato_data:
-        tomato_score = tomato_data["score"]
-        tomato_score_vote_count = tomato_data["ratingCount"]
+        tomato_score = tomato_data.get("score")
+        tomato_score_vote_count = tomato_data.get("ratingCount")
     print("Tomatometer rating:", tomato_score)
     print("Number of critic reviews:", tomato_score_vote_count)
 
@@ -153,14 +153,14 @@ async def crawl_rotten_tomatoes_page(
     audience_all_data = data.get("overlay", {}).get("audienceAll")
     audience_data = data.get("audienceScore")
     if audience_all_data:
-        audience_score = audience_all_data["score"]
+        audience_score = audience_all_data.get("score")
         if "likedCount" in audience_data and "notLikedCount" in audience_data:
             audience_score_vote_count = (
                 audience_all_data["likedCount"] + audience_all_data["notLikedCount"]
             )
     if audience_data:
         if not audience_score:
-            audience_score = audience_data["score"]
+            audience_score = audience_data.get("score")
         if not audience_score_vote_count:
             banded_rating_count = audience_data.get("bandedRatingCount", "")
             audience_score_vote_count = extract_numeric_value(banded_rating_count)

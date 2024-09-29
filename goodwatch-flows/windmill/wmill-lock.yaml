@@ -22,6 +22,7 @@ locks:
   f/genome/generate/fetch_from_chat: dce97009a8757f62a5a81dc0355714503c1c6861149fcb2a003f16d4fd477c2d
   f/genome/generate/iterate: 1dd0d8df0f33b8b37c02c8505d5f7b2d856d95c3181c56ff52fe2469e3413dcd
   f/genome/generate/next: 03775703690b96cf303b359189721dc1a9b918f7ee5184056805f1a87cefde02
+  f/genome/groq_test: 85123fba755a16b37d5fa0da459950b7e182cfc8a630a5cb99e68ddf7cf501f7
   f/genome/hug_api: 0f9921ae3c5ce24b58d8183a6456ef965edc2684c60cf12faf50c9004c9cffec
   f/genome/hugchat: c39439e2b2f80ff49281ad4830c5458605238a7858e21beeecbb185eaed6a018
   f/genome/init/main: 4b5ace097e63b9338dc669be01086f7105bcf7083ea94c9db84a2eac9f2f5188
@@ -30,7 +31,7 @@ locks:
   f/genome/models: d3809c7c3f9a3273e16e4cbc1fddce9c2ea7a12977e03657da03eebc0ed91186
   f/genome/openai: 56bff0b76f5ebc588d0607b52ad1282a4c2e58e4a38057495724600b54c4e0a5
   f/priority/next: 7424cdbc20eea4a638208280c39182c40c5f4d3a0f770ce83ad94b82f51257cd
-  f/rotten_web/rotten_tomatoes_crawl_ratings/fetch: f7dd4bb03514dc89a3d47b10ffe91d19b713e2d654775ddce1f0e6e0139a3fdc
+  f/rotten_web/rotten_tomatoes_crawl_ratings/fetch: 5109f5bd2c6713ca53cae41e3ceb20786cd0f84936ed5d1a3bedba776498063f
   f/tmdb_api/models: eb7b33e4171813349524ccf302e8932d66b988ab7fe5992929463ac07cc4136c
   f/tmdb_api/tmdb_fetch_details_from_api/fetch: 7f16308e42116c6f3e19422c81341fca6c4300403636af5a3048b6b8af8eecd2
   f/tmdb_web/models: 248b3a3c1f0896abe98e4320cb7c778f39319f2ea20b99805b83fcbbe48ff598
@@ -41,7 +42,8 @@ locks:
   f/user/skipped/create_skipped_table: 9ced2de109dc82ea10961478a16d332010583eeb8f53d0c679323ed2cd348aab
   f/utils/visit_goodwatch_and_populate_cache: a8b117043113315fdcf131c370339606e24121facba659bf7aafc0140a0a3586
   f/vector/create_vectors_media_table_and_indexes: e121b6120f0d50eedfaf89ac63efc650c821b62446f94c8cb71e26a875b0cac1
-  f/vector/save: b1ac0e2d294424fbac8ae866534512aecd14db87506d96cb549c2352790fbe3f
+  f/vector/create_vectors_query_table_and_indexes: 8b5779e3497600cc85efe340475f39541910bc1fc71af6a271439ac5165788bd
+  f/vector/save: dbaf70a83078ae65f5144091efd5e11a6cb0faf6fcea17df244b779799782eba
   f/vector/save_weaviate: d037a268c911497df4e9e7401cbfab13fdb12238c411f4d90e76989639cd51a5
   f/vector/test_embeddings_transformer: 2c9425f5fe2f83e54b32f3aa9e0613cc5657d087aa1dacd462e5ea1630aa539e
   f/vector/test_vectors: 73e79cee15d884f460844e6fa7f573237e01ec8c4bf975294be652812f15a1dd

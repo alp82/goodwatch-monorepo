@@ -6,11 +6,19 @@ schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   properties:
+    exclude_existing:
+      type: boolean
+      description: ''
+      default: false
     media_type:
       type: string
       description: ''
       default: null
       originalType: string
+    start_offset:
+      type: integer
+      description: ''
+      default: 0
     tmdb_ids:
       type: object
       description: ''

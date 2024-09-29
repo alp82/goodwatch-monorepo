@@ -30,11 +30,25 @@ value:
                     media_type:
                       type: static
                       value: movies
+                    start_offset:
+                      type: static
+                      value: 0
                     tmdb_ids:
                       type: javascript
                       expr: results.a.tmdb_ids.movie_ids
                   path: f/vector/save
                   tag_override: ''
+                continue_on_error: false
+                retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
+                  exponential:
+                    attempts: 5
+                    multiplier: 1
+                    random_factor: 0
+                    seconds: 2
+                timeout: 60
             expr: ''
             parallel: true
             skip_failure: false
@@ -47,11 +61,25 @@ value:
                     media_type:
                       type: static
                       value: tv
+                    start_offset:
+                      type: static
+                      value: 0
                     tmdb_ids:
                       type: javascript
                       expr: results.a.tmdb_ids.tv_ids
                   path: f/vector/save
                   tag_override: ''
+                continue_on_error: false
+                retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
+                  exponential:
+                    attempts: 5
+                    multiplier: 1
+                    random_factor: 0
+                    seconds: 2
+                timeout: 60
             expr: 'false'
             parallel: true
             skip_failure: false

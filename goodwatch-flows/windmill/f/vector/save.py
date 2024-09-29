@@ -14,7 +14,7 @@ TABLE_NAME = Union[Literal["movies"], Literal["tv"]]
 
 
 def get_medias_df(
-    table_name: TABLE_NAME, tmdb_ids: Optional[list[str]] = None
+    table_name: TABLE_NAME, tmdb_ids: Optional[list[str]] = None, start_offset: int = 0, exclude_existing: bool = False,
 ) -> pd.DataFrame:
     pg = init_postgres()
     base_query = f"""
@@ -29,7 +29,8 @@ def get_medias_df(
     FROM
         {table_name} m
     WHERE
-        m.dna <> '{{}}'::jsonb
+        (m.dna <> '{{}}'::jsonb
+        OR m.trope_names <> '{{}}')
     """
 
     params = {}
@@ -37,7 +38,20 @@ def get_medias_df(
         base_query += " AND m.tmdb_id = ANY(%(tmdb_ids)s)"
         params["tmdb_ids"] = [int(tmdb_id) for tmdb_id in tmdb_ids]
 
-    base_query += " ORDER BY m.popularity DESC"
+    if exclude_existing:
+        media_type = "movie" if table_name == "movies" else "tv"
+        base_query += f"""
+        AND NOT EXISTS (
+            SELECT 1 
+            FROM vectors_media vm
+            WHERE vm.tmdb_id = m.tmdb_id 
+            AND vm.media_type = '{media_type}'
+        )
+        """
+
+    # Add ORDER BY and OFFSET
+    base_query += " ORDER BY m.popularity DESC OFFSET %(start_offset)s"
+    params["start_offset"] = start_offset
 
     df = pd.read_sql_query(base_query, pg, params=params)
     pg.close()
@@ -97,7 +111,7 @@ def prepare_vectors_data(record: dict):
     # Process tropes
     if record.get("trope_names"):
         tropes_text = build_limited_text(record["trope_names"], "\n")
-        text_dict["trope_vector"] = tropes_text
+        text_dict["tropes_vector"] = tropes_text
 
     # Process DNA fields
     dna = record.get("dna", {})
@@ -259,8 +273,8 @@ def store_vectors(table_name: TABLE_NAME, df: pd.DataFrame) -> dict:
             # continue
             raise e
 
-    # Commit the transaction after all inserts
-    pg.commit()
+        # Commit the transaction after all inserts
+        pg.commit()
 
     pg_cursor.close()
     pg.close()
@@ -273,14 +287,14 @@ def store_vectors(table_name: TABLE_NAME, df: pd.DataFrame) -> dict:
     }
 
 
-def main(media_type: str, tmdb_ids: Optional[list[str]] = None):
+def main(media_type: str, tmdb_ids: Optional[list[str]] = None, start_offset: int = 0, exclude_existing: bool = False):
     # Validate the collection_name to prevent SQL injection
     valid_tables = ["movies", "tv"]
     if media_type not in valid_tables:
         raise ValueError(f"Invalid media type: {media_type}")
 
     table_name = "movies" if media_type == "movies" else "tv"
-    medias_df = get_medias_df(table_name=table_name, tmdb_ids=tmdb_ids)
+    medias_df = get_medias_df(table_name=table_name, tmdb_ids=tmdb_ids, start_offset=start_offset, exclude_existing=exclude_existing)
     pd.set_option("display.max_columns", None)
     print(medias_df)
 
