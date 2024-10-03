@@ -4,18 +4,22 @@ import {
 	type MetaFunction,
 	json,
 } from "@remix-run/node"
-import { useLoaderData, useNavigate, useNavigation } from "@remix-run/react"
+import {
+	useLoaderData,
+	useNavigate,
+	useNavigation,
+	useRouteError,
+} from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import React from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import {
 	AVAILABLE_CATEGORIES,
-	AVAILABLE_TYPES,
 	type ExploreParams,
 	type ExploreResult,
 	getExploreResults,
 } from "~/server/explore.server"
-import type { FilterMediaType, MediaType } from "~/server/search.server"
+import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import type { Tab } from "~/ui/tabs/Tabs"
@@ -38,6 +42,27 @@ export const meta: MetaFunction<typeof loader> = () => {
 	]
 }
 
+export function ErrorBoundary() {
+	const error = useRouteError()
+	const navigate = useNavigate()
+
+	return (
+		<div className="max-w-7xl mt-8 mx-auto px-4 flex flex-col gap-5 items-center">
+			<h1 className="text-3xl font-bold">Oh no!</h1>
+			<p className="py-1 px-3 text-2xl text-gray-300 bg-red-900">
+				{error.message}
+			</p>
+			<button
+				type="button"
+				className="w-40 px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
+				onClick={() => navigate("/explore/all")}
+			>
+				Go Back
+			</button>
+		</div>
+	)
+}
+
 export type LoaderData = {
 	params: ExploreParams
 	results: ExploreResult[]
@@ -53,7 +78,7 @@ export const loader: LoaderFunction = async ({
 	const url = new URL(request.url)
 	const type = (params.type || "movies") as ExploreParams["type"]
 	const category = (params.category || "dna") as ExploreParams["category"]
-	const query = params.query as ExploreParams["query"]
+	const text = params.text as ExploreParams["text"]
 	// TODO guess country
 	const country = (url.searchParams.get("country") ||
 		"US") as ExploreParams["country"]
@@ -61,7 +86,7 @@ export const loader: LoaderFunction = async ({
 	const exploreParams = {
 		type,
 		category,
-		query,
+		text,
 		country,
 	}
 	if (!type || !AVAILABLE_TYPES.includes(type)) {
@@ -71,11 +96,11 @@ export const loader: LoaderFunction = async ({
 			error: "Invalid type",
 		})
 	}
-	if (!query || !AVAILABLE_CATEGORIES.includes(category)) {
+	if (!text || !AVAILABLE_CATEGORIES.includes(category)) {
 		return json<LoaderData>({
 			params: exploreParams,
 			results: [],
-			error: "Invalid query or category",
+			error: "Invalid text or category",
 		})
 	}
 
@@ -87,7 +112,7 @@ export const loader: LoaderFunction = async ({
 	})
 }
 
-export default function ExploreMoviesCategoryQuery() {
+export default function Explore() {
 	const { params, results, error } = useLoaderData<LoaderData>()
 	const navigation = useNavigation()
 	const navigate = useNavigate()
@@ -98,7 +123,7 @@ export default function ExploreMoviesCategoryQuery() {
 
 	const handleTypeChange = (tab: Tab<FilterMediaType>) => {
 		navigate(
-			`/explore/${tab.key}/${currentParams.category}/${currentParams.query}`,
+			`/explore/${tab.key}/${currentParams.category}/${currentParams.text}`,
 		)
 	}
 
@@ -114,7 +139,7 @@ export default function ExploreMoviesCategoryQuery() {
 		<div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
 			<div className="w-full flex flex-col gap-6 text-white">
 				<div className="px-4 flex items-center justify-start gap-3">
-					<div className="text-4xl font-bold">{currentParams.query}</div>
+					<div className="text-4xl font-bold">{currentParams.text}</div>
 					<div className="opacity-20 text-gray-400 text-8xl font-extrabold">
 						{currentParams.category.charAt(0).toUpperCase() +
 							currentParams.category.slice(1).replace(/_/g, " ")}

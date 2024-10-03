@@ -1,7 +1,9 @@
 import { cached } from "~/utils/cache"
 
+// TODO move to query-db
 export type MediaType = "movie" | "tv"
 export type FilterMediaType = "all" | "movies" | "tv"
+export const AVAILABLE_TYPES = ["all", "movies", "tv"]
 
 export interface KnownFor {
 	adult: boolean

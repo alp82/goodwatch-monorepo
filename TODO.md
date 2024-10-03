@@ -2,15 +2,25 @@
 ```
 ---
 
-explore v2
-    remove weaviate
-    all / movie / tv
+home screen
+    "everything" -> DNA
+    anon: link to how it works
+    user: trending, watch next, etc.
+    carousel
+    stagger animation for rating progress bars
+    parallax scrolling landing page
+
+how it works
+    DNA explanation
 
 ---
 
-home screen
-    anon: link to how it works
-    user: trending, watch next, etc.
+explore
+    useQuery
+    progress text (generating results...)
+    streaming config (providers + country ...)
+
+---
 
 header
     main search expand
@@ -27,12 +37,21 @@ vector save
 details
     fragment for scroll position (auto update)
     share button sticky
+    guess country
+    age restriction by country
+    streaming section country flag button does not change selected country
+    streaming section favors user selected providers
+    web links section
+    
+    show title in current language
+    images section
+    images and videos as gallery
+    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&t=DM0lDYiEkBYUsMZY-0
+
     empty sections:
+        http://localhost:3003/movie/46388-a-ghost-of-a-chantz
         http://localhost:3003/movie/1261489-betrayal
         http://localhost:3003/movie/974995-identity 
-    streaming section favors user selected providers
-    streaming section country flag button does not change selected country
-    guess country
     mobile: user action buttons below poster directly
     https://imdb.shyakadavis.me/title#overview
 
@@ -52,6 +71,67 @@ onboarding
     
     Success notification for milestones
     
+---
+
+redis optional
+
+---
+
+postgres cluster config in repo
+    https://github.com/vitabaks/postgresql_cluster
+    
+---
+
+explore v2
+    all / movie / tv
+    remove weaviate
+
+---
+
+data flows ignore list:
+    no release_year
+    no poster_path
+    no title
+
+---
+
+tv seasons:
+    get episodes
+    get ratings
+    show in details
+    when last season/episode was released
+
+---
+
+sign up
+    via email
+    via apple
+
+---
+
+similarity issues
+    dark palette is close to vibrant palette
+    http://localhost:3003/explore/all/cinematic_style/Dark%20Palette
+
+---
+
+wishlist
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
+    search & filter
+    easy adding more
+
+watched/ratings page:
+    rating stats (1-10 distribution)
+    search & filter
+    easy rating more
+
+favorites page
+    search & filter
+    easy adding more
+
 ---
 
 DNA infobox with Discord link
@@ -131,19 +211,10 @@ similarity for movie/tv details by DNA vector category
 
 ---
 
-redis optional
-
----
-
 redesigned footer
     community blocks
     https://flowbite.com/blocks/marketing/footer/
 
----
-
-postgres cluster config in repo
-    https://github.com/vitabaks/postgresql_cluster
-    
 ---
 
 mongodb backups
@@ -173,18 +244,6 @@ country usage
 
 ---
 
-watched/ratings page:
-    rating stats (1-10 distribution)
-    easy rating for more
-
-wishlist
-    not logged in handling
-    split into two sections:
-        watch now
-        rest
-
----
-
 analyze slow indexes
 
 SELECT 
@@ -195,8 +254,6 @@ WHERE
   query LIKE '%vectors_media%'
 LIMIT 20;
   
-
-
 ---
 
 referrer paths
@@ -280,6 +337,39 @@ streaming_provider_rank
     
 ---
 
+guides (explore shortcuts)
+    by genre
+    by mood
+    etc.
+    
+guide of the day
+
+---
+
+stats
+    # of movies
+    # of tv shows
+    # of ratings per site
+    # of streaming links
+    # of tropes
+    avg rating per provider
+    oldest fetch date
+        date distribution
+
+---
+
+all titles from a-z (search page?)
+    difference between search, explore, discover, watch next, etc.?
+    
+---
+    
+clips
+    tiktok
+    youtube shorts
+    reels
+    
+---
+
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
 
@@ -302,14 +392,15 @@ user notes/comments
 
 playwright tests
 
-tvdb
-
 anime
     https://anidb.net/
     https://anibrain.ai/
+    https://www.anisearch.de/
+    https://www.anime-planet.com/
     
 other sites
     https://simkl.com/
+    https://www.thetvdb.com/
     https://mdblist.com/
     https://letterboxd.com/film/beetlejuice-beetlejuice/nanogenres/
     https://nanocrowd.com/
@@ -323,40 +414,13 @@ redistribute weight for gw score
 
 more lightweight user data
 
-stats
-# of movies
-# of tv shows
-# of ratings per site
-# of streaming links
-# of tropes
-avg rating per provider
-oldest fetch date
+detailed watchlists
+    https://docs.simkl.org/how-to-use-simkl/basic-features/watchlists-and-custom-lists#how-are-notifications-handled-for-each-watchlist
 
-all titles from a-z (search page?)
-    difference between search, explore, discover, watch next, etc.?
-
-similarity vectors flow
-
-guides
-    by genre
-    by mood
-    etc.
-
-show title in current language
-
-details: images tab
-    images and videos as gallery
-    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&t=DM0lDYiEkBYUsMZY-0
-
-wishlist with search
-watched page (with search)
-favorites page (with search)
-
-tv seasons:
-get episodes
-get ratings
-show in details
-when last season/episode was released
+refresh data request
+    show oldest last refreshed date
+    badge with counter
+    email once finished
 
 notification when streaming is available (country + streaming)
 alerts for new search results
@@ -418,12 +482,6 @@ international / indie guides
 stuck scripts monitoring
 rate limit monitoring
 
-discord threads
-    bugs & error handling
-
-tiktok review
-    a11y
-
 do not refetch stale data
     streaming links
     tv tropes
@@ -463,19 +521,11 @@ zombie processes:
     alternate approach: MAX_WAIT_FOR_SIGINT=1
     https://github.com/windmill-labs/windmill/issues/4198
 
-description full text toggle
 score explanations
 streaming explanations
-autocomplete dark style
-
-parallax scrolling landing page
-best rated picks animation
-stagger animation for rating progress bars
-show picks on mobile too
-
-rating on mobile with touch/slide/drag
 
 android app
+iphone app
 
 data source: existing crawlers use existing url instead of guessing
 data-source: letterboxd scores
@@ -495,18 +545,24 @@ data source: based on / adapted from (books, comics, ...)
 Blog Posts Page
     https://flowbite.com/docs/components/jumbotron/#jumbotron-with-cards
 
-GoodWwatch API
+GoodWatch API
 
 socket.io updates
 
-fix certification longer than 50 chars: 12 éven aluliak számára a megtekintése nagykorú felügyelete mellett ajánlott
+fix certification longer than 50 chars
+    12 éven aluliak számára a megtekintése nagykorú felügyelete mellett ajánlott
 
 issue: breaking bad streaming missing -> justwatch streaming data
 issue: videos not available or not a real trailer (ip man: kung fu master, plane 2023)
 
 analyze subtitles
 
-books?
+other media
+    games
+    music
+    podcasts
+    books
+    audio books
 
 ```
 
@@ -564,24 +620,26 @@ LIMIT 20;
 
 # Blog
 ```
-data pipeline with windmill: grow data and keep it up to date
-    ansible for worker upgrades
+monorepo design
 db architecture: performance and scalability
 caching strategy
+from vercel to coolify
+    too many open files
 remix: keep it simple with tailwind
-monorepo design
-linting with biomejs
-deployment with docker compose
+    linting with biomejs
+    component example: rating
+data pipeline with windmill: grow data and keep it up to date
+server architecture
+    deployment with docker compose
+    ansible for worker upgrades
 monitoring with uptime kuma
 authentication
     https://www.dusanstam.com/posts/remix-supabase-authentication
-remix component example: rating
-from vercel to coolify
-    too many open files
 genome with LLM's
 recommendation engine
 zombie processes
     windmill -> chrome (playwright)
     "can't start new thread"
     "IO error: Resource temporarily unavailable (os error 11)"
+    kill windmill every 24 hours
 ```

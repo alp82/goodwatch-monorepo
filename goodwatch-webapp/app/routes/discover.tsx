@@ -8,8 +8,11 @@ import {
 import {
 	PrefetchPageLinks,
 	useLoaderData,
+	useNavigate,
 	useNavigation,
+	useRouteError,
 } from "@remix-run/react"
+import { captureRemixErrorBoundaryError } from "@sentry/remix"
 import { AnimatePresence, motion } from "framer-motion"
 import React, { useEffect, useState } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
@@ -20,7 +23,7 @@ import {
 	type DiscoverSortBy,
 	getDiscoverResults,
 } from "~/server/discover.server"
-import type { MediaType } from "~/server/search.server"
+import type { FilterMediaType, MediaType } from "~/server/search.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import FilterSelection from "~/ui/filter/FilterSelection"
@@ -47,6 +50,27 @@ export const meta: MetaFunction<typeof loader> = () => {
 	]
 }
 
+export function ErrorBoundary() {
+	const error = useRouteError()
+	const navigate = useNavigate()
+
+	return (
+		<div className="max-w-7xl mt-8 mx-auto px-4 flex flex-col gap-5 items-center">
+			<h1 className="text-3xl font-bold">Oh no!</h1>
+			<p className="py-1 px-3 text-2xl text-gray-300 bg-red-900">
+				{error.message}
+			</p>
+			<button
+				type="button"
+				className="w-40 px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
+				onClick={() => navigate("/discover")}
+			>
+				Go Back
+			</button>
+		</div>
+	)
+}
+
 export type LoaderData = {
 	params: DiscoverParams
 	results: DiscoverResults
@@ -61,7 +85,7 @@ export const loader: LoaderFunction = async ({
 	const userSettings = await getUserSettings({ user_id })
 
 	const url = new URL(request.url)
-	const type = (url.searchParams.get("type") || "movie") as MediaType
+	const type = (url.searchParams.get("type") || "all") as FilterMediaType
 	const mode = (url.searchParams.get("mode") || "advanced") as "advanced"
 	const country =
 		userSettings?.country_default || url.searchParams.get("country") || ""
@@ -177,7 +201,7 @@ export default function Discover() {
 		setFiltersOpen((isOpen) => !isOpen)
 	}
 
-	const handleTabSelect = (tab: Tab<MediaType>) => {
+	const handleTabSelect = (tab: Tab<FilterMediaType>) => {
 		const newParams = {
 			...currentParams,
 			type: tab.key,
@@ -200,13 +224,13 @@ export default function Discover() {
 					selected={currentParams.type}
 					onSelect={handleTabSelect}
 				/>
-				<PrefetchPageLinks
-					key="discover-type"
-					page={constructUrl({
-						...currentParams,
-						type: params.type === "movie" ? "tv" : "movie",
-					})}
-				/>
+				{/*<PrefetchPageLinks*/}
+				{/*	key="discover-type"*/}
+				{/*	page={constructUrl({*/}
+				{/*		...currentParams,*/}
+				{/*		type: params.type === "movie" ? "tv" : "movie",*/}
+				{/*	})}*/}
+				{/*/>*/}
 			</div>
 			<div>
 				<FilterSummary
@@ -269,20 +293,11 @@ export default function Discover() {
 										}}
 										transition={{ duration: 0.5, type: "tween" }}
 									>
-										{currentParams.type === "movie" && (
-											<MovieTvCard
-												details={result as DiscoverResult}
-												mediaType="movie"
-												prefetch={index < 6}
-											/>
-										)}
-										{currentParams.type === "tv" && (
-											<MovieTvCard
-												details={result as DiscoverResult}
-												mediaType="tv"
-												prefetch={index < 6}
-											/>
-										)}
+										<MovieTvCard
+											details={result as DiscoverResult}
+											mediaType={result.media_type}
+											prefetch={index < 6}
+										/>
 									</motion.div>
 								</div>
 							)

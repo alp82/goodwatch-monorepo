@@ -24,13 +24,13 @@ export const loader: LoaderFunction = async ({
 		"movies") as ExploreParams["type"]
 	const category = (url.searchParams.get("category") ||
 		"dna") as ExploreParams["category"]
-	const query = (url.searchParams.get("query") || "") as ExploreParams["query"]
+	const text = (url.searchParams.get("text") || "") as ExploreParams["text"]
 	const country = (url.searchParams.get("country") ||
 		"US") as ExploreParams["country"]
 	const params = {
 		type,
 		category,
-		query,
+		text,
 		country,
 	}
 

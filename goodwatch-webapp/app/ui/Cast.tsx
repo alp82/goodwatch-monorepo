@@ -13,7 +13,7 @@ export default function Cast({ cast }: CastProps) {
 		(castMember) => !castMember.profile_path,
 	)
 
-	const type = "movie"
+	const type = "all"
 	return (
 		<>
 			<h2 className="text-2xl font-bold">Cast</h2>

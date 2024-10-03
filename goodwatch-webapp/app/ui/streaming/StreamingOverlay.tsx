@@ -13,7 +13,7 @@ export default function StreamingOverlay({ links }: StreamingOverlayProps) {
 	})
 
 	return (
-		<div className="absolute bottom-1 left-1 w-full overflow-hidden flex items-center gap-1 opacity-80">
+		<div className="absolute top-5 left-1 w-full overflow-hidden flex items-center gap-1 opacity-80">
 			{hasProviders ? (
 				uniqueLinks.map((link, index) => (
 					<img

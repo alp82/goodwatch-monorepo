@@ -1,22 +1,19 @@
+import type { StreamingProvider } from "~/routes/api.streaming-providers"
 import {
 	type StreamingLink,
 	type StreamingProviders,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
-import type { StreamingProvider } from "~/server/streaming-providers.server"
+import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
+import { constructFullQuery, filterMediaTypes } from "~/server/utils/query-db"
 import { cached } from "~/utils/cache"
-import { VOTE_COUNT_THRESHOLD } from "~/utils/constants"
 import { executeQuery } from "~/utils/postgres"
-import { type AllRatings, getRatingKeys } from "~/utils/ratings"
+import type { AllRatings } from "~/utils/ratings"
 
-export type DiscoverSortBy =
-	| "popularity"
-	| "aggregated_score"
-	| "release_date"
-	| "title"
+export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
 
 export interface DiscoverParams {
-	type: "movie" | "tv"
+	type: FilterMediaType
 	mode: "advanced"
 	country: string
 	language: string
@@ -43,12 +40,12 @@ export interface DiscoverResult extends AllRatings {
 	// TODO remove streaming_providers
 	streaming_providers: StreamingProviders
 	streaming_links: StreamingLink[]
+	media_type: "movie" | "tv"
 }
 
 export interface DiscoverFilters {
 	castMembers: string[]
 	crewMembers: string[]
-	streamingProviders: StreamingProvider[]
 }
 
 export interface DiscoverResults {
@@ -61,8 +58,8 @@ export const getDiscoverResults = async (params: DiscoverParams) => {
 		name: "discover-results",
 		target: _getDiscoverResults,
 		params,
-		ttlMinutes: 60 * 2,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 2,
+		ttlMinutes: 0,
 	})
 }
 
@@ -85,130 +82,45 @@ async function _getDiscoverResults({
 	sortBy,
 	sortDirection,
 }: DiscoverParams): Promise<DiscoverResults> {
-	const joins = []
-	const conditions = []
+	if (!filterMediaTypes.includes(type))
+		throw new Error(`Invalid type for Discover: ${type}`)
+	if (country.length !== 2)
+		throw new Error(`Invalid value for Country: ${country}`)
+	if (language.length !== 2)
+		throw new Error(`Invalid value for Language: ${language}`)
 
-	let placeholderNumber = 1
-	function getNextPlaceholder() {
-		return `$${placeholderNumber++}`
-	}
-	const placeholderValues = []
+	const column =
+		sortBy === "release_date"
+			? "release_date"
+			: sortBy === "aggregated_score"
+				? "aggregated_overall_score_normalized_percent"
+				: "popularity"
+	const direction = sortDirection === "asc" ? "ASC" : "DESC"
 
-	if (minYear) {
-		conditions.push(`m.release_year >= ${getNextPlaceholder()}`)
-		placeholderValues.push(minYear)
-	}
-	if (maxYear) {
-		conditions.push(`m.release_year <= ${getNextPlaceholder()}`)
-		placeholderValues.push(maxYear)
-	}
-	if (withGenres) {
-		const genresArray = withGenres.split(",")
-		const genrePlaceholders = genresArray.map((_) => getNextPlaceholder())
-		conditions.push(
-			`m.genres::text[] && ARRAY[${genrePlaceholders.join(", ")}]`,
-		)
-		placeholderValues.push(...genresArray)
-	}
-	if (withKeywords) {
-		const keywordsArray = withKeywords.split(",")
-		const keywordPlaceholders = keywordsArray.map((_) => getNextPlaceholder())
-		conditions.push(
-			`m.keywords::text[] && ARRAY[${keywordPlaceholders.join(", ")}]`,
-		)
-		placeholderValues.push(...keywordsArray)
-	}
-	if (minScore) {
-		conditions.push(
-			`m.aggregated_overall_score_normalized_percent >= ${getNextPlaceholder()}`,
-		)
-		placeholderValues.push(minScore)
-	}
+	const { query, params } = constructFullQuery({
+		filterMediaType: type,
+		streaming: {
+			countryCode: country,
+			streamTypes: ["free", "flatrate"],
+			providerIds: withStreamingProviders
+				? withStreamingProviders.split(",").map((id) => Number(id))
+				: undefined,
+		},
+		conditions: {
+			minScore,
+			minYear,
+			maxYear,
+			withCast,
+			withGenres,
+		},
+		orderBy: {
+			column,
+			direction,
+		},
+		limit: 120,
+	})
 
-	if (withCast) {
-		const castConditions: string[] = []
-		const filteredCast = withCast
-			.split(",")
-			.map((castId) => Number.parseInt(castId, 10)) // Convert to integer
-			.filter((castId) => !Number.isNaN(castId)) // Filter out invalid numbers
-		for (const castId of filteredCast) {
-			castConditions.push(`m.cast @> '[{"id": ${castId}}]'`)
-		}
-
-		conditions.push(`(${castConditions.join(" OR ")})`)
-	}
-
-	const streamingProviderIds = withStreamingProviders
-		? withStreamingProviders
-				.split(",")
-				.filter((id) => /^\d+$/.test(id.trim()))
-				.map((id) => Number.parseInt(id))
-				.join(",")
-		: null
-	joins.push(`INNER JOIN
-    streaming_provider_links spl
-    ON spl.tmdb_id = m.tmdb_id
-    AND spl.media_type = ${getNextPlaceholder()}
-    AND spl.country_code = ${getNextPlaceholder()}
-    AND spl.stream_type = 'flatrate'
-    ${streamingProviderIds ? `AND spl.provider_id IN (${streamingProviderIds})` : ""}
-  `)
-	placeholderValues.push(type)
-	placeholderValues.push(country)
-	joins.push(`INNER JOIN
-    streaming_providers sp
-    ON sp.id = spl.provider_id
-  `)
-
-	let orderBy: string
-	if (sortBy === "release_date") {
-		orderBy = "m.release_date DESC"
-	} else if (sortBy === "aggregated_score") {
-		orderBy = "MAX(m.aggregated_overall_score_normalized_percent) DESC"
-	} else {
-		orderBy = "m.popularity DESC"
-	}
-
-	if (sortBy === "aggregated_score") {
-		conditions.push("m.aggregated_overall_score_normalized_percent IS NOT NULL")
-	}
-
-	if (sortBy === "aggregated_score" || minScore) {
-		conditions.push(
-			`m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}`,
-		)
-	}
-
-	// TODO random sort
-	const query = `
-    SELECT
-      m.tmdb_id,
-      m.title,
-      m.poster_path,
-      m.streaming_providers,
-      json_agg(json_build_object(
-        'provider_id', spl.provider_id,
-        'provider_name', sp.name,
-        'provider_logo_path', sp.logo_path,
-        'media_type', spl.media_type,
-        'country_code', spl.country_code,
-        'stream_type', spl.stream_type
-      )) AS streaming_links,
-      ${getRatingKeys()
-				.map((key) => `m.${key}`)
-				.join(", ")}
-    FROM
-      ${type === "movie" ? "movies" : "tv"} m
-    --TABLESAMPLE BERNOULLI(1)
-    ${joins.join(" ")}
-    ${conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""}
-    GROUP BY
-      m.tmdb_id
-    ORDER BY
-      ${orderBy}
-    LIMIT 120;
-  `
-	const result = await executeQuery(query, placeholderValues)
+	const result = await executeQuery(query, params)
 	const results = result.rows.map((row) =>
 		getCountrySpecificDetails(row, country, language),
 	) as unknown as DiscoverResult[]
@@ -218,15 +130,11 @@ async function _getDiscoverResults({
 		[withCast ? withCast.split(",") : []],
 	)
 	const castMembers = castResult.rows.map((row) => row.name) as string[]
-
 	const crewMembers = [] as string[]
-
-	const streamingProviders = [] as StreamingProvider[]
 
 	const filters = {
 		castMembers,
 		crewMembers,
-		streamingProviders,
 	}
 
 	return {
