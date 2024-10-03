@@ -1,17 +1,10 @@
 import type { StreamingLink, StreamingProviders } from "~/server/details.server"
 import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
-import {
-	getMediaType,
-	getRatingFieldsForType,
-	getSelectFieldsForType,
-	getStreamingLinksForType,
-} from "~/server/utils/query"
 import { constructFullQuery } from "~/server/utils/query-db"
 import { generateVectorResults } from "~/server/vector.server"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
-import { type AllRatings, getRatingKeys } from "~/utils/ratings"
-import { ignoredProviders } from "~/utils/streaming-links"
+import type { AllRatings } from "~/utils/ratings"
 
 const RESULT_LIMIT = 120
 
