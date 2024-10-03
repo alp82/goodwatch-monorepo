@@ -67,9 +67,11 @@ export default function FilterSummary({
 									alt={provider.label}
 									className="h-5 w-5 flex-shrink-0 rounded-full"
 								/>
-								<span className="sr-only lg:not-sr-only block">
-									{provider.label}
-								</span>
+								{enabledStreamingProviders.length < 5 && (
+									<span className="sr-only lg:not-sr-only block">
+										{provider.label}
+									</span>
+								)}
 							</span>
 						))}
 				</div>
