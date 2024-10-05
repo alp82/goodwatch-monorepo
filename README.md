@@ -4,10 +4,13 @@ See it running here: https://goodwatch.app/
 
 ## What's unique about GoodWatch?
 
-1. Discover page tailored to your needs
-2. See all ratings at one place
-3. See all streaming services at one place (similar to JustWatch)
-4. See score for whole series of movies at one glance
+1. DNA: Classify movies and TV shows by 18 meaningful categories like Mood, Plot or Cinematic Style
+2. See availability of streaming services for each title (Netflix, Hulu, Amazon Prime, ...)
+3. See all ratings at one place (IMDb, Metacritic, Rotten Tomatoes)
+
+## Documentation Status: The following guide is outdated. If you want to contribute to the project, please join the Discord Community
+
+# https://discord.gg/TVAcrfQzcA
 
 ## Getting started
 
