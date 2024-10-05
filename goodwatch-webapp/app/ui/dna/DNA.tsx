@@ -28,7 +28,12 @@ export default function DNA({ details, dna = {} }: DNAProps) {
 		<div>
 			<h2 className="text-2xl font-bold">DNA</h2>
 			<p className="mt-2 mb-8 text-lg">
-				Explore similar movies and shows based on the categories below.
+				Explore similar movies and shows to{" "}
+				<span className="font-bold">
+					{details.title}{" "}
+					{details.release_year && <>({details.release_year})</>}
+				</span>{" "}
+				based on the categories below.
 			</p>
 			{hasDNA ? (
 				<div className="mt-4">
