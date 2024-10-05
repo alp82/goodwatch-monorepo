@@ -1,5 +1,5 @@
 import { PrefetchPageLinks } from "@remix-run/react"
-import React from "react"
+import React, { useState } from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { ExploreResult } from "~/server/explore.server"
@@ -27,10 +27,30 @@ export function MovieTvCard({
 	prefetch = false,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
+
+	const [isDragging, setIsDragging] = useState(false)
+	const handleTouchStart = (e: MouseEvent | TouchEvent) => {
+		setIsDragging(false) // Start by assuming no drag
+	}
+	const handleTouchMove = (e: MouseEvent | TouchEvent) => {
+		setIsDragging(true) // If they move, we know it's a drag
+	}
+	const handleClick = (e: MouseEvent | TouchEvent) => {
+		if (isDragging) {
+			e.preventDefault() // Prevent navigation if it was a drag
+		}
+	}
+
 	return (
 		<a
 			className="flex flex-col w-full bg-gray-900 hover:bg-gray-800 border-4 rounded-md border-gray-800 hover:border-indigo-700"
 			href={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
+			draggable="false"
+			onTouchStart={handleTouchStart}
+			onTouchMove={handleTouchMove}
+			onMouseDown={handleTouchStart}
+			onMouseMove={handleTouchMove}
+			onClick={handleClick}
 		>
 			<div className="relative">
 				<RatingOverlay ratings={ratings} />

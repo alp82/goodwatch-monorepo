@@ -120,8 +120,8 @@ export default function Index() {
 	return (
 		<div>
 			<div
-				onMouseDown={handleSwipeStart}
 				onTouchStart={handleSwipeStart}
+				onMouseDown={handleSwipeStart}
 				className="relative w-full h-screen flex flex-col bg-gray-700 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
 				style={{
 					backgroundImage: `url('${startBackground}')`,

@@ -13,9 +13,10 @@ export function Poster({ path, title, loading = false }: PosterProps) {
 		: placeholder
 	return (
 		<img
-			className={`block w-full rounded-md ${loading ? "animate-pulse brightness-50" : ""}`}
+			className={`block w-full rounded-md pointer-events-none ${loading ? "animate-pulse brightness-50" : ""}`}
 			src={url}
 			alt={title && `Poster for ${title}`}
+			draggable="false"
 		/>
 	)
 }
