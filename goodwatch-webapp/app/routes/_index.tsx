@@ -181,10 +181,10 @@ export default function Index() {
 				<div className="absolute bottom-0 left-0 right-0 z-30">
 					<div className="w-full bg-gradient-to-t from-black/70 to-black/40 sm:from-black/50 sm:to-transparent sm-h:from-black/70 sm-h:to-black/40 ">
 						<div className="flex flex-col items-center justify-end gap-4 px-4 pt-8 pb-12 lg-h:pb-40 md:lg-h:pb-52 text-center text-gray-200">
-							<h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold">
+							<h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl sm-h:text-6xl font-bold">
 								What's Good?
 							</h1>
-							<p className="mt-6 max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl">
+							<p className="mt-6 max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl sm-h:text-2xl">
 								The only site that understands the{" "}
 								<a
 									className="inline-block accent font-bold transition-transform transform duration-300 hover:scale-110"
