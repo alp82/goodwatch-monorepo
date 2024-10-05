@@ -2,56 +2,30 @@
 ```
 ---
 
-similarity for movie/tv details by DNA vector category
+discover sidebar redesign
+    bug multiple genres duplicated
+    subheader
+    blocks with filter names and subtle bg in a grid
+    https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
+    https://flowbite.com/blocks/application/table-headers/#multi-level-table-header-with-filters
+    filter inspiration:
+        https://www.yidio.com/movies
+        https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
+    discover: unselect streaming
+    discover: unselect country
+    discover age ratings
+    discover cast / crew
+    discover director
+    discover scores
+    discover budget & revenue
+    disocver keywords and tropes
 
-	const pg_query = `
-    SELECT
-      COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
-			COALESCE(m.title, t.title) AS title,
-			COALESCE(m.release_year, t.release_year) AS release_year,
-			COALESCE(m.poster_path, t.poster_path) AS poster_path,
-			COALESCE(m.streaming_providers, t.streaming_providers) AS streaming_providers,
-			
-      (
-				SELECT json_agg(json_build_object(
-					'provider_id', spl.provider_id,
-					'provider_name', sp.name,
-					'provider_logo_path', sp.logo_path,
-					'media_type', spl.media_type,
-					'country_code', spl.country_code,
-					'stream_type', spl.stream_type
-				))
-				FROM streaming_provider_links spl
-				INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
-				WHERE spl.tmdb_id = COALESCE(m.tmdb_id, t.tmdb_id)
-				AND spl.media_type = $1
-				AND spl.country_code = $2
-				AND spl.provider_id NOT IN (24,119,188,210,235,350,380,390,524,1796,2100)
-			) AS streaming_links,
-		
-      ${getRatingKeys()
-				.map((key) => `COALESCE(m.${key}, t.${key}) AS ${key}`)
-				.join(", ")}
-      
-    -- TODO SIMILAR FOR DETAILS
-		FROM (
-			SELECT ${category}_vector
-			FROM vectors_media
-			WHERE tmdb_id = 603 AND media_type = 'movie'
-		) sv
-	
-		CROSS JOIN LATERAL (
-			SELECT v.*
-			FROM vectors_media v
-			WHERE v.${category}_vector IS NOT NULL
-			ORDER BY v.${category}_vector <=> sv.${category}_vector ASC
-			LIMIT ${RESULT_LIMIT}
-		) v
-		
-		LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
-		LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
-  `
-
+discover
+    all | movies | tv
+    return count: "showing first 100 results"
+    streaming types: mine, free, buy, all
+    discover loading animation with skeletons
+    
 ---
 
 details
@@ -102,11 +76,8 @@ header
 ---
 
 home screen
-    anon: link to how it works
     user: trending, watch next, etc.
-    carousel
     stagger animation for rating progress bars
-    parallax scrolling landing page
 
 ---
 
@@ -131,9 +102,59 @@ postgres cluster config in repo
     
 ---
 
-explore v2
-    all / movie / tv
-    remove weaviate
+remove weaviate
+
+---
+
+similarity for movie/tv details by DNA vector category
+
+	const pg_query = `
+    SELECT
+      COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
+			COALESCE(m.title, t.title) AS title,
+			COALESCE(m.release_year, t.release_year) AS release_year,
+			COALESCE(m.poster_path, t.poster_path) AS poster_path,
+			COALESCE(m.streaming_providers, t.streaming_providers) AS streaming_providers,
+			
+      (
+				SELECT json_agg(json_build_object(
+					'provider_id', spl.provider_id,
+					'provider_name', sp.name,
+					'provider_logo_path', sp.logo_path,
+					'media_type', spl.media_type,
+					'country_code', spl.country_code,
+					'stream_type', spl.stream_type
+				))
+				FROM streaming_provider_links spl
+				INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
+				WHERE spl.tmdb_id = COALESCE(m.tmdb_id, t.tmdb_id)
+				AND spl.media_type = $1
+				AND spl.country_code = $2
+				AND spl.provider_id NOT IN (24,119,188,210,235,350,380,390,524,1796,2100)
+			) AS streaming_links,
+		
+      ${getRatingKeys()
+				.map((key) => `COALESCE(m.${key}, t.${key}) AS ${key}`)
+				.join(", ")}
+      
+    -- TODO SIMILAR FOR DETAILS
+		FROM (
+			SELECT ${category}_vector
+			FROM vectors_media
+			WHERE tmdb_id = 603 AND media_type = 'movie'
+		) sv
+	
+		CROSS JOIN LATERAL (
+			SELECT v.*
+			FROM vectors_media v
+			WHERE v.${category}_vector IS NOT NULL
+			ORDER BY v.${category}_vector <=> sv.${category}_vector ASC
+			LIMIT ${RESULT_LIMIT}
+		) v
+		
+		LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
+		LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
+  `
 
 ---
 
@@ -261,30 +282,6 @@ referrer paths
 init scripts only insert new and ignore existing ids
     copy/combine scripts only copy diffs to postgres
 
----
-
-discover sidebar redesign
-    subheader
-    blocks with filter names and subtle bg in a grid
-    https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
-    https://flowbite.com/blocks/application/table-headers/#multi-level-table-header-with-filters
-    filter inspiration:
-        https://www.yidio.com/movies
-        https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-    discover: unselect streaming
-    discover: unselect country
-    discover age ratings
-    discover cast / crew
-    discover director
-    discover scores
-    discover budget & revenue
-    disocver keywords and tropes
-
-discover
-    all | movies | tv
-    return count: "showing first 100 results"
-    streaming types: mine, free, buy, all
-    discover loading animation with skeletons
 
 ---
 

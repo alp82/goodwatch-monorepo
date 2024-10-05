@@ -2,20 +2,21 @@ import {
 	BookmarkIcon,
 	HashtagIcon,
 	XCircleIcon,
-} from "@heroicons/react/20/solid";
-import { useFetcher } from "@remix-run/react";
-import React, { useEffect } from "react";
-import type { Genre } from "~/server/genres.server";
+} from "@heroicons/react/20/solid"
+import { useFetcher } from "@remix-run/react"
+import React, { useEffect } from "react"
+import type { Genre } from "~/server/genres.server"
+import type { FilterMediaType } from "~/server/utils/query-db"
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
-} from "~/ui/form/Autocomplete";
+} from "~/ui/form/Autocomplete"
 
 export interface FilterGenresProps {
-	type: "movie" | "tv";
-	withGenres?: string;
-	withoutGenres?: string;
-	onChange: (genresToInclude: Genre[], genresToExclude: Genre[]) => void;
+	type: FilterMediaType
+	withGenres?: string
+	withoutGenres?: string
+	onChange: (genresToInclude: Genre[], genresToExclude: Genre[]) => void
 }
 
 export default function FilterGenres({
@@ -24,7 +25,7 @@ export default function FilterGenres({
 	withoutGenres = "",
 	onChange,
 }: FilterGenresProps) {
-	const genresFetcher = useFetcher();
+	const genresFetcher = useFetcher()
 	useEffect(() => {
 		genresFetcher.submit(
 			{},
@@ -32,24 +33,25 @@ export default function FilterGenres({
 				method: "get",
 				action: `/api/genres/${type}`,
 			},
-		);
-	}, [type]);
-	const genres: Genre[] = genresFetcher.data?.genres?.genres || [];
+		)
+	}, [type])
+	const genres: Genre[] = genresFetcher.data?.genres || []
+	console.log({ genres })
 
 	// TODO filter autocomplete items by input value
 	const autocompleteItems = genres.map((genre: Genre) => {
 		return {
 			key: genre.id.toString(),
 			label: genre.name,
-		};
-	});
+		}
+	})
 
 	const genresToInclude = genres.filter((genre) =>
 		withGenres.includes(genre.name.toString()),
-	);
+	)
 	const genresToExclude = genres.filter((genre) =>
 		withoutGenres.includes(genre.name.toString()),
-	);
+	)
 
 	const handleSelect = (selectedItem: AutocompleteItem) => {
 		const updatedGenresToInclude: Genre[] = [
@@ -58,16 +60,16 @@ export default function FilterGenres({
 				id: Number.parseInt(selectedItem.key),
 				name: selectedItem.label,
 			},
-		];
-		onChange(updatedGenresToInclude, genresToExclude);
-	};
+		]
+		onChange(updatedGenresToInclude, genresToExclude)
+	}
 
 	const handleDelete = (genreToDelete: Genre) => {
 		const updatedGenresToInclude: Genre[] = genresToInclude.filter(
 			(genre) => genre.id !== genreToDelete.id,
-		);
-		onChange(updatedGenresToInclude, genresToExclude);
-	};
+		)
+		onChange(updatedGenresToInclude, genresToExclude)
+	}
 
 	const renderItem = ({ item }: RenderItemParams<AutocompleteItem>) => {
 		return (
@@ -75,8 +77,8 @@ export default function FilterGenres({
 				<HashtagIcon className="h-4 w-4 text-gray-800" aria-hidden="true" />
 				<div className="text-sm truncate">{item.label}</div>
 			</div>
-		);
-	};
+		)
+	}
 
 	// TODO debounce
 	return (
@@ -108,9 +110,9 @@ export default function FilterGenres({
 								onClick={() => handleDelete(genre)}
 							/>
 						</span>
-					);
+					)
 				})}
 			</div>
 		</div>
-	);
+	)
 }

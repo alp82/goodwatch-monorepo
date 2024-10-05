@@ -2,6 +2,15 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
+## [0.4.1] 2024-10-xx
+
+### Added
+
+### Changed
+
+### Fixed
+* Discover Genre Filter did show duplicate entries
+
 ## [0.4.0] 2024-10-05
 
 Minor Release: **Similarity Engine**

@@ -1,12 +1,8 @@
 import { type LoaderFunction, json } from "@remix-run/node"
-import {
-	type GenresResults,
-	getGenresMovie,
-	getGenresTV,
-} from "~/server/genres.server"
+import { type Genre, getGenresMovie, getGenresTV } from "~/server/genres.server"
 
 type LoaderData = {
-	genres: Awaited<GenresResults>
+	genres: Genre[]
 }
 
 export const loader: LoaderFunction = async () => {
@@ -16,9 +12,17 @@ export const loader: LoaderFunction = async () => {
 	const genresTV = await getGenresTV({
 		type: "default",
 	})
-	const genres = { genres: [...genresMovie.genres, ...genresTV.genres] }
+
+	const combinedGenres = [...genresMovie.genres, ...genresTV.genres]
+
+	const uniqueGenres = combinedGenres.reduce((genres, current) => {
+		if (!genres.some((genre) => genre.id === current.id)) {
+			genres.push(current)
+		}
+		return genres
+	}, [] as Genre[])
 
 	return json<LoaderData>({
-		genres,
+		genres: uniqueGenres,
 	})
 }
