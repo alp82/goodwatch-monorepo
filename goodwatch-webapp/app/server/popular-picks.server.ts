@@ -3,38 +3,38 @@ import {
 	type StreamingProviders,
 	TVDetails,
 	getCountrySpecificDetails,
-} from "~/server/details.server";
+} from "~/server/details.server"
 import {
 	increasePriorityForMovies,
 	increasePriorityForTVs,
-} from "~/server/utils/priority";
-import { cached } from "~/utils/cache";
-import { executeQuery } from "~/utils/postgres";
-import { type AllRatings, getRatingKeys } from "~/utils/ratings";
+} from "~/server/utils/priority"
+import { cached } from "~/utils/cache"
+import { executeQuery } from "~/utils/postgres"
+import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 export interface PopularPicksMovie extends AllRatings {
-	tmdb_id: number;
-	poster_path: string;
-	title: string;
-	streaming_providers: StreamingProviders;
+	tmdb_id: number
+	poster_path: string
+	title: string
+	streaming_providers: StreamingProviders
 }
 
 export interface PopularPicksTV extends AllRatings {
-	tmdb_id: number;
-	poster_path: string;
-	title: string;
-	streaming_providers: StreamingProviders;
+	tmdb_id: number
+	poster_path: string
+	title: string
+	streaming_providers: StreamingProviders
 }
 
 export interface PopularPicksMovieParams {
-	type: string;
-	country: string;
-	language: string;
+	type: string
+	country: string
+	language: string
 }
 export interface PopularPicksTVParams {
-	type: string;
-	country: string;
-	language: string;
+	type: string
+	country: string
+	language: string
 }
 
 export const getPopularPicksMovies = async (
@@ -45,8 +45,8 @@ export const getPopularPicksMovies = async (
 		target: _getPopularPicksMovies,
 		params,
 		ttlMinutes: 10,
-	});
-};
+	})
+}
 
 export async function _getPopularPicksMovies({
 	country,
@@ -69,13 +69,13 @@ export async function _getPopularPicksMovies({
     ORDER BY
       RANDOM()
     LIMIT 10;
-  `);
-	if (!result.rows.length) throw Error("no popular picks for movies found");
+  `)
+	if (!result.rows.length) throw Error("no popular picks for movies found")
 
-	increasePriorityForMovies(result.rows.map((row) => row.tmdb_id));
+	increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>
 		getCountrySpecificDetails(row, country, language),
-	);
+	)
 }
 
 export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
@@ -84,8 +84,8 @@ export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
 		target: _getPopularPicksTV,
 		params,
 		ttlMinutes: 10,
-	});
-};
+	})
+}
 
 export async function _getPopularPicksTV({
 	country,
@@ -108,11 +108,11 @@ export async function _getPopularPicksTV({
     ORDER BY
       RANDOM()
     LIMIT 10;
-  `);
-	if (!result.rows.length) throw Error("no popular picks for tv shows found");
+  `)
+	if (!result.rows.length) throw Error("no popular picks for tv shows found")
 
-	increasePriorityForTVs(result.rows.map((row) => row.tmdb_id));
+	increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>
 		getCountrySpecificDetails(row, country, language),
-	);
+	)
 }
