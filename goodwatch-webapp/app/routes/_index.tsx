@@ -170,51 +170,54 @@ export default function Index() {
 						))}
 					</div>
 				</div>
+
 				<div
-					className="absolute bottom-0 left-0 right-0 -ml-44 h-full bg-cover bg-center before:bg-black/[.25] z-20 pointer-events-none"
+					className="absolute bottom-0 left-0 right-0 -ml-24 sm:-ml-44 h-full bg-cover bg-center before:bg-black/[.25] z-20 pointer-events-none"
 					style={{
 						backgroundImage: `url(${startForeground})`,
 					}}
 				/>
-			</div>
 
-			<div className="absolute -mt-[24em] sm:-mt-[36em] pt-8 w-full bg-gradient-to-t from-black/80 to-black/40 sm:from-black/50 sm:to-transparent z-30">
-				<div className="flex flex-col items-center justify-end gap-4 px-4 pb-40 md:pb-32 text-center text-gray-200">
-					<h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold">
-						What's Good?
-					</h1>
-					<p className="mt-6 max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl">
-						The only site that understands the{" "}
-						<a
-							className="inline-block accent font-bold transition-transform transform duration-300 hover:scale-110"
-							href="/how-it-works"
-						>
-							DNA
-						</a>{" "}
-						of your favorite movies or shows.
-					</p>
-					<div className="mt-2 sm:mt-4 md:mt-6 lg:mt-10 flex items-center justify-center flex-wrap gap-4 lg:gap-6 text-xs sm:text-sm md:text-base lg:text-lg font-semibold ">
-						<a
-							href="/how-it-works"
-							className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
-						>
-							<InformationCircleIcon className="h-5 w-auto" />
-							How it works
-						</a>
-						<a
-							href="/discover"
-							className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg lg:text-xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-						>
-							<CubeIcon className="h-5 w-auto" />
-							Discover
-						</a>
-						<a
-							href="#trending"
-							className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
-						>
-							<ArrowDownIcon className="h-5 w-auto" />
-							What's Trending?
-						</a>
+				<div className="absolute bottom-0 left-0 right-0 z-30">
+					<div className="w-full bg-gradient-to-t from-black/70 to-black/40 sm:from-black/50 sm:to-transparent">
+						<div className="flex flex-col items-center justify-end gap-4 px-4 pt-8 pb-40 md:pb-52 text-center text-gray-200">
+							<h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold">
+								What's Good?
+							</h1>
+							<p className="mt-6 max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl">
+								The only site that understands the{" "}
+								<a
+									className="inline-block accent font-bold transition-transform transform duration-300 hover:scale-110"
+									href="/how-it-works"
+								>
+									DNA
+								</a>{" "}
+								of your favorite movies or shows.
+							</p>
+							<div className="mt-2 sm:mt-4 md:mt-6 lg:mt-10 flex items-center justify-center flex-wrap gap-4 lg:gap-6 text-xs sm:text-sm md:text-base lg:text-lg font-semibold ">
+								<a
+									href="/how-it-works"
+									className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+								>
+									<InformationCircleIcon className="h-5 w-auto" />
+									How it works
+								</a>
+								<a
+									href="/discover"
+									className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg lg:text-xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+								>
+									<CubeIcon className="h-5 w-auto" />
+									Discover
+								</a>
+								<a
+									href="#trending"
+									className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+								>
+									<ArrowDownIcon className="h-5 w-auto" />
+									What's Trending?
+								</a>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
