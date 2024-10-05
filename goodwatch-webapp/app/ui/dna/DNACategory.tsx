@@ -92,7 +92,7 @@ export default function DNACategory({
 				</div>
 			</div>
 			<div className="mt-8 md:mt-0 w-full flex items-center gap-2">
-				{results ? (
+				{results.length ? (
 					<>
 						{categoryPreview.map((details) => (
 							<div key={details.tmdb_id} className="">

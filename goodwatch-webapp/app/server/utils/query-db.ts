@@ -148,7 +148,11 @@ const constructSelectQuery = ({
 			? `JOIN vectors_media v ON v.tmdb_id = m.tmdb_id AND v.media_type = media_type AND v.${similarity.category}_vector IS NOT NULL`
 			: ""
 	}
-	WHERE ${similarity ? `v.${similarity.category}_vector` : orderBy.column} IS NOT NULL
+	WHERE
+	  m.title IS NOT NULL 
+	  AND m.release_year IS NOT NULL 
+	  AND m.poster_path IS NOT NULL 
+	  ${similarity ? `AND v.${similarity.category}_vector` : orderBy.column} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
 		${minYear ? "AND release_year >= :::minYear" : ""}

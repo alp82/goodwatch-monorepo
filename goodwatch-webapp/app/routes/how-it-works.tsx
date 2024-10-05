@@ -77,7 +77,7 @@ export default function About() {
 									All 18 DNA categories
 								</h3>
 								<p className="text-sm">
-									Movies and shows are classified into categories:
+									Movies and shows are classified into:
 									<ul className="list-disc pl-6 mt-2">
 										<li>Sub-Genres</li>
 										<li>Mood</li>
