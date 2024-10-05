@@ -45,6 +45,7 @@ export const getPopularPicksMovies = async (
 		target: _getPopularPicksMovies,
 		params,
 		ttlMinutes: 10,
+		// ttlMinutes: 0,
 	})
 }
 
@@ -62,13 +63,13 @@ export async function _getPopularPicksMovies({
     FROM
       movies
     WHERE
-      popularity > 75
+      popularity > 30
       AND poster_path IS NOT NULL
-      AND aggregated_overall_score_normalized_percent > 80
-      AND aggregated_overall_score_voting_count > 1000
+      AND aggregated_overall_score_normalized_percent >= 80
+      AND aggregated_overall_score_voting_count >= 500
     ORDER BY
       RANDOM()
-    LIMIT 10;
+    LIMIT 50;
   `)
 	if (!result.rows.length) throw Error("no popular picks for movies found")
 
@@ -84,6 +85,7 @@ export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
 		target: _getPopularPicksTV,
 		params,
 		ttlMinutes: 10,
+		// ttlMinutes: 0,
 	})
 }
 
@@ -101,13 +103,13 @@ export async function _getPopularPicksTV({
     FROM
       tv
     WHERE
-      popularity > 50
+      popularity > 30
       AND poster_path IS NOT NULL
-      AND aggregated_overall_score_normalized_percent > 80
-      AND aggregated_overall_score_voting_count > 1000
+      AND aggregated_overall_score_normalized_percent >= 80
+      AND aggregated_overall_score_voting_count >= 500
     ORDER BY
       RANDOM()
-    LIMIT 10;
+    LIMIT 40;
   `)
 	if (!result.rows.length) throw Error("no popular picks for tv shows found")
 

@@ -38,6 +38,7 @@ import { prefetchUserData } from "~/server/userData.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { sections } from "~/ui/details/common"
 import { getLocaleFromRequest } from "~/utils/locale"
+import { useSwipe } from "~/utils/swipe"
 
 export const headers: HeadersFunction = () => {
 	return {
@@ -100,12 +101,10 @@ export const loader: LoaderFunction = async ({
 
 export default function Index() {
 	const numberOfItemsToShow = 11
-
 	const { trendingMovies, trendingTV, popularPicksMovies, popularPicksTV } =
 		useLoaderData<LoaderData>()
 
 	const [popularPicks, setPopularPicks] = useState<"movies" | "tv">("movies")
-
 	const selectPopularMovies = () => {
 		setPopularPicks("movies")
 	}
@@ -113,9 +112,17 @@ export default function Index() {
 		setPopularPicks("tv")
 	}
 
+	const [currentPosition, setCurrentPosition] = useState(0)
+	const { swipeData, handleSwipeStart } = useSwipe((distance) => {
+		console.log({ currentPosition, distance })
+		setCurrentPosition((curr) => curr + distance)
+	})
+
 	return (
 		<div>
 			<div
+				onMouseDown={handleSwipeStart}
+				onTouchStart={handleSwipeStart}
 				className="relative w-full h-screen flex flex-col bg-gray-700 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
 				style={{
 					backgroundImage: `url('${startBackground}')`,
@@ -139,11 +146,14 @@ export default function Index() {
 						</button>
 					</div>
 
-					<div className="my-12 flex gap-16">
+					<div className="my-12 flex items-center justify-center gap-16 select-none">
 						{popularPicksMovies.map((details) => (
 							<div
 								key={details.tmdb_id}
 								className={`${popularPicks === "movies" ? "" : "hidden"} w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96`}
+								style={{
+									transform: `translateX(${currentPosition + swipeData.distance}px)`,
+								}}
 							>
 								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
 									<MovieTvCard
