@@ -152,7 +152,7 @@ const constructSelectQuery = ({
 	  m.title IS NOT NULL 
 	  AND m.release_year IS NOT NULL 
 	  AND m.poster_path IS NOT NULL 
-	  ${similarity ? `AND v.${similarity.category}_vector` : orderBy.column} IS NOT NULL
+	  ${similarity ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
 		${minYear ? "AND release_year >= :::minYear" : ""}
