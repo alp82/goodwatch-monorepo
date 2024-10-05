@@ -114,7 +114,6 @@ export default function Index() {
 
 	const [currentPosition, setCurrentPosition] = useState(0)
 	const { swipeData, handleSwipeStart } = useSwipe((distance) => {
-		console.log({ currentPosition, distance })
 		setCurrentPosition((curr) => curr + distance)
 	})
 

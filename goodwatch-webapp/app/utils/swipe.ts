@@ -16,8 +16,9 @@ export const useSwipe = (onSwipeEnd?: (finalDistance: number) => void) => {
 	const isSwiping = useRef(false)
 
 	const handleStart = (e: MouseEvent | TouchEvent) => {
-		const x = e.touches ? e.touches[0].clientX : e.clientX
-		startX.current = x
+		startX.current = currentX.current = e.touches
+			? e.touches[0].clientX
+			: e.clientX
 		isSwiping.current = true
 	}
 
