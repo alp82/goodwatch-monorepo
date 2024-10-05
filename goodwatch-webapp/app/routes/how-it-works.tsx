@@ -1,6 +1,8 @@
+import { CubeIcon } from "@heroicons/react/24/solid"
 import type { MetaFunction } from "@remix-run/node"
-import React from "react"
+import React, { useState } from "react"
 import disneyLogo from "~/img/disneyplus-logo.svg"
+import dnaBig from "~/img/dna-big.png"
 import huluLogo from "~/img/hulu-logo.png"
 import imdbLogo from "~/img/imdb-logo-250.png"
 import metacriticLogo from "~/img/metacritic-logo-250.png"
@@ -8,6 +10,7 @@ import netflixLogo from "~/img/netflix-logo.svg"
 import primeLogo from "~/img/primevideo-logo.svg"
 import rottenLogo from "~/img/rotten-logo-250.png"
 import type { loader } from "~/routes/discover"
+import { useInfoModal } from "~/ui/modal/infoModal"
 
 export function headers() {
 	return {
@@ -18,7 +21,7 @@ export function headers() {
 
 export const meta: MetaFunction<typeof loader> = () => {
 	return [
-		{ title: "Privacy | GoodWatch" },
+		{ title: "How It Works | GoodWatch" },
 		{
 			description:
 				"Privacy at GoodWatch. All movie and tv show ratings and streaming providers on the same page",
@@ -27,6 +30,8 @@ export const meta: MetaFunction<typeof loader> = () => {
 }
 
 export default function About() {
+	const { ref, isOpen, position, openModal, closeModal } = useInfoModal()
+
 	return (
 		<div className="max-w-7x mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8">
 			<div className="mx-auto max-w-7xl px-6 pb-32 lg:px-8">
@@ -34,8 +39,63 @@ export default function About() {
 					<h1 className="my-12 font-bold tracking-tight text-center text-gray-100 text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
 						How it works
 					</h1>
+
 					<hr className="border-gray-700" />
-					<div className="mt-16 sm:mt-36 flex flex-col gap-16 sm:gap-36 leading-relaxed text-2xl sm:text-3xl lg:text-4xl">
+
+					<div className="mt-16 sm:mt-24 flex flex-col gap-16 sm:gap-24 leading-relaxed text-2xl sm:text-3xl lg:text-4xl">
+						<div className="flex items-center justify-center flex-wrap gap-8">
+							<p className="max-w-lg text-center">
+								Only on GoodWatch: The <span className="accent">DNA</span>{" "}
+								classifies movies and shows based on{" "}
+								<button
+									type="button"
+									ref={ref}
+									onClick={openModal}
+									className="text-blue-500 underline hover:text-blue-700 focus:outline-none"
+								>
+									18 categories
+								</button>
+								, for example <strong>Mood</strong>, <strong>Plot</strong>,{" "}
+								<strong>Dialogs</strong> or <strong>Cinematic Style</strong>
+							</p>
+							<div className="w-[10em] flex items-center justify-center flex-wrap gap-10">
+								<img
+									className="h-28 sm:h-40 inline-block"
+									src={dnaBig}
+									alt="DNA Logo"
+									title="DNA Logo"
+								/>
+							</div>
+						</div>
+
+						{isOpen && (
+							<div
+								style={{ top: `${position.top}px`, left: `${position.left}px` }}
+								className="absolute bg-white p-4 rounded-lg shadow-lg max-w-xs"
+							>
+								<h2 className="text-lg font-bold mb-2">18 Categories</h2>
+								<p>
+									Movies and shows are classified into categories such as:
+									<ul className="list-disc pl-6 mt-2">
+										<li>Mood</li>
+										<li>Plot</li>
+										<li>Dialogs</li>
+										<li>Cinematic Style</li>
+										{/* Add more categories here */}
+									</ul>
+								</p>
+								<button
+									type="button"
+									onClick={closeModal}
+									className="mt-2 text-red-500 underline hover:text-red-700"
+								>
+									Close
+								</button>
+							</div>
+						)}
+
+						<hr className="border-gray-700" />
+
 						<div className="flex items-center justify-center flex-wrap gap-16 md:gap-36">
 							<div className="flex flex-col gap-10">
 								<div className="w-[10em] flex items-center justify-center gap-10">
@@ -100,6 +160,18 @@ export default function About() {
 									title="Rotten Tomatoes"
 								/>
 							</div>
+						</div>
+
+						<hr className="border-gray-700" />
+
+						<div className="flex items-center justify-center flex-wrap gap-16 md:gap-36">
+							<a
+								href="/discover"
+								className="rounded-md bg-indigo-600 px-8 py-4 flex items-center justify-center gap-2 lg:gap-4 text-xl lg:text-2xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+							>
+								<CubeIcon className="h-5 lg:h-7 w-auto" />
+								<span className="hidden xs:inline">Try it: </span>Discover
+							</a>
 						</div>
 					</div>
 				</div>

@@ -3,6 +3,7 @@ import { Spoiler } from "spoiled"
 import type { DNA } from "~/server/details.server"
 import type { ExploreParams } from "~/server/explore.server"
 import InfoBox from "~/ui/InfoBox"
+import DNACategory from "~/ui/dna/DNACategory"
 import { DNATag } from "~/ui/dna/DNATag"
 import {
 	getCategoryColor,
@@ -15,7 +16,7 @@ export interface DNAProps {
 	dna: DNA
 }
 
-export default function DNADisplay({ type, dna = {} }: DNAProps) {
+export default function DNA({ type, dna = {} }: DNAProps) {
 	// const hasDNA = Object.keys(dna).length > 0
 	const [hasDNA, setHasDNA] = useState(false)
 
@@ -32,6 +33,24 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 	return (
 		<div>
 			<h2 className="text-2xl font-bold">DNA</h2>
+			<p className="mt-2 mb-8 text-lg">
+				Explore similar movies and shows based on the categories below.
+			</p>
+			{hasDNA ? (
+				<div className="mt-4">
+					{sortedCategories.map((category) => (
+						<DNACategory
+							key={category}
+							category={category}
+							tags={dna[category]}
+							spoilerVisible={spoilerVisible}
+							onRevealSpoiler={handleRevealSpoiler}
+						/>
+					))}
+				</div>
+			) : (
+				<InfoBox text="No DNA found for this title. Please try again later, we are working on it." />
+			)}
 			{hasDNA ? (
 				<div className="mt-4">
 					{sortedCategories.map((category) => {
@@ -50,7 +69,7 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 										onClick={
 											spoilerCategories.includes(category)
 												? handleRevealSpoiler
-												: null
+												: undefined
 										}
 										onKeyDown={() => null}
 									>
@@ -63,7 +82,6 @@ export default function DNADisplay({ type, dna = {} }: DNAProps) {
 												density={0.15}
 											>
 												<DNATag
-													type={type}
 													category={category}
 													label={label}
 													linkDisabled={isSpoiler && !spoilerVisible}

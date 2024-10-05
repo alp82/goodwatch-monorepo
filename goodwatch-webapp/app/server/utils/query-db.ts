@@ -16,8 +16,14 @@ interface StreamingConfig {
 	providerIds?: number[]
 }
 
+interface Media {
+	type: MediaType
+	tmdb_id: number
+}
+
 interface Similarity {
 	category: string
+	media?: Media
 }
 
 interface Conditions {
@@ -139,15 +145,7 @@ const constructSelectQuery = ({
 	FROM ${type === "movie" ? "movies" : "tv"} m
 	${
 		similarity
-			? `JOIN LATERAL (
-				SELECT v.tmdb_id, v.${similarity.category}_vector
-				FROM vectors_media v
-				WHERE v.tmdb_id = m.tmdb_id
-					AND v.media_type = '${type}'
-					AND v.${similarity.category}_vector IS NOT NULL
-				ORDER BY v.${similarity.category}_vector <=> :::similarityVector ASC
-				LIMIT 1
-			) v ON true`
+			? `JOIN vectors_media v ON v.tmdb_id = m.tmdb_id AND v.media_type = media_type AND v.${similarity.category}_vector IS NOT NULL`
 			: ""
 	}
 	WHERE ${similarity ? `v.${similarity.category}_vector` : orderBy.column} IS NOT NULL

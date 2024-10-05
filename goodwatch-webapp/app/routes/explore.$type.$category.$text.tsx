@@ -20,6 +20,7 @@ import {
 	getExploreResults,
 } from "~/server/explore.server"
 import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
+import { filterMediaTypes } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import type { Tab } from "~/ui/tabs/Tabs"
@@ -89,7 +90,7 @@ export const loader: LoaderFunction = async ({
 		text,
 		country,
 	}
-	if (!type || !AVAILABLE_TYPES.includes(type)) {
+	if (!type || !filterMediaTypes.includes(type)) {
 		return json<LoaderData>({
 			params: exploreParams,
 			results: [],

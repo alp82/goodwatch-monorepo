@@ -1,6 +1,6 @@
 import type { StreamingLink, StreamingProviders } from "~/server/details.server"
-import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
-import { constructFullQuery } from "~/server/utils/query-db"
+import type { FilterMediaType } from "~/server/search.server"
+import { constructFullQuery, filterMediaTypes } from "~/server/utils/query-db"
 import { generateVectorResults } from "~/server/vector.server"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
@@ -55,8 +55,8 @@ export const getExploreResults = async (params: ExploreParams) => {
 		name: "explore-results",
 		target: _getExploreResults,
 		params,
-		// ttlMinutes: 60 * 2,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 4,
+		// ttlMinutes: 0,
 	})
 }
 
@@ -66,7 +66,7 @@ async function _getExploreResults({
 	text,
 	country,
 }: ExploreParams): Promise<ExploreResults> {
-	if (!AVAILABLE_TYPES.includes(type)) return { results: [] }
+	if (!filterMediaTypes.includes(type)) return { results: [] }
 	if (!AVAILABLE_CATEGORIES.includes(category)) return { results: [] }
 
 	const queryText = `${category}: ${text}`

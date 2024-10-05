@@ -7,11 +7,12 @@ All notable changes to GoodWatch will be documented in this file.
 Minor Release: **Similarity Engine**
 
 ### Added
-* Show similar titles based on DNA categories based on new similarity algorithm
-* Completely revamped Landing Page design
-* Completely revamped Details Page design
+* New How it works page
 
 ### Changed
+* DNA: Show similar titles based on DNA categories based on new similarity algorithm
+* Completely revamped Landing Page design
+* Updated Details Page design
 * Rewrote DB queries for fetching movies and shows with filters to make them more performant and reusable across different views
 
 ### Fixed

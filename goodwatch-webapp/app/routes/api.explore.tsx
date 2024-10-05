@@ -4,24 +4,29 @@ import {
 	json,
 } from "@remix-run/node"
 
+import { useQuery } from "@tanstack/react-query"
 import {
 	type ExploreParams,
 	type ExploreResult,
 	getExploreResults,
 } from "~/server/explore.server"
 import type { FilterMediaType } from "~/server/search.server"
+import { mapCategoryToVectorName } from "~/ui/dna/utils"
 
-export type LoaderData = {
+// type definitions
+
+export type GetExploreResult = {
 	type: FilterMediaType
 	results: ExploreResult[]
 }
+
+// API endpoint
 
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
-	const type = (url.searchParams.get("type") ||
-		"movies") as ExploreParams["type"]
+	const type = (url.searchParams.get("type") || "all") as ExploreParams["type"]
 	const category = (url.searchParams.get("category") ||
 		"dna") as ExploreParams["category"]
 	const text = (url.searchParams.get("text") || "") as ExploreParams["text"]
@@ -36,8 +41,31 @@ export const loader: LoaderFunction = async ({
 
 	const { results } = await getExploreResults(params)
 
-	return json<LoaderData>({
+	return json<GetExploreResult>({
 		type,
 		results,
+	})
+}
+
+// Query hook
+
+export const queryKeyUserData = ["explore"]
+
+export interface UseExploreParams {
+	type?: FilterMediaType
+	category: ExploreParams["category"]
+	text: ExploreParams["text"]
+}
+
+export const useExplore = ({
+	type = "all",
+	category,
+	text,
+}: UseExploreParams) => {
+	const vectorCategory = mapCategoryToVectorName(category)
+	const url = `/api/explore?type=${type}&category=${vectorCategory}&text=${text}`
+	return useQuery<GetExploreResult>({
+		queryKey: [...queryKeyUserData, type, vectorCategory, text],
+		queryFn: async () => await (await fetch(url)).json(),
 	})
 }

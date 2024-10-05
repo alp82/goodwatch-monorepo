@@ -49,7 +49,7 @@ export default function Crew({ crew }: CrewProps) {
 	}
 
 	return (
-		<div className="mx-2">
+		<>
 			<h2 className="text-2xl font-bold">Crew</h2>
 			<div className="my-4">
 				<RenderInfo
@@ -73,6 +73,6 @@ export default function Crew({ crew }: CrewProps) {
 					people={composers}
 				/>
 			</div>
-		</div>
+		</>
 	)
 }

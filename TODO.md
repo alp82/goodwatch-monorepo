@@ -2,40 +2,59 @@
 ```
 ---
 
-home screen
-    "everything" -> DNA
-    anon: link to how it works
-    user: trending, watch next, etc.
-    carousel
-    stagger animation for rating progress bars
-    parallax scrolling landing page
+similarity for movie/tv details by DNA vector category
 
-how it works
-    DNA explanation
-
----
-
-explore
-    useQuery
-    progress text (generating results...)
-    streaming config (providers + country ...)
-
----
-
-header
-    main search expand
-    subnav row with search and default filters
-        https://flowbite.com/blocks/application/navbar/#double-navigation-bar-with-search-input
-    
----
-
-vector save
-    python normalization fix 'S typos
+	const pg_query = `
+    SELECT
+      COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
+			COALESCE(m.title, t.title) AS title,
+			COALESCE(m.release_year, t.release_year) AS release_year,
+			COALESCE(m.poster_path, t.poster_path) AS poster_path,
+			COALESCE(m.streaming_providers, t.streaming_providers) AS streaming_providers,
+			
+      (
+				SELECT json_agg(json_build_object(
+					'provider_id', spl.provider_id,
+					'provider_name', sp.name,
+					'provider_logo_path', sp.logo_path,
+					'media_type', spl.media_type,
+					'country_code', spl.country_code,
+					'stream_type', spl.stream_type
+				))
+				FROM streaming_provider_links spl
+				INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
+				WHERE spl.tmdb_id = COALESCE(m.tmdb_id, t.tmdb_id)
+				AND spl.media_type = $1
+				AND spl.country_code = $2
+				AND spl.provider_id NOT IN (24,119,188,210,235,350,380,390,524,1796,2100)
+			) AS streaming_links,
+		
+      ${getRatingKeys()
+				.map((key) => `COALESCE(m.${key}, t.${key}) AS ${key}`)
+				.join(", ")}
+      
+    -- TODO SIMILAR FOR DETAILS
+		FROM (
+			SELECT ${category}_vector
+			FROM vectors_media
+			WHERE tmdb_id = 603 AND media_type = 'movie'
+		) sv
+	
+		CROSS JOIN LATERAL (
+			SELECT v.*
+			FROM vectors_media v
+			WHERE v.${category}_vector IS NOT NULL
+			ORDER BY v.${category}_vector <=> sv.${category}_vector ASC
+			LIMIT ${RESULT_LIMIT}
+		) v
+		
+		LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
+		LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
+  `
 
 ---
 
 details
-    fragment for scroll position (auto update)
     share button sticky
     guess country
     age restriction by country
@@ -55,6 +74,8 @@ details
     mobile: user action buttons below poster directly
     https://imdb.shyakadavis.me/title#overview
 
+    fragment for scroll position (auto update)
+
 ---
 
 onboarding
@@ -71,6 +92,34 @@ onboarding
     
     Success notification for milestones
     
+---
+
+header
+    main search expand
+    subnav row with search and default filters
+        https://flowbite.com/blocks/application/navbar/#double-navigation-bar-with-search-input
+    
+---
+
+home screen
+    anon: link to how it works
+    user: trending, watch next, etc.
+    carousel
+    stagger animation for rating progress bars
+    parallax scrolling landing page
+
+---
+
+explore
+    useQuery
+    progress text (generating results...)
+    streaming config (providers + country ...)
+
+---
+
+vector save
+    python normalization fix 'S typos
+
 ---
 
 redis optional
@@ -156,58 +205,6 @@ Show User Data In Movie Cards
 use connection pooling properly
     postgres
     redis
-
----
-
-similarity for movie/tv details by DNA vector category
-
-	const pg_query = `
-    SELECT
-      COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
-			COALESCE(m.title, t.title) AS title,
-			COALESCE(m.release_year, t.release_year) AS release_year,
-			COALESCE(m.poster_path, t.poster_path) AS poster_path,
-			COALESCE(m.streaming_providers, t.streaming_providers) AS streaming_providers,
-			
-      (
-				SELECT json_agg(json_build_object(
-					'provider_id', spl.provider_id,
-					'provider_name', sp.name,
-					'provider_logo_path', sp.logo_path,
-					'media_type', spl.media_type,
-					'country_code', spl.country_code,
-					'stream_type', spl.stream_type
-				))
-				FROM streaming_provider_links spl
-				INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
-				WHERE spl.tmdb_id = COALESCE(m.tmdb_id, t.tmdb_id)
-				AND spl.media_type = $1
-				AND spl.country_code = $2
-				AND spl.provider_id NOT IN (24,119,188,210,235,350,380,390,524,1796,2100)
-			) AS streaming_links,
-		
-      ${getRatingKeys()
-				.map((key) => `COALESCE(m.${key}, t.${key}) AS ${key}`)
-				.join(", ")}
-      
-    -- TODO SIMILAR FOR DETAILS
-		FROM (
-			SELECT ${category}_vector
-			FROM vectors_media
-			WHERE tmdb_id = 603 AND media_type = 'movie'
-		) sv
-	
-		CROSS JOIN LATERAL (
-			SELECT v.*
-			FROM vectors_media v
-			WHERE v.${category}_vector IS NOT NULL
-			ORDER BY v.${category}_vector <=> sv.${category}_vector ASC
-			LIMIT ${RESULT_LIMIT}
-		) v
-		
-		LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
-		LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
-  `
 
 ---
 

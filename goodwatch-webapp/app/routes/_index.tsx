@@ -19,12 +19,6 @@ import {
 	dehydrate,
 } from "@tanstack/react-query"
 import React, { useState } from "react"
-import disneyLogo from "~/img/disneyplus-logo.svg"
-import imdbLogo from "~/img/imdb-logo-250.png"
-import metacriticLogo from "~/img/metacritic-logo-250.png"
-import netflixLogo from "~/img/netflix-logo.svg"
-import primeLogo from "~/img/primevideo-logo.svg"
-import rottenLogo from "~/img/rotten-logo-250.png"
 import startBackground from "~/img/start-background.png"
 import startForeground from "~/img/start-foreground.png"
 import {
@@ -42,6 +36,7 @@ import {
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import { prefetchUserData } from "~/server/userData.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
+import { sections } from "~/ui/details/common"
 import { getLocaleFromRequest } from "~/utils/locale"
 
 export const headers: HeadersFunction = () => {
@@ -126,8 +121,8 @@ export default function Index() {
 					backgroundImage: `url('${startBackground}')`,
 				}}
 			>
-				<div className="flex flex-col justify-start items-center z-20">
-					<div className="flex gap-8 sm:gap-16 text-gray-200 text-xl sm:text-2xl md:text-3xl font-bold">
+				<div className="flex flex-col justify-start items-center overflow-hidden z-10">
+					<div className="hidden sm:flex gap-8 sm:gap-16 text-gray-200 text-xl sm:text-2xl md:text-3xl font-bold">
 						<button
 							type="button"
 							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "movies" ? "bg-indigo-900/60" : "bg-slate-900/70"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
@@ -143,11 +138,12 @@ export default function Index() {
 							Popular Shows
 						</button>
 					</div>
-					<div className="mt-12 flex gap-16">
+
+					<div className="my-12 flex gap-16">
 						{popularPicksMovies.map((details) => (
 							<div
 								key={details.tmdb_id}
-								className={`${popularPicks === "movies" ? "" : "hidden"} w-64 md:w-72 lg:w-80 xl:w-96`}
+								className={`${popularPicks === "movies" ? "" : "hidden"} w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96`}
 							>
 								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
 									<MovieTvCard
@@ -161,7 +157,7 @@ export default function Index() {
 						{popularPicksTV.map((details) => (
 							<div
 								key={details.tmdb_id}
-								className={`${popularPicks === "tv" ? "" : "hidden"} w-64 md:w-72 lg:w-80 xl:w-96`}
+								className={`${popularPicks === "tv" ? "" : "hidden"} w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96`}
 							>
 								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
 									<MovieTvCard
@@ -182,17 +178,22 @@ export default function Index() {
 				/>
 			</div>
 
-			<div className="relative -mt-[60em] sm:-mt-[50em] pt-[20em] pb-[8em] w-full h-[60em] sm:h-[50em] bg-gradient-to-t from-black/80 to-transparent z-30">
-				<div className="px-4 text-center text-gray-200">
-					<h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold">
+			<div className="absolute -mt-[24em] sm:-mt-[36em] pt-8 w-full bg-gradient-to-t from-black/80 to-black/40 sm:from-black/50 sm:to-transparent z-30">
+				<div className="flex flex-col items-center justify-end gap-4 px-4 pb-40 md:pb-32 text-center text-gray-200">
+					<h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold">
 						What's Good?
 					</h1>
-					<p className="mt-6 m-auto max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl">
-						At GoodWatch you'll find{" "}
-						<span className="accent font-bold">everything</span> you need to
-						know about your next favorite movie or TV show.
+					<p className="mt-6 max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl">
+						The only site that understands the{" "}
+						<a
+							className="inline-block accent font-bold transition-transform transform duration-300 hover:scale-110"
+							href="/how-it-works"
+						>
+							DNA
+						</a>{" "}
+						of your favorite movies or shows.
 					</p>
-					<div className="mt-2 sm:mt-4 md:mt-6 lg:mt-10 flex items-center justify-center flex-wrap gap-4 lg:gap-6 text-sm lg:text-lg font-semibold ">
+					<div className="mt-2 sm:mt-4 md:mt-6 lg:mt-10 flex items-center justify-center flex-wrap gap-4 lg:gap-6 text-xs sm:text-sm md:text-base lg:text-lg font-semibold ">
 						<a
 							href="/how-it-works"
 							className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
@@ -202,7 +203,7 @@ export default function Index() {
 						</a>
 						<a
 							href="/discover"
-							className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-base lg:text-xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+							className="rounded-md bg-indigo-600 px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg lg:text-xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
 						>
 							<CubeIcon className="h-5 w-auto" />
 							Discover
@@ -247,7 +248,7 @@ export default function Index() {
 						</a>
 					</div>
 				)}
-				<h2 className="mt-12 mb-4 text-3xl font-bold">Trending TV Shows</h2>
+				<h2 className="mt-20 mb-4 text-3xl font-bold">Trending TV Shows</h2>
 				{trendingTV.length > 0 && (
 					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
 						{trendingTV.slice(0, numberOfItemsToShow).map((tv: TrendingTV) => (
