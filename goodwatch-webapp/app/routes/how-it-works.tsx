@@ -30,7 +30,7 @@ export const meta: MetaFunction<typeof loader> = () => {
 }
 
 export default function About() {
-	const { ref, isOpen, position, openModal, closeModal } = useInfoModal()
+	const { ref, isOpen, position, toggleModal } = useInfoModal()
 
 	return (
 		<div className="max-w-7x mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8">
@@ -50,7 +50,7 @@ export default function About() {
 								<button
 									type="button"
 									ref={ref}
-									onClick={openModal}
+									onClick={toggleModal}
 									className="text-blue-500 underline hover:text-blue-700 focus:outline-none"
 								>
 									18 categories
@@ -71,23 +71,38 @@ export default function About() {
 						{isOpen && (
 							<div
 								style={{ top: `${position.top}px`, left: `${position.left}px` }}
-								className="absolute bg-white p-4 rounded-lg shadow-lg max-w-xs"
+								className="absolute p-4 bg-gray-950 text-lg text-white rounded-lg shadow-lg max-w-sm"
 							>
-								<h2 className="text-lg font-bold mb-2">18 Categories</h2>
-								<p>
-									Movies and shows are classified into categories such as:
+								<h3 className="text-lg font-bold mb-2">
+									All 18 DNA categories
+								</h3>
+								<p className="text-sm">
+									Movies and shows are classified into categories:
 									<ul className="list-disc pl-6 mt-2">
+										<li>Sub-Genres</li>
 										<li>Mood</li>
+										<li>Themes</li>
 										<li>Plot</li>
-										<li>Dialogs</li>
+										<li>Cultural Impact</li>
+										<li>Character Types</li>
+										<li>Dialog</li>
+										<li>Narrative</li>
+										<li>Humor</li>
+										<li>Pacing</li>
+										<li>Time</li>
+										<li>Place</li>
 										<li>Cinematic Style</li>
-										{/* Add more categories here */}
+										<li>Score and Sound</li>
+										<li>Costume and Set</li>
+										<li>Key Props</li>
+										<li>Target Audience</li>
+										<li>Flag</li>
 									</ul>
 								</p>
 								<button
 									type="button"
-									onClick={closeModal}
-									className="mt-2 text-red-500 underline hover:text-red-700"
+									onClick={toggleModal}
+									className="mt-2 text-sm text-indigo-300 underline hover:text-indigo-200"
 								>
 									Close
 								</button>

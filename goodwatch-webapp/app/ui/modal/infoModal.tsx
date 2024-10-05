@@ -9,7 +9,8 @@ export const useInfoModal = () => {
 		if (ref.current) {
 			const rect = ref.current.getBoundingClientRect()
 			setPosition({
-				top: rect.bottom + window.scrollY,
+				// TODO why do i need "- 70"?
+				top: rect.bottom + window.scrollY - 70,
 				left: rect.left + window.scrollX,
 			})
 		}
@@ -18,5 +19,10 @@ export const useInfoModal = () => {
 
 	const closeModal = () => setIsOpen(false)
 
-	return { ref, isOpen, position, openModal, closeModal }
+	const toggleModal = () => {
+		if (isOpen) closeModal()
+		else openModal()
+	}
+
+	return { ref, isOpen, position, openModal, closeModal, toggleModal }
 }
