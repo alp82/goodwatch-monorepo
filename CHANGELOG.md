@@ -2,7 +2,7 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.4.0] 2024-09-xx
+## [0.4.0] 2024-10-05
 
 Minor Release: **Similarity Engine**
 

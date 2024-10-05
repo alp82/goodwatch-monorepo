@@ -88,7 +88,7 @@ export const loader: LoaderFunction = async ({
 	const type = (url.searchParams.get("type") || "all") as FilterMediaType
 	const mode = (url.searchParams.get("mode") || "advanced") as "advanced"
 	const country =
-		userSettings?.country_default || url.searchParams.get("country") || ""
+		userSettings?.country_default || url.searchParams.get("country") || "US"
 	const language = url.searchParams.get("language") || locale.language
 	const minAgeRating = url.searchParams.get("minAgeRating") || ""
 	const maxAgeRating = url.searchParams.get("maxAgeRating") || ""
