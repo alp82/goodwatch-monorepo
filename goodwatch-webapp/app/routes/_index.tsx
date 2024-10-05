@@ -249,7 +249,7 @@ export default function Index() {
 							))}
 						<a
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							href="/discover?type=movie"
+							href="/discover?type=movies"
 						>
 							<FilmIcon className="w-16 h-16" />
 							<div className="my-2 px-2">
