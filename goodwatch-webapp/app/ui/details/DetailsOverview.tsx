@@ -146,11 +146,7 @@ export default function DetailsOverview({
 								<ScoreSelector details={details} />
 							</div>
 							<div className="hidden ml-2 md:flex items-center gap-4">
-								<DNAPreview
-									type={media_type === "movie" ? "movies" : "tv"}
-									dna={dna}
-									navigateToSection={navigateToSection}
-								/>
+								<DNAPreview dna={dna} navigateToSection={navigateToSection} />
 							</div>
 						</div>
 					</div>

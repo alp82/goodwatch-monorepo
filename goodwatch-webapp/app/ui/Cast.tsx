@@ -6,6 +6,9 @@ export interface CastProps {
 }
 
 export default function Cast({ cast }: CastProps) {
+	const [showAll, setShowAll] = React.useState(false)
+	const toggleShowAll = () => setShowAll(!showAll)
+
 	const castWithPhotos = (cast || []).filter(
 		(castMember) => castMember.profile_path,
 	)
@@ -13,12 +16,16 @@ export default function Cast({ cast }: CastProps) {
 		(castMember) => !castMember.profile_path,
 	)
 
+	const castToShow = showAll ? castWithPhotos : castWithPhotos.slice(0, 10)
+	const numberOfMoreToShow =
+		castWithPhotos.length + castWithoutPhotos.length - 10
+
 	const type = "all"
 	return (
 		<>
 			<h2 className="text-2xl font-bold">Cast</h2>
 			<div className="mt-4 flex flex-wrap gap-2">
-				{(castWithPhotos || []).map((castMember) => {
+				{castToShow.map((castMember) => {
 					const character =
 						castMember.character || castMember.roles?.[0].character
 					return (
@@ -50,26 +57,37 @@ export default function Cast({ cast }: CastProps) {
 					)
 				})}
 			</div>
-			<div className="mt-8 flex flex-wrap gap-4">
-				{(castWithoutPhotos || []).map((castMember) => {
-					const character =
-						castMember.character || castMember.roles?.[0].character
-					return (
-						<a
-							key={castMember.id}
-							href={`/discover?type=${type}&withCast=${castMember.id}`}
-							className="w-64 h-16 hover:bg-slate-800"
-						>
-							<strong>{castMember.name}</strong>{" "}
-							{character && (
-								<>
-									as <em>{character}</em>
-								</>
-							)}
-						</a>
-					)
-				})}
-			</div>
+			{showAll && castWithoutPhotos.length > 0 && (
+				<div className="mt-8 flex flex-wrap gap-4">
+					{castWithoutPhotos.map((castMember) => {
+						const character =
+							castMember.character || castMember.roles?.[0].character
+						return (
+							<a
+								key={castMember.id}
+								href={`/discover?type=${type}&withCast=${castMember.id}`}
+								className="w-64 h-16 hover:bg-slate-800"
+							>
+								<strong>{castMember.name}</strong>{" "}
+								{character && (
+									<>
+										as <em>{character}</em>
+									</>
+								)}
+							</a>
+						)
+					})}
+				</div>
+			)}
+			{numberOfMoreToShow > 0 && (
+				<button
+					type="button"
+					className="mt-4 text-indigo-400"
+					onClick={toggleShowAll}
+				>
+					Show {numberOfMoreToShow} {showAll ? "Less" : "More"}
+				</button>
+			)}
 		</>
 	)
 }

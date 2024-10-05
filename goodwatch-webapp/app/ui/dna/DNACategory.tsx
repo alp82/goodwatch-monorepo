@@ -3,12 +3,17 @@ import React from "react"
 import { Spoiler } from "spoiled"
 import { useExplore } from "~/routes/api.explore"
 import type { ExploreParams } from "~/server/explore.server"
+import type { MediaType } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { Spinner } from "~/ui/Spinner"
 import { DNATag } from "~/ui/dna/DNATag"
 import { mapCategoryToVectorName, spoilerCategories } from "~/ui/dna/utils"
 
 export interface DNACategoryProps {
+	without: {
+		tmdb_id: number
+		media_type: MediaType
+	}
 	category: ExploreParams["category"]
 	tags: string[]
 	spoilerVisible: boolean
@@ -16,6 +21,7 @@ export interface DNACategoryProps {
 }
 
 export default function DNACategory({
+	without,
 	category,
 	tags,
 	spoilerVisible,
@@ -29,7 +35,14 @@ export default function DNACategory({
 		text,
 	})
 
-	const { results } = explore.data || {}
+	const results = explore.data?.results || []
+	const categoryPreview = results
+		.filter(
+			(details) =>
+				details.tmdb_id !== without.tmdb_id &&
+				details.media_type !== without.media_type,
+		)
+		.slice(0, 4)
 
 	return (
 		<div className="mb-12 bg-gray-800 grid grid-cols-1 md:grid-cols-2">
@@ -81,7 +94,7 @@ export default function DNACategory({
 			<div className="mt-8 md:mt-0 w-full flex items-center gap-2">
 				{results ? (
 					<>
-						{(results || []).slice(0, 4).map((details) => (
+						{categoryPreview.map((details) => (
 							<div key={details.tmdb_id} className="">
 								<MovieTvCard details={details} mediaType={details.media_type} />
 							</div>

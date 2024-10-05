@@ -64,7 +64,7 @@ export default function DetailsContent({
 				<Cast cast={cast} />
 			</div>
 			<div {...sectionProps.dna}>
-				<DNA type={media_type === "movie" ? "movies" : "tv"} dna={dna} />
+				<DNA details={details} dna={dna} />
 			</div>
 			<div {...sectionProps.ratings}>
 				<Ratings ratings={ratings} />

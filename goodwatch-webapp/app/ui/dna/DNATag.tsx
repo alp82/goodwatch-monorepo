@@ -4,6 +4,7 @@ import { getCategoryColor, mapCategoryToVectorName } from "~/ui/dna/utils"
 export interface DNATagProps {
 	category: string
 	label: string
+	onClick?: () => void
 	linkDisabled?: boolean
 }
 

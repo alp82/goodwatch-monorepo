@@ -82,6 +82,7 @@ async function _getExploreResults({
 			category,
 		},
 		conditions: {
+			minScore: "60",
 			similarityVector: queryVectorParam,
 		},
 		orderBy: {

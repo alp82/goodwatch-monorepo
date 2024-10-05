@@ -8,6 +8,7 @@ Minor Release: **Similarity Engine**
 
 ### Added
 * New How it works page
+* DNA section for movies and shows with preview of similar titles
 
 ### Changed
 * DNA: Show similar titles based on DNA categories based on new similarity algorithm

@@ -10,16 +10,11 @@ import Cycle from "~/ui/list/Cycle"
 import type { Section } from "~/utils/scroll"
 
 export interface DNAProps {
-	type: ExploreParams["type"]
 	dna: DNA
 	navigateToSection: (section: Section) => void
 }
 
-export default function DNAPreview({
-	type,
-	dna = {},
-	navigateToSection,
-}: DNAProps) {
+export default function DNAPreview({ dna = {}, navigateToSection }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 
 	const sortedCategories = getSortedCategories(dna, false)
@@ -28,10 +23,15 @@ export default function DNAPreview({
 			return [
 				...items,
 				...dna[category].map((label) => (
-					<div key={`${category}-${label}`} className="flex gap-2 w-full">
-						{category}:
-						<DNATag type={type} category={category} label={label} />
-					</div>
+					<button
+						key={`${category}-${label}`}
+						type="button"
+						className="py-1 px-3 flex items-center gap-2 w-full bg-gray-700 border-2 border-gray-700 hover:bg-gray-600 hover:border-gray-500 rounded-md"
+						onClick={() => navigateToSection(sections.dna)}
+					>
+						<span className="font-semibold">{category}:</span>
+						<DNATag category={category} label={label} linkDisabled={true} />
+					</button>
 				)),
 			]
 		}, [])
@@ -43,11 +43,11 @@ export default function DNAPreview({
 				<div className="mb-4 sm:mb-0 flex flex-col sm:flex-row sm:items-center flex-wrap gap-3 sm:gap-4">
 					<Sparkles>
 						<div
-							className="ml-1 h-7 accent-bg rounded-md pl-1 pr-2 flex items-center justify-center gap-2 text-sm font-semibold shadow-sm cursor-pointer"
+							className="ml-1 py-2 accent-bg rounded-md pl-1 pr-2 flex items-center justify-center gap-2 text-base font-semibold shadow-sm cursor-pointer"
 							onClick={() => navigateToSection(sections.dna)}
 							onKeyDown={() => null}
 						>
-							<img src={dnaIcon} className="h-5 w-auto" alt="DNA Icon" />
+							<img src={dnaIcon} className="h-6 w-auto" alt="DNA Icon" />
 							Show DNA
 						</div>
 					</Sparkles>
