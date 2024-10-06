@@ -5,7 +5,19 @@
     <lastmod>2024-10-06</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://goodwatch.app/sitemaps/sitemap_tv_50000.xml</loc>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_20000.xml</loc>
+    <lastmod>2024-10-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_40000.xml</loc>
+    <lastmod>2024-10-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_60000.xml</loc>
+    <lastmod>2024-10-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_80000.xml</loc>
     <lastmod>2024-10-06</lastmod>
   </sitemap>
   <sitemap>
@@ -13,7 +25,19 @@
     <lastmod>2024-10-06</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://goodwatch.app/sitemaps/sitemap_tv_150000.xml</loc>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_120000.xml</loc>
+    <lastmod>2024-10-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_140000.xml</loc>
+    <lastmod>2024-10-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_160000.xml</loc>
+    <lastmod>2024-10-06</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goodwatch.app/sitemaps/sitemap_tv_180000.xml</loc>
     <lastmod>2024-10-06</lastmod>
   </sitemap>
 </sitemapindex>
