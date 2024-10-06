@@ -113,16 +113,15 @@ export default function Index() {
 	}
 
 	const [currentPosition, setCurrentPosition] = useState(0)
-	const { swipeData, handleSwipeStart } = useSwipe((distance) => {
+	const { swipeData, swipeRef } = useSwipe((distance) => {
 		setCurrentPosition((curr) => curr + distance)
 	})
 
 	return (
 		<div>
 			<div
-				onTouchStart={handleSwipeStart}
-				onMouseDown={handleSwipeStart}
-				className="relative w-full h-screen flex flex-col bg-gray-700 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
+				className="relative w-full h-screen flex flex-col select-none bg-gray-700 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
+				ref={swipeRef}
 				style={{
 					backgroundImage: `url('${startBackground}')`,
 				}}
@@ -145,7 +144,7 @@ export default function Index() {
 						</button>
 					</div>
 
-					<div className="my-12 flex items-center justify-center gap-16 select-none">
+					<div className="my-12 flex items-center justify-center gap-16">
 						{popularPicksMovies.map((details) => (
 							<div
 								key={details.tmdb_id}
@@ -167,6 +166,9 @@ export default function Index() {
 							<div
 								key={details.tmdb_id}
 								className={`${popularPicks === "tv" ? "" : "hidden"} w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96`}
+								style={{
+									transform: `translateX(${currentPosition + swipeData.distance}px)`,
+								}}
 							>
 								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
 									<MovieTvCard

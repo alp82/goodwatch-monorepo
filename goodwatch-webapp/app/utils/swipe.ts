@@ -14,18 +14,19 @@ export const useSwipe = (onSwipeEnd?: (finalDistance: number) => void) => {
 	const startX = useRef(0)
 	const currentX = useRef(0)
 	const isSwiping = useRef(false)
+	const swipeRef = useRef<HTMLElement | undefined>()
 
 	const handleStart = (e: MouseEvent | TouchEvent) => {
-		startX.current = currentX.current = e.touches
-			? e.touches[0].clientX
-			: e.clientX
+		startX.current = currentX.current =
+			e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
 		isSwiping.current = true
 	}
 
 	const handleMove = (e: MouseEvent | TouchEvent) => {
 		if (!isSwiping.current) return
 
-		currentX.current = e.touches ? e.touches[0].clientX : e.clientX
+		currentX.current =
+			e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
 		const deltaX = currentX.current - startX.current
 		const direction = deltaX > 0 ? "right" : "left"
 
@@ -49,21 +50,28 @@ export const useSwipe = (onSwipeEnd?: (finalDistance: number) => void) => {
 	}
 
 	useEffect(() => {
-		window.addEventListener("mousemove", handleMove)
-		window.addEventListener("touchmove", handleMove)
-		window.addEventListener("mouseup", handleEnd)
-		window.addEventListener("touchend", handleEnd)
+		const element = swipeRef.current
+		if (!element) return
+
+		element.addEventListener("mousedown", handleStart)
+		element.addEventListener("touchstart", handleStart)
+		element.addEventListener("mousemove", handleMove)
+		element.addEventListener("touchmove", handleMove)
+		element.addEventListener("mouseup", handleEnd)
+		element.addEventListener("touchend", handleEnd)
 
 		return () => {
-			window.removeEventListener("mousemove", handleMove)
-			window.removeEventListener("touchmove", handleMove)
-			window.removeEventListener("mouseup", handleEnd)
-			window.removeEventListener("touchend", handleEnd)
+			element.removeEventListener("mousedown", handleStart)
+			element.removeEventListener("touchstart", handleStart)
+			element.removeEventListener("mousemove", handleMove)
+			element.removeEventListener("touchmove", handleMove)
+			element.removeEventListener("mouseup", handleEnd)
+			element.removeEventListener("touchend", handleEnd)
 		}
 	}, [])
 
 	return {
 		swipeData,
-		handleSwipeStart: handleStart,
+		swipeRef,
 	}
 }
