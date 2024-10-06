@@ -12,6 +12,11 @@ services:
     ports:
       - "${PGADMIN_PORT:-6080}:80"
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
 
 volumes:
   pgadmin:

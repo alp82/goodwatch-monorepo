@@ -18,37 +18,11 @@ services:
     ports:
       - "7997:80"
     restart: unless-stopped
-
-  weaviate:
-    image: cr.weaviate.io/semitechnologies/weaviate:1.25.8
-    restart: unless-stopped
-    ports:
-      - "${WEAVIATE_PORT:-8765}:8080"
-      - "${WEAVIATE_GRPC_PORT:-50081}:50051"
-    volumes:
-      - weaviate_data:/var/lib/weaviate
-    environment:
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      CLUSTER_HOSTNAME: 'node1'
-      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
-      ENABLE_MODULES: 'text2vec-transformers'
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      QUERY_DEFAULTS_LIMIT: 25
-      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
-    command:
-      - --host
-      - 0.0.0.0
-      - --port
-      - '8080'
-      - --scheme
-      - http
-
-  t2v-transformers:
-    image: cr.weaviate.io/semitechnologies/transformers-inference:sentence-transformers-multi-qa-MiniLM-L6-cos-v1
-    restart: unless-stopped
-    environment:
-      ENABLE_CUDA: '0'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
 
 volumes:
   embeddings_cache:
-  weaviate_data:

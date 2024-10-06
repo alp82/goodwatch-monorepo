@@ -15,6 +15,11 @@ services:
     environment:
       - 'REDIS_NODES=78.46.209.172 168.119.242.21 91.107.208.205'
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
     command:
       - /opt/bitnami/scripts/redis-cluster/run.sh
       - --cluster-announce-ip
