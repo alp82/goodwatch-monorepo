@@ -13,6 +13,11 @@ services:
     volumes:
       - mongodb:/data/db
       - ./mongodb-keyfile:/data/mongodb-keyfile
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
     command: --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
 volumes:

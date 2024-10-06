@@ -19,6 +19,11 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
     command: --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
   mongoinit:
