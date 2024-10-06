@@ -2,13 +2,6 @@
 ```
 ---
 
-query-db only with
-    title
-    release_year
-    poster_path
-
----
-
 discover sidebar redesign
     bug multiple genres duplicated
     subheader
