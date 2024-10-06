@@ -173,7 +173,7 @@ export default function Index() {
 								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
 									<MovieTvCard
 										details={details}
-										mediaType="movie"
+										mediaType="tv"
 										prefetch={true}
 									/>
 								</div>
