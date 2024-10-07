@@ -5,7 +5,7 @@ import os
 from connect_db import init_postgres
 from utils import slugify
 
-BATCH_SIZE = 20000
+BATCH_SIZE = 10000
 SITEMAP_DIR = "../public/sitemaps/"
 BASE_URL = {
     "movies": "https://goodwatch.app/movie/",
