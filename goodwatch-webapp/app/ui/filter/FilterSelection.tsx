@@ -42,8 +42,8 @@ export default function FilterSelection({
 	) => {
 		const newParams = {
 			...params,
-			withGenres: genresToInclude.map((genre) => genre.name).join(","),
-			withoutGenres: genresToExclude.map((genre) => genre.name).join(","),
+			withGenres: genresToInclude.map((genre) => genre.id).join(","),
+			withoutGenres: genresToExclude.map((genre) => genre.id).join(","),
 		}
 		updateParams(newParams)
 	}

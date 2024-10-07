@@ -36,7 +36,6 @@ export default function FilterGenres({
 		)
 	}, [type])
 	const genres: Genre[] = genresFetcher.data?.genres || []
-	console.log({ genres })
 
 	// TODO filter autocomplete items by input value
 	const autocompleteItems = genres.map((genre: Genre) => {
@@ -61,6 +60,7 @@ export default function FilterGenres({
 				name: selectedItem.label,
 			},
 		]
+		console.log({ genresToInclude, selectedItem, updatedGenresToInclude })
 		onChange(updatedGenresToInclude, genresToExclude)
 	}
 
