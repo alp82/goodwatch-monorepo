@@ -5,6 +5,7 @@ import {
 } from "@heroicons/react/20/solid"
 import { useFetcher } from "@remix-run/react"
 import React, { useEffect } from "react"
+import { useGenres } from "~/routes/api.genres.all"
 import type { Genre } from "~/server/genres.server"
 import type { FilterMediaType } from "~/server/utils/query-db"
 import Autocomplete, {
@@ -25,17 +26,8 @@ export default function FilterGenres({
 	withoutGenres = "",
 	onChange,
 }: FilterGenresProps) {
-	const genresFetcher = useFetcher()
-	useEffect(() => {
-		genresFetcher.submit(
-			{},
-			{
-				method: "get",
-				action: `/api/genres/${type}`,
-			},
-		)
-	}, [type])
-	const genres: Genre[] = genresFetcher.data?.genres || []
+	const genresResult = useGenres()
+	const genres = genresResult?.data || []
 
 	// TODO filter autocomplete items by input value
 	const autocompleteItems = genres.map((genre: Genre) => {
@@ -46,10 +38,10 @@ export default function FilterGenres({
 	})
 
 	const genresToInclude = genres.filter((genre) =>
-		withGenres.includes(genre.name.toString()),
+		withGenres.includes(genre.id.toString()),
 	)
 	const genresToExclude = genres.filter((genre) =>
-		withoutGenres.includes(genre.name.toString()),
+		withoutGenres.includes(genre.id.toString()),
 	)
 
 	const handleSelect = (selectedItem: AutocompleteItem) => {
@@ -60,7 +52,6 @@ export default function FilterGenres({
 				name: selectedItem.label,
 			},
 		]
-		console.log({ genresToInclude, selectedItem, updatedGenresToInclude })
 		onChange(updatedGenresToInclude, genresToExclude)
 	}
 

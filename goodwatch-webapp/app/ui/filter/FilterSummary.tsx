@@ -1,5 +1,6 @@
 import { TagIcon } from "@heroicons/react/20/solid"
 import React from "react"
+import { useGenres } from "~/routes/api.genres.all"
 import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import type { DiscoverFilters, DiscoverParams } from "~/server/discover.server"
 
@@ -15,6 +16,7 @@ export default function FilterSummary({
 	onToggle,
 }: FilterSummaryParams) {
 	const { data: streamingProviders } = useStreamingProviders()
+	const { data: genres } = useGenres()
 
 	const enabledStreamingProviders = (streamingProviders || [])
 		.filter((provider) => {
@@ -35,9 +37,12 @@ export default function FilterSummary({
 
 	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${params.country}.svg`
 
-	const genres = (params.withGenres || "")
+	const genreIds = (params.withGenres || "")
 		.split(",")
 		.filter((genre) => Boolean(genre))
+	const selectedGenres = (genres || [])
+		.filter((genre) => genreIds.includes(genre.id.toString()))
+		.map((genre) => genre.name)
 
 	const cast = filters.castMembers || []
 
@@ -98,13 +103,13 @@ export default function FilterSummary({
 				</span>
 			)}
 
-			{genres.length > 0 && (
+			{selectedGenres.length > 0 && (
 				<span className="flex items-center gap-2 bg-gray-700 px-2 py-1 rounded">
 					<TagIcon className="h-5 w-5 flex-shrink-0" />
-					{genres.length > 2 ? (
-						<>{genres.length} Genres</>
+					{selectedGenres.length > 2 ? (
+						<>{selectedGenres.length} Genres</>
 					) : (
-						<>{genres.join(", ")}</>
+						<>{selectedGenres.join(", ")}</>
 					)}
 				</span>
 			)}

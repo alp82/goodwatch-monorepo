@@ -1,28 +1,28 @@
 import { type LoaderFunction, json } from "@remix-run/node"
-import { type Genre, getGenresMovie, getGenresTV } from "~/server/genres.server"
+import { useQuery } from "@tanstack/react-query"
+import {
+	type Genre,
+	getGenresAll,
+	getGenresMovie,
+	getGenresTV,
+} from "~/server/genres.server"
 
-type LoaderData = {
-	genres: Genre[]
-}
+type GetGenresResult = Genre[]
 
 export const loader: LoaderFunction = async () => {
-	const genresMovie = await getGenresMovie({
-		type: "default",
-	})
-	const genresTV = await getGenresTV({
-		type: "default",
-	})
+	const genres = await getGenresAll()
+	return json<GetGenresResult>(genres)
+}
 
-	const combinedGenres = [...genresMovie.genres, ...genresTV.genres]
+// Query hook
 
-	const uniqueGenres = combinedGenres.reduce((genres, current) => {
-		if (!genres.some((genre) => genre.id === current.id)) {
-			genres.push(current)
-		}
-		return genres
-	}, [] as Genre[])
+export const queryKeyGenres = ["genres"]
 
-	return json<LoaderData>({
-		genres: uniqueGenres,
+export const useGenres = () => {
+	const url = new URL("/api/genres/all", "https://goodwatch.app")
+
+	return useQuery<GetGenresResult>({
+		queryKey: queryKeyGenres,
+		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),
 	})
 }

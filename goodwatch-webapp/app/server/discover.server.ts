@@ -4,6 +4,7 @@ import {
 	type StreamingProviders,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
+import { getGenresAll } from "~/server/genres.server"
 import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
 import { constructFullQuery, filterMediaTypes } from "~/server/utils/query-db"
 import { cached } from "~/utils/cache"
@@ -58,8 +59,8 @@ export const getDiscoverResults = async (params: DiscoverParams) => {
 		name: "discover-results",
 		target: _getDiscoverResults,
 		params,
-		ttlMinutes: 60 * 2,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 2,
+		ttlMinutes: 0,
 	})
 }
 
@@ -97,6 +98,12 @@ async function _getDiscoverResults({
 				: "popularity"
 	const direction = sortDirection === "asc" ? "ASC" : "DESC"
 
+	const genres = await getGenresAll()
+	const genreNames = genres
+		.filter((genre) => withGenres.includes(genre.id.toString()))
+		.map((genre) => genre.name)
+		.join(",")
+
 	const { query, params } = constructFullQuery({
 		filterMediaType: type,
 		streaming: {
@@ -111,7 +118,7 @@ async function _getDiscoverResults({
 			minYear,
 			maxYear,
 			withCast,
-			withGenres,
+			withGenres: genreNames,
 		},
 		orderBy: {
 			column,

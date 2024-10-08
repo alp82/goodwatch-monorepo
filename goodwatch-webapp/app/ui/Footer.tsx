@@ -102,6 +102,8 @@ export default function Footer({}: FooterProps) {
 	return (
 		<footer className="mt-8 bg-gray-950">
 			<div className="mx-auto max-w-7xl overflow-hidden py-12 px-6 sm:py-16 lg:px-8">
+				<div className="flex justify-center">{/*TODO DISCORD BLOCK*/}</div>
+
 				<nav
 					className="-mb-6 columns-2 flex justify-center space-x-12"
 					aria-label="Footer"
