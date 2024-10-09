@@ -107,20 +107,30 @@ export default function Index() {
 	const [popularPicks, setPopularPicks] = useState<"movies" | "tv">("movies")
 	const selectPopularMovies = () => {
 		setPopularPicks("movies")
+		setCurrentPosition(0)
 	}
 	const selectPopularTV = () => {
 		setPopularPicks("tv")
+		setCurrentPosition(0)
 	}
 
 	const [currentPosition, setCurrentPosition] = useState(0)
 	const { swipeData, swipeRef } = useSwipe((distance) => {
-		setCurrentPosition((curr) => curr + distance)
+		const maxPosition =
+			((popularPicks === "movies"
+				? popularPicksMovies.length
+				: popularPicksTV.length) +
+				2) *
+			200
+		setCurrentPosition((curr) =>
+			Math.min(Math.max(curr + distance, -maxPosition), maxPosition),
+		)
 	})
 
 	return (
 		<div>
 			<div
-				className="relative w-full h-screen flex flex-col select-none bg-gray-700 bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
+				className="relative w-full h-screen flex flex-col select-none bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
 				ref={swipeRef}
 				style={{
 					backgroundImage: `url('${startBackground}')`,
