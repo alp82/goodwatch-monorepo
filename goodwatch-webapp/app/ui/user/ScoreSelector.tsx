@@ -51,7 +51,8 @@ export default function ScoreSelector({
 			const vibeColorIndex = (hoveredScore || score || -1) * 10
 			return `bg-vibe-${vibeColorIndex}`
 		}
-		return "bg-gray-600"
+		return `bg-vibe-${index * 10}/40`
+		// return "bg-gray-600"
 	}
 
 	const getLabelText = () => {

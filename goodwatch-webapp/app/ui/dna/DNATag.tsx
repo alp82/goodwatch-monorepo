@@ -13,7 +13,7 @@ export function DNATag({ category, label, linkDisabled = false }: DNATagProps) {
 
 	const tagElement = (
 		<span
-			className={`${getCategoryColor(category)} text-white text-lg border-gray-600 border-2 px-2 rounded-md`}
+			className={`${getCategoryColor(category)} text-white text-base border-gray-600 border-2 px-2 py-1 rounded-md`}
 		>
 			{label}
 		</span>

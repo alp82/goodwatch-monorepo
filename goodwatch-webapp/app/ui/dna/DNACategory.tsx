@@ -58,7 +58,7 @@ export default function DNACategory({
 				</h3>
 				<div
 					className={`
-										mt-1 text-sm leading-6 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-2
+										mt-1 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-4 
 										${spoilerCategories.includes(category) && !spoilerVisible ? "cursor-pointer" : ""}
 									`}
 					onClick={

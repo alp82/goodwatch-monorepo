@@ -97,7 +97,9 @@ export default function StreamingBadges({
 				<PoweredBy />
 			</div>
 		) : (
-			<div className="textsm md:text-lg">not available for streaming yet</div>
+			<div className="textsm md:text-lg">
+				Not available for streaming right now
+			</div>
 		)
 	}
 
