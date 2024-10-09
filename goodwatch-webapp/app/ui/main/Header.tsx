@@ -75,7 +75,7 @@ export default function Header() {
 										<Search />
 									</div>
 								</div>
-								<div className="lg:ml-4">
+								<div className="lg:ml-2">
 									<div className="flex items-center">
 										{loading ? (
 											<></>

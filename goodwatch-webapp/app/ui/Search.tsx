@@ -83,10 +83,10 @@ export default function Search() {
 				className="flex justify-center"
 			>
 				<div
-					className="flex w-36 h-12 max-w-[calc(theme(maxWidth.7xl)-3em) py-2 px-4
-					rounded-md bg-gray-800 border-slate-800 border-2 text-gray-200 group-focus-within:bg-slate-700
+					className="flex items-center w-36 h-9 max-w-[calc(theme(maxWidth.7xl)-3em) py-2 px-4 group-focus-within:h-12
+					rounded-md bg-gray-800 border-slate-700 border-2 text-gray-200 hover:border-slate-600 group-focus-within:bg-slate-700 group-focus-within:border-slate-600
 					group-focus-within:absolute group-focus-within:top-2 group-focus-within:left-0 group-focus-within:w-full group-focus-within:z-10
-					transition-all duration-300 ease-in-out transform"
+					transition-all duration-150 ease-in-out transform"
 				>
 					{fetcher.state === "idle" ? (
 						<MagnifyingGlassIcon
@@ -111,7 +111,7 @@ export default function Search() {
 						// onBlur={() => setIsFocused(false)}
 					/>
 				</div>
-				{autocompleteItems.length && isFocused && (
+				{isFocused && autocompleteItems.length && (
 					<div className="absolute left-0 top-full mt-1 w-full bg-slate-950 text-white rounded-md shadow-lg">
 						{autocompleteItems.map((item) => (
 							<div
