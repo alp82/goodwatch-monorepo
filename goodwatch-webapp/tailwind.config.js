@@ -8,6 +8,9 @@ module.exports = {
 		require("@tailwindcss/aspect-ratio"),
 		require("@tailwindcss/forms"),
 		require("@tailwindcss/typography"),
+		require("tailwindcss/plugin")(({ addVariant }) => {
+			addVariant("search-cancel", "&::-webkit-search-cancel-button")
+		}),
 	],
 	future: {
 		hoverOnlyWhenSupported: true,

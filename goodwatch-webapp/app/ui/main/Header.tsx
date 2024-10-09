@@ -71,7 +71,7 @@ export default function Header() {
 									</div>
 								</div>
 								<div className="flex flex-1 justify-center px-2 lg:ml-6 lg:justify-end">
-									<div className="w-full max-w-lg lg:max-w-xl">
+									<div className="max-w-lg lg:max-w-7xl">
 										<Search />
 									</div>
 								</div>

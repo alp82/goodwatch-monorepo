@@ -63,6 +63,8 @@ export default function Videos({ videos }: VideosProps) {
 		},
 	}
 
+	console.log({ selectedVideos })
+
 	return (
 		<div className="mt-8">
 			<h2 className="text-2xl font-bold">Videos</h2>
@@ -80,17 +82,19 @@ export default function Videos({ videos }: VideosProps) {
 							/>
 						</div>
 					)}
-					<div className="aspect-w-16 aspect-h-9">
-						<ReactPlayer
-							url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
-							width="100%"
-							height="100%"
-							controls={true}
-							config={{
-								playerVars: {},
-							}}
-						/>
-					</div>
+					{selectedVideos[selectedNumber]?.key && (
+						<div className="aspect-w-16 aspect-h-9">
+							<ReactPlayer
+								url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
+								width="100%"
+								height="100%"
+								controls={true}
+								config={{
+									playerVars: {},
+								}}
+							/>
+						</div>
+					)}
 				</>
 			) : (
 				<InfoBox text="No videos available" />

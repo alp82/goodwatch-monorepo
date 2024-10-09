@@ -52,6 +52,12 @@ details
 
 ---
 
+slow network emulation
+    skeleton loading
+    useQuery
+
+---
+
 onboarding
     better instructions for step 2
     card titles above poster (better for long titles)

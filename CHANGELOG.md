@@ -7,9 +7,11 @@ All notable changes to GoodWatch will be documented in this file.
 ### Added
 
 ### Changed
+* Better search bar UX
 
 ### Fixed
 * Discover Genre Filter did show duplicate entries
+* No content jumping as DNA similarities are loaded
 
 ## [0.4.0] 2024-10-05
 

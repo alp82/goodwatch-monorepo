@@ -5,6 +5,7 @@ import { useExplore } from "~/routes/api.explore"
 import type { ExploreParams } from "~/server/explore.server"
 import type { MediaType } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
+import { Poster } from "~/ui/Poster"
 import { Spinner } from "~/ui/Spinner"
 import { DNATag } from "~/ui/dna/DNATag"
 import { mapCategoryToVectorName, spoilerCategories } from "~/ui/dna/utils"
@@ -92,19 +93,34 @@ export default function DNACategory({
 				</div>
 			</div>
 			<div className="mt-8 md:mt-0 w-full flex items-center gap-2">
-				{results.length ? (
-					<>
-						{categoryPreview.map((details) => (
-							<div key={details.tmdb_id} className="">
-								<MovieTvCard details={details} mediaType={details.media_type} />
-							</div>
-						))}
-					</>
-				) : (
-					<div className="mt-4">
-						<Spinner size="large" />
-					</div>
-				)}
+				{
+					results.length ? (
+						<>
+							{categoryPreview.map((details) => (
+								<div key={details.tmdb_id} className="">
+									<MovieTvCard
+										details={details}
+										mediaType={details.media_type}
+									/>
+								</div>
+							))}
+						</>
+					) : (
+						[...Array(Math.max(0, 4 - results.length)).keys()].map(
+							(_, index) => (
+								<div
+									key={index}
+									className="w-full h-auto border-2 rounded-2xl border-slate-700"
+								>
+									<Poster />
+								</div>
+							),
+						)
+					)
+					// <div className="mt-4">
+					// 	<Spinner size="large" />
+					// </div>
+				}
 			</div>
 		</div>
 	)
