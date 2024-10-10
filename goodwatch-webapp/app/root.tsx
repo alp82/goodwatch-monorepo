@@ -212,20 +212,20 @@ function Root() {
 			</head>
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
-					<HydrationBoundary state={dehydratedState}>
-						<LocaleContext.Provider value={{ locale }}>
-							<AuthContext.Provider value={{ supabase }}>
-								<AuthRedirect>
+					<AuthRedirect>
+						<HydrationBoundary state={dehydratedState}>
+							<LocaleContext.Provider value={{ locale }}>
+								<AuthContext.Provider value={{ supabase }}>
 									<App />
 									<CookieConsent />
 									<ToastContainer />
 									<PostHogInit />
 									<ScrollRestoration />
 									<Scripts />
-								</AuthRedirect>
-							</AuthContext.Provider>
-						</LocaleContext.Provider>
-					</HydrationBoundary>
+								</AuthContext.Provider>
+							</LocaleContext.Provider>
+						</HydrationBoundary>
+					</AuthRedirect>
 					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>
 			</body>
