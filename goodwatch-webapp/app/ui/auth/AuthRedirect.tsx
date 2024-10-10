@@ -13,7 +13,7 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 	const navigate = useNavigate()
 	const location = useLocation()
 
-	const hash = location.hash
+	const { hash } = location
 	const isAuthRedirect = hash?.startsWith("#redirect=")
 
 	useEffect(() => {
@@ -28,7 +28,7 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 			const redirectUrl = decodeURIComponent(hash.replace("#redirect=", ""))
 			navigate(redirectUrl, { replace: true })
 		}
-	}, [hash, navigate])
+	}, [hash])
 
 	return <>{!isAuthRedirect && children}</>
 }
