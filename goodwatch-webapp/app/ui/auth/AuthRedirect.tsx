@@ -30,5 +30,9 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 		}
 	}, [hash])
 
-	return <>{!isAuthRedirect && children}</>
+	if (isAuthRedirect) {
+		return null
+	}
+
+	return <>{children}</>
 }
