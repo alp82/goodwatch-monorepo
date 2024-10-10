@@ -51,7 +51,7 @@ export default function ScoreSelector({
 			const vibeColorIndex = (hoveredScore || score || -1) * 10
 			return `bg-vibe-${vibeColorIndex}`
 		}
-		return `bg-vibe-${index * 10}/40`
+		return `bg-vibe-${index * 10}/35`
 		// return "bg-gray-600"
 	}
 
@@ -145,13 +145,13 @@ export default function ScoreSelector({
 			<div className="px-6 py-2">
 				<span className="flex gap-2">
 					Your score:
-					<span className="font-semibold">{getLabelText()}</span>
+					<span className="font-extrabold">{getLabelText()}</span>
 					{score && (!hoveredScore || hoveredScore === score) && (
 						<>
 							<span className="flex-grow" />
 							<ScoreAction details={details} score={null}>
 								<span className="px-2 py-1 bg-red-950 hover:bg-red-800 text-red-200 text-xs font-semibold rounded cursor-pointer">
-									Remove
+									Remove Score
 								</span>
 							</ScoreAction>
 						</>
