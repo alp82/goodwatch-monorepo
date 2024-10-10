@@ -204,7 +204,11 @@ function Root() {
 	const dehydratedState = useDehydratedState()
 
 	return (
-		<html lang="en" className="scroll-smooth">
+		<html
+			lang="en"
+			className="scroll-smooth"
+			style={{ scrollbarGutter: "stable" }}
+		>
 			<head>
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
@@ -215,14 +219,14 @@ function Root() {
 					<LocaleContext.Provider value={{ locale }}>
 						<AuthContext.Provider value={{ supabase }}>
 							<AuthRedirect>
-								<HydrationBoundary state={dehydratedState}>
-									<App />
-									<CookieConsent />
-									<ToastContainer />
-									<PostHogInit />
-									<ScrollRestoration />
-									<Scripts />
-								</HydrationBoundary>
+								{/*<HydrationBoundary state={dehydratedState}>*/}
+								<App />
+								<CookieConsent />
+								<ToastContainer />
+								<PostHogInit />
+								<ScrollRestoration />
+								<Scripts />
+								{/*</HydrationBoundary>*/}
 							</AuthRedirect>
 						</AuthContext.Provider>
 					</LocaleContext.Provider>

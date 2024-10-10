@@ -2,8 +2,6 @@
 ```
 ---
 
-scrollbar-gutter: stable
-
 discover sidebar redesign
     bug multiple genres duplicated
     subheader
