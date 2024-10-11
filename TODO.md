@@ -75,13 +75,13 @@ onboarding
 ---
 
 header
-    main search expand
     subnav row with search and default filters
         https://flowbite.com/blocks/application/navbar/#double-navigation-bar-with-search-input
     
 ---
 
 home screen
+    swiping with acceleration
     user: trending, watch next, etc.
     stagger animation for rating progress bars
 

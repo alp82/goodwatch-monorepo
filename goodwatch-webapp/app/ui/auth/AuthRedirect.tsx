@@ -18,11 +18,12 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 
 	useEffect(() => {
 		if (isAuthRedirect) {
-			const redirectUrl = decodeURIComponent(hash.replace("#redirect=", ""))
-			navigate(redirectUrl, { replace: true })
-
 			queryClient.invalidateQueries()
 			queryClient.refetchQueries()
+
+			const redirectUrl = decodeURIComponent(hash.replace("#redirect=", ""))
+			navigate(redirectUrl, { replace: true })
+			window.location.href = redirectUrl
 		}
 	}, [hash])
 
