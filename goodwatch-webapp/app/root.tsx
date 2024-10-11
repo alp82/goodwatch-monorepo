@@ -9,6 +9,8 @@ import {
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
+	useLocation,
+	useNavigate,
 	useRouteError,
 } from "@remix-run/react"
 import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix"
@@ -17,6 +19,7 @@ import {
 	HydrationBoundary,
 	QueryClient,
 	QueryClientProvider,
+	useQueryClient,
 } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import posthog from "posthog-js"
@@ -34,7 +37,11 @@ import { useDehydratedState } from "use-dehydrated-state"
 import App from "~/app"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
-import { useCookieConsent } from "~/routes/api.user-settings.get"
+import { queryKeyUserData } from "~/routes/api.user-data"
+import {
+	queryKeyUserSettings,
+	useCookieConsent,
+} from "~/routes/api.user-settings.get"
 import cssTailwind from "~/tailwind.css?url"
 import { CookieConsent } from "~/ui/CookieConsent"
 import { AuthRedirect } from "~/ui/auth/AuthRedirect"
@@ -207,7 +214,7 @@ function Root() {
 		<html
 			lang="en"
 			className="scroll-smooth"
-			style={{ scrollbarGutter: "stable" }}
+			// style={{ scrollbarGutter: "stable" }}
 		>
 			<head>
 				<meta name="viewport" content="width=device-width, initial-scale=1" />

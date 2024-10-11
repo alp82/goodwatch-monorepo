@@ -185,6 +185,10 @@ sign up
 
 ---
 
+command palette
+
+---
+
 similarity issues
     dark palette is close to vibrant palette
     http://localhost:3003/explore/all/cinematic_style/Dark%20Palette
