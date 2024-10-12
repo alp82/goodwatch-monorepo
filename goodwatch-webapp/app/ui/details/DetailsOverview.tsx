@@ -75,8 +75,8 @@ export default function DetailsOverview({
 				<div className="relative m-auto ow-full max-w-7xl z-20">
 					<div className="ml-4">
 						<h1 className="mb-4 mr-24 text-2xl md:text-3xl lg:text-4xl">
-							<span className="font-bold pr-2">{title}</span> (
-							<small>{release_year})</small>
+							<span className="font-bold pr-2">{title}</span>{" "}
+							<small>({release_year})</small>
 						</h1>
 
 						<div className="flex gap-4 items-center mb-4 ml-">
