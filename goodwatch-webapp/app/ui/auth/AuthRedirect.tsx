@@ -22,8 +22,8 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 			queryClient.refetchQueries()
 
 			const redirectUrl = decodeURIComponent(hash.replace("#redirect=", ""))
-			window.location.replace(redirectUrl)
-			// navigate(redirectUrl, { replace: true })
+			navigate(redirectUrl, { replace: true })
+			// window.location.replace(redirectUrl)
 		}
 	}, [hash])
 
