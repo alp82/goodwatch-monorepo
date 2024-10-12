@@ -1,3 +1,4 @@
+import { Link } from "@remix-run/react"
 import React from "react"
 import type { Cast as CastType } from "~/server/details.server"
 
@@ -29,10 +30,11 @@ export default function Cast({ cast }: CastProps) {
 					const character =
 						castMember.character || castMember.roles?.[0].character
 					return (
-						<a
+						<Link
 							key={castMember.id}
-							href={`/discover?type=${type}&withCast=${castMember.id}`}
 							className="w-28 h-60 border-2 border-gray-700 flex flex-col items-center group"
+							to={`/discover?type=${type}&withCast=${castMember.id}`}
+							prefetch="intent"
 						>
 							<img
 								className="w-full h-auto"
@@ -53,7 +55,7 @@ export default function Cast({ cast }: CastProps) {
 									{character}
 								</p>
 							</div>
-						</a>
+						</Link>
 					)
 				})}
 			</div>
@@ -63,10 +65,11 @@ export default function Cast({ cast }: CastProps) {
 						const character =
 							castMember.character || castMember.roles?.[0].character
 						return (
-							<a
+							<Link
 								key={castMember.id}
-								href={`/discover?type=${type}&withCast=${castMember.id}`}
 								className="w-64 h-16 hover:bg-slate-800"
+								to={`/discover?type=${type}&withCast=${castMember.id}`}
+								prefetch="intent"
 							>
 								<strong>{castMember.name}</strong>{" "}
 								{character && (
@@ -74,7 +77,7 @@ export default function Cast({ cast }: CastProps) {
 										as <em>{character}</em>
 									</>
 								)}
-							</a>
+							</Link>
 						)
 					})}
 				</div>

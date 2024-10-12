@@ -12,7 +12,7 @@ import {
 	type LoaderFunctionArgs,
 	json,
 } from "@remix-run/node"
-import { useLoaderData } from "@remix-run/react"
+import { Link, useLoaderData } from "@remix-run/react"
 import {
 	type DehydratedState,
 	QueryClient,
@@ -207,32 +207,35 @@ export default function Index() {
 							</h1>
 							<p className="mt-6 max-w-2xl leading-relaxed text-xl sm:text-2xl md:text-3xl lg:text-4xl sm-h:text-2xl">
 								The only site that understands the{" "}
-								<a
+								<Link
 									className="inline-block accent font-bold transition-transform transform duration-300 hover:scale-110"
-									href="/how-it-works"
+									to="/how-it-works"
+									prefetch="viewport"
 								>
 									DNA
-								</a>{" "}
+								</Link>{" "}
 								of your favorite movies or shows.
 							</p>
 							<div className="mt-2 sm:mt-4 md:mt-6 lg:mt-10 flex items-center justify-center flex-wrap gap-4 lg:gap-6 text-xs sm:text-sm md:text-base lg:text-lg font-semibold ">
-								<a
-									href="/how-it-works"
+								<Link
 									className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+									to="/how-it-works"
+									prefetch="viewport"
 								>
 									<InformationCircleIcon className="h-5 w-auto" />
 									How it works
-								</a>
-								<a
-									href="/discover"
+								</Link>
+								<Link
 									className="hidden md:flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-md bg-indigo-600 text-sm sm:text-base md:text-lg lg:text-xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+									to="/discover"
+									prefetch="viewport"
 								>
 									<CubeIcon className="h-5 w-auto" />
 									Discover
-								</a>
+								</Link>
 								<a
-									href="#trending"
 									className="flex items-center justify-center gap-2 p-2 leading-6 text-indigo-400 hover:text-indigo-100 hover:bg-indigo-900"
+									href="#trending"
 								>
 									<ArrowDownIcon className="h-5 w-auto" />
 									What's Trending?
@@ -259,9 +262,10 @@ export default function Index() {
 									/>
 								</div>
 							))}
-						<a
+						<Link
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							href="/discover?type=movies"
+							to="/discover?type=movies"
+							prefetch="viewport"
 						>
 							<FilmIcon className="w-16 h-16" />
 							<div className="my-2 px-2">
@@ -269,7 +273,7 @@ export default function Index() {
 									Discover more Movies
 								</span>
 							</div>
-						</a>
+						</Link>
 					</div>
 				)}
 				<h2 className="mt-20 mb-4 text-3xl font-bold">Trending TV Shows</h2>
@@ -280,9 +284,10 @@ export default function Index() {
 								<MovieTvCard details={tv} mediaType="tv" prefetch={true} />
 							</div>
 						))}
-						<a
+						<Link
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							href="/discover?type=tv"
+							to="/discover?type=tv"
+							prefetch="viewport"
 						>
 							<TvIcon className="w-16 h-16" />
 							<div className="my-2 px-2">
@@ -290,7 +295,7 @@ export default function Index() {
 									Discover more TV Shows
 								</span>
 							</div>
-						</a>
+						</Link>
 					</div>
 				)}
 			</div>

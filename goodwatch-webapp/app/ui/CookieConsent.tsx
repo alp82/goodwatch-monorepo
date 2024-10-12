@@ -1,3 +1,4 @@
+import { Link } from "@remix-run/react"
 import { useCookieConsent } from "~/routes/api.user-settings.get"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 
@@ -38,9 +39,13 @@ export const CookieConsent = () => {
 											This website uses cookies to ensure you get the best
 											experience on our website.
 										</span>
-										<a href="/privacy" className="text-xs underline">
+										<Link
+											className="text-xs underline"
+											to="/privacy"
+											prefetch="viewport"
+										>
 											Learn more about our privacy policy
-										</a>
+										</Link>
 									</p>
 								</div>
 								<div className="flex flex-col sm:flex-row items-center gap-4 p-4 py-5 bg-background/20 text-lg">

@@ -1,4 +1,5 @@
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
+import { Link } from "@remix-run/react"
 import React from "react"
 import discordColor from "~/img/discord-mark-blue.svg"
 import redditColor from "~/img/reddit-color.svg"
@@ -111,12 +112,13 @@ export default function Footer({}: FooterProps) {
 					<div>
 						{navigation.main.map((item) => (
 							<div key={item.name} className="mb-2">
-								<a
-									href={item.href}
+								<Link
 									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+									to={item.href}
+									prefetch="viewport"
 								>
 									{item.name}
-								</a>
+								</Link>
 							</div>
 						))}
 						<div className="mb-2">
@@ -133,28 +135,31 @@ export default function Footer({}: FooterProps) {
 					</div>
 					<div>
 						<div className="mb-2">
-							<a
-								href="/about"
+							<Link
 								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+								to="/about"
+								prefetch="viewport"
 							>
 								About
-							</a>
+							</Link>
 						</div>
 						<div className="mb-2">
-							<a
-								href="/how-it-works"
+							<Link
 								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+								to="/how-it-works"
+								prefetch="viewport"
 							>
 								How it works
-							</a>
+							</Link>
 						</div>
 						<div className="mb-2">
-							<a
-								href="/disclaimer"
+							<Link
 								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+								to="/disclaimer"
+								prefetch="viewport"
 							>
 								Disclaimer
-							</a>
+							</Link>
 						</div>
 						<div className="mb-2">
 							<a

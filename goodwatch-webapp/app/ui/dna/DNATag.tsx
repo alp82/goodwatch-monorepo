@@ -1,3 +1,4 @@
+import { Link } from "@remix-run/react"
 import React from "react"
 import { getCategoryColor, mapCategoryToVectorName } from "~/ui/dna/utils"
 
@@ -22,12 +23,8 @@ export function DNATag({ category, label, linkDisabled = false }: DNATagProps) {
 	return linkDisabled ? (
 		tagElement
 	) : (
-		<a
-			href={
-				linkDisabled ? undefined : `/explore/all/${vectorCategory}/${label}`
-			}
-		>
+		<Link to={`/explore/all/${vectorCategory}/${label}`} prefetch="intent">
 			{tagElement}
-		</a>
+		</Link>
 	)
 }

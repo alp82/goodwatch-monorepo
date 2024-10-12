@@ -1,5 +1,6 @@
 import { CubeIcon } from "@heroicons/react/24/solid"
 import type { MetaFunction } from "@remix-run/node"
+import { Link } from "@remix-run/react"
 import React, { useState } from "react"
 import disneyLogo from "~/img/disneyplus-logo.svg"
 import dnaBig from "~/img/dna-big.png"
@@ -180,13 +181,14 @@ export default function About() {
 						<hr className="border-gray-700" />
 
 						<div className="flex items-center justify-center flex-wrap gap-16 md:gap-36">
-							<a
-								href="/discover"
+							<Link
 								className="rounded-md bg-indigo-600 px-8 py-4 flex items-center justify-center gap-2 lg:gap-4 text-xl lg:text-2xl text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+								to="/discover"
+								prefetch="render"
 							>
 								<CubeIcon className="h-5 lg:h-7 w-auto" />
 								<span className="hidden xs:inline">Try it: </span>Discover
-							</a>
+							</Link>
 						</div>
 					</div>
 				</div>

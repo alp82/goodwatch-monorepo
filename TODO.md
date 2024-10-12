@@ -2,7 +2,12 @@
 ```
 ---
 
+replace links
+remmove prefetch component
 redirect toast
+
+---
+
 
 discover sidebar redesign
     bug multiple genres duplicated
@@ -374,6 +379,14 @@ clips
     youtube shorts
     reels
     
+---
+
+anti spoiler mode
+    hide images and thumbnails
+    hide overview and description
+    hide all DNA tags
+    hide episode titles
+
 ---
 
 server resource monitoring

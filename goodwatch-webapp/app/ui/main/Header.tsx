@@ -16,6 +16,7 @@ import Search from "~/ui/Search"
 import { useUser } from "~/utils/auth"
 
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
+import { Link } from "@remix-run/react"
 import logo from "~/img/goodwatch-logo.png"
 import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
 import { SignOutLink } from "~/ui/auth/SignOutLink"
@@ -46,27 +47,28 @@ export default function Header() {
 								</div>
 								<div className="flex items-center px-2 lg:px-0">
 									<div className="flex-shrink-0">
-										<a href="/">
+										<Link to="/" prefetch="render">
 											<img
 												className="h-10 w-auto"
 												src={logo}
 												alt="GoodWatch Logo"
 											/>
-										</a>
+										</Link>
 									</div>
-									<a href="/">
+									<Link to="/" prefetch="render">
 										<div className="brand-header hidden md:block ml-2 text-2xl text-gray-100">
 											GoodWatch
 										</div>
-									</a>
+									</Link>
 									<div className="hidden lg:ml-6 lg:block">
 										<div className="flex space-x-4">
-											<a
-												href="/discover"
+											<Link
 												className={`rounded-md px-3 py-2 text-md font-semibold ${isPage("/discover") ? "text-white bg-indigo-800" : "text-gray-300"} hover:bg-indigo-900 hover:text-white`}
+												to="/discover"
+												prefetch="render"
 											>
 												Discover
-											</a>
+											</Link>
 										</div>
 									</div>
 								</div>
@@ -106,15 +108,16 @@ export default function Header() {
 															className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
 														>
 															<MenuItem>
-																<a
-																	href="/wishlist"
+																<Link
 																	className={`
-                                  ${isPage("/wishlist") ? "bg-gray-800 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}
-                                  block px-4 py-2 text-base
-                                `}
+																		${isPage("/wishlist") ? "bg-gray-800 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}
+																		block px-4 py-2 text-base
+																	`}
+																	to="/wishlist"
+																	prefetch="viewport"
 																>
 																	Wishlist
-																</a>
+																</Link>
 															</MenuItem>
 															<MenuItem>
 																<SignOutLink active={false} />
@@ -141,32 +144,36 @@ export default function Header() {
 						>
 							<DisclosurePanel className="lg:hidden text-lg">
 								<div className="space-y-1 px-2 pt-2 pb-3">
-									<a
-										href="/"
+									<Link
 										className={`block rounded-md px-3 py-2 font-medium ${isPage("/") ? "bg-gray-900 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+										to="/"
+										prefetch="render"
 									>
 										Home
-									</a>
-									<a
-										href="/discover"
+									</Link>
+									<Link
 										className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage("/discover") ? "bg-gray-900 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+										to="/discover"
+										prefetch="render"
 									>
 										Discover
-									</a>
+									</Link>
 								</div>
 								<div className="border-t border-gray-500 space-y-1 px-2 pt-2 pb-3">
-									<a
-										href="/about"
+									<Link
 										className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage("/about") ? "bg-gray-900 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+										to="/about"
+										prefetch="viewport"
 									>
 										About
-									</a>
-									<a
-										href="/disclaimer"
+									</Link>
+									<Link
 										className={`flex items-center rounded-md px-3 py-2 font-medium ${isPage("/disclaimer") ? "bg-gray-900 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+										to="/disclaimer"
+										prefetch="viewport"
 									>
 										Disclaimer
-									</a>
+									</Link>
 								</div>
 								<div className="border-t border-gray-500 space-y-1 px-2 pt-2 pb-3">
 									<a

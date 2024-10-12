@@ -1,3 +1,4 @@
+import { Link } from "@remix-run/react"
 import React, { useState } from "react"
 import type { MediaType } from "~/server/search.server"
 
@@ -8,13 +9,14 @@ export interface KeywordProps {
 
 const Keyword = ({ keyword, type }: KeywordProps) => {
 	return (
-		<a
+		<Link
 			key={keyword}
-			href={`/discover?type=${type}&withKeywords=${keyword}`}
 			className="px-2 py-0.5 rounded text-xs font-medium border-2 border-sky-800 text-sky-100 bg-sky-950 hover:text-white hover:bg-sky-900"
+			to={`/discover?type=${type}&withKeywords=${keyword}`}
+			prefetch="intent"
 		>
 			{keyword}
-		</a>
+		</Link>
 	)
 }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
 import { useState } from "react"
@@ -98,17 +99,17 @@ export default function Onboarding() {
 								<div className="flex items-center gap-2 text-2xl">
 									<span className="hidden sm:block mr-2">Welcome to</span>
 									<div className="hidden sm:block flex-shrink-0">
-										<a href="/">
+										<Link to="/" prefetch="render">
 											<img
 												className="h-10 w-auto"
 												src={logo}
 												alt="GoodWatch Logo"
 											/>
-										</a>
+										</Link>
 									</div>
-									<a href="/">
+									<Link to="/" prefetch="render">
 										<div className="brand-header text-gray-100">GoodWatch</div>
-									</a>
+									</Link>
 									<img
 										className="ml-2 h-10 w-10 rounded-full"
 										src={user?.user_metadata.avatar_url}

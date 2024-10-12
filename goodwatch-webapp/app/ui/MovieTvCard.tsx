@@ -1,5 +1,6 @@
-import { PrefetchPageLinks } from "@remix-run/react"
-import React, { useState } from "react"
+import { Link, PrefetchPageLinks } from "@remix-run/react"
+import type React from "react"
+import { useState } from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { ExploreResult } from "~/server/explore.server"
@@ -29,22 +30,35 @@ export function MovieTvCard({
 	const ratings = extractRatings(details)
 
 	const [isDragging, setIsDragging] = useState(false)
-	const handleTouchStart = (e: MouseEvent | TouchEvent) => {
+	const handleTouchStart = (
+		e:
+			| React.MouseEvent<HTMLAnchorElement>
+			| React.TouchEvent<HTMLAnchorElement>,
+	) => {
 		setIsDragging(false) // Start by assuming no drag
 	}
-	const handleTouchMove = (e: MouseEvent | TouchEvent) => {
+	const handleTouchMove = (
+		e:
+			| React.MouseEvent<HTMLAnchorElement>
+			| React.TouchEvent<HTMLAnchorElement>,
+	) => {
 		setIsDragging(true) // If they move, we know it's a drag
 	}
-	const handleClick = (e: MouseEvent | TouchEvent) => {
+	const handleClick = (
+		e:
+			| React.MouseEvent<HTMLAnchorElement>
+			| React.TouchEvent<HTMLAnchorElement>,
+	) => {
 		if (isDragging) {
 			e.preventDefault() // Prevent navigation if it was a drag
 		}
 	}
 
 	return (
-		<a
+		<Link
 			className="flex flex-col w-full bg-gray-900 hover:bg-gray-800 border-4 rounded-md border-gray-800 hover:border-indigo-700"
-			href={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
+			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
+			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
 			onTouchStart={handleTouchStart}
 			onTouchMove={handleTouchMove}
@@ -72,6 +86,6 @@ export function MovieTvCard({
 					page={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
 				/>
 			)}
-		</a>
+		</Link>
 	)
 }

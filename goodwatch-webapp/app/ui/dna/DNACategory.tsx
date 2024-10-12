@@ -1,4 +1,5 @@
 import { MapIcon } from "@heroicons/react/24/solid"
+import { Link } from "@remix-run/react"
 import React from "react"
 import { Spoiler } from "spoiled"
 import { useExplore } from "~/routes/api.explore"
@@ -83,13 +84,14 @@ export default function DNACategory({
 					))}
 				</div>
 				<div className="mt-4">
-					<a
-						href={`/explore/all/${mapCategoryToVectorName(category)}/${text}`}
+					<Link
 						className="px-3 py-2 border-2 border-gray-500 bg-slate-700 text-gray-100 text-sm rounded-md hover:bg-slate-600 hover:text-white"
+						to={`/explore/all/${mapCategoryToVectorName(category)}/${text}`}
+						prefetch="viewport"
 					>
 						<MapIcon className="w-4 h-4 inline-block mr-2" />
 						Explore: <span className="font-bold">Similar {category}</span>
-					</a>
+					</Link>
 				</div>
 			</div>
 			<div className="mt-8 md:mt-0 w-full flex items-center gap-2">

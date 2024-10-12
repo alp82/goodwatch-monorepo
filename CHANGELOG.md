@@ -2,7 +2,25 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.4.1] 2024-10-xx
+## [0.4.3] 2024-10-xx
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.4.2] 2024-10-12
+
+### Added
+
+### Changed
+* Much faster page load: links are not causing a full page reload anymore
+* Removed unnecessary page transition animation
+
+### Fixed
+
+## [0.4.1] 2024-10-12
 
 ### Added
 
@@ -10,8 +28,9 @@ All notable changes to GoodWatch will be documented in this file.
 * Better search bar UX
 
 ### Fixed
+* Blank Screen after Login
 * Discover Genre Filter did show duplicate entries
-* No content jumping as DNA similarities are loaded
+* Less content jumping as DNA similarities are loaded
 
 ## [0.4.0] 2024-10-05
 

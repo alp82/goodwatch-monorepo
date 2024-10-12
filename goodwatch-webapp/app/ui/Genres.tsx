@@ -1,3 +1,4 @@
+import { Link } from "@remix-run/react"
 import React from "react"
 import type { MediaType } from "~/server/search.server"
 
@@ -19,13 +20,14 @@ export default function Genres({
 					{genres.map((genre) => {
 						if (withLinks) {
 							return (
-								<a
+								<Link
 									key={genre}
-									href={`/discover?type=all&withGenres=${genre.replace("&", "%26")}`}
 									className="mr-2 px-2.5 py-0.5 inline-flex items-center rounded-md border-2 border-slate-600 text-slate-100 bg-slate-800 hover:text-white hover:bg-slate-900"
+									to={`/discover?type=all&withGenres=${genre.replace("&", "%26")}`}
+									prefetch="intent"
 								>
 									{genre}
-								</a>
+								</Link>
 							)
 						}
 						return (

@@ -1,11 +1,12 @@
-import type { MetaFunction } from "@remix-run/node";
-import type { loader } from "~/routes/discover";
+import type { MetaFunction } from "@remix-run/node"
+import { Link } from "@remix-run/react"
+import type { loader } from "~/routes/discover"
 
 export function headers() {
 	return {
 		"Cache-Control":
 			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	};
+	}
 }
 
 export const meta: MetaFunction<typeof loader> = () => {
@@ -15,8 +16,8 @@ export const meta: MetaFunction<typeof loader> = () => {
 			description:
 				"FAQ for GoodWatch. All movie and tv show ratings and streaming providers on the same page",
 		},
-	];
-};
+	]
+}
 
 export default function About() {
 	return (
@@ -63,8 +64,8 @@ export default function About() {
 				<p>
 					The closest offering to what I was looking for can be found on &nbsp;
 					<a
-						href="https://www.justwatch.com/"
 						className="underline cursor-pointer"
+						href="https://www.justwatch.com/"
 						target="_blank"
 						rel="noreferrer"
 					>
@@ -90,5 +91,5 @@ export default function About() {
 				</p>
 			</section>
 		</div>
-	);
+	)
 }

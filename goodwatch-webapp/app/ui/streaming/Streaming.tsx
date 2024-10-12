@@ -1,4 +1,5 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid"
+import { Link } from "@remix-run/react"
 import React from "react"
 import tmdb_logo from "~/img/tmdb-logo.svg"
 import type {
@@ -137,10 +138,11 @@ export default function Streaming({
 					</div>
 					<div className="flex flex-wrap gap-6">
 						{countryCodes.map((countryCode) => (
-							<a
+							<Link
 								key={countryCode}
-								href={`?country=${countryCode}&tab=streaming`}
 								className="flex items-center gap-2 w-16 px-1 py-1 border-2 border-gray-600 bg-gray-800 text-sm hover:bg-gray-700"
+								to={`?country=${countryCode}&tab=streaming`}
+								prefetch="intent"
 							>
 								<img
 									src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`}
@@ -148,7 +150,7 @@ export default function Streaming({
 									className="h-4"
 								/>
 								<span className="font-bold">{countryCode}</span>
-							</a>
+							</Link>
 						))}
 					</div>
 				</div>
