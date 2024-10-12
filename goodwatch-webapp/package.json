@@ -37,6 +37,7 @@
 		"react-toastify": "^10.0.4",
 		"remix-utils": "^7.6.0",
 		"spoiled": "^0.3.2",
+		"swiper": "^11.1.14",
 		"use-dehydrated-state": "^0.1.0"
 	},
 	"devDependencies": {

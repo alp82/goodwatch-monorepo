@@ -18,6 +18,7 @@ All notable changes to GoodWatch will be documented in this file.
 ### Changed
 * Much faster page load: links are not causing a full page reload anymore
 * Removed unnecessary page transition animation
+* Much smoother carousel on home page 
 
 ### Fixed
 

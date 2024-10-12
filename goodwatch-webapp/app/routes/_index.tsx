@@ -19,6 +19,8 @@ import {
 	dehydrate,
 } from "@tanstack/react-query"
 import React, { useState } from "react"
+import { Autoplay, EffectCoverflow, FreeMode } from "swiper/modules"
+import { Swiper, SwiperSlide } from "swiper/react"
 import startBackground from "~/img/start-background.png"
 import startForeground from "~/img/start-foreground.png"
 import {
@@ -36,9 +38,10 @@ import {
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import { prefetchUserData } from "~/server/userData.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { sections } from "~/ui/details/common"
 import { getLocaleFromRequest } from "~/utils/locale"
-import { useSwipe } from "~/utils/swipe"
+
+import "swiper/css"
+import "swiper/css/effect-coverflow"
 
 export const headers: HeadersFunction = () => {
 	return {
@@ -104,34 +107,24 @@ export default function Index() {
 	const { trendingMovies, trendingTV, popularPicksMovies, popularPicksTV } =
 		useLoaderData<LoaderData>()
 
-	const [popularPicks, setPopularPicks] = useState<"movies" | "tv">("movies")
+	const [popularPicksType, setPopularPicksType] = useState<"movies" | "tv">(
+		"movies",
+	)
 	const selectPopularMovies = () => {
-		setPopularPicks("movies")
+		setPopularPicksType("movies")
 		setCurrentPosition(0)
 	}
 	const selectPopularTV = () => {
-		setPopularPicks("tv")
+		setPopularPicksType("tv")
 		setCurrentPosition(0)
 	}
-
-	const [currentPosition, setCurrentPosition] = useState(0)
-	const { swipeData, swipeRef } = useSwipe((distance) => {
-		const maxPosition =
-			((popularPicks === "movies"
-				? popularPicksMovies.length
-				: popularPicksTV.length) +
-				2) *
-			200
-		setCurrentPosition((curr) =>
-			Math.min(Math.max(curr + distance, -maxPosition), maxPosition),
-		)
-	})
+	const popularPicks =
+		popularPicksType === "movies" ? popularPicksMovies : popularPicksTV
 
 	return (
 		<div>
 			<div
 				className="relative w-full h-screen flex flex-col select-none bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
-				ref={swipeRef}
 				style={{
 					backgroundImage: `url('${startBackground}')`,
 				}}
@@ -140,55 +133,56 @@ export default function Index() {
 					<div className="hidden sm:flex gap-8 sm:gap-16 text-gray-200 text-xl sm:text-2xl md:text-3xl font-bold">
 						<button
 							type="button"
-							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "movies" ? "bg-indigo-900/60" : "bg-slate-900/70"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
+							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicksType === "movies" ? "bg-indigo-900/60" : "bg-slate-900/70"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
 							onClick={selectPopularMovies}
 						>
 							Popular Movies
 						</button>
 						<button
 							type="button"
-							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicks === "tv" ? "bg-indigo-900/70" : "bg-slate-900/60"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
+							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicksType === "tv" ? "bg-indigo-900/70" : "bg-slate-900/60"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
 							onClick={selectPopularTV}
 						>
 							Popular Shows
 						</button>
 					</div>
 
-					<div className="my-12 flex items-center justify-center gap-16">
-						{popularPicksMovies.map((details) => (
-							<div
-								key={details.tmdb_id}
-								className={`${popularPicks === "movies" ? "" : "hidden"} w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96`}
-								style={{
-									transform: `translateX(${currentPosition + swipeData.distance}px)`,
-								}}
-							>
-								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
-									<MovieTvCard
-										details={details}
-										mediaType="movie"
-										prefetch={true}
-									/>
-								</div>
-							</div>
-						))}
-						{popularPicksTV.map((details) => (
-							<div
-								key={details.tmdb_id}
-								className={`${popularPicks === "tv" ? "" : "hidden"} w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96`}
-								style={{
-									transform: `translateX(${currentPosition + swipeData.distance}px)`,
-								}}
-							>
-								<div className="transition-transform duration-200 transform hover:scale-105 hover:rotate-2">
-									<MovieTvCard
-										details={details}
-										mediaType="tv"
-										prefetch={true}
-									/>
-								</div>
-							</div>
-						))}
+					<div className="my-12 w-full">
+						<Swiper
+							autoplay={{
+								delay: 3000,
+							}}
+							centeredSlides={true}
+							coverflowEffect={{
+								rotate: 10,
+								stretch: 0,
+								depth: 100,
+								modifier: 1,
+								slideShadows: true,
+							}}
+							effect="coverflow"
+							freeMode={{
+								enabled: true,
+							}}
+							grabCursor={true}
+							loop={true}
+							modules={[Autoplay, EffectCoverflow, FreeMode]}
+							preventClicks={false}
+							preventClicksPropagation={false}
+							slidesPerView={5}
+						>
+							{popularPicks.map((details) => (
+								<SwiperSlide key={details.tmdb_id}>
+									<div className="w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96">
+										<MovieTvCard
+											details={details}
+											mediaType={popularPicksType === "movies" ? "movie" : "tv"}
+											prefetch={true}
+										/>
+									</div>
+								</SwiperSlide>
+							))}
+						</Swiper>
 					</div>
 				</div>
 
