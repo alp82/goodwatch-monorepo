@@ -36,7 +36,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 						</p>
 					</button>
 					<Transition show={open} as={Fragment}>
-						<Dialog as="div" className="relative z-10" onClose={setOpen}>
+						<Dialog as="div" className="relative z-50" onClose={setOpen}>
 							<TransitionChild
 								as={Fragment}
 								enter="ease-out duration-300"
@@ -49,7 +49,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 								<div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" />
 							</TransitionChild>
 
-							<div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+							<div className="fixed inset-0 w-screen overflow-y-auto">
 								<div className="flex min-h-full items-center justify-center p-4 text-center">
 									<TransitionChild
 										as={Fragment}
