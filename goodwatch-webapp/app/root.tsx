@@ -214,7 +214,7 @@ function Root() {
 		<html
 			lang="en"
 			className="scroll-smooth"
-			// style={{ scrollbarGutter: "stable" }}
+			style={{ scrollbarGutter: "stable" }}
 		>
 			<head>
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
