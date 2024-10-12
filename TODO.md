@@ -2,9 +2,7 @@
 ```
 ---
 
-replace links
 remmove prefetch component
-redirect toast
 
 ---
 

@@ -1,16 +1,9 @@
-import {
-	ArrowPathIcon,
-	MagnifyingGlassIcon,
-	XCircleIcon,
-} from "@heroicons/react/20/solid"
-import { PrefetchPageLinks, useFetcher, useNavigate } from "@remix-run/react"
+import { ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
+import { Link, useFetcher } from "@remix-run/react"
 import React from "react"
 import placeholder from "~/img/placeholder-poster.png"
 import type { MediaType, SearchResult } from "~/server/search.server"
-import Autocomplete, {
-	type AutocompleteItem,
-	type RenderItemParams,
-} from "~/ui/form/Autocomplete"
+import type { AutocompleteItem } from "~/ui/form/Autocomplete"
 import { classNames, titleToDashed } from "~/utils/helpers"
 
 export interface SearchAutocompleteItem extends AutocompleteItem {
@@ -42,13 +35,6 @@ export default function Search() {
 	})
 
 	const [isFocused, setIsFocused] = React.useState(false)
-
-	const navigate = useNavigate()
-	const handleClickSearchResult = (item: SearchAutocompleteItem) => {
-		const title = titleToDashed(item.label)
-		navigate(`/${item.mediaType}/${item.key}-${title}`)
-		setIsFocused(false)
-	}
 
 	const renderItem = ({
 		item,
@@ -113,25 +99,19 @@ export default function Search() {
 				</div>
 				{isFocused && autocompleteItems.length && (
 					<div className="absolute left-0 top-full mt-1 w-full bg-slate-950 text-white rounded-md shadow-lg">
-						{autocompleteItems.map((item) => (
-							<div
+						{autocompleteItems.map((item, index) => (
+							<Link
 								key={item.key}
-								onClick={() => handleClickSearchResult(item)}
-								onKeyDown={() => null}
-								onMouseDown={(e) => e.preventDefault()}
+								to={`/${item.mediaType}/${item.key}-${titleToDashed(item.label)}`}
+								prefetch={index < 5 ? "render" : "intent"}
+								onClick={() => setIsFocused(false)}
 							>
 								{renderItem({ item, selected: false })}
-							</div>
+							</Link>
 						))}
 					</div>
 				)}
 			</fetcher.Form>
-			{autocompleteItems.slice(0, 4).map((item) => (
-				<PrefetchPageLinks
-					key={item.key}
-					page={`/${item.mediaType}/${item.key}-${titleToDashed(item.label)}`}
-				/>
-			))}
 		</div>
 	)
 }

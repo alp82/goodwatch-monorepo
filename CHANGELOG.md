@@ -13,6 +13,7 @@ All notable changes to GoodWatch will be documented in this file.
 ## [0.4.2] 2024-10-12
 
 ### Added
+* Global loading indicator
 
 ### Changed
 * Much faster page load: links are not causing a full page reload anymore

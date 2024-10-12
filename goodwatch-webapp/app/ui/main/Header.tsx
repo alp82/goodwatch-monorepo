@@ -20,6 +20,7 @@ import { Link } from "@remix-run/react"
 import logo from "~/img/goodwatch-logo.png"
 import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
 import { SignOutLink } from "~/ui/auth/SignOutLink"
+import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 
 export default function Header() {
 	const location = useLocation()
@@ -29,6 +30,7 @@ export default function Header() {
 
 	return (
 		<div className="bg-gray-900 fixed top-0 z-50 w-full">
+			<GlobalLoading />
 			<Disclosure as="nav" className="bg-gray-950/35">
 				{({ open }) => (
 					<>

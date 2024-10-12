@@ -80,12 +80,6 @@ export function MovieTvCard({
 					</span>
 				</div>
 			</div>
-
-			{prefetch && (
-				<PrefetchPageLinks
-					page={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
-				/>
-			)}
 		</Link>
 	)
 }
