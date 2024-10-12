@@ -129,7 +129,7 @@ export default function Index() {
 					backgroundImage: `url('${startBackground}')`,
 				}}
 			>
-				<div className="flex flex-col justify-start items-center overflow-hidden z-10 hover:z-30">
+				<div className="pb-32 flex flex-col justify-start items-center overflow-hidden z-10 hover:z-30">
 					<div className="hidden sm:flex gap-8 sm:gap-16 text-gray-200 text-xl sm:text-2xl md:text-3xl font-bold">
 						<button
 							type="button"
