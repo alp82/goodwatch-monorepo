@@ -29,42 +29,12 @@ export function MovieTvCard({
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
 
-	const [isDragging, setIsDragging] = useState(false)
-	const handleTouchStart = (
-		e:
-			| React.MouseEvent<HTMLAnchorElement>
-			| React.TouchEvent<HTMLAnchorElement>,
-	) => {
-		setIsDragging(false) // Start by assuming no drag
-	}
-	const handleTouchMove = (
-		e:
-			| React.MouseEvent<HTMLAnchorElement>
-			| React.TouchEvent<HTMLAnchorElement>,
-	) => {
-		setIsDragging(true) // If they move, we know it's a drag
-	}
-	const handleClick = (
-		e:
-			| React.MouseEvent<HTMLAnchorElement>
-			| React.TouchEvent<HTMLAnchorElement>,
-	) => {
-		if (isDragging) {
-			e.preventDefault() // Prevent navigation if it was a drag
-		}
-	}
-
 	return (
 		<Link
 			className="flex flex-col w-full bg-gray-900 hover:bg-gray-800 border-4 rounded-md border-gray-800 hover:border-indigo-700"
 			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
-			onTouchStart={handleTouchStart}
-			onTouchMove={handleTouchMove}
-			onMouseDown={handleTouchStart}
-			onMouseMove={handleTouchMove}
-			onClick={handleClick}
 		>
 			<div className="relative">
 				<RatingOverlay ratings={ratings} />

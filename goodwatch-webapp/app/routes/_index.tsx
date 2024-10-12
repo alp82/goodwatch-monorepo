@@ -184,8 +184,8 @@ export default function Index() {
 							grabCursor={true}
 							loop={true}
 							modules={[Autoplay, EffectCoverflow, FreeMode]}
-							preventClicks={false}
-							preventClicksPropagation={false}
+							// preventClicks={false}
+							// preventClicksPropagation={false}
 							slidesPerView={3}
 						>
 							{popularPicks.map((details) => (
