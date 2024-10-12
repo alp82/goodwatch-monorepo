@@ -226,14 +226,14 @@ function Root() {
 					<LocaleContext.Provider value={{ locale }}>
 						<AuthContext.Provider value={{ supabase }}>
 							<AuthRedirect>
-								{/*<HydrationBoundary state={dehydratedState}>*/}
-								<App />
-								<CookieConsent />
-								<ToastContainer />
-								<PostHogInit />
-								<ScrollRestoration />
-								<Scripts />
-								{/*</HydrationBoundary>*/}
+								<HydrationBoundary state={dehydratedState}>
+									<App />
+									<CookieConsent />
+									<ToastContainer />
+									<PostHogInit />
+									<ScrollRestoration />
+									<Scripts />
+								</HydrationBoundary>
 							</AuthRedirect>
 						</AuthContext.Provider>
 					</LocaleContext.Provider>
