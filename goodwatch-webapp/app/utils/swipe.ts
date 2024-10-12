@@ -16,39 +16,71 @@ export const useSwipe = (onSwipeEnd?: (finalDistance: number) => void) => {
 	const isSwiping = useRef(false)
 	const swipeRef = useRef<HTMLElement | undefined>()
 
-	const previousX = useRef(0)
-	const previousTime = useRef(0)
+	const previousX = useRef<number[]>([]) // Store last few X positions
+	const previousTimes = useRef<number[]>([]) // Store corresponding timestamps
 	const velocity = useRef(0)
 	const animationFrameId = useRef<number | null>(null)
+	const momentumOngoing = useRef(false)
 
-	const handleStart = (e: MouseEvent | TouchEvent) => {
-		const clientX = e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
-		startX.current = currentX.current = previousX.current = clientX
-		previousTime.current = performance.now()
-		isSwiping.current = true
+	const maxHistorySize = 5 // Maximum number of data points to smooth over
 
-		// Cancel any ongoing animation
+	const reset = (finalDistance = 0) => {
+		velocity.current = 0
+		previousX.current = [] // Reset position history
+		previousTimes.current = [] // Reset time history
+		setSwipeData({ direction: null, distance: 0 })
 		if (animationFrameId.current) {
 			cancelAnimationFrame(animationFrameId.current)
 			animationFrameId.current = null
 		}
+		if (onSwipeEnd) {
+			onSwipeEnd(finalDistance)
+		}
+		momentumOngoing.current = false
+	}
+
+	const handleStart = (e: MouseEvent | TouchEvent) => {
+		if (momentumOngoing.current) {
+			reset()
+		}
+
+		const clientX = e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
+		startX.current = currentX.current = clientX
+		previousTimes.current = [performance.now()]
+		previousX.current = [clientX]
+		isSwiping.current = true
+		velocity.current = 0
 	}
 
 	const handleMove = (e: MouseEvent | TouchEvent) => {
 		if (!isSwiping.current) return
 
 		const clientX = e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
+		const currentTime = performance.now()
+
 		currentX.current = clientX
 
-		const currentTime = performance.now()
-		const deltaX = currentX.current - previousX.current
-		const deltaTime = currentTime - previousTime.current
+		// Add current position and time to the history
+		previousX.current.push(clientX)
+		previousTimes.current.push(currentTime)
 
-		// Calculate velocity in pixels per millisecond
-		velocity.current = deltaX / deltaTime
+		// Keep the history size within the maximum window
+		if (previousX.current.length > maxHistorySize) previousX.current.shift()
+		if (previousTimes.current.length > maxHistorySize)
+			previousTimes.current.shift()
 
-		previousX.current = currentX.current
-		previousTime.current = currentTime
+		// Calculate velocity using average distance/time over multiple points
+		if (previousX.current.length >= 2) {
+			const totalDistance =
+				previousX.current[previousX.current.length - 1] - previousX.current[0]
+			const totalTime =
+				previousTimes.current[previousTimes.current.length - 1] -
+				previousTimes.current[0]
+
+			if (totalTime > 0) {
+				velocity.current = totalDistance / totalTime
+			}
+		}
 
 		const totalDeltaX = currentX.current - startX.current
 		const direction = totalDeltaX > 0 ? "right" : "left"
@@ -60,19 +92,19 @@ export const useSwipe = (onSwipeEnd?: (finalDistance: number) => void) => {
 	}
 
 	const continueSwipe = (timestamp: number) => {
-		const deltaTime = timestamp - previousTime.current
-		previousTime.current = timestamp
+		const deltaTime =
+			timestamp - previousTimes.current[previousTimes.current.length - 1]
+		previousTimes.current.push(timestamp)
 
-		const friction = 0.01 // Adjust this value to control deceleration
-
-		// Apply friction to velocity
+		// Smooth velocity decay with friction
+		const friction = 0.03 * (1 / Math.abs(velocity.current))
 		if (velocity.current > 0) {
 			velocity.current = Math.max(0, velocity.current - friction * deltaTime)
 		} else {
 			velocity.current = Math.min(0, velocity.current + friction * deltaTime)
 		}
 
-		// Update position
+		// Update position based on smoothed velocity
 		const deltaX = velocity.current * deltaTime
 		currentX.current += deltaX
 
@@ -86,17 +118,7 @@ export const useSwipe = (onSwipeEnd?: (finalDistance: number) => void) => {
 
 		// Stop animation when velocity is negligible
 		if (Math.abs(velocity.current) < 0.1) {
-			if (onSwipeEnd) {
-				onSwipeEnd(totalDeltaX)
-			}
-			setSwipeData({
-				direction: null,
-				distance: 0,
-			})
-			if (animationFrameId.current) {
-				cancelAnimationFrame(animationFrameId.current)
-				animationFrameId.current = null
-			}
+			reset(totalDeltaX)
 		} else {
 			animationFrameId.current = requestAnimationFrame(continueSwipe)
 		}
@@ -105,18 +127,11 @@ export const useSwipe = (onSwipeEnd?: (finalDistance: number) => void) => {
 	const handleEnd = () => {
 		isSwiping.current = false
 
-		// Start momentum animation if velocity is significant
 		if (Math.abs(velocity.current) > 0) {
-			previousTime.current = performance.now()
+			momentumOngoing.current = true
 			animationFrameId.current = requestAnimationFrame(continueSwipe)
 		} else {
-			setSwipeData({
-				direction: null,
-				distance: 0,
-			})
-			if (onSwipeEnd) {
-				onSwipeEnd(0)
-			}
+			reset(0)
 		}
 	}
 
