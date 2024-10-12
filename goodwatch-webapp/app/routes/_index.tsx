@@ -152,6 +152,23 @@ export default function Index() {
 							autoplay={{
 								delay: 3000,
 							}}
+							breakpoints={{
+								"@0.50": {
+									slidesPerView: 3,
+								},
+								"@1.00": {
+									slidesPerView: 5,
+								},
+								"@1.50": {
+									slidesPerView: 7,
+								},
+								"@2.00": {
+									slidesPerView: 9,
+								},
+								"@2.50": {
+									slidesPerView: 11,
+								},
+							}}
 							centeredSlides={true}
 							coverflowEffect={{
 								rotate: 10,
@@ -169,11 +186,11 @@ export default function Index() {
 							modules={[Autoplay, EffectCoverflow, FreeMode]}
 							preventClicks={false}
 							preventClicksPropagation={false}
-							slidesPerView={5}
+							slidesPerView={3}
 						>
 							{popularPicks.map((details) => (
 								<SwiperSlide key={details.tmdb_id}>
-									<div className="w-44 xs:w-56 sm:w-64 md:w-72 lg:w-80 xl:w-96">
+									<div className="w-56 xs:w-64 sm:w-72 md:w-80 lg:w-88 xl:w-96">
 										<MovieTvCard
 											details={details}
 											mediaType={popularPicksType === "movies" ? "movie" : "tv"}
