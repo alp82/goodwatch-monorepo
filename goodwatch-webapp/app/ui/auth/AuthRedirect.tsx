@@ -23,7 +23,6 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 
 			const redirectUrl = decodeURIComponent(hash.replace("#redirect=", ""))
 			navigate(redirectUrl, { replace: true })
-			window.location.href = redirectUrl
 		}
 	}, [hash])
 
