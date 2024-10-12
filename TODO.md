@@ -2,6 +2,8 @@
 ```
 ---
 
+redirect toast
+
 discover sidebar redesign
     bug multiple genres duplicated
     subheader

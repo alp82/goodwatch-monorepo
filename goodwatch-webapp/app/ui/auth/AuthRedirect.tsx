@@ -1,8 +1,6 @@
 import { useLocation, useNavigate } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
-import { queryKeyUserData } from "~/routes/api.user-data"
-import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
 
 interface AuthRedirectProps {
 	children: React.ReactNode
@@ -22,17 +20,16 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 			queryClient.refetchQueries()
 
 			const redirectUrl = decodeURIComponent(hash.replace("#redirect=", ""))
-			// setTimeout(() => {
-			// 	navigate(redirectUrl, { replace: true })
-			// }, 100)
 			navigate(redirectUrl, { replace: true })
 			// window.location.replace(redirectUrl)
 		}
 	}, [hash])
 
-	// if (isAuthRedirect) {
-	// 	return null
-	// }
+	// TODO toast for redirecting
+
+	if (isAuthRedirect) {
+		return <div>Logging you in...</div>
+	}
 
 	return <>{children}</>
 }
