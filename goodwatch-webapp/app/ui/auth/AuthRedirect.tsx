@@ -21,11 +21,8 @@ export const AuthRedirect = ({ children }: AuthRedirectProps) => {
 
 			const redirectUrl = decodeURIComponent(hash.replace("#redirect=", ""))
 			navigate(redirectUrl, { replace: true })
-			// window.location.replace(redirectUrl)
 		}
 	}, [hash])
-
-	// TODO toast for redirecting
 
 	if (isAuthRedirect) {
 		return <div>Logging you in...</div>
