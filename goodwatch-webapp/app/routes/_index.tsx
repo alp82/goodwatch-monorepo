@@ -175,7 +175,7 @@ export default function Index() {
 								stretch: 0,
 								depth: 100,
 								modifier: 1,
-								slideShadows: true,
+								slideShadows: false,
 							}}
 							effect="coverflow"
 							freeMode={{
@@ -190,7 +190,7 @@ export default function Index() {
 						>
 							{popularPicks.map((details) => (
 								<SwiperSlide key={details.tmdb_id}>
-									<div className="w-56 xs:w-64 sm:w-72 md:w-80 lg:w-88 xl:w-96">
+									<div className="w-56 xs:w-64 sm:w-72 md:w-80 lg:w-88 xl:w-96 transition-transform ease-in-out duration-200 hover:rotate-3">
 										<MovieTvCard
 											details={details}
 											mediaType={popularPicksType === "movies" ? "movie" : "tv"}

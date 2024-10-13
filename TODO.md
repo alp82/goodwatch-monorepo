@@ -6,7 +6,31 @@ remmove prefetch component
 
 ---
 
+user actions
+    "to watch" -> "plan to watch"
+    enabled buttons with highlight color
+    new for shows: watching / completed
 
+---
+
+user settings
+    oval together: profile picture -> profile icon
+
+---
+
+subbar
+    streaming: everywhere, selected providers, selected country
+    each filter as block in subbar
+        click to expand
+        x to close
+
+sidebar
+    sort by
+
+results
+    one facet as scroll preview minimap (e.g. release year)
+    facets
+    
 discover sidebar redesign
     bug multiple genres duplicated
     subheader
@@ -30,7 +54,7 @@ discover
     return count: "showing first 100 results"
     streaming types: mine, free, buy, all
     discover loading animation with skeletons
-    
+
 ---
 
 details
