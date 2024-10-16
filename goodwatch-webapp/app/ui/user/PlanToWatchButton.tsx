@@ -4,15 +4,15 @@ import { useUserData } from "~/routes/api.user-data"
 import ToWatchAction from "~/ui/user/actions/ToWatchAction"
 import type { UserActionDetails } from "~/ui/user/actions/types"
 
-export interface ToWatchButtonProps {
+export interface PlanToWatchButtonProps {
 	details: UserActionDetails
 	onChange?: () => void
 }
 
-export default function ToWatchButton({
+export default function PlanToWatchButton({
 	details,
 	onChange,
-}: ToWatchButtonProps) {
+}: PlanToWatchButtonProps) {
 	const { tmdb_id, media_type } = details
 	const [isActive, setIsActive] = useState(false)
 
@@ -23,25 +23,25 @@ export default function ToWatchButton({
 
 	const WishListIcon = BookmarkIcon
 	const wishListColor =
-		isInWishList || isActive ? "text-amber-500" : "text-gray-400"
+		isInWishList || isActive ? "text-amber-300" : "text-gray-300"
 	const wishlistText = isInWishList
 		? isInWatchHistory
-			? "Want to Watch Again"
-			: "Want to Watch"
+			? "Plan to Watch Again"
+			: "Plan to Watch"
 		: isInWatchHistory
 			? "Watch Again"
-			: "To Watch"
+			: "Plan to Watch"
 	const wishlistAction = isInWishList
 		? "Don't want to Watch"
 		: isInWatchHistory
 			? "Want to Watch Again"
-			: "Add To Watch"
+			: "Want to Watch"
 
 	return (
 		<ToWatchAction details={details} onChange={onChange}>
 			<button
 				type="button"
-				className={`${isInWishList ? "bg-slate-700" : "bg-zinc-700"} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700`}
+				className={`${isInWishList ? "bg-amber-800" : "bg-zinc-700"} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-amber-800/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-800/70`}
 				onPointerEnter={() => setIsActive(true)}
 				onPointerLeave={() => setIsActive(false)}
 			>

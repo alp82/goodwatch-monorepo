@@ -8,9 +8,9 @@ import { Poster } from "~/ui/Poster"
 import { Spinner } from "~/ui/Spinner"
 import NextBackButtons from "~/ui/button/NextBackButtons"
 import { TextInput } from "~/ui/form/TextInput"
+import PlanToWatchButton from "~/ui/user/PlanToWatchButton"
 import ScoreSelector from "~/ui/user/ScoreSelector"
 import SkipButton from "~/ui/user/SkipButton"
-import ToWatchButton from "~/ui/user/ToWatchButton"
 import { useAutoFocus } from "~/utils/form"
 import { useDebounce } from "~/utils/timing"
 import { getSortedUserData } from "~/utils/user-data"
@@ -182,7 +182,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 													details={details}
 													onChange={() => handleUserChange(details)}
 												/>
-												<ToWatchButton
+												<PlanToWatchButton
 													details={details}
 													onChange={() => handleUserChange(details)}
 												/>

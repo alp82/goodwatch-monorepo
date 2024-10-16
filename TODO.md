@@ -2,12 +2,7 @@
 ```
 ---
 
-remmove prefetch component
-
----
-
 user actions
-    "to watch" -> "plan to watch"
     enabled buttons with highlight color
     new for shows: watching / completed
 
@@ -84,6 +79,10 @@ details
 slow network emulation
     skeleton loading
     useQuery
+
+---
+
+remmove prefetch component
 
 ---
 
