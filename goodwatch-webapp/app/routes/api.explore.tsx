@@ -55,17 +55,20 @@ export interface UseExploreParams {
 	type?: FilterMediaType
 	category: ExploreParams["category"]
 	text: ExploreParams["text"]
+	isInView: boolean
 }
 
 export const useExplore = ({
 	type = "all",
 	category,
 	text,
+	isInView,
 }: UseExploreParams) => {
 	const vectorCategory = mapCategoryToVectorName(category)
 	const url = `/api/explore?type=${type}&category=${vectorCategory}&text=${text}`
 	return useQuery<GetExploreResult>({
 		queryKey: [...queryKeyUserData, type, vectorCategory, text],
 		queryFn: async () => await (await fetch(url)).json(),
+		enabled: isInView,
 	})
 }

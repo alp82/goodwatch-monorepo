@@ -275,7 +275,7 @@ export default function Index() {
 							))}
 						<Link
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							to="/discover?type=movies"
+							to="/discover/movies"
 							prefetch="viewport"
 						>
 							<FilmIcon className="w-16 h-16" />
@@ -297,7 +297,7 @@ export default function Index() {
 						))}
 						<Link
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							to="/discover?type=tv"
+							to="/discover/tv"
 							prefetch="viewport"
 						>
 							<TvIcon className="w-16 h-16" />

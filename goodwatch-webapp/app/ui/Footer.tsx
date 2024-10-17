@@ -7,8 +7,8 @@ import tmdbLogo from "~/img/tmdb-logo.svg"
 
 const navigation = {
 	main: [
-		{ name: "Discover Movies", href: "/discover?type=movie" },
-		{ name: "Discover TV Shows", href: "/discover?type=tv" },
+		{ name: "Discover Movies", href: "/discover/movies" },
+		{ name: "Discover TV Shows", href: "/discover/tv" },
 	],
 	social: [
 		// {

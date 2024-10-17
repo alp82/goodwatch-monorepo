@@ -1,35 +1,35 @@
-import type { MovieDetails, TVDetails } from "~/server/details.server";
-import type { DiscoverResult, DiscoverTV } from "~/server/discover.server";
+import type { MovieDetails, TVDetails } from "~/server/details.server"
+import type { DiscoverResult } from "~/server/discover.server"
 
 export interface AllRatings {
-	tmdb_url: string;
-	tmdb_user_score_original: number;
-	tmdb_user_score_normalized_percent: number;
-	tmdb_user_score_rating_count: number;
-	imdb_url: string;
-	imdb_user_score_original: number;
-	imdb_user_score_normalized_percent: number;
-	imdb_user_score_rating_count: number;
-	metacritic_url: string;
-	metacritic_user_score_original: number;
-	metacritic_user_score_normalized_percent: number;
-	metacritic_user_score_rating_count: number;
-	metacritic_meta_score_original: number;
-	metacritic_meta_score_normalized_percent: number;
-	metacritic_meta_score_review_count: number;
-	rotten_tomatoes_url: string;
-	rotten_tomatoes_audience_score_original: number;
-	rotten_tomatoes_audience_score_normalized_percent: number;
-	rotten_tomatoes_audience_score_rating_count: number;
-	rotten_tomatoes_tomato_score_original: number;
-	rotten_tomatoes_tomato_score_normalized_percent: number;
-	rotten_tomatoes_tomato_score_review_count: number;
-	aggregated_user_score_normalized_percent: number;
-	aggregated_user_score_rating_count: number;
-	aggregated_official_score_normalized_percent: number;
-	aggregated_official_score_review_count: number;
-	aggregated_overall_score_normalized_percent: number;
-	aggregated_overall_score_voting_count: number;
+	tmdb_url: string
+	tmdb_user_score_original: number
+	tmdb_user_score_normalized_percent: number
+	tmdb_user_score_rating_count: number
+	imdb_url: string
+	imdb_user_score_original: number
+	imdb_user_score_normalized_percent: number
+	imdb_user_score_rating_count: number
+	metacritic_url: string
+	metacritic_user_score_original: number
+	metacritic_user_score_normalized_percent: number
+	metacritic_user_score_rating_count: number
+	metacritic_meta_score_original: number
+	metacritic_meta_score_normalized_percent: number
+	metacritic_meta_score_review_count: number
+	rotten_tomatoes_url: string
+	rotten_tomatoes_audience_score_original: number
+	rotten_tomatoes_audience_score_normalized_percent: number
+	rotten_tomatoes_audience_score_rating_count: number
+	rotten_tomatoes_tomato_score_original: number
+	rotten_tomatoes_tomato_score_normalized_percent: number
+	rotten_tomatoes_tomato_score_review_count: number
+	aggregated_user_score_normalized_percent: number
+	aggregated_user_score_rating_count: number
+	aggregated_official_score_normalized_percent: number
+	aggregated_official_score_review_count: number
+	aggregated_overall_score_normalized_percent: number
+	aggregated_overall_score_voting_count: number
 }
 
 export const getRatingKeys = () => {
@@ -62,18 +62,18 @@ export const getRatingKeys = () => {
 		"aggregated_official_score_review_count",
 		"aggregated_overall_score_normalized_percent",
 		"aggregated_overall_score_voting_count",
-	];
-	return keys;
-};
+	]
+	return keys
+}
 
 export const extractRatings = (
-	details: MovieDetails | TVDetails | DiscoverResult | DiscoverTV,
+	details: MovieDetails | TVDetails | DiscoverResult,
 ) => {
-	const keys = getRatingKeys();
+	const keys = getRatingKeys()
 	return keys.reduce((acc, key) => {
 		return {
 			...acc,
 			[key]: details[key],
-		};
-	}, {}) as AllRatings;
-};
+		}
+	}, {}) as AllRatings
+}
