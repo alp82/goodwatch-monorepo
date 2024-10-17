@@ -2,17 +2,6 @@
 ```
 ---
 
-user actions
-    enabled buttons with highlight color
-    new for shows: watching / completed
-
----
-
-user settings
-    oval together: profile picture -> profile icon
-
----
-
 subbar
     streaming: everywhere, selected providers, selected country
     each filter as block in subbar
@@ -73,6 +62,11 @@ details
     https://imdb.shyakadavis.me/title#overview
 
     fragment for scroll position (auto update)
+
+---
+
+user settings
+    oval together: profile picture -> profile icon
 
 ---
 
@@ -284,6 +278,11 @@ new page: started this week on your streaming services
 
 secret handling
 project documentation
+
+---
+
+user actions
+    new for shows: watching / completed
 
 ---
 

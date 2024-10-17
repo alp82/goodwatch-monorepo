@@ -23,9 +23,10 @@ import {
 	type DiscoverSortBy,
 	getDiscoverResults,
 } from "~/server/discover.server"
-import type { FilterMediaType, MediaType } from "~/server/search.server"
 import { getUserSettings } from "~/server/user-settings.server"
+import type { FilterMediaType } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
+import FilterBar from "~/ui/filter/FilterBar"
 import FilterSelection from "~/ui/filter/FilterSelection"
 import FilterSummary from "~/ui/filter/FilterSummary"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
@@ -77,15 +78,16 @@ export type LoaderData = {
 }
 
 export const loader: LoaderFunction = async ({
+	params: { type },
 	request,
 }: LoaderFunctionArgs) => {
-	const { locale } = getLocaleFromRequest(request)
+	const paramsType = (type || "all") as FilterMediaType
 
 	const user_id = await getUserIdFromRequest({ request })
 	const userSettings = await getUserSettings({ user_id })
 
+	const { locale } = getLocaleFromRequest(request)
 	const url = new URL(request.url)
-	const type = (url.searchParams.get("type") || "all") as FilterMediaType
 	const mode = (url.searchParams.get("mode") || "advanced") as "advanced"
 	const country =
 		userSettings?.country_default || url.searchParams.get("country") || "US"
@@ -111,8 +113,9 @@ export const loader: LoaderFunction = async ({
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
 		| "asc"
 		| "desc"
+
 	const params = {
-		type,
+		type: paramsType,
 		mode,
 		country,
 		language,
@@ -218,92 +221,92 @@ export default function Discover() {
 	}
 
 	return (
-		<div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
-			<div>
-				<MediaTypeTabs
-					selected={currentParams.type}
-					onSelect={handleTabSelect}
-				/>
-				{/*<PrefetchPageLinks*/}
-				{/*	key="discover-type"*/}
-				{/*	page={constructUrl({*/}
-				{/*		...currentParams,*/}
-				{/*		type: params.type === "movie" ? "tv" : "movie",*/}
-				{/*	})}*/}
-				{/*/>*/}
-			</div>
-			<div>
-				<FilterSummary
-					params={currentParams}
-					filters={filters}
-					onToggle={toggleFilters}
-				/>
-			</div>
-			<div>
-				<FilterSelection
-					show={filtersOpen}
-					params={currentParams}
-					updateParams={updateParams}
-					onClose={() => setFiltersOpen(false)}
-				/>
-			</div>
-			<div className="mt-2">
-				<Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
-				{sortByTabs
-					.filter((tab) => !tab.current)
-					.map((tab) => (
-						<PrefetchPageLinks
-							key={tab.key}
-							page={constructUrl({
-								...currentParams,
-								sortBy: tab.key as DiscoverParams["sortBy"],
+		<>
+			<FilterBar
+				params={currentParams}
+				filters={filters}
+				onToggle={toggleFilters}
+			/>
+			<div className="max-w-7xl mx-auto px-4 flex flex-col gap-5 sm:gap-6">
+				<div>
+					<MediaTypeTabs
+						selected={currentParams.type}
+						onSelect={handleTabSelect}
+					/>
+					{/*<PrefetchPageLinks*/}
+					{/*	key="discover-type"*/}
+					{/*	page={constructUrl({*/}
+					{/*		...currentParams,*/}
+					{/*		type: params.type === "movie" ? "tv" : "movie",*/}
+					{/*	})}*/}
+					{/*/>*/}
+				</div>
+				<div>
+					<FilterSelection
+						show={filtersOpen}
+						params={currentParams}
+						updateParams={updateParams}
+						onClose={() => setFiltersOpen(false)}
+					/>
+				</div>
+				<div className="mt-2">
+					<Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
+					{sortByTabs
+						.filter((tab) => !tab.current)
+						.map((tab) => (
+							<PrefetchPageLinks
+								key={tab.key}
+								page={constructUrl({
+									...currentParams,
+									sortBy: tab.key as DiscoverParams["sortBy"],
+								})}
+							/>
+						))}
+				</div>
+				<div
+					className={
+						"relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+					}
+				>
+					<AnimatePresence initial={false}>
+						{navigation.state === "loading" && (
+							<span className="absolute top-2 left-6 animate-ping inline-flex h-8 w-8 rounded-full bg-sky-300 opacity-75" />
+						)}
+						{!results.length && navigation.state === "idle" && (
+							<div className="my-6 text-lg italic">
+								No results. Try to change your search filters.
+							</div>
+						)}
+						{results.length > 0 &&
+							navigation.state === "idle" &&
+							results.map((result: DiscoverResult, index) => {
+								return (
+									<div key={result.tmdb_id}>
+										<motion.div
+											key={currentParams.sortBy}
+											initial={{
+												y: `-${Math.floor(Math.random() * 10) + 5}%`,
+												opacity: 0,
+											}}
+											animate={{ y: "0", opacity: 1 }}
+											exit={{
+												y: `${Math.floor(Math.random() * 10) + 5}%`,
+												opacity: 0,
+											}}
+											transition={{ duration: 0.5, type: "tween" }}
+										>
+											<MovieTvCard
+												details={result as DiscoverResult}
+												mediaType={result.media_type}
+												prefetch={index < 6}
+											/>
+										</motion.div>
+									</div>
+								)
 							})}
-						/>
-					))}
+					</AnimatePresence>
+				</div>
 			</div>
-			<div
-				className={
-					"relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-				}
-			>
-				<AnimatePresence initial={false}>
-					{navigation.state === "loading" && (
-						<span className="absolute top-2 left-6 animate-ping inline-flex h-8 w-8 rounded-full bg-sky-300 opacity-75" />
-					)}
-					{!results.length && navigation.state === "idle" && (
-						<div className="my-6 text-lg italic">
-							No results. Try to change your search filters.
-						</div>
-					)}
-					{results.length > 0 &&
-						navigation.state === "idle" &&
-						results.map((result: DiscoverResult, index) => {
-							return (
-								<div key={result.tmdb_id}>
-									<motion.div
-										key={currentParams.sortBy}
-										initial={{
-											y: `-${Math.floor(Math.random() * 10) + 5}%`,
-											opacity: 0,
-										}}
-										animate={{ y: "0", opacity: 1 }}
-										exit={{
-											y: `${Math.floor(Math.random() * 10) + 5}%`,
-											opacity: 0,
-										}}
-										transition={{ duration: 0.5, type: "tween" }}
-									>
-										<MovieTvCard
-											details={result as DiscoverResult}
-											mediaType={result.media_type}
-											prefetch={index < 6}
-										/>
-									</motion.div>
-								</div>
-							)
-						})}
-				</AnimatePresence>
-			</div>
-		</div>
+		</>
 	)
 }

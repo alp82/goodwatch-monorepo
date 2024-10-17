@@ -4,6 +4,9 @@ const defaultTheme = require("tailwindcss/defaultTheme")
 
 module.exports = {
 	content: ["./app/**/*.{js,jsx,ts,tsx}"],
+	future: {
+		hoverOnlyWhenSupported: true,
+	},
 	plugins: [
 		require("@tailwindcss/aspect-ratio"),
 		require("@tailwindcss/forms"),
@@ -12,9 +15,12 @@ module.exports = {
 			addVariant("search-cancel", "&::-webkit-search-cancel-button")
 		}),
 	],
-	future: {
-		hoverOnlyWhenSupported: true,
-	},
+	safelist: [
+		{ pattern: /bg-vibe-[0-9]+/ },
+		{ pattern: /from-\w+-700\/[0-9]+/ },
+		{ pattern: /via-\w+-900\/[0-9]+/ },
+		{ pattern: /to-\w+-800\/[0-9]+/ },
+	],
 	theme: {
 		screens: {
 			xs: "475px",
@@ -48,5 +54,4 @@ module.exports = {
 			},
 		},
 	},
-	safelist: [{ pattern: /bg-vibe-[0-9]+/ }],
 }

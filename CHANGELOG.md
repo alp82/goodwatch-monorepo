@@ -2,11 +2,20 @@
 
 All notable changes to GoodWatch will be documented in this file.
 
-## [0.4.3] 2024-10-xx
+## [0.4.4] 2024-10-xx
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+## [0.4.3] 2024-10-16
+
+### Added
+
+### Changed
+* Better watch button colors and texts
 
 ### Fixed
 

@@ -12,7 +12,7 @@ export default function DetailsInlineNav({
 	navigateToSection,
 }: DetailsInlineNavProps) {
 	return (
-		<nav className="2xl:hidden sticky top-16 w-full flex flex-center justify-center bg-black z-40">
+		<nav className="2xl:hidden sticky top-16 w-full flex flex-center justify-center bg-gray-950 z-40">
 			<div className="m-auto max-w-7xl w-full mx-4 py-4 px-8 flex items-center gap-6 flex-wrap">
 				{Object.values(sections).map((section) => (
 					<div

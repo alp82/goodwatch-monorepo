@@ -24,7 +24,7 @@ import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 
 export default function Header() {
 	const location = useLocation()
-	const isPage = (pathname: string) => location.pathname === pathname
+	const isPage = (pathname: string) => location.pathname.startsWith(pathname)
 
 	const { user, loading } = useUser()
 
