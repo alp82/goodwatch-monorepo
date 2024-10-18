@@ -27,6 +27,15 @@ module.exports = {
 			...defaultTheme.screens,
 		},
 		extend: {
+			animation: {
+				"gradient-x": "gradient-move-x 5s ease infinite",
+			},
+			keyframes: {
+				"gradient-move-x": {
+					"0%, 100%": { "background-position": "0% 0%" },
+					"50%": { "background-position": "50% 50%" },
+				},
+			},
 			colors: {
 				gray: {
 					950: "#060606",

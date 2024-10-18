@@ -29,7 +29,7 @@ export default function Header() {
 	const { user, loading } = useUser()
 
 	return (
-		<div className="bg-gray-900 fixed top-0 z-50 w-full">
+		<div className="fixed top-0 z-50 w-full bg-gray-900">
 			<GlobalLoading />
 			<Disclosure as="nav" className="bg-gray-950/35">
 				{({ open }) => (

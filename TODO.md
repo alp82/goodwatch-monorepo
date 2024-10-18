@@ -48,6 +48,7 @@ details
     streaming section country flag button does not change selected country
     streaming section favors user selected providers
     web links section
+    sequels section
     
     show title in current language
     images section
@@ -62,6 +63,9 @@ details
     https://imdb.shyakadavis.me/title#overview
 
     fragment for scroll position (auto update)
+    
+    about section
+        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
 
 ---
 
@@ -198,6 +202,7 @@ tv seasons:
     get ratings
     show in details
     when last season/episode was released
+    recaps
 
 ---
 
@@ -496,6 +501,12 @@ save trending scores per day
 trending yesterday
 trending difference
 
+styling goodies:
+    view transitions: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#view-transitions-12
+    search delete animation: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#search-13
+    rem based breakpoints: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#accessibility-15
+    animated svg icons: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#modern-outline-icons-14
+
 details:
 box office (e.g. Google)
 crew links to discovery
@@ -565,6 +576,10 @@ streaming explanations
 
 android app
 iphone app
+
+credits for design inspiration:
+    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&node-type=canvas&t=HNeQ9QDw29BnwYEl-0
+    https://imdb.shyakadavis.me/title#technical-specs
 
 data source: existing crawlers use existing url instead of guessing
 data-source: letterboxd scores
