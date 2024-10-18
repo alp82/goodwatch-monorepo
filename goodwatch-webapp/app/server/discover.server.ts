@@ -1,11 +1,11 @@
-import type { StreamingProvider } from "~/routes/api.streaming-providers"
 import {
 	type StreamingLink,
 	type StreamingProviders,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
+import { AVAILABLE_CATEGORIES } from "~/server/explore.server"
 import { getGenresAll } from "~/server/genres.server"
-import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
+import type { FilterMediaType } from "~/server/search.server"
 import { constructFullQuery, filterMediaTypes } from "~/server/utils/query-db"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"

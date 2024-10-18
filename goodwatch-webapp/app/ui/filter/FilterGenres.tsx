@@ -14,7 +14,7 @@ import Autocomplete, {
 } from "~/ui/form/Autocomplete"
 
 export interface FilterGenresProps {
-	type: FilterMediaType
+	type?: FilterMediaType
 	withGenres?: string
 	withoutGenres?: string
 	onChange: (genresToInclude: Genre[], genresToExclude: Genre[]) => void
@@ -78,7 +78,7 @@ export default function FilterGenres({
 				name="query"
 				placeholder="Genre Search"
 				icon={
-					<BookmarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+					<HashtagIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
 				}
 				autocompleteItems={autocompleteItems}
 				renderItem={renderItem}

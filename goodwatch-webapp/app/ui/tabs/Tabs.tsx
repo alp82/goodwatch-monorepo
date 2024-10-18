@@ -1,17 +1,17 @@
-import type { JSXElementConstructor } from "react";
+import type { JSXElementConstructor } from "react"
 
 export interface Tab<T> {
-	key: T;
-	label?: string;
-	icon?: JSXElementConstructor<any>;
-	current?: boolean;
+	key: T
+	label?: string
+	icon?: JSXElementConstructor<any>
+	current?: boolean
 }
 
 export interface TabsProps<T> {
-	title?: string;
-	tabs: Tab<T>[];
-	pills: boolean;
-	onSelect: (tab: Tab<T>) => void;
+	title?: string
+	tabs: Tab<T>[]
+	pills: boolean
+	onSelect: (tab: Tab<T>) => void
 }
 
 export default function Tabs<T extends string>({
@@ -21,20 +21,21 @@ export default function Tabs<T extends string>({
 	onSelect,
 }: TabsProps<T>) {
 	const renderedTabs = (
-		<div className="flex flex-wrap items-center gap-2 font-medium text-sm sm:text-base md:text-lg">
+		<div className="flex flex-wrap items-center gap-4 sm:gap-6 font-medium text-sm sm:text-base md:text-lg">
 			{title && <span className="mx-2 text-xs text-gray-300">{title}</span>}
 			{tabs.map((tab) => (
 				<span
 					key={tab.key}
 					onClick={() => onSelect(tab)}
+					onKeyDown={() => null}
 					className={`
             ${
 							tab.current
 								? "border-indigo-500 text-indigo-200"
 								: "border-transparent text-gray-400 hover:border-gray-300 hover:text-gray-300"
 						}
-            ${pills ? "rounded-md px-3 py-2" : "group border-b-2 py-4 px-1"}
-            ${tab.current && pills && "bg-indigo-800"}
+            ${pills ? "rounded-md px-2 py-1" : "group border-b-2 py-2 px-1"}
+            ${tab.current && pills && "bg-teal-900"}
             cursor-pointer inline-flex items-center font-bold
           `}
 					aria-current={tab.current ? "page" : undefined}
@@ -51,7 +52,7 @@ export default function Tabs<T extends string>({
 				</span>
 			))}
 		</div>
-	);
+	)
 
 	return (
 		<div>
@@ -92,5 +93,5 @@ export default function Tabs<T extends string>({
 				)}
 			</div>
 		</div>
-	);
+	)
 }
