@@ -1,16 +1,14 @@
-import React from "react"
-import { useCountries } from "~/routes/api.countries"
-import { useStreamingProviders } from "~/routes/api.streaming-providers"
-import type { DiscoverParams } from "~/server/discover.server"
-import type { Genre } from "~/server/genres.server"
-import { discoverFilters } from "~/server/types/discover-types"
-import FilterCountries from "~/ui/filter/FilterCountries"
-import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
-import EditableSection from "~/ui/filter/sections/EditableSection"
-import Select, { type SelectItem } from "~/ui/form/Select"
-import { Ping } from "~/ui/wait/Ping"
-import { Spinner } from "~/ui/wait/Spinner"
-import { useNav } from "~/utils/navigation"
+import React from 'react'
+import { useCountries } from '~/routes/api.countries'
+import { useStreamingProviders } from '~/routes/api.streaming-providers'
+import type { DiscoverParams } from '~/server/discover.server'
+import { discoverFilters } from '~/server/types/discover-types'
+import OneOrMoreItems from '~/ui/filter/OneOrMoreItems'
+import EditableSection from '~/ui/filter/sections/EditableSection'
+import Select, { type SelectItem } from '~/ui/form/Select'
+import { Ping } from '~/ui/wait/Ping'
+import { Spinner } from '~/ui/wait/Spinner'
+import { useNav } from '~/utils/navigation'
 
 interface SectionStreamingParams {
 	params: DiscoverParams
@@ -146,49 +144,48 @@ export default function SectionStreaming({
 								)}
 							</div>
 						</div>
-					) : (
-						<div className="flex flex-wrap items-center gap-2">
-							{selectedStreamingProviderItems.length > 0 ? (
-								<>
-									{selectedStreamingProviderItems.map((provider, index) => (
-										<OneOrMoreItems
-											key={provider.key}
-											index={index}
-											amount={selectedStreamingProviderItems.length}
-										>
-											<span className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded">
-												<img
-													src={provider.icon}
-													alt={provider.label}
-													className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
-												/>
-												{selectedStreamingProviderItems.length < 5 && (
-													<div className="md:hidden sr-only lg:not-sr-only">
-														{provider.label}
-													</div>
-												)}
-											</span>
-										</OneOrMoreItems>
-									))}
-									<span className="mx-3">in</span>
-									<span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded">
-										<img
-											src={countryIcon}
-											alt={params.country}
-											className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
-										/>
-										<span className="sr-only lg:not-sr-only block">
-											{params.country}
+					) : null}
+					<div className="flex flex-wrap items-center gap-2">
+						{selectedStreamingProviderItems.length > 0 ? (
+							<>
+								{selectedStreamingProviderItems.map((provider, index) => (
+									<OneOrMoreItems
+										key={provider.key}
+										index={index}
+										amount={selectedStreamingProviderItems.length}
+									>
+										<span className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded">
+											<img
+												src={provider.icon}
+												alt={provider.label}
+												className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
+											/>
+											{selectedStreamingProviderItems.length < 5 && (
+												<div className="md:hidden sr-only lg:not-sr-only">
+													{provider.label}
+												</div>
+											)}
 										</span>
+									</OneOrMoreItems>
+								))}
+								<span className="mx-3">in</span>
+								<span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded">
+									<img
+										src={countryIcon}
+										alt={params.country}
+										className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
+									/>
+									<span className="sr-only lg:not-sr-only block">
+										{params.country}
 									</span>
-								</>
-							) : streamingProviders.length === 0 ? (
-								<div className="relative h-8">
-									<Ping size="small" />
-								</div>
-							) : null}
-						</div>
-					)}
+								</span>
+							</>
+						) : streamingProviders.length === 0 ? (
+							<div className="relative h-8">
+								<Ping size="small" />
+							</div>
+						) : null}
+					</div>
 				</div>
 			)}
 		</EditableSection>
