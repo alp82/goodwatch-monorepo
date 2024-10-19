@@ -5,24 +5,22 @@ import type { ColorName } from "~/utils/color"
 interface SectionParams {
 	label: string
 	color: ColorName
-	enabled: boolean
+	visible: boolean
 	editing: boolean
 	onEdit: () => void
 	onClose: () => void
 	onRemoveAll: () => void
-	renderEditing: () => ReactNode
-	children: ReactNode
+	children: (isEditing: boolean) => ReactNode
 }
 
 export default function EditableSection({
 	label,
 	color,
-	enabled,
+	visible,
 	editing,
 	onEdit,
 	onClose,
 	onRemoveAll,
-	renderEditing,
 	children,
 }: SectionParams) {
 	// visibility & editing logic
@@ -43,10 +41,10 @@ export default function EditableSection({
 		setIsEditing(editing)
 	}, [editing])
 
-	const [isVisible, setIsVisible] = React.useState(isEditing || enabled)
+	const [isVisible, setIsVisible] = React.useState(isEditing || visible)
 	useEffect(() => {
-		setIsVisible(isEditing || enabled)
-	}, [isEditing, enabled])
+		setIsVisible(isEditing || visible)
+	}, [isEditing, visible])
 
 	// update handlers
 
@@ -69,7 +67,7 @@ export default function EditableSection({
 			onToggle={onToggleEditing}
 			onRemove={handleRemoveAll}
 		>
-			{isEditing ? renderEditing() : children}
+			{children(isEditing)}
 		</FilterBarSection>
 	)
 }

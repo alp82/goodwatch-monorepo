@@ -1,40 +1,26 @@
 import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
-import {
-	type LoaderFunction,
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
-import {
-	PrefetchPageLinks,
-	useLoaderData,
-	useNavigate,
-	useNavigation,
-	useRouteError,
-} from "@remix-run/react"
+import type { MetaFunction } from "@remix-run/node"
+import { useNavigate, useRouteError } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import React, { useEffect, useState } from "react"
-import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import {
-	type DiscoverFilterType,
-	type DiscoverParams,
-	type DiscoverResult,
-	type DiscoverResults,
-	type DiscoverSortBy,
-	getDiscoverResults,
+import { useDiscover } from "~/routes/api.discover"
+import type {
+	DiscoverParams,
+	DiscoverResult,
+	DiscoverResults,
+	DiscoverSortBy,
 } from "~/server/discover.server"
-import { getUserSettings } from "~/server/user-settings.server"
+import type { DiscoverFilterType } from "~/server/types/discover-types"
 import type { FilterMediaType } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import AddFilterBar from "~/ui/filter/AddFilterBar"
 import FilterBar from "~/ui/filter/FilterBar"
-import FilterSelection from "~/ui/filter/FilterSelection"
 import Appear from "~/ui/fx/Appear"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
-import { Ping } from "~/ui/wait/Ping"
-import { getUserIdFromRequest } from "~/utils/auth"
-import useLocale, { getLocaleFromRequest } from "~/utils/locale"
+import { Spinner } from "~/ui/wait/Spinner"
+import useLocale from "~/utils/locale"
+import { useNav } from "~/utils/navigation"
 
 export function headers() {
 	return {
@@ -79,106 +65,39 @@ export type LoaderData = {
 	results: DiscoverResults
 }
 
-export const loader: LoaderFunction = async ({
-	params: { type },
-	request,
-}: LoaderFunctionArgs) => {
-	const paramsType = (type || "all") as FilterMediaType
-
-	const user_id = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ user_id })
-
-	const { locale } = getLocaleFromRequest(request)
-	const url = new URL(request.url)
-	const mode = (url.searchParams.get("mode") || "advanced") as "advanced"
-	const country =
-		userSettings?.country_default || url.searchParams.get("country") || "US"
-	const language = url.searchParams.get("language") || locale.language
-	const minAgeRating = url.searchParams.get("minAgeRating") || ""
-	const maxAgeRating = url.searchParams.get("maxAgeRating") || ""
-	const minYear = url.searchParams.get("minYear") || ""
-	// const maxYear = url.searchParams.get('maxYear') || new Date().getFullYear().toString()
-	const maxYear = url.searchParams.get("maxYear") || ""
-	const minScore = url.searchParams.get("minScore") || ""
-	const withCast = url.searchParams.get("withCast") || ""
-	const withCrew = url.searchParams.get("withCrew") || ""
-	const withKeywords = url.searchParams.get("withKeywords") || ""
-	const withoutKeywords = url.searchParams.get("withoutKeywords") || ""
-	const withGenres = url.searchParams.get("withGenres") || ""
-	const withoutGenres = url.searchParams.get("withoutGenres") || ""
-	const withStreamingProviders =
-		url.searchParams.get("withStreamingProviders") ||
-		userSettings?.streaming_providers_default ||
-		""
-	const sortBy = (url.searchParams.get("sortBy") ||
-		"popularity") as DiscoverSortBy
-	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
-		| "asc"
-		| "desc"
-
-	const params = {
-		type: paramsType,
-		mode,
-		country,
-		language,
-		minAgeRating,
-		maxAgeRating,
-		minYear,
-		maxYear,
-		minScore,
-		withCast,
-		withCrew,
-		withKeywords,
-		withoutKeywords,
-		withGenres,
-		withoutGenres,
-		withStreamingProviders,
-		sortBy,
-		sortDirection,
-	}
-
-	const results = await getDiscoverResults(params)
-
-	return json<LoaderData>({
-		params,
-		results,
-	})
-}
-
 export default function Discover() {
-	const {
-		params,
-		results: { results, filters },
-	} = useLoaderData<LoaderData>()
-	const navigation = useNavigation()
 	const { locale } = useLocale()
 
-	const { currentParams, constructUrl, updateParams } = useUpdateUrlParams({
-		params,
-	})
+	const { currentParams, updateQueryParams } = useNav<DiscoverParams>()
+	const discover = useDiscover({ params: currentParams })
+	const results = discover.data?.results || []
+	const filters = discover.data?.filters || {
+		castMembers: [],
+		crewMembers: [],
+	}
 
 	useEffect(() => {
-		if (params.country === "" || params.withStreamingProviders === "") {
-			let country = locale.country
-			if (params.country === "" || params.withStreamingProviders === "") {
-				country = localStorage.getItem("country") || country
-			}
+		if (!currentParams.country || !currentParams.withStreamingProviders) {
+			const country =
+				currentParams.country ||
+				localStorage.getItem("country") ||
+				locale.country
 
-			let withStreamingProviders = "8,9,337"
-			if (params.withStreamingProviders === "") {
-				withStreamingProviders =
-					localStorage.getItem("withStreamingProviders") ||
-					withStreamingProviders
-			}
+			const withStreamingProviders =
+				currentParams.withStreamingProviders ||
+				localStorage.getItem("withStreamingProviders") ||
+				"8,9,337"
 
-			const newParams = {
-				...currentParams,
-				country,
-				withStreamingProviders,
-			}
-			updateParams(newParams, true)
+			// TODO do not add params explicitly
+			updateQueryParams(
+				{
+					country,
+					withStreamingProviders,
+				},
+				{ replace: true },
+			)
 		}
-	}, [])
+	}, [currentParams.country, currentParams.withStreamingProviders])
 
 	const sortByTabs: Tab<DiscoverSortBy>[] = [
 		{
@@ -202,21 +121,15 @@ export default function Discover() {
 	]
 
 	const handleTabSelect = (tab: Tab<FilterMediaType>) => {
-		// TODO url navigate
-		const newParams = {
-			...currentParams,
+		updateQueryParams({
 			type: tab.key,
-		}
-		updateParams(newParams)
+		})
 	}
 
 	const handleSortBySelect = (tab: Tab<DiscoverSortBy>) => {
-		// TODO url navigate
-		const newParams = {
-			...currentParams,
+		updateQueryParams({
 			sortBy: tab.key,
-		}
-		updateParams(newParams)
+		})
 	}
 
 	const [isAddingFilter, setIsAddingFilter] = useState(false)
@@ -240,12 +153,16 @@ export default function Discover() {
 					onAddToggle={toggleIsAddingFilter}
 					onEditToggle={setSelectedFilter}
 				/>
-				<AddFilterBar isVisible={isAddingFilter} onSelect={setSelectedFilter} />
+				<AddFilterBar
+					params={currentParams}
+					isVisible={isAddingFilter}
+					onSelect={setSelectedFilter}
+				/>
 			</div>
 			<div className="w-full bg-gray-950/35 pb-4">
 				<div className="max-w-7xl mx-auto px-4 flex flex-col gap-4">
 					<MediaTypeTabs
-						selected={currentParams.type}
+						selected={currentParams.type || "all"}
 						onSelect={handleTabSelect}
 					/>
 					{/*<PrefetchPageLinks*/}
@@ -257,31 +174,15 @@ export default function Discover() {
 					{/*/>*/}
 				</div>
 			</div>
-			<FilterSelection
-				show={false && !!filterToEdit}
-				params={currentParams}
-				updateParams={updateParams}
-				onClose={() => setFilterToEdit(null)}
-			/>
 			<div className="max-w-7xl mx-auto px-4 flex flex-col gap-4">
 				<Appear isVisible={results.length > 1}>
 					<div className="mt-2">
+						{/*TODO prefetch tab links*/}
 						<Tabs
 							tabs={sortByTabs}
 							pills={true}
 							onSelect={handleSortBySelect}
 						/>
-						{sortByTabs
-							.filter((tab) => !tab.current)
-							.map((tab) => (
-								<PrefetchPageLinks
-									key={tab.key}
-									page={constructUrl({
-										...currentParams,
-										sortBy: tab.key as DiscoverParams["sortBy"],
-									})}
-								/>
-							))}
 					</div>
 				</Appear>
 				<div
@@ -290,14 +191,14 @@ export default function Discover() {
 					}
 				>
 					<AnimatePresence>
-						{navigation.state === "loading" && <Ping size="medium" />}
-						{!results.length && navigation.state === "idle" && (
+						{discover.isLoading && <Spinner size="medium" />}
+						{!results.length && discover.isSuccess && (
 							<div className="my-6 text-lg italic">
 								No results. Try to change your search filters.
 							</div>
 						)}
 						{results.length > 0 &&
-							navigation.state === "idle" &&
+							discover.isSuccess &&
 							results.map((result: DiscoverResult, index) => {
 								return (
 									<div key={result.tmdb_id}>

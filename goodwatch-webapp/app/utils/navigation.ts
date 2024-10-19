@@ -1,12 +1,14 @@
 import { useLocation, useNavigate } from "@remix-run/react"
+import type { NavigateOptions } from "react-router/dist/lib/context"
 
-export type UseNavProps<T> = {}
-
-export const useNav = <T extends {}>({}: UseNavProps<T> = {}) => {
+export const useNav = <T extends {}>() => {
 	const location = useLocation()
 	const navigate = useNavigate()
 
-	const updateQueryParams = (paramsToUpdate: Partial<T>) => {
+	const updateQueryParams = (
+		paramsToUpdate: Partial<T>,
+		options?: NavigateOptions,
+	) => {
 		const newParams = new URLSearchParams(location.search)
 
 		for (const [key, value] of Object.entries(paramsToUpdate)) {
@@ -17,8 +19,11 @@ export const useNav = <T extends {}>({}: UseNavProps<T> = {}) => {
 			}
 		}
 
-		navigate(`${location.pathname}?${newParams.toString()}`)
+		navigate(`${location.pathname}?${newParams.toString()}`, options)
 	}
 
-	return { updateQueryParams }
+	const currentParams = Object.fromEntries(
+		new URLSearchParams(location.search).entries(),
+	) as T
+	return { currentParams, updateQueryParams }
 }

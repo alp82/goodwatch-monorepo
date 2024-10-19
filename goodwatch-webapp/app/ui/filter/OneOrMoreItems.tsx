@@ -14,8 +14,7 @@ export default function OneOrMoreItems({
 	return (
 		<>
 			{children}
-			{index < amount - 2 && ","}
-			{index === amount - 2 && "&"}
+			{index === amount - 2 && "or"}
 		</>
 	)
 }

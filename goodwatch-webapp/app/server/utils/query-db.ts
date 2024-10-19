@@ -33,7 +33,7 @@ interface Conditions {
 	similarityVector?: string
 	withCast?: string
 	withCrew?: string
-	withGenres?: string
+	withGenres?: string[]
 }
 
 interface OrderByConfig {
@@ -159,7 +159,7 @@ const constructSelectQuery = ({
 		${maxYear ? "AND release_year <= :::maxYear" : ""}
 		${withCast ? "AND m.cast @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}
 		${withCrew ? "AND m.crew @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}
-		${withGenres ? "AND m.genres @> ARRAY[:::withGenres]::varchar[]" : ""}
+		${withGenres?.length > 0 ? "AND m.genres && :::withGenres::varchar[]" : ""}
 		${minScore || orderBy.column === "aggregated_overall_score_normalized_percent" ? `AND m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}` : ""}
 	ORDER BY ${similarity ? `v.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`} 
 	LIMIT ${limit}

@@ -8,6 +8,7 @@ import {
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid"
 import type React from "react"
 import { Fragment, useState } from "react"
+import { useAutoFocus } from "~/utils/form"
 
 export interface SelectItem {
 	key: string
@@ -32,7 +33,7 @@ export interface SelectPropsMulti<RenderItem>
 	extends SelectPropsBase<RenderItem> {
 	selectedItems: RenderItem[]
 	withMultiSelection: true
-	onSelect: (selectedItem: RenderItem | RenderItem[]) => void
+	onSelect: (selectedItems: RenderItem[]) => void
 }
 
 export type SelectProps<RenderItem> =
@@ -46,6 +47,7 @@ export default function Select<RenderItem extends SelectItem>({
 	withMultiSelection,
 	onSelect,
 }: SelectProps<RenderItem>) {
+	const autoFocusRef = useAutoFocus<HTMLInputElement>()
 	const [query, setQuery] = useState("")
 
 	let searchMatches = query
@@ -88,8 +90,16 @@ export default function Select<RenderItem extends SelectItem>({
 		>
 			{({ open }) => (
 				<>
-					<div className="relative mt-2">
-						<ListboxButton className="relative w-full rounded-md bg-gray-700 py-1.5 pl-3 pr-10 text-left text-gray-100 shadow-sm ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 cursor-pointer">
+					<div className="relative">
+						<ListboxButton
+							className="
+								relative w-full py-2 pl-3 pr-10
+								rounded-md shadow-sm cursor-pointer
+								bg-gray-700 focus:bg-gray-800
+								ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600
+								text-left text-gray-100 text-sm sm:text-base
+							"
+						>
 							{selectedItems ? (
 								withMultiSelection ? (
 									<div className="flex flex-wrap items-center gap-2">
@@ -137,18 +147,19 @@ export default function Select<RenderItem extends SelectItem>({
 							leaveFrom="opacity-100"
 							leaveTo="opacity-0"
 						>
-							<ListboxOptions className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md bg-gray-700 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+							<ListboxOptions className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md bg-stone-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-sm sm:text-base">
 								{withSearch && (
-									<div className="sticky top-0 z-10 bg-gray-700">
+									<div className="sticky top-0 z-10 bg-stone-800">
 										<div className="text-gray-100 cursor-default select-none relative py-2 px-3">
 											<input
 												type="search"
 												name="search"
 												defaultValue={query}
 												autoComplete={"off"}
-												className="bg-gray-800 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+												className="bg-stone-900 focus:ring-blue-500 focus:border-blue-500 block w-full border-gray-300 rounded-md text-sm sm:text-base"
 												placeholder="Search"
 												onChange={handleSearch}
+												ref={autoFocusRef}
 											/>
 										</div>
 										<hr className="mb-2 h-px border-t-0 bg-gray-500" />
@@ -157,15 +168,15 @@ export default function Select<RenderItem extends SelectItem>({
 								{searchMatches.map((item) => (
 									<ListboxOption
 										key={item.key}
-										className={({ active }) =>
+										className={({ focus }) =>
 											`
-                        ${active ? "bg-indigo-600 text-white" : "text-gray-100"}
+                        ${focus ? "bg-indigo-600 text-white" : "text-gray-100"}
                         relative cursor-default select-none py-2 pl-3 pr-9
                       `
 										}
 										value={item}
 									>
-										{({ selected, active }) => {
+										{({ selected, focus }) => {
 											const isSelected = withMultiSelection
 												? selectedItems.find(
 														(selectedItem) => selectedItem.key === item.key,
@@ -191,7 +202,7 @@ export default function Select<RenderItem extends SelectItem>({
 													{isSelected ? (
 														<span
 															className={`
-                                ${active ? "text-white" : "text-indigo-300"}
+                                ${focus ? "text-white" : "text-indigo-300"}
                                 absolute inset-y-0 right-0 flex items-center pr-4
                               `}
 														>

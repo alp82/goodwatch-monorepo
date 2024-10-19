@@ -4,34 +4,28 @@
 
 subbar
     streaming: everywhere, selected providers, selected country
-    each filter as block in subbar
-        click to expand
-        x to close
+
+virtual combolist
 
 sidebar
     sort by
 
 results
-    one facet as scroll preview minimap (e.g. release year)
-    facets
+    facets as scroll preview minimap (e.g. release year)
     
-discover sidebar redesign
-    bug multiple genres duplicated
-    subheader
-    blocks with filter names and subtle bg in a grid
+discover redesign
+    discover: unselect streaming
+    discover: unselect country
+    discover release
+    discover cast / crew
+    discover scores
+    discover age ratings
+    discover budget & revenue
+    disocver keywords and tropes
     https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
-    https://flowbite.com/blocks/application/table-headers/#multi-level-table-header-with-filters
     filter inspiration:
         https://www.yidio.com/movies
         https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-    discover: unselect streaming
-    discover: unselect country
-    discover age ratings
-    discover cast / crew
-    discover director
-    discover scores
-    discover budget & revenue
-    disocver keywords and tropes
 
 discover
     all | movies | tv

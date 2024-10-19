@@ -3,6 +3,7 @@ import React from "react"
 import { useGenres } from "~/routes/api.genres.all"
 import type { DiscoverParams } from "~/server/discover.server"
 import type { Genre } from "~/server/genres.server"
+import { discoverFilters } from "~/server/types/discover-types"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
 import EditableSection from "~/ui/filter/sections/EditableSection"
 import Autocomplete, {
@@ -31,7 +32,7 @@ export default function SectionGenre({
 	const genresResult = useGenres()
 	const genres = genresResult?.data || []
 
-	const { withGenres, withoutGenres } = params
+	const { withGenres = "", withoutGenres = "" } = params
 	const genreIds = (withGenres || "")
 		.split(",")
 		.filter((genre) => Boolean(genre))
@@ -46,7 +47,7 @@ export default function SectionGenre({
 		withoutGenres.includes(genre.id.toString()),
 	)
 
-	// editing logic
+	// autocomplete data
 
 	const autocompleteItems = genres.map((genre: Genre) => {
 		return {
@@ -67,7 +68,8 @@ export default function SectionGenre({
 
 	// update handlers
 
-	const { updateQueryParams } = useNav()
+	const { updateQueryParams } =
+		useNav<Pick<DiscoverParams, "withGenres" | "withoutGenres">>()
 	const updateGenres = (genresToInclude: Genre[], genresToExclude: Genre[]) => {
 		updateQueryParams({
 			withGenres: genresToInclude.map((genre) => genre.id).join(","),
@@ -101,61 +103,55 @@ export default function SectionGenre({
 
 	return (
 		<EditableSection
-			label="Genre"
-			color="amber"
-			enabled={genreIds.length > 0}
+			label={discoverFilters.genre.label}
+			color={discoverFilters.genre.color}
+			visible={genreIds.length > 0}
 			editing={editing}
 			onEdit={onEdit}
 			onClose={onClose}
 			onRemoveAll={handleRemoveAll}
-			renderEditing={() => (
+		>
+			{(isEditing) => (
 				<div className="flex flex-col flex-wrap gap-2">
-					<Autocomplete<AutocompleteItem>
-						name="query"
-						placeholder="Genre Search"
-						icon={
-							<MagnifyingGlassIcon
-								className="h-4 w-4 text-gray-400"
-								aria-hidden="true"
-							/>
-						}
-						autocompleteItems={autocompleteItems}
-						renderItem={autocompleteRenderItem}
-						onSelect={handleSelect}
-					/>
-					<div className="flex gap-2">
-						{genresToInclude.map((genre: Genre) => {
-							return (
-								<Tag
+					{isEditing && (
+						<Autocomplete<AutocompleteItem>
+							name="query"
+							placeholder="Search Genre"
+							icon={
+								<MagnifyingGlassIcon
+									className="h-4 w-4 text-gray-400"
+									aria-hidden="true"
+								/>
+							}
+							autocompleteItems={autocompleteItems}
+							renderItem={autocompleteRenderItem}
+							onSelect={handleSelect}
+						/>
+					)}
+					<div className="flex flex-wrap items-center gap-2">
+						{genresToInclude.length > 0 ? (
+							genresToInclude.map((genre, index) => (
+								<OneOrMoreItems
 									key={genre.id}
-									icon={TagIcon}
-									onRemove={() => handleDelete(genre)}
+									index={index}
+									amount={selectedGenres.length}
 								>
-									{genre.name}
-								</Tag>
-							)
-						})}
+									<Tag
+										icon={TagIcon}
+										onRemove={isEditing ? () => handleDelete(genre) : undefined}
+									>
+										{genre.name}
+									</Tag>
+								</OneOrMoreItems>
+							))
+						) : genres.length === 0 ? (
+							<div className="relative h-8">
+								<Ping size="small" />
+							</div>
+						) : null}
 					</div>
 				</div>
 			)}
-		>
-			<div className="flex flex-wrap items-center gap-2">
-				{selectedGenres.length > 0 ? (
-					selectedGenres.map((genre, index) => (
-						<OneOrMoreItems
-							key={genre}
-							index={index}
-							amount={selectedGenres.length}
-						>
-							<Tag icon={TagIcon}>{genre}</Tag>
-						</OneOrMoreItems>
-					))
-				) : (
-					<div className="relative h-8">
-						<Ping size="small" />
-					</div>
-				)}
-			</div>
 		</EditableSection>
 	)
 }

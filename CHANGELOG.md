@@ -2,7 +2,7 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.4.4] 2024-10-xx
+## [0.5.0] 2024-10-xx
 
 ### Added
 * New filters for Discover page, now including:

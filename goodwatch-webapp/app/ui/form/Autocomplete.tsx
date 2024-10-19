@@ -14,8 +14,6 @@ import type React from "react"
 import { type ReactNode, useEffect, useState } from "react"
 import { classNames } from "~/utils/helpers"
 
-export type AutocompleteMode = "select" | "search"
-
 export interface AutocompleteItem {
 	key: string
 	label: string
@@ -23,7 +21,7 @@ export interface AutocompleteItem {
 
 export interface RenderItemParams<RenderItem extends AutocompleteItem> {
 	item: RenderItem
-	active: boolean
+	focus: boolean
 	selected: boolean
 	disabled: boolean
 }
@@ -79,21 +77,23 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 
 	return (
 		<Combobox as="div" value={selectedItem} onChange={setSelectedItem}>
-			<div className="relative mt-1">
+			<div className="relative">
 				<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
 					{icon}
 				</div>
 				<ComboboxInput
 					id="search-input"
 					className="
-						block w-full py-1.5 pl-10 pr-3
+						block w-full py-2 pl-10 pr-3
 						border border-transparent rounded-md focus:border-gray-400
-						bg-stone-800 focus:bg-stone-900 focus:outline-none focus:ring-gray-400
-						leading-5 text-gray-300 focus:text-gray-100 placeholder-gray-600 text-sm
+						bg-gray-700 focus:bg-gray-800
+						ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600
+						leading-5 text-gray-300 focus:text-gray-100 placeholder-gray-500 text-sm
 					"
 					name={name}
 					placeholder={placeholder}
 					autoComplete="off"
+					autoFocus={true}
 					value={query}
 					displayValue={(item: AutocompleteItem) => item?.label}
 					onChange={handleChange}
@@ -121,7 +121,13 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 				</ComboboxButton>
 
 				{autocompleteMatches?.length > 0 && (
-					<ComboboxOptions className="absolute z-10 mt-1 max-h-96 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+					<ComboboxOptions
+						className="
+						absolute mt-1 max-h-96 w-full overflow-auto
+						rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none
+						text-sm sm:text-base
+					"
+					>
 						{autocompleteMatches.map((item) => (
 							<ComboboxOption
 								key={item.key}

@@ -3,10 +3,12 @@ import {
 	type StreamingProviders,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
-import { AVAILABLE_CATEGORIES } from "~/server/explore.server"
 import { getGenresAll } from "~/server/genres.server"
-import type { FilterMediaType } from "~/server/search.server"
-import { constructFullQuery, filterMediaTypes } from "~/server/utils/query-db"
+import {
+	type FilterMediaType,
+	constructFullQuery,
+	filterMediaTypes,
+} from "~/server/utils/query-db"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import type { AllRatings } from "~/utils/ratings"
@@ -102,7 +104,8 @@ async function _getDiscoverResults({
 	const genreNames = genres
 		.filter((genre) => withGenres.includes(genre.id.toString()))
 		.map((genre) => genre.name)
-		.join(",")
+
+	console.log({ genreNames })
 
 	const { query, params } = constructFullQuery({
 		filterMediaType: type,
@@ -118,7 +121,7 @@ async function _getDiscoverResults({
 			minYear,
 			maxYear,
 			withCast,
-			withGenres: genreNames,
+			withGenres: genreNames?.length > 0 ? genreNames : undefined,
 		},
 		orderBy: {
 			column,
@@ -132,7 +135,7 @@ async function _getDiscoverResults({
 		getCountrySpecificDetails(row, country, language),
 	) as unknown as DiscoverResult[]
 
-	const castResult = await executeQuery(
+	const castResult = await executeQuery<{ id: string; name: string }>(
 		`SELECT DISTINCT id, name FROM "cast" WHERE id = ANY($1)`,
 		[withCast ? withCast.split(",") : []],
 	)
