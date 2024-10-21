@@ -44,6 +44,11 @@ streaming
 
 ---
 
+streaming links missing
+    inside out 2
+
+---
+
 optimistic ui for user settings
     api-action.ts
 

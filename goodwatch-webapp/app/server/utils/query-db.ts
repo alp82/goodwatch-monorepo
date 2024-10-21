@@ -30,6 +30,7 @@ interface Similarity {
 
 interface Conditions {
 	minScore?: string
+	maxScore?: string
 	minYear?: string
 	maxYear?: string
 	similarityVector?: string
@@ -134,8 +135,15 @@ const constructSelectQuery = ({
 	orderBy,
 	limit,
 }: ConstructSelectQueryParams) => {
-	const { minYear, maxYear, minScore, withCast, withCrew, withGenres } =
-		conditions
+	const {
+		minYear,
+		maxYear,
+		minScore,
+		maxScore,
+		withCast,
+		withCrew,
+		withGenres,
+	} = conditions
 
 	return `
 	SELECT
@@ -157,6 +165,7 @@ const constructSelectQuery = ({
 	  ${similarity ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
+		${maxScore ? "AND aggregated_overall_score_normalized_percent <= :::maxScore" : ""}
 		${minYear ? "AND release_year >= :::minYear" : ""}
 		${maxYear ? "AND release_year <= :::maxYear" : ""}
 		${withCast ? "AND m.cast @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}

@@ -33,8 +33,8 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 		},
 		score: {
 			label: "Score",
-			color: "blue",
-			associatedParams: ["minScore"],
+			color: "slate",
+			associatedParams: ["minScore", "maxScore"],
 		},
 		release: {
 			label: "Release",

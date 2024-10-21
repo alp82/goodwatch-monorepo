@@ -46,6 +46,7 @@ export const loader: LoaderFunction = async ({
 	// const maxYear = url.searchParams.get('maxYear') || new Date().getFullYear().toString()
 	const maxYear = url.searchParams.get("maxYear") || ""
 	const minScore = url.searchParams.get("minScore") || ""
+	const maxScore = url.searchParams.get("maxScore") || ""
 	const withCast = url.searchParams.get("withCast") || ""
 	const withCrew = url.searchParams.get("withCrew") || ""
 	const withKeywords = url.searchParams.get("withKeywords") || ""
@@ -74,6 +75,7 @@ export const loader: LoaderFunction = async ({
 		minYear,
 		maxYear,
 		minScore,
+		maxScore,
 		withCast,
 		withCrew,
 		withKeywords,

@@ -26,6 +26,7 @@ export interface DiscoverParams {
 	minYear: string
 	maxYear: string
 	minScore: string
+	maxScore: string
 	withCast: string
 	withCrew: string
 	withKeywords: string
@@ -77,6 +78,7 @@ async function _getDiscoverResults({
 	minYear,
 	maxYear,
 	minScore,
+	maxScore,
 	withCast,
 	withCrew,
 	withKeywords,
@@ -120,6 +122,7 @@ async function _getDiscoverResults({
 		},
 		conditions: {
 			minScore,
+			maxScore,
 			minYear,
 			maxYear,
 			withCast,

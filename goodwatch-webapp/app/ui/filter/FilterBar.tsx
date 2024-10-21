@@ -5,6 +5,7 @@ import type { DiscoverFilterType } from "~/server/types/discover-types"
 import FilterBarSection from "~/ui/filter/FilterBarSection"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
 import SectionGenre from "~/ui/filter/sections/SectionGenre"
+import SectionScore from "~/ui/filter/sections/SectionScore"
 import SectionStreaming from "~/ui/filter/sections/SectionStreaming"
 
 interface FilterBarParams {
@@ -26,6 +27,10 @@ export default function FilterBar({
 }: FilterBarParams) {
 	const cast = filters.castMembers || []
 
+	const handleClose = () => {
+		onEditToggle(null)
+	}
+
 	return (
 		<div className="m-auto max-w-7xl w-full px-4 flex flex-col flex-wrap gap-1 text-sm border-gray-900 rounded-lg">
 			<div className="flex flex-wrap items-stretch gap-1">
@@ -33,14 +38,21 @@ export default function FilterBar({
 					params={params}
 					editing={filterToEdit === "streaming"}
 					onEdit={() => onEditToggle("streaming")}
-					onClose={() => onEditToggle(null)}
+					onClose={handleClose}
 				/>
 
 				<SectionGenre
 					params={params}
 					editing={filterToEdit === "genre"}
 					onEdit={() => onEditToggle("genre")}
-					onClose={() => onEditToggle(null)}
+					onClose={handleClose}
+				/>
+
+				<SectionScore
+					params={params}
+					editing={filterToEdit === "score"}
+					onEdit={() => onEditToggle("score")}
+					onClose={handleClose}
 				/>
 
 				{params.minYear && params.maxYear && (
