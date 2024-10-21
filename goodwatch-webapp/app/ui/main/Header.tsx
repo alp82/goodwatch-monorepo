@@ -24,12 +24,12 @@ import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 
 export default function Header() {
 	const location = useLocation()
-	const isPage = (pathname: string) => location.pathname === pathname
+	const isPage = (pathname: string) => location.pathname.startsWith(pathname)
 
 	const { user, loading } = useUser()
 
 	return (
-		<div className="bg-gray-900 fixed top-0 z-50 w-full">
+		<div className="fixed top-0 z-50 w-full bg-gray-900">
 			<GlobalLoading />
 			<Disclosure as="nav" className="bg-gray-950/35">
 				{({ open }) => (
@@ -107,13 +107,13 @@ export default function Header() {
 													>
 														<MenuItems
 															anchor="bottom"
-															className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+															className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
 														>
 															<MenuItem>
 																<Link
 																	className={`
 																		${isPage("/wishlist") ? "bg-gray-800 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}
-																		block px-4 py-2 text-base
+																		block px-4 py-2 text-base text-center
 																	`}
 																	to="/wishlist"
 																	prefetch="viewport"

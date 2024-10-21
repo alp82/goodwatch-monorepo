@@ -33,7 +33,7 @@ export default function Cast({ cast }: CastProps) {
 						<Link
 							key={castMember.id}
 							className="w-28 h-60 border-2 border-gray-700 flex flex-col items-center group"
-							to={`/discover?type=${type}&withCast=${castMember.id}`}
+							to={`/discover/all?withCast=${castMember.id}`}
 							prefetch="intent"
 						>
 							<img
@@ -68,7 +68,7 @@ export default function Cast({ cast }: CastProps) {
 							<Link
 								key={castMember.id}
 								className="w-64 h-16 hover:bg-slate-800"
-								to={`/discover?type=${type}&withCast=${castMember.id}`}
+								to={`/discover/all?withCast=${castMember.id}`}
 								prefetch="intent"
 							>
 								<strong>{castMember.name}</strong>{" "}

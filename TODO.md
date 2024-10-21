@@ -2,63 +2,70 @@
 ```
 ---
 
-user actions
-    enabled buttons with highlight color
-    new for shows: watching / completed
+not seen movies
 
----
+movie card
+    overlay: show movie or tv icon 
+    max 3 streaming overlays
 
-user settings
-    oval together: profile picture -> profile icon
-
----
-
-subbar
-    streaming: everywhere, selected providers, selected country
-    each filter as block in subbar
-        click to expand
-        x to close
+addbar
+    always visible?
+    dropdown?
 
 sidebar
-    sort by
-
-results
-    one facet as scroll preview minimap (e.g. release year)
-    facets
+    sort by column
+    facets as scroll preview minimap (e.g. release year)
     
-discover sidebar redesign
-    bug multiple genres duplicated
-    subheader
-    blocks with filter names and subtle bg in a grid
+genre
+    fix incompatible genre & media type combinations
+
+sign up backlink
+    redirect without jump to home
+    
+discover redesign
+    return count: "showing first 100 results"
+  
+    discover scores
+    discover release
+    discover cast / crew
+    discover DNA
+    discover age ratings
+    discover search text
+
+    discover loading animation with skeletons
     https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
-    https://flowbite.com/blocks/application/table-headers/#multi-level-table-header-with-filters
     filter inspiration:
         https://www.yidio.com/movies
         https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-    discover: unselect streaming
-    discover: unselect country
-    discover age ratings
-    discover cast / crew
-    discover director
-    discover scores
-    discover budget & revenue
-    disocver keywords and tropes
 
-discover
-    all | movies | tv
-    return count: "showing first 100 results"
-    streaming types: mine, free, buy, all
-    discover loading animation with skeletons
+streaming
+    checkbox: include buy/rent
+
+tropes
+    show in details
+    add filter
+
+---
+
+streaming links missing
+    inside out 2
+
+---
+
+optimistic ui for user settings
+    api-action.ts
 
 ---
 
 details
+    mobile with small poster
     share button sticky
     guess country
     age restriction by country
     streaming section country flag button does not change selected country
     streaming section favors user selected providers
     web links section
+    sequels section
     
     show title in current language
     images section
@@ -73,6 +80,17 @@ details
     https://imdb.shyakadavis.me/title#overview
 
     fragment for scroll position (auto update)
+    
+    about section
+        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+
+remove obsolete code
+    updateUrlParams.tsx
+
+---
+
+user settings
+    oval together: profile picture -> profile icon
 
 ---
 
@@ -199,11 +217,18 @@ data flows ignore list:
 
 ---
 
+error boundaries
+    add for each page
+    better error display
+
+---
+
 tv seasons:
     get episodes
     get ratings
     show in details
     when last season/episode was released
+    recaps
 
 ---
 
@@ -287,6 +312,11 @@ project documentation
 
 ---
 
+user actions
+    new for shows: watching / completed
+
+---
+
 letterboxd ratings
 
 ---
@@ -297,6 +327,12 @@ country usage
     explore
     discover
     trending
+
+---
+
+meta tags
+    better descriptions
+    based on params
 
 ---
 
@@ -402,6 +438,12 @@ clips
     
 ---
 
+signup
+    apple
+    email
+
+---
+
 anti spoiler mode
     hide images and thumbnails
     hide overview and description
@@ -497,6 +539,12 @@ save trending scores per day
 trending yesterday
 trending difference
 
+styling goodies:
+    view transitions: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#view-transitions-12
+    search delete animation: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#search-13
+    rem based breakpoints: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#accessibility-15
+    animated svg icons: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#modern-outline-icons-14
+
 details:
 box office (e.g. Google)
 crew links to discovery
@@ -566,6 +614,10 @@ streaming explanations
 
 android app
 iphone app
+
+credits for design inspiration:
+    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&node-type=canvas&t=HNeQ9QDw29BnwYEl-0
+    https://imdb.shyakadavis.me/title#technical-specs
 
 data source: existing crawlers use existing url instead of guessing
 data-source: letterboxd scores
@@ -660,15 +712,25 @@ LIMIT 20;
 
 # Blog
 ```
-monorepo design
-db architecture: performance and scalability
-caching strategy
-from vercel to coolify
-    too many open files
 remix: keep it simple with tailwind
     linting with biomejs
     component example: rating
-data pipeline with windmill: grow data and keep it up to date
+discover design
+data pipeline with windmill:
+    keep grow data and keep it up to date
+    infrastructure
+    data flow design
+monorepo design
+from vercel to coolify
+    too many open files
+    hidden costs
+db architecture: performance and scalability
+caching strategy
+zombie processes
+    windmill -> chrome (playwright)
+    "can't start new thread"
+    "IO error: Resource temporarily unavailable (os error 11)"
+    kill windmill every 24 hours
 server architecture
     deployment with docker compose
     ansible for worker upgrades
@@ -677,9 +739,4 @@ authentication
     https://www.dusanstam.com/posts/remix-supabase-authentication
 genome with LLM's
 recommendation engine
-zombie processes
-    windmill -> chrome (playwright)
-    "can't start new thread"
-    "IO error: Resource temporarily unavailable (os error 11)"
-    kill windmill every 24 hours
 ```

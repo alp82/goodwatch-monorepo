@@ -35,8 +35,18 @@ export async function _getCountries(): Promise<CountriesResults> {
         country;
   `
 	const result = await executeQuery<CountryRow>(query)
-	return result.rows.map((row) => ({
+	const countries = result.rows.map((row) => ({
 		code: row.country,
 		name: getCountryName(row.country),
 	}))
+
+	return countries.sort((a, b) => {
+		if (a.name < b.name) {
+			return -1
+		}
+		if (a.name > b.name) {
+			return 1
+		}
+		return 0
+	})
 }

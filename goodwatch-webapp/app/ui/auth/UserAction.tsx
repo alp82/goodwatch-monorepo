@@ -12,12 +12,14 @@ import { useUser } from "~/utils/auth"
 export interface UserActionProps {
 	children: React.ReactElement
 	instructions: React.ReactNode
+	requiresLogin?: boolean
 	onChange?: () => void
 }
 
 export default function UserAction({
 	children,
 	instructions,
+	requiresLogin = false,
 	onChange,
 }: UserActionProps) {
 	const { user } = useUser()
@@ -27,7 +29,7 @@ export default function UserAction({
 	const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 })
 
 	const handleClick = (e: MouseEvent) => {
-		if (isLoggedIn) {
+		if (isLoggedIn || !requiresLogin) {
 			// Perform the intended action
 			if (children.props.onClick) {
 				children.props.onClick(e)
@@ -66,7 +68,7 @@ export default function UserAction({
 				<Dialog open={isOpen} onClose={() => setIsOpen(false)}>
 					<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 					<div
-						className="absolute w-[400px] p-8 z-10 bg-gray-700 border-8 border-gray-600 rounded-lg shadow-2xl"
+						className="absolute w-[400px] p-8 z-10 bg-gray-700 border-8 border-gray-600 rounded-lg shadow-2xl z-50"
 						style={{ top: modalPosition.top, left: modalPosition.left }}
 					>
 						<DialogTitle className="text-xl font-medium text-gray-100">

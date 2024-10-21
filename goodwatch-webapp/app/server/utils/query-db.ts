@@ -1,3 +1,4 @@
+import type { StreamingPreset } from "~/server/discover.server"
 import { VOTE_COUNT_THRESHOLD } from "~/utils/constants"
 import { getRatingKeys } from "~/utils/ratings"
 import { ignoredProviders } from "~/utils/streaming-links"
@@ -11,6 +12,7 @@ export type FilterMediaType = (typeof filterMediaTypes)[number]
 type StreamType = "flatrate" | "free" | "ads" | "buy" | "rent"
 
 interface StreamingConfig {
+	streamingPreset?: StreamingPreset
 	countryCode?: string
 	streamTypes?: StreamType[]
 	providerIds?: number[]
@@ -28,12 +30,13 @@ interface Similarity {
 
 interface Conditions {
 	minScore?: string
+	maxScore?: string
 	minYear?: string
 	maxYear?: string
 	similarityVector?: string
 	withCast?: string
 	withCrew?: string
-	withGenres?: string
+	withGenres?: string[]
 }
 
 interface OrderByConfig {
@@ -132,8 +135,15 @@ const constructSelectQuery = ({
 	orderBy,
 	limit,
 }: ConstructSelectQueryParams) => {
-	const { minYear, maxYear, minScore, withCast, withCrew, withGenres } =
-		conditions
+	const {
+		minYear,
+		maxYear,
+		minScore,
+		maxScore,
+		withCast,
+		withCrew,
+		withGenres,
+	} = conditions
 
 	return `
 	SELECT
@@ -155,11 +165,12 @@ const constructSelectQuery = ({
 	  ${similarity ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
+		${maxScore ? "AND aggregated_overall_score_normalized_percent <= :::maxScore" : ""}
 		${minYear ? "AND release_year >= :::minYear" : ""}
 		${maxYear ? "AND release_year <= :::maxYear" : ""}
 		${withCast ? "AND m.cast @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}
 		${withCrew ? "AND m.crew @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}
-		${withGenres ? "AND m.genres @> ARRAY[:::withGenres]::varchar[]" : ""}
+		${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}
 		${minScore || orderBy.column === "aggregated_overall_score_normalized_percent" ? `AND m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}` : ""}
 	ORDER BY ${similarity ? `v.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`} 
 	LIMIT ${limit}
@@ -182,7 +193,7 @@ const getCommonFields = () => {
 
 const getStreamingLinksCondition = (
 	type: MediaType,
-	{ countryCode, streamTypes, providerIds }: StreamingConfig,
+	{ streamingPreset, countryCode, streamTypes, providerIds }: StreamingConfig,
 ) => {
 	// TODO validation for country code
 	// TODO validation for stream types
@@ -192,13 +203,15 @@ const getStreamingLinksCondition = (
 		FROM streaming_provider_links spl
 		WHERE spl.tmdb_id = m.tmdb_id
 			AND spl.media_type = '${type}'
-			${countryCode ? `AND spl.country_code = '${countryCode}'` : ""}
+			AND spl.provider_id ${streamingPreset !== "everywhere" && providerIds ? `IN (${providerIds.join(",")})` : `NOT IN (${ignoredProviders.join(",")})`}
+			${streamingPreset !== "everywhere" && countryCode ? `AND spl.country_code = '${countryCode}'` : ""}
 			${streamTypes ? `AND spl.stream_type IN (${streamTypes.map((streamType) => `'${streamType}'`).join(",")})` : ""}
-			AND spl.provider_id ${providerIds ? `IN (${providerIds.join(",")})` : `NOT IN (${ignoredProviders.join(",")})`}
+		LIMIT 1
 	)`
 }
 
 const getStreamingLinksJoin = ({
+	streamingPreset,
 	countryCode,
 	streamTypes,
 	providerIds,
@@ -218,13 +231,17 @@ const getStreamingLinksJoin = ({
         'price_dollar', spl.price_dollar,
         'quality', spl.quality
     )) AS streaming_links
-    FROM streaming_provider_links spl
+		FROM (
+			SELECT DISTINCT ON (spl.provider_id) spl.*
+			FROM streaming_provider_links spl
+			WHERE spl.tmdb_id = m.tmdb_id
+				AND spl.media_type = m.media_type
+				AND spl.provider_id ${streamingPreset !== "everywhere" && providerIds ? `IN (${providerIds.join(",")})` : `NOT IN (${ignoredProviders.join(",")})`}
+				${streamingPreset !== "everywhere" && countryCode ? `AND spl.country_code = '${countryCode}'` : ""}
+				${streamTypes ? `AND spl.stream_type IN (${streamTypes.map((streamType) => `'${streamType}'`).join(",")})` : ""}
+			ORDER BY spl.provider_id, spl.quality DESC, spl.price_dollar ASC
+    ) spl
     INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
-		WHERE spl.tmdb_id = m.tmdb_id
-			AND spl.media_type = m.media_type
-			${countryCode ? `AND spl.country_code = '${countryCode}'` : ""}
-			${streamTypes ? `AND spl.stream_type IN (${streamTypes.map((streamType) => `'${streamType}'`).join(",")})` : ""}
-			AND spl.provider_id ${providerIds ? `IN (${providerIds.join(",")})` : `NOT IN (${ignoredProviders.join(",")})`}
 	`
 }
 
