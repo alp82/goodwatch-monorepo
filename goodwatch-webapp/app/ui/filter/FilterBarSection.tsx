@@ -22,6 +22,8 @@ export default function FilterBarSection({
 	children,
 }: FilterBarSectionParams) {
 	const transparency = isActive ? 80 : 50
+
+	const isInteractive = onToggle && (isCompact || !isActive)
 	return (
 		<div
 			className={`
@@ -29,10 +31,10 @@ export default function FilterBarSection({
 				bg-gradient-to-br from-${color}-700/${transparency} via-${color}-900/${transparency} to-${color}-800/${transparency}
 				border-4 ${isActive ? "border-white/50" : "border-white/10"}
 				transition duration-150 
-				${isActive ? "bg-[length:200%_200%] animate-gradient-x via-50% to-70%" : "cursor-pointer"}
-				${onToggle && !isActive ? "hover:brightness-150" : ""}
+				${isActive ? "bg-[length:200%_200%] animate-gradient-x via-50% to-70%" : ""}
+				${isInteractive ? "cursor-pointer hover:brightness-150" : ""}
 			`}
-			onClick={() => (onToggle && !isActive ? onToggle() : null)}
+			onClick={() => (isInteractive ? onToggle() : null)}
 			onKeyDown={() => null}
 		>
 			{label && (

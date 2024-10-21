@@ -72,6 +72,9 @@ details
     about section
         infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
 
+remove obsolete code
+    updateUrlParams.tsx
+
 ---
 
 user settings

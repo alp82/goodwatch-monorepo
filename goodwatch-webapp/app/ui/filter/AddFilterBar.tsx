@@ -31,20 +31,22 @@ export default function AddFilterBar({
 	return (
 		<div className="m-auto max-w-7xl w-full px-4 flex flex-col flex-wrap gap-1 text-sm border-gray-900 rounded-lg">
 			<Appear isVisible={Boolean(isVisible)}>
-				<FilterBarSection label="Add Filter" isActive={true} color="stone">
-					<div className="my-4 flex items-center flex-wrap gap-4 text-sm sm:text-base md:text-lg">
-						{unusedFilters.map(([filterType, discoverFilter]) => (
-							<button
-								key={filterType}
-								type="button"
-								className="rounded-md bg-gray-700 px-2.5 py-1.5 font-semibold text-white shadow-sm hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700 cursor-pointer"
-								onClick={() => onSelect(filterType as DiscoverFilterType)}
-							>
+				<div className="flex items-center flex-wrap gap-2 text-sm sm:text-base md:text-lg">
+					<span className="font-extrabold text-sm">Add Filter:</span>
+					{unusedFilters.map(([filterType, discoverFilter]) => (
+						<FilterBarSection
+							key={filterType}
+							isCompact={true}
+							isActive={false}
+							color={discoverFilter.color}
+							onToggle={() => onSelect(filterType as DiscoverFilterType)}
+						>
+							<span className="px-1.5 py-0.5 font-semibold">
 								{discoverFilter.label}
-							</button>
-						))}
-					</div>
-				</FilterBarSection>
+							</span>
+						</FilterBarSection>
+					))}
+				</div>
 			</Appear>
 		</div>
 	)

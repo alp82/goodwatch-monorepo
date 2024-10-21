@@ -11,6 +11,7 @@ interface FilterBarParams {
 	params: DiscoverParams
 	filters: DiscoverFilters
 	filterToEdit: DiscoverFilterType | null
+	isAddingFilter: boolean
 	onAddToggle: () => void
 	onEditToggle: (filterType: DiscoverFilterType | null) => void
 }
@@ -19,6 +20,7 @@ export default function FilterBar({
 	params,
 	filters,
 	filterToEdit,
+	isAddingFilter,
 	onAddToggle,
 	onEditToggle,
 }: FilterBarParams) {
@@ -87,7 +89,7 @@ export default function FilterBar({
 				<FilterBarSection
 					isCompact={true}
 					color="stone"
-					isActive={false}
+					isActive={isAddingFilter}
 					onToggle={onAddToggle}
 				>
 					<PlusIcon className="h-16" />
