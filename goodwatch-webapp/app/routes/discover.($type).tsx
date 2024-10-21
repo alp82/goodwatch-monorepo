@@ -176,7 +176,7 @@ export default function Discover() {
 							discover.isSuccess &&
 							results.map((result: DiscoverResult, index) => {
 								return (
-									<div key={result.tmdb_id}>
+									<div key={`${result.tmdb_id}-${result.media_type}`}>
 										<motion.div
 											key={currentParams.sortBy}
 											initial={{

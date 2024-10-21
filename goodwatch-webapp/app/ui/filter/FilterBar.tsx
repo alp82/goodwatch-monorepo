@@ -5,6 +5,7 @@ import type { DiscoverFilterType } from "~/server/types/discover-types"
 import FilterBarSection from "~/ui/filter/FilterBarSection"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
 import SectionGenre from "~/ui/filter/sections/SectionGenre"
+import SectionRelease from "~/ui/filter/sections/SectionRelease"
 import SectionScore from "~/ui/filter/sections/SectionScore"
 import SectionStreaming from "~/ui/filter/sections/SectionStreaming"
 
@@ -55,24 +56,12 @@ export default function FilterBar({
 					onClose={handleClose}
 				/>
 
-				{params.minYear && params.maxYear && (
-					<FilterBarSection
-						label="Release"
-						color="cyan"
-						isActive={filterToEdit === "release"}
-						onToggle={() => onEditToggle("release")}
-					>
-						<span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded">
-							{params.minYear === params.maxYear ? (
-								<>{params.maxYear}</>
-							) : (
-								<>
-									{params.minYear} - {params.maxYear}
-								</>
-							)}
-						</span>
-					</FilterBarSection>
-				)}
+				<SectionRelease
+					params={params}
+					editing={filterToEdit === "release"}
+					onEdit={() => onEditToggle("release")}
+					onClose={handleClose}
+				/>
 
 				{cast.length > 0 && (
 					<FilterBarSection

@@ -71,7 +71,8 @@ export default function SectionScore({
 			return
 
 		updateQueryParams({
-			minScore: "50",
+			minScore: presets[0].minScore.toString(),
+			maxScore: presets[1].maxScore.toString(),
 		})
 	}, [editing, params.minScore, params.maxScore])
 
@@ -110,7 +111,7 @@ export default function SectionScore({
 		<EditableSection
 			label={discoverFilters.score.label}
 			color={discoverFilters.score.color}
-			visible={params.minScore !== undefined}
+			visible={params.minScore !== undefined || params.maxScore !== undefined}
 			editing={editing}
 			onEdit={onEdit}
 			onClose={onClose}

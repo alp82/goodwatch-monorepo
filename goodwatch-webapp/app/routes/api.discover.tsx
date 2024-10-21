@@ -54,17 +54,20 @@ export const loader: LoaderFunction = async ({
 	const withGenres = url.searchParams.get("withGenres") || ""
 	const withoutGenres = url.searchParams.get("withoutGenres") || ""
 	const streamingPreset =
-		(url.searchParams.get("streamingPreset") as StreamingPreset) ||
-		(user_id ? "mine" : "everywhere")
+		(url.searchParams.get("streamingPreset") as StreamingPreset) || ""
 	const withStreamingProviders =
 		url.searchParams.get("withStreamingProviders") ||
-		userSettings?.streaming_providers_default ||
+		(streamingPreset === "mine"
+			? userSettings?.streaming_providers_default
+			: "") ||
 		""
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"popularity") as DiscoverSortBy
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
 		| "asc"
 		| "desc"
+
+	console.log({ withStreamingProviders, streamingPreset })
 
 	const params = {
 		type,
