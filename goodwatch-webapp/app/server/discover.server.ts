@@ -108,8 +108,6 @@ async function _getDiscoverResults({
 		.filter((genre) => withGenres.includes(genre.id.toString()))
 		.map((genre) => genre.name)
 
-	console.log({ genreNames })
-
 	const { query, params } = constructFullQuery({
 		filterMediaType: type,
 		streaming: {

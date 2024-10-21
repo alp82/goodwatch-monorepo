@@ -29,19 +29,16 @@ export type GetDiscoverResult = {
 // API endpoint
 
 export const loader: LoaderFunction = async ({
-	params: { type },
 	request,
 }: LoaderFunctionArgs) => {
-	const paramsType = (type || "all") as FilterMediaType
-
 	const user_id = await getUserIdFromRequest({ request })
 	const userSettings = await getUserSettings({ user_id })
 
 	const { locale } = getLocaleFromRequest(request)
 	const url = new URL(request.url)
-	const mode = (url.searchParams.get("mode") || "advanced") as "advanced"
+	const type = url.searchParams.get("type" as FilterMediaType) || "all"
 	const country =
-		userSettings?.country_default || url.searchParams.get("country") || ""
+		url.searchParams.get("country") || userSettings?.country_default || ""
 	const language = url.searchParams.get("language") || locale.language
 	const minAgeRating = url.searchParams.get("minAgeRating") || ""
 	const maxAgeRating = url.searchParams.get("maxAgeRating") || ""
@@ -55,8 +52,9 @@ export const loader: LoaderFunction = async ({
 	const withoutKeywords = url.searchParams.get("withoutKeywords") || ""
 	const withGenres = url.searchParams.get("withGenres") || ""
 	const withoutGenres = url.searchParams.get("withoutGenres") || ""
-	const streamingPreset = (url.searchParams.get("streamingPreset") ||
-		"everywhere") as StreamingPreset
+	const streamingPreset =
+		(url.searchParams.get("streamingPreset") as StreamingPreset) ||
+		(user_id ? "mine" : "everywhere")
 	const withStreamingProviders =
 		url.searchParams.get("withStreamingProviders") ||
 		userSettings?.streaming_providers_default ||
@@ -68,8 +66,7 @@ export const loader: LoaderFunction = async ({
 		| "desc"
 
 	const params = {
-		type: paramsType,
-		mode,
+		type,
 		country,
 		language,
 		minAgeRating,

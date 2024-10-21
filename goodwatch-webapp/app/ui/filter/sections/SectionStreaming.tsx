@@ -13,6 +13,7 @@ import Select, { type SelectItem } from "~/ui/form/Select"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 import { Ping } from "~/ui/wait/Ping"
 import { Spinner } from "~/ui/wait/Spinner"
+import { useUser } from "~/utils/auth"
 import useLocale from "~/utils/locale"
 import { useNav } from "~/utils/navigation"
 
@@ -72,14 +73,15 @@ export default function SectionStreaming({
 			current: selectedTab === "custom",
 		},
 	]
-	const onSelectTab = (tab: Tab<StreamingPreset>) => {
-		const streamingPreset = tab.key
+
+	// selection logic
+
+	const onSelectStreamingPreset = (streamingPreset: StreamingPreset) => {
 		setSelectedTab(streamingPreset)
 
 		let withStreamingProviders = ""
 		let country = ""
 		if (streamingPreset === "custom") {
-			console.log(params.country, { localCountry })
 			if (!params.withStreamingProviders)
 				withStreamingProviders = localStreamingProviders
 			if (!params.country) country = localCountry
@@ -91,11 +93,14 @@ export default function SectionStreaming({
 			country,
 		})
 	}
+
+	const { user } = useUser()
 	useEffect(() => {
-		if (!params.streamingPreset || params.streamingPreset === selectedTab)
-			return
-		setSelectedTab(params.streamingPreset)
-	}, [params.streamingPreset])
+		if (params.streamingPreset || !editing) return
+
+		const streamingPreset = user?.id ? "mine" : "everywhere"
+		onSelectStreamingPreset(streamingPreset)
+	}, [user?.id, params.streamingPreset, editing])
 
 	// data retrieval
 
@@ -182,7 +187,9 @@ export default function SectionStreaming({
 	}
 
 	const handleRemoveAll = () => {
+		onClose()
 		updateQueryParams({
+			streamingPreset: undefined,
 			withStreamingProviders: "",
 			country: "",
 		})
@@ -194,9 +201,7 @@ export default function SectionStreaming({
 		<EditableSection
 			label={discoverFilters.streaming.label}
 			color={discoverFilters.streaming.color}
-			visible={
-				Boolean(params.streamingPreset) || streamingProviderIds.length > 0
-			}
+			visible={Boolean(params.streamingPreset)}
 			editing={editing}
 			onEdit={onEdit}
 			onClose={onClose}
@@ -206,7 +211,11 @@ export default function SectionStreaming({
 				<div className="w-full flex flex-col flex-wrap gap-4">
 					{isEditing ? (
 						<div className="flex flex-col flex-wrap gap-3">
-							<Tabs tabs={streamingTabs} size="small" onSelect={onSelectTab} />
+							<Tabs
+								tabs={streamingTabs}
+								size="small"
+								onSelect={(tab) => onSelectStreamingPreset(tab.key)}
+							/>
 							{selectedTab === "everywhere" && (
 								<span>
 									Showing all titles that are available for{" "}

@@ -2,6 +2,12 @@
 ```
 ---
 
+not seen movies
+
+movie card
+    overlay: show movie or tv icon 
+    max 3 streaming overlays
+
 addbar
     always visible?
     dropdown?
@@ -31,7 +37,6 @@ discover redesign
 
 streaming
     checkbox: include buy/rent
-    movie card: max 3 streaming overlays 
 
 ---
 

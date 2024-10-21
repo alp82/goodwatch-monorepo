@@ -50,7 +50,7 @@ export default function FilterBarSection({
 								onClick={onRemove}
 							>
 								<XMarkIcon className="h-4 w-4" />
-								Remove
+								Remove Filter
 							</button>
 							<button
 								type="button"
@@ -62,7 +62,7 @@ export default function FilterBarSection({
 								onClick={onToggle}
 							>
 								<CheckIcon className="h-4 w-4" />
-								OK
+								Apply Filter
 							</button>
 						</span>
 					)}

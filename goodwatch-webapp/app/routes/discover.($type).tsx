@@ -2,7 +2,7 @@ import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
 import type { MetaFunction } from "@remix-run/node"
 import { useNavigate, useRouteError } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { useDiscover } from "~/routes/api.discover"
 import type {
 	DiscoverParams,
@@ -19,7 +19,6 @@ import Appear from "~/ui/fx/Appear"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 import { Spinner } from "~/ui/wait/Spinner"
-import { useUser } from "~/utils/auth"
 import { useNav } from "~/utils/navigation"
 
 export function headers() {
@@ -74,24 +73,12 @@ export default function Discover() {
 		crewMembers: [],
 	}
 
-	const { user } = useUser()
-	useEffect(() => {
-		if (currentParams.streamingPreset) return
-
-		updateQueryParams(
-			{
-				streamingPreset: user?.id ? "mine" : "everywhere",
-			},
-			{ replace: true },
-		)
-	}, [user?.id])
-
 	const sortByTabs: Tab<DiscoverSortBy>[] = [
 		{
 			key: "popularity",
 			label: "Most popular",
 			icon: FireIcon,
-			current: currentParams.sortBy === "popularity",
+			current: !currentParams.sortBy || currentParams.sortBy === "popularity",
 		},
 		{
 			key: "aggregated_score",

@@ -97,6 +97,7 @@ export default function SectionGenre({
 
 	const handleRemoveAll = () => {
 		updateGenres([], [])
+		onClose()
 	}
 
 	// rendering

@@ -197,6 +197,7 @@ const getStreamingLinksCondition = (
 			AND spl.provider_id ${streamingPreset !== "everywhere" && providerIds ? `IN (${providerIds.join(",")})` : `NOT IN (${ignoredProviders.join(",")})`}
 			${streamingPreset !== "everywhere" && countryCode ? `AND spl.country_code = '${countryCode}'` : ""}
 			${streamTypes ? `AND spl.stream_type IN (${streamTypes.map((streamType) => `'${streamType}'`).join(",")})` : ""}
+		LIMIT 1
 	)`
 }
 
@@ -221,13 +222,17 @@ const getStreamingLinksJoin = ({
         'price_dollar', spl.price_dollar,
         'quality', spl.quality
     )) AS streaming_links
-    FROM streaming_provider_links spl
+		FROM (
+			SELECT DISTINCT ON (spl.provider_id) spl.*
+			FROM streaming_provider_links spl
+			WHERE spl.tmdb_id = m.tmdb_id
+				AND spl.media_type = m.media_type
+				AND spl.provider_id ${streamingPreset !== "everywhere" && providerIds ? `IN (${providerIds.join(",")})` : `NOT IN (${ignoredProviders.join(",")})`}
+				${streamingPreset !== "everywhere" && countryCode ? `AND spl.country_code = '${countryCode}'` : ""}
+				${streamTypes ? `AND spl.stream_type IN (${streamTypes.map((streamType) => `'${streamType}'`).join(",")})` : ""}
+			ORDER BY spl.provider_id, spl.quality DESC, spl.price_dollar ASC
+    ) spl
     INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
-		WHERE spl.tmdb_id = m.tmdb_id
-			AND spl.media_type = m.media_type
-			AND spl.provider_id ${streamingPreset !== "everywhere" && providerIds ? `IN (${providerIds.join(",")})` : `NOT IN (${ignoredProviders.join(",")})`}
-			${streamingPreset !== "everywhere" && countryCode ? `AND spl.country_code = '${countryCode}'` : ""}
-			${streamTypes ? `AND spl.stream_type IN (${streamTypes.map((streamType) => `'${streamType}'`).join(",")})` : ""}
 	`
 }
 

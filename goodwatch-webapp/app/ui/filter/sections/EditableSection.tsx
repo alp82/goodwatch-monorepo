@@ -23,7 +23,7 @@ export default function EditableSection({
 	onRemoveAll,
 	children,
 }: SectionParams) {
-	// visibility & editing logic
+	// editing logic
 
 	const [isEditing, setIsEditing] = React.useState(editing)
 	const onToggleEditing = () => {
@@ -41,23 +41,25 @@ export default function EditableSection({
 		setIsEditing(editing)
 	}, [editing])
 
-	const [isVisible, setIsVisible] = React.useState(isEditing || visible)
-	useEffect(() => {
-		setIsVisible(isEditing || visible)
-	}, [isEditing, visible])
-
 	// update handlers
 
+	const [hasRemoved, setHasRemoved] = React.useState(false)
 	const handleRemoveAll = () => {
+		setHasRemoved(true)
 		onRemoveAll()
 		onClose()
-		setIsEditing(false)
-		setIsVisible(false)
 	}
+	useEffect(() => {
+		if (editing) {
+			setHasRemoved(false)
+		}
+	}, [editing])
+
+	// visibility logic
+	const skipSectionRender = (!isEditing && !visible) || hasRemoved
+	if (skipSectionRender) return null
 
 	// rendering
-
-	if (!isVisible) return null
 
 	return (
 		<FilterBarSection
