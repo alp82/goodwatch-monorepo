@@ -23,15 +23,14 @@ sign up backlink
     redirect without jump to home
     
 discover redesign
-    all | movies | tv
     return count: "showing first 100 results"
   
-    discover scores & vote count
+    discover scores
     discover release
     discover cast / crew
     discover DNA
     discover age ratings
-    disocver keywords and tropes
+    discover search text
 
     discover loading animation with skeletons
     https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
@@ -41,6 +40,10 @@ discover redesign
 
 streaming
     checkbox: include buy/rent
+
+tropes
+    show in details
+    add filter
 
 ---
 

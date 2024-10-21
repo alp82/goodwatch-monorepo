@@ -25,31 +25,33 @@ export const RangeSlider = ({ ...params }: RangeSliderProps) => {
 		<div className="my-2 mx-2">
 			<Range
 				{...params}
-				renderTrack={({ props, children }) => (
-					<div {...props} className="h-1 bg-stone-400">
-						<div
-							ref={props.ref}
-							style={{
-								height: "5px",
-								width: "100%",
-								borderRadius: "4px",
-								background: getTrackBackground({
-									values: params.values,
-									min: params.min,
-									max: params.max,
-									colors: ["transparent", defaultColor, "transparent"],
-								}),
-								alignSelf: "center",
-							}}
-						>
-							{children}
+				renderTrack={({ props, children }) => {
+					const { ref, ...topLevelProps } = props
+					return (
+						<div {...topLevelProps} className="h-1 bg-stone-400">
+							<div
+								ref={ref}
+								style={{
+									height: "5px",
+									width: "100%",
+									borderRadius: "4px",
+									background: getTrackBackground({
+										values: params.values,
+										min: params.min,
+										max: params.max,
+										colors: ["transparent", defaultColor, "transparent"],
+									}),
+									alignSelf: "center",
+								}}
+							>
+								{children}
+							</div>
 						</div>
-					</div>
-				)}
+					)
+				}}
 				renderMark={({ props, index }) => {
-					const isInRange =
-						index * params.step > params.values[0] &&
-						index * params.step < params.values[1]
+					const value = index * params.step
+					const isInRange = value > params.values[0] && value < params.values[1]
 					return (
 						<div
 							{...props}
@@ -61,13 +63,20 @@ export const RangeSlider = ({ ...params }: RangeSliderProps) => {
 						/>
 					)
 				}}
-				renderThumb={({ props }) => (
-					<div
-						{...props}
-						key={props.key}
-						className="h-5 w-5 rounded-full bg-blue-600"
-					/>
-				)}
+				renderThumb={({ props }) => {
+					return (
+						<div
+							{...props}
+							key={props.key}
+							className="h-5 w-5 rounded-full bg-blue-600"
+							style={{
+								// top: "-0.55em",
+								// left: `calc(${value}% - 0.75em)`,
+								...props.style,
+							}}
+						/>
+					)
+				}}
 			/>
 		</div>
 	)

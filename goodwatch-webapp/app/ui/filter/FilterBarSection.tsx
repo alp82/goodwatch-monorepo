@@ -32,7 +32,7 @@ export default function FilterBarSection({
 				border-4 ${isActive ? "border-white/50" : "border-white/10"}
 				transition duration-150 
 				${isActive ? "bg-[length:200%_200%] animate-gradient-x via-50% to-70%" : ""}
-				${isInteractive ? "cursor-pointer hover:brightness-150" : ""}
+				${isInteractive ? "cursor-pointer hover:brightness-125" : ""}
 			`}
 			onClick={() => (isInteractive ? onToggle() : null)}
 			onKeyDown={() => null}
