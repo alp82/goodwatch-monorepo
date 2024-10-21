@@ -65,7 +65,12 @@ export default function SectionStreaming({
 			key: "mine",
 			label: "Mine",
 			current: selectedTab === "mine",
-			requiresLogin: true,
+			requiresLoginContent: (
+				<>
+					Select your <strong>streaming services</strong> and{" "}
+					<strong>country</strong> once to quickly find what you're looking for.
+				</>
+			),
 		},
 		{
 			key: "custom",
@@ -96,7 +101,7 @@ export default function SectionStreaming({
 
 	const { user } = useUser()
 	useEffect(() => {
-		if (params.streamingPreset || !editing) return
+		if ((params.streamingPreset || !editing) && user?.id) return
 
 		const streamingPreset = user?.id ? "mine" : "everywhere"
 		onSelectStreamingPreset(streamingPreset)

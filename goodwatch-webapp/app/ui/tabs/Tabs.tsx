@@ -1,4 +1,8 @@
-import React, { type ComponentType, type HTMLAttributes } from "react"
+import React, {
+	type ComponentType,
+	type HTMLAttributes,
+	type ReactNode,
+} from "react"
 import UserAction from "~/ui/auth/UserAction"
 import { useUser } from "~/utils/auth"
 
@@ -7,7 +11,7 @@ export interface Tab<T> {
 	label?: string
 	icon?: ComponentType<HTMLAttributes<SVGElement>>
 	current?: boolean
-	requiresLogin?: boolean
+	requiresLoginContent?: ReactNode
 }
 
 export interface TabsProps<T> {
@@ -40,8 +44,8 @@ export default function Tabs<T extends string>({
 			{tabs.map((tab) => (
 				<UserAction
 					key={tab.key}
-					requiresLogin={tab.requiresLogin}
-					instructions={<>Quickly pre-select your streaming services.</>}
+					requiresLogin={Boolean(tab.requiresLoginContent)}
+					instructions={tab.requiresLoginContent}
 				>
 					<span
 						onClick={() => onSelect(tab)}

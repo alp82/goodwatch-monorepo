@@ -16,7 +16,11 @@ sidebar
     sort by column
     facets as scroll preview minimap (e.g. release year)
     
+genre
+    fix incompatible genre & media type combinations
+
 sign up backlink
+    redirect without jump to home
     
 discover redesign
     all | movies | tv
