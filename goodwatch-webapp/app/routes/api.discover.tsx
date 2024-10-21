@@ -10,6 +10,7 @@ import {
 	type DiscoverParams,
 	type DiscoverResult,
 	type DiscoverSortBy,
+	type StreamingPreset,
 	getDiscoverResults,
 } from "~/server/discover.server"
 import type { FilterMediaType } from "~/server/search.server"
@@ -54,6 +55,8 @@ export const loader: LoaderFunction = async ({
 	const withoutKeywords = url.searchParams.get("withoutKeywords") || ""
 	const withGenres = url.searchParams.get("withGenres") || ""
 	const withoutGenres = url.searchParams.get("withoutGenres") || ""
+	const streamingPreset = (url.searchParams.get("streamingPreset") ||
+		"everywhere") as StreamingPreset
 	const withStreamingProviders =
 		url.searchParams.get("withStreamingProviders") ||
 		userSettings?.streaming_providers_default ||
@@ -80,6 +83,7 @@ export const loader: LoaderFunction = async ({
 		withoutKeywords,
 		withGenres,
 		withoutGenres,
+		streamingPreset,
 		withStreamingProviders,
 		sortBy,
 		sortDirection,

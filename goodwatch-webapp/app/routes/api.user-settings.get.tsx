@@ -117,3 +117,8 @@ export const useUserStreamingProviders = () => {
 		return streamingProviderIds.includes(provider.id.toString())
 	})
 }
+
+export const useUserCountry = () => {
+	const userSettings = useUserSettings()
+	return userSettings.data?.country_default
+}

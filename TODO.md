@@ -2,40 +2,46 @@
 ```
 ---
 
-subbar
-    streaming: everywhere, selected providers, selected country
-
-virtual combolist
+addbar
+    always visible?
+    dropdown?
 
 sidebar
-    sort by
-
-results
+    sort by column
     facets as scroll preview minimap (e.g. release year)
     
+sign up backlink
+    
 discover redesign
-    discover: unselect streaming
-    discover: unselect country
+    all | movies | tv
+    return count: "showing first 100 results"
+  
+    discover scores & vote count
     discover release
     discover cast / crew
-    discover scores
+    discover DNA
     discover age ratings
-    discover budget & revenue
     disocver keywords and tropes
+
+    discover loading animation with skeletons
     https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
     filter inspiration:
         https://www.yidio.com/movies
         https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
 
-discover
-    all | movies | tv
-    return count: "showing first 100 results"
-    streaming types: mine, free, buy, all
-    discover loading animation with skeletons
+streaming
+    checkbox: include buy/rent
+    movie card: max 3 streaming overlays 
+
+---
+
+optimistic ui for user settings
+    api-action.ts
 
 ---
 
 details
+    mobile with small poster
     share button sticky
     guess country
     age restriction by country
@@ -191,6 +197,12 @@ data flows ignore list:
 
 ---
 
+error boundaries
+    add for each page
+    better error display
+
+---
+
 tv seasons:
     get episodes
     get ratings
@@ -298,6 +310,12 @@ country usage
 
 ---
 
+meta tags
+    better descriptions
+    based on params
+
+---
+
 analyze slow indexes
 
 SELECT 
@@ -398,6 +416,12 @@ clips
     youtube shorts
     reels
     
+---
+
+signup
+    apple
+    email
+
 ---
 
 anti spoiler mode
@@ -668,15 +692,25 @@ LIMIT 20;
 
 # Blog
 ```
-monorepo design
-db architecture: performance and scalability
-caching strategy
-from vercel to coolify
-    too many open files
 remix: keep it simple with tailwind
     linting with biomejs
     component example: rating
-data pipeline with windmill: grow data and keep it up to date
+discover design
+data pipeline with windmill:
+    keep grow data and keep it up to date
+    infrastructure
+    data flow design
+monorepo design
+from vercel to coolify
+    too many open files
+    hidden costs
+db architecture: performance and scalability
+caching strategy
+zombie processes
+    windmill -> chrome (playwright)
+    "can't start new thread"
+    "IO error: Resource temporarily unavailable (os error 11)"
+    kill windmill every 24 hours
 server architecture
     deployment with docker compose
     ansible for worker upgrades
@@ -685,9 +719,4 @@ authentication
     https://www.dusanstam.com/posts/remix-supabase-authentication
 genome with LLM's
 recommendation engine
-zombie processes
-    windmill -> chrome (playwright)
-    "can't start new thread"
-    "IO error: Resource temporarily unavailable (os error 11)"
-    kill windmill every 24 hours
 ```

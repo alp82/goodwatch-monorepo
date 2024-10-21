@@ -24,7 +24,7 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 		streaming: {
 			label: "Streaming",
 			color: "emerald",
-			associatedParams: ["withStreamingProviders"],
+			associatedParams: ["streamingPreset", "withStreamingProviders"],
 		},
 		genre: {
 			label: "Genre",

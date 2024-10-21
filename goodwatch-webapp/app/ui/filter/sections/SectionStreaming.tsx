@@ -1,14 +1,22 @@
-import React from 'react'
-import { useCountries } from '~/routes/api.countries'
-import { useStreamingProviders } from '~/routes/api.streaming-providers'
-import type { DiscoverParams } from '~/server/discover.server'
-import { discoverFilters } from '~/server/types/discover-types'
-import OneOrMoreItems from '~/ui/filter/OneOrMoreItems'
-import EditableSection from '~/ui/filter/sections/EditableSection'
-import Select, { type SelectItem } from '~/ui/form/Select'
-import { Ping } from '~/ui/wait/Ping'
-import { Spinner } from '~/ui/wait/Spinner'
-import { useNav } from '~/utils/navigation'
+import React, { useEffect, useMemo } from "react"
+import { useCountries } from "~/routes/api.countries"
+import { useStreamingProviders } from "~/routes/api.streaming-providers"
+import {
+	useUserCountry,
+	useUserStreamingProviders,
+} from "~/routes/api.user-settings.get"
+import type { DiscoverParams, StreamingPreset } from "~/server/discover.server"
+import { discoverFilters } from "~/server/types/discover-types"
+import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
+import EditableSection from "~/ui/filter/sections/EditableSection"
+import Select, { type SelectItem } from "~/ui/form/Select"
+import Tabs, { type Tab } from "~/ui/tabs/Tabs"
+import { Ping } from "~/ui/wait/Ping"
+import { Spinner } from "~/ui/wait/Spinner"
+import useLocale from "~/utils/locale"
+import { useNav } from "~/utils/navigation"
+
+const EVERYWHERE_LIMIT = 3
 
 interface SectionStreamingParams {
 	params: DiscoverParams
@@ -23,17 +31,102 @@ export default function SectionStreaming({
 	onEdit,
 	onClose,
 }: SectionStreamingParams) {
+	// local data
+
+	const { locale } = useLocale()
+	const localStreamingProviders = useMemo(() => {
+		return (
+			(typeof window !== "undefined" &&
+				localStorage.getItem("withStreamingProviders")) ||
+			"8,9,337"
+		)
+	}, [typeof window])
+
+	const localCountry = useMemo(() => {
+		return (
+			(typeof window !== "undefined" && localStorage.getItem("country")) ||
+			locale.country
+		)
+	}, [typeof window, locale.country])
+
+	// tabs
+
+	const [selectedTab, setSelectedTab] = React.useState<StreamingPreset>(
+		params.streamingPreset || "everywhere",
+	)
+	const streamingTabs: Tab<StreamingPreset>[] = [
+		{
+			key: "everywhere",
+			label: "Everywhere",
+			current: selectedTab === "everywhere",
+		},
+		{
+			key: "mine",
+			label: "Mine",
+			current: selectedTab === "mine",
+			requiresLogin: true,
+		},
+		{
+			key: "custom",
+			label: "Custom",
+			current: selectedTab === "custom",
+		},
+	]
+	const onSelectTab = (tab: Tab<StreamingPreset>) => {
+		const streamingPreset = tab.key
+		setSelectedTab(streamingPreset)
+
+		let withStreamingProviders = ""
+		let country = ""
+		if (streamingPreset === "custom") {
+			console.log(params.country, { localCountry })
+			if (!params.withStreamingProviders)
+				withStreamingProviders = localStreamingProviders
+			if (!params.country) country = localCountry
+		}
+
+		updateQueryParams({
+			streamingPreset,
+			withStreamingProviders,
+			country,
+		})
+	}
+	useEffect(() => {
+		if (!params.streamingPreset || params.streamingPreset === selectedTab)
+			return
+		setSelectedTab(params.streamingPreset)
+	}, [params.streamingPreset])
+
 	// data retrieval
+
 	const streamingProvidersResult = useStreamingProviders()
 	const streamingProviders = streamingProvidersResult?.data || []
 
-	const streamingProviderIds = params.withStreamingProviders
-		? params.withStreamingProviders.split(",")
-		: []
+	const userStreamingProviders = useUserStreamingProviders()
+	let streamingProviderIds: string[] = []
+	if (selectedTab === "mine") {
+		streamingProviderIds = userStreamingProviders?.map((provider) =>
+			provider.id.toString(),
+		)
+	} else if (selectedTab === "custom") {
+		streamingProviderIds = (
+			params.withStreamingProviders || localStreamingProviders
+		).split(",")
+	}
 
 	const countriesResult = useCountries()
 	const countries = countriesResult?.data || []
-	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${params.country}.svg`
+
+	const userCountry = useUserCountry()
+	let country = ""
+	if (selectedTab === "mine") {
+		country = userCountry || ""
+	} else if (selectedTab === "custom") {
+		country = params.country || localCountry
+	} else {
+		country = localCountry
+	}
+	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`
 
 	// autocomplete data
 
@@ -63,35 +156,36 @@ export default function SectionStreaming({
 	// update handlers
 
 	const { updateQueryParams } =
-		useNav<Pick<DiscoverParams, "withStreamingProviders" | "country">>()
-	const updateStreaming = (withStreamingProviders: string) => {
-		updateQueryParams({
-			withStreamingProviders,
-		})
-	}
-	const updateCountry = (country: string) => {
-		updateQueryParams({
-			country,
-		})
-	}
+		useNav<
+			Pick<
+				DiscoverParams,
+				"streamingPreset" | "withStreamingProviders" | "country"
+			>
+		>()
 
-	const handleSelectStreaming = (selectedItems: SelectItem[]) => {
+	const handleSelectStreamingProviders = (selectedItems: SelectItem[]) => {
 		const withStreamingProviders = selectedItems
 			.map((item) => item.key)
 			.join(",")
-		updateStreaming(withStreamingProviders)
+		updateQueryParams({
+			withStreamingProviders,
+		})
 		localStorage.setItem("withStreamingProviders", withStreamingProviders)
 	}
 
 	const handleSelectCountry = (selectedItem: SelectItem) => {
 		const country = selectedItem.key
-		updateCountry(country)
+		updateQueryParams({
+			country,
+		})
 		localStorage.setItem("country", country)
 	}
 
 	const handleRemoveAll = () => {
-		updateStreaming("")
-		updateCountry("")
+		updateQueryParams({
+			withStreamingProviders: "",
+			country: "",
+		})
 	}
 
 	// rendering
@@ -100,53 +194,106 @@ export default function SectionStreaming({
 		<EditableSection
 			label={discoverFilters.streaming.label}
 			color={discoverFilters.streaming.color}
-			visible={streamingProviderIds.length > 0}
+			visible={
+				Boolean(params.streamingPreset) || streamingProviderIds.length > 0
+			}
 			editing={editing}
 			onEdit={onEdit}
 			onClose={onClose}
 			onRemoveAll={handleRemoveAll}
 		>
 			{(isEditing) => (
-				<div className="flex flex-col flex-wrap gap-2">
+				<div className="w-full flex flex-col flex-wrap gap-4">
 					{isEditing ? (
-						<div className="flex flex-col flex-wrap gap-2">
-							<div className="flex items-center gap-2">
-								<span className="w-6">On:</span>
-								{streamingProvidersResult.isSuccess ? (
-									<div className="min-w-60 xs:min-w-72">
-										<Select<SelectItem>
-											selectItems={streamingProviderItems}
-											selectedItems={selectedStreamingProviderItems}
-											withSearch={true}
-											withMultiSelection={true}
-											onSelect={handleSelectStreaming}
-										/>
+						<div className="flex flex-col flex-wrap gap-3">
+							<Tabs tabs={streamingTabs} size="small" onSelect={onSelectTab} />
+							{selectedTab === "everywhere" && (
+								<span>
+									Showing all titles that are available for{" "}
+									<strong>streaming on any service</strong>.
+								</span>
+							)}
+							{selectedTab === "mine" && (
+								<span>
+									Only titles that are available on{" "}
+									<strong>your streaming services</strong> and{" "}
+									<strong>country</strong>.
+								</span>
+							)}
+							{selectedTab === "custom" && (
+								<>
+									<div className="flex items-center gap-2">
+										<span className="w-6">On:</span>
+										{streamingProvidersResult.isSuccess ? (
+											<div className="min-w-60 xs:min-w-72">
+												<Select<SelectItem>
+													selectItems={streamingProviderItems}
+													selectedItems={selectedStreamingProviderItems}
+													withSearch={true}
+													withMultiSelection={true}
+													onSelect={handleSelectStreamingProviders}
+												/>
+											</div>
+										) : (
+											<Spinner size="small" />
+										)}
 									</div>
-								) : (
-									<Spinner size="small" />
-								)}
-							</div>
-							<div className="flex items-center gap-2">
-								<span className="w-6">In:</span>
-								{countriesResult.isSuccess ? (
-									<div className="min-w-60 xs:min-w-72">
-										<Select<SelectItem>
-											selectItems={countryItems}
-											selectedItems={countryItems.find(
-												(item) => item.key === params.country,
-											)}
-											withSearch={true}
-											onSelect={handleSelectCountry}
-										/>
+									<div className="flex items-center gap-2">
+										<span className="w-6">In:</span>
+										{countriesResult.isSuccess ? (
+											<div className="min-w-60 xs:min-w-72">
+												<Select<SelectItem>
+													selectItems={countryItems}
+													selectedItems={countryItems.find(
+														(item) => item.key === country,
+													)}
+													withSearch={true}
+													onSelect={handleSelectCountry}
+												/>
+											</div>
+										) : (
+											<Spinner size="small" />
+										)}
 									</div>
-								) : (
-									<Spinner size="small" />
-								)}
-							</div>
+								</>
+							)}
 						</div>
 					) : null}
 					<div className="flex flex-wrap items-center gap-2">
-						{selectedStreamingProviderItems.length > 0 ? (
+						{streamingProviderItems.length === 0 ? (
+							<div className="relative h-8">
+								<Ping size="small" />
+							</div>
+						) : selectedTab === "everywhere" ? (
+							<>
+								{streamingProviderItems
+									.slice(0, EVERYWHERE_LIMIT)
+									.map((provider) => (
+										<span
+											key={provider.key}
+											className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded"
+										>
+											<img
+												src={provider.icon}
+												alt={provider.label}
+												className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
+											/>
+											{selectedStreamingProviderItems.length < 5 && (
+												<div className="md:hidden sr-only lg:not-sr-only">
+													{provider.label}
+												</div>
+											)}
+										</span>
+									))}
+								<span>
+									and{" "}
+									<strong className="mx-1 text-lg">
+										{streamingProviderItems.length - EVERYWHERE_LIMIT} more
+									</strong>{" "}
+									streaming services in any country.
+								</span>
+							</>
+						) : selectedStreamingProviderItems.length > 0 ? (
 							<>
 								{selectedStreamingProviderItems.map((provider, index) => (
 									<OneOrMoreItems
@@ -172,19 +319,19 @@ export default function SectionStreaming({
 								<span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded">
 									<img
 										src={countryIcon}
-										alt={params.country}
+										alt={country}
 										className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
 									/>
 									<span className="sr-only lg:not-sr-only block">
-										{params.country}
+										{country}
 									</span>
 								</span>
 							</>
-						) : streamingProviders.length === 0 ? (
-							<div className="relative h-8">
-								<Ping size="small" />
-							</div>
-						) : null}
+						) : (
+							<span>
+								Please select <em>at least one</em> streaming service.
+							</span>
+						)}
 					</div>
 				</div>
 			)}

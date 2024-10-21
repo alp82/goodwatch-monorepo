@@ -4,6 +4,8 @@ Notable changes to GoodWatch will be documented in this file.
 
 ## [0.5.0] 2024-10-xx
 
+Minor Release: **Improved Discovery**
+
 ### Added
 * New filters for Discover page, now including:
     - Streaming Services
@@ -15,6 +17,7 @@ Notable changes to GoodWatch will be documented in this file.
 
 ### Changed
 * Better UX for Discover page
+* Long select lists are virtualized for better performance
 
 ### Fixed
 

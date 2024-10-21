@@ -14,6 +14,7 @@ import { executeQuery } from "~/utils/postgres"
 import type { AllRatings } from "~/utils/ratings"
 
 export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
+export type StreamingPreset = "everywhere" | "mine" | "custom"
 
 export interface DiscoverParams {
 	type: FilterMediaType
@@ -31,6 +32,7 @@ export interface DiscoverParams {
 	withoutKeywords: string
 	withGenres: string
 	withoutGenres: string
+	streamingPreset: StreamingPreset
 	withStreamingProviders: string
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
@@ -81,13 +83,14 @@ async function _getDiscoverResults({
 	withoutKeywords,
 	withGenres,
 	withoutGenres,
+	streamingPreset,
 	withStreamingProviders,
 	sortBy,
 	sortDirection,
 }: DiscoverParams): Promise<DiscoverResults> {
 	if (!filterMediaTypes.includes(type))
 		throw new Error(`Invalid type for Discover: ${type}`)
-	if (country.length !== 2)
+	if (country && country.length !== 2)
 		throw new Error(`Invalid value for Country: ${country}`)
 	if (language.length !== 2)
 		throw new Error(`Invalid value for Language: ${language}`)
@@ -110,6 +113,7 @@ async function _getDiscoverResults({
 	const { query, params } = constructFullQuery({
 		filterMediaType: type,
 		streaming: {
+			streamingPreset,
 			countryCode: country,
 			streamTypes: ["free", "flatrate"],
 			providerIds: withStreamingProviders

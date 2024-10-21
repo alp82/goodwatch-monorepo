@@ -40,8 +40,8 @@ export const getTrendingMovies = async (params: TrendingMovieParams) => {
 		name: "trending-movie",
 		target: _getTrendingMovies,
 		params,
-		ttlMinutes: 60 * 2,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 2,
+		ttlMinutes: 0,
 	})
 }
 
@@ -72,7 +72,6 @@ export async function _getTrendingMovies({
     ORDER BY
       popularity;
   `)
-	if (!result.rows.length) throw Error("no trending movies found")
 
 	increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>
@@ -85,7 +84,8 @@ export const getTrendingTV = async (params: TrendingTVParams) => {
 		name: "trending-tv",
 		target: _getTrendingTV,
 		params,
-		ttlMinutes: 60 * 2,
+		// ttlMinutes: 60 * 2,
+		ttlMinutes: 0,
 	})
 }
 
@@ -116,7 +116,6 @@ export async function _getTrendingTV({
     ORDER BY
       popularity;
   `)
-	if (!result.rows.length) throw Error("no trending tv shows found")
 
 	increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>

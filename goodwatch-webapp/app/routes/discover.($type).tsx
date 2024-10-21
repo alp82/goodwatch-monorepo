@@ -19,7 +19,7 @@ import Appear from "~/ui/fx/Appear"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 import { Spinner } from "~/ui/wait/Spinner"
-import useLocale from "~/utils/locale"
+import { useUser } from "~/utils/auth"
 import { useNav } from "~/utils/navigation"
 
 export function headers() {
@@ -29,7 +29,7 @@ export function headers() {
 	}
 }
 
-export const meta: MetaFunction<typeof loader> = () => {
+export const meta: MetaFunction = () => {
 	return [
 		{ title: "Discover | GoodWatch" },
 		{
@@ -66,8 +66,6 @@ export type LoaderData = {
 }
 
 export default function Discover() {
-	const { locale } = useLocale()
-
 	const { currentParams, updateQueryParams } = useNav<DiscoverParams>()
 	const discover = useDiscover({ params: currentParams })
 	const results = discover.data?.results || []
@@ -76,28 +74,17 @@ export default function Discover() {
 		crewMembers: [],
 	}
 
+	const { user } = useUser()
 	useEffect(() => {
-		if (!currentParams.country || !currentParams.withStreamingProviders) {
-			const country =
-				currentParams.country ||
-				localStorage.getItem("country") ||
-				locale.country
+		if (currentParams.streamingPreset) return
 
-			const withStreamingProviders =
-				currentParams.withStreamingProviders ||
-				localStorage.getItem("withStreamingProviders") ||
-				"8,9,337"
-
-			// TODO do not add params explicitly
-			updateQueryParams(
-				{
-					country,
-					withStreamingProviders,
-				},
-				{ replace: true },
-			)
-		}
-	}, [currentParams.country, currentParams.withStreamingProviders])
+		updateQueryParams(
+			{
+				streamingPreset: user?.id ? "mine" : "everywhere",
+			},
+			{ replace: true },
+		)
+	}, [user?.id])
 
 	const sortByTabs: Tab<DiscoverSortBy>[] = [
 		{
