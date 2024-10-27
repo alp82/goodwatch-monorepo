@@ -4,10 +4,14 @@
 
 each section immediately saves in url when starting edit mode
 
+disable sliders on mobile
+
+score
+    add input fields (like score)
+
 remove all for streaming filter applies "mine" filter
     check guest too
 streaming "custom" not working for guest
-disable sliders on mobile
 
 movie card
     overlay: show movie or tv icon 
@@ -15,6 +19,9 @@ movie card
 
 sticky only on desktop
     if enough height
+
+discover pagination
+    load more on scroll?7
 
 sidebar
     sort by column

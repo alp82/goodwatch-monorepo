@@ -117,7 +117,7 @@ export default function Header() {
 																<Link
 																	className={`
 																	  flex gap-2 items-center px-4 py-2
-																		text-base text-gray-300 hover:bg-gray-700 hover:text-white
+																		text-base text-amber-500 hover:bg-gray-700 hover:text-white
 																	`}
 																	to="/discover?type=all&watchedType=plan-to-watch&streamingPreset=mine"
 																	prefetch="viewport"
@@ -135,7 +135,7 @@ export default function Header() {
 																<Link
 																	className={`
 																	  flex gap-2 items-center px-4 py-2
-																		text-base text-gray-300 hover:bg-gray-700 hover:text-white
+																		text-base text-green-500 hover:bg-gray-700 hover:text-white
 																	`}
 																	to="http://localhost:3003/discover?type=all&watchedType=watched"
 																	prefetch="viewport"
