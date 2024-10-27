@@ -94,12 +94,15 @@ export default function SectionWatch({
 					{isEditing && (
 						<RadioBlock
 							options={watchOptions}
-							defaultValue={selectedWatchOption}
+							value={selectedWatchOption}
 							onChange={handleChangeWatchedType}
 						/>
 					)}
 					<div className="flex flex-wrap items-center gap-2">
-						<Tag icon={selectedWatchOption?.icon}>
+						<Tag
+							color={selectedWatchOption?.color}
+							icon={selectedWatchOption?.icon}
+						>
 							{selectedWatchOption?.label}
 						</Tag>
 					</div>

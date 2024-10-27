@@ -16,8 +16,13 @@ const currentYear = new Date().getFullYear()
 
 const presets = [
 	{
-		label: "All until today",
-		minYear: earliestReleaseYear,
+		label: "Since 2000",
+		minYear: 2000,
+		maxYear: currentYear,
+	},
+	{
+		label: "Last 2 years",
+		minYear: currentYear - 2,
 		maxYear: currentYear,
 	},
 	{
@@ -29,6 +34,11 @@ const presets = [
 		label: "Last decade",
 		minYear: 2010,
 		maxYear: 2020,
+	},
+	{
+		label: "All until today",
+		minYear: earliestReleaseYear,
+		maxYear: currentYear,
 	},
 ]
 

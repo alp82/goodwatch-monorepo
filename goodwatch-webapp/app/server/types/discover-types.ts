@@ -72,6 +72,7 @@ export interface WatchOption {
 	label: string
 	description: string
 	icon: ComponentType<HTMLAttributes<SVGElement>>
+	color: ColorName
 }
 
 export const watchOptions: WatchOption[] = [
@@ -80,17 +81,20 @@ export const watchOptions: WatchOption[] = [
 		label: "Didn't Watch",
 		description: "Show only what I didn't watch yet",
 		icon: EyeSlashIcon,
+		color: "orange",
 	},
 	{
 		name: "plan-to-watch",
 		label: "Plan to Watch",
 		description: "Show only what I plan to watch",
 		icon: BookmarkIcon,
+		color: "amber",
 	},
 	{
 		name: "watched",
 		label: "Seen this",
 		description: "Show only what I watched already",
 		icon: EyeIcon,
+		color: "green",
 	},
 ]

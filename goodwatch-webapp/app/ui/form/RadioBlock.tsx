@@ -1,5 +1,5 @@
 import { Radio, RadioGroup } from "@headlessui/react"
-import React from "react"
+import React, { useEffect } from "react"
 import type { WatchedType } from "~/server/discover.server"
 import { watchOptions } from "~/server/types/discover-types"
 
@@ -12,20 +12,25 @@ export interface RadioOption {
 
 export interface RadioBlockParams<T extends RadioOption[]> {
 	options: T
-	defaultValue?: T[number]
+	value?: T[number]
 	onChange: (option: T[number]) => void
 }
 
 export default function RadioBlock<T extends RadioOption[]>({
 	options,
-	defaultValue,
+	value,
 	onChange,
 }: RadioBlockParams<T>) {
 	// initialization
 
 	const [selectedOption, setSelectedOption] = React.useState<T[number]>(
-		defaultValue || options[0],
+		value || options[0],
 	)
+
+	useEffect(() => {
+		if (!value || value === selectedOption) return
+		setSelectedOption(value)
+	}, [value])
 
 	//  handlers
 

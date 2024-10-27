@@ -4,6 +4,8 @@
 
 each section immediately saves in url when starting edit mode
 
+watch filter with signup CTA
+
 disable sliders on mobile
 
 remove all for streaming filter applies "mine" filter

@@ -17,6 +17,7 @@ module.exports = {
 	],
 	safelist: [
 		{ pattern: /bg-vibe-[0-9]+/ },
+		{ pattern: /text-\w+-500/ },
 		{ pattern: /from-\w+-700\/[0-9]+/ },
 		{ pattern: /via-\w+-900\/[0-9]+/ },
 		{ pattern: /to-\w+-800\/[0-9]+/ },
