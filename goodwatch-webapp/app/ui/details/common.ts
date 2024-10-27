@@ -7,6 +7,10 @@ export const sections = {
 		id: "about",
 		label: "About",
 	},
+	dna: {
+		id: "dna",
+		label: "DNA",
+	},
 	crew: {
 		id: "crew",
 		label: "Crew",
@@ -14,10 +18,6 @@ export const sections = {
 	cast: {
 		id: "cast",
 		label: "Cast",
-	},
-	dna: {
-		id: "dna",
-		label: "DNA",
 	},
 	ratings: {
 		id: "ratings",

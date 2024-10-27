@@ -54,7 +54,7 @@ async function _getUserData({
 		return {} as GetUserDataResult
 	}
 
-	const userSettings = await getUserSettings({ user_id })
+	const userSettings = await getUserSettings({ userId: user_id })
 
 	const query = `
 WITH combined AS (

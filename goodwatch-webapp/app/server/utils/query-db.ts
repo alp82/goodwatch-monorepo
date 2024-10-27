@@ -1,4 +1,4 @@
-import type { StreamingPreset } from "~/server/discover.server"
+import type { StreamingPreset, WatchedType } from "~/server/discover.server"
 import { VOTE_COUNT_THRESHOLD } from "~/utils/constants"
 import { getRatingKeys } from "~/utils/ratings"
 import { ignoredProviders } from "~/utils/streaming-links"
@@ -34,9 +34,16 @@ interface Conditions {
 	minYear?: string
 	maxYear?: string
 	similarityVector?: string
+	watchedType?: WatchedType
 	withCast?: string
 	withCrew?: string
 	withGenres?: string[]
+}
+
+interface ConstructUserQueryParams {
+	userId?: string
+	type: MediaType
+	watchedType?: WatchedType
 }
 
 interface OrderByConfig {
@@ -48,6 +55,7 @@ interface OrderByConfig {
 	direction: "ASC" | "DESC"
 }
 interface ConstructSelectQueryParams {
+	userId?: string
 	type: MediaType
 	streaming?: StreamingConfig
 	similarity?: Similarity
@@ -64,6 +72,7 @@ interface ConstructUnionQueryParams
 interface ConstructFullQueryParams extends ConstructUnionQueryParams {}
 
 export const constructFullQuery = ({
+	userId,
 	filterMediaType,
 	streaming,
 	similarity,
@@ -72,7 +81,7 @@ export const constructFullQuery = ({
 	limit,
 }: ConstructFullQueryParams) => {
 	const namedQuery = `
-	${constructUnionQuery({ filterMediaType, streaming, conditions, similarity, orderBy, limit })}
+	${constructUnionQuery({ userId, filterMediaType, streaming, conditions, similarity, orderBy, limit })}
 	SELECT
 		m.*,
 		sl.streaming_links
@@ -87,6 +96,7 @@ export const constructFullQuery = ({
 }
 
 const constructUnionQuery = ({
+	userId,
 	filterMediaType,
 	streaming,
 	similarity,
@@ -98,6 +108,7 @@ const constructUnionQuery = ({
 
 	if (["all", "movies"].includes(filterMediaType)) {
 		const selectMovies = constructSelectQuery({
+			userId,
 			type: "movie",
 			streaming,
 			similarity,
@@ -110,6 +121,7 @@ const constructUnionQuery = ({
 
 	if (["all", "tv"].includes(filterMediaType)) {
 		const selectTv = constructSelectQuery({
+			userId,
 			type: "tv",
 			streaming,
 			similarity,
@@ -128,6 +140,7 @@ const constructUnionQuery = ({
 }
 
 const constructSelectQuery = ({
+	userId,
 	type,
 	streaming,
 	similarity,
@@ -140,10 +153,13 @@ const constructSelectQuery = ({
 		maxYear,
 		minScore,
 		maxScore,
+		watchedType,
 		withCast,
 		withCrew,
 		withGenres,
 	} = conditions
+
+	const userJoin = constructUserQuery({ userId, type, watchedType })
 
 	return `
 	SELECT
@@ -158,6 +174,7 @@ const constructSelectQuery = ({
 			? `JOIN vectors_media v ON v.tmdb_id = m.tmdb_id AND v.media_type = media_type AND v.${similarity.category}_vector IS NOT NULL`
 			: ""
 	}
+	${userJoin}
 	WHERE
 	  m.title IS NOT NULL 
 	  AND m.release_year IS NOT NULL 
@@ -172,9 +189,44 @@ const constructSelectQuery = ({
 		${withCrew ? "AND m.crew @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}
 		${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}
 		${minScore || orderBy.column === "aggregated_overall_score_normalized_percent" ? `AND m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}` : ""}
+		${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}
 	ORDER BY ${similarity ? `v.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`} 
 	LIMIT ${limit}
   `
+}
+
+const constructUserQuery = ({
+	userId,
+	type,
+	watchedType,
+}: ConstructUserQueryParams) => {
+	if (!userId || !watchedType) return ""
+
+	if (watchedType === "watched") {
+		return `
+			INNER JOIN user_watch_history uwh ON
+				uwh.user_id = '${userId}'
+				AND uwh.tmdb_id = m.tmdb_id 
+				AND uwh.media_type = '${type}' 
+		`
+	}
+	if (watchedType === "didnt-watch") {
+		// requires addition WHERE condition
+		return `
+			LEFT JOIN user_watch_history uwh ON
+				uwh.user_id = '${userId}'
+				AND uwh.tmdb_id = m.tmdb_id 
+				AND uwh.media_type = '${type}' 
+		`
+	}
+	if (watchedType === "plan-to-watch") {
+		return `
+			INNER JOIN user_wishlist uwl ON
+				uwl.user_id = '${userId}'
+				AND uwl.tmdb_id = m.tmdb_id 
+				AND uwl.media_type = '${type}' 
+		`
+	}
 }
 
 const getCommonFields = () => {

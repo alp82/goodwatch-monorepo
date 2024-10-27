@@ -2,20 +2,34 @@
 ```
 ---
 
-not seen movies
+each section immediately saves in url when starting edit mode
+
+remove all for streaming filter applies "mine" filter
+    check guest too
+streaming "custom" not working for guest
+disable sliders on mobile
 
 movie card
     overlay: show movie or tv icon 
     max 3 streaming overlays
 
-addbar
-    always visible?
-    dropdown?
+sticky only on desktop
+    if enough height
 
 sidebar
     sort by column
     facets as scroll preview minimap (e.g. release year)
     
+DNA filter
+    toggle buttons for each category (hide secondary categories)
+
+details
+    small poster
+    DNA at the top
+    top DNA categories, hide the rest
+    no flickering for explore previews
+    section title anchors
+
 genre
     fix incompatible genre & media type combinations
 
@@ -51,6 +65,8 @@ streaming links missing
     inside out 2
 
 ---
+
+login flicker from index to redirected page
 
 optimistic ui for user settings
     api-action.ts
@@ -91,6 +107,13 @@ remove obsolete code
 
 user settings
     oval together: profile picture -> profile icon
+
+---
+
+cards with user data
+    user score
+    plan to watch
+    favorite
 
 ---
 
@@ -207,6 +230,12 @@ similarity for movie/tv details by DNA vector category
 		LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
 		LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
   `
+
+---
+
+watch filter
+    only what I scored / didn't score
+    only favs / not favs
 
 ---
 
@@ -452,6 +481,9 @@ anti spoiler mode
 
 ---
 
+drizzle
+    remix server scripts with sql builder
+
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
 
@@ -495,6 +527,14 @@ other api's
 redistribute weight for gw score
 
 more lightweight user data
+
+batch user actions
+    add all to plan to watch
+    add all to watched
+    add all to favorites
+    
+audit log per user
+    revert own actions
 
 detailed watchlists
     https://docs.simkl.org/how-to-use-simkl/basic-features/watchlists-and-custom-lists#how-are-notifications-handled-for-each-watchlist
@@ -545,6 +585,9 @@ styling goodies:
     rem based breakpoints: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#accessibility-15
     animated svg icons: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#modern-outline-icons-14
 
+explore graphs
+    https://reactflow.dev/
+
 details:
 box office (e.g. Google)
 crew links to discovery
@@ -561,6 +604,9 @@ report missing/wrong DNA
 decide together: watch party / watch together / swipe and watch
 
 reduce costs: show best streaming bundles for my likings
+
+similarity
+    display percentage
 
 search page
 explore button for media titles (prefilled discover, map feature)
@@ -740,3 +786,5 @@ authentication
 genome with LLM's
 recommendation engine
 ```
+
+https://www.writebots.com/discord-text-formatting/

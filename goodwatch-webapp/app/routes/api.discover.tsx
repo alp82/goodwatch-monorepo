@@ -31,8 +31,8 @@ export type GetDiscoverResult = {
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
-	const user_id = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ user_id })
+	const userId = await getUserIdFromRequest({ request })
+	const userSettings = await getUserSettings({ userId })
 
 	const { locale } = getLocaleFromRequest(request)
 	const url = new URL(request.url)
@@ -47,6 +47,7 @@ export const loader: LoaderFunction = async ({
 	const maxYear = url.searchParams.get("maxYear") || ""
 	const minScore = url.searchParams.get("minScore") || ""
 	const maxScore = url.searchParams.get("maxScore") || ""
+	const watchedType = url.searchParams.get("watchedType") || ""
 	const withCast = url.searchParams.get("withCast") || ""
 	const withCrew = url.searchParams.get("withCrew") || ""
 	const withKeywords = url.searchParams.get("withKeywords") || ""
@@ -70,6 +71,7 @@ export const loader: LoaderFunction = async ({
 	console.log({ withStreamingProviders, streamingPreset })
 
 	const params = {
+		userId,
 		type,
 		country,
 		language,
@@ -79,6 +81,7 @@ export const loader: LoaderFunction = async ({
 		maxYear,
 		minScore,
 		maxScore,
+		watchedType,
 		withCast,
 		withCrew,
 		withKeywords,

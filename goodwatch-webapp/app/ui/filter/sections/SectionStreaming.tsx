@@ -101,7 +101,7 @@ export default function SectionStreaming({
 
 	const { user } = useUser()
 	useEffect(() => {
-		if ((params.streamingPreset || !editing) && user?.id) return
+		if (!editing || params.streamingPreset) return
 
 		const streamingPreset = user?.id ? "mine" : "everywhere"
 		onSelectStreamingPreset(streamingPreset)

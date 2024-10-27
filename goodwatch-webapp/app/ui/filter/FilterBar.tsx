@@ -8,6 +8,7 @@ import SectionGenre from "~/ui/filter/sections/SectionGenre"
 import SectionRelease from "~/ui/filter/sections/SectionRelease"
 import SectionScore from "~/ui/filter/sections/SectionScore"
 import SectionStreaming from "~/ui/filter/sections/SectionStreaming"
+import SectionWatch from "~/ui/filter/sections/SectionWatch"
 
 interface FilterBarParams {
 	params: DiscoverParams
@@ -35,6 +36,13 @@ export default function FilterBar({
 	return (
 		<div className="m-auto max-w-7xl w-full px-4 flex flex-col flex-wrap gap-1 text-sm border-gray-900 rounded-lg">
 			<div className="flex flex-wrap items-stretch gap-1">
+				<SectionWatch
+					params={params}
+					editing={filterToEdit === "watch"}
+					onEdit={() => onEditToggle("watch")}
+					onClose={handleClose}
+				/>
+
 				<SectionStreaming
 					params={params}
 					editing={filterToEdit === "streaming"}

@@ -13,14 +13,17 @@ import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import type { AllRatings } from "~/utils/ratings"
 
-export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
+export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
 export type StreamingPreset = "everywhere" | "mine" | "custom"
+export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
 
 export interface DiscoverParams {
+	userId?: string
 	type: FilterMediaType
 	mode: "advanced"
 	country: string
 	language: string
+	watchedType: WatchedType
 	minAgeRating: string
 	maxAgeRating: string
 	minYear: string
@@ -70,6 +73,7 @@ export const getDiscoverResults = async (params: DiscoverParams) => {
 }
 
 async function _getDiscoverResults({
+	userId,
 	type,
 	country,
 	language,
@@ -79,6 +83,7 @@ async function _getDiscoverResults({
 	maxYear,
 	minScore,
 	maxScore,
+	watchedType,
 	withCast,
 	withCrew,
 	withKeywords,
@@ -111,6 +116,7 @@ async function _getDiscoverResults({
 		.map((genre) => genre.name)
 
 	const { query, params } = constructFullQuery({
+		userId,
 		filterMediaType: type,
 		streaming: {
 			streamingPreset,
@@ -125,6 +131,7 @@ async function _getDiscoverResults({
 			maxScore,
 			minYear,
 			maxYear,
+			watchedType,
 			withCast,
 			withGenres: genreNames?.length > 0 ? genreNames : undefined,
 		},

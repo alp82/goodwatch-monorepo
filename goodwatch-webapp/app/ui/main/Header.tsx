@@ -15,7 +15,11 @@ import { useLocation } from "react-router"
 import Search from "~/ui/Search"
 import { useUser } from "~/utils/auth"
 
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
+import {
+	ArrowTopRightOnSquareIcon,
+	BookmarkIcon,
+} from "@heroicons/react/20/solid"
+import { EyeIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import logo from "~/img/goodwatch-logo.png"
 import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
@@ -86,7 +90,7 @@ export default function Header() {
 										) : user ? (
 											<>
 												{/* Profile dropdown */}
-												<Menu as="div" className="relative ml-4 flex-shrink-0">
+												<Menu as="div" className="relative ml-2 flex-shrink-0">
 													<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
 														<span className="sr-only">Open user menu</span>
 														<img
@@ -107,18 +111,42 @@ export default function Header() {
 													>
 														<MenuItems
 															anchor="bottom"
-															className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+															className="absolute right-0 z-50 mt-2 w-64 origin-top-right rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
 														>
 															<MenuItem>
 																<Link
 																	className={`
-																		${isPage("/wishlist") ? "bg-gray-800 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}
-																		block px-4 py-2 text-base text-center
+																	  flex gap-2 items-center px-4 py-2
+																		text-base text-gray-300 hover:bg-gray-700 hover:text-white
 																	`}
-																	to="/wishlist"
+																	to="/discover?type=all&watchedType=plan-to-watch&streamingPreset=mine"
 																	prefetch="viewport"
 																>
-																	Wishlist
+																	<BookmarkIcon className="w-5 h-5" />
+																	<span>
+																		What I{" "}
+																		<span className="font-extrabold">
+																			Plan to Watch
+																		</span>
+																	</span>
+																</Link>
+															</MenuItem>
+															<MenuItem>
+																<Link
+																	className={`
+																	  flex gap-2 items-center px-4 py-2
+																		text-base text-gray-300 hover:bg-gray-700 hover:text-white
+																	`}
+																	to="http://localhost:3003/discover?type=all&watchedType=watched"
+																	prefetch="viewport"
+																>
+																	<EyeIcon className="w-5 h-5" />
+																	<span>
+																		What I{" "}
+																		<span className="font-extrabold">
+																			Already Watched
+																		</span>
+																	</span>
 																</Link>
 															</MenuItem>
 															<MenuItem>

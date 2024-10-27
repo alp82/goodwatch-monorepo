@@ -44,8 +44,8 @@ export const loader: LoaderFunction = async ({
 }: LoaderFunctionArgs) => {
 	const movieId = (params.movieKey || "").split("-")[0]
 
-	const user_id = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ user_id })
+	const userId = await getUserIdFromRequest({ request })
+	const userSettings = await getUserSettings({ userId })
 
 	const url = new URL(request.url)
 	const country =
