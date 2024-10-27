@@ -3,6 +3,7 @@ import type { DiscoverParams } from "~/server/discover.server"
 import { discoverFilters } from "~/server/types/discover-types"
 import PresetButton from "~/ui/button/PresetButton"
 import EditableSection from "~/ui/filter/sections/EditableSection"
+import NumberInput from "~/ui/form/NumberInput"
 import { RangeSlider } from "~/ui/form/RangeSlider"
 import { useNav } from "~/utils/navigation"
 
@@ -91,6 +92,25 @@ export default function SectionScore({
 			maxScore: maxScore.toString(),
 		})
 	}
+	const setMinScore = (value: string) => {
+		const parsedMinScore = Number.parseInt(value)
+		setScoreValues((prev) => [parsedMinScore, prev[1]])
+	}
+	const setMaxScore = (value: string) => {
+		const parsedMaxScore = Number.parseInt(value)
+		setScoreValues((prev) => [prev[0], parsedMaxScore])
+	}
+	const normalizeScores = () => {
+		const realMinScore = Math.min(Math.max(scoreValues[0], 0), 100)
+		const realMaxScore = Math.min(Math.max(scoreValues[1], 0), 100)
+		const normalizedMinScore = Math.min(realMinScore, realMaxScore)
+		const normalizedMaxScore = Math.max(realMinScore, realMaxScore)
+		setScoreValues([normalizedMinScore, normalizedMaxScore])
+		updateQueryParams({
+			minScore: normalizedMinScore.toString(),
+			maxScore: normalizedMaxScore.toString(),
+		})
+	}
 
 	const handleRemoveAll = () => {
 		updateQueryParams({
@@ -103,7 +123,7 @@ export default function SectionScore({
 	// rendering
 
 	const getBgColorName = (score: number) => {
-		const vibeColorIndex = (score / 10) * 10
+		const vibeColorIndex = Math.floor(score / 10) * 10
 		return `bg-vibe-${vibeColorIndex}`
 	}
 
@@ -121,29 +141,54 @@ export default function SectionScore({
 				<div className="w-full flex flex-col flex-wrap gap-2">
 					{isEditing && (
 						<div className="my-5 flex flex-col gap-6">
-							<RangeSlider
-								label="Select Score"
-								values={scoreValues}
-								min={0}
-								max={100}
-								step={STEP_COUNT}
-								draggableTrack={true}
-								onChange={setScoreValues}
-								onFinalChange={updateScores}
-							/>
-							<div className="flex flex-wrap gap-2">
-								{presets.map((preset) => (
-									<PresetButton
-										key={preset.label}
-										active={
-											minScore === preset.minScore &&
-											maxScore === preset.maxScore
-										}
-										onClick={() => handlePreset(preset)}
-									>
-										{preset.label}
-									</PresetButton>
-								))}
+							<div className="hidden xs:block">
+								<RangeSlider
+									label="Select Score"
+									values={scoreValues}
+									min={0}
+									max={100}
+									step={STEP_COUNT}
+									draggableTrack={true}
+									onChange={setScoreValues}
+									onFinalChange={updateScores}
+								/>
+							</div>
+							<div className="flex justify-between gap-4">
+								<div className="flex flex-wrap gap-2">
+									{presets.map((preset) => (
+										<PresetButton
+											key={preset.label}
+											active={
+												minScore === preset.minScore &&
+												maxScore === preset.maxScore
+											}
+											onClick={() => handlePreset(preset)}
+										>
+											{preset.label}
+										</PresetButton>
+									))}
+								</div>
+								<div className="mt-1 flex gap-3 items-center">
+									<NumberInput
+										name="minScore"
+										placeholder="Min Score"
+										value={minScore.toString() || ""}
+										min={0}
+										max={100}
+										onChange={(event) => setMinScore(event.target.value)}
+										onBlur={normalizeScores}
+									/>
+									<span className="italic">to</span>
+									<NumberInput
+										name="maxScore"
+										placeholder="Max Score"
+										value={maxScore.toString() || ""}
+										min={0}
+										max={100}
+										onChange={(event) => setMaxScore(event.target.value)}
+										onBlur={normalizeScores}
+									/>
+								</div>
 							</div>
 						</div>
 					)}

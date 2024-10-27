@@ -6,9 +6,6 @@ each section immediately saves in url when starting edit mode
 
 disable sliders on mobile
 
-score
-    add input fields (like score)
-
 remove all for streaming filter applies "mine" filter
     check guest too
 streaming "custom" not working for guest

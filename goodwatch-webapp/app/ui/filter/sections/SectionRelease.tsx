@@ -76,8 +76,11 @@ export default function SectionRelease({
 		)
 			return
 
+		const defaultPreset = presets[0]
+		setYearValues([defaultPreset.minYear, defaultPreset.maxYear])
 		updateQueryParams({
-			minYear: "2000",
+			minYear: defaultPreset.minYear.toString(),
+			maxYear: defaultPreset.maxYear.toString(),
 		})
 	}, [editing, params.minYear, params.maxYear])
 
@@ -148,16 +151,18 @@ export default function SectionRelease({
 				<div className="w-full flex flex-col flex-wrap gap-2">
 					{isEditing && (
 						<div className="my-5 flex flex-col gap-6 overflow-x-hidden">
-							<RangeSlider
-								label="Select Score"
-								values={yearValues}
-								min={earliestReleaseYear}
-								max={currentYear}
-								step={STEP_COUNT}
-								draggableTrack={true}
-								onChange={setYearValues}
-								onFinalChange={updateYears}
-							/>
+							<div className="hidden xs:block">
+								<RangeSlider
+									label="Select Score"
+									values={yearValues}
+									min={earliestReleaseYear}
+									max={currentYear}
+									step={STEP_COUNT}
+									draggableTrack={true}
+									onChange={setYearValues}
+									onFinalChange={updateYears}
+								/>
+							</div>
 							<div className="flex justify-between gap-4">
 								<div className="flex flex-wrap gap-2">
 									{presets.map((preset) => (
