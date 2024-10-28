@@ -4,6 +4,7 @@ import {
 	type DiscoverFilterType,
 	discoverFilters,
 } from "~/server/types/discover-types"
+import UserAction from "~/ui/auth/UserAction"
 import FilterBarSection from "~/ui/filter/FilterBarSection"
 import Appear from "~/ui/fx/Appear"
 
@@ -34,17 +35,22 @@ export default function AddFilterBar({
 				<div className="flex items-center flex-wrap gap-2 text-sm sm:text-base md:text-lg">
 					<span className="font-extrabold text-sm">Add Filter:</span>
 					{unusedFilters.map(([filterType, discoverFilter]) => (
-						<FilterBarSection
+						<UserAction
 							key={filterType}
-							isCompact={true}
-							isActive={false}
-							color={discoverFilter.color}
-							onToggle={() => onSelect(filterType as DiscoverFilterType)}
+							requiresLogin={Boolean(discoverFilter.loginInstructions)}
+							instructions={discoverFilter.loginInstructions}
 						>
-							<span className="px-1.5 py-0.5 font-semibold">
-								{discoverFilter.label}
-							</span>
-						</FilterBarSection>
+							<FilterBarSection
+								isCompact={true}
+								isActive={false}
+								color={discoverFilter.color}
+								onClick={() => onSelect(filterType as DiscoverFilterType)}
+							>
+								<span className="px-1.5 py-0.5 font-semibold">
+									{discoverFilter.label}
+								</span>
+							</FilterBarSection>
+						</UserAction>
 					))}
 				</div>
 			</Appear>

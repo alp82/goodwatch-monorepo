@@ -66,7 +66,7 @@ export default function EditableSection({
 			label={label}
 			color={color}
 			isActive={isEditing}
-			onToggle={onToggleEditing}
+			onClick={onToggleEditing}
 			onRemove={handleRemoveAll}
 		>
 			{children(isEditing)}

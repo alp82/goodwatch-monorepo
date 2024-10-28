@@ -76,7 +76,7 @@ export default function FilterBar({
 						label="Cast"
 						color="purple"
 						isActive={filterToEdit === "cast"}
-						onToggle={() => onEditToggle("cast")}
+						onClick={() => onEditToggle("cast")}
 					>
 						<div className="flex flex-wrap items-center gap-2">
 							{cast.map((castMember, index) => (
@@ -99,7 +99,7 @@ export default function FilterBar({
 					isCompact={true}
 					color="stone"
 					isActive={isAddingFilter}
-					onToggle={onAddToggle}
+					onClick={onAddToggle}
 				>
 					<PlusIcon className="h-16" />
 				</FilterBarSection>

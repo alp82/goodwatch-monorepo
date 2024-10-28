@@ -7,7 +7,7 @@ interface FilterBarSectionParams {
 	isCompact?: boolean
 	color: ColorName
 	isActive: boolean
-	onToggle?: () => void
+	onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
 	onRemove?: () => void
 	children: React.ReactNode
 }
@@ -17,13 +17,13 @@ export default function FilterBarSection({
 	isCompact = false,
 	color,
 	isActive = false,
-	onToggle,
+	onClick,
 	onRemove,
 	children,
 }: FilterBarSectionParams) {
 	const transparency = isActive ? 80 : 50
 
-	const isInteractive = onToggle && (isCompact || !isActive)
+	const isInteractive = onClick && (isCompact || !isActive)
 	return (
 		<div
 			className={`
@@ -34,13 +34,13 @@ export default function FilterBarSection({
 				${isActive ? "bg-[length:200%_200%] animate-gradient-x via-50% to-70%" : ""}
 				${isInteractive ? "cursor-pointer hover:brightness-125" : ""}
 			`}
-			onClick={() => (isInteractive ? onToggle() : null)}
+			onClick={(e) => (isInteractive ? onClick(e) : null)}
 			onKeyDown={() => null}
 		>
 			{label && (
 				<div className="flex items-center justify-between text-xs">
 					<span className="text-sm font-extrabold">{label}</span>
-					{isActive && onToggle && onRemove && (
+					{isActive && onClick && onRemove && (
 						<span className="flex gap-2">
 							<button
 								type="button"
@@ -61,7 +61,7 @@ export default function FilterBarSection({
 							border-2 border-green-500/70 rounded
 							bg-green-900/80 hover:bg-green-800/80 cursor-pointer
 						"
-								onClick={onToggle}
+								onClick={onClick}
 							>
 								<CheckIcon className="h-4 w-4" />
 								Apply Filter

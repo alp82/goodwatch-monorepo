@@ -1,8 +1,4 @@
-import { Radio, RadioGroup } from "@headlessui/react"
-import { EyeSlashIcon } from "@heroicons/react/24/solid"
 import React, { useEffect } from "react"
-import { useUserData } from "~/routes/api.user-data"
-import { useUserSettings } from "~/routes/api.user-settings.get"
 import type { DiscoverParams, WatchedType } from "~/server/discover.server"
 import {
 	type WatchOption,
