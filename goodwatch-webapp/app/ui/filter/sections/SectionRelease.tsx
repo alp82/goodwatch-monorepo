@@ -153,6 +153,7 @@ export default function SectionRelease({
 			color={discoverFilters.release.color}
 			visible={params.minYear !== undefined || params.maxYear !== undefined}
 			editing={editing}
+			active={true}
 			onEdit={onEdit}
 			onClose={onClose}
 			onRemoveAll={handleRemoveAll}

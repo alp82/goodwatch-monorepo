@@ -5,9 +5,11 @@ import {
 	discoverFilters,
 	watchOptions,
 } from "~/server/types/discover-types"
+import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
 import EditableSection from "~/ui/filter/sections/EditableSection"
 import RadioBlock from "~/ui/form/RadioBlock"
 import { Tag } from "~/ui/tags/Tag"
+import { useUser } from "~/utils/auth"
 import { useNav } from "~/utils/navigation"
 
 interface SectionWatchParams {
@@ -23,6 +25,9 @@ export default function SectionWatch({
 	onEdit,
 	onClose,
 }: SectionWatchParams) {
+	const { user } = useUser()
+	const isUserLoggedIn = Boolean(user)
+
 	// initialization
 
 	const [watchedType, setWatchedType] = React.useState<WatchedType>(
@@ -76,34 +81,46 @@ export default function SectionWatch({
 	// rendering
 
 	return (
-		<EditableSection
-			label={discoverFilters.watch.label}
-			color={discoverFilters.watch.color}
-			visible={Boolean(params.watchedType)}
-			editing={editing}
-			onEdit={onEdit}
-			onClose={onClose}
-			onRemoveAll={handleRemoveAll}
-		>
-			{(isEditing) => (
-				<div className="flex flex-col flex-wrap gap-2">
-					{isEditing && (
-						<RadioBlock
-							options={watchOptions}
-							value={selectedWatchOption}
-							onChange={handleChangeWatchedType}
-						/>
-					)}
-					<div className="flex flex-wrap items-center gap-2">
-						<Tag
-							color={selectedWatchOption?.color}
-							icon={selectedWatchOption?.icon}
-						>
-							{selectedWatchOption?.label}
-						</Tag>
+		<>
+			<EditableSection
+				label={discoverFilters.watch.label}
+				color={discoverFilters.watch.color}
+				visible={Boolean(params.watchedType)}
+				active={isUserLoggedIn}
+				editing={editing && isUserLoggedIn}
+				onEdit={onEdit}
+				onClose={onClose}
+				onRemoveAll={handleRemoveAll}
+			>
+				{(isEditing) => (
+					<div className="flex flex-col flex-wrap gap-2">
+						{isUserLoggedIn ? (
+							<>
+								{isEditing && (
+									<RadioBlock
+										options={watchOptions}
+										value={selectedWatchOption}
+										onChange={handleChangeWatchedType}
+									/>
+								)}
+								<div className="flex flex-wrap items-center gap-2">
+									<Tag
+										color={selectedWatchOption?.color}
+										icon={selectedWatchOption?.icon}
+									>
+										{selectedWatchOption?.label}
+									</Tag>
+								</div>
+							</>
+						) : (
+							<div className="flex flex-col gap-4">
+								<GoogleSignInButton />
+								{discoverFilters.watch.loginInstructions}
+							</div>
+						)}
 					</div>
-				</div>
-			)}
-		</EditableSection>
+				)}
+			</EditableSection>
+		</>
 	)
 }

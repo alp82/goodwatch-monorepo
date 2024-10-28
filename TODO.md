@@ -6,18 +6,20 @@ discover pagination
     total number of results
     load more on scroll?7
 
+preview count for selections in edited sections
+
+genre
+    fix incompatible genre & media type combinations
+
+cast & crew
+
 DNA filter
     toggle buttons for most important categories
 
 details
-    small poster
-    DNA at the top
+    section title anchors
     top DNA categories, hide the rest
     no flickering for explore previews
-    section title anchors
-
-genre
-    fix incompatible genre & media type combinations
 
 sign up backlink
     redirect without jump to home
@@ -26,21 +28,15 @@ movie card
     overlay: show movie or tv icon 
     max 3 streaming overlays
 
-discover redesign
-    return count: "showing first 100 results"
-  
-    discover scores
-    discover release
-    discover cast / crew
-    discover DNA
-    discover age ratings
-    discover search text
+more cateogires
+    age ratings
+    search text
 
-    discover loading animation with skeletons
-    https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
-    filter inspiration:
-        https://www.yidio.com/movies
-        https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
+loading animation with skeletons
+
+filter inspiration:
+    https://www.yidio.com/movies
+    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
 
 ---
 

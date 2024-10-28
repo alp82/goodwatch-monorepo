@@ -108,6 +108,7 @@ export default function SectionGenre({
 			color={discoverFilters.genre.color}
 			visible={genreIds.length > 0}
 			editing={editing}
+			active={true}
 			onEdit={onEdit}
 			onClose={onClose}
 			onRemoveAll={handleRemoveAll}

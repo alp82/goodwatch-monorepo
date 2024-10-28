@@ -133,6 +133,7 @@ export default function SectionScore({
 			color={discoverFilters.score.color}
 			visible={params.minScore !== undefined || params.maxScore !== undefined}
 			editing={editing}
+			active={true}
 			onEdit={onEdit}
 			onClose={onClose}
 			onRemoveAll={handleRemoveAll}

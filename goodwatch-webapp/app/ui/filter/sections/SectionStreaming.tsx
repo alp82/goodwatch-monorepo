@@ -208,6 +208,7 @@ export default function SectionStreaming({
 			color={discoverFilters.streaming.color}
 			visible={Boolean(params.streamingPreset)}
 			editing={editing}
+			active={true}
 			onEdit={onEdit}
 			onClose={onClose}
 			onRemoveAll={handleRemoveAll}

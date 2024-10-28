@@ -7,6 +7,7 @@ interface SectionParams {
 	color: ColorName
 	visible: boolean
 	editing: boolean
+	active: boolean
 	onEdit: () => void
 	onClose: () => void
 	onRemoveAll: () => void
@@ -18,6 +19,7 @@ export default function EditableSection({
 	color,
 	visible,
 	editing,
+	active,
 	onEdit,
 	onClose,
 	onRemoveAll,
@@ -66,7 +68,7 @@ export default function EditableSection({
 			label={label}
 			color={color}
 			isActive={isEditing}
-			onClick={onToggleEditing}
+			onClick={active ? onToggleEditing : undefined}
 			onRemove={handleRemoveAll}
 		>
 			{children(isEditing)}
