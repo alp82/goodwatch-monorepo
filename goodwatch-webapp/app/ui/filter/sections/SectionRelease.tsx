@@ -1,4 +1,4 @@
-import { ClockIcon } from "@heroicons/react/20/solid"
+import { CalendarDaysIcon } from "@heroicons/react/24/solid"
 import React, { useEffect } from "react"
 import type { DiscoverParams } from "~/server/discover.server"
 import { discoverFilters } from "~/server/types/discover-types"
@@ -209,7 +209,7 @@ export default function SectionRelease({
 						</div>
 					)}
 					<div className="flex flex-wrap items-center gap-2">
-						<Tag icon={ClockIcon}>
+						<Tag icon={CalendarDaysIcon}>
 							{minYear} - {maxYear}
 						</Tag>
 					</div>

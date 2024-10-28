@@ -250,7 +250,7 @@ export default function Header() {
 												<MenuItem>
 													{({ active }) => (
 														<Link
-															to="http://localhost:3003/discover?type=all&watchedType=watched"
+															to="/discover?type=all&watchedType=watched"
 															prefetch="viewport"
 															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
 																active

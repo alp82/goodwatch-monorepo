@@ -23,7 +23,26 @@ re-add TTL
 
 sign up
     redirect without jump to home
+    via email
+    via apple
     
+---
+
+Posthog
+    UTM
+
+---
+
+command palette
+    CTRL + K
+
+---
+
+user scores
+    new page with all scores
+    tiered view
+    shareable link
+
 ---
 
 details
@@ -46,12 +65,6 @@ login flicker from index to redirected page
 
 optimistic ui for user settings
     api-action.ts
-
----
-
-sign up
-    via email
-    via apple
 
 ---
 
@@ -96,6 +109,11 @@ remove obsolete code
 
 ---
 
+Terminology
+    TV, TV Shows -> Shows
+
+---
+
 user settings
     oval together: profile picture -> profile icon
 
@@ -120,6 +138,10 @@ discover sidebar
     
 discover filters
     streaming: checkbox for include buy/rent
+
+discover release
+    filter by month
+    add index
 
 ---
 
@@ -270,10 +292,6 @@ filter inspiration:
 
 ---
 
-command palette
-
----
-
 similarity issues
     dark palette is close to vibrant palette
     http://localhost:3003/explore/all/cinematic_style/Dark%20Palette
@@ -287,6 +305,8 @@ wishlist
         rest
     search & filter
     easy adding more
+    
+    remove separate wishlist page?
 
 watched/ratings page:
     rating stats (1-10 distribution)
@@ -571,7 +591,7 @@ show similar/related movies
 
 poster: inline scoring / watched / wish 
 
-streaming: show flatrate countries in ratingblock and streaming tab
+streaming: show flatrate countries in rating block and streaming tab
 
 tv: watched vs currently watching (finished show)
 
@@ -580,10 +600,8 @@ ratings: show last updated time
 date of first streaming link / new to stream
 
 trending load more
-discover load more
 
 replace url for details when country changes
-better discover url handling with new hook
 
 show titles on map (production countries + places in film)
     where to show space and fantasy places
@@ -603,9 +621,9 @@ explore graphs
     https://reactflow.dev/
 
 details:
-box office (e.g. Google)
-crew links to discovery
-awards (grab from API)
+    box office (e.g. Google)
+    crew links to discovery
+    awards (grab from API)
 
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
