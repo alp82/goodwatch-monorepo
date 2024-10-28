@@ -105,26 +105,29 @@ export default function DetailsOverview({
 						<div className="sm:hidden flex items-center gap-4 flex-wrap">
 							<Genres genres={genres} type={media_type} />
 						</div>
+
+						<div className="sm:hidden flex items-center gap-4 flex-wrap mt-6">
+							<DNAPreview dna={dna} navigateToSection={navigateToSection} />
+						</div>
 					</div>
 
 					<div className="p-3 flex items-start">
-						<div className="hidden sm:block w-48 md:w-72">
+						<div className="w-24 xs:w-36 sm:w-48 md:w-60 lg:w-72">
 							<div className="relative flex-none mt-8 w-full">
 								<TrailerOverlay videos={videos || []} />
 								<RatingOverlay ratings={ratings} />
 								<Poster path={poster_path} title={title} />
 							</div>
-							<div className="hidden md:block mt-4">
+							<div className="hidden sm:block mt-4">
 								<WatchStatusBlock details={details} />
 							</div>
 						</div>
 						<div className="relative flex-1 mt-2 sm:mt-4 sm:pl-6 lg:pl-8">
-							<div className="sm:hidden mt-8 flex flex-wrap justify-center gap-4 w-full">
-								<div className="relative flex-none max-w-full sm:w-64">
-									<TrailerOverlay videos={videos || []} />
-									<RatingOverlay ratings={ratings} />
-									<Poster path={poster_path} title={title} />
-								</div>
+							<div className="hidden sm:flex items-center gap-4 ml-2 mt-3 mb-4">
+								<DNAPreview dna={dna} navigateToSection={navigateToSection} />
+							</div>
+							<div className="sm:hidden mt-5 ml-2">
+								<WatchStatusBlock details={details} />
 							</div>
 							<div className="hidden sm:block mb-4">
 								<StreamingBlock
@@ -144,9 +147,6 @@ export default function DetailsOverview({
 							</div>
 							<div className="hidden md:block mb-4">
 								<ScoreSelector details={details} />
-							</div>
-							<div className="hidden ml-2 md:flex items-center gap-4">
-								<DNAPreview dna={dna} navigateToSection={navigateToSection} />
 							</div>
 						</div>
 					</div>
@@ -172,9 +172,6 @@ export default function DetailsOverview({
 						</div>
 						<div className="md:hidden mb-4">
 							<ScoreSelector details={details} />
-						</div>
-						<div className="md:hidden mb-4">
-							<WatchStatusBlock details={details} />
 						</div>
 					</div>
 				</div>

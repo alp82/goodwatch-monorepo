@@ -33,7 +33,7 @@ export const meta: MetaFunction = () => {
 		{ title: "Discover | GoodWatch" },
 		{
 			description:
-				"All movie and tv show ratings and streaming providers on the same page",
+				"Find movies and tv shows by streaming, scores, DNA, watch filters, release date and more",
 		},
 	]
 }
@@ -119,7 +119,7 @@ export default function Discover() {
 
 	return (
 		<>
-			<div className="sticky top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">
+			<div className="xl-h:sticky xl-h:top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">
 				<FilterBar
 					params={currentParams}
 					filters={filters}
@@ -130,7 +130,7 @@ export default function Discover() {
 				/>
 				<AddFilterBar
 					params={currentParams}
-					isVisible={isAddingFilter}
+					isVisible={true}
 					onSelect={setSelectedFilter}
 				/>
 			</div>

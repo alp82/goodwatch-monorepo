@@ -95,14 +95,14 @@ export default function FilterBar({
 					</FilterBarSection>
 				)}
 
-				<FilterBarSection
-					isCompact={true}
-					color="stone"
-					isActive={isAddingFilter}
-					onClick={onAddToggle}
-				>
-					<PlusIcon className="h-16" />
-				</FilterBarSection>
+				{/*<FilterBarSection*/}
+				{/*	isCompact={true}*/}
+				{/*	color="stone"*/}
+				{/*	isActive={isAddingFilter}*/}
+				{/*	onClick={onAddToggle}*/}
+				{/*>*/}
+				{/*	<PlusIcon className="h-16" />*/}
+				{/*</FilterBarSection>*/}
 			</div>
 		</div>
 	)

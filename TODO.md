@@ -2,28 +2,12 @@
 ```
 ---
 
-watch filter with signup CTA
-
-remove all for streaming filter applies "mine" filter
-    check guest too
-streaming "custom" not working for guest
-
-movie card
-    overlay: show movie or tv icon 
-    max 3 streaming overlays
-
-sticky only on desktop
-    if enough height
-
 discover pagination
+    total number of results
     load more on scroll?7
 
-sidebar
-    sort by column
-    facets as scroll preview minimap (e.g. release year)
-    
 DNA filter
-    toggle buttons for each category (hide secondary categories)
+    toggle buttons for most important categories
 
 details
     small poster
@@ -38,6 +22,10 @@ genre
 sign up backlink
     redirect without jump to home
     
+movie card
+    overlay: show movie or tv icon 
+    max 3 streaming overlays
+
 discover redesign
     return count: "showing first 100 results"
   
@@ -53,13 +41,6 @@ discover redesign
     filter inspiration:
         https://www.yidio.com/movies
         https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-
-streaming
-    checkbox: include buy/rent
-
-tropes
-    show in details
-    add filter
 
 ---
 
@@ -122,6 +103,21 @@ cards with user data
 slow network emulation
     skeleton loading
     useQuery
+
+---
+
+discover sidebar
+    sort by column
+    facets as scroll preview minimap (e.g. release year)
+    
+discover filters
+    streaming: checkbox for include buy/rent
+
+---
+
+tropes
+    show in details
+    add discover filter
 
 ---
 

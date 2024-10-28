@@ -16,7 +16,7 @@ export default function Cycle({ items }: CycleProps) {
 	}, [items.length])
 
 	return (
-		<div className="pl-1 sm:pl-0 flex sm:items-center">
+		<div className="flex items-center">
 			{items.map((item, index) => (
 				<span
 					key={index}

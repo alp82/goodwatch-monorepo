@@ -61,6 +61,7 @@ module.exports = {
 			screens: {
 				"sm-h": { raw: "(max-height: 1000px)" },
 				"lg-h": { raw: "(min-height: 1001px)" },
+				"xl-h": { raw: "(min-height: 1301px)" },
 			},
 		},
 	},
