@@ -2,41 +2,38 @@
 ```
 ---
 
-discover pagination
-    total number of results
-    load more on scroll?7
-
-preview count for selections in edited sections
-
-genre
-    fix incompatible genre & media type combinations
-
 cast & crew
 
 DNA filter
     toggle buttons for most important categories
+
+genre
+    fix incompatible genre & media type combinations
+
+discover pagination
+    tabs with total number of results (100+)
+    load more on scroll?
+    filter suggestions at the bottom?
+
+preview count for selections in edited sections (100+)
+    
+re-add TTL
+
+---
+
+sign up
+    redirect without jump to home
+    
+---
 
 details
     section title anchors
     top DNA categories, hide the rest
     no flickering for explore previews
 
-sign up backlink
-    redirect without jump to home
-    
 movie card
     overlay: show movie or tv icon 
     max 3 streaming overlays
-
-more cateogires
-    age ratings
-    search text
-
-loading animation with skeletons
-
-filter inspiration:
-    https://www.yidio.com/movies
-    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
 
 ---
 
@@ -49,6 +46,21 @@ login flicker from index to redirected page
 
 optimistic ui for user settings
     api-action.ts
+
+---
+
+sign up
+    via email
+    via apple
+
+---
+
+tv seasons:
+    get episodes
+    get ratings
+    show in details
+    when last season/episode was released
+    recaps
 
 ---
 
@@ -246,18 +258,15 @@ error boundaries
 
 ---
 
-tv seasons:
-    get episodes
-    get ratings
-    show in details
-    when last season/episode was released
-    recaps
+discover cateogires
+    age ratings
+    search text
 
----
+loading animation with skeletons
 
-sign up
-    via email
-    via apple
+filter inspiration:
+    https://www.yidio.com/movies
+    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
 
 ---
 
@@ -332,6 +341,17 @@ new page: started this week on your streaming services
 
 secret handling
 project documentation
+
+---
+
+wide cards
+    two images next o each other, big title in center
+    inspiration: letterboxd
+
+---
+
+details: releases
+    show dates for each country with age ratings
 
 ---
 

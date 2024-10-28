@@ -139,7 +139,7 @@ async function _getDiscoverResults({
 			column,
 			direction,
 		},
-		limit: 120,
+		limit: 100,
 	})
 
 	const result = await executeQuery(query, params)
