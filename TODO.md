@@ -3,10 +3,6 @@
 ---
 
 cast & crew
-    debounced text
-    CREATE INDEX idx_cast_gin ON [movies, tv] USING GIN (cast);
-    CREATE INDEX idx_crew_gin ON [movies, tv] USING GIN (crew);
-
 
 DNA filter
     toggle buttons for most important categories
@@ -21,7 +17,7 @@ discover pagination
 
 preview count for selections in edited sections (100+)
     
-re-add TTL
+TTL 0
 
 ---
 

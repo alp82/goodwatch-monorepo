@@ -5,6 +5,7 @@ import type { DiscoverFilterType } from "~/server/types/discover-types"
 import FilterBarSection from "~/ui/filter/FilterBarSection"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
 import SectionCast from "~/ui/filter/sections/SectionCast"
+import SectionCrew from "~/ui/filter/sections/SectionCrew"
 import SectionGenre from "~/ui/filter/sections/SectionGenre"
 import SectionRelease from "~/ui/filter/sections/SectionRelease"
 import SectionScore from "~/ui/filter/sections/SectionScore"
@@ -72,6 +73,13 @@ export default function FilterBar({
 					params={params}
 					editing={filterToEdit === "cast"}
 					onEdit={() => onEditToggle("cast")}
+					onClose={handleClose}
+				/>
+
+				<SectionCrew
+					params={params}
+					editing={filterToEdit === "crew"}
+					onEdit={() => onEditToggle("crew")}
 					onClose={handleClose}
 				/>
 

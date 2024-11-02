@@ -190,8 +190,8 @@ const constructSelectQuery = ({
 		${maxScore ? "AND aggregated_overall_score_normalized_percent <= :::maxScore" : ""}
 		${minYear ? "AND release_year >= :::minYear" : ""}
 		${maxYear ? "AND release_year <= :::maxYear" : ""}
-		${withCast ? `AND ${castIds.map((castId) => `m.cast @> '[{"id": ${castId}}]'`).join(" OR ")}` : ""}
-		${withCrew ? `AND ${crewIds.map((crewId) => `m.crew @> '[{"id": ${crewId}}]'`).join(" OR ")}` : ""}
+		${withCast ? `AND (${castIds.map((castId) => `m.cast @> '[{"id": ${castId}}]'`).join(" OR ")})` : ""}
+		${withCrew ? `AND (${crewIds.map((crewId) => `m.crew @> '[{"id": ${crewId}}]'`).join(" OR ")})` : ""}
 		${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}
 		${minScore || orderBy.column === "aggregated_overall_score_normalized_percent" ? `AND m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}` : ""}
 		${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}

@@ -6,8 +6,8 @@ import {
 import { UserIcon } from "@heroicons/react/24/solid"
 import React from "react"
 import Highlighter from "react-highlight-words"
-import { useCast } from "~/routes/api.cast"
-import type { CastMember } from "~/server/cast.server"
+import { useCrew } from "~/routes/api.crew"
+import type { CrewMember } from "~/server/crew.server"
 import type { DiscoverParams } from "~/server/discover.server"
 import { discoverFilters } from "~/server/types/discover-types"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
@@ -21,19 +21,19 @@ import { Ping } from "~/ui/wait/Ping"
 import { useNav } from "~/utils/navigation"
 import { useDebounce } from "~/utils/timing"
 
-interface SectionCastParams {
+interface SectionCrewParams {
 	params: DiscoverParams
 	editing: boolean
 	onEdit: () => void
 	onClose: () => void
 }
 
-export default function SectionCast({
+export default function SectionCrew({
 	params,
 	editing,
 	onEdit,
 	onClose,
-}: SectionCastParams) {
+}: SectionCrewParams) {
 	const [searchText, setSearchText] = React.useState("")
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchText(event.target.value)
@@ -41,37 +41,40 @@ export default function SectionCast({
 	const debouncedSearchText = useDebounce(searchText, 200)
 
 	// data retrieval
-	const { withCast = "", withoutCast = "" } = params
-	const castResult = useCast({
+	const { withCrew = "", withoutCrew = "" } = params
+	const crewResult = useCrew({
 		text: debouncedSearchText,
-		withCast,
-		withoutCast,
+		withCrew,
+		withoutCrew,
 	})
-	const cast = castResult?.data?.castMembers || []
+	const crew = crewResult?.data?.crewMembers || []
 
-	const castIds = (withCast || "")
+	const crewIds = (withCrew || "")
 		.split(",")
-		.filter((castId) => Boolean(castId))
-	const selectedCast = (cast || [])
-		.filter((cast) => castIds.includes(cast.id.toString()))
-		.map((cast) => cast.name)
-	const castToInclude = cast.filter((cast) =>
-		castIds.includes(cast.id.toString()),
+		.filter((crewId) => Boolean(crewId))
+	const selectedCrew = (crew || [])
+		.filter((crew) => crewIds.includes(crew.id.toString()))
+		.map((crew) => crew.name)
+	const crewToInclude = crew.filter((crew) =>
+		crewIds.includes(crew.id.toString()),
 	)
 
 	// autocomplete data
 
-	const autocompleteItems = cast.map((cast: CastMember) => {
+	const autocompleteItems = crew.map((crew: CrewMember) => {
 		return {
-			key: cast.id.toString(),
-			label: cast.name,
-			img: cast.profile_path,
+			key: crew.id.toString(),
+			label: crew.name,
+			img: crew.profile_path,
+			department: crew.known_for_department,
 		}
 	})
 	const autocompleteRenderItem = ({
 		item,
-	}: RenderItemParams<AutocompleteItem & { img: string }>) => {
-		const isSelected = castIds.includes(item.key)
+	}: RenderItemParams<
+		AutocompleteItem & { img: string; department: string }
+	>) => {
+		const isSelected = crewIds.includes(item.key)
 		return (
 			<div
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
@@ -82,13 +85,16 @@ export default function SectionCast({
 						src={`https://www.themoviedb.org/t/p/original/${item.img}`}
 						alt={`${item.label} profile`}
 					/>
-					<div className="text-sm font-medium truncate">
+					<div className="flex flex-col gap-1 text-sm font-medium truncate">
 						<Highlighter
-							highlightClassName="font-bold bg-yellow-600 text-gray-900"
+							highlightClassName="font-extrabold bg-yellow-400 text-gray-900"
 							searchWords={[searchText]}
 							autoEscape={true}
 							textToHighlight={item.label}
 						/>
+						<span className="text-xs text-gray-500">
+							Known for: <strong>{item.department}</strong>
+						</span>
 					</div>
 				</span>
 				{isSelected && (
@@ -104,43 +110,43 @@ export default function SectionCast({
 	// update handlers
 
 	const { updateQueryParams } =
-		useNav<Pick<DiscoverParams, "withCast" | "withoutCast">>()
-	const updateCast = (
-		castToInclude: CastMember[],
-		castToExclude: CastMember[],
+		useNav<Pick<DiscoverParams, "withCrew" | "withoutCrew">>()
+	const updateCrew = (
+		crewToInclude: CrewMember[],
+		crewToExclude: CrewMember[],
 	) => {
 		updateQueryParams({
-			withCast: castToInclude.map((cast) => cast.id).join(","),
-			// withoutCast: castToExclude.map((cast) => cast.id).join(","),
+			withCrew: crewToInclude.map((crew) => crew.id).join(","),
+			// withoutCrew: crewToExclude.map((crew) => crew.id).join(","),
 		})
 	}
 
 	const handleSelect = (selectedItem: AutocompleteItem) => {
-		const updatedCastToInclude: CastMember[] = castIds.includes(
+		const updatedCrewToInclude: CrewMember[] = crewIds.includes(
 			selectedItem.key,
 		)
-			? castToInclude.filter(
-					(cast) => cast.id !== Number.parseInt(selectedItem.key),
+			? crewToInclude.filter(
+					(crew) => crew.id !== Number.parseInt(selectedItem.key),
 				)
 			: [
-					...castToInclude,
+					...crewToInclude,
 					{
 						id: Number.parseInt(selectedItem.key),
 						name: selectedItem.label,
 					},
 				]
-		updateCast(updatedCastToInclude, [])
+		updateCrew(updatedCrewToInclude, [])
 	}
 
-	const handleDelete = (castToDelete: CastMember) => {
-		const updatedCastToInclude: CastMember[] = castToInclude.filter(
-			(cast) => cast.id !== castToDelete.id,
+	const handleDelete = (crewToDelete: CrewMember) => {
+		const updatedCrewToInclude: CrewMember[] = crewToInclude.filter(
+			(crew) => crew.id !== crewToDelete.id,
 		)
-		updateCast(updatedCastToInclude, [])
+		updateCrew(updatedCrewToInclude, [])
 	}
 
 	const handleRemoveAll = () => {
-		updateCast([], [])
+		updateCrew([], [])
 		onClose()
 	}
 
@@ -148,9 +154,9 @@ export default function SectionCast({
 
 	return (
 		<EditableSection
-			label={discoverFilters.cast.label}
-			color={discoverFilters.cast.color}
-			visible={castIds.length > 0}
+			label={discoverFilters.crew.label}
+			color={discoverFilters.crew.color}
+			visible={crewIds.length > 0}
 			editing={editing}
 			active={true}
 			onEdit={onEdit}
@@ -162,7 +168,7 @@ export default function SectionCast({
 					{isEditing && (
 						<Autocomplete<AutocompleteItem>
 							name="query"
-							placeholder="Search Cast"
+							placeholder="Search Crew"
 							icon={
 								<MagnifyingGlassIcon
 									className="h-4 w-4 text-gray-400"
@@ -176,22 +182,22 @@ export default function SectionCast({
 						/>
 					)}
 					<div className="flex flex-wrap items-center gap-2">
-						{castToInclude.length > 0 ? (
-							castToInclude.map((cast, index) => (
+						{crewToInclude.length > 0 ? (
+							crewToInclude.map((crew, index) => (
 								<OneOrMoreItems
-									key={cast.id}
+									key={crew.id}
 									index={index}
-									amount={selectedCast.length}
+									amount={selectedCrew.length}
 								>
 									<Tag
 										icon={UserIcon}
-										onRemove={isEditing ? () => handleDelete(cast) : undefined}
+										onRemove={isEditing ? () => handleDelete(crew) : undefined}
 									>
-										{cast.name}
+										{crew.name}
 									</Tag>
 								</OneOrMoreItems>
 							))
-						) : castResult.isLoading && cast.length === 0 ? (
+						) : crewResult.isLoading && crew.length === 0 ? (
 							<div className="relative h-8">
 								<Ping size="small" />
 							</div>
