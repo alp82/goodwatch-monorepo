@@ -13,7 +13,6 @@ import SectionWatch from "~/ui/filter/sections/SectionWatch"
 
 interface FilterBarParams {
 	params: DiscoverParams
-	filters: DiscoverFilters
 	filterToEdit: DiscoverFilterType | null
 	isAddingFilter: boolean
 	onAddToggle: () => void
@@ -22,14 +21,11 @@ interface FilterBarParams {
 
 export default function FilterBar({
 	params,
-	filters,
 	filterToEdit,
 	isAddingFilter,
 	onAddToggle,
 	onEditToggle,
 }: FilterBarParams) {
-	const cast = filters.castMembers || []
-
 	const handleClose = () => {
 		onEditToggle(null)
 	}

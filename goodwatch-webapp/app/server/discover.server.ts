@@ -53,15 +53,7 @@ export interface DiscoverResult extends AllRatings {
 	media_type: "movie" | "tv"
 }
 
-export interface DiscoverFilters {
-	castMembers: string[]
-	crewMembers: string[]
-}
-
-export interface DiscoverResults {
-	results: DiscoverResult[]
-	filters: DiscoverFilters
-}
+export type DiscoverResults = DiscoverResult[]
 
 export const getDiscoverResults = async (params: DiscoverParams) => {
 	return await cached<DiscoverParams, DiscoverResults>({
@@ -153,20 +145,5 @@ async function _getDiscoverResults({
 		getCountrySpecificDetails(row, country, language),
 	) as unknown as DiscoverResult[]
 
-	const castResult = await executeQuery<{ id: string; name: string }>(
-		`SELECT DISTINCT id, name FROM "cast" WHERE id = ANY($1)`,
-		[withCast ? withCast.split(",") : []],
-	)
-	const castMembers = castResult.rows.map((row) => row.name) as string[]
-	const crewMembers = [] as string[]
-
-	const filters = {
-		castMembers,
-		crewMembers,
-	}
-
-	return {
-		results,
-		filters,
-	}
+	return results
 }

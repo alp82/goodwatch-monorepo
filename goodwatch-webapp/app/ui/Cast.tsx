@@ -21,7 +21,6 @@ export default function Cast({ cast }: CastProps) {
 	const numberOfMoreToShow =
 		castWithPhotos.length + castWithoutPhotos.length - 10
 
-	const type = "all"
 	return (
 		<>
 			<h2 className="text-2xl font-bold">Cast</h2>

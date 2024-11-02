@@ -67,11 +67,7 @@ export type LoaderData = {
 export default function Discover() {
 	const { currentParams, updateQueryParams } = useNav<DiscoverParams>()
 	const discover = useDiscover({ params: currentParams })
-	const results = discover.data?.results || []
-	const filters = discover.data?.filters || {
-		castMembers: [],
-		crewMembers: [],
-	}
+	const results = discover.data || []
 
 	const sortByTabs: Tab<DiscoverSortBy>[] = [
 		{
@@ -122,7 +118,6 @@ export default function Discover() {
 			<div className="xl-h:sticky xl-h:top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">
 				<FilterBar
 					params={currentParams}
-					filters={filters}
 					filterToEdit={filterToEdit}
 					isAddingFilter={isAddingFilter}
 					onAddToggle={toggleIsAddingFilter}

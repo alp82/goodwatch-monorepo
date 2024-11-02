@@ -4,6 +4,7 @@ import {
 	TagIcon,
 } from "@heroicons/react/20/solid"
 import React from "react"
+import Highlighter from "react-highlight-words"
 import { useCast } from "~/routes/api.cast"
 import type { CastMember } from "~/server/cast.server"
 import type { DiscoverParams } from "~/server/discover.server"
@@ -70,11 +71,18 @@ export default function SectionCast({
 			>
 				<span className="flex items-center gap-4">
 					<img
-						className="h-10 rounded-sm"
+						className="w-7 h-10 rounded-sm"
 						src={`https://www.themoviedb.org/t/p/original/${item.img}`}
 						alt={`${item.label} profile`}
 					/>
-					<div className="text-sm font-bold truncate">{item.label}</div>
+					<div className="text-sm font-medium truncate">
+						<Highlighter
+							highlightClassName="bg-yellow-400 text-gray-900"
+							searchWords={[text]}
+							autoEscape={true}
+							textToHighlight={item.label}
+						/>
+					</div>
 				</span>
 				{isSelected && (
 					<CheckIcon

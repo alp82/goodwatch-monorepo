@@ -21,11 +21,7 @@ import { getLocaleFromRequest } from "~/utils/locale"
 
 // type definitions
 
-export type GetDiscoverResult = {
-	type: FilterMediaType
-	results: DiscoverResult[]
-	filters: DiscoverFilters
-}
+export type GetDiscoverResult = DiscoverResult[]
 
 // API endpoint
 
@@ -97,13 +93,9 @@ export const loader: LoaderFunction = async ({
 		sortDirection,
 	}
 
-	const { results, filters } = await getDiscoverResults(params)
+	const results = await getDiscoverResults(params)
 
-	return json<GetDiscoverResult>({
-		type,
-		results,
-		filters,
-	})
+	return json<GetDiscoverResult>(results)
 }
 
 // Query hook
