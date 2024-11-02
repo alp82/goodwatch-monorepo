@@ -112,11 +112,9 @@ export default function Index() {
 	)
 	const selectPopularMovies = () => {
 		setPopularPicksType("movies")
-		setCurrentPosition(0)
 	}
 	const selectPopularTV = () => {
 		setPopularPicksType("tv")
-		setCurrentPosition(0)
 	}
 	const popularPicks =
 		popularPicksType === "movies" ? popularPicksMovies : popularPicksTV

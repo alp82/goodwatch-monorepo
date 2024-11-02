@@ -9,6 +9,8 @@ import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
 import EditableSection from "~/ui/filter/sections/EditableSection"
 import RadioBlock from "~/ui/form/RadioBlock"
 import { Tag } from "~/ui/tags/Tag"
+import { Ping } from "~/ui/wait/Ping"
+import { Spinner } from "~/ui/wait/Spinner"
 import { useUser } from "~/utils/auth"
 import { useNav } from "~/utils/navigation"
 
@@ -25,7 +27,7 @@ export default function SectionWatch({
 	onEdit,
 	onClose,
 }: SectionWatchParams) {
-	const { user } = useUser()
+	const { user, loading } = useUser()
 	const isUserLoggedIn = Boolean(user)
 
 	// initialization
@@ -94,7 +96,11 @@ export default function SectionWatch({
 			>
 				{(isEditing) => (
 					<div className="flex flex-col flex-wrap gap-2">
-						{isUserLoggedIn ? (
+						{loading ? (
+							<div className="relative h-8">
+								<Ping size="small" />
+							</div>
+						) : isUserLoggedIn ? (
 							<>
 								{isEditing && (
 									<RadioBlock

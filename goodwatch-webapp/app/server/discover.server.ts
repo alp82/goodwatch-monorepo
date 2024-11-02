@@ -20,7 +20,6 @@ export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
 export interface DiscoverParams {
 	userId?: string
 	type: FilterMediaType
-	mode: "advanced"
 	country: string
 	language: string
 	watchedType: WatchedType
@@ -31,11 +30,13 @@ export interface DiscoverParams {
 	minScore: string
 	maxScore: string
 	withCast: string
+	withoutCast: string
 	withCrew: string
-	withKeywords: string
-	withoutKeywords: string
+	withoutCrew: string
 	withGenres: string
 	withoutGenres: string
+	withKeywords: string
+	withoutKeywords: string
 	streamingPreset: StreamingPreset
 	withStreamingProviders: string
 	sortBy: DiscoverSortBy
@@ -85,11 +86,13 @@ async function _getDiscoverResults({
 	maxScore,
 	watchedType,
 	withCast,
+	withoutCast,
 	withCrew,
-	withKeywords,
-	withoutKeywords,
+	withoutCrew,
 	withGenres,
 	withoutGenres,
+	withKeywords,
+	withoutKeywords,
 	streamingPreset,
 	withStreamingProviders,
 	sortBy,
@@ -133,6 +136,9 @@ async function _getDiscoverResults({
 			maxYear,
 			watchedType,
 			withCast,
+			withoutCast,
+			withCrew,
+			withoutCrew,
 			withGenres: genreNames?.length > 0 ? genreNames : undefined,
 		},
 		orderBy: {

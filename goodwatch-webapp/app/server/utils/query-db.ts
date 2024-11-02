@@ -36,8 +36,11 @@ interface Conditions {
 	similarityVector?: string
 	watchedType?: WatchedType
 	withCast?: string
+	withoutCast?: string
 	withCrew?: string
+	withoutCrew?: string
 	withGenres?: string[]
+	withoutGenres?: string[]
 }
 
 interface ConstructUserQueryParams {
@@ -160,6 +163,8 @@ const constructSelectQuery = ({
 	} = conditions
 
 	const userJoin = constructUserQuery({ userId, type, watchedType })
+	const castIds = (withCast || "").split(",").map((castId) => Number(castId))
+	const crewIds = (withCrew || "").split(",").map((crewId) => Number(crewId))
 
 	return `
 	SELECT
@@ -185,8 +190,8 @@ const constructSelectQuery = ({
 		${maxScore ? "AND aggregated_overall_score_normalized_percent <= :::maxScore" : ""}
 		${minYear ? "AND release_year >= :::minYear" : ""}
 		${maxYear ? "AND release_year <= :::maxYear" : ""}
-		${withCast ? "AND m.cast @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}
-		${withCrew ? "AND m.crew @> ANY (SELECT jsonb_agg(jsonb_build_object('id', id)) FROM unnest(ARRAY[:::withCast]::int[]) AS t(id))" : ""}
+		${withCast ? `AND ${castIds.map((castId) => `m.cast @> '[{"id": ${castId}}]'`).join(" OR ")}` : ""}
+		${withCrew ? `AND ${crewIds.map((crewId) => `m.crew @> '[{"id": ${crewId}}]'`).join(" OR ")}` : ""}
 		${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}
 		${minScore || orderBy.column === "aggregated_overall_score_normalized_percent" ? `AND m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}` : ""}
 		${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}

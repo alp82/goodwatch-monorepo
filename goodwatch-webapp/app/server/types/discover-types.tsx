@@ -90,15 +90,15 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 			color: "slate",
 			associatedParams: ["minScore", "maxScore"],
 		},
-		genre: {
-			label: "Genre",
-			color: "amber",
-			associatedParams: ["withGenres", "withoutGenres"],
-		},
 		dna: {
 			label: "DNA",
 			color: "indigo",
 			associatedParams: [],
+		},
+		genre: {
+			label: "Genre",
+			color: "amber",
+			associatedParams: ["withGenres", "withoutGenres"],
 		},
 		release: {
 			label: "Release",
@@ -108,11 +108,11 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 		cast: {
 			label: "Cast",
 			color: "purple",
-			associatedParams: ["withCast"],
+			associatedParams: ["withCast", "withoutCast"],
 		},
 		crew: {
 			label: "Crew",
 			color: "pink",
-			associatedParams: ["withCrew"],
+			associatedParams: ["withCrew", "withoutCrew"],
 		},
 	}

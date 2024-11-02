@@ -18,7 +18,7 @@ export const queryKeyCountries = ["countries"]
 export const useCountries = () => {
 	const url = "/api/countries"
 	return useQuery<GetCountriesResult>({
-		queryKey: [...queryKeyCountries],
+		queryKey: queryKeyCountries,
 		queryFn: async () => await (await fetch(url)).json(),
 	})
 }

@@ -56,6 +56,18 @@ layout {
             }
         }
     }
+    tab name="db3" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db; git pull; exec $SHELL"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db && htop; exec $SHELL"
+            }
+        }
+    }
     tab name="cache1" {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {

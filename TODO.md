@@ -3,6 +3,10 @@
 ---
 
 cast & crew
+    debounced text
+    CREATE INDEX idx_cast_gin ON [movies, tv] USING GIN (cast);
+    CREATE INDEX idx_crew_gin ON [movies, tv] USING GIN (crew);
+
 
 DNA filter
     toggle buttons for most important categories
@@ -18,6 +22,28 @@ discover pagination
 preview count for selections in edited sections (100+)
     
 re-add TTL
+
+---
+
+score selector
+    cancel on vertical movement
+
+start page word carousel
+    DNA categories
+
+swiper
+    edgeSwipeDetection?
+    mousewheel
+    freemode: sticky?
+    lazyPreloadPrevNext?
+    navigation: https://swiperjs.com/swiper-api#navigation
+    cardsEffect?
+
+---
+
+move caddy proxy from db1 to vector
+
+install windmill worker on gw-db3
 
 ---
 
@@ -38,9 +64,11 @@ command palette
 
 ---
 
-user scores
-    new page with all scores
-    tiered view
+user profile
+    taste matching (logged in users only - or a teaser)
+        you both like ABC
+    show all scores
+    grouped by tier
     shareable link
 
 ---
@@ -49,6 +77,7 @@ details
     section title anchors
     top DNA categories, hide the rest
     no flickering for explore previews
+    swiper for explore preview
 
 movie card
     overlay: show movie or tv icon 

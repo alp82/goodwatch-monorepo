@@ -60,7 +60,7 @@ cargo pgrx init --pg16 pg_config
 
 #download, build and install pgvectorscale
 cd /tmp
-git clone --branch <version> https://github.com/timescale/pgvectorscale
+git clone --branch 0.3.0 https://github.com/timescale/pgvectorscale
 cd pgvectorscale/pgvectorscale
 export RUSTFLAGS="-C target-feature=+avx2,+fma"
 cargo pgrx install --release

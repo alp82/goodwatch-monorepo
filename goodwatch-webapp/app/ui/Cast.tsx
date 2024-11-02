@@ -39,7 +39,7 @@ export default function Cast({ cast }: CastProps) {
 							<img
 								className="w-full h-auto"
 								src={`https://www.themoviedb.org/t/p/original/${castMember.profile_path}`}
-								alt={`${castMember.name} profile photo`}
+								alt={`${castMember.name} profile`}
 							/>
 							<div className="w-full h-full px-2 bg-gray-800 group-hover:bg-slate-800">
 								<p

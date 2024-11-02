@@ -4,6 +4,7 @@ import type { DiscoverFilters, DiscoverParams } from "~/server/discover.server"
 import type { DiscoverFilterType } from "~/server/types/discover-types"
 import FilterBarSection from "~/ui/filter/FilterBarSection"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
+import SectionCast from "~/ui/filter/sections/SectionCast"
 import SectionGenre from "~/ui/filter/sections/SectionGenre"
 import SectionRelease from "~/ui/filter/sections/SectionRelease"
 import SectionScore from "~/ui/filter/sections/SectionScore"
@@ -71,29 +72,12 @@ export default function FilterBar({
 					onClose={handleClose}
 				/>
 
-				{cast.length > 0 && (
-					<FilterBarSection
-						label="Cast"
-						color="purple"
-						isActive={filterToEdit === "cast"}
-						onClick={() => onEditToggle("cast")}
-					>
-						<div className="flex flex-wrap items-center gap-2">
-							{cast.map((castMember, index) => (
-								<OneOrMoreItems
-									key={castMember}
-									index={index}
-									amount={cast.length}
-								>
-									<span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded">
-										<UserIcon className="h-5 w-5 flex-shrink-0" />
-										{castMember}
-									</span>
-								</OneOrMoreItems>
-							))}
-						</div>
-					</FilterBarSection>
-				)}
+				<SectionCast
+					params={params}
+					editing={filterToEdit === "cast"}
+					onEdit={() => onEditToggle("cast")}
+					onClose={handleClose}
+				/>
 
 				{/*<FilterBarSection*/}
 				{/*	isCompact={true}*/}

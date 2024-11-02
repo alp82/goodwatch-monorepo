@@ -134,8 +134,8 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 								value={item}
 								className={({ focus }) =>
 									classNames(
-										"relative cursor-default select-none py-2 pl-3 pr-9 text-white",
-										focus ? "bg-indigo-800" : "bg-stone-800",
+										"relative cursor-pointer select-none py-2 pl-3 pr-9 text-white",
+										focus ? "bg-stone-950" : "bg-stone-800",
 									)
 								}
 							>

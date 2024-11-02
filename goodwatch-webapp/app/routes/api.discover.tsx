@@ -11,6 +11,7 @@ import {
 	type DiscoverResult,
 	type DiscoverSortBy,
 	type StreamingPreset,
+	type WatchedType,
 	getDiscoverResults,
 } from "~/server/discover.server"
 import type { FilterMediaType } from "~/server/search.server"
@@ -36,7 +37,7 @@ export const loader: LoaderFunction = async ({
 
 	const { locale } = getLocaleFromRequest(request)
 	const url = new URL(request.url)
-	const type = url.searchParams.get("type" as FilterMediaType) || "all"
+	const type = (url.searchParams.get("type") || "all") as FilterMediaType
 	const country =
 		url.searchParams.get("country") || userSettings?.country_default || ""
 	const language = url.searchParams.get("language") || locale.language
@@ -47,13 +48,15 @@ export const loader: LoaderFunction = async ({
 	const maxYear = url.searchParams.get("maxYear") || ""
 	const minScore = url.searchParams.get("minScore") || ""
 	const maxScore = url.searchParams.get("maxScore") || ""
-	const watchedType = url.searchParams.get("watchedType") || ""
+	const watchedType = (url.searchParams.get("watchedType") as WatchedType) || ""
 	const withCast = url.searchParams.get("withCast") || ""
+	const withoutCast = url.searchParams.get("withoutCast") || ""
 	const withCrew = url.searchParams.get("withCrew") || ""
-	const withKeywords = url.searchParams.get("withKeywords") || ""
-	const withoutKeywords = url.searchParams.get("withoutKeywords") || ""
+	const withoutCrew = url.searchParams.get("withoutCrew") || ""
 	const withGenres = url.searchParams.get("withGenres") || ""
 	const withoutGenres = url.searchParams.get("withoutGenres") || ""
+	const withKeywords = url.searchParams.get("withKeywords") || ""
+	const withoutKeywords = url.searchParams.get("withoutKeywords") || ""
 	const streamingPreset =
 		(url.searchParams.get("streamingPreset") as StreamingPreset) || ""
 	const withStreamingProviders =
@@ -68,8 +71,6 @@ export const loader: LoaderFunction = async ({
 		| "asc"
 		| "desc"
 
-	console.log({ withStreamingProviders, streamingPreset })
-
 	const params = {
 		userId,
 		type,
@@ -83,11 +84,13 @@ export const loader: LoaderFunction = async ({
 		maxScore,
 		watchedType,
 		withCast,
+		withoutCast,
 		withCrew,
-		withKeywords,
-		withoutKeywords,
+		withoutCrew,
 		withGenres,
 		withoutGenres,
+		withKeywords,
+		withoutKeywords,
 		streamingPreset,
 		withStreamingProviders,
 		sortBy,
