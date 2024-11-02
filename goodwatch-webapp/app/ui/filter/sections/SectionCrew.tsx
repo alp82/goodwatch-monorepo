@@ -87,7 +87,7 @@ export default function SectionCrew({
 					/>
 					<div className="flex flex-col gap-1 text-sm font-medium truncate">
 						<Highlighter
-							highlightClassName="font-extrabold bg-yellow-400 text-gray-900"
+							highlightClassName="font-bold bg-yellow-500 text-gray-900"
 							searchWords={[searchText]}
 							autoEscape={true}
 							textToHighlight={item.label}

@@ -49,6 +49,7 @@ export async function _getCrew({
 			FROM "crew"
 			WHERE
 				name ILIKE $1
+				AND known_for_department != 'Acting'
 				${withCrew ? "AND id != ALL($2)" : ""}
 			ORDER BY popularity DESC
 			LIMIT ${LIMIT - withCrewArray.length}

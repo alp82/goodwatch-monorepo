@@ -2,8 +2,6 @@
 ```
 ---
 
-cast & crew
-
 DNA filter
     toggle buttons for most important categories
 

@@ -84,7 +84,7 @@ export default function SectionCast({
 					/>
 					<div className="text-sm font-medium truncate">
 						<Highlighter
-							highlightClassName="font-bold bg-yellow-600 text-gray-900"
+							highlightClassName="font-bold bg-yellow-500 text-gray-900"
 							searchWords={[searchText]}
 							autoEscape={true}
 							textToHighlight={item.label}
