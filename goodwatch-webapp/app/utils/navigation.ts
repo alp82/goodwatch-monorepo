@@ -19,7 +19,8 @@ export const useNav = <T extends {}>() => {
 			}
 		}
 
-		navigate(`${location.pathname}?${newParams.toString()}`, options)
+		const safeQueryString = newParams.toString().replace(/%2C/g, ",")
+		navigate(`${location.pathname}?${safeQueryString}`, options)
 	}
 
 	const currentParams = Object.fromEntries(
