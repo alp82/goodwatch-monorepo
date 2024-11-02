@@ -1,0 +1,220 @@
+import {
+	ArrowPathIcon,
+	CheckIcon,
+	MagnifyingGlassIcon,
+	TagIcon,
+} from "@heroicons/react/20/solid"
+import { UserIcon } from "@heroicons/react/24/solid"
+import React from "react"
+import Highlighter from "react-highlight-words"
+import { useDNA } from "~/routes/api.dna"
+import type { DiscoverParams } from "~/server/discover.server"
+import type { DNAResult } from "~/server/dna.server"
+import { discoverFilters } from "~/server/types/discover-types"
+import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
+import EditableSection from "~/ui/filter/sections/EditableSection"
+import Autocomplete, {
+	type AutocompleteItem,
+	type RenderItemParams,
+} from "~/ui/form/Autocomplete"
+import { Tag } from "~/ui/tags/Tag"
+import { Ping } from "~/ui/wait/Ping"
+import { useNav } from "~/utils/navigation"
+import { useDebounce } from "~/utils/timing"
+
+interface SectionDNAParams {
+	params: DiscoverParams
+	editing: boolean
+	onEdit: () => void
+	onClose: () => void
+}
+
+export default function SectionDNA({
+	params,
+	editing,
+	onEdit,
+	onClose,
+}: SectionDNAParams) {
+	const [searchText, setSearchText] = React.useState("")
+	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchText(event.target.value)
+	}
+	const debouncedSearchText = useDebounce(searchText, 200)
+
+	// data retrieval
+	const { similarDNA = "" } = params
+	const dnaResult = useDNA({
+		text: debouncedSearchText,
+		similarDNA,
+	})
+	const dna = dnaResult.data?.result || []
+
+	const dnaKeys = (similarDNA || "").split(",").filter(Boolean)
+	const selectedDNA = (dna || [])
+		.filter((dna) => dnaKeys.includes(`${dna.dna_name}:${dna.dna_value}`))
+		.map((dna) => dna.name)
+	const dnaToInclude = similarDNA
+		.split(",")
+		.filter(Boolean)
+		.map((dna) => {
+			const [dnaName, dnaValue] = dna.split(":", 2)
+			return {
+				dna_name: dnaName,
+				dna_value: dnaValue,
+			}
+		})
+
+	// autocomplete data
+
+	const autocompleteItems = dna.map((dna: DNAResult) => {
+		const key = `${dna.dna_name}:${dna.dna_value}`
+		const label = dna.dna_value
+		return {
+			key,
+			label,
+			category: dna.dna_name,
+			count: dna.dna_count,
+		}
+	})
+	const autocompleteRenderItem = ({
+		item,
+	}: RenderItemParams<
+		AutocompleteItem & { category: string; count: number }
+	>) => {
+		const isSelected = dnaKeys.includes(item.key)
+		return (
+			<div
+				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
+			>
+				<span className="flex items-center gap-4">
+					<div className="text-sm font-medium truncate">
+						{item.category}:
+						<Highlighter
+							highlightClassName="font-bold bg-yellow-500 text-gray-900"
+							searchWords={[searchText]}
+							autoEscape={true}
+							textToHighlight={item.label}
+						/>
+						({item.count})
+					</div>
+				</span>
+				{isSelected && (
+					<CheckIcon
+						className="h-6 w-6 p-1 text-green-100 bg-green-700 rounded-full"
+						aria-hidden="true"
+					/>
+				)}
+			</div>
+		)
+	}
+
+	// update handlers
+
+	const { updateQueryParams } = useNav<Pick<DiscoverParams, "similarDNA">>()
+	const updateDNA = (dnaToInclude: DNAResult[]) => {
+		updateQueryParams({
+			similarDNA: dnaToInclude
+				.map((dna) => `${dna.dna_name}:${dna.dna_value}`)
+				.join(","),
+		})
+	}
+
+	const handleSelect = (
+		selectedItem: AutocompleteItem & { category: string; count: number },
+	) => {
+		const updatedDNAToInclude: DNAResult[] = dnaKeys.includes(selectedItem.key)
+			? dnaToInclude.filter(
+					(dna) => `${dna.dna_name}:${dna.dna_value}` !== selectedItem.key,
+				)
+			: [
+					...dnaToInclude,
+					{
+						dna_name: selectedItem.category,
+						dna_value: selectedItem.label,
+						dna_count: selectedItem.count,
+					},
+				]
+		updateDNA(updatedDNAToInclude)
+	}
+
+	const handleDelete = (dnaToDelete: DNAResult) => {
+		const updatedDNAToInclude: DNAResult[] = dnaToInclude.filter(
+			(dna) =>
+				`${dna.dna_name}:${dna.dna_value}` !==
+				`${dnaToDelete.dna_name}:${dnaToDelete.dna_value}`,
+		)
+		updateDNA(updatedDNAToInclude)
+	}
+
+	const handleRemoveAll = () => {
+		updateDNA([])
+		onClose()
+	}
+
+	// rendering
+
+	return (
+		<EditableSection
+			label={discoverFilters.dna.label}
+			color={discoverFilters.dna.color}
+			visible={dnaKeys.length > 0}
+			editing={editing}
+			active={true}
+			onEdit={onEdit}
+			onClose={onClose}
+			onRemoveAll={handleRemoveAll}
+		>
+			{(isEditing) => (
+				<div className="flex flex-col flex-wrap gap-2">
+					{isEditing && (
+						<div className="w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
+							<Autocomplete<AutocompleteItem>
+								name="query"
+								placeholder="Search DNA"
+								icon={
+									dnaResult.isFetching ? (
+										<ArrowPathIcon
+											className="h-4 w-4 text-gray-400 animate-spin"
+											aria-hidden="true"
+										/>
+									) : (
+										<MagnifyingGlassIcon
+											className="h-4 w-4 text-gray-400"
+											aria-hidden="true"
+										/>
+									)
+								}
+								autocompleteItems={autocompleteItems}
+								renderItem={autocompleteRenderItem}
+								onChange={handleChange}
+								onSelect={handleSelect}
+							/>
+						</div>
+					)}
+					<div className="flex flex-wrap items-center gap-2">
+						{dnaToInclude.length > 0 ? (
+							dnaToInclude.map((dna, index) => (
+								<OneOrMoreItems
+									key={`${dna.dna_name}:${dna.dna_value}`}
+									index={index}
+									amount={dnaToInclude.length}
+								>
+									<Tag
+										icon={TagIcon}
+										onRemove={isEditing ? () => handleDelete(dna) : undefined}
+									>
+										{dna.dna_name}: {dna.dna_value}
+									</Tag>
+								</OneOrMoreItems>
+							))
+						) : dnaResult.isLoading && dna.length === 0 ? (
+							<div className="relative h-8">
+								<Ping size="small" />
+							</div>
+						) : null}
+					</div>
+				</div>
+			)}
+		</EditableSection>
+	)
+}

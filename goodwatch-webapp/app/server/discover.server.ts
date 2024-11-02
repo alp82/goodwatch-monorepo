@@ -39,6 +39,7 @@ export interface DiscoverParams {
 	withoutKeywords: string
 	streamingPreset: StreamingPreset
 	withStreamingProviders: string
+	similarDNA: string
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
 }
@@ -85,8 +86,9 @@ async function _getDiscoverResults({
 	withoutGenres,
 	withKeywords,
 	withoutKeywords,
-	streamingPreset,
 	withStreamingProviders,
+	streamingPreset,
+	similarDNA,
 	sortBy,
 	sortDirection,
 }: DiscoverParams): Promise<DiscoverResults> {
@@ -132,6 +134,9 @@ async function _getDiscoverResults({
 			withCrew,
 			withoutCrew,
 			withGenres: genreNames?.length > 0 ? genreNames : undefined,
+		},
+		similarity: {
+			similarDNA,
 		},
 		orderBy: {
 			column,

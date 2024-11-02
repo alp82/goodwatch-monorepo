@@ -6,6 +6,7 @@ import FilterBarSection from "~/ui/filter/FilterBarSection"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
 import SectionCast from "~/ui/filter/sections/SectionCast"
 import SectionCrew from "~/ui/filter/sections/SectionCrew"
+import SectionDNA from "~/ui/filter/sections/SectionDNA"
 import SectionGenre from "~/ui/filter/sections/SectionGenre"
 import SectionRelease from "~/ui/filter/sections/SectionRelease"
 import SectionScore from "~/ui/filter/sections/SectionScore"
@@ -48,17 +49,24 @@ export default function FilterBar({
 					onClose={handleClose}
 				/>
 
-				<SectionGenre
-					params={params}
-					editing={filterToEdit === "genre"}
-					onEdit={() => onEditToggle("genre")}
-					onClose={handleClose}
-				/>
-
 				<SectionScore
 					params={params}
 					editing={filterToEdit === "score"}
 					onEdit={() => onEditToggle("score")}
+					onClose={handleClose}
+				/>
+
+				<SectionDNA
+					params={params}
+					editing={filterToEdit === "dna"}
+					onEdit={() => onEditToggle("dna")}
+					onClose={handleClose}
+				/>
+
+				<SectionGenre
+					params={params}
+					editing={filterToEdit === "genre"}
+					onEdit={() => onEditToggle("genre")}
 					onClose={handleClose}
 				/>
 

@@ -11,7 +11,7 @@ import {
 	getExploreResults,
 } from "~/server/explore.server"
 import type { FilterMediaType } from "~/server/search.server"
-import { mapCategoryToVectorName } from "~/ui/dna/utils"
+import { mapCategoryToVectorName } from "~/ui/dna/dna_utils"
 
 // type definitions
 

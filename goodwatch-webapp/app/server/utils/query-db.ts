@@ -25,6 +25,7 @@ interface Media {
 
 interface Similarity {
 	category: string
+	similarDNA: string
 	media?: Media
 }
 
@@ -92,7 +93,7 @@ export const constructFullQuery = ({
 	JOIN LATERAL (
 		${getStreamingLinksJoin(streaming)}
 	) sl on TRUE
-	ORDER BY ${similarity ? `m.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`}
+	ORDER BY ${similarity?.category ? `m.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`}
 	LIMIT ${limit}
 	`
 	return convertNamedToPositionalParams(namedQuery, conditions)
@@ -169,13 +170,13 @@ const constructSelectQuery = ({
 	return `
 	SELECT
 		'${type}' as media_type,
-		${similarity ? `v.${similarity.category}_vector,` : ""}
+		${similarity?.category ? `v.${similarity.category}_vector,` : ""}
 		${getCommonFields()
 			.map((field) => `m.${field}`)
 			.join(",\n\t")}
 	FROM ${type === "movie" ? "movies" : "tv"} m
 	${
-		similarity
+		similarity?.category
 			? `JOIN vectors_media v ON v.tmdb_id = m.tmdb_id AND v.media_type = media_type AND v.${similarity.category}_vector IS NOT NULL`
 			: ""
 	}
@@ -184,7 +185,7 @@ const constructSelectQuery = ({
 	  m.title IS NOT NULL 
 	  AND m.release_year IS NOT NULL 
 	  AND m.poster_path IS NOT NULL 
-	  ${similarity ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
+	  ${similarity?.category ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
 		${maxScore ? "AND aggregated_overall_score_normalized_percent <= :::maxScore" : ""}
@@ -195,7 +196,7 @@ const constructSelectQuery = ({
 		${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}
 		${minScore || orderBy.column === "aggregated_overall_score_normalized_percent" ? `AND m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}` : ""}
 		${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}
-	ORDER BY ${similarity ? `v.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`} 
+	ORDER BY ${similarity?.category ? `v.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`} 
 	LIMIT ${limit}
   `
 }

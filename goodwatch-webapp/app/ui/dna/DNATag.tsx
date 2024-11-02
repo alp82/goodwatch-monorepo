@@ -1,6 +1,6 @@
 import { Link } from "@remix-run/react"
 import React from "react"
-import { getCategoryColor, mapCategoryToVectorName } from "~/ui/dna/utils"
+import { getCategoryColor, mapCategoryToVectorName } from "~/ui/dna/dna_utils"
 
 export interface DNATagProps {
 	category: string

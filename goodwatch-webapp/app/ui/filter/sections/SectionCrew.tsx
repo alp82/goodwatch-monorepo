@@ -99,7 +99,7 @@ export default function SectionCrew({
 				</span>
 				{isSelected && (
 					<CheckIcon
-						className="h-6 w-6 p-1 text-green-300 bg-green-700 rounded-full"
+						className="h-6 w-6 p-1 text-green-100 bg-green-700 rounded-full"
 						aria-hidden="true"
 					/>
 				)}

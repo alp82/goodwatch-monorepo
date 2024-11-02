@@ -9,7 +9,7 @@ import type { MediaType } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { Poster } from "~/ui/Poster"
 import { DNATag } from "~/ui/dna/DNATag"
-import { mapCategoryToVectorName, spoilerCategories } from "~/ui/dna/utils"
+import { mapCategoryToVectorName, spoilerCategories } from "~/ui/dna/dna_utils"
 
 export interface DNACategoryProps {
 	without: {

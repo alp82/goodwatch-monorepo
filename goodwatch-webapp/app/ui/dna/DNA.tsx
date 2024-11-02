@@ -3,7 +3,7 @@ import type { DNA, MovieDetails, TVDetails } from "~/server/details.server"
 import type { ExploreParams } from "~/server/explore.server"
 import InfoBox from "~/ui/InfoBox"
 import DNACategory from "~/ui/dna/DNACategory"
-import { getSortedCategories } from "~/ui/dna/utils"
+import { getSortedCategories } from "~/ui/dna/dna_utils"
 
 export interface DNAProps {
 	details: MovieDetails | TVDetails

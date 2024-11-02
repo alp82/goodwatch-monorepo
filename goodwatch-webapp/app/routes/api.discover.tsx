@@ -61,6 +61,7 @@ export const loader: LoaderFunction = async ({
 			? userSettings?.streaming_providers_default
 			: "") ||
 		""
+	const similarDNA = url.searchParams.get("similarDNA") || ""
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"popularity") as DiscoverSortBy
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
@@ -87,8 +88,9 @@ export const loader: LoaderFunction = async ({
 		withoutGenres,
 		withKeywords,
 		withoutKeywords,
-		streamingPreset,
 		withStreamingProviders,
+		streamingPreset,
+		similarDNA,
 		sortBy,
 		sortDirection,
 	}

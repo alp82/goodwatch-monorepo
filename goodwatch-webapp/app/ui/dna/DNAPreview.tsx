@@ -5,7 +5,7 @@ import type { ExploreParams } from "~/server/explore.server"
 import Sparkles from "~/ui/Sparkles"
 import { sections } from "~/ui/details/common"
 import { DNATag } from "~/ui/dna/DNATag"
-import { getCategoryColor, getSortedCategories } from "~/ui/dna/utils"
+import { getCategoryColor, getSortedCategories } from "~/ui/dna/dna_utils"
 import Cycle from "~/ui/list/Cycle"
 import type { Section } from "~/utils/scroll"
 

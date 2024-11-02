@@ -4,6 +4,9 @@
 
 DNA filter
     toggle buttons for most important categories
+    threshold for similarity?
+    
+Similar filter extra?
 
 genre
     fix incompatible genre & media type combinations
@@ -14,6 +17,8 @@ discover pagination
     filter suggestions at the bottom?
 
 preview count for selections in edited sections (100+)
+
+save discover filters in db
     
 TTL 0
 
@@ -25,6 +30,8 @@ score selector
 start page word carousel
     DNA categories
 
+---
+
 swiper
     edgeSwipeDetection?
     mousewheel
@@ -32,6 +39,9 @@ swiper
     lazyPreloadPrevNext?
     navigation: https://swiperjs.com/swiper-api#navigation
     cardsEffect?
+
+similar headings for start page (trending, moods, themes, etc.)
+    each section as swipable
 
 ---
 

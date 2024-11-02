@@ -1,3 +1,4 @@
+import { PlusIcon } from "@heroicons/react/24/solid"
 import React from "react"
 import type { DiscoverParams } from "~/server/discover.server"
 import {
@@ -33,7 +34,9 @@ export default function AddFilterBar({
 		<div className="m-auto max-w-7xl w-full px-4 flex flex-col flex-wrap gap-1 text-sm border-gray-900 rounded-lg">
 			<Appear isVisible={Boolean(isVisible)}>
 				<div className="flex items-center flex-wrap gap-2 text-sm sm:text-base md:text-lg">
-					<span className="font-extrabold text-sm">Add Filter:</span>
+					<FilterBarSection isCompact={true} color="stone" isActive={false}>
+						<PlusIcon className="h-8" title="Add filter" />
+					</FilterBarSection>
 					{unusedFilters.map(([filterType, discoverFilter]) => (
 						<UserAction
 							key={filterType}

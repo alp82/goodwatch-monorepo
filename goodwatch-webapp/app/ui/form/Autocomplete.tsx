@@ -123,7 +123,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 				{autocompleteMatches?.length > 0 && (
 					<ComboboxOptions
 						className="
-						absolute mt-1 max-h-96 w-full overflow-auto
+						absolute mt-1 max-h-96 w-full overflow-y-auto overflow-x-hidden
 						rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none
 						text-sm sm:text-base
 					"
