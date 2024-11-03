@@ -86,7 +86,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 					className="
 						block w-full py-2 pl-10 pr-3
 						border border-transparent rounded-md focus:border-gray-400
-						bg-gray-700 focus:bg-gray-800
+						bg-gray-800 focus:bg-gray-900
 						ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600
 						leading-5 text-gray-300 focus:text-gray-100 placeholder-gray-500 text-sm
 					"

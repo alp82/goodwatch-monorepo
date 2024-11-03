@@ -2,19 +2,15 @@
 ```
 ---
 
-dna table
-    update dna column indexes in windmill too
-    update genome prompt
-        add humor to example output
-        include summary?
+dna
+    don't close/reset autocomplete suggestions after selection
 
-DNA filter
+Similar filter
     toggle buttons for most important categories
     threshold for similarity?
-    
-Similar filter extra?
 
 genre
+    show selections
     fix incompatible genre & media type combinations
 
 discover pagination
@@ -33,6 +29,10 @@ TTL 0
 update windmill version
     add worker to gw-db3
     all workers in same group
+
+update genome prompt
+    add humor to example output
+    include summary?
 
 ---
 

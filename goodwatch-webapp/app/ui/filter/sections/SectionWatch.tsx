@@ -106,6 +106,7 @@ export default function SectionWatch({
 									<RadioBlock
 										options={watchOptions}
 										value={selectedWatchOption}
+										orientation="vertical"
 										onChange={handleChangeWatchedType}
 									/>
 								)}

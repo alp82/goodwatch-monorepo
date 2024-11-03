@@ -94,7 +94,7 @@ export default function Search() {
 						onChange={(event) => fetcher.submit(event.target.form)}
 						onClick={() => setIsFocused(true)}
 						onFocus={() => setIsFocused(true)}
-						// onBlur={() => setIsFocused(false)}
+						onBlur={() => setIsFocused(false)}
 					/>
 				</div>
 				{isFocused && autocompleteItems.length && (

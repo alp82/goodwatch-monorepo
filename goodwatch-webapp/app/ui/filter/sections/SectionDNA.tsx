@@ -12,13 +12,18 @@ import type {
 	SimilarDNACombinationType,
 } from "~/server/discover.server"
 import type { DNAResult } from "~/server/dna.server"
-import { discoverFilters } from "~/server/types/discover-types"
+import {
+	type CombinationTypeOption,
+	combinationTypeOptions,
+	discoverFilters,
+} from "~/server/types/discover-types"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
 import EditableSection from "~/ui/filter/sections/EditableSection"
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
 } from "~/ui/form/Autocomplete"
+import RadioBlock from "~/ui/form/RadioBlock"
 import { Tag } from "~/ui/tags/Tag"
 import { Ping } from "~/ui/wait/Ping"
 import { useNav } from "~/utils/navigation"
@@ -44,17 +49,30 @@ export default function SectionDNA({
 	const debouncedSearchText = useDebounce(searchText, 200)
 
 	const [combinationType, setCombinationType] =
-		React.useState<SimilarDNACombinationType>("any")
+		React.useState<SimilarDNACombinationType>(
+			params.similarDNACombinationType || combinationTypeOptions[0].name,
+		)
+	const selectedCombinationTypeOption = combinationTypeOptions.find(
+		(option) => option.name === combinationType,
+	)
+	const handleChangeCombinationType = (
+		combinationTypeOption: CombinationTypeOption,
+	) => {
+		const combinationType = combinationTypeOption.name
+		setCombinationType(combinationType)
+		updateQueryParams({
+			similarDNACombinationType: combinationType,
+		})
+	}
 
 	// data retrieval
 
-	const { similarDNA = "" } = params
 	const dnaResult = useDNA({
 		text: debouncedSearchText,
-		similarDNA,
 	})
 	const dna = dnaResult.data?.result || []
 
+	const { similarDNA = "" } = params
 	const dnaKeys = (similarDNA || "").split(",").filter(Boolean)
 	const dnaToInclude = similarDNA
 		.split(",")
@@ -177,27 +195,35 @@ export default function SectionDNA({
 			{(isEditing) => (
 				<div className="flex flex-col flex-wrap gap-2">
 					{isEditing && (
-						<div className="w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
-							<Autocomplete<AutocompleteItem>
-								name="query"
-								placeholder="Search DNA"
-								icon={
-									dnaResult.isFetching ? (
-										<ArrowPathIcon
-											className="h-4 w-4 text-gray-400 animate-spin"
-											aria-hidden="true"
-										/>
-									) : (
-										<MagnifyingGlassIcon
-											className="h-4 w-4 text-gray-400"
-											aria-hidden="true"
-										/>
-									)
-								}
-								autocompleteItems={autocompleteItems}
-								renderItem={autocompleteRenderItem}
-								onChange={handleChange}
-								onSelect={handleSelect}
+						<div className="flex flex-col flex-wrap justify-between gap-2">
+							<div className="w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
+								<Autocomplete<AutocompleteItem>
+									name="query"
+									placeholder="Search DNA"
+									icon={
+										dnaResult.isFetching ? (
+											<ArrowPathIcon
+												className="h-4 w-4 text-gray-400 animate-spin"
+												aria-hidden="true"
+											/>
+										) : (
+											<MagnifyingGlassIcon
+												className="h-4 w-4 text-gray-400"
+												aria-hidden="true"
+											/>
+										)
+									}
+									autocompleteItems={autocompleteItems}
+									renderItem={autocompleteRenderItem}
+									onChange={handleChange}
+									onSelect={handleSelect}
+								/>
+							</div>
+							<RadioBlock
+								options={combinationTypeOptions}
+								value={selectedCombinationTypeOption}
+								orientation="horizontal"
+								onChange={handleChangeCombinationType}
 							/>
 						</div>
 					)}

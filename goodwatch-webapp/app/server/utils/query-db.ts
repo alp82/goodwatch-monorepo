@@ -91,7 +91,7 @@ export const constructFullQuery = ({
 }: ConstructFullQueryParams) => {
 	const namedQuery = `
 	${constructUnionQuery({ userId, filterMediaType, streaming, conditions, similarity, orderBy, limit })}
-	SELECT DISTINCT
+	SELECT
 		m.*,
 		sl.streaming_links
 	FROM media m
@@ -184,7 +184,7 @@ const constructSelectQuery = ({
 		: []
 
 	return `
-	SELECT
+	SELECT DISTINCT
 		'${type}' as media_type,
 		${similarity?.category ? `v.${similarity.category}_vector,` : ""}
 		${getCommonFields()
