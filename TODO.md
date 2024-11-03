@@ -8,6 +8,7 @@ dna
 Similar filter
     toggle buttons for most important categories
     threshold for similarity?
+    explore buttons link to discover
 
 genre
     show selections

@@ -60,7 +60,7 @@ export default function RadioBlock<T extends RadioOption[]>({
 					aria-label={option.name}
 					aria-description={option.description}
 					className={`
-            group relative p-4 flex gap-1
+            group relative p-3 flex gap-1
             ${orientation === "vertical" && "flex-col md:grid md:grid-cols-2 md:pl-4 md:pr-6"}
             border border-gray-700 data-[checked]:border-slate-700
             focus:outline-none cursor-pointer

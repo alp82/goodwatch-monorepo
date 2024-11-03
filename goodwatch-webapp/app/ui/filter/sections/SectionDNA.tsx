@@ -144,7 +144,6 @@ export default function SectionDNA({
 				.join(","),
 			similarDNACombinationType: combinationType,
 		})
-		setSearchText("")
 	}
 
 	const handleSelect = (
@@ -176,6 +175,7 @@ export default function SectionDNA({
 
 	const handleRemoveAll = () => {
 		updateDNA([])
+		setSearchText("")
 		onClose()
 	}
 
@@ -196,7 +196,13 @@ export default function SectionDNA({
 				<div className="flex flex-col flex-wrap gap-2">
 					{isEditing && (
 						<div className="flex flex-col flex-wrap justify-between gap-2">
-							<div className="w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
+							<RadioBlock
+								options={combinationTypeOptions}
+								value={selectedCombinationTypeOption}
+								orientation="horizontal"
+								onChange={handleChangeCombinationType}
+							/>
+							<div className="my-2 w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
 								<Autocomplete<AutocompleteItem>
 									name="query"
 									placeholder="Search DNA"
@@ -219,12 +225,6 @@ export default function SectionDNA({
 									onSelect={handleSelect}
 								/>
 							</div>
-							<RadioBlock
-								options={combinationTypeOptions}
-								value={selectedCombinationTypeOption}
-								orientation="horizontal"
-								onChange={handleChangeCombinationType}
-							/>
 						</div>
 					)}
 					<div className="flex flex-wrap items-center gap-2">

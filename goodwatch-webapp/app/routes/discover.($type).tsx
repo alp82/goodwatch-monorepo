@@ -112,7 +112,6 @@ export default function Discover() {
 		setIsAddingFilter(false)
 		setFilterToEdit(filterType)
 	}
-	console.log(results.length, { results })
 	return (
 		<>
 			<div className="xl-h:sticky xl-h:top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">

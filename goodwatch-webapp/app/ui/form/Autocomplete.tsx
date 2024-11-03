@@ -59,7 +59,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 	useEffect(() => {
 		if (!selectedItem || !onSelect) return
 		onSelect(selectedItem)
-		handleReset()
+		// handleReset()
 	}, [selectedItem])
 
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
