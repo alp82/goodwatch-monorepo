@@ -82,18 +82,22 @@ export default function SectionDNA({
 			<div
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
 			>
-				<span className="flex items-center gap-4">
-					<div className="text-sm font-medium truncate">
-						{item.category}:
+				<div className="flex items-center gap-4">
+					<div
+						className="text-sm font-bold truncate"
+						title={`Used in ${item.count} movies and shows`}
+					>
+						<div className="w-52 text-gray-400 font-medium">
+							{item.category}{" "}
+						</div>
 						<Highlighter
 							highlightClassName="font-bold bg-yellow-500 text-gray-900"
 							searchWords={[searchText]}
 							autoEscape={true}
 							textToHighlight={item.label}
 						/>
-						({item.count})
 					</div>
-				</span>
+				</div>
 				{isSelected && (
 					<CheckIcon
 						className="h-6 w-6 p-1 text-green-100 bg-green-700 rounded-full"
@@ -113,6 +117,7 @@ export default function SectionDNA({
 				.map((dna) => `${dna.category}:${dna.label}`)
 				.join(","),
 		})
+		setSearchText("")
 	}
 
 	const handleSelect = (
@@ -199,7 +204,8 @@ export default function SectionDNA({
 										icon={TagIcon}
 										onRemove={isEditing ? () => handleDelete(dna) : undefined}
 									>
-										{dna.category}: {dna.label}
+										<span className="text-gray-500">{dna.category}: </span>
+										<span className="font-bold">{dna.label}</span>
 									</Tag>
 								</OneOrMoreItems>
 							))

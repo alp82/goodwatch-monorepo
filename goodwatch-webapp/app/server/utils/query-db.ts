@@ -167,6 +167,17 @@ const constructSelectQuery = ({
 	const castIds = (withCast || "").split(",").map((castId) => Number(castId))
 	const crewIds = (withCrew || "").split(",").map((crewId) => Number(crewId))
 
+	const { similarDNA } = similarity || {}
+	const similarDNAList = similarDNA
+		? similarDNA.split(",").map((dna) => {
+				const [category, label] = dna.split(":", 2)
+				return {
+					category,
+					label,
+				}
+			})
+		: []
+
 	return `
 	SELECT
 		'${type}' as media_type,
@@ -175,6 +186,11 @@ const constructSelectQuery = ({
 			.map((field) => `m.${field}`)
 			.join(",\n\t")}
 	FROM ${type === "movie" ? "movies" : "tv"} m
+	${
+		similarDNAList.length > 0
+			? `JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id)`
+			: ""
+	}
 	${
 		similarity?.category
 			? `JOIN vectors_media v ON v.tmdb_id = m.tmdb_id AND v.media_type = media_type AND v.${similarity.category}_vector IS NOT NULL`
@@ -185,6 +201,15 @@ const constructSelectQuery = ({
 	  m.title IS NOT NULL 
 	  AND m.release_year IS NOT NULL 
 	  AND m.poster_path IS NOT NULL 
+	  ${
+			similarDNAList.length > 0
+				? `AND (${similarDNAList
+						.map((dna) => {
+							return `(d.category = '${dna.category}' AND d.label = '${dna.label}')`
+						})
+						.join(" OR ")})`
+				: ""
+		}
 	  ${similarity?.category ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}

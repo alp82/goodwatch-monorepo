@@ -41,8 +41,8 @@ export const DISCOVER_FILTER_TYPES = [
 	"watch",
 	"streaming",
 	"score",
-	"dna",
 	"similar",
+	"dna",
 	"genre",
 	"release",
 	"cast",
@@ -91,15 +91,15 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 			color: "slate",
 			associatedParams: ["minScore", "maxScore"],
 		},
-		dna: {
-			label: "DNA",
-			color: "indigo",
-			associatedParams: [],
-		},
 		similar: {
 			label: "Similar",
 			color: "teal",
-			associatedParams: [],
+			associatedParams: ["similarMovie", "similarTV"],
+		},
+		dna: {
+			label: "DNA",
+			color: "indigo",
+			associatedParams: ["similarDNA"],
 		},
 		genre: {
 			label: "Genre",
