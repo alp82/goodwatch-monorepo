@@ -2,6 +2,12 @@
 ```
 ---
 
+dna table
+    update dna column indexes in windmill too
+    update genome prompt
+        add humor to example output
+        include summary?
+
 DNA filter
     toggle buttons for most important categories
     threshold for similarity?
@@ -21,6 +27,18 @@ preview count for selections in edited sections (100+)
 save discover filters in db
     
 TTL 0
+
+---
+
+update windmill version
+    add worker to gw-db3
+    all workers in same group
+
+---
+
+update FE deps
+    update posthog version
+delete explore page and BE
 
 ---
 
@@ -46,8 +64,6 @@ similar headings for start page (trending, moods, themes, etc.)
 ---
 
 move caddy proxy from db1 to vector
-
-install windmill worker on gw-db3
 
 ---
 

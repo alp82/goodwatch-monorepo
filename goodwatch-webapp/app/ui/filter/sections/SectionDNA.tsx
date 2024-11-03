@@ -4,7 +4,6 @@ import {
 	MagnifyingGlassIcon,
 	TagIcon,
 } from "@heroicons/react/20/solid"
-import { UserIcon } from "@heroicons/react/24/solid"
 import React from "react"
 import Highlighter from "react-highlight-words"
 import { useDNA } from "~/routes/api.dna"
@@ -50,30 +49,27 @@ export default function SectionDNA({
 	const dna = dnaResult.data?.result || []
 
 	const dnaKeys = (similarDNA || "").split(",").filter(Boolean)
-	const selectedDNA = (dna || [])
-		.filter((dna) => dnaKeys.includes(`${dna.dna_name}:${dna.dna_value}`))
-		.map((dna) => dna.name)
 	const dnaToInclude = similarDNA
 		.split(",")
 		.filter(Boolean)
 		.map((dna) => {
-			const [dnaName, dnaValue] = dna.split(":", 2)
+			const [category, label] = dna.split(":", 2)
 			return {
-				dna_name: dnaName,
-				dna_value: dnaValue,
+				category,
+				label,
 			}
 		})
 
 	// autocomplete data
 
 	const autocompleteItems = dna.map((dna: DNAResult) => {
-		const key = `${dna.dna_name}:${dna.dna_value}`
-		const label = dna.dna_value
+		const key = `${dna.category}:${dna.label}`
+		const label = dna.label
 		return {
 			key,
 			label,
-			category: dna.dna_name,
-			count: dna.dna_count,
+			category: dna.category,
+			count: dna.count_all,
 		}
 	})
 	const autocompleteRenderItem = ({
@@ -114,7 +110,7 @@ export default function SectionDNA({
 	const updateDNA = (dnaToInclude: DNAResult[]) => {
 		updateQueryParams({
 			similarDNA: dnaToInclude
-				.map((dna) => `${dna.dna_name}:${dna.dna_value}`)
+				.map((dna) => `${dna.category}:${dna.label}`)
 				.join(","),
 		})
 	}
@@ -124,14 +120,14 @@ export default function SectionDNA({
 	) => {
 		const updatedDNAToInclude: DNAResult[] = dnaKeys.includes(selectedItem.key)
 			? dnaToInclude.filter(
-					(dna) => `${dna.dna_name}:${dna.dna_value}` !== selectedItem.key,
+					(dna) => `${dna.category}:${dna.label}` !== selectedItem.key,
 				)
 			: [
 					...dnaToInclude,
 					{
-						dna_name: selectedItem.category,
-						dna_value: selectedItem.label,
-						dna_count: selectedItem.count,
+						category: selectedItem.category,
+						label: selectedItem.label,
+						count_all: selectedItem.count,
 					},
 				]
 		updateDNA(updatedDNAToInclude)
@@ -140,8 +136,8 @@ export default function SectionDNA({
 	const handleDelete = (dnaToDelete: DNAResult) => {
 		const updatedDNAToInclude: DNAResult[] = dnaToInclude.filter(
 			(dna) =>
-				`${dna.dna_name}:${dna.dna_value}` !==
-				`${dnaToDelete.dna_name}:${dnaToDelete.dna_value}`,
+				`${dna.category}:${dna.label}` !==
+				`${dnaToDelete.category}:${dnaToDelete.label}`,
 		)
 		updateDNA(updatedDNAToInclude)
 	}
@@ -195,7 +191,7 @@ export default function SectionDNA({
 						{dnaToInclude.length > 0 ? (
 							dnaToInclude.map((dna, index) => (
 								<OneOrMoreItems
-									key={`${dna.dna_name}:${dna.dna_value}`}
+									key={`${dna.category}:${dna.label}`}
 									index={index}
 									amount={dnaToInclude.length}
 								>
@@ -203,7 +199,7 @@ export default function SectionDNA({
 										icon={TagIcon}
 										onRemove={isEditing ? () => handleDelete(dna) : undefined}
 									>
-										{dna.dna_name}: {dna.dna_value}
+										{dna.category}: {dna.label}
 									</Tag>
 								</OneOrMoreItems>
 							))
