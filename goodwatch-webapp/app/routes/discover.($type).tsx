@@ -112,7 +112,7 @@ export default function Discover() {
 		setIsAddingFilter(false)
 		setFilterToEdit(filterType)
 	}
-
+	console.log(results.length, { results })
 	return (
 		<>
 			<div className="xl-h:sticky xl-h:top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">
@@ -160,20 +160,18 @@ export default function Discover() {
 						"relative mt-4 grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5"
 					}
 				>
-					<AnimatePresence>
-						{discover.isLoading && <Spinner size="medium" />}
-						{!results.length && discover.isSuccess && (
-							<div className="my-6 text-lg italic">
-								No results. Try to change your search filters.
-							</div>
-						)}
-						{results.length > 0 &&
-							discover.isSuccess &&
-							results.map((result: DiscoverResult, index) => {
+					{discover.isLoading && <Spinner size="medium" />}
+					{!results.length && discover.isSuccess && (
+						<div className="my-6 text-lg italic">
+							No results. Try to change your search filters.
+						</div>
+					)}
+					{results.length > 0 && discover.isSuccess && (
+						<AnimatePresence>
+							{results.map((result: DiscoverResult, index) => {
 								return (
-									<div key={`${result.tmdb_id}-${result.media_type}`}>
+									<div key={`${result.media_type}-${result.tmdb_id}`}>
 										<motion.div
-											key={currentParams.sortBy}
 											initial={{
 												y: `-${Math.floor(Math.random() * 12) + 6}%`,
 												opacity: 0,
@@ -194,7 +192,8 @@ export default function Discover() {
 									</div>
 								)
 							})}
-					</AnimatePresence>
+						</AnimatePresence>
+					)}
 				</div>
 			</div>
 		</>

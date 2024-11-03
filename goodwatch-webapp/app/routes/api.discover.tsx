@@ -62,6 +62,8 @@ export const loader: LoaderFunction = async ({
 			: "") ||
 		""
 	const similarDNA = url.searchParams.get("similarDNA") || ""
+	const similarDNACombinationType =
+		url.searchParams.get("similarDNACombinationType") || ""
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"popularity") as DiscoverSortBy
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
@@ -91,6 +93,7 @@ export const loader: LoaderFunction = async ({
 		withStreamingProviders,
 		streamingPreset,
 		similarDNA,
+		similarDNACombinationType,
 		sortBy,
 		sortDirection,
 	}

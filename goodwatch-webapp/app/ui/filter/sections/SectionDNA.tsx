@@ -7,7 +7,10 @@ import {
 import React from "react"
 import Highlighter from "react-highlight-words"
 import { useDNA } from "~/routes/api.dna"
-import type { DiscoverParams } from "~/server/discover.server"
+import type {
+	DiscoverParams,
+	SimilarDNACombinationType,
+} from "~/server/discover.server"
 import type { DNAResult } from "~/server/dna.server"
 import { discoverFilters } from "~/server/types/discover-types"
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
@@ -40,7 +43,11 @@ export default function SectionDNA({
 	}
 	const debouncedSearchText = useDebounce(searchText, 200)
 
+	const [combinationType, setCombinationType] =
+		React.useState<SimilarDNACombinationType>("any")
+
 	// data retrieval
+
 	const { similarDNA = "" } = params
 	const dnaResult = useDNA({
 		text: debouncedSearchText,
@@ -110,12 +117,14 @@ export default function SectionDNA({
 
 	// update handlers
 
-	const { updateQueryParams } = useNav<Pick<DiscoverParams, "similarDNA">>()
+	const { updateQueryParams } =
+		useNav<Pick<DiscoverParams, "similarDNA" | "similarDNACombinationType">>()
 	const updateDNA = (dnaToInclude: DNAResult[]) => {
 		updateQueryParams({
 			similarDNA: dnaToInclude
 				.map((dna) => `${dna.category}:${dna.label}`)
 				.join(","),
+			similarDNACombinationType: combinationType,
 		})
 		setSearchText("")
 	}

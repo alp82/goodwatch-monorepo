@@ -1,4 +1,8 @@
-import type { StreamingPreset, WatchedType } from "~/server/discover.server"
+import type {
+	SimilarDNACombinationType,
+	StreamingPreset,
+	WatchedType,
+} from "~/server/discover.server"
 import { VOTE_COUNT_THRESHOLD } from "~/utils/constants"
 import { getRatingKeys } from "~/utils/ratings"
 import { ignoredProviders } from "~/utils/streaming-links"
@@ -26,6 +30,7 @@ interface Media {
 interface Similarity {
 	category: string
 	similarDNA: string
+	similarDNACombinationType: SimilarDNACombinationType
 	media?: Media
 }
 
@@ -86,7 +91,7 @@ export const constructFullQuery = ({
 }: ConstructFullQueryParams) => {
 	const namedQuery = `
 	${constructUnionQuery({ userId, filterMediaType, streaming, conditions, similarity, orderBy, limit })}
-	SELECT
+	SELECT DISTINCT
 		m.*,
 		sl.streaming_links
 	FROM media m
@@ -167,7 +172,7 @@ const constructSelectQuery = ({
 	const castIds = (withCast || "").split(",").map((castId) => Number(castId))
 	const crewIds = (withCrew || "").split(",").map((crewId) => Number(crewId))
 
-	const { similarDNA } = similarity || {}
+	const { similarDNA, similarDNACombinationType } = similarity || {}
 	const similarDNAList = similarDNA
 		? similarDNA.split(",").map((dna) => {
 				const [category, label] = dna.split(":", 2)
@@ -207,7 +212,7 @@ const constructSelectQuery = ({
 						.map((dna) => {
 							return `(d.category = '${dna.category}' AND d.label = '${dna.label}')`
 						})
-						.join(" OR ")})`
+						.join(similarDNACombinationType === "any" ? " OR " : " AND ")})`
 				: ""
 		}
 	  ${similarity?.category ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL

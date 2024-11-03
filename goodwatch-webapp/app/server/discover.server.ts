@@ -15,6 +15,7 @@ import type { AllRatings } from "~/utils/ratings"
 
 export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
 export type StreamingPreset = "everywhere" | "mine" | "custom"
+export type SimilarDNACombinationType = "all" | "any"
 export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
 
 export interface DiscoverParams {
@@ -40,6 +41,7 @@ export interface DiscoverParams {
 	streamingPreset: StreamingPreset
 	withStreamingProviders: string
 	similarDNA: string
+	similarDNACombinationType: SimilarDNACombinationType
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
 }
@@ -89,6 +91,7 @@ async function _getDiscoverResults({
 	withStreamingProviders,
 	streamingPreset,
 	similarDNA,
+	similarDNACombinationType,
 	sortBy,
 	sortDirection,
 }: DiscoverParams): Promise<DiscoverResults> {
@@ -137,6 +140,7 @@ async function _getDiscoverResults({
 		},
 		similarity: {
 			similarDNA,
+			similarDNACombinationType,
 		},
 		orderBy: {
 			column,

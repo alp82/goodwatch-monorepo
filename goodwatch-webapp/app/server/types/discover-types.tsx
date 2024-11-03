@@ -99,7 +99,7 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 		dna: {
 			label: "DNA",
 			color: "indigo",
-			associatedParams: ["similarDNA"],
+			associatedParams: ["similarDNA", "similarDNACombinationType"],
 		},
 		genre: {
 			label: "Genre",
