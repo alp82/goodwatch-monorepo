@@ -18,6 +18,8 @@ locks:
   f/combine_data/copy_tv/create_tv_table: b3b4c8deb322d38d08b87416d9ad42190b5b1736ad62bd79d9bb79607ba3d4c3
   f/combine_data/copy_tv/main: 50f783534770d823800b827425f0da8d15a19ee49f618b68d89c11e86aae76af
   f/data_source/common: 442d137713e1bfd91db22e185a42c6f05ed356420d7cb5cb7d5e1f4a4464237e
+  f/genome/dna/copy_dna_data: 6aec99a34d800d03b0d5de008b1571dc8de730acd37b521e33b56ef51b31a332
+  f/genome/dna/create_dna_table: 34229d62beacfa597a2269df80046e4ba802038f6e1ea80859b1ac5c137e5b18
   f/genome/generate/fetch: 268fdf30857ceaaa2d817e5e4a17bb486ba9213fe8167f9135a59e44fe151c37
   f/genome/generate/fetch_from_chat: dce97009a8757f62a5a81dc0355714503c1c6861149fcb2a003f16d4fd477c2d
   f/genome/generate/iterate: 1dd0d8df0f33b8b37c02c8505d5f7b2d856d95c3181c56ff52fe2469e3413dcd
@@ -30,6 +32,7 @@ locks:
   f/genome/iterate: 43415039746e51ac0784840fd73060d341f001b43ae1704e30932e663818d6db
   f/genome/models: d3809c7c3f9a3273e16e4cbc1fddce9c2ea7a12977e03657da03eebc0ed91186
   f/genome/openai: 56bff0b76f5ebc588d0607b52ad1282a4c2e58e4a38057495724600b54c4e0a5
+  f/other/proxy/bland: fa09d17e54413ae64badaafb673b21ac089f079edb95886b1f898673a127ed83
   f/priority/next: 7424cdbc20eea4a638208280c39182c40c5f4d3a0f770ce83ad94b82f51257cd
   f/rotten_web/rotten_tomatoes_crawl_ratings/fetch: 5109f5bd2c6713ca53cae41e3ceb20786cd0f84936ed5d1a3bedba776498063f
   f/tmdb_api/models: eb7b33e4171813349524ccf302e8932d66b988ab7fe5992929463ac07cc4136c
