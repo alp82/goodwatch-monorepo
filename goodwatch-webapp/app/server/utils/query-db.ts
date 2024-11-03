@@ -49,6 +49,11 @@ interface Conditions {
 	withoutGenres?: string[]
 }
 
+interface ConstructSimilarityQueryParams {
+	type: MediaType
+	similarity?: Similarity
+}
+
 interface ConstructUserQueryParams {
 	userId?: string
 	type: MediaType
@@ -169,19 +174,10 @@ const constructSelectQuery = ({
 	} = conditions
 
 	const userJoin = constructUserQuery({ userId, type, watchedType })
+	const similarityJoins = constructSimilarityQueryParams({ type, similarity })
+
 	const castIds = (withCast || "").split(",").map((castId) => Number(castId))
 	const crewIds = (withCrew || "").split(",").map((crewId) => Number(crewId))
-
-	const { similarDNA, similarDNACombinationType } = similarity || {}
-	const similarDNAList = similarDNA
-		? similarDNA.split(",").map((dna) => {
-				const [category, label] = dna.split(":", 2)
-				return {
-					category,
-					label,
-				}
-			})
-		: []
 
 	return `
 	SELECT DISTINCT
@@ -191,30 +187,12 @@ const constructSelectQuery = ({
 			.map((field) => `m.${field}`)
 			.join(",\n\t")}
 	FROM ${type === "movie" ? "movies" : "tv"} m
-	${
-		similarDNAList.length > 0
-			? `JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id)`
-			: ""
-	}
-	${
-		similarity?.category
-			? `JOIN vectors_media v ON v.tmdb_id = m.tmdb_id AND v.media_type = media_type AND v.${similarity.category}_vector IS NOT NULL`
-			: ""
-	}
+	${similarityJoins}
 	${userJoin}
 	WHERE
 	  m.title IS NOT NULL 
 	  AND m.release_year IS NOT NULL 
 	  AND m.poster_path IS NOT NULL 
-	  ${
-			similarDNAList.length > 0
-				? `AND (${similarDNAList
-						.map((dna) => {
-							return `(d.category = '${dna.category}' AND d.label = '${dna.label}')`
-						})
-						.join(similarDNACombinationType === "any" ? " OR " : " AND ")})`
-				: ""
-		}
 	  ${similarity?.category ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
@@ -229,6 +207,43 @@ const constructSelectQuery = ({
 	ORDER BY ${similarity?.category ? `v.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`} 
 	LIMIT ${limit}
   `
+}
+
+const constructSimilarityQueryParams = ({
+	type,
+	similarity,
+}: ConstructSimilarityQueryParams) => {
+	const { similarDNA, similarDNACombinationType } = similarity || {}
+	const similarDNAList = similarDNA
+		? similarDNA.split(",").map((dna) => {
+				const [category, label] = dna.split(":", 2)
+				return {
+					category,
+					label,
+				}
+			})
+		: []
+
+	return similarDNAList.length > 0
+		? similarDNACombinationType === "all"
+			? // For "all", join each category/label pair as a separate JOIN
+				similarDNAList
+					.map(
+						(dna, index) =>
+							`JOIN dna d${index} ON m.tmdb_id = ANY(d${index}.${type}_tmdb_id)
+							 AND d${index}.category = '${dna.category}' 
+							 AND d${index}.label = '${dna.label}'`,
+					)
+					.join("\n")
+			: // For "any", join once with OR conditions
+				`JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id) 
+				   AND (${similarDNAList
+							.map(
+								(dna) =>
+									`(d.category = '${dna.category}' AND d.label = '${dna.label}')`,
+							)
+							.join(" OR ")})`
+		: ""
 }
 
 const constructUserQuery = ({

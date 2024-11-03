@@ -3,12 +3,16 @@
 ---
 
 dna
-    don't close/reset autocomplete suggestions after selection
+    AND does not work
 
 Similar filter
     toggle buttons for most important categories
     threshold for similarity?
     explore buttons link to discover
+
+streaming
+    disabled streaming filter activates "mine" filter
+    buy/rent toggle
 
 genre
     show selections

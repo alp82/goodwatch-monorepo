@@ -234,6 +234,7 @@ export default function SectionDNA({
 									key={`${dna.category}:${dna.label}`}
 									index={index}
 									amount={dnaToInclude.length}
+									mode={combinationType}
 								>
 									<Tag
 										icon={TagIcon}
