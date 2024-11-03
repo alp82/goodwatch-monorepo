@@ -5,6 +5,7 @@ import placeholder from "~/img/placeholder-poster.png"
 import type { MediaType, SearchResult } from "~/server/search.server"
 import type { AutocompleteItem } from "~/ui/form/Autocomplete"
 import { classNames, titleToDashed } from "~/utils/helpers"
+import useOutsideClick from "~/utils/pointer"
 
 export interface SearchAutocompleteItem extends AutocompleteItem {
 	mediaType: MediaType
@@ -13,6 +14,7 @@ export interface SearchAutocompleteItem extends AutocompleteItem {
 }
 
 export default function Search() {
+	// TODO debounce
 	const fetcher = useFetcher()
 	const autocompleteItems: SearchAutocompleteItem[] = (
 		fetcher.data?.searchResults || []
@@ -60,9 +62,11 @@ export default function Search() {
 		)
 	}
 
-	// TODO debounce
+	const { ref } = useOutsideClick({
+		onClickOutside: () => setIsFocused(false),
+	})
 	return (
-		<div className="group focus-within">
+		<div ref={ref} className="group focus-within">
 			<fetcher.Form
 				method="get"
 				action="/api/search"
@@ -94,7 +98,6 @@ export default function Search() {
 						onChange={(event) => fetcher.submit(event.target.form)}
 						onClick={() => setIsFocused(true)}
 						onFocus={() => setIsFocused(true)}
-						onBlur={() => setIsFocused(false)}
 					/>
 				</div>
 				{isFocused && autocompleteItems.length && (
