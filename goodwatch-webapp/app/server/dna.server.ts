@@ -31,7 +31,7 @@ export async function _getDNA({ text = "" }: DNAParams): Promise<DNAResults> {
 	const query = `
 		SELECT category, label, count_all
 		FROM dna
-		WHERE label ILIKE $1
+		WHERE category ILIKE $1 OR label ILIKE $1
 		ORDER BY count_all DESC
 		LIMIT ${LIMIT};
 	`

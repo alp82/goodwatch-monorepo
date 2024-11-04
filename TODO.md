@@ -2,13 +2,15 @@
 ```
 ---
 
-dna
-    AND does not work
-
 Similar filter
     toggle buttons for most important categories
     threshold for similarity?
     explore buttons link to discover
+
+presets at the top
+    I'm in the mood for...
+    Something from the past...
+    What I didn't see yet...
 
 streaming
     disabled streaming filter activates "mine" filter
@@ -95,6 +97,26 @@ user profile
     show all scores
     grouped by tier
     shareable link
+    
+plan to watch
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
+    search & filter
+    easy adding more
+    
+    remove separate wishlist page?
+
+watched/ratings page:
+    rating stats (1-10 distribution)
+    search & filter
+    easy rating more
+
+favorites page
+    search & filter
+    easy adding more
+
 
 ---
 
@@ -352,24 +374,10 @@ similarity issues
 
 ---
 
-wishlist
-    not logged in handling
-    split into two sections:
-        watch now
-        rest
-    search & filter
-    easy adding more
-    
-    remove separate wishlist page?
-
-watched/ratings page:
-    rating stats (1-10 distribution)
-    search & filter
-    easy rating more
-
-favorites page
-    search & filter
-    easy adding more
+Thanks page
+    tools & libraries
+    content creators
+    beta tester shoutouts
 
 ---
 

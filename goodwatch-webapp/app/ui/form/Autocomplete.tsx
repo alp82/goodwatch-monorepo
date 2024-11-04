@@ -31,6 +31,7 @@ export interface AutocompleteProps<RenderItem extends AutocompleteItem> {
 	placeholder: string
 	icon: ReactNode
 	autocompleteItems: RenderItem[]
+	additionalFieldsToMatch?: (keyof RenderItem)[]
 	renderItem: (renderItemParams: RenderItemParams<RenderItem>) => ReactNode
 	onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
 	onSelect?: (selectedItem: RenderItem) => void
@@ -41,6 +42,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 	placeholder,
 	icon,
 	autocompleteItems,
+	additionalFieldsToMatch = [],
 	renderItem,
 	onChange,
 	onSelect,
@@ -52,7 +54,15 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 	const autocompleteMatches = query
 		? autocompleteItems.filter((item) => {
 				const lowercaseQuery = query.toLowerCase()
-				return item.label.toLowerCase().includes(lowercaseQuery)
+				const fieldsToMatch = [
+					"label" as keyof RenderItem,
+					...additionalFieldsToMatch,
+				]
+				return (
+					fieldsToMatch.filter((field) =>
+						String(item[field]).toLowerCase().includes(lowercaseQuery),
+					).length > 0
+				)
 			})
 		: autocompleteItems
 

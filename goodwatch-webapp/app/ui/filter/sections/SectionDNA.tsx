@@ -113,10 +113,15 @@ export default function SectionDNA({
 						title={`Used in ${item.count} movies and shows`}
 					>
 						<div className="w-52 text-gray-400 font-medium">
-							{item.category}{" "}
+							<Highlighter
+								highlightClassName="bg-yellow-500 text-gray-900"
+								searchWords={[searchText]}
+								autoEscape={true}
+								textToHighlight={item.category}
+							/>{" "}
 						</div>
 						<Highlighter
-							highlightClassName="font-bold bg-yellow-500 text-gray-900"
+							highlightClassName="bg-yellow-500 text-gray-900"
 							searchWords={[searchText]}
 							autoEscape={true}
 							textToHighlight={item.label}
@@ -203,7 +208,7 @@ export default function SectionDNA({
 								onChange={handleChangeCombinationType}
 							/>
 							<div className="my-2 w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
-								<Autocomplete<AutocompleteItem>
+								<Autocomplete<(typeof autocompleteItems)[number]>
 									name="query"
 									placeholder="Search DNA"
 									icon={
@@ -220,6 +225,7 @@ export default function SectionDNA({
 										)
 									}
 									autocompleteItems={autocompleteItems}
+									additionalFieldsToMatch={["category"]}
 									renderItem={autocompleteRenderItem}
 									onChange={handleChange}
 									onSelect={handleSelect}
