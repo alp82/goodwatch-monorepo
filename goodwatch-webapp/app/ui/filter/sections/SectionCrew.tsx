@@ -188,6 +188,7 @@ export default function SectionCrew({
 									key={crew.id}
 									index={index}
 									amount={selectedCrew.length}
+									mode="any"
 								>
 									<Tag
 										icon={UserIcon}

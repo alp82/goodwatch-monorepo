@@ -119,8 +119,8 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 		},
 		similar: {
 			label: "Similar",
-			color: "teal",
-			associatedParams: ["similarMovie", "similarTV"],
+			color: "rose",
+			associatedParams: ["similarTitles"],
 		},
 		dna: {
 			label: "DNA",

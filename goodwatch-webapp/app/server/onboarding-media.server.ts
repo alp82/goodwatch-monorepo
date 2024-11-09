@@ -37,7 +37,7 @@ export interface OnboardingMediaParams {
 
 export const getOnboardingMedia = async (params: OnboardingMediaParams) => {
 	return await cached<OnboardingMediaParams, OnboardingMediaResult>({
-		name: "countries",
+		name: "onboarding-media",
 		target: _getOnboardingMedia,
 		params,
 		// TTL can't be set here because every user action affects the results

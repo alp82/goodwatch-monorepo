@@ -19,7 +19,11 @@ export const useNav = <T extends {}>() => {
 			}
 		}
 
-		const safeQueryString = newParams.toString().replace(/%2C/g, ",")
+		const safeQueryString = newParams
+			.toString()
+			.replace(/%2C/g, ",")
+			.replace(/%3A/g, ":")
+			.replace(/%3B/g, ";")
 		navigate(`${location.pathname}?${safeQueryString}`, options)
 	}
 

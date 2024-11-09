@@ -1,8 +1,10 @@
+import type { WithSimilar } from "~/routes/api.similar-media"
 import type {
 	SimilarDNACombinationType,
 	StreamingPreset,
 	WatchedType,
 } from "~/server/discover.server"
+import { mapCategoryToVectorName } from "~/ui/dna/dna_utils"
 import { VOTE_COUNT_THRESHOLD } from "~/utils/constants"
 import { getRatingKeys } from "~/utils/ratings"
 import { ignoredProviders } from "~/utils/streaming-links"
@@ -31,6 +33,7 @@ interface Similarity {
 	category: string
 	similarDNA: string
 	similarDNACombinationType: SimilarDNACombinationType
+	withSimilar: WithSimilar[]
 	media?: Media
 }
 
@@ -182,7 +185,16 @@ const constructSelectQuery = ({
 	return `
 	SELECT DISTINCT
 		'${type}' as media_type,
-		${similarity?.category ? `v.${similarity.category}_vector,` : ""}
+		${
+			similarity?.withSimilar?.[0]?.categories
+				? `(${similarity.withSimilar[0].categories
+						.map((category) => {
+							const categoryName = mapCategoryToVectorName(category)
+							return `(vm.${categoryName}_vector <=> vm1.${categoryName}_vector)`
+						})
+						.join(" + ")}) as similarity_score,`
+				: ""
+		}
 		${getCommonFields()
 			.map((field) => `m.${field}`)
 			.join(",\n\t")}
@@ -193,7 +205,7 @@ const constructSelectQuery = ({
 	  m.title IS NOT NULL 
 	  AND m.release_year IS NOT NULL 
 	  AND m.poster_path IS NOT NULL 
-	  ${similarity?.category ? `AND v.${similarity.category}_vector` : `AND ${orderBy.column}`} IS NOT NULL
+	  AND ${orderBy.column} IS NOT NULL
 		${streaming ? `AND ${getStreamingLinksCondition(type, streaming)}` : ""}
 		${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
 		${maxScore ? "AND aggregated_overall_score_normalized_percent <= :::maxScore" : ""}
@@ -204,7 +216,12 @@ const constructSelectQuery = ({
 		${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}
 		${minScore || orderBy.column === "aggregated_overall_score_normalized_percent" ? `AND m.aggregated_overall_score_voting_count >= ${VOTE_COUNT_THRESHOLD}` : ""}
 		${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}
-	ORDER BY ${similarity?.category ? `v.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`} 
+	ORDER BY 
+	  ${
+			similarity?.withSimilar?.[0]?.categories
+				? "similarity_score ASC"
+				: `${orderBy.column} ${orderBy.direction}`
+		}
 	LIMIT ${limit}
   `
 }
@@ -213,7 +230,8 @@ const constructSimilarityQueryParams = ({
 	type,
 	similarity,
 }: ConstructSimilarityQueryParams) => {
-	const { similarDNA, similarDNACombinationType } = similarity || {}
+	const { similarDNA, similarDNACombinationType, withSimilar } =
+		similarity || {}
 	const similarDNAList = similarDNA
 		? similarDNA.split(",").map((dna) => {
 				const [category, label] = dna.split(":", 2)
@@ -224,26 +242,43 @@ const constructSimilarityQueryParams = ({
 			})
 		: []
 
-	return similarDNAList.length > 0
-		? similarDNACombinationType === "all"
-			? // For "all", join each category/label pair as a separate JOIN
-				similarDNAList
-					.map(
-						(dna, index) =>
-							`JOIN dna d${index} ON m.tmdb_id = ANY(d${index}.${type}_tmdb_id)
+	const similarDNAJoins =
+		similarDNAList.length > 0
+			? similarDNACombinationType === "all"
+				? // For "all", join each category/label pair as a separate JOIN
+					similarDNAList
+						.map(
+							(dna, index) =>
+								`JOIN dna d${index} ON m.tmdb_id = ANY(d${index}.${type}_tmdb_id)
 							 AND d${index}.category = '${dna.category}' 
 							 AND d${index}.label = '${dna.label}'`,
-					)
-					.join("\n")
-			: // For "any", join once with OR conditions
-				`JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id) 
+						)
+						.join("\n")
+				: // For "any", join once with OR conditions
+					`JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id) 
 				   AND (${similarDNAList
 							.map(
 								(dna) =>
 									`(d.category = '${dna.category}' AND d.label = '${dna.label}')`,
 							)
 							.join(" OR ")})`
-		: ""
+			: ""
+
+	const withSimilarList = withSimilar || []
+	const similarTitleJoins =
+		withSimilarList.length > 0
+			? [
+					`JOIN vectors_media vm ON vm.tmdb_id = m.tmdb_id AND vm.media_type = '${type}'`,
+					...withSimilarList.map((similar) => {
+						// TODO add support for multiple titles
+						return `
+						JOIN vectors_media vm1 ON vm1.tmdb_id = ${similar.tmdbId} AND vm1.media_type = '${similar.mediaType}'
+					`
+					}),
+				].join("\n")
+			: ""
+
+	return [similarDNAJoins, similarTitleJoins].filter(Boolean).join("\n")
 }
 
 const constructUserQuery = ({

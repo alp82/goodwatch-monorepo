@@ -3,32 +3,27 @@
 ---
 
 Similar filter
-    toggle buttons for most important categories
-    threshold for similarity?
-    explore buttons link to discover
+    exclude movie itself from results
 
 presets at the top
     I'm in the mood for...
     Something from the past...
     What I didn't see yet...
 
-streaming
-    disabled streaming filter activates "mine" filter
-    buy/rent toggle
-
 genre
     show selections
     fix incompatible genre & media type combinations
 
-discover pagination
-    tabs with total number of results (100+)
-    load more on scroll?
-    filter suggestions at the bottom?
+dna search
+    word by word
+    select category?
 
-preview count for selections in edited sections (100+)
+streaming
+    disabled streaming filter activates "mine" filter
+    buy/rent toggle
 
-save discover filters in db
-    
+threshold for similarity?
+
 TTL 0
 
 ---
@@ -41,11 +36,8 @@ update genome prompt
     add humor to example output
     include summary?
 
----
-
-update FE deps
-    update posthog version
-delete explore page and BE
+bad examples:
+    https://goodwatch.app/movie/976734-canary-black
 
 ---
 
@@ -54,6 +46,57 @@ score selector
 
 start page word carousel
     DNA categories
+
+---
+
+user profile
+    taste matching (logged in users only - or a teaser)
+        you both like ABC
+    show all scores
+    grouped by tier
+    shareable link
+    
+plan to watch
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
+    search & filter
+    easy adding more
+    
+    remove separate wishlist page?
+
+watched/ratings page:
+    rating stats (1-10 distribution)
+    search & filter
+    easy rating more
+        personalized?
+
+favorites page
+    search & filter
+    easy adding more
+
+
+---
+
+details
+    section title anchors
+    DNA different sections
+        subgenres below genres (filter standard genres)
+        mood and themes in summary
+    top DNA categories, hide the rest
+    no flickering for explore previews
+    swiper for explore preview
+
+movie card
+    overlay: show movie or tv icon 
+    max 3 streaming overlays
+    
+---
+
+update FE deps
+    update posthog version
+delete explore page and BE
 
 ---
 
@@ -81,6 +124,17 @@ sign up
     
 ---
 
+discover pagination
+    tabs with total number of results (100+)
+    load more on scroll?
+    filter suggestions at the bottom?
+
+preview count for selections in edited sections (100+)
+
+save discover filters in db
+    
+---
+
 Posthog
     UTM
 
@@ -88,47 +142,6 @@ Posthog
 
 command palette
     CTRL + K
-
----
-
-user profile
-    taste matching (logged in users only - or a teaser)
-        you both like ABC
-    show all scores
-    grouped by tier
-    shareable link
-    
-plan to watch
-    not logged in handling
-    split into two sections:
-        watch now
-        rest
-    search & filter
-    easy adding more
-    
-    remove separate wishlist page?
-
-watched/ratings page:
-    rating stats (1-10 distribution)
-    search & filter
-    easy rating more
-
-favorites page
-    search & filter
-    easy adding more
-
-
----
-
-details
-    section title anchors
-    top DNA categories, hide the rest
-    no flickering for explore previews
-    swiper for explore preview
-
-movie card
-    overlay: show movie or tv icon 
-    max 3 streaming overlays
 
 ---
 
@@ -260,6 +273,16 @@ home screen
 
 ---
 
+sound section
+    soundtrack info
+    sound bites / board
+
+---
+
+famous quotes section
+
+---
+
 explore
     useQuery
     progress text (generating results...)
@@ -377,7 +400,14 @@ similarity issues
 Thanks page
     tools & libraries
     content creators
+        josh
     beta tester shoutouts
+    community shoutouts
+        Lost Design
+        Mohit UX audit
+    credits for design inspiration
+        https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&node-type=canvas&t=HNeQ9QDw29BnwYEl-0
+        https://imdb.shyakadavis.me/title#technical-specs
 
 ---
 
@@ -493,6 +523,11 @@ translated titles in current language
 ---
 
 offline support
+
+---
+
+dna
+    political undertone (famas)
 
 ---
 
@@ -755,9 +790,6 @@ streaming explanations
 android app
 iphone app
 
-credits for design inspiration:
-    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&node-type=canvas&t=HNeQ9QDw29BnwYEl-0
-    https://imdb.shyakadavis.me/title#technical-specs
 
 data source: existing crawlers use existing url instead of guessing
 data-source: letterboxd scores

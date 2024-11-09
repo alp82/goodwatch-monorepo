@@ -182,6 +182,7 @@ export default function SectionCast({
 									key={cast.id}
 									index={index}
 									amount={selectedCast.length}
+									mode="any"
 								>
 									<Tag
 										icon={UserIcon}

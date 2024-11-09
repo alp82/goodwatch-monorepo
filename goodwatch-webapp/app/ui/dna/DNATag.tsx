@@ -1,6 +1,6 @@
 import { Link } from "@remix-run/react"
 import React from "react"
-import { getCategoryColor, mapCategoryToVectorName } from "~/ui/dna/dna_utils"
+import { getCategoryColor } from "~/ui/dna/dna_utils"
 
 export interface DNATagProps {
 	category: string
@@ -10,8 +10,6 @@ export interface DNATagProps {
 }
 
 export function DNATag({ category, label, linkDisabled = false }: DNATagProps) {
-	const vectorCategory = mapCategoryToVectorName(category)
-
 	const tagElement = (
 		<span
 			className={`px-2 py-1 ${getCategoryColor(category)} text-white text-xs xs:text-sm sm:text-base border-gray-600 border-2 rounded-md`}
@@ -23,7 +21,10 @@ export function DNATag({ category, label, linkDisabled = false }: DNATagProps) {
 	return linkDisabled ? (
 		tagElement
 	) : (
-		<Link to={`/explore/all/${vectorCategory}/${label}`} prefetch="intent">
+		<Link
+			to={`/discover?type=all&similarDNA=${category}:${label}&similarDNACombinationType=any`}
+			prefetch="intent"
+		>
 			{tagElement}
 		</Link>
 	)

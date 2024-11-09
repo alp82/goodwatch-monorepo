@@ -142,12 +142,15 @@ export default function SectionDNA({
 
 	const { updateQueryParams } =
 		useNav<Pick<DiscoverParams, "similarDNA" | "similarDNACombinationType">>()
-	const updateDNA = (dnaToInclude: DNAResult[]) => {
+	const updateDNA = (
+		dnaToInclude: DNAResult[],
+		updatedCombinationType: string,
+	) => {
 		updateQueryParams({
 			similarDNA: dnaToInclude
 				.map((dna) => `${dna.category}:${dna.label}`)
 				.join(","),
-			similarDNACombinationType: combinationType,
+			similarDNACombinationType: updatedCombinationType,
 		})
 	}
 
@@ -166,7 +169,7 @@ export default function SectionDNA({
 						count_all: selectedItem.count,
 					},
 				]
-		updateDNA(updatedDNAToInclude)
+		updateDNA(updatedDNAToInclude, combinationType)
 	}
 
 	const handleDelete = (dnaToDelete: DNAResult) => {
@@ -175,11 +178,11 @@ export default function SectionDNA({
 				`${dna.category}:${dna.label}` !==
 				`${dnaToDelete.category}:${dnaToDelete.label}`,
 		)
-		updateDNA(updatedDNAToInclude)
+		updateDNA(updatedDNAToInclude, combinationType)
 	}
 
 	const handleRemoveAll = () => {
-		updateDNA([])
+		updateDNA([], "")
 		setSearchText("")
 		onClose()
 	}

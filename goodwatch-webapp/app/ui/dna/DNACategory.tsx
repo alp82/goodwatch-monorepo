@@ -1,4 +1,4 @@
-import { MapIcon } from "@heroicons/react/24/solid"
+import { CubeIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useInView } from "framer-motion"
 import React, { useRef } from "react"
@@ -9,7 +9,7 @@ import type { MediaType } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { Poster } from "~/ui/Poster"
 import { DNATag } from "~/ui/dna/DNATag"
-import { mapCategoryToVectorName, spoilerCategories } from "~/ui/dna/dna_utils"
+import { spoilerCategories } from "~/ui/dna/dna_utils"
 
 export interface DNACategoryProps {
 	without: {
@@ -37,7 +37,7 @@ export default function DNACategory({
 	const explore = useExplore({
 		category,
 		text,
-		isInView,
+		isInView: false,
 	})
 
 	const results = explore.data?.results || []
@@ -92,11 +92,11 @@ export default function DNACategory({
 				<div className="mt-4">
 					<Link
 						className="px-3 py-2 border-2 border-gray-500 bg-slate-700 text-gray-100 text-sm rounded-md hover:bg-slate-600 hover:text-white"
-						to={`/explore/all/${mapCategoryToVectorName(category)}/${text}`}
+						to={`/discover?type=all&similarTitles=${without.tmdb_id}:${without.media_type}:${category}`}
 						prefetch="viewport"
 					>
-						<MapIcon className="w-4 h-4 inline-block mr-2" />
-						Explore: <span className="font-bold">Similar {category}</span>
+						<CubeIcon className="w-4 h-4 inline-block mr-2" />
+						Discover <span className="font-bold">Similar {category}</span>
 					</Link>
 				</div>
 			</div>

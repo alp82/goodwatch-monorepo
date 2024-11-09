@@ -5,6 +5,7 @@ import {
 } from "@remix-run/node"
 
 import { useQuery } from "@tanstack/react-query"
+import type { WithSimilar } from "~/routes/api.similar-media"
 import {
 	type DiscoverFilters,
 	type DiscoverParams,
@@ -16,6 +17,8 @@ import {
 } from "~/server/discover.server"
 import type { FilterMediaType } from "~/server/search.server"
 import { getUserSettings } from "~/server/user-settings.server"
+import type { MediaType } from "~/server/utils/query-db"
+import { sortedDNACategories } from "~/ui/dna/dna_utils"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { getLocaleFromRequest } from "~/utils/locale"
 
@@ -64,6 +67,7 @@ export const loader: LoaderFunction = async ({
 	const similarDNA = url.searchParams.get("similarDNA") || ""
 	const similarDNACombinationType =
 		url.searchParams.get("similarDNACombinationType") || ""
+	const similarTitles = url.searchParams.get("similarTitles") || ""
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"popularity") as DiscoverSortBy
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
@@ -94,6 +98,7 @@ export const loader: LoaderFunction = async ({
 		streamingPreset,
 		similarDNA,
 		similarDNACombinationType,
+		similarTitles,
 		sortBy,
 		sortDirection,
 	}
@@ -120,4 +125,20 @@ export const useDiscover = ({ params }: UseDiscoverParams) => {
 		queryKey: [...queryKeyDiscover, queryString],
 		queryFn: async () => await (await fetch(url)).json(),
 	})
+}
+
+// Utils
+
+export const convertSimilarTitles = (similarTitles: string): WithSimilar[] => {
+	return similarTitles
+		.split(",")
+		.filter(Boolean)
+		.map((similarTitle) => (similarTitle || "").split(":").filter(Boolean))
+		.map(([tmdbId, mediaType, categories]) => ({
+			tmdbId,
+			mediaType: mediaType as MediaType,
+			categories: (categories || "")
+				.split(";")
+				.filter((category) => sortedDNACategories.includes(category)),
+		}))
 }

@@ -10,6 +10,7 @@ import SectionDNA from "~/ui/filter/sections/SectionDNA"
 import SectionGenre from "~/ui/filter/sections/SectionGenre"
 import SectionRelease from "~/ui/filter/sections/SectionRelease"
 import SectionScore from "~/ui/filter/sections/SectionScore"
+import SectionSimilar from "~/ui/filter/sections/SectionSimilar"
 import SectionStreaming from "~/ui/filter/sections/SectionStreaming"
 import SectionWatch from "~/ui/filter/sections/SectionWatch"
 
@@ -53,6 +54,13 @@ export default function FilterBar({
 					params={params}
 					editing={filterToEdit === "score"}
 					onEdit={() => onEditToggle("score")}
+					onClose={handleClose}
+				/>
+
+				<SectionSimilar
+					params={params}
+					editing={filterToEdit === "similar"}
+					onEdit={() => onEditToggle("similar")}
 					onClose={handleClose}
 				/>
 

@@ -1,3 +1,5 @@
+import { convertSimilarTitles } from "~/routes/api.discover"
+import type { WithSimilar } from "~/routes/api.similar-media"
 import {
 	type StreamingLink,
 	type StreamingProviders,
@@ -6,6 +8,7 @@ import {
 import { getGenresAll } from "~/server/genres.server"
 import {
 	type FilterMediaType,
+	type MediaType,
 	constructFullQuery,
 	filterMediaTypes,
 } from "~/server/utils/query-db"
@@ -42,6 +45,7 @@ export interface DiscoverParams {
 	withStreamingProviders: string
 	similarDNA: string
 	similarDNACombinationType: SimilarDNACombinationType
+	similarTitles: string
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
 }
@@ -92,6 +96,7 @@ async function _getDiscoverResults({
 	streamingPreset,
 	similarDNA,
 	similarDNACombinationType,
+	similarTitles,
 	sortBy,
 	sortDirection,
 }: DiscoverParams): Promise<DiscoverResults> {
@@ -114,6 +119,8 @@ async function _getDiscoverResults({
 	const genreNames = genres
 		.filter((genre) => withGenres.includes(genre.id.toString()))
 		.map((genre) => genre.name)
+
+	const withSimilar = convertSimilarTitles(similarTitles)
 
 	const { query, params } = constructFullQuery({
 		userId,
@@ -141,6 +148,7 @@ async function _getDiscoverResults({
 		similarity: {
 			similarDNA,
 			similarDNACombinationType,
+			withSimilar,
 		},
 		orderBy: {
 			column,
