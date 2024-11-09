@@ -102,7 +102,7 @@ export default function SectionSimilar({
 	const autocompleteItems = searchResults.map((searchResult) => {
 		return {
 			key: `${searchResult.tmdb_id.toString()}:${searchResult.media_type}`,
-			label: searchResult.title,
+			label: `${searchResult.title} (${searchResult.release_year})`,
 			img: searchResult.poster_path,
 		}
 	})
