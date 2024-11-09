@@ -1,5 +1,4 @@
 import type { MetaFunction } from "@remix-run/node"
-import { Link } from "@remix-run/react"
 import type { loader } from "~/routes/discover"
 
 export function headers() {

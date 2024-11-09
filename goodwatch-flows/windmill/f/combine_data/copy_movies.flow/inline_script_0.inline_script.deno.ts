@@ -29,6 +29,7 @@ export async function main(db: Postgresql) {
     `CREATE INDEX IF NOT EXISTS idx_movies_trope_names ON "movies" USING gin("trope_names");`,
     `CREATE INDEX IF NOT EXISTS idx_movies_crew ON "movies" USING gin("crew");`,
     `CREATE INDEX IF NOT EXISTS idx_movies_cast ON "movies" USING gin("cast");`,
+    `CREATE INDEX IF NOT EXISTS idx_movies_dna ON "movies" USING gin("dna");`,
     `CREATE INDEX IF NOT EXISTS idx_movies_streaming_providers ON "movies" USING gin("streaming_providers");`,
     `CREATE INDEX IF NOT EXISTS idx_movies_aggregated_scores_and_votes ON "movies"(aggregated_overall_score_normalized_percent DESC, aggregated_overall_score_voting_count);`,
   ];

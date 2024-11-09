@@ -45,7 +45,14 @@ export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
 		<button
 			type="button"
 			onClick={handleSignInWithGoogle}
-			className="flex w-full items-center justify-center gap-2 rounded-md bg-white px-3 py-2 font-semibold text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent"
+			className="
+				w-full px-3 py-2
+				flex items-center justify-center gap-2
+				rounded-md
+				bg-gray-100 hover:bg-white
+				shadow-sm ring-2 ring-inset ring-gray-400 hover:ring-blue-500 focus-visible:ring-transparent
+				font-semibold text-sm text-gray-900
+			"
 		>
 			{googleLogo}
 			Sign In

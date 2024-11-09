@@ -1,12 +1,32 @@
 # Change Log
 
-All notable changes to GoodWatch will be documented in this file.
+Notable changes to GoodWatch will be documented in this file.
 
-## [0.4.3] 2024-10-xx
+## [0.5.0] 2024-10-xx
+
+Minor Release: **Improved Discovery**
+
+### Added
+* New filters for Discover page, now including:
+    - Streaming Services
+    - Genres
+    - Release Date
+    - Cast & Crew
+    - Score / Ratings
+    - DNA
+
+### Changed
+* Better UX for Discover page
+* Long select lists are virtualized for better performance
+
+### Fixed
+
+## [0.4.3] 2024-10-16
 
 ### Added
 
 ### Changed
+* Better watch button colors and texts
 
 ### Fixed
 

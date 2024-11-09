@@ -11,7 +11,7 @@ import {
 	getExploreResults,
 } from "~/server/explore.server"
 import type { FilterMediaType } from "~/server/search.server"
-import { mapCategoryToVectorName } from "~/ui/dna/utils"
+import { mapCategoryToVectorName } from "~/ui/dna/dna_utils"
 
 // type definitions
 
@@ -55,17 +55,20 @@ export interface UseExploreParams {
 	type?: FilterMediaType
 	category: ExploreParams["category"]
 	text: ExploreParams["text"]
+	isInView: boolean
 }
 
 export const useExplore = ({
 	type = "all",
 	category,
 	text,
+	isInView,
 }: UseExploreParams) => {
 	const vectorCategory = mapCategoryToVectorName(category)
 	const url = `/api/explore?type=${type}&category=${vectorCategory}&text=${text}`
 	return useQuery<GetExploreResult>({
 		queryKey: [...queryKeyUserData, type, vectorCategory, text],
 		queryFn: async () => await (await fetch(url)).json(),
+		enabled: isInView,
 	})
 }

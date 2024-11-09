@@ -21,7 +21,6 @@ export default function Cast({ cast }: CastProps) {
 	const numberOfMoreToShow =
 		castWithPhotos.length + castWithoutPhotos.length - 10
 
-	const type = "all"
 	return (
 		<>
 			<h2 className="text-2xl font-bold">Cast</h2>
@@ -33,13 +32,13 @@ export default function Cast({ cast }: CastProps) {
 						<Link
 							key={castMember.id}
 							className="w-28 h-60 border-2 border-gray-700 flex flex-col items-center group"
-							to={`/discover?type=${type}&withCast=${castMember.id}`}
+							to={`/discover/all?withCast=${castMember.id}`}
 							prefetch="intent"
 						>
 							<img
 								className="w-full h-auto"
 								src={`https://www.themoviedb.org/t/p/original/${castMember.profile_path}`}
-								alt={`${castMember.name} profile photo`}
+								alt={`${castMember.name} profile`}
 							/>
 							<div className="w-full h-full px-2 bg-gray-800 group-hover:bg-slate-800">
 								<p
@@ -68,7 +67,7 @@ export default function Cast({ cast }: CastProps) {
 							<Link
 								key={castMember.id}
 								className="w-64 h-16 hover:bg-slate-800"
-								to={`/discover?type=${type}&withCast=${castMember.id}`}
+								to={`/discover/all?withCast=${castMember.id}`}
 								prefetch="intent"
 							>
 								<strong>{castMember.name}</strong>{" "}

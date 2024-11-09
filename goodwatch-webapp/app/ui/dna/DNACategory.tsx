@@ -1,15 +1,15 @@
-import { MapIcon } from "@heroicons/react/24/solid"
+import { CubeIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import React from "react"
+import { useInView } from "framer-motion"
+import React, { useRef } from "react"
 import { Spoiler } from "spoiled"
 import { useExplore } from "~/routes/api.explore"
 import type { ExploreParams } from "~/server/explore.server"
 import type { MediaType } from "~/server/utils/query-db"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { Poster } from "~/ui/Poster"
-import { Spinner } from "~/ui/Spinner"
 import { DNATag } from "~/ui/dna/DNATag"
-import { mapCategoryToVectorName, spoilerCategories } from "~/ui/dna/utils"
+import { spoilerCategories } from "~/ui/dna/dna_utils"
 
 export interface DNACategoryProps {
 	without: {
@@ -31,10 +31,13 @@ export default function DNACategory({
 }: DNACategoryProps) {
 	const isSpoiler = spoilerCategories.includes(category)
 
+	const ref = useRef(null)
+	const isInView = useInView(ref)
 	const text = tags.join(", ")
 	const explore = useExplore({
 		category,
 		text,
+		isInView: false,
 	})
 
 	const results = explore.data?.results || []
@@ -47,7 +50,10 @@ export default function DNACategory({
 		.slice(0, 4)
 
 	return (
-		<div className="mb-12 bg-gray-800 grid grid-cols-1 md:grid-cols-2">
+		<div
+			ref={ref}
+			className="mb-12 bg-gray-800 grid grid-cols-1 md:grid-cols-2"
+		>
 			<div className="pl-4 py-4 flex flex-col gap-4">
 				<h3 className="text-3xl font-extrabold text-gray-400">
 					{category}
@@ -86,11 +92,11 @@ export default function DNACategory({
 				<div className="mt-4">
 					<Link
 						className="px-3 py-2 border-2 border-gray-500 bg-slate-700 text-gray-100 text-sm rounded-md hover:bg-slate-600 hover:text-white"
-						to={`/explore/all/${mapCategoryToVectorName(category)}/${text}`}
+						to={`/discover?type=all&similarTitles=${without.tmdb_id}:${without.media_type}:${category}`}
 						prefetch="viewport"
 					>
-						<MapIcon className="w-4 h-4 inline-block mr-2" />
-						Explore: <span className="font-bold">Similar {category}</span>
+						<CubeIcon className="w-4 h-4 inline-block mr-2" />
+						Discover <span className="font-bold">Similar {category}</span>
 					</Link>
 				</div>
 			</div>

@@ -22,7 +22,6 @@ value:
             value: '$res:u/Alp/resource/postgresql'
         lock: '!inline inline_script_0.inline_script.lock'
         language: deno
-        tag: ''
     - id: b
       value:
         type: script

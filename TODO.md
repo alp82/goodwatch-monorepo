@@ -2,63 +2,179 @@
 ```
 ---
 
-user actions
-    enabled buttons with highlight color
-    new for shows: watching / completed
+Similar filter
+    exclude movie itself from results
+
+presets at the top
+    I'm in the mood for...
+    Something from the past...
+    What I didn't see yet...
+
+genre
+    show selections
+    fix incompatible genre & media type combinations
+
+dna search
+    word by word
+    select category?
+
+streaming
+    disabled streaming filter activates "mine" filter
+    buy/rent toggle
+
+threshold for similarity?
+
+TTL 0
 
 ---
 
-user settings
-    oval together: profile picture -> profile icon
+update windmill version
+    add worker to gw-db3
+    all workers in same group
+
+update genome prompt
+    add humor to example output
+    include summary?
+
+bad examples:
+    https://goodwatch.app/movie/976734-canary-black
 
 ---
 
-subbar
-    streaming: everywhere, selected providers, selected country
-    each filter as block in subbar
-        click to expand
-        x to close
+score selector
+    cancel on vertical movement
 
-sidebar
-    sort by
+start page word carousel
+    DNA categories
 
-results
-    one facet as scroll preview minimap (e.g. release year)
-    facets
+---
+
+user profile
+    taste matching (logged in users only - or a teaser)
+        you both like ABC
+    show all scores
+    grouped by tier
+    shareable link
     
-discover sidebar redesign
-    bug multiple genres duplicated
-    subheader
-    blocks with filter names and subtle bg in a grid
-    https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-filtering
-    https://flowbite.com/blocks/application/table-headers/#multi-level-table-header-with-filters
-    filter inspiration:
-        https://www.yidio.com/movies
-        https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
-    discover: unselect streaming
-    discover: unselect country
-    discover age ratings
-    discover cast / crew
-    discover director
-    discover scores
-    discover budget & revenue
-    disocver keywords and tropes
+plan to watch
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
+    search & filter
+    easy adding more
+    
+    remove separate wishlist page?
 
-discover
-    all | movies | tv
-    return count: "showing first 100 results"
-    streaming types: mine, free, buy, all
-    discover loading animation with skeletons
+watched/ratings page:
+    rating stats (1-10 distribution)
+    search & filter
+    easy rating more
+        personalized?
+
+favorites page
+    search & filter
+    easy adding more
+
 
 ---
 
 details
+    section title anchors
+    DNA different sections
+        subgenres below genres (filter standard genres)
+        mood and themes in summary
+    top DNA categories, hide the rest
+    no flickering for explore previews
+    swiper for explore preview
+
+movie card
+    overlay: show movie or tv icon 
+    max 3 streaming overlays
+    
+---
+
+update FE deps
+    update posthog version
+delete explore page and BE
+
+---
+
+swiper
+    edgeSwipeDetection?
+    mousewheel
+    freemode: sticky?
+    lazyPreloadPrevNext?
+    navigation: https://swiperjs.com/swiper-api#navigation
+    cardsEffect?
+
+similar headings for start page (trending, moods, themes, etc.)
+    each section as swipable
+
+---
+
+move caddy proxy from db1 to vector
+
+---
+
+sign up
+    redirect without jump to home
+    via email
+    via apple
+    
+---
+
+discover pagination
+    tabs with total number of results (100+)
+    load more on scroll?
+    filter suggestions at the bottom?
+
+preview count for selections in edited sections (100+)
+
+save discover filters in db
+    
+---
+
+Posthog
+    UTM
+
+---
+
+command palette
+    CTRL + K
+
+---
+
+streaming links missing
+    inside out 2
+
+---
+
+login flicker from index to redirected page
+
+optimistic ui for user settings
+    api-action.ts
+
+---
+
+tv seasons:
+    get episodes
+    get ratings
+    show in details
+    when last season/episode was released
+    recaps
+
+---
+
+details
+    mobile with small poster
     share button sticky
     guess country
     age restriction by country
     streaming section country flag button does not change selected country
     streaming section favors user selected providers
     web links section
+    sequels section
     
     show title in current language
     images section
@@ -73,12 +189,54 @@ details
     https://imdb.shyakadavis.me/title#overview
 
     fragment for scroll position (auto update)
+    
+    about section
+        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+
+remove obsolete code
+    updateUrlParams.tsx
+
+---
+
+Terminology
+    TV, TV Shows -> Shows
+
+---
+
+user settings
+    oval together: profile picture -> profile icon
+
+---
+
+cards with user data
+    user score
+    plan to watch
+    favorite
 
 ---
 
 slow network emulation
     skeleton loading
     useQuery
+
+---
+
+discover sidebar
+    sort by column
+    facets as scroll preview minimap (e.g. release year)
+    
+discover filters
+    streaming: checkbox for include buy/rent
+
+discover release
+    filter by month
+    add index
+
+---
+
+tropes
+    show in details
+    add discover filter
 
 ---
 
@@ -112,6 +270,16 @@ home screen
     swiping with acceleration
     user: trending, watch next, etc.
     stagger animation for rating progress bars
+
+---
+
+sound section
+    soundtrack info
+    sound bites / board
+
+---
+
+famous quotes section
 
 ---
 
@@ -192,6 +360,12 @@ similarity for movie/tv details by DNA vector category
 
 ---
 
+watch filter
+    only what I scored / didn't score
+    only favs / not favs
+
+---
+
 data flows ignore list:
     no release_year
     no poster_path
@@ -199,21 +373,21 @@ data flows ignore list:
 
 ---
 
-tv seasons:
-    get episodes
-    get ratings
-    show in details
-    when last season/episode was released
+error boundaries
+    add for each page
+    better error display
 
 ---
 
-sign up
-    via email
-    via apple
+discover cateogires
+    age ratings
+    search text
 
----
+loading animation with skeletons
 
-command palette
+filter inspiration:
+    https://www.yidio.com/movies
+    https://movielens.org/explore?people=brad%20pitt&minYear=2000&hasRated=no&sortBy=popularity
 
 ---
 
@@ -223,22 +397,17 @@ similarity issues
 
 ---
 
-wishlist
-    not logged in handling
-    split into two sections:
-        watch now
-        rest
-    search & filter
-    easy adding more
-
-watched/ratings page:
-    rating stats (1-10 distribution)
-    search & filter
-    easy rating more
-
-favorites page
-    search & filter
-    easy adding more
+Thanks page
+    tools & libraries
+    content creators
+        josh
+    beta tester shoutouts
+    community shoutouts
+        Lost Design
+        Mohit UX audit
+    credits for design inspiration
+        https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&node-type=canvas&t=HNeQ9QDw29BnwYEl-0
+        https://imdb.shyakadavis.me/title#technical-specs
 
 ---
 
@@ -287,6 +456,22 @@ project documentation
 
 ---
 
+wide cards
+    two images next o each other, big title in center
+    inspiration: letterboxd
+
+---
+
+details: releases
+    show dates for each country with age ratings
+
+---
+
+user actions
+    new for shows: watching / completed
+
+---
+
 letterboxd ratings
 
 ---
@@ -297,6 +482,12 @@ country usage
     explore
     discover
     trending
+
+---
+
+meta tags
+    better descriptions
+    based on params
 
 ---
 
@@ -332,6 +523,11 @@ translated titles in current language
 ---
 
 offline support
+
+---
+
+dna
+    political undertone (famas)
 
 ---
 
@@ -402,6 +598,12 @@ clips
     
 ---
 
+signup
+    apple
+    email
+
+---
+
 anti spoiler mode
     hide images and thumbnails
     hide overview and description
@@ -409,6 +611,9 @@ anti spoiler mode
     hide episode titles
 
 ---
+
+drizzle
+    remix server scripts with sql builder
 
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
@@ -454,6 +659,14 @@ redistribute weight for gw score
 
 more lightweight user data
 
+batch user actions
+    add all to plan to watch
+    add all to watched
+    add all to favorites
+    
+audit log per user
+    revert own actions
+
 detailed watchlists
     https://docs.simkl.org/how-to-use-simkl/basic-features/watchlists-and-custom-lists#how-are-notifications-handled-for-each-watchlist
 
@@ -475,7 +688,7 @@ show similar/related movies
 
 poster: inline scoring / watched / wish 
 
-streaming: show flatrate countries in ratingblock and streaming tab
+streaming: show flatrate countries in rating block and streaming tab
 
 tv: watched vs currently watching (finished show)
 
@@ -484,10 +697,8 @@ ratings: show last updated time
 date of first streaming link / new to stream
 
 trending load more
-discover load more
 
 replace url for details when country changes
-better discover url handling with new hook
 
 show titles on map (production countries + places in film)
     where to show space and fantasy places
@@ -497,10 +708,19 @@ save trending scores per day
 trending yesterday
 trending difference
 
+styling goodies:
+    view transitions: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#view-transitions-12
+    search delete animation: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#search-13
+    rem based breakpoints: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#accessibility-15
+    animated svg icons: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#modern-outline-icons-14
+
+explore graphs
+    https://reactflow.dev/
+
 details:
-box office (e.g. Google)
-crew links to discovery
-awards (grab from API)
+    box office (e.g. Google)
+    crew links to discovery
+    awards (grab from API)
 
 invalidate redis caches after update
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
@@ -513,6 +733,9 @@ report missing/wrong DNA
 decide together: watch party / watch together / swipe and watch
 
 reduce costs: show best streaming bundles for my likings
+
+similarity
+    display percentage
 
 search page
 explore button for media titles (prefilled discover, map feature)
@@ -566,6 +789,7 @@ streaming explanations
 
 android app
 iphone app
+
 
 data source: existing crawlers use existing url instead of guessing
 data-source: letterboxd scores
@@ -660,15 +884,25 @@ LIMIT 20;
 
 # Blog
 ```
-monorepo design
-db architecture: performance and scalability
-caching strategy
-from vercel to coolify
-    too many open files
 remix: keep it simple with tailwind
     linting with biomejs
     component example: rating
-data pipeline with windmill: grow data and keep it up to date
+discover design
+data pipeline with windmill:
+    keep grow data and keep it up to date
+    infrastructure
+    data flow design
+monorepo design
+from vercel to coolify
+    too many open files
+    hidden costs
+db architecture: performance and scalability
+caching strategy
+zombie processes
+    windmill -> chrome (playwright)
+    "can't start new thread"
+    "IO error: Resource temporarily unavailable (os error 11)"
+    kill windmill every 24 hours
 server architecture
     deployment with docker compose
     ansible for worker upgrades
@@ -677,9 +911,6 @@ authentication
     https://www.dusanstam.com/posts/remix-supabase-authentication
 genome with LLM's
 recommendation engine
-zombie processes
-    windmill -> chrome (playwright)
-    "can't start new thread"
-    "IO error: Resource temporarily unavailable (os error 11)"
-    kill windmill every 24 hours
 ```
+
+https://www.writebots.com/discord-text-formatting/

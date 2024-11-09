@@ -1,3 +1,4 @@
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/solid"
 import { useQueryClient } from "@tanstack/react-query"
 import React from "react"
 import { queryKeyUserData } from "~/routes/api.user-data"
@@ -31,10 +32,12 @@ export const SignOutLink = ({ active }: SignOutLinkProps) => {
 			type="button"
 			onClick={handleSignOut}
 			className={`
+			  w-full flex gap-2 items-center
+        px-4 py-2 text-base hover:bg-gray-800 hover:text-white
         ${active ? "text-white" : "text-gray-300"}
-        block px-4 py-2 text-base hover:bg-gray-800 hover:text-white
       `}
 		>
+			<ArrowRightStartOnRectangleIcon className="w-5 h-5" />
 			Sign out
 		</button>
 	)

@@ -35,8 +35,8 @@ export type GetUserSettingsResult = Partial<UserSettingsMap>
 // API endpoint
 
 export const loader: LoaderFunction = async ({ request }) => {
-	const user_id = await getUserIdFromRequest({ request })
-	const userSettings = await getUserSettings({ user_id })
+	const userId = await getUserIdFromRequest({ request })
+	const userSettings = await getUserSettings({ userId })
 
 	return json<GetUserSettingsResult>(userSettings)
 }
@@ -116,4 +116,9 @@ export const useUserStreamingProviders = () => {
 	return (streamingProviders?.data || []).filter((provider) => {
 		return streamingProviderIds.includes(provider.id.toString())
 	})
+}
+
+export const useUserCountry = () => {
+	const userSettings = useUserSettings()
+	return userSettings.data?.country_default
 }

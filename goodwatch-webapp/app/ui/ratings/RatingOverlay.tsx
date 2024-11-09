@@ -31,7 +31,7 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 						}}
 					>
 						<img className="h-4" src={gwLogo} alt="GoodWatch Score" />
-						<span className="text-sm mt-0.5">Score:</span>
+						<span className="hidden xs:inline text-sm mt-0.5">Score:</span>
 						<span className="font-bold">{score}</span>
 					</div>
 					<div

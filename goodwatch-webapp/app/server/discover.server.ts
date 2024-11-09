@@ -1,35 +1,51 @@
-import type { StreamingProvider } from "~/routes/api.streaming-providers"
+import { convertSimilarTitles } from "~/routes/api.discover"
+import type { WithSimilar } from "~/routes/api.similar-media"
 import {
 	type StreamingLink,
 	type StreamingProviders,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
 import { getGenresAll } from "~/server/genres.server"
-import { AVAILABLE_TYPES, type FilterMediaType } from "~/server/search.server"
-import { constructFullQuery, filterMediaTypes } from "~/server/utils/query-db"
+import {
+	type FilterMediaType,
+	type MediaType,
+	constructFullQuery,
+	filterMediaTypes,
+} from "~/server/utils/query-db"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import type { AllRatings } from "~/utils/ratings"
 
+export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
+export type StreamingPreset = "everywhere" | "mine" | "custom"
+export type SimilarDNACombinationType = "all" | "any"
 export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
 
 export interface DiscoverParams {
+	userId?: string
 	type: FilterMediaType
-	mode: "advanced"
 	country: string
 	language: string
+	watchedType: WatchedType
 	minAgeRating: string
 	maxAgeRating: string
 	minYear: string
 	maxYear: string
 	minScore: string
+	maxScore: string
 	withCast: string
+	withoutCast: string
 	withCrew: string
-	withKeywords: string
-	withoutKeywords: string
+	withoutCrew: string
 	withGenres: string
 	withoutGenres: string
+	withKeywords: string
+	withoutKeywords: string
+	streamingPreset: StreamingPreset
 	withStreamingProviders: string
+	similarDNA: string
+	similarDNACombinationType: SimilarDNACombinationType
+	similarTitles: string
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
 }
@@ -44,15 +60,7 @@ export interface DiscoverResult extends AllRatings {
 	media_type: "movie" | "tv"
 }
 
-export interface DiscoverFilters {
-	castMembers: string[]
-	crewMembers: string[]
-}
-
-export interface DiscoverResults {
-	results: DiscoverResult[]
-	filters: DiscoverFilters
-}
+export type DiscoverResults = DiscoverResult[]
 
 export const getDiscoverResults = async (params: DiscoverParams) => {
 	return await cached<DiscoverParams, DiscoverResults>({
@@ -65,6 +73,7 @@ export const getDiscoverResults = async (params: DiscoverParams) => {
 }
 
 async function _getDiscoverResults({
+	userId,
 	type,
 	country,
 	language,
@@ -73,19 +82,27 @@ async function _getDiscoverResults({
 	minYear,
 	maxYear,
 	minScore,
+	maxScore,
+	watchedType,
 	withCast,
+	withoutCast,
 	withCrew,
-	withKeywords,
-	withoutKeywords,
+	withoutCrew,
 	withGenres,
 	withoutGenres,
+	withKeywords,
+	withoutKeywords,
 	withStreamingProviders,
+	streamingPreset,
+	similarDNA,
+	similarDNACombinationType,
+	similarTitles,
 	sortBy,
 	sortDirection,
 }: DiscoverParams): Promise<DiscoverResults> {
 	if (!filterMediaTypes.includes(type))
 		throw new Error(`Invalid type for Discover: ${type}`)
-	if (country.length !== 2)
+	if (country && country.length !== 2)
 		throw new Error(`Invalid value for Country: ${country}`)
 	if (language.length !== 2)
 		throw new Error(`Invalid value for Language: ${language}`)
@@ -102,11 +119,14 @@ async function _getDiscoverResults({
 	const genreNames = genres
 		.filter((genre) => withGenres.includes(genre.id.toString()))
 		.map((genre) => genre.name)
-		.join(",")
+
+	const withSimilar = convertSimilarTitles(similarTitles)
 
 	const { query, params } = constructFullQuery({
+		userId,
 		filterMediaType: type,
 		streaming: {
+			streamingPreset,
 			countryCode: country,
 			streamTypes: ["free", "flatrate"],
 			providerIds: withStreamingProviders
@@ -115,16 +135,26 @@ async function _getDiscoverResults({
 		},
 		conditions: {
 			minScore,
+			maxScore,
 			minYear,
 			maxYear,
+			watchedType,
 			withCast,
-			withGenres: genreNames,
+			withoutCast,
+			withCrew,
+			withoutCrew,
+			withGenres: genreNames?.length > 0 ? genreNames : undefined,
+		},
+		similarity: {
+			similarDNA,
+			similarDNACombinationType,
+			withSimilar,
 		},
 		orderBy: {
 			column,
 			direction,
 		},
-		limit: 120,
+		limit: 100,
 	})
 
 	const result = await executeQuery(query, params)
@@ -132,20 +162,5 @@ async function _getDiscoverResults({
 		getCountrySpecificDetails(row, country, language),
 	) as unknown as DiscoverResult[]
 
-	const castResult = await executeQuery(
-		`SELECT DISTINCT id, name FROM "cast" WHERE id = ANY($1)`,
-		[withCast ? withCast.split(",") : []],
-	)
-	const castMembers = castResult.rows.map((row) => row.name) as string[]
-	const crewMembers = [] as string[]
-
-	const filters = {
-		castMembers,
-		crewMembers,
-	}
-
-	return {
-		results,
-		filters,
-	}
+	return results
 }

@@ -1,0 +1,30 @@
+summary: ''
+description: ''
+lock: '!inline f/other/proxy/bland.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    body:
+      type: object
+      description: ''
+      default: null
+      format: resource-record
+    method:
+      type: string
+      description: ''
+      default: null
+      enum:
+        - GET
+        - POST
+        - DELETE
+      originalType: enum
+    path:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+  required:
+    - path
+    - method

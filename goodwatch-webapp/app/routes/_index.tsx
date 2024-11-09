@@ -112,11 +112,9 @@ export default function Index() {
 	)
 	const selectPopularMovies = () => {
 		setPopularPicksType("movies")
-		setCurrentPosition(0)
 	}
 	const selectPopularTV = () => {
 		setPopularPicksType("tv")
-		setCurrentPosition(0)
 	}
 	const popularPicks =
 		popularPicksType === "movies" ? popularPicksMovies : popularPicksTV
@@ -136,14 +134,14 @@ export default function Index() {
 							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicksType === "movies" ? "bg-indigo-900/60" : "bg-slate-900/70"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
 							onClick={selectPopularMovies}
 						>
-							Popular Movies
+							Good Movies
 						</button>
 						<button
 							type="button"
 							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicksType === "tv" ? "bg-indigo-900/70" : "bg-slate-900/60"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
 							onClick={selectPopularTV}
 						>
-							Popular Shows
+							Good Shows
 						</button>
 					</div>
 
@@ -275,7 +273,7 @@ export default function Index() {
 							))}
 						<Link
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							to="/discover?type=movies"
+							to="/discover/movies"
 							prefetch="viewport"
 						>
 							<FilmIcon className="w-16 h-16" />
@@ -297,7 +295,7 @@ export default function Index() {
 						))}
 						<Link
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							to="/discover?type=tv"
+							to="/discover/tv"
 							prefetch="viewport"
 						>
 							<TvIcon className="w-16 h-16" />

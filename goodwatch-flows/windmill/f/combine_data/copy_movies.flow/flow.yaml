@@ -24,7 +24,6 @@ value:
         lock: '!inline inline_script_0.inline_script.lock'
         language: deno
         path: hub/1457/postgresql/execute_query_and_return_results
-        tag: ''
     - id: b
       value:
         type: script

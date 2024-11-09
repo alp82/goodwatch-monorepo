@@ -15,7 +15,7 @@ interface UserSettingRow {
 }
 
 type GetUserSettingsParams = {
-	user_id?: string
+	userId?: string
 }
 
 // server call
@@ -31,9 +31,9 @@ export const getUserSettings = async (params: GetUserSettingsParams) => {
 }
 
 async function _getUserSettings({
-	user_id,
+	userId,
 }: GetUserSettingsParams): Promise<GetUserSettingsResult> {
-	if (!user_id) {
+	if (!userId) {
 		return {}
 	}
 
@@ -45,7 +45,7 @@ async function _getUserSettings({
 		WHERE user_id = $1;
   `
 
-	const params = [user_id]
+	const params = [userId]
 	const result = await executeQuery<UserSettingRow>(query, params)
 
 	const settings: GetUserSettingsResult = {}
@@ -177,7 +177,7 @@ export const prefetchUserSettings = async ({
 	await prefetchQuery({
 		queryClient,
 		queryKey: queryKeyUserSettings,
-		getter: async ({ userId }) => await getUserSettings({ user_id: userId }),
+		getter: async ({ userId }) => await getUserSettings({ userId: userId }),
 		request,
 	})
 }

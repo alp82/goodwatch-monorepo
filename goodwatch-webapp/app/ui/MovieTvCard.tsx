@@ -31,7 +31,12 @@ export function MovieTvCard({
 
 	return (
 		<Link
-			className="flex flex-col w-full bg-gray-900 hover:bg-gray-800 border-4 rounded-md border-gray-800 hover:border-indigo-700"
+			className="
+				flex flex-col w-full
+				bg-gray-900 hover:bg-gray-800
+				border-4 rounded-md border-gray-800 hover:border-indigo-700
+				group
+			"
 			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
@@ -43,8 +48,20 @@ export function MovieTvCard({
 				)}
 				<Poster path={details.poster_path} title={details.title} />
 
-				<div className="absolute bottom-0 w-full min-h-40 flex items-end bg-gradient-to-t from-black/70 to-transparent px-2 py-2 overflow-hidden">
-					<span className="text-sm font-bold text-white">
+				<div
+					className="
+						absolute bottom-0 w-full min-h-40 px-2 py-2
+						flex items-end
+						bg-gradient-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
+						overflow-hidden
+					"
+				>
+					<span
+						className="
+						text-sm font-bold text-white
+						transition-transform duration-200 group-hover:-translate-y-1
+					"
+					>
 						{details.title}
 						{details.release_year ? ` (${details.release_year})` : ""}
 					</span>

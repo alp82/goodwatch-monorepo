@@ -30,8 +30,8 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 						className="absolute flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-0 hover:bg-opacity-50 cursor-pointer group"
 						onClick={handleShowTrailer}
 					>
-						<PlayCircleIcon className="relative bottom-4 w-24 h-24 md:w-32 md:h-32 lg:w-24 lg:h-24 xl:w-32 xl:h-32 mx-auto opacity-80 transition duration-300 ease-in-out group-hover:scale-125" />
-						<p className="absolute bottom-3 py-2 w-full bg-black bg-opacity-80 font-bold text-center">
+						<PlayCircleIcon className="relative bottom-4 w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-24 lg:h-24 xl:w-32 xl:h-32 mx-auto opacity-80 transition duration-300 ease-in-out group-hover:scale-125" />
+						<p className="absolute bottom-3 py-2 w-full bg-black bg-opacity-80 font-bold text-center text-xs xs:text-sm sm:text-base">
 							Play Trailer
 						</p>
 					</button>

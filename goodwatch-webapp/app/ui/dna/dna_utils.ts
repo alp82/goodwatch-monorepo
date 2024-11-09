@@ -1,6 +1,6 @@
 import type { DNA } from "~/server/details.server"
 
-const sortedDNACategories = [
+export const sortedDNACategories = [
 	"Sub-Genres",
 	"Mood",
 	"Themes",

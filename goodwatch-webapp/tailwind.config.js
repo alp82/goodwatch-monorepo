@@ -4,6 +4,9 @@ const defaultTheme = require("tailwindcss/defaultTheme")
 
 module.exports = {
 	content: ["./app/**/*.{js,jsx,ts,tsx}"],
+	future: {
+		hoverOnlyWhenSupported: true,
+	},
 	plugins: [
 		require("@tailwindcss/aspect-ratio"),
 		require("@tailwindcss/forms"),
@@ -12,15 +15,28 @@ module.exports = {
 			addVariant("search-cancel", "&::-webkit-search-cancel-button")
 		}),
 	],
-	future: {
-		hoverOnlyWhenSupported: true,
-	},
+	safelist: [
+		{ pattern: /bg-vibe-[0-9]+/ },
+		{ pattern: /text-\w+-500/ },
+		{ pattern: /from-\w+-700\/[0-9]+/ },
+		{ pattern: /via-\w+-900\/[0-9]+/ },
+		{ pattern: /to-\w+-800\/[0-9]+/ },
+	],
 	theme: {
 		screens: {
 			xs: "475px",
 			...defaultTheme.screens,
 		},
 		extend: {
+			animation: {
+				"gradient-x": "gradient-move-x 5s ease infinite",
+			},
+			keyframes: {
+				"gradient-move-x": {
+					"0%, 100%": { "background-position": "0% 0%" },
+					"50%": { "background-position": "50% 50%" },
+				},
+			},
 			colors: {
 				gray: {
 					950: "#060606",
@@ -45,8 +61,8 @@ module.exports = {
 			screens: {
 				"sm-h": { raw: "(max-height: 1000px)" },
 				"lg-h": { raw: "(min-height: 1001px)" },
+				"xl-h": { raw: "(min-height: 1301px)" },
 			},
 		},
 	},
-	safelist: [{ pattern: /bg-vibe-[0-9]+/ }],
 }

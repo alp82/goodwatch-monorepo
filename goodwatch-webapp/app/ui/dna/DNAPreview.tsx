@@ -5,7 +5,7 @@ import type { ExploreParams } from "~/server/explore.server"
 import Sparkles from "~/ui/Sparkles"
 import { sections } from "~/ui/details/common"
 import { DNATag } from "~/ui/dna/DNATag"
-import { getCategoryColor, getSortedCategories } from "~/ui/dna/utils"
+import { getCategoryColor, getSortedCategories } from "~/ui/dna/dna_utils"
 import Cycle from "~/ui/list/Cycle"
 import type { Section } from "~/utils/scroll"
 
@@ -40,14 +40,14 @@ export default function DNAPreview({ dna = {}, navigateToSection }: DNAProps) {
 	return (
 		<>
 			{hasDNA && (
-				<div className="mb-4 sm:mb-0 flex flex-col sm:flex-row sm:items-center flex-wrap gap-3 sm:gap-4">
+				<div className="flex items-center flex-wrap gap-4 text-sm sm:text-base">
 					<Sparkles>
 						<div
-							className="ml-1 py-2 accent-bg rounded-md pl-1 pr-2 flex items-center justify-center gap-2 text-base font-semibold shadow-sm cursor-pointer"
+							className="ml-1 py-2 accent-bg rounded-md pl-1 pr-2 flex items-center justify-center gap-2 font-semibold shadow-sm cursor-pointer"
 							onClick={() => navigateToSection(sections.dna)}
 							onKeyDown={() => null}
 						>
-							<img src={dnaIcon} className="h-6 w-auto" alt="DNA Icon" />
+							<img src={dnaIcon} className="h-4 sm:h-5 w-auto" alt="DNA Icon" />
 							Show DNA
 						</div>
 					</Sparkles>

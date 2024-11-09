@@ -4,7 +4,6 @@ import Cast from "~/ui/Cast"
 import Collection from "~/ui/Collection"
 import Crew from "~/ui/Crew"
 import Description from "~/ui/Description"
-import Keywords from "~/ui/Keywords"
 import Videos from "~/ui/Videos"
 import type { SectionIds } from "~/ui/details/common"
 import Ratings from "~/ui/ratings/Ratings"
@@ -57,14 +56,14 @@ export default function DetailsContent({
 					<Collection collection={collection} movieId={details.tmdb_id} />
 				)}
 			</div>
+			<div {...sectionProps.dna}>
+				<DNA details={details} dna={dna} />
+			</div>
 			<div {...sectionProps.crew}>
 				<Crew crew={crew} />
 			</div>
 			<div {...sectionProps.cast}>
 				<Cast cast={cast} />
-			</div>
-			<div {...sectionProps.dna}>
-				<DNA details={details} dna={dna} />
 			</div>
 			<div {...sectionProps.ratings}>
 				<Ratings ratings={ratings} />
