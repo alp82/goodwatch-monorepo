@@ -2,18 +2,30 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.0] 2024-10-xx
+## [0.5.1] 2024-11-xx
+
+### Added
+
+### Changed
+* Updated Frontend Dependencies
+* Improved Similarity Query
+
+### Fixed
+
+## [0.5.0] 2024-11-09
 
 Minor Release: **Improved Discovery**
 
 ### Added
 * New filters for Discover page, now including:
+    - Watch
     - Streaming Services
+    - Score / Ratings
+    - Similar
+    - DNA
     - Genres
     - Release Date
     - Cast & Crew
-    - Score / Ratings
-    - DNA
 
 ### Changed
 * Better UX for Discover page

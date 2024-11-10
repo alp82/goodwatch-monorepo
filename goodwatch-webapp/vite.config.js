@@ -1,44 +1,40 @@
-import { sentryVitePlugin } from "@sentry/vite-plugin";
-import { vitePlugin as remix } from "@remix-run/dev";
-import { installGlobals } from "@remix-run/node";
-import { defineConfig } from "vite";
+import { vitePlugin as remix } from "@remix-run/dev"
+import { installGlobals } from "@remix-run/node"
+import { sentryVitePlugin } from "@sentry/vite-plugin"
+import { defineConfig } from "vite"
 // import { remixDevTools } from "remix-development-tools/vite";
-import envOnly from "vite-env-only";
-import tsconfigPaths from "vite-tsconfig-paths";
+import tsconfigPaths from "vite-tsconfig-paths"
 
-installGlobals();
+installGlobals()
 
 export default defineConfig({
-  server: {
-    port: 3003,
-  },
+	server: {
+		port: 3003,
+	},
 
-  plugins: [
-    // remixDevTools(),
-    remix({
-      serverMinify: false,
-      // ignoredRouteFiles: ["**/.*"],
-      // TODO remove
-      // serverModuleFormat: "cjs",
-    }),
-    envOnly(),
-    tsconfigPaths({
-      denyFiles: {
-        client: [
-          "**/server/**/*",
-        ],
-      },
-      denyImports: {
-        client: ["fs-extra", /^node:/],
-      },
-    }),
-    sentryVitePlugin({
-      org: "goodwatch",
-      project: "webapp"
-    }),
-  ],
+	plugins: [
+		// remixDevTools(),
+		remix({
+			serverMinify: false,
+			// ignoredRouteFiles: ["**/.*"],
+			// TODO remove
+			// serverModuleFormat: "cjs",
+		}),
+		tsconfigPaths({
+			denyFiles: {
+				client: ["**/server/**/*"],
+			},
+			denyImports: {
+				client: ["fs-extra", /^node:/],
+			},
+		}),
+		sentryVitePlugin({
+			org: "goodwatch",
+			project: "webapp",
+		}),
+	],
 
-  build: {
-    sourcemap: true
-  }
-});
+	build: {
+		sourcemap: true,
+	},
+})

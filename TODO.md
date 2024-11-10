@@ -2,13 +2,13 @@
 ```
 ---
 
-Similar filter
-    exclude movie itself from results
-
 presets at the top
     I'm in the mood for...
     Something from the past...
     What I didn't see yet...
+    
+addbar
+    remove +
 
 genre
     show selections
@@ -22,7 +22,9 @@ streaming
     disabled streaming filter activates "mine" filter
     buy/rent toggle
 
-threshold for similarity?
+Similar filter
+    exclude movie itself from results
+    threshold for similarity?
 
 ---
 

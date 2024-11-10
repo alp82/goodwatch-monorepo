@@ -98,16 +98,21 @@ export const constructFullQuery = ({
 	limit,
 }: ConstructFullQueryParams) => {
 	const namedQuery = `
-	${constructUnionQuery({ userId, filterMediaType, streaming, conditions, similarity, orderBy, limit })}
-	SELECT
-		m.*,
-		sl.streaming_links
-	FROM media m
-	JOIN LATERAL (
-		${getStreamingLinksJoin(streaming)}
-	) sl on TRUE
-	ORDER BY ${similarity?.category ? `m.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`}
-	LIMIT ${limit}
+		${constructUnionQuery({ userId, filterMediaType, streaming, conditions, similarity, orderBy, limit })}
+		SELECT
+			m.*,
+			sl.streaming_links
+		FROM media m
+		JOIN LATERAL (
+			${getStreamingLinksJoin(streaming)}
+		) sl on TRUE
+		${
+			similarity?.withSimilar?.[0]?.categories
+				? "WHERE similarity_score IS NOT NULL"
+				: ""
+		}
+		ORDER BY ${similarity?.category ? `m.${similarity.category}_vector <=> :::similarityVector ASC` : `${orderBy.column} ${orderBy.direction}`}
+		LIMIT ${limit}
 	`
 	return convertNamedToPositionalParams(namedQuery, conditions)
 }
@@ -190,7 +195,7 @@ const constructSelectQuery = ({
 				? `(${similarity.withSimilar[0].categories
 						.map((category) => {
 							const categoryName = mapCategoryToVectorName(category)
-							return `(vm.${categoryName}_vector <=> vm1.${categoryName}_vector)`
+							return `(COALESCE(vm.${categoryName}_vector <=> vm1.${categoryName}_vector, 1))`
 						})
 						.join(" + ")}) as similarity_score,`
 				: ""
@@ -219,7 +224,7 @@ const constructSelectQuery = ({
 	ORDER BY 
 	  ${
 			similarity?.withSimilar?.[0]?.categories
-				? "similarity_score ASC"
+				? "similarity_score ASC NULLS LAST"
 				: `${orderBy.column} ${orderBy.direction}`
 		}
 	LIMIT ${limit}
