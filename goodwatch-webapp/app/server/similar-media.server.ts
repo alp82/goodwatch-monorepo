@@ -36,8 +36,8 @@ export const getSimilarMedia = async (params: SimilarMediaParams) => {
 		name: "similar-media",
 		target: _getSimilarMedia,
 		params,
-		// ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		// ttlMinutes: 0,
 	})
 }
 
@@ -178,6 +178,7 @@ const _getSearchResults = async <T extends SimilarResult>({
 			)
 			SELECT *
 			FROM ranked_media
+			WHERE relevance > 0
 			ORDER BY
 				relevance DESC NULLS LAST,
 				aggregated_overall_score_voting_count DESC

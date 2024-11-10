@@ -2,26 +2,6 @@
 ```
 ---
 
-similar
-    serch with multiple words: the boys
-
-dna search
-    word by word
-    select category?
-
-streaming
-    buy/rent toggle
-
-Similar filter
-    exclude movie itself from results
-    threshold for similarity?
-    
-Randomize button
-    all: add bar right edge
-    DNA: random selection
-
----
-
 update windmill version
     add worker to gw-db3
     all workers in same group
@@ -299,6 +279,17 @@ postgres cluster config in repo
 ---
 
 remove weaviate
+
+---
+
+discover
+    streaming: buy/rent toggle
+    dna: select category?
+    similarity: threshold?
+
+Randomize button
+    all: add bar right edge
+    DNA: random selection
 
 ---
 

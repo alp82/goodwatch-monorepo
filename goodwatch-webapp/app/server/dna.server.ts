@@ -28,14 +28,26 @@ export const getDNA = async (params: DNAParams) => {
 }
 
 export async function _getDNA({ text = "" }: DNAParams): Promise<DNAResults> {
+	const words = text.includes(" ")
+		? text
+				.split(" ")
+				.filter(Boolean)
+				.map((word) => `%${word}%`)
+		: [`%${text}%`]
+	const conditions = words
+		.map((_, i) => `(category ILIKE $${i + 1} OR label ILIKE $${i + 1})`)
+		.join(" AND ")
+
 	const query = `
 		SELECT category, label, count_all
 		FROM dna
-		WHERE category ILIKE $1 OR label ILIKE $1
+		WHERE 
+			${conditions}
 		ORDER BY count_all DESC
 		LIMIT ${LIMIT};
 	`
-	const result = await executeQuery<DNAResult>(query, [`%${text}%`])
+	const params = [...words]
+	const result = await executeQuery<DNAResult>(query, params)
 	return {
 		result: result.rows,
 	}
