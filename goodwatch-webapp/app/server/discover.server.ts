@@ -67,8 +67,8 @@ export const getDiscoverResults = async (params: DiscoverParams) => {
 		name: "discover-results",
 		target: _getDiscoverResults,
 		params,
-		// ttlMinutes: 60 * 2,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 2,
+		// ttlMinutes: 0,
 	})
 }
 
