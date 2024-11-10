@@ -64,8 +64,6 @@ export default function EditableSection({
 
 	// visibility logic
 	const skipSectionRender = (!isEditing && !visible) || hasRemoved
-	if (label === "DNA")
-		console.log({ skipSectionRender, isEditing, visible, hasRemoved })
 	if (skipSectionRender) return null
 
 	// rendering

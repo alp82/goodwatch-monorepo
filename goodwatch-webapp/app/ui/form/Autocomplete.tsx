@@ -54,13 +54,18 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 	const autocompleteMatches = query
 		? autocompleteItems.filter((item) => {
 				const lowercaseQuery = query.toLowerCase()
+				const lowercaseQueries = lowercaseQuery.includes(" ")
+					? [lowercaseQuery, ...lowercaseQuery.split(" ").filter(Boolean)]
+					: [lowercaseQuery]
 				const fieldsToMatch = [
 					"label" as keyof RenderItem,
 					...additionalFieldsToMatch,
 				]
 				return (
 					fieldsToMatch.filter((field) =>
-						String(item[field]).toLowerCase().includes(lowercaseQuery),
+						lowercaseQueries.some((lowercaseQuery) =>
+							String(item[field]).toLowerCase().includes(lowercaseQuery),
+						),
 					).length > 0
 				)
 			})

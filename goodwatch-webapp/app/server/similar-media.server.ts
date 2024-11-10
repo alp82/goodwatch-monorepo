@@ -36,8 +36,8 @@ export const getSimilarMedia = async (params: SimilarMediaParams) => {
 		name: "similar-media",
 		target: _getSimilarMedia,
 		params,
-		ttlMinutes: 60 * 24,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	})
 }
 
@@ -78,22 +78,22 @@ const _getSearchResults = async <T extends SimilarResult>({
 	const mediaType = tableName === "movies" ? "movie" : "tv"
 
 	const exactMatchCondition = searchTerm
-		? `
-		m.title ILIKE $1
-		OR m.original_title ILIKE $1
-		OR m.alternative_titles_text ILIKE $1
-	`
+		? `(
+			m.title ILIKE $2
+			OR m.original_title ILIKE $2
+			OR m.alternative_titles_text ILIKE $2
+		)`
 		: ""
 	const words = searchTerm.split(" ").filter(Boolean)
 	const wordConditions = words
 		.map(
-			(_, index) => `
-				m.title ILIKE $${index + 2}
-				OR m.original_title ILIKE $${index + 2}
-				OR m.alternative_titles_text ILIKE $${index + 2}
-			`,
+			(_, index) => `(
+				m.title ILIKE $${index + 3}
+				OR m.original_title ILIKE $${index + 3}
+				OR m.alternative_titles_text ILIKE $${index + 3}
+			)`,
 		)
-		.join(" OR ")
+		.join(" AND ")
 
 	const selectedSimilarForMediaType = withSimilar.filter(
 		(similar) => similar.mediaType === mediaType,
@@ -117,6 +117,8 @@ const _getSearchResults = async <T extends SimilarResult>({
 				m.tmdb_id,
 				'${mediaType}' as media_type,
 				m.title,
+				m.original_title,
+				m.alternative_titles_text,
 				m.release_year,
 				m.popularity,
 				m.poster_path,
@@ -137,6 +139,8 @@ const _getSearchResults = async <T extends SimilarResult>({
 					m.tmdb_id,
 					'${mediaType}' as media_type,
 					m.title,
+					m.original_title,
+					m.alternative_titles_text,
 					m.release_year,
 					m.popularity,
 					m.poster_path,
@@ -151,12 +155,18 @@ const _getSearchResults = async <T extends SimilarResult>({
 									setweight(to_tsvector(m.title), 'A') ||
 									setweight(to_tsvector(m.original_title), 'B') ||
 									setweight(to_tsvector(m.alternative_titles_text), 'C'),
+									phraseto_tsquery($1)
+								) * 10
+								+
+								ts_rank_cd(
+									setweight(to_tsvector(m.title), 'A') ||
+									setweight(to_tsvector(m.original_title), 'B') ||
+									setweight(to_tsvector(m.alternative_titles_text), 'C'),
 									plainto_tsquery($1)
-								) +
+								)
 							`
-							: ""
+							: "m.popularity"
 					}
-					(m.popularity / 1000)
 					AS relevance
 				FROM
 					${tableName} as m
@@ -179,7 +189,7 @@ const _getSearchResults = async <T extends SimilarResult>({
 	// search query - only if search term was provided
 
 	const searchParams = [
-		...(searchTerm ? [`%${searchTerm}%`] : []),
+		...(searchTerm ? [searchTerm, `%${searchTerm}%`] : []),
 		...words.map((word) => `%${word}%`),
 	]
 	const searchResult = await executeQuery<T>(searchQuery, searchParams)

@@ -121,7 +121,7 @@ export default function SectionSimilar({
 			>
 				<span className="flex items-center gap-4">
 					<img
-						className="w-7 h-10 rounded-sm"
+						className="w-auto h-12 rounded-sm"
 						src={`https://www.themoviedb.org/t/p/original/${item.img}`}
 						alt={`${item.label} profile`}
 					/>
