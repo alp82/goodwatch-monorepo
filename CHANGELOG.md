@@ -13,6 +13,7 @@ Notable changes to GoodWatch will be documented in this file.
 ## [0.5.1] 2024-11-10
 
 ### Added
+* Presets for Discover
 
 ### Changed
 * Updated Frontend Dependencies

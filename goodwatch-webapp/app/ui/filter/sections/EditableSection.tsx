@@ -56,9 +56,16 @@ export default function EditableSection({
 			setHasRemoved(false)
 		}
 	}, [editing])
+	useEffect(() => {
+		if (visible) {
+			setHasRemoved(false)
+		}
+	}, [visible])
 
 	// visibility logic
 	const skipSectionRender = (!isEditing && !visible) || hasRemoved
+	if (label === "DNA")
+		console.log({ skipSectionRender, isEditing, visible, hasRemoved })
 	if (skipSectionRender) return null
 
 	// rendering

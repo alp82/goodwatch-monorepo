@@ -2,29 +2,23 @@
 ```
 ---
 
-presets at the top
-    I'm in the mood for...
-    Something from the past...
-    What I didn't see yet...
-    
-addbar
-    remove +
-
-genre
-    show selections
-    fix incompatible genre & media type combinations
+similar
+    serch with multiple words: the boys
 
 dna search
     word by word
     select category?
 
 streaming
-    disabled streaming filter activates "mine" filter
     buy/rent toggle
 
 Similar filter
     exclude movie itself from results
     threshold for similarity?
+    
+Randomize button
+    all: add bar right edge
+    DNA: random selection
 
 ---
 
