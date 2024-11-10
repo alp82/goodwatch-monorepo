@@ -2,7 +2,15 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.1] 2024-11-xx
+## [0.5.2] 2024-11-xx
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.5.1] 2024-11-10
 
 ### Added
 
@@ -11,6 +19,7 @@ Notable changes to GoodWatch will be documented in this file.
 * Improved Similarity Query
 
 ### Fixed
+* Genre filter does not show duplicates anymore
 
 ## [0.5.0] 2024-11-09
 

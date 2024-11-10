@@ -1,17 +1,28 @@
-import { type LoaderFunction, json } from "@remix-run/node"
+import type { LoaderFunction } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import {
 	type Genre,
+	genreDuplicates,
 	getGenresAll,
-	getGenresMovie,
-	getGenresTV,
 } from "~/server/genres.server"
 
 type GetGenresResult = Genre[]
 
 export const loader: LoaderFunction = async () => {
-	const genres = await getGenresAll()
-	return json<GetGenresResult>(genres)
+	const combinedGenres = await getGenresAll()
+
+	const duplicateGenres = Object.values(genreDuplicates).flat()
+	const genres = combinedGenres.reduce((genres, current) => {
+		if (
+			!genres.some((genre) => genre.id === current.id) &&
+			!duplicateGenres.includes(current.name)
+		) {
+			genres.push(current)
+		}
+		return genres
+	}, [] as Genre[])
+	genres.sort((a, b) => a.name.localeCompare(b.name))
+	return genres
 }
 
 // Query hook

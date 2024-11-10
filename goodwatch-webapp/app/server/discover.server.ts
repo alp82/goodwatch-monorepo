@@ -5,7 +5,7 @@ import {
 	type StreamingProviders,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
-import { getGenresAll } from "~/server/genres.server"
+import { genreDuplicates, getGenresAll } from "~/server/genres.server"
 import {
 	type FilterMediaType,
 	type MediaType,
@@ -117,8 +117,27 @@ async function _getDiscoverResults({
 
 	const genres = await getGenresAll()
 	const genreNames = genres
-		.filter((genre) => withGenres.includes(genre.id.toString()))
+		.filter((genre) => {
+			// Check if genre ID or its string representation is in withGenres
+			const isDirectlyIncluded = withGenres.includes(genre.id.toString())
+
+			// Check if any genre from genreDuplicates has the key present based on name mapping
+			const isDuplicateIncluded = Object.keys(genreDuplicates).some((key) => {
+				// Check if the key (genre name) corresponds to any genre ID in withGenres
+				const keyGenre = genres.find((g) => g.name === key)
+				return (
+					keyGenre &&
+					withGenres.includes(keyGenre.id.toString()) &&
+					genreDuplicates[key].includes(genre.name)
+				)
+			})
+
+			return isDirectlyIncluded || isDuplicateIncluded
+		})
 		.map((genre) => genre.name)
+
+	const uniqueGenreNames =
+		genreNames?.length > 0 ? [...new Set(genreNames)] : undefined
 
 	const withSimilar = convertSimilarTitles(similarTitles)
 
@@ -143,7 +162,7 @@ async function _getDiscoverResults({
 			withoutCast,
 			withCrew,
 			withoutCrew,
-			withGenres: genreNames?.length > 0 ? genreNames : undefined,
+			withGenres: uniqueGenreNames,
 		},
 		similarity: {
 			similarDNA,

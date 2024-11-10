@@ -1,4 +1,8 @@
-import { MagnifyingGlassIcon, TagIcon } from "@heroicons/react/20/solid"
+import {
+	CheckIcon,
+	MagnifyingGlassIcon,
+	TagIcon,
+} from "@heroicons/react/20/solid"
 import React from "react"
 import { useGenres } from "~/routes/api.genres.all"
 import type { DiscoverParams } from "~/server/discover.server"
@@ -58,10 +62,22 @@ export default function SectionGenre({
 	const autocompleteRenderItem = ({
 		item,
 	}: RenderItemParams<AutocompleteItem>) => {
+		const isSelected =
+			genreIds.filter((genreId) => genreId === item.key).length > 0
 		return (
-			<div className="flex items-center gap-2">
-				<TagIcon className="h-4 w-4 text-gray-200" aria-hidden="true" />
-				<div className="text-sm truncate">{item.label}</div>
+			<div
+				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
+			>
+				<div className="flex items-center gap-2">
+					<TagIcon className="h-4 w-4 text-gray-200" aria-hidden="true" />
+					<div className="text-sm truncate">{item.label}</div>
+				</div>
+				{isSelected && (
+					<CheckIcon
+						className="h-6 w-6 p-1 text-green-100 bg-green-700 rounded-full"
+						aria-hidden="true"
+					/>
+				)}
 			</div>
 		)
 	}

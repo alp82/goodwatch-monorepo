@@ -1,5 +1,11 @@
 import { cached } from "~/utils/cache"
 
+export const genreDuplicates = {
+	"Action & Adventure": ["Action", "Adventure"],
+	"Sci-Fi & Fantasy": ["Science Fiction", "Fantasy"],
+	"War & Politics": ["War"],
+}
+
 export interface Genre {
 	id: number
 	name: string
@@ -22,6 +28,7 @@ export const getGenresAll = async (params = {}) => {
 		target: _getGenresAll,
 		params,
 		ttlMinutes: 60 * 24,
+		// ttlMinutes: 0,
 	})
 }
 
