@@ -21,15 +21,11 @@ export type GetSimilarMediaResult = {
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
-	const userId = await getUserIdFromRequest({ request })
-	if (!userId) return null
-
 	const url = new URL(request.url)
 	const searchTerm = url.searchParams.get("searchTerm") || ""
 	const withSimilarJson = url.searchParams.get("withSimilarJson") || ""
 
 	const params = {
-		userId,
 		searchTerm,
 		withSimilarJson,
 	}

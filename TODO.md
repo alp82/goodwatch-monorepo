@@ -24,8 +24,6 @@ streaming
 
 threshold for similarity?
 
-TTL 0
-
 ---
 
 update windmill version
