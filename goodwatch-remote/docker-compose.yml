@@ -36,7 +36,7 @@ services:
       - DISABLE_SERVER=true
       - KEEP_JOB_DIR=false
       - METRICS_ADDR=false
-      - WORKER_GROUP=remote-${WORKER_GROUP}
+      - WORKER_GROUP=${WORKER_GROUP}
       # LICENSE_KEY is only needed for the enterprise edition
       - LICENSE_KEY=${WM_LICENSE_KEY}
     depends_on:
