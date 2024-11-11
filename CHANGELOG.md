@@ -2,13 +2,14 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.2] 2024-11-xx
+## [0.5.2] 2024-11-11
 
 ### Added
 
 ### Changed
 
 ### Fixed
+* On mobile, the score selector cancels scoring on vertical movement
 
 ## [0.5.1] 2024-11-10
 

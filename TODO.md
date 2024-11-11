@@ -2,44 +2,19 @@
 ```
 ---
 
-update windmill version
-    add worker to gw-db3
-    all workers in same group
-
 update genome prompt
-    add humor to example output
     include summary?
-
-bad examples:
+    
+bad dna examples:
     https://goodwatch.app/movie/976734-canary-black
 
 ---
 
-score selector
-    cancel on vertical movement
-
-start page word carousel
-    DNA categories
-
----
-
 user profile
-    taste matching (logged in users only - or a teaser)
-        you both like ABC
     show all scores
     grouped by tier
     shareable link
     
-plan to watch
-    not logged in handling
-    split into two sections:
-        watch now
-        rest
-    search & filter
-    easy adding more
-    
-    remove separate wishlist page?
-
 watched/ratings page:
     rating stats (1-10 distribution)
     search & filter
@@ -50,6 +25,18 @@ favorites page
     search & filter
     easy adding more
 
+plan to watch
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
+    search & filter
+    easy adding more
+    
+    remove separate wishlist page?
+
+taste matching (logged in users only - or a teaser)
+    you both like ABC
 
 ---
 
@@ -137,6 +124,11 @@ tv seasons:
     show in details
     when last season/episode was released
     recaps
+
+---
+
+start page word carousel
+    DNA categories
 
 ---
 
@@ -594,6 +586,12 @@ anti spoiler mode
     hide overview and description
     hide all DNA tags
     hide episode titles
+
+---
+
+fix high memory windmill scripts
+    f/tvtropes_web/tvtropes_init_tags/main
+    check db
 
 ---
 

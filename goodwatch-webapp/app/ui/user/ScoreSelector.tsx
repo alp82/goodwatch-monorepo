@@ -95,13 +95,32 @@ export default function ScoreSelector({
 	}
 
 	// touch controls
+	const [startY, setStartY] = useState<number | null>(null)
+	const verticalThreshold = 30 // You can adjust this threshold based on your needs
+
 	const [lastTouchedElement, setLastTouchedElement] =
 		useState<HTMLElement | null>(null)
+
+	const handleTouchStart = (e: React.TouchEvent) => {
+		const touch = e.touches[0]
+		setStartY(touch.clientY)
+	}
 
 	const containerRef = useRef<HTMLDivElement>(null)
 	const handleTouchMove = (e: React.TouchEvent) => {
 		const touch = e.touches[0]
 		if (!containerRef.current) return
+
+		// Check if vertical movement is above the threshold
+		if (startY !== null) {
+			const verticalMovement = Math.abs(touch.clientY - startY)
+			if (verticalMovement > verticalThreshold) {
+				// Cancel further movement handling if threshold is exceeded
+				setHoveredScore(null)
+				setLastTouchedElement(null)
+				return
+			}
+		}
 
 		const rect = containerRef.current.getBoundingClientRect()
 		const touchX = touch.clientX - rect.left
@@ -139,6 +158,7 @@ export default function ScoreSelector({
 		<div
 			className="divide-y divide-gray-600 py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow"
 			ref={containerRef}
+			onTouchStart={handleTouchStart}
 			onTouchMove={handleTouchMove}
 			onTouchEnd={handleTouchEnd}
 		>
