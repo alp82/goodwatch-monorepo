@@ -114,7 +114,7 @@ export default function Discover() {
 	}
 	return (
 		<>
-			<div className="xl-h:sticky xl-h:top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">
+			<div className="relative xl-h:sticky xl-h:top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">
 				<AddFilterBar
 					params={currentParams}
 					isVisible={true}

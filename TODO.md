@@ -10,6 +10,38 @@ bad dna examples:
 
 ---
 
+details
+    scroll behavior
+        country addition?
+    DNA different sections
+        subgenres below genres (filter standard genres)
+        mood and themes in summary
+    top DNA categories, hide the rest
+    swiper for discover preview
+    no flickering for discover previews
+    section title anchors in URL
+
+movie card
+    overlay: show movie or tv icon 
+    max 3 streaming overlays
+    
+---
+
+swiper
+    edgeSwipeDetection?
+    mousewheel
+    freemode: sticky?
+    lazyPreloadPrevNext?
+    navigation: https://swiperjs.com/swiper-api#navigation
+    cardsEffect?
+
+similar headings for start page (trending, moods, themes, etc.)
+    each section as swipable
+
+delete explore page and BE
+
+---
+
 user profile
     show all scores
     grouped by tier
@@ -40,40 +72,6 @@ taste matching (logged in users only - or a teaser)
 
 ---
 
-details
-    section title anchors
-    DNA different sections
-        subgenres below genres (filter standard genres)
-        mood and themes in summary
-    top DNA categories, hide the rest
-    no flickering for explore previews
-    swiper for explore preview
-
-movie card
-    overlay: show movie or tv icon 
-    max 3 streaming overlays
-    
----
-
-update FE deps
-    update posthog version
-delete explore page and BE
-
----
-
-swiper
-    edgeSwipeDetection?
-    mousewheel
-    freemode: sticky?
-    lazyPreloadPrevNext?
-    navigation: https://swiperjs.com/swiper-api#navigation
-    cardsEffect?
-
-similar headings for start page (trending, moods, themes, etc.)
-    each section as swipable
-
----
-
 move caddy proxy from db1 to vector
 
 ---
@@ -81,7 +79,6 @@ move caddy proxy from db1 to vector
 sign up
     redirect without jump to home
     via email
-    via apple
     
 ---
 
@@ -163,6 +160,14 @@ remove obsolete code
     updateUrlParams.tsx
 
 ---
+    
+clips
+    https://ensembledata.com/pricing
+    tiktok
+    youtube shorts
+    reels
+
+---
 
 Terminology
     TV, TV Shows -> Shows
@@ -203,6 +208,12 @@ discover release
 tropes
     show in details
     add discover filter
+
+---
+
+Solve issues with DNA data quality
+    duplicate entries with similar wording
+    overlaps between categories
 
 ---
 
@@ -565,13 +576,6 @@ stats
 
 all titles from a-z (search page?)
     difference between search, explore, discover, watch next, etc.?
-    
----
-    
-clips
-    tiktok
-    youtube shorts
-    reels
     
 ---
 

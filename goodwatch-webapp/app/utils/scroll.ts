@@ -41,10 +41,19 @@ export const useScrollSections = <T extends string>({
 	) as SectionProps<T>
 
 	const navigateToSection = (section: Section) => {
+		// Scroll to the section smoothly
 		sectionRefs.current[section.id as T]?.scrollIntoView({
 			behavior: "smooth",
 			block: "start",
 		})
+
+		// Update the URL hash without causing a page refresh
+		if (history.pushState) {
+			history.pushState(null, "", `#${section.id}`)
+		} else {
+			// Fallback for older browsers
+			window.location.hash = section.id
+		}
 	}
 
 	// internal scroll observers
