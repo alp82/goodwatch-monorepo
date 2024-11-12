@@ -2,6 +2,15 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
+## [0.5.3] 2024-11-xx
+
+### Added
+
+### Changed
+
+### Fixed
+* On mobile, the filter bar dropdowns are not hidden by the results below
+
 ## [0.5.2] 2024-11-11
 
 ### Added

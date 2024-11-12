@@ -440,6 +440,7 @@ new page: started this week on your streaming services
 ---
 
 secret handling
+    https://www.reddit.com/r/selfhosted/comments/1goj5yi/self_hosted_secrets_manager/
 project documentation
 
 ---

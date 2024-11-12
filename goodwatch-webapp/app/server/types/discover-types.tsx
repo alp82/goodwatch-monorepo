@@ -1,23 +1,23 @@
-import { BookmarkIcon } from "@heroicons/react/20/solid"
+import { BookmarkIcon } from "@heroicons/react/20/solid";
 import {
 	EyeIcon,
 	EyeSlashIcon,
 	RectangleStackIcon,
 	Squares2X2Icon,
-} from "@heroicons/react/24/solid"
-import type { ComponentType, HTMLAttributes, ReactNode } from "react"
+} from "@heroicons/react/24/solid";
+import type { ComponentType, HTMLAttributes, ReactNode } from "react";
 import type {
 	DiscoverParams,
 	SimilarDNACombinationType,
 	WatchedType,
-} from "~/server/discover.server"
-import type { RadioOption } from "~/ui/form/RadioBlock"
-import { Tag } from "~/ui/tags/Tag"
-import type { ColorName } from "~/utils/color"
+} from "~/server/discover.server";
+import type { RadioOption } from "~/ui/form/RadioBlock";
+import { Tag } from "~/ui/tags/Tag";
+import type { ColorName } from "~/utils/color";
 
 export interface WatchOption extends RadioOption {
-	name: WatchedType
-	color: ColorName
+	name: WatchedType;
+	color: ColorName;
 }
 
 export const watchOptions: WatchOption[] = [
@@ -42,26 +42,26 @@ export const watchOptions: WatchOption[] = [
 		icon: EyeIcon,
 		color: "green",
 	},
-]
+];
 
 export interface CombinationTypeOption extends RadioOption {
-	name: SimilarDNACombinationType
+	name: SimilarDNACombinationType;
 }
 
 export const combinationTypeOptions: CombinationTypeOption[] = [
-	{
-		name: "any",
-		label: "Any",
-		description: "At least one selection must match",
-		icon: Squares2X2Icon,
-	},
 	{
 		name: "all",
 		label: "All",
 		description: "All selections must match for each title",
 		icon: RectangleStackIcon,
 	},
-]
+	{
+		name: "any",
+		label: "Any",
+		description: "At least one selection must match",
+		icon: Squares2X2Icon,
+	},
+];
 
 export const DISCOVER_FILTER_TYPES = [
 	"watch",
@@ -73,15 +73,15 @@ export const DISCOVER_FILTER_TYPES = [
 	"release",
 	"cast",
 	"crew",
-] as const
+] as const;
 
-export type DiscoverFilterType = (typeof DISCOVER_FILTER_TYPES)[number]
+export type DiscoverFilterType = (typeof DISCOVER_FILTER_TYPES)[number];
 
 export interface DiscoverFilterOption {
-	label: string
-	color: ColorName
-	associatedParams: (keyof DiscoverParams)[]
-	loginInstructions?: ReactNode
+	label: string;
+	color: ColorName;
+	associatedParams: (keyof DiscoverParams)[];
+	loginInstructions?: ReactNode;
 }
 
 export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
@@ -147,4 +147,4 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 			color: "pink",
 			associatedParams: ["withCrew", "withoutCrew"],
 		},
-	}
+	};
