@@ -3,20 +3,20 @@ import {
 	type UserSettingsMap,
 	UserSettingsSchema,
 	queryKeyUserSettings,
-} from "~/routes/api.user-settings.get"
-import type { SetUserSettingsOptions } from "~/routes/api.user-settings.set"
-import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
-import { cached, resetCache } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+} from "~/routes/api.user-settings.get";
+import type { SetUserSettingsOptions } from "~/routes/api.user-settings.set";
+import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch";
+import { cached, resetCache } from "~/utils/cache";
+import { executeQuery } from "~/utils/postgres";
 
 interface UserSettingRow {
-	key: keyof UserSettingsMap
-	value: string
+	key: keyof UserSettingsMap;
+	value: string;
 }
 
 type GetUserSettingsParams = {
-	userId?: string
-}
+	userId?: string;
+};
 
 // server call
 
@@ -25,16 +25,16 @@ export const getUserSettings = async (params: GetUserSettingsParams) => {
 		name: "user-settings",
 		target: _getUserSettings,
 		params,
-		ttlMinutes: 60,
-		// ttlMinutes: 0,
-	})
-}
+		// can't use TTL on this, e.g. because of onboarding
+		ttlMinutes: 0,
+	});
+};
 
 async function _getUserSettings({
 	userId,
 }: GetUserSettingsParams): Promise<GetUserSettingsResult> {
 	if (!userId) {
-		return {}
+		return {};
 	}
 
 	const query = `
@@ -43,44 +43,44 @@ async function _getUserSettings({
 			value
 		FROM user_settings
 		WHERE user_id = $1;
-  `
+  `;
 
-	const params = [userId]
-	const result = await executeQuery<UserSettingRow>(query, params)
+	const params = [userId];
+	const result = await executeQuery<UserSettingRow>(query, params);
 
-	const settings: GetUserSettingsResult = {}
+	const settings: GetUserSettingsResult = {};
 	for (const row of result.rows) {
-		const convertedSettingValue = _convertSettingValue(row.key, row.value)
+		const convertedSettingValue = _convertSettingValue(row.key, row.value);
 		if (convertedSettingValue !== null) {
-			settings[row.key] = convertedSettingValue
+			settings[row.key] = convertedSettingValue;
 		}
 	}
-	return settings
+	return settings;
 }
 
 const _convertSettingValue = (
 	key: keyof UserSettingsMap,
 	value: string,
 ): UserSettingsMap[keyof UserSettingsMap] | null => {
-	const schema = UserSettingsSchema[key]
-	if (!schema) return null
+	const schema = UserSettingsSchema[key];
+	if (!schema) return null;
 
 	switch (schema.type) {
 		case "string":
-			return value
+			return value;
 		case "enum":
-			return schema.options.includes(value) ? value : null
+			return schema.options.includes(value) ? value : null;
 		default:
-			return null
+			return null;
 	}
-}
+};
 
 // setter call
 
 interface SetUserSettingsParams {
-	user_id: string | undefined
-	settings: Partial<UserSettingsMap>
-	options?: SetUserSettingsOptions
+	user_id: string | undefined;
+	settings: Partial<UserSettingsMap>;
+	options?: SetUserSettingsOptions;
 }
 
 export async function setUserSettings({
@@ -89,14 +89,14 @@ export async function setUserSettings({
 	options = {},
 }: SetUserSettingsParams) {
 	if (!user_id || !settings) {
-		return null
+		return null;
 	}
 
 	// Validate each setting against allowed settings
 	for (const [key, value] of Object.entries(settings)) {
 		if (!isValidSetting(key as keyof UserSettingsMap, value)) {
-			console.error(`setSettings error: invalid "${key}" for value ${value}`)
-			return null
+			console.error(`setSettings error: invalid "${key}" for value ${value}`);
+			return null;
 		}
 	}
 
@@ -120,13 +120,13 @@ export async function setUserSettings({
 						updated_at = CURRENT_TIMESTAMP`
 		}
 		RETURNING *;
-	`
+	`;
 
-	const params = [user_id, ...Object.entries(settings).flat()]
+	const params = [user_id, ...Object.entries(settings).flat()];
 
-	const result = await executeQuery(query, params)
-	await resetUserSettingsCache({ user_id })
-	return result
+	const result = await executeQuery(query, params);
+	await resetUserSettingsCache({ user_id });
+	return result;
 }
 
 // validation
@@ -135,38 +135,38 @@ const isValidSetting = <K extends keyof UserSettingsMap>(
 	key: K,
 	value: UserSettingsMap[K],
 ): boolean => {
-	const schema = UserSettingsSchema[key]
-	if (!schema) return false
+	const schema = UserSettingsSchema[key];
+	if (!schema) return false;
 
 	// Validate based on the type in the schema
 	switch (schema.type) {
 		case "string":
-			return typeof value === "string"
+			return typeof value === "string";
 		case "enum":
-			return schema.options.includes(value)
+			return schema.options.includes(value);
 		default:
-			return false
+			return false;
 	}
-}
+};
 
 // cache reset
 
 type ResetUserSettingsCacheParams = {
-	user_id?: string
-}
+	user_id?: string;
+};
 
 export const resetUserSettingsCache = async (
 	params: ResetUserSettingsCacheParams,
 ) => {
 	if (!params.user_id) {
-		return 0
+		return 0;
 	}
 
 	return await resetCache({
 		name: "user-settings",
 		params,
-	})
-}
+	});
+};
 
 // loader prefetch
 
@@ -179,5 +179,5 @@ export const prefetchUserSettings = async ({
 		queryKey: queryKeyUserSettings,
 		getter: async ({ userId }) => await getUserSettings({ userId: userId }),
 		request,
-	})
-}
+	});
+};
