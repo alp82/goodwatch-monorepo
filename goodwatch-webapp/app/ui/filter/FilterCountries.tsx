@@ -1,13 +1,13 @@
-import { useFetcher } from "@remix-run/react"
-import React, { useEffect } from "react"
-import type { Country } from "~/server/countries.server"
-import Select, { type SelectItem } from "~/ui/form/Select"
+import { useFetcher } from "@remix-run/react";
+import React, { useEffect } from "react";
+import type { Country } from "~/server/countries.server";
+import Select, { type SelectItem } from "~/ui/form/Select";
 
 export interface FilterCountriesProps {
-	type: "movie" | "tv"
-	selectedCountry: string
-	availableCountryCodes?: string[]
-	onChange: (country: string) => void
+	type: "movie" | "tv";
+	selectedCountry: string;
+	availableCountryCodes?: string[];
+	onChange: (country: string) => void;
 }
 
 export default function FilterCountries({
@@ -15,43 +15,40 @@ export default function FilterCountries({
 	availableCountryCodes,
 	onChange,
 }: FilterCountriesProps) {
-	const countriesFetcher = useFetcher<{ countries: Country[] }>()
+	const countriesFetcher = useFetcher<{ countries: Country[] }>();
 	useEffect(() => {
 		countriesFetcher.submit(
 			{},
 			{
 				method: "get",
-				action: "/api/discover/countries",
+				action: "/api/countries",
 			},
-		)
-	}, [])
-	const countries = countriesFetcher.data?.countries || []
+		);
+	}, []);
+	const countries = countriesFetcher.data || [];
 
-	const selectItems = countries
-		.map((country) => {
-			return {
-				key: country.code,
-				label: country.name,
-				icon: `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`,
-			}
-		})
-		.sort((a, b) => {
-			if ((availableCountryCodes || []).includes(a.key)) return -1
+	const selectItems = countries.map((country) => {
+		return {
+			key: country.code,
+			label: country.name,
+			icon: `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`,
+		};
+	});
+	selectItems.sort((a, b) => {
+		const aIsAvailable = (availableCountryCodes || []).includes(a.key);
+		const bIsAvailable = (availableCountryCodes || []).includes(b.key);
 
-			if (a.label < b.label) {
-				return -1
-			}
-			if (a.label > b.label) {
-				return 1
-			}
-			return 0
-		})
+		if (aIsAvailable && !bIsAvailable) return -1;
+		if (!aIsAvailable && bIsAvailable) return 1;
+
+		return a.label.localeCompare(b.label);
+	});
 
 	const handleSelect = (selectedItem: SelectItem) => {
-		const country = selectedItem.key
-		onChange(country)
-		localStorage.setItem("country", country)
-	}
+		const country = selectedItem.key;
+		onChange(country);
+		localStorage.setItem("country", country);
+	};
 
 	return (
 		<div className="w-72 relative">
@@ -68,5 +65,5 @@ export default function FilterCountries({
 				<span className="text-sm">Loading countries...</span>
 			)}
 		</div>
-	)
+	);
 }

@@ -2,11 +2,11 @@
 ```
 ---
 
-update genome prompt
-    include summary?
-    
-bad dna examples:
-    https://goodwatch.app/movie/976734-canary-black
+details: country flag click error
+
+dna search sometimes empty
+
+
 
 ---
 
