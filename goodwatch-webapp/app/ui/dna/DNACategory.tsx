@@ -1,25 +1,26 @@
-import { CubeIcon } from "@heroicons/react/24/solid"
-import { Link } from "@remix-run/react"
-import { useInView } from "framer-motion"
-import React, { useRef } from "react"
-import { Spoiler } from "spoiled"
-import { useExplore } from "~/routes/api.explore"
-import type { ExploreParams } from "~/server/explore.server"
-import type { MediaType } from "~/server/utils/query-db"
-import { MovieTvCard } from "~/ui/MovieTvCard"
-import { Poster } from "~/ui/Poster"
-import { DNATag } from "~/ui/dna/DNATag"
-import { spoilerCategories } from "~/ui/dna/dna_utils"
+import { CubeIcon } from "@heroicons/react/24/solid";
+import { Link, useNavigate, useRouteError } from "@remix-run/react";
+import { useInView } from "framer-motion";
+import React, { useRef } from "react";
+import { Spoiler } from "spoiled";
+import { useDiscover } from "~/routes/api.discover";
+import { useExplore } from "~/routes/api.explore";
+import type { ExploreParams } from "~/server/explore.server";
+import type { MediaType } from "~/server/utils/query-db";
+import { MovieTvCard } from "~/ui/MovieTvCard";
+import { Poster } from "~/ui/Poster";
+import { DNATag } from "~/ui/dna/DNATag";
+import { spoilerCategories } from "~/ui/dna/dna_utils";
 
 export interface DNACategoryProps {
 	without: {
-		tmdb_id: number
-		media_type: MediaType
-	}
-	category: ExploreParams["category"]
-	tags: string[]
-	spoilerVisible: boolean
-	onRevealSpoiler: () => void
+		tmdb_id: number;
+		media_type: MediaType;
+	};
+	category: ExploreParams["category"];
+	tags: string[];
+	spoilerVisible: boolean;
+	onRevealSpoiler: () => void;
 }
 
 export default function DNACategory({
@@ -29,25 +30,26 @@ export default function DNACategory({
 	spoilerVisible,
 	onRevealSpoiler,
 }: DNACategoryProps) {
-	const isSpoiler = spoilerCategories.includes(category)
+	const isSpoiler = spoilerCategories.includes(category);
 
-	const ref = useRef(null)
-	const isInView = useInView(ref)
-	const text = tags.join(", ")
-	const explore = useExplore({
-		category,
-		text,
-		isInView: false,
-	})
+	const ref = useRef(null);
+	const isInView = useInView(ref);
+	const text = tags.join(", ");
 
-	const results = explore.data?.results || []
+	const discover = useDiscover({
+		params: {
+			similarTitles: `${without.tmdb_id}:${without.media_type}:${category}`,
+		},
+	});
+
+	const results = discover.data || [];
 	const categoryPreview = results
 		.filter(
 			(details) =>
 				details.tmdb_id !== without.tmdb_id &&
 				details.media_type !== without.media_type,
 		)
-		.slice(0, 4)
+		.slice(0, 4);
 
 	return (
 		<div
@@ -100,7 +102,7 @@ export default function DNACategory({
 					</Link>
 				</div>
 			</div>
-			<div className="mt-8 md:mt-0 w-full flex items-center gap-2">
+			<div className="mt-8 md:mt-0 w-auto h-full flex items-center gap-2">
 				{
 					results.length ? (
 						<>
@@ -118,7 +120,7 @@ export default function DNACategory({
 							(_, index) => (
 								<div
 									key={index}
-									className="w-full h-auto border-2 rounded-2xl border-slate-700"
+									className="w-full h-full border-2 rounded-2xl border-slate-700"
 								>
 									<Poster />
 								</div>
@@ -131,5 +133,5 @@ export default function DNACategory({
 				}
 			</div>
 		</div>
-	)
+	);
 }

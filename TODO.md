@@ -2,11 +2,18 @@
 ```
 ---
 
-details: country flag click error
+fix dna previews
 
 dna search sometimes empty
 
+onboarding: fix duplicates
+db: exchange duplicates
 
+---
+
+new dna filters:
+    spoken languages
+    dubbed languages
 
 ---
 
@@ -578,6 +585,16 @@ stats
 all titles from a-z (search page?)
     difference between search, explore, discover, watch next, etc.?
     
+---
+
+import watchlist / ratings
+    imdb
+    rotten
+    metacritic
+    netflix
+    prime
+    ...
+
 ---
 
 signup

@@ -2,7 +2,7 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.3] 2024-11-13
+## [0.5.3] 2024-11-14
 
 ### Added
 
@@ -10,9 +10,10 @@ Notable changes to GoodWatch will be documented in this file.
 
 ### Fixed
 * Onboarding could not be completed (only registered after 60 minutes due to aggresive caching)
-* Clicking on the country flag in the details screen caused a blank screen with a cryptic error message
-* On mobile, the filter bar dropdowns are not hidden by the results below
-* DNA filter search fields sometimes didn't show results even though they exist
+* Some streaming services were duplicates and didn't show any results
+* Discover: On mobile, the filter bar dropdowns are not hidden by the results below
+* Details: Clicking on the country flag in the details screen caused a blank screen with a cryptic error message
+* Details: Show DNA discover preview results
 
 ## [0.5.2] 2024-11-11
 

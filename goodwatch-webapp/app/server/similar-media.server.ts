@@ -1,34 +1,34 @@
-import type { WithSimilar } from "~/routes/api.similar-media"
-import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
-import { type AllRatings, getRatingKeys } from "~/utils/ratings"
+import type { WithSimilar } from "~/routes/api.similar-media";
+import { cached } from "~/utils/cache";
+import { executeQuery } from "~/utils/postgres";
+import { type AllRatings, getRatingKeys } from "~/utils/ratings";
 
-const LIMIT_PER_SEARCH = 30
+const LIMIT_PER_SEARCH = 30;
 
 export interface SimilarMedia extends AllRatings {
-	tmdb_id: number
-	media_type: "movie" | "tv"
-	title: string
-	release_year: string
-	popularity: number
-	poster_path: string
-	backdrop_path: string
+	tmdb_id: number;
+	media_type: "movie" | "tv";
+	title: string;
+	release_year: string;
+	popularity: number;
+	poster_path: string;
+	backdrop_path: string;
 }
 
 export interface SimilarMovie extends SimilarMedia {}
 
 export interface SimilarTV extends SimilarMedia {}
 
-export type SimilarResult = SimilarMovie | SimilarTV
+export type SimilarResult = SimilarMovie | SimilarTV;
 
 export type SimilarMediaResult = {
-	movies: SimilarMovie[]
-	tv: SimilarTV[]
-}
+	movies: SimilarMovie[];
+	tv: SimilarTV[];
+};
 
 export interface SimilarMediaParams {
-	searchTerm: string
-	withSimilarJson: string
+	searchTerm: string;
+	withSimilarJson: string;
 }
 
 export const getSimilarMedia = async (params: SimilarMediaParams) => {
@@ -38,36 +38,36 @@ export const getSimilarMedia = async (params: SimilarMediaParams) => {
 		params,
 		ttlMinutes: 60 * 24,
 		// ttlMinutes: 0,
-	})
-}
+	});
+};
 
 async function _getSimilarMedia({
 	searchTerm,
 	withSimilarJson,
 }: SimilarMediaParams): Promise<SimilarMediaResult> {
-	const withSimilar = JSON.parse(withSimilarJson)
+	const withSimilar = JSON.parse(withSimilarJson);
 
 	const movies = await _getSearchResults({
 		tableName: "movies",
 		searchTerm,
 		withSimilar,
-	})
+	});
 	const tv = await _getSearchResults({
 		tableName: "tv",
 		searchTerm,
 		withSimilar,
-	})
+	});
 
 	return {
 		movies,
 		tv,
-	}
+	};
 }
 
 interface CombinedResultProps {
-	tableName: "movies" | "tv"
-	searchTerm: string
-	withSimilar: WithSimilar[]
+	tableName: "movies" | "tv";
+	searchTerm: string;
+	withSimilar: WithSimilar[];
 }
 
 const _getSearchResults = async <T extends SimilarResult>({
@@ -75,7 +75,7 @@ const _getSearchResults = async <T extends SimilarResult>({
 	searchTerm,
 	withSimilar,
 }: CombinedResultProps) => {
-	const mediaType = tableName === "movies" ? "movie" : "tv"
+	const mediaType = tableName === "movies" ? "movie" : "tv";
 
 	const exactMatchCondition = searchTerm
 		? `(
@@ -83,8 +83,8 @@ const _getSearchResults = async <T extends SimilarResult>({
 			OR m.original_title ILIKE $2
 			OR m.alternative_titles_text ILIKE $2
 		)`
-		: ""
-	const words = searchTerm.split(" ").filter(Boolean)
+		: "";
+	const words = searchTerm.split(" ").filter(Boolean);
 	const wordConditions = words
 		.map(
 			(_, index) => `(
@@ -93,23 +93,23 @@ const _getSearchResults = async <T extends SimilarResult>({
 				OR m.alternative_titles_text ILIKE $${index + 3}
 			)`,
 		)
-		.join(" AND ")
+		.join(" AND ");
 
 	const selectedSimilarForMediaType = withSimilar.filter(
 		(similar) => similar.mediaType === mediaType,
-	)
+	);
 	const selectedSimilarCondition = selectedSimilarForMediaType
 		.map((similar) => {
 			return `
 			m.tmdb_id = ${similar.tmdbId}
-		`
+		`;
 		})
-		.join(" OR ")
+		.join(" OR ");
 
 	const searchWhereConditions = `
 		${searchTerm ? `(${exactMatchCondition})` : "TRUE"}
 		OR (${wordConditions || "TRUE"})
-	`
+	`;
 
 	const searchQuery = `
 		(
@@ -178,23 +178,22 @@ const _getSearchResults = async <T extends SimilarResult>({
 			)
 			SELECT *
 			FROM ranked_media
-			WHERE relevance > 0
 			ORDER BY
 				relevance DESC NULLS LAST,
 				aggregated_overall_score_voting_count DESC
 			LIMIT ${LIMIT_PER_SEARCH - selectedSimilarForMediaType.length}
 		)
 		LIMIT ${LIMIT_PER_SEARCH};
-  `
+  `;
 
 	// search query - only if search term was provided
 
 	const searchParams = [
 		...(searchTerm ? [searchTerm, `%${searchTerm}%`] : []),
 		...words.map((word) => `%${word}%`),
-	]
-	const searchResult = await executeQuery<T>(searchQuery, searchParams)
-	const searchRows: T[] = searchResult.rows
+	];
+	const searchResult = await executeQuery<T>(searchQuery, searchParams);
+	const searchRows: T[] = searchResult.rows;
 
-	return searchRows
-}
+	return searchRows;
+};
