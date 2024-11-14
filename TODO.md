@@ -5,6 +5,8 @@
 onboarding: fix duplicates
 db: exchange duplicates
 
+add restart onboarding
+
 ---
 
 new dna filters:
@@ -16,6 +18,15 @@ new sorting:
     critics score
     release date
     last air date
+
+---
+
+add caching for user settings
+    invalidate cache in setter
+
+add caching for user data
+    invalidate cache in all setters
+    possible with onboarding?
 
 ---
 

@@ -1,31 +1,31 @@
-import React from "react"
+import React from "react";
 import type {
 	ContentRatingResult,
 	MovieDetails,
 	ReleaseDate,
 	TVDetails,
-} from "~/server/details.server"
-import AgeRating from "~/ui/AgeRating"
-import Genres from "~/ui/Genres"
-import { Poster } from "~/ui/Poster"
-import Runtime from "~/ui/Runtime"
-import ShareButton from "~/ui/ShareButton"
-import TrailerOverlay from "~/ui/TrailerOverlay"
-import type { SectionIds } from "~/ui/details/common"
-import DNAPreview from "~/ui/dna/DNAPreview"
-import RatingBlock from "~/ui/ratings/RatingBlock"
-import RatingOverlay from "~/ui/ratings/RatingOverlay"
-import StreamingBlock from "~/ui/streaming/StreamingBlock"
-import ScoreSelector from "~/ui/user/ScoreSelector"
-import WatchStatusBlock from "~/ui/user/WatchStatusBlock"
-import { extractRatings } from "~/utils/ratings"
-import type { Section, SectionProps } from "~/utils/scroll"
+} from "~/server/details.server";
+import { Poster } from "~/ui/Poster";
+import ShareButton from "~/ui/ShareButton";
+import TrailerOverlay from "~/ui/TrailerOverlay";
+import AgeRating from "~/ui/details/AgeRating";
+import Genres from "~/ui/details/Genres";
+import Runtime from "~/ui/details/Runtime";
+import type { SectionIds } from "~/ui/details/common";
+import DNAPreview from "~/ui/dna/DNAPreview";
+import RatingBlock from "~/ui/ratings/RatingBlock";
+import RatingOverlay from "~/ui/ratings/RatingOverlay";
+import StreamingBlock from "~/ui/streaming/StreamingBlock";
+import ScoreSelector from "~/ui/user/ScoreSelector";
+import WatchStatusBlock from "~/ui/user/WatchStatusBlock";
+import { extractRatings } from "~/utils/ratings";
+import type { Section, SectionProps } from "~/utils/scroll";
 
 export interface DetailsOverviewProps {
-	details: MovieDetails | TVDetails
-	country: string
-	sectionProps: SectionProps<SectionIds>
-	navigateToSection: (section: Section) => void
+	details: MovieDetails | TVDetails;
+	country: string;
+	sectionProps: SectionProps<SectionIds>;
+	navigateToSection: (section: Section) => void;
 }
 
 export default function DetailsOverview({
@@ -34,7 +34,7 @@ export default function DetailsOverview({
 	sectionProps,
 	navigateToSection,
 }: DetailsOverviewProps) {
-	const ratings = extractRatings(details)
+	const ratings = extractRatings(details);
 
 	const {
 		backdrop_path,
@@ -47,23 +47,26 @@ export default function DetailsOverview({
 		streaming_links,
 		title,
 		videos,
-	} = details
+	} = details;
 
-	let ageRating: ContentRatingResult | ReleaseDate | undefined
-	let number_of_episodes: number | undefined
-	let number_of_seasons: number | undefined
-	let runtime: number | undefined
+	let ageRating: ContentRatingResult | ReleaseDate | undefined;
+	let number_of_episodes: number | undefined;
+	let number_of_seasons: number | undefined;
+	let runtime: number | undefined;
 	if (media_type === "movie") {
 		ageRating = (details.certifications || []).find(
 			(release) => release.certification,
-		)
-		runtime = details.runtime
+		);
+		runtime = details.runtime;
 	} else {
-		ageRating = (details.certifications || []).find((release) => release.rating)
-		number_of_episodes = details.number_of_episodes
-		number_of_seasons = details.number_of_seasons
+		ageRating = (details.certifications || []).find(
+			(release) => release.rating,
+		);
+		number_of_episodes = details.number_of_episodes;
+		number_of_seasons = details.number_of_seasons;
 	}
 
+	console.log({ dna });
 	return (
 		<div {...sectionProps.overview}>
 			<div
@@ -79,31 +82,43 @@ export default function DetailsOverview({
 							<small>({release_year})</small>
 						</h1>
 
-						<div className="flex gap-4 items-center mb-4 ml-">
-							<AgeRating ageRating={ageRating} />
+						<div className="flex gap-4 items-center flex-wrap mb-4 ml-">
+							{ageRating && (
+								<>
+									<AgeRating ageRating={ageRating} /> ·
+								</>
+							)}
 							{runtime ? (
 								<>
-									· <Runtime minutes={runtime} />
+									<Runtime minutes={runtime} /> ·
 								</>
 							) : null}
 							{number_of_episodes && number_of_seasons ? (
 								<>
-									·{" "}
-									<div className="flex gap-1">
+									<span className="flex gap-1">
 										<strong>{number_of_episodes}</strong>
 										Episode{number_of_episodes === 1 ? "" : "s"} in
 										<strong>{number_of_seasons}</strong>
 										Season{number_of_seasons === 1 ? "" : "s"}
-									</div>
+									</span>
+									·
 								</>
 							) : null}
 							<div className="hidden sm:flex items-center gap-4">
-								· <Genres genres={genres} type={media_type} />
+								<Genres
+									genres={genres}
+									subgenres={dna["Sub-Genres"]}
+									type={media_type}
+								/>
 							</div>
 						</div>
 
 						<div className="sm:hidden flex items-center gap-4 flex-wrap">
-							<Genres genres={genres} type={media_type} />
+							<Genres
+								genres={genres}
+								subgenres={dna["Sub-Genres"]}
+								type={media_type}
+							/>
 						</div>
 
 						<div className="sm:hidden flex items-center gap-4 flex-wrap mt-6">
@@ -177,5 +192,5 @@ export default function DetailsOverview({
 				</div>
 			</div>
 		</div>
-	)
+	);
 }

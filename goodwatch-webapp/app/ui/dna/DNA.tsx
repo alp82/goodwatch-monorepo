@@ -7,16 +7,16 @@ import { Spinner } from "~/ui/wait/Spinner";
 
 export interface DNAProps {
 	details: MovieDetails | TVDetails;
-	dna: DNA;
 }
 
-export default function DNA({ details, dna = {} }: DNAProps) {
+export default function DNA({ details }: DNAProps) {
 	const [hasDNA, setHasDNA] = useState<boolean | null>(null);
+	const { dna = {} } = details;
 
 	useEffect(() => {
 		setHasDNA(Object.keys(dna).length > 0);
 	}, []);
-	const sortedCategories = getSortedCategories(dna);
+	const sortedCategories = getSortedCategories(dna, true, false);
 
 	const [spoilerVisible, setSpoilerVisible] = React.useState(false);
 	const handleRevealSpoiler = () => {
