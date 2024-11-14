@@ -1,13 +1,13 @@
-import React, { useEffect } from "react"
-import type { DiscoverParams } from "~/server/discover.server"
-import { discoverFilters } from "~/server/types/discover-types"
-import PresetButton from "~/ui/button/PresetButton"
-import EditableSection from "~/ui/filter/sections/EditableSection"
-import NumberInput from "~/ui/form/NumberInput"
-import { RangeSlider } from "~/ui/form/RangeSlider"
-import { useNav } from "~/utils/navigation"
+import React, { useEffect } from "react";
+import type { DiscoverParams } from "~/server/discover.server";
+import { discoverFilters } from "~/server/types/discover-types";
+import PresetButton from "~/ui/button/PresetButton";
+import EditableSection from "~/ui/filter/sections/EditableSection";
+import NumberInput from "~/ui/form/NumberInput";
+import { RangeSlider } from "~/ui/form/RangeSlider";
+import { useNav } from "~/utils/navigation";
 
-const STEP_COUNT = 10
+const STEP_COUNT = 10;
 
 const presets = [
 	{
@@ -25,13 +25,13 @@ const presets = [
 		minScore: 0,
 		maxScore: 40,
 	},
-]
+];
 
 interface SectionScoreParams {
-	params: DiscoverParams
-	editing: boolean
-	onEdit: () => void
-	onClose: () => void
+	params: DiscoverParams;
+	editing: boolean;
+	onEdit: () => void;
+	onClose: () => void;
 }
 
 export default function SectionScore({
@@ -49,83 +49,93 @@ export default function SectionScore({
 		params.maxScore !== undefined
 			? Number.parseInt(params.maxScore)
 			: presets[0].maxScore,
-	])
+	]);
 	const minScore =
 		typeof scoreValues[0] === "number"
 			? scoreValues[0]
-			: Number.parseInt(params.minScore)
+			: Number.parseInt(params.minScore);
 	const maxScore =
 		typeof scoreValues[1] === "number"
 			? scoreValues[1]
-			: Number.parseInt(params.maxScore)
+			: Number.parseInt(params.maxScore);
 
 	// update handlers
 
 	const { updateQueryParams } =
-		useNav<Pick<DiscoverParams, "minScore" | "maxScore">>()
+		useNav<Pick<DiscoverParams, "minScore" | "maxScore">>();
 	useEffect(() => {
+		const defaultPreset = presets[0];
 		if (
 			!editing ||
 			params.minScore !== undefined ||
 			params.maxScore !== undefined
-		)
-			return
+		) {
+			setScoreValues([
+				params.minScore
+					? Number.parseInt(params.minScore)
+					: defaultPreset.minScore,
+				params.maxScore
+					? Number.parseInt(params.maxScore)
+					: defaultPreset.minScore,
+			]);
+			return;
+		}
 
 		updateQueryParams({
-			minScore: presets[0].minScore.toString(),
-			maxScore: presets[1].maxScore.toString(),
-		})
-	}, [editing, params.minScore, params.maxScore])
+			minScore: defaultPreset.minScore.toString(),
+			maxScore: defaultPreset.maxScore.toString(),
+		});
+	}, [editing, params.minScore, params.maxScore]);
 
 	const updateScores = (values: number[]) => {
 		updateQueryParams({
 			minScore: values[0].toString(),
 			maxScore: values[1].toString(),
-		})
-	}
+		});
+	};
 
 	const handlePreset = (preset: (typeof presets)[number]) => {
-		const { minScore, maxScore } = preset
-		setScoreValues([minScore, maxScore])
+		const { minScore, maxScore } = preset;
+		setScoreValues([minScore, maxScore]);
 		updateQueryParams({
 			minScore: minScore.toString(),
 			maxScore: maxScore.toString(),
-		})
-	}
+		});
+	};
 	const setMinScore = (value: string) => {
-		const parsedMinScore = Number.parseInt(value)
-		setScoreValues((prev) => [parsedMinScore, prev[1]])
-	}
+		const parsedMinScore = Number.parseInt(value);
+		setScoreValues((prev) => [parsedMinScore, prev[1]]);
+	};
 	const setMaxScore = (value: string) => {
-		const parsedMaxScore = Number.parseInt(value)
-		setScoreValues((prev) => [prev[0], parsedMaxScore])
-	}
+		const parsedMaxScore = Number.parseInt(value);
+		setScoreValues((prev) => [prev[0], parsedMaxScore]);
+	};
 	const normalizeScores = () => {
-		const realMinScore = Math.min(Math.max(scoreValues[0], 0), 100)
-		const realMaxScore = Math.min(Math.max(scoreValues[1], 0), 100)
-		const normalizedMinScore = Math.min(realMinScore, realMaxScore)
-		const normalizedMaxScore = Math.max(realMinScore, realMaxScore)
-		setScoreValues([normalizedMinScore, normalizedMaxScore])
+		const realMinScore = Math.min(Math.max(scoreValues[0], 0), 100);
+		const realMaxScore = Math.min(Math.max(scoreValues[1], 0), 100);
+		const normalizedMinScore = Math.min(realMinScore, realMaxScore);
+		const normalizedMaxScore = Math.max(realMinScore, realMaxScore);
+		setScoreValues([normalizedMinScore, normalizedMaxScore]);
 		updateQueryParams({
 			minScore: normalizedMinScore.toString(),
 			maxScore: normalizedMaxScore.toString(),
-		})
-	}
+		});
+	};
 
 	const handleRemoveAll = () => {
 		updateQueryParams({
 			minScore: undefined,
 			maxScore: undefined,
-		})
-		onClose()
-	}
+		});
+		onClose();
+	};
 
 	// rendering
 
 	const getBgColorName = (score: number) => {
-		const vibeColorIndex = Math.floor(score / 10) * 10
-		return `bg-vibe-${vibeColorIndex}`
-	}
+		const vibeColorIndex = Math.floor(score / 10) * 10;
+		return `bg-vibe-${vibeColorIndex}`;
+	};
 
 	return (
 		<EditableSection
@@ -218,5 +228,5 @@ export default function SectionScore({
 				</div>
 			)}
 		</EditableSection>
-	)
+	);
 }

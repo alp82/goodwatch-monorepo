@@ -2,31 +2,15 @@
 ```
 ---
 
+score above 80 preset does not reset scores if they were 0-40 before
+
 onboarding: fix duplicates
 db: exchange duplicates
 
 add restart onboarding
 
----
-
-new dna filters:
-    spoken languages
-    dubbed languages
-    
-new sorting:
-    user score
-    critics score
-    release date
-    last air date
-
----
-
-add caching for user settings
-    invalidate cache in setter
-
-add caching for user data
-    invalidate cache in all setters
-    possible with onboarding?
+filter duplicate subgenres
+    http://localhost:3003/movie/64-talk-to-her
 
 ---
 
@@ -85,6 +69,27 @@ plan to watch
 
 taste matching (logged in users only - or a teaser)
     you both like ABC
+
+---
+
+new dna filters:
+    spoken languages
+    dubbed languages
+    
+new sorting:
+    user score
+    critics score
+    release date
+    last air date
+
+---
+
+add caching for user settings
+    invalidate cache in setter
+
+add caching for user data
+    invalidate cache in all setters
+    possible with onboarding?
 
 ---
 
