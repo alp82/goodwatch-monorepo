@@ -2,44 +2,6 @@
 ```
 ---
 
-add restart onboarding
-
-onboarding: fix duplicates
-db: exchange duplicates
-
-filter duplicate subgenres
-    http://localhost:3003/movie/64-talk-to-her
-
----
-
-details
-    DNA different sections
-        subgenres below genres (filter standard genres)
-        mood and themes in summary
-    top DNA categories, hide the rest
-    swiper for discover preview
-
-movie card
-    overlay: show movie or tv icon 
-    max 3 streaming overlays
-    
----
-
-swiper
-    edgeSwipeDetection?
-    mousewheel
-    freemode: sticky?
-    lazyPreloadPrevNext?
-    navigation: https://swiperjs.com/swiper-api#navigation
-    cardsEffect?
-
-similar headings for start page (trending, moods, themes, etc.)
-    each section as swipable
-
-delete explore page and BE
-
----
-
 user profile
     show all scores
     grouped by tier
@@ -67,6 +29,37 @@ plan to watch
 
 taste matching (logged in users only - or a teaser)
     you both like ABC
+
+---
+
+swiper
+    edgeSwipeDetection?
+    mousewheel
+    freemode: sticky?
+    lazyPreloadPrevNext?
+    navigation: https://swiperjs.com/swiper-api#navigation
+    cardsEffect?
+
+similar headings for start page (trending, moods, themes, etc.)
+    each section as swipable
+
+delete explore page and BE
+
+---
+
+details
+    DNA different sections
+    top DNA categories, hide the rest
+    swiper for discover preview
+
+movie card
+    overlay: show movie or tv icon 
+    max 3 streaming overlays
+    
+---
+
+filter duplicate subgenres
+    http://localhost:3003/movie/64-talk-to-her
 
 ---
 
