@@ -4,30 +4,31 @@ import {
 	MenuItem,
 	MenuItems,
 	Transition,
-} from "@headlessui/react"
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
-import React, { Fragment } from "react"
-import { useLocation } from "react-router"
+} from "@headlessui/react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import React, { Fragment } from "react";
+import { useLocation } from "react-router";
 
 import {
 	ArrowTopRightOnSquareIcon,
 	BookmarkIcon,
-} from "@heroicons/react/20/solid"
-import { EyeIcon } from "@heroicons/react/24/solid"
-import { Link } from "@remix-run/react"
-import logo from "~/img/goodwatch-logo.png"
-import Search from "~/ui/Search"
-import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
-import { SignOutLink } from "~/ui/auth/SignOutLink"
-import { GlobalLoading } from "~/ui/nav/GlobalLoading"
-import { useUser } from "~/utils/auth"
+} from "@heroicons/react/20/solid";
+import { Cog6ToothIcon, CogIcon, EyeIcon } from "@heroicons/react/24/solid";
+import { Link } from "@remix-run/react";
+import logo from "~/img/goodwatch-logo.png";
+import { useSetUserSettings } from "~/routes/api.user-settings.set";
+import Search from "~/ui/Search";
+import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
+import { SignOutLink } from "~/ui/auth/SignOutLink";
+import { GlobalLoading } from "~/ui/nav/GlobalLoading";
+import { useUser } from "~/utils/auth";
 
 export default function Header() {
-	const location = useLocation()
-	const isPage = (pathname: string) => location.pathname.startsWith(pathname)
-	const isPageExact = (pathname: string) => location.pathname === pathname
+	const location = useLocation();
+	const isPage = (pathname: string) => location.pathname.startsWith(pathname);
+	const isPageExact = (pathname: string) => location.pathname === pathname;
 
-	const { user, loading } = useUser()
+	const { user, loading } = useUser();
 
 	return (
 		<div className="fixed top-0 z-50 w-full bg-gray-900">
@@ -229,6 +230,21 @@ export default function Header() {
 												<MenuItem>
 													{({ focus }) => (
 														<Link
+															to="/settings"
+															className={`w-full flex gap-2 items-center px-4 py-2 text-base font-medium ${
+																focus
+																	? "bg-gray-700 text-white"
+																	: "text-gray-200"
+															}`}
+														>
+															<Cog6ToothIcon className="w-5 h-5" />
+															<span>User Settings</span>
+														</Link>
+													)}
+												</MenuItem>
+												<MenuItem>
+													{({ focus }) => (
+														<Link
 															to="/discover?type=all&watchedType=plan-to-watch&streamingPreset=mine"
 															prefetch="viewport"
 															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
@@ -248,12 +264,12 @@ export default function Header() {
 													)}
 												</MenuItem>
 												<MenuItem>
-													{({ active }) => (
+													{({ focus }) => (
 														<Link
 															to="/discover?type=all&watchedType=watched"
 															prefetch="viewport"
 															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
-																active
+																focus
 																	? "bg-gray-700 text-white"
 																	: "text-green-500"
 															}`}
@@ -283,5 +299,5 @@ export default function Header() {
 				</div>
 			</nav>
 		</div>
-	)
+	);
 }
