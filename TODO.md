@@ -2,12 +2,10 @@
 ```
 ---
 
-score above 80 preset does not reset scores if they were 0-40 before
+add restart onboarding
 
 onboarding: fix duplicates
 db: exchange duplicates
-
-add restart onboarding
 
 filter duplicate subgenres
     http://localhost:3003/movie/64-talk-to-her
