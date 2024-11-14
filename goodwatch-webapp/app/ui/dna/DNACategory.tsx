@@ -122,7 +122,7 @@ export default function DNACategory({
 									key={index}
 									className="w-full h-full border-2 rounded-2xl border-slate-700"
 								>
-									<Poster />
+									<Poster loading={true} />
 								</div>
 							),
 						)

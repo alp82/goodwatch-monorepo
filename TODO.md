@@ -2,10 +2,6 @@
 ```
 ---
 
-fix dna previews
-
-dna search sometimes empty
-
 onboarding: fix duplicates
 db: exchange duplicates
 
@@ -14,19 +10,21 @@ db: exchange duplicates
 new dna filters:
     spoken languages
     dubbed languages
+    
+new sorting:
+    user score
+    critics score
+    release date
+    last air date
 
 ---
 
 details
-    scroll behavior
-        country addition?
     DNA different sections
         subgenres below genres (filter standard genres)
         mood and themes in summary
     top DNA categories, hide the rest
     swiper for discover preview
-    no flickering for discover previews
-    section title anchors in URL
 
 movie card
     overlay: show movie or tv icon 
