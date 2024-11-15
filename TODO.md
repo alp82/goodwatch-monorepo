@@ -2,6 +2,10 @@
 ```
 ---
 
+discover page title based on filters
+
+---
+
 user profile
     show all scores
     grouped by tier
@@ -26,6 +30,8 @@ plan to watch
     easy adding more
     
     remove separate wishlist page?
+
+---
 
 taste matching (logged in users only - or a teaser)
     you both like ABC

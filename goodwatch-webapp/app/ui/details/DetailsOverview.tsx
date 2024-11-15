@@ -66,7 +66,6 @@ export default function DetailsOverview({
 		number_of_seasons = details.number_of_seasons;
 	}
 
-	console.log({ dna });
 	return (
 		<div {...sectionProps.overview}>
 			<div

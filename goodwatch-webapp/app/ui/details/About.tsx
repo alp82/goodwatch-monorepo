@@ -21,8 +21,6 @@ export default function About({ details }: AboutProps) {
 	const mood = dna.Mood || [];
 	const themes = dna.Themes || [];
 
-	console.log(themes.length > 0 || mood.length > 0);
-
 	return (
 		<>
 			<h2 className="mt-6 text-2xl font-bold">About</h2>

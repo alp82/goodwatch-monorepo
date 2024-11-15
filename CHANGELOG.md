@@ -9,7 +9,6 @@ Notable changes to GoodWatch will be documented in this file.
 ### Changed
 
 ### Fixed
-* Some streaming services were duplicates and didn't show any results
 
 ## [0.5.4] 2024-11-14
 
@@ -19,6 +18,7 @@ Notable changes to GoodWatch will be documented in this file.
 * Details: Some DNA tags are inlined in more intuitive places
 
 ### Fixed
+* Some streaming services were duplicates and didn't show any results
 
 ## [0.5.3] 2024-11-13
 
