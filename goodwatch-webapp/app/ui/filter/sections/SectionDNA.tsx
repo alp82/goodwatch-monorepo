@@ -3,37 +3,37 @@ import {
 	CheckIcon,
 	MagnifyingGlassIcon,
 	TagIcon,
-} from "@heroicons/react/20/solid"
-import React from "react"
-import Highlighter from "react-highlight-words"
-import { useDNA } from "~/routes/api.dna"
+} from "@heroicons/react/20/solid";
+import React from "react";
+import Highlighter from "react-highlight-words";
+import { useDNA } from "~/routes/api.dna";
 import type {
 	DiscoverParams,
 	SimilarDNACombinationType,
-} from "~/server/discover.server"
-import type { DNAResult } from "~/server/dna.server"
+} from "~/server/discover.server";
+import type { DNAResult } from "~/server/dna.server";
 import {
 	type CombinationTypeOption,
 	combinationTypeOptions,
 	discoverFilters,
-} from "~/server/types/discover-types"
-import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
-import EditableSection from "~/ui/filter/sections/EditableSection"
+} from "~/server/types/discover-types";
+import OneOrMoreItems from "~/ui/filter/OneOrMoreItems";
+import EditableSection from "~/ui/filter/sections/EditableSection";
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
-} from "~/ui/form/Autocomplete"
-import RadioBlock from "~/ui/form/RadioBlock"
-import { Tag } from "~/ui/tags/Tag"
-import { Ping } from "~/ui/wait/Ping"
-import { useNav } from "~/utils/navigation"
-import { useDebounce } from "~/utils/timing"
+} from "~/ui/form/Autocomplete";
+import RadioBlock from "~/ui/form/RadioBlock";
+import { Tag } from "~/ui/tags/Tag";
+import { Ping } from "~/ui/wait/Ping";
+import { useNav } from "~/utils/navigation";
+import { useDebounce } from "~/utils/timing";
 
 interface SectionDNAParams {
-	params: DiscoverParams
-	editing: boolean
-	onEdit: () => void
-	onClose: () => void
+	params: DiscoverParams;
+	editing: boolean;
+	onEdit: () => void;
+	onClose: () => void;
 }
 
 export default function SectionDNA({
@@ -42,67 +42,67 @@ export default function SectionDNA({
 	onEdit,
 	onClose,
 }: SectionDNAParams) {
-	const [searchText, setSearchText] = React.useState("")
+	const [searchText, setSearchText] = React.useState("");
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchText(event.target.value)
-	}
-	const debouncedSearchText = useDebounce(searchText, 200)
+		setSearchText(event.target.value);
+	};
+	const debouncedSearchText = useDebounce(searchText, 200);
 
 	const [combinationType, setCombinationType] =
 		React.useState<SimilarDNACombinationType>(
 			params.similarDNACombinationType || combinationTypeOptions[0].name,
-		)
+		);
 	const selectedCombinationTypeOption = combinationTypeOptions.find(
 		(option) => option.name === combinationType,
-	)
+	);
 	const handleChangeCombinationType = (
 		combinationTypeOption: CombinationTypeOption,
 	) => {
-		const combinationType = combinationTypeOption.name
-		setCombinationType(combinationType)
+		const combinationType = combinationTypeOption.name;
+		setCombinationType(combinationType);
 		updateQueryParams({
 			similarDNACombinationType: combinationType,
-		})
-	}
+		});
+	};
 
 	// data retrieval
 
 	const dnaResult = useDNA({
 		text: debouncedSearchText,
-	})
-	const dna = dnaResult.data?.result || []
+	});
+	const dna = dnaResult.data?.result || [];
 
-	const { similarDNA = "" } = params
-	const dnaKeys = (similarDNA || "").split(",").filter(Boolean)
+	const { similarDNA = "" } = params;
+	const dnaKeys = (similarDNA || "").split(",").filter(Boolean);
 	const dnaToInclude = similarDNA
 		.split(",")
 		.filter(Boolean)
 		.map((dna) => {
-			const [category, label] = dna.split(":", 2)
+			const [category, label] = dna.split(":", 2);
 			return {
 				category,
 				label,
-			}
-		})
+			};
+		});
 
 	// autocomplete data
 
 	const autocompleteItems = dna.map((dna: DNAResult) => {
-		const key = `${dna.category}:${dna.label}`
-		const label = dna.label
+		const key = `${dna.category}:${dna.label}`;
+		const label = dna.label;
 		return {
 			key,
 			label,
 			category: dna.category,
 			count: dna.count_all,
-		}
-	})
+		};
+	});
 	const autocompleteRenderItem = ({
 		item,
 	}: RenderItemParams<
 		AutocompleteItem & { category: string; count: number }
 	>) => {
-		const isSelected = dnaKeys.includes(item.key)
+		const isSelected = dnaKeys.includes(item.key);
 		return (
 			<div
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
@@ -135,13 +135,13 @@ export default function SectionDNA({
 					/>
 				)}
 			</div>
-		)
-	}
+		);
+	};
 
 	// update handlers
 
 	const { updateQueryParams } =
-		useNav<Pick<DiscoverParams, "similarDNA" | "similarDNACombinationType">>()
+		useNav<Pick<DiscoverParams, "similarDNA" | "similarDNACombinationType">>();
 	const updateDNA = (
 		dnaToInclude: DNAResult[],
 		updatedCombinationType: string,
@@ -151,8 +151,8 @@ export default function SectionDNA({
 				.map((dna) => `${dna.category}:${dna.label}`)
 				.join(","),
 			similarDNACombinationType: updatedCombinationType,
-		})
-	}
+		});
+	};
 
 	const handleSelect = (
 		selectedItem: AutocompleteItem & { category: string; count: number },
@@ -168,24 +168,24 @@ export default function SectionDNA({
 						label: selectedItem.label,
 						count_all: selectedItem.count,
 					},
-				]
-		updateDNA(updatedDNAToInclude, combinationType)
-	}
+				];
+		updateDNA(updatedDNAToInclude, combinationType);
+	};
 
 	const handleDelete = (dnaToDelete: DNAResult) => {
 		const updatedDNAToInclude: DNAResult[] = dnaToInclude.filter(
 			(dna) =>
 				`${dna.category}:${dna.label}` !==
 				`${dnaToDelete.category}:${dnaToDelete.label}`,
-		)
-		updateDNA(updatedDNAToInclude, combinationType)
-	}
+		);
+		updateDNA(updatedDNAToInclude, combinationType);
+	};
 
 	const handleRemoveAll = () => {
-		updateDNA([], "")
-		setSearchText("")
-		onClose()
-	}
+		updateDNA([], "");
+		setSearchText("");
+		onClose();
+	};
 
 	// rendering
 
@@ -263,5 +263,5 @@ export default function SectionDNA({
 				</div>
 			)}
 		</EditableSection>
-	)
+	);
 }

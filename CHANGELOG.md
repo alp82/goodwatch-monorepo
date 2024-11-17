@@ -2,13 +2,16 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.5] 2024-11-xx
+## [0.5.5] 2024-11-17
 
 ### Added
+* Discover: Streaming filter is not only showing flatrate, but also buy/rent titles if chosen
 
 ### Changed
 
 ### Fixed
+* Discover results were never complete because a streaming filter was always implicitly added 
+* Discover DNA filter allowed SQL injection
 
 ## [0.5.4] 2024-11-14
 

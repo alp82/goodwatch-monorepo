@@ -1,28 +1,28 @@
-import type React from "react"
-import { useEffect, useRef, useState } from "react"
-import { useUserData } from "~/routes/api.user-data"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
-import type { Score } from "~/server/scores.server"
-import ScoreAction from "~/ui/user/actions/ScoreAction"
-import WatchHistoryAction from "~/ui/user/actions/WatchHistoryAction"
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import { useUserData } from "~/routes/api.user-data";
+import type { MovieDetails, TVDetails } from "~/server/details.server";
+import type { Score } from "~/server/scores.server";
+import ScoreAction from "~/ui/user/actions/ScoreAction";
+import WatchHistoryAction from "~/ui/user/actions/WatchHistoryAction";
 
 interface ScoreSelectorProps {
-	details: MovieDetails | TVDetails
-	onChange?: (score: Score | null) => void
+	details: MovieDetails | TVDetails;
+	onChange?: (score: Score | null) => void;
 }
 
 export default function ScoreSelector({
 	details,
 	onChange,
 }: ScoreSelectorProps) {
-	const { tmdb_id, media_type } = details
+	const { tmdb_id, media_type } = details;
 
-	const { data: userData } = useUserData()
+	const { data: userData } = useUserData();
 
-	const userScore = userData?.[media_type]?.[tmdb_id]?.score || null
-	const [score, setScore] = useState<Score | null>(userScore)
-	const [hoveredScore, setHoveredScore] = useState<Score | null>(null)
-	const [clearedScore, setClearedScore] = useState<Score | null>(null)
+	const userScore = userData?.[media_type]?.[tmdb_id]?.score || null;
+	const [score, setScore] = useState<Score | null>(userScore);
+	const [hoveredScore, setHoveredScore] = useState<Score | null>(null);
+	const [clearedScore, setClearedScore] = useState<Score | null>(null);
 
 	const scoreLabels = [
 		"Not Rated",
@@ -36,110 +36,110 @@ export default function ScoreSelector({
 		"Great",
 		"Excellent",
 		"Must Watch",
-	]
+	];
 
 	useEffect(() => {
-		if (score === userScore) return
-		setScore(userScore)
-	}, [userScore])
+		if (score === userScore) return;
+		setScore(userScore);
+	}, [userScore]);
 
 	const getColorForIndex = (index: Score | null) => {
-		const hovered = index && hoveredScore && index <= hoveredScore
-		const scored = index && !hoveredScore && score && index <= score
+		const hovered = index && hoveredScore && index <= hoveredScore;
+		const scored = index && !hoveredScore && score && index <= score;
 
 		if ((hovered || scored) && !clearedScore) {
-			const vibeColorIndex = (hoveredScore || score || -1) * 10
-			return `bg-vibe-${vibeColorIndex}`
+			const vibeColorIndex = (hoveredScore || score || -1) * 10;
+			return `bg-vibe-${vibeColorIndex}`;
 		}
-		return `bg-vibe-${index * 10}/35`
+		return `bg-vibe-${index * 10}/35`;
 		// return "bg-gray-600"
-	}
+	};
 
 	const getLabelText = () => {
 		if (score !== clearedScore || hoveredScore !== clearedScore) {
-			if (hoveredScore) return `${scoreLabels[hoveredScore]} (${hoveredScore})`
-			if (score) return `${scoreLabels[score]} (${score})`
+			if (hoveredScore) return `${scoreLabels[hoveredScore]} (${hoveredScore})`;
+			if (score) return `${scoreLabels[score]} (${score})`;
 		}
-		return scoreLabels[0]
-	}
+		return scoreLabels[0];
+	};
 
 	const handlePointerEnter = (
 		event: React.TouchEvent | React.MouseEvent,
 		index: Score | null,
 	) => {
-		event.preventDefault() // prevent text selection on desktop and scrolling on mobile
-		setHoveredScore(index)
-	}
+		event.preventDefault(); // prevent text selection on desktop and scrolling on mobile
+		setHoveredScore(index);
+	};
 
 	const handlePointerLeave = () => {
-		setHoveredScore(null)
-		setClearedScore(null)
-	}
+		setHoveredScore(null);
+		setClearedScore(null);
+	};
 
 	const handleClick = (index: Score | null) => {
 		setScore((previousScore) => {
-			let newScore = null
+			let newScore = null;
 
-			const clearingScore = previousScore === index
+			const clearingScore = previousScore === index;
 			if (clearingScore) {
-				setClearedScore(index)
+				setClearedScore(index);
 			} else {
-				newScore = index
+				newScore = index;
 			}
 
 			if (onChange) {
-				onChange(newScore)
+				onChange(newScore);
 			}
-			return newScore
-		})
-	}
+			return newScore;
+		});
+	};
 
 	// touch controls
-	const [startY, setStartY] = useState<number | null>(null)
-	const verticalThreshold = 30 // You can adjust this threshold based on your needs
+	const [startY, setStartY] = useState<number | null>(null);
+	const verticalThreshold = 30; // You can adjust this threshold based on your needs
 
 	const [lastTouchedElement, setLastTouchedElement] =
-		useState<HTMLElement | null>(null)
+		useState<HTMLElement | null>(null);
 
 	const handleTouchStart = (e: React.TouchEvent) => {
-		const touch = e.touches[0]
-		setStartY(touch.clientY)
-	}
+		const touch = e.touches[0];
+		setStartY(touch.clientY);
+	};
 
-	const containerRef = useRef<HTMLDivElement>(null)
+	const containerRef = useRef<HTMLDivElement>(null);
 	const handleTouchMove = (e: React.TouchEvent) => {
-		const touch = e.touches[0]
-		if (!containerRef.current) return
+		const touch = e.touches[0];
+		if (!containerRef.current) return;
 
 		// Check if vertical movement is above the threshold
 		if (startY !== null) {
-			const verticalMovement = Math.abs(touch.clientY - startY)
+			const verticalMovement = Math.abs(touch.clientY - startY);
 			if (verticalMovement > verticalThreshold) {
 				// Cancel further movement handling if threshold is exceeded
-				setHoveredScore(null)
-				setLastTouchedElement(null)
-				return
+				setHoveredScore(null);
+				setLastTouchedElement(null);
+				return;
 			}
 		}
 
-		const rect = containerRef.current.getBoundingClientRect()
-		const touchX = touch.clientX - rect.left
+		const rect = containerRef.current.getBoundingClientRect();
+		const touchX = touch.clientX - rect.left;
 
-		const containerWidth = rect.width
+		const containerWidth = rect.width;
 		const touchScore = Math.min(
 			10,
 			Math.max(1, Math.ceil((touchX / containerWidth) * 10)),
-		) as Score
+		) as Score;
 
-		setHoveredScore(touchScore)
+		setHoveredScore(touchScore);
 
 		// Track the last touched element
 		const element = document.elementFromPoint(
 			touch.clientX,
 			touch.clientY,
-		) as HTMLElement
-		setLastTouchedElement(element)
-	}
+		) as HTMLElement;
+		setLastTouchedElement(element);
+	};
 
 	const handleTouchEnd = () => {
 		if (hoveredScore && lastTouchedElement) {
@@ -147,16 +147,16 @@ export default function ScoreSelector({
 				bubbles: true,
 				cancelable: true,
 				view: window,
-			})
-			lastTouchedElement.dispatchEvent(clickEvent)
+			});
+			lastTouchedElement.dispatchEvent(clickEvent);
 		}
-		setHoveredScore(null)
-		setLastTouchedElement(null) // Reset the last touched element after submission
-	}
+		setHoveredScore(null);
+		setLastTouchedElement(null); // Reset the last touched element after submission
+	};
 
 	return (
 		<div
-			className="divide-y divide-gray-600 py-2 rounded-lg bg-gray-900 bg-opacity-50 shadow"
+			className="divide-y divide-gray-600 py-2 rounded-lg bg-gray-900 bg-opacity-70 shadow-lg"
 			ref={containerRef}
 			onTouchStart={handleTouchStart}
 			onTouchMove={handleTouchMove}
@@ -180,7 +180,7 @@ export default function ScoreSelector({
 			</div>
 			<div className="flex px-4 transition duration-150 ease-in-out">
 				{Array.from({ length: 10 }, (_, i: number) => {
-					const scoreIndex = (i + 1) as Score
+					const scoreIndex = (i + 1) as Score;
 					return (
 						<ScoreAction
 							key={i + 1}
@@ -202,9 +202,9 @@ export default function ScoreSelector({
 								/>
 							</div>
 						</ScoreAction>
-					)
+					);
 				})}
 			</div>
 		</div>
-	)
+	);
 }

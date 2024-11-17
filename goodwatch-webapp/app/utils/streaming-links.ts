@@ -50,8 +50,7 @@ export const getStreamingUrl = (
 	return link.tmdb_url;
 };
 
-export const ignoredProviders = [
-	10, // Amazon Video
+export const duplicateProviders = [
 	24, // Quickflix Store
 	119, // Amazon Prime Video
 	188, // YouTube Premium
@@ -63,4 +62,13 @@ export const ignoredProviders = [
 	524, // Discovery+
 	1796, // Netflix basic with Ads
 	2100, // Amazon Prime Video with Ads
+];
+
+export const duplicateProviderMapping = {
+	9: [10],
+};
+
+export const ignoredProviders = [
+	...duplicateProviders,
+	10, // Amazon Video
 ];

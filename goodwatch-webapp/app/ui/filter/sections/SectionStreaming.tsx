@@ -9,6 +9,7 @@ import type { DiscoverParams, StreamingPreset } from "~/server/discover.server";
 import { discoverFilters } from "~/server/types/discover-types";
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems";
 import EditableSection from "~/ui/filter/sections/EditableSection";
+import Checkbox from "~/ui/form/Checkbox";
 import Select, { type SelectItem } from "~/ui/form/Select";
 import Tabs, { type Tab } from "~/ui/tabs/Tabs";
 import { Ping } from "~/ui/wait/Ping";
@@ -33,6 +34,7 @@ export default function SectionStreaming({
 	onClose,
 }: SectionStreamingParams) {
 	// local data
+	const { withStreamingTypes = "" } = params;
 
 	const { locale } = useLocale();
 	const localStreamingProviders = useMemo(() => {
@@ -172,7 +174,10 @@ export default function SectionStreaming({
 		useNav<
 			Pick<
 				DiscoverParams,
-				"streamingPreset" | "withStreamingProviders" | "country"
+				| "streamingPreset"
+				| "withStreamingProviders"
+				| "withStreamingTypes"
+				| "country"
 			>
 		>();
 
@@ -192,6 +197,13 @@ export default function SectionStreaming({
 			country,
 		});
 		localStorage.setItem("country", country);
+	};
+
+	const handleIncludeBuyRentChange = (checked: boolean) => {
+		const withStreamingTypes = checked ? "flatrate,free,buy,rent" : "";
+		updateQueryParams({
+			withStreamingTypes,
+		});
 	};
 
 	const handleRemoveAll = () => {
@@ -275,6 +287,17 @@ export default function SectionStreaming({
 									</div>
 								</>
 							)}
+							<Checkbox
+								option={{
+									name: "includeBuyRent",
+									label: "Include titles to buy or rent",
+								}}
+								defaultChecked={
+									withStreamingTypes.includes("buy") &&
+									withStreamingTypes.includes("rent")
+								}
+								onChange={handleIncludeBuyRentChange}
+							/>
 						</div>
 					) : null}
 					<div className="flex flex-wrap items-center gap-2">

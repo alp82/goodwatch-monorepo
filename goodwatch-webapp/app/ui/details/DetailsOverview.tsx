@@ -81,7 +81,7 @@ export default function DetailsOverview({
 							<small>({release_year})</small>
 						</h1>
 
-						<div className="flex gap-4 items-center flex-wrap mb-4 ml-">
+						<div className="flex gap-4 items-center flex-wrap mb-4">
 							{ageRating && (
 								<>
 									<AgeRating ageRating={ageRating} /> ·
@@ -100,7 +100,7 @@ export default function DetailsOverview({
 										<strong>{number_of_seasons}</strong>
 										Season{number_of_seasons === 1 ? "" : "s"}
 									</span>
-									·
+									<span className="hidden sm:inline">·</span>
 								</>
 							) : null}
 							<div className="hidden sm:flex items-center gap-4">
@@ -125,7 +125,7 @@ export default function DetailsOverview({
 						</div>
 					</div>
 
-					<div className="p-3 flex items-start">
+					<div className="p-3 flex items-center sm:items-start">
 						<div className="w-24 xs:w-36 sm:w-48 md:w-60 lg:w-72">
 							<div className="relative flex-none mt-8 w-full">
 								<TrailerOverlay videos={videos || []} />

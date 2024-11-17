@@ -1,9 +1,17 @@
 # TODO's
 ```
 ---
+    
+dna duplicates
+    http://localhost:3003/movie/533535-deadpool-wolverine
 
-discover page title based on filters
+---
 
+Solve issues with DNA data quality
+    duplicate entries with similar wording
+    overlaps between categories
+    wrong capitialization, e.g. "Children'S"
+    
 ---
 
 user profile
@@ -46,7 +54,7 @@ swiper
     navigation: https://swiperjs.com/swiper-api#navigation
     cardsEffect?
 
-similar headings for start page (trending, moods, themes, etc.)
+similar headings as explore for start page (trending, moods, themes, etc.)
     each section as swipable
 
 delete explore page and BE
@@ -142,8 +150,17 @@ tv seasons:
 
 ---
 
+discover page title based on filters
+
+---
+
 start page word carousel
     DNA categories
+
+---
+
+roadmap + todo organization
+    https://flowbite.com/docs/components/timeline/
 
 ---
 
@@ -214,9 +231,6 @@ discover sidebar
     sort by column
     facets as scroll preview minimap (e.g. release year)
     
-discover filters
-    streaming: checkbox for include buy/rent
-
 discover release
     filter by month
     add index
@@ -227,11 +241,6 @@ tropes
     show in details
     add discover filter
 
----
-
-Solve issues with DNA data quality
-    duplicate entries with similar wording
-    overlaps between categories
 
 ---
 
@@ -314,58 +323,6 @@ Randomize button
 
 ---
 
-similarity for movie/tv details by DNA vector category
-
-	const pg_query = `
-    SELECT
-      COALESCE(m.tmdb_id, t.tmdb_id) AS tmdb_id,
-			COALESCE(m.title, t.title) AS title,
-			COALESCE(m.release_year, t.release_year) AS release_year,
-			COALESCE(m.poster_path, t.poster_path) AS poster_path,
-			COALESCE(m.streaming_providers, t.streaming_providers) AS streaming_providers,
-			
-      (
-				SELECT json_agg(json_build_object(
-					'provider_id', spl.provider_id,
-					'provider_name', sp.name,
-					'provider_logo_path', sp.logo_path,
-					'media_type', spl.media_type,
-					'country_code', spl.country_code,
-					'stream_type', spl.stream_type
-				))
-				FROM streaming_provider_links spl
-				INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
-				WHERE spl.tmdb_id = COALESCE(m.tmdb_id, t.tmdb_id)
-				AND spl.media_type = $1
-				AND spl.country_code = $2
-				AND spl.provider_id NOT IN (24,119,188,210,235,350,380,390,524,1796,2100)
-			) AS streaming_links,
-		
-      ${getRatingKeys()
-				.map((key) => `COALESCE(m.${key}, t.${key}) AS ${key}`)
-				.join(", ")}
-      
-    -- TODO SIMILAR FOR DETAILS
-		FROM (
-			SELECT ${category}_vector
-			FROM vectors_media
-			WHERE tmdb_id = 603 AND media_type = 'movie'
-		) sv
-	
-		CROSS JOIN LATERAL (
-			SELECT v.*
-			FROM vectors_media v
-			WHERE v.${category}_vector IS NOT NULL
-			ORDER BY v.${category}_vector <=> sv.${category}_vector ASC
-			LIMIT ${RESULT_LIMIT}
-		) v
-		
-		LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'
-		LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'
-  `
-
----
-
 watch filter
     only what I scored / didn't score
     only favs / not favs
@@ -385,7 +342,7 @@ error boundaries
 
 ---
 
-discover cateogires
+discover categories
     age ratings
     search text
 

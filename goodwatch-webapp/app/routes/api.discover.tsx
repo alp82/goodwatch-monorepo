@@ -65,6 +65,8 @@ export const loader: LoaderFunction = async ({
 			? userSettings?.streaming_providers_default
 			: "") ||
 		"";
+	const withStreamingTypes =
+		url.searchParams.get("withStreamingTypes") || "free,flatrate";
 	const similarDNA = url.searchParams.get("similarDNA") || "";
 	const similarDNACombinationType =
 		url.searchParams.get("similarDNACombinationType") || "";
@@ -96,6 +98,7 @@ export const loader: LoaderFunction = async ({
 		withKeywords,
 		withoutKeywords,
 		withStreamingProviders,
+		withStreamingTypes,
 		streamingPreset,
 		similarDNA,
 		similarDNACombinationType,
@@ -104,9 +107,7 @@ export const loader: LoaderFunction = async ({
 		sortDirection,
 	};
 
-	const results = await getDiscoverResults(params);
-
-	return json<GetDiscoverResult>(results);
+	return await getDiscoverResults(params);
 };
 
 // Query hook
