@@ -1,16 +1,23 @@
-import React from "react"
-import { type StreamingLink, StreamingProviders } from "~/server/details.server"
+import React from "react";
+import {
+	type StreamingLink,
+	StreamingProviders,
+} from "~/server/details.server";
 
 export interface StreamingOverlayProps {
-	links?: StreamingLink[]
+	links?: StreamingLink[];
 }
 
 export default function StreamingOverlay({ links }: StreamingOverlayProps) {
 	// const hasProviders = providers?.flatrate && providers.flatrate.length > 0
-	const hasProviders = links?.length
-	const uniqueLinks = (links || []).filter((link, index) => {
-		return links.findIndex((l) => l.provider_id === link.provider_id) === index
-	})
+	const hasProviders = links?.length;
+	const uniqueLinks = (links || [])
+		.filter((link, index) => {
+			return (
+				links.findIndex((l) => l.provider_id === link.provider_id) === index
+			);
+		})
+		.slice(0, 5);
 
 	return (
 		<div className="absolute top-5 left-1 w-full overflow-hidden flex items-center gap-1 opacity-80">
@@ -27,5 +34,5 @@ export default function StreamingOverlay({ links }: StreamingOverlayProps) {
 				<></>
 			)}
 		</div>
-	)
+	);
 }
