@@ -86,6 +86,20 @@ async def crawl_rotten_tomatoes_page(
     )
     all_urls = [f"{base_url}/{title}" for title in all_variations]
 
+    if len(all_urls) == 0:
+        print(f"no title for {type} with id {next_entry.tmdb_id}")
+        return RottenTomatoesCrawlResult(
+            url=None,
+            tomato_score_original=None,
+            tomato_score_normalized_percent=None,
+            tomato_score_vote_count=None,
+            audience_score_original=None,
+            audience_score_normalized_percent=None,
+            audience_score_vote_count=None,
+            rate_limit_reached=False,
+        )
+
+
     # headers = {
     #     #        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
     #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",

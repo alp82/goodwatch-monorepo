@@ -21,7 +21,11 @@ def initialize_documents():
 
     filter_query = {
         "original_title": {"$ne": None},
-        "tropes": {"$ne": None},
+        "$or": [
+            {"release_year": {"$ne": None}},
+            {"overview": {"$ne": None}},
+            {"tropes": {"$ne": None}},
+        ]
     }
 
     total_movies = tvtropes_movie_collection.count_documents(filter_query)
@@ -90,8 +94,8 @@ def initialize_documents():
     return {
         "count_new_movies": movie_upserts.get("count_new_documents"),
         "count_new_tv": tv_upserts.get("count_new_documents"),
-        "upserted_movie_ids": movie_upserts.get("upserted_ids"),
-        "upserted_tv_ids": tv_upserts.get("upserted_ids"),
+        "upserted_movie_ids": movie_upserts.get("upserted_movie_ids"),
+        "upserted_tv_ids": tv_upserts.get("upserted_tv_ids"),
     }
 
 
@@ -102,6 +106,7 @@ def build_operation(tvtropes_entry: dict, type: DumpType):
         "original_title": tvtropes_entry.get("original_title"),
         "release_year": tvtropes_entry.get("release_year"),
         "popularity": tvtropes_entry.get("popularity"),
+        "overview": tvtropes_entry.get("overview"),
         "trope_names": [trope["name"] for trope in tvtropes_entry.get("tropes", [])],
     }
 

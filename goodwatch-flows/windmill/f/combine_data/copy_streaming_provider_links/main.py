@@ -2,6 +2,7 @@
 # pymongo==4.8.0
 
 from datetime import datetime
+import gc
 from mongoengine import get_db
 from psycopg2.extras import execute_batch, execute_values
 
@@ -354,6 +355,18 @@ def copy_streaming_provider_links(
             pg_cursor.execute("COMMIT")
 
             print("------------------")
+
+            # Clear batch-specific data structures
+            batch_update_data.clear()
+            batch_insert_data.clear()
+            batch_obsolete_links.clear()
+
+            # Reinitialize or clear other large objects
+            existing_links_dict = {}
+            tmdb_id_to_details = {}
+            
+            # Collect garbage
+            gc.collect()
 
         except Exception as e:
             # Rollback transaction in case of error

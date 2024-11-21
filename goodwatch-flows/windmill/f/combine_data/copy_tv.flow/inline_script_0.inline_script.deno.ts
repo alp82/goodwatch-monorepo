@@ -31,8 +31,7 @@ export async function main(db: Postgresql) {
     `CREATE INDEX IF NOT EXISTS idx_tv_cast ON "tv" USING gin("cast");`,
     `CREATE INDEX IF NOT EXISTS idx_tv_dna ON "tv" USING gin("dna");`,
     `CREATE INDEX IF NOT EXISTS idx_tv_streaming_providers ON "tv" USING gin("streaming_providers");`,
-    `CREATE INDEX IF NOT EXISTS idx_tv_aggregated_scores_and_votes ON "tv"(aggregated_overall_score_normalized_percent DESC, aggregated_overall_score_voting_count);`,
-  ];
+    `CREATE INDEX IF NOT EXISTS idx_tv_aggregated_scores_and_votes ON "tv"(aggregated_overall_score_normalized_percent DESC, aggregated_overall_score_voting_count);`,  ];
 
   const results = [];
   for (const query of queries) {

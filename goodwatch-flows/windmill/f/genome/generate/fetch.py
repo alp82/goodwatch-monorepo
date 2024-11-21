@@ -1,4 +1,5 @@
 from datetime import datetime
+import string
 import traceback
 from typing import Union
 
@@ -10,12 +11,13 @@ from f.db.mongodb import init_mongodb, close_mongodb
 from f.genome.models import GenomeMovie, GenomeTv
 
 # Example input for The Matrix (1999)
-#
-# {
-#   "id": "666f2e9c14a0587ad34d7425",
-#   "type": "movie",
-#   "tmdb_id": 603
-# }
+"""
+{
+  "id": "666f2e9c14a0587ad34d7425",
+  "tmdb_id": 603,
+  "type": "movie"
+}
+"""
 
 hf_token = wmill.get_variable("u/Alp/HUGGINGFACE_TOKEN")
 
@@ -61,7 +63,7 @@ Good vs. Evil, The Cost of Ambition, Love Conquers All, Identity Crisis, Corrupt
 
 4. Plot:
 * Definition: Includes both Plot Types (e.g., quest, revenge) and Plot Elements (specific plot points or devices).
-* Instruction: Assign as many quality values as you can find, but at most 20. They need to be significantly distinct to avoid overlap within this category and with other categories.
+* Instruction: Assign as many quality values as you can find. Target count is 10 and at most 20. They need to be significantly distinct to avoid overlap within this category and with other categories.
 * Example Choices (grouped by Category):
 ```
 Adventure and Exploration:
@@ -137,7 +139,7 @@ Nonlinear Narrative, Multiple Perspectives, Framed Story, Flashbacks, Real-Time 
 ```
 
 9. Humor:
-* Definition: Types of humor used, if applicable.
+* Definition: Types of humor used, if applicable. Some titles don't use Humor, it's fine to keep this empty in those cases.
 * Instruction: Assign values if humor is present.
 * Controlled Vocabulary:
 ```
@@ -222,6 +224,7 @@ Example Input
 
 ```
 The Matrix (1999)
+Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.
 ```
 
 ---
@@ -253,16 +256,77 @@ Flag: Graphic Violence, Strong Language
 
 Important Instructions
 
+* Avoid Duplicates: No value can occur more than once
 * Avoid Overlaps: Ensure values are distinct and properly categorized. Each value should be unique to its category.
 * Quality and Relevance: Include as many contextually relevant and distinct values as possible.
+* Validate the truthness of each value and don't hallucinate
 * No Character Names: Do not include character names in any category.
 * No "The " Prefix in Character Types: Use character types without starting with "The ".
 * If no values are applicable, remove the category from the result completely. Avoid showing the Category if no values are availble (e.g. "Flag: None")
 * Output Format: Provide values for each category in a single line per category. Start each line with the category name, followed by a colon and a comma-separated list of values
-* The example in the section "Example Output"  is just for illustration. Don't blindly copy text from there to your answer.
-* Input Format: Movie or TV show title and release year in paranthesis. See section "Example Input" above for an example.
+* The example in the section "Example Output" is just for illustration. Don't blindly copy text from there to your answer.
+* Input Format: Movie or TV show title and release year in paranthesis. The summary is added below. See section "Example Input" above for an example.
 * In case the input has no release year, a list of TV Tropes might be submitted to support the genome creation.
 """
+
+
+excluded_sub_genres = {
+    "Action",
+    "Adventure",
+    "Animation",
+    "Comedy",
+    "Crime",
+    "Documentary",
+    "Drama",
+    "Family",
+    "Fantasy",
+    "History",
+    "Horror",
+    "Kids",
+    "Music",
+    "Mystery",
+    "News",
+    "Politics",
+    "Reality",
+    "Romance",
+    "Science Fiction",
+    "Soap",
+    "Talk",
+    "Thriller",
+    "TV Movie",
+    "War",
+    "Western",
+}
+
+
+def is_valid_value(key: str, value: str, seen: set) -> bool:
+    val = value.strip()
+
+    # remove null values
+    if not val or val.lower() in ("none", "null", "n/a", "-", ""):
+        return False
+
+    # remove sub-genres using only default genre names
+    if key == "Sub-Genres":
+        if string.capwords(val) in excluded_sub_genres:
+            return False
+        if all(
+            string.capwords(word.strip()) in excluded_sub_genres for word in val.split()
+        ):
+            return False
+
+    # remove duplicates
+    if val in seen:
+        return False
+
+    seen.add(val)
+    return True
+
+
+def capitalize_value(value: str) -> str:
+    return " ".join(
+        [string.capwords(word.strip(), "-") for word in value.split(" ")]
+    ).strip()
 
 
 def extract_attributes(text: str) -> dict[str, list[str]]:
@@ -300,10 +364,11 @@ def extract_attributes(text: str) -> dict[str, list[str]]:
         if key not in valid_keys:
             continue
 
+        seen = set()
         values_list = [
-            value.strip().title()
+            capitalize_value(value)
             for value in values.split(",")
-            if value.strip() and value.lower() not in ("none", "n/a", "")
+            if is_valid_value(key, value, seen)
         ]
 
         if values_list:
@@ -358,12 +423,25 @@ def try_models(user_message: str):
     raise Exception("No models worked successfully.")
 
 
-def generate_genome(title: str, release_year: str, trope_names: list[str]):
-    prompt = (
-        f"{title} ({release_year})"
-        if release_year and release_year != "None"
-        else f"{title} (release year unknown)\nTV Tropes: {', '.join(trope_names)}"
-    )
+def generate_genome(
+    title: str, release_year: str, overview: str, trope_names: list[str]
+):
+    prompt = f"{title}"
+
+    # Add release year if present
+    if release_year:
+        prompt += f" ({release_year})"
+    else:
+        prompt += " (release year unknown)"
+
+    # Add overview if present
+    if overview:
+        prompt += f"\n{overview}"
+
+    # Add TV Tropes if release year or overview is missing
+    if not release_year or not overview:
+        prompt += f"\nTV Tropes: {', '.join(trope_names)}"
+
     print(prompt)
 
     return try_models(user_message=prompt)
@@ -391,9 +469,10 @@ def hugchat_generate_dna(next_entry: Union[GenomeMovie, GenomeTv]):
 
     title = str(next_entry.original_title)
     release_year = str(next_entry.release_year)
+    overview = str(next_entry.overview)
     trope_names = next_entry.trope_names
 
-    genome = generate_genome(title, release_year, trope_names)
+    genome = generate_genome(title, release_year, overview, trope_names)
     print(genome)
 
     # TODO better rate limit handling

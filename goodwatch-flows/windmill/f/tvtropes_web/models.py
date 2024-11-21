@@ -41,6 +41,7 @@ class BaseTvTropesTags(Document):
     tmdb_id = IntField()
     original_title = StringField()
     popularity = FloatField()
+    overview = StringField()
 
     created_at = DateTimeField()
     updated_at = DateTimeField()

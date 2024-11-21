@@ -12,11 +12,13 @@ from mongoengine import (
 
 # Database models
 
+
 class BaseGenome(Document):
     tmdb_id = IntField()
     original_title = StringField()
     release_year = IntField()
     popularity = FloatField()
+    overview = StringField()
     trope_names = ListField()
 
     created_at = DateTimeField()

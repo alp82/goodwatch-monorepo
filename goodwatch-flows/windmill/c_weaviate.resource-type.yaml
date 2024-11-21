@@ -1,4 +1,5 @@
 description: Connection configuration for a Weaviate server
+format_extension: null
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

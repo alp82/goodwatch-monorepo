@@ -1,4 +1,5 @@
 from collections import defaultdict
+from psycopg2.extras import execute_values
 from f.db.postgres import init_postgres
 
 BATCH_SIZE = 20000
@@ -70,7 +71,7 @@ def prepare_dna_inserts(data, media_type):
 
 def batch_upsert_dna(pg_cursor, dna_inserts):
     upsert_sql = """
-    INSERT INTO dna (category, label, count_all, count_movies, count_tv, movie_tmdb_id, tv_tmdb_id, created_at, updated_at)
+    INSERT INTO dna (category, label, count_all, count_movies, count_tv, movie_tmdb_id, tv_tmdb_id)
     VALUES %s
     ON CONFLICT (category, label)
     DO UPDATE SET
@@ -81,13 +82,7 @@ def batch_upsert_dna(pg_cursor, dna_inserts):
         tv_tmdb_id = array_cat(dna.tv_tmdb_id, EXCLUDED.tv_tmdb_id),
         updated_at = CURRENT_TIMESTAMP;
     """
-    values = [
-        pg_cursor.mogrify(
-            "(%s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", row
-        ).decode("utf-8")
-        for row in dna_inserts
-    ]
-    pg_cursor.execute(upsert_sql % ",".join(values))
+    execute_values(pg_cursor, upsert_sql, dna_inserts)
 
 
 def copy_dna_data(pg):

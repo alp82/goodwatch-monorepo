@@ -47,6 +47,8 @@ value:
                       type: javascript
                       expr: results.n
                   path: f/imdb_web/crawl_all_by_id
+                continue_on_error: false
+                timeout: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -69,6 +71,8 @@ value:
                       type: javascript
                       expr: results.m
                   path: f/metacritic_web/crawl_all_by_id
+                continue_on_error: false
+                timeout: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -91,6 +95,8 @@ value:
                       type: javascript
                       expr: results.l
                   path: f/rotten_web/crawl_all_by_id
+                continue_on_error: false
+                timeout: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -113,6 +119,8 @@ value:
                       type: javascript
                       expr: results.k
                   path: f/tvtropes_web/crawl_all_by_id
+                continue_on_error: false
+                timeout: 300
               - id: z
                 value:
                   type: script
@@ -152,6 +160,8 @@ value:
                       type: javascript
                       expr: results.j
                   path: f/tmdb_web/crawl_all_by_id
+                continue_on_error: false
+                timeout: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -209,9 +219,13 @@ value:
                 value:
                   type: script
                   input_transforms:
+                    exclude_existing:
+                      type: static
                     media_type:
                       type: static
                       value: movies
+                    start_offset:
+                      type: static
                     tmdb_ids:
                       type: javascript
                       expr: results.g.tmdb_ids.movie_ids
@@ -237,9 +251,13 @@ value:
                 value:
                   type: script
                   input_transforms:
+                    exclude_existing:
+                      type: static
                     media_type:
                       type: static
                       value: tv
+                    start_offset:
+                      type: static
                     tmdb_ids:
                       type: javascript
                       expr: results.g.tmdb_ids.tv_ids
@@ -269,6 +287,7 @@ value:
             expr: results.g.tmdb_ids
         path: f/priority/reset
         tag_override: null
+  concurrency_time_window_s: 0
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

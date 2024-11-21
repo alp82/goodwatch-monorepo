@@ -28,8 +28,14 @@ def initialize_documents():
     print(f"Total movie objects with titles: {total_movies}")
     print(f"Total tv objects with titles: {total_tv}")
 
-    movie_operations = []
-    tv_operations = []
+    movie_upserts = {
+        "count_new_movies": 0,
+        "upserted_movie_ids": [],
+    }
+    tv_upserts = {
+        "count_new_tv": 0,
+        "upserted_tv_ids": [],
+    }
 
     # Process movies in batches
     for start in range(0, total_movies, BATCH_SIZE):
@@ -42,9 +48,18 @@ def initialize_documents():
             .limit(BATCH_SIZE)
         )
 
+        movie_operations = []
         for tmdb_movie in tmdb_movie_cursor:
             operation = build_operation(tmdb_entry=tmdb_movie, type=DumpType.MOVIES)
             movie_operations.append(operation)
+        
+        upserts = store_copies(
+            movie_operations,
+            collection=tvtropes_movie_collection,
+            label_plural="movies",
+        )
+        movie_upserts["count_new_movies"] += upserts.get("count_new_documents")
+        movie_upserts["upserted_movie_ids"] += upserts.get("upserted_ids")
 
     # Process TV shows in batches
     for start in range(0, total_tv, BATCH_SIZE):
@@ -57,34 +72,24 @@ def initialize_documents():
             .limit(BATCH_SIZE)
         )
 
+        tv_operations = []
         for tmdb_tv in tmdb_tv_cursor:
             operation = build_operation(tmdb_entry=tmdb_tv, type=DumpType.TV_SERIES)
             tv_operations.append(operation)
 
-    print(
-        f"Storing copies of {len(movie_operations)} movies and {len(tv_operations)} tv series"
-    )
-
-    movie_upserts = {}
-    tv_upserts = {}
-    if movie_operations:
-        movie_upserts = store_copies(
-            movie_operations,
-            collection=tvtropes_movie_collection,
-            label_plural="movies",
-        )
-    if tv_operations:
-        tv_upserts = store_copies(
+        upserts = store_copies(
             tv_operations,
             collection=tvtropes_tv_collection,
             label_plural="tv series",
         )
+        tv_upserts["count_new_tv"] += upserts.get("count_new_documents")
+        tv_upserts["upserted_tv_ids"] += upserts.get("upserted_ids")
 
     return {
         "count_new_movies": movie_upserts.get("count_new_documents"),
         "count_new_tv": tv_upserts.get("count_new_documents"),
-        "upserted_movie_ids": movie_upserts.get("upserted_ids"),
-        "upserted_tv_ids": tv_upserts.get("upserted_ids"),
+        "upserted_movie_ids": movie_upserts.get("upserted_movie_ids"),
+        "upserted_tv_ids": tv_upserts.get("upserted_tv_ids"),
     }
 
 
@@ -99,6 +104,7 @@ def build_operation(tmdb_entry: dict, type: DumpType):
         "popularity": tmdb_entry.get("popularity"),
         "title_variations": title_variations,
         "release_year": release_date.year if release_date else None,
+        "overview": tmdb_entry.get("overview"),
     }
 
     operation = UpdateOne(
