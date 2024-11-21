@@ -7,8 +7,8 @@ import {
 } from "@heroicons/react/24/solid";
 import type { ComponentType, HTMLAttributes, ReactNode } from "react";
 import type {
+	CombinationType,
 	DiscoverParams,
-	SimilarDNACombinationType,
 	WatchedType,
 } from "~/server/discover.server";
 import type { RadioOption } from "~/ui/form/RadioBlock";
@@ -45,7 +45,7 @@ export const watchOptions: WatchOption[] = [
 ];
 
 export interface CombinationTypeOption extends RadioOption {
-	name: SimilarDNACombinationType;
+	name: CombinationType;
 }
 
 export const combinationTypeOptions: CombinationTypeOption[] = [

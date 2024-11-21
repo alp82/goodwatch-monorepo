@@ -1,17 +1,15 @@
 # TODO's
 ```
----
-    
-dna duplicates
-    http://localhost:3003/movie/533535-deadpool-wolverine
 
 ---
 
 Solve issues with DNA data quality
     duplicate entries with similar wording
     overlaps between categories
-    wrong capitialization, e.g. "Children'S"
-    
+
+similarity issues
+    dark palette is close to vibrant palette
+
 ---
 
 user profile
@@ -41,8 +39,74 @@ plan to watch
 
 ---
 
+tv seasons:
+    get episodes
+    get ratings
+    show in details
+    when last season/episode was released
+    recaps
+
+---
+
+cards with user actions
+    user score
+    plan to watch
+    favorite
+
+---
+
+Show User Data In Movie Cards
+    Trending
+    Explore
+    Discover
+    Collections
+    etc.
+
+---
+
+home page categories:
+    top 5 ____
+    ____ vs ____
+    
+---
+
+onboarding as CTA banner
+    e.g. https://www.producthunt.com/
+
+---
+
+sign up
+    redirect without jump to home
+    via email
+    
+
+---
+
+tv: watched vs currently watching (finished show)
+
+combined collection score
+    franchise and collection pages
+
+streaming: show flatrate countries in rating block and streaming tab
+
+details:
+    box office (e.g. Google)
+    awards (grab from API)
+
+---
+
 taste matching (logged in users only - or a teaser)
     you both like ABC
+
+---
+
+recommendation
+
+---
+
+For You
+    Landing page with examples
+    Personal Recommendations by DNA category
 
 ---
 
@@ -68,13 +132,7 @@ details
 
 movie card
     overlay: show movie or tv icon 
-    max 3 streaming overlays
     
----
-
-filter duplicate subgenres
-    http://localhost:3003/movie/64-talk-to-her
-
 ---
 
 new dna filters:
@@ -100,12 +158,6 @@ add caching for user data
 
 move caddy proxy from db1 to vector
 
----
-
-sign up
-    redirect without jump to home
-    via email
-    
 ---
 
 discover pagination
@@ -141,15 +193,6 @@ optimistic ui for user settings
 
 ---
 
-tv seasons:
-    get episodes
-    get ratings
-    show in details
-    when last season/episode was released
-    recaps
-
----
-
 discover page title based on filters
 
 ---
@@ -165,11 +208,9 @@ roadmap + todo organization
 ---
 
 details
-    mobile with small poster
     share button sticky
     guess country
     age restriction by country
-    streaming section country flag button does not change selected country
     streaming section favors user selected providers
     web links section
     sequels section
@@ -211,13 +252,6 @@ Terminology
 
 user settings
     oval together: profile picture -> profile icon
-
----
-
-cards with user data
-    user score
-    plan to watch
-    favorite
 
 ---
 
@@ -287,18 +321,6 @@ famous quotes section
 
 ---
 
-explore
-    useQuery
-    progress text (generating results...)
-    streaming config (providers + country ...)
-
----
-
-vector save
-    python normalization fix 'S typos
-
----
-
 redis optional
 
 ---
@@ -313,7 +335,6 @@ remove weaviate
 ---
 
 discover
-    streaming: buy/rent toggle
     dna: select category?
     similarity: threshold?
 
@@ -354,12 +375,6 @@ filter inspiration:
 
 ---
 
-similarity issues
-    dark palette is close to vibrant palette
-    http://localhost:3003/explore/all/cinematic_style/Dark%20Palette
-
----
-
 Thanks page
     tools & libraries
     content creators
@@ -375,21 +390,6 @@ Thanks page
 ---
 
 DNA infobox with Discord link
-
----
-
-For You
-    Landing page with examples
-    Personal Recommendations by DNA category
-
----
-
-Show User Data In Movie Cards
-    Trending
-    Explore
-    Discover
-    Collections
-    etc.
 
 ---
 
@@ -426,6 +426,13 @@ wide cards
 
 ---
 
+age ratings
+    https://en.wikipedia.org/wiki/Motion_picture_content_rating_system
+    https://www.movielabs.com/md/ratings/
+    https://www.movielabs.com/md/ratings/v2.4.9/html/Summary.html
+
+---
+
 details: releases
     show dates for each country with age ratings
 
@@ -452,6 +459,11 @@ country usage
 meta tags
     better descriptions
     based on params
+
+---
+
+local storage optimizations
+    https://usehooks.com/uselocalstorage
 
 ---
 
@@ -529,12 +541,17 @@ streaming_provider_rank
     
 ---
 
-guides (explore shortcuts)
+guides (discover dna shortcuts)
     by genre
     by mood
     etc.
     
 guide of the day
+
+---
+
+movie site/app directory
+    https://www.youtube.com/watch?v=hPveUtta0Es
 
 ---
 
@@ -550,6 +567,12 @@ stats
 
 ---
 
+what do they have in common?
+    multi-select titles and see DNA intersections
+    "reverse discover"
+
+---
+
 all titles from a-z (search page?)
     difference between search, explore, discover, watch next, etc.?
     
@@ -562,12 +585,6 @@ import watchlist / ratings
     netflix
     prime
     ...
-
----
-
-signup
-    apple
-    email
 
 ---
 
@@ -607,6 +624,9 @@ DNA tag user weights
 
 user notes/comments
     use for LLM input for recommendations
+
+cast with images from time of their role
+    also images from their character
 
 playwright tests
 
@@ -651,19 +671,9 @@ refresh data request
 notification when streaming is available (country + streaming)
 alerts for new search results
 
-combined collection score
-
 fix all linting errors
 
 user favs: actors, directors, writers
-
-show similar/related movies
-
-poster: inline scoring / watched / wish 
-
-streaming: show flatrate countries in rating block and streaming tab
-
-tv: watched vs currently watching (finished show)
 
 ratings: show last updated time
 
@@ -671,10 +681,8 @@ date of first streaming link / new to stream
 
 trending load more
 
-replace url for details when country changes
-
 show titles on map (production countries + places in film)
-    where to show space and fantasy places
+    where to show space and fantasy places?
 
 populate trending score 1-500
 save trending scores per day
@@ -690,14 +698,12 @@ styling goodies:
 explore graphs
     https://reactflow.dev/
 
-details:
-    box office (e.g. Google)
-    crew links to discovery
-    awards (grab from API)
-
 invalidate redis caches after update
+    https://github.com/redis/node-redis
     https://yunpengn.github.io/blog/2019/05/04/consistent-redis-sql/
-invalidate vercel caches after update
+
+coolify caching
+    invalidate coolify caches after update
 
 report missing/wrong ratings
 report missing/wrong streaming providers
@@ -709,10 +715,16 @@ reduce costs: show best streaming bundles for my likings
 
 similarity
     display percentage
+    
+recommendation directory
+    https://www.reddit.com/r/MovieSuggestions/wiki/frequently_requested/?utm_medium=android_app&utm_source=share
 
 search page
+
 explore button for media titles (prefilled discover, map feature)
+
 random full screen: album cover (good roulette)
+
 international / indie guides
 
 stuck scripts monitoring
@@ -725,6 +737,10 @@ do not refetch stale data
 live rating events
     chatbox
     countdown
+
+discord bot
+
+telegram bot
     
 wrong tropes: the little mermaid (tmdb_id = 10144)
 streaming missing: https://www.themoviedb.org/movie/872585-oppenheimer/watch

@@ -1,6 +1,6 @@
 import type { WithSimilar } from "~/routes/api.similar-media";
 import type {
-	SimilarDNACombinationType,
+	CombinationType,
 	StreamingPreset,
 	WatchedType,
 } from "~/server/discover.server";
@@ -38,7 +38,7 @@ interface Media {
 interface Similarity {
 	category: string;
 	similarDNA: string;
-	similarDNACombinationType: SimilarDNACombinationType;
+	similarDNACombinationType: CombinationType;
 	withSimilar: WithSimilar[];
 	media?: Media;
 }
@@ -51,8 +51,10 @@ interface Conditions {
 	similarityVector?: string;
 	watchedType?: WatchedType;
 	withCast?: string;
+	withCastCombinationType?: CombinationType;
 	withoutCast?: string;
 	withCrew?: string;
+	withCrewCombinationType?: CombinationType;
 	withoutCrew?: string;
 	withGenres?: string[];
 	withoutGenres?: string[];
@@ -231,7 +233,9 @@ const constructSelectQuery = ({
 		maxScore,
 		watchedType,
 		withCast,
+		withCastCombinationType,
 		withCrew,
+		withCrewCombinationType,
 		withGenres,
 	} = conditions;
 
@@ -276,9 +280,9 @@ const constructSelectQuery = ({
 							.join(" + ")}) as similarity_score,`
 					: ""
 			}
-									 ${getCommonFields()
-											.map((field) => `m.${field}`)
-											.join(",\n\t")}
+			${getCommonFields()
+				.map((field) => `m.${field}`)
+				.join(",\n\t")}
 		FROM ${type === "movie" ? "movies" : "tv"} m
 			${similarityJoins}
 			${userJoin}
@@ -296,14 +300,14 @@ const constructSelectQuery = ({
 				withCast && castIds.length
 					? `AND (${castIds
 							.map((castId) => `m.cast @> '[{"id": ${castId}}]'`)
-							.join(" OR ")})`
+							.join(withCastCombinationType === "all" ? " AND " : " OR ")})`
 					: ""
 			}
 			${
 				withCrew && crewIds.length
 					? `AND (${crewIds
 							.map((crewId) => `m.crew @> '[{"id": ${crewId}}]'`)
-							.join(" OR ")})`
+							.join(withCrewCombinationType === "all" ? " AND " : " OR ")})`
 					: ""
 			}
 			${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}

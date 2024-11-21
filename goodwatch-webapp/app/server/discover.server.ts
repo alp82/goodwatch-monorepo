@@ -19,7 +19,7 @@ import { duplicateProviderMapping } from "~/utils/streaming-links";
 
 export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched";
 export type StreamingPreset = "everywhere" | "mine" | "custom";
-export type SimilarDNACombinationType = "all" | "any";
+export type CombinationType = "all" | "any";
 export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date";
 
 export interface DiscoverParams {
@@ -35,8 +35,10 @@ export interface DiscoverParams {
 	minScore: string;
 	maxScore: string;
 	withCast: string;
+	withCastCombinationType: CombinationType;
 	withoutCast: string;
 	withCrew: string;
+	withCrewCombinationType: CombinationType;
 	withoutCrew: string;
 	withGenres: string;
 	withoutGenres: string;
@@ -46,7 +48,7 @@ export interface DiscoverParams {
 	withStreamingProviders: string;
 	withStreamingTypes: string;
 	similarDNA: string;
-	similarDNACombinationType: SimilarDNACombinationType;
+	similarDNACombinationType: CombinationType;
 	similarTitles: string;
 	sortBy: DiscoverSortBy;
 	sortDirection: "asc" | "desc";
@@ -87,8 +89,10 @@ async function _getDiscoverResults({
 	maxScore,
 	watchedType,
 	withCast,
+	withCastCombinationType,
 	withoutCast,
 	withCrew,
+	withCrewCombinationType,
 	withoutCrew,
 	withGenres,
 	withoutGenres,
@@ -175,8 +179,10 @@ async function _getDiscoverResults({
 			maxYear,
 			watchedType,
 			withCast,
+			withCastCombinationType,
 			withoutCast,
 			withCrew,
+			withCrewCombinationType,
 			withoutCrew,
 			withGenres: uniqueGenreNames,
 		},

@@ -50,8 +50,12 @@ export const loader: LoaderFunction = async ({
 	const watchedType =
 		(url.searchParams.get("watchedType") as WatchedType) || "";
 	const withCast = url.searchParams.get("withCast") || "";
+	const withCastCombinationType =
+		url.searchParams.get("withCastCombinationType") || "";
 	const withoutCast = url.searchParams.get("withoutCast") || "";
 	const withCrew = url.searchParams.get("withCrew") || "";
+	const withCrewCombinationType =
+		url.searchParams.get("withCrewCombinationType") || "";
 	const withoutCrew = url.searchParams.get("withoutCrew") || "";
 	const withGenres = url.searchParams.get("withGenres") || "";
 	const withoutGenres = url.searchParams.get("withoutGenres") || "";
@@ -90,8 +94,10 @@ export const loader: LoaderFunction = async ({
 		maxScore,
 		watchedType,
 		withCast,
+		withCastCombinationType,
 		withoutCast,
 		withCrew,
+		withCrewCombinationType,
 		withoutCrew,
 		withGenres,
 		withoutGenres,

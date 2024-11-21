@@ -7,10 +7,7 @@ import {
 import React from "react";
 import Highlighter from "react-highlight-words";
 import { useDNA } from "~/routes/api.dna";
-import type {
-	DiscoverParams,
-	SimilarDNACombinationType,
-} from "~/server/discover.server";
+import type { CombinationType, DiscoverParams } from "~/server/discover.server";
 import type { DNAResult } from "~/server/dna.server";
 import {
 	type CombinationTypeOption,
@@ -48,10 +45,9 @@ export default function SectionDNA({
 	};
 	const debouncedSearchText = useDebounce(searchText, 200);
 
-	const [combinationType, setCombinationType] =
-		React.useState<SimilarDNACombinationType>(
-			params.similarDNACombinationType || combinationTypeOptions[0].name,
-		);
+	const [combinationType, setCombinationType] = React.useState<CombinationType>(
+		params.similarDNACombinationType || combinationTypeOptions[0].name,
+	);
 	const selectedCombinationTypeOption = combinationTypeOptions.find(
 		(option) => option.name === combinationType,
 	);
@@ -204,13 +200,7 @@ export default function SectionDNA({
 				<div className="flex flex-col flex-wrap gap-2">
 					{isEditing && (
 						<div className="flex flex-col flex-wrap justify-between gap-2">
-							<RadioBlock
-								options={combinationTypeOptions}
-								value={selectedCombinationTypeOption}
-								orientation="horizontal"
-								onChange={handleChangeCombinationType}
-							/>
-							<div className="my-2 w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
+							<div className="z-30 my-2 w-[18rem] xs:w-[20rem] sm:w-[22rem] md:w-[24rem] lg:w-[26rem] xl:w-[28rem]">
 								<Autocomplete<(typeof autocompleteItems)[number]>
 									name="query"
 									placeholder="Search DNA"
@@ -234,6 +224,12 @@ export default function SectionDNA({
 									onSelect={handleSelect}
 								/>
 							</div>
+							<RadioBlock
+								options={combinationTypeOptions}
+								value={selectedCombinationTypeOption}
+								orientation="horizontal"
+								onChange={handleChangeCombinationType}
+							/>
 						</div>
 					)}
 					<div className="flex flex-wrap items-center gap-2">

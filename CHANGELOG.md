@@ -2,6 +2,25 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
+## [0.5.7] 2024-11-xx
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.5.6] 2024-11-21
+
+### Added
+* Discover: Cast and Crew members can now be filtered to match all entries at once for each title, e.g. all movies that star both "Edward Norton" and "Brad Pitt"
+
+### Changed
+
+### Fixed
+* Major cleanup of duplicate DNA values
+* Corrected wrong capitalization for DNA values with apostrophes, e.g. "Children'S Adventure"
+
 ## [0.5.5] 2024-11-17
 
 ### Added

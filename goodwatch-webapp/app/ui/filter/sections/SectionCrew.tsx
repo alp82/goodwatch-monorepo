@@ -2,30 +2,35 @@ import {
 	CheckIcon,
 	MagnifyingGlassIcon,
 	TagIcon,
-} from "@heroicons/react/20/solid"
-import { UserIcon } from "@heroicons/react/24/solid"
-import React from "react"
-import Highlighter from "react-highlight-words"
-import { useCrew } from "~/routes/api.crew"
-import type { CrewMember } from "~/server/crew.server"
-import type { DiscoverParams } from "~/server/discover.server"
-import { discoverFilters } from "~/server/types/discover-types"
-import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
-import EditableSection from "~/ui/filter/sections/EditableSection"
+} from "@heroicons/react/20/solid";
+import { UserIcon } from "@heroicons/react/24/solid";
+import React from "react";
+import Highlighter from "react-highlight-words";
+import { useCrew } from "~/routes/api.crew";
+import type { CrewMember } from "~/server/crew.server";
+import type { CombinationType, DiscoverParams } from "~/server/discover.server";
+import {
+	type CombinationTypeOption,
+	combinationTypeOptions,
+	discoverFilters,
+} from "~/server/types/discover-types";
+import OneOrMoreItems from "~/ui/filter/OneOrMoreItems";
+import EditableSection from "~/ui/filter/sections/EditableSection";
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
-} from "~/ui/form/Autocomplete"
-import { Tag } from "~/ui/tags/Tag"
-import { Ping } from "~/ui/wait/Ping"
-import { useNav } from "~/utils/navigation"
-import { useDebounce } from "~/utils/timing"
+} from "~/ui/form/Autocomplete";
+import RadioBlock from "~/ui/form/RadioBlock";
+import { Tag } from "~/ui/tags/Tag";
+import { Ping } from "~/ui/wait/Ping";
+import { useNav } from "~/utils/navigation";
+import { useDebounce } from "~/utils/timing";
 
 interface SectionCrewParams {
-	params: DiscoverParams
-	editing: boolean
-	onEdit: () => void
-	onClose: () => void
+	params: DiscoverParams;
+	editing: boolean;
+	onEdit: () => void;
+	onClose: () => void;
 }
 
 export default function SectionCrew({
@@ -34,30 +39,46 @@ export default function SectionCrew({
 	onEdit,
 	onClose,
 }: SectionCrewParams) {
-	const [searchText, setSearchText] = React.useState("")
+	const [searchText, setSearchText] = React.useState("");
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchText(event.target.value)
-	}
-	const debouncedSearchText = useDebounce(searchText, 200)
+		setSearchText(event.target.value);
+	};
+	const debouncedSearchText = useDebounce(searchText, 200);
 
 	// data retrieval
-	const { withCrew = "", withoutCrew = "" } = params
+	const { withCrew = "", withoutCrew = "" } = params;
 	const crewResult = useCrew({
 		text: debouncedSearchText,
 		withCrew,
 		withoutCrew,
-	})
-	const crew = crewResult?.data?.crewMembers || []
+	});
+	const crew = crewResult?.data?.crewMembers || [];
 
 	const crewIds = (withCrew || "")
 		.split(",")
-		.filter((crewId) => Boolean(crewId))
+		.filter((crewId) => Boolean(crewId));
 	const selectedCrew = (crew || [])
 		.filter((crew) => crewIds.includes(crew.id.toString()))
-		.map((crew) => crew.name)
+		.map((crew) => crew.name);
 	const crewToInclude = crew.filter((crew) =>
 		crewIds.includes(crew.id.toString()),
-	)
+	);
+
+	const [combinationType, setCombinationType] = React.useState<CombinationType>(
+		params.similarDNACombinationType || combinationTypeOptions[0].name,
+	);
+	const selectedCombinationTypeOption = combinationTypeOptions.find(
+		(option) => option.name === combinationType,
+	);
+	const handleChangeCombinationType = (
+		combinationTypeOption: CombinationTypeOption,
+	) => {
+		const combinationType = combinationTypeOption.name;
+		setCombinationType(combinationType);
+		updateQueryParams({
+			withCrewCombinationType: combinationType,
+		});
+	};
 
 	// autocomplete data
 
@@ -67,14 +88,14 @@ export default function SectionCrew({
 			label: crew.name,
 			img: crew.profile_path,
 			department: crew.known_for_department,
-		}
-	})
+		};
+	});
 	const autocompleteRenderItem = ({
 		item,
 	}: RenderItemParams<
 		AutocompleteItem & { img: string; department: string }
 	>) => {
-		const isSelected = crewIds.includes(item.key)
+		const isSelected = crewIds.includes(item.key);
 		return (
 			<div
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
@@ -104,13 +125,18 @@ export default function SectionCrew({
 					/>
 				)}
 			</div>
-		)
-	}
+		);
+	};
 
 	// update handlers
 
 	const { updateQueryParams } =
-		useNav<Pick<DiscoverParams, "withCrew" | "withoutCrew">>()
+		useNav<
+			Pick<
+				DiscoverParams,
+				"withCrew" | "withoutCrew" | "withCrewCombinationType"
+			>
+		>();
 	const updateCrew = (
 		crewToInclude: CrewMember[],
 		crewToExclude: CrewMember[],
@@ -118,8 +144,9 @@ export default function SectionCrew({
 		updateQueryParams({
 			withCrew: crewToInclude.map((crew) => crew.id).join(","),
 			// withoutCrew: crewToExclude.map((crew) => crew.id).join(","),
-		})
-	}
+			withCrewCombinationType: combinationType,
+		});
+	};
 
 	const handleSelect = (selectedItem: AutocompleteItem) => {
 		const updatedCrewToInclude: CrewMember[] = crewIds.includes(
@@ -134,21 +161,21 @@ export default function SectionCrew({
 						id: Number.parseInt(selectedItem.key),
 						name: selectedItem.label,
 					},
-				]
-		updateCrew(updatedCrewToInclude, [])
-	}
+				];
+		updateCrew(updatedCrewToInclude, []);
+	};
 
 	const handleDelete = (crewToDelete: CrewMember) => {
 		const updatedCrewToInclude: CrewMember[] = crewToInclude.filter(
 			(crew) => crew.id !== crewToDelete.id,
-		)
-		updateCrew(updatedCrewToInclude, [])
-	}
+		);
+		updateCrew(updatedCrewToInclude, []);
+	};
 
 	const handleRemoveAll = () => {
-		updateCrew([], [])
-		onClose()
-	}
+		updateCrew([], []);
+		onClose();
+	};
 
 	// rendering
 
@@ -166,20 +193,30 @@ export default function SectionCrew({
 			{(isEditing) => (
 				<div className="flex flex-col flex-wrap gap-2">
 					{isEditing && (
-						<Autocomplete<AutocompleteItem>
-							name="query"
-							placeholder="Search Crew"
-							icon={
-								<MagnifyingGlassIcon
-									className="h-4 w-4 text-gray-400"
-									aria-hidden="true"
+						<div className="flex flex-col flex-wrap justify-between gap-2">
+							<div className="z-30">
+								<Autocomplete<AutocompleteItem>
+									name="query"
+									placeholder="Search Crew"
+									icon={
+										<MagnifyingGlassIcon
+											className="h-4 w-4 text-gray-400"
+											aria-hidden="true"
+										/>
+									}
+									autocompleteItems={autocompleteItems}
+									renderItem={autocompleteRenderItem}
+									onChange={handleChange}
+									onSelect={handleSelect}
 								/>
-							}
-							autocompleteItems={autocompleteItems}
-							renderItem={autocompleteRenderItem}
-							onChange={handleChange}
-							onSelect={handleSelect}
-						/>
+							</div>
+							<RadioBlock
+								options={combinationTypeOptions}
+								value={selectedCombinationTypeOption}
+								orientation="horizontal"
+								onChange={handleChangeCombinationType}
+							/>
+						</div>
 					)}
 					<div className="flex flex-wrap items-center gap-2">
 						{crewToInclude.length > 0 ? (
@@ -188,7 +225,7 @@ export default function SectionCrew({
 									key={crew.id}
 									index={index}
 									amount={selectedCrew.length}
-									mode="any"
+									mode={combinationType}
 								>
 									<Tag
 										icon={UserIcon}
@@ -207,5 +244,5 @@ export default function SectionCrew({
 				</div>
 			)}
 		</EditableSection>
-	)
+	);
 }
