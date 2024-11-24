@@ -29,6 +29,8 @@ class BaseGenome(Document):
     is_selected = BooleanField(default=False)
 
     dna = DictField()
+    dna_old = DictField()
+    dna_cleaned = DictField()
 
     meta = {
         "abstract": True,
