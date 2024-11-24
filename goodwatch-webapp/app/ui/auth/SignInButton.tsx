@@ -14,7 +14,7 @@ export const SignInButton = ({}: SignInButtonProps) => {
 
 	return (
 		<Link
-			to={`sign-in/${redirectTo}`}
+			to={`/sign-in/${redirectTo}`}
 			className="
 				w-full px-3 py-2
 				flex items-center justify-center gap-2

@@ -6,6 +6,7 @@ import {
 	watchOptions,
 } from "~/server/types/discover-types";
 import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
+import { SignInButton } from "~/ui/auth/SignInButton";
 import EditableSection from "~/ui/filter/sections/EditableSection";
 import RadioBlock from "~/ui/form/RadioBlock";
 import { Tag } from "~/ui/tags/Tag";
@@ -121,7 +122,7 @@ export default function SectionWatch({
 							</>
 						) : (
 							<div className="flex flex-col gap-4">
-								<GoogleSignInButton />
+								<SignInButton />
 								{discoverFilters.watch.loginInstructions}
 							</div>
 						)}

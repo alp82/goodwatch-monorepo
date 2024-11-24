@@ -1,5 +1,7 @@
-import React from "react"
-import { useSupabase } from "~/utils/auth"
+import React from "react";
+import { useSupabase } from "~/utils/auth";
+
+// TODO deprecated component, remove once obsolete
 
 const googleLogo = (
 	<svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24">
@@ -20,26 +22,26 @@ const googleLogo = (
 			fill="#34A853"
 		/>
 	</svg>
-)
+);
 
-type GoogleSignInButtonProps = {}
+type GoogleSignInButtonProps = {};
 
 export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
-	const { supabase } = useSupabase()
+	const { supabase } = useSupabase();
 
 	const handleSignInWithGoogle = () => {
-		if (!supabase) return
+		if (!supabase) return;
 
-		const redirectHash = `#redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`
-		const redirectTo = `${window.location.origin}${redirectHash}`
+		const redirectHash = `#redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`;
+		const redirectTo = `${window.location.origin}${redirectHash}`;
 
 		supabase.auth.signInWithOAuth({
 			provider: "google",
 			options: {
 				redirectTo,
 			},
-		})
-	}
+		});
+	};
 
 	return (
 		<button
@@ -57,5 +59,5 @@ export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
 			{googleLogo}
 			Sign In
 		</button>
-	)
-}
+	);
+};
