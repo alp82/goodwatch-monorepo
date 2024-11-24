@@ -21,6 +21,7 @@ import type { MediaType } from "~/server/utils/query-db";
 import { sortedDNACategories } from "~/ui/dna/dna_utils";
 import { getUserIdFromRequest } from "~/utils/auth";
 import { getLocaleFromRequest } from "~/utils/locale";
+import { SEPARATOR_SECONDARY, SEPARATOR_TERTIARY } from "~/utils/navigation";
 
 // type definitions
 
@@ -141,12 +142,14 @@ export const convertSimilarTitles = (similarTitles: string): WithSimilar[] => {
 	return similarTitles
 		.split(",")
 		.filter(Boolean)
-		.map((similarTitle) => (similarTitle || "").split(":").filter(Boolean))
+		.map((similarTitle) =>
+			(similarTitle || "").split(SEPARATOR_SECONDARY).filter(Boolean),
+		)
 		.map(([tmdbId, mediaType, categories]) => ({
 			tmdbId,
 			mediaType: mediaType as MediaType,
 			categories: (categories || "")
-				.split(";")
+				.split(SEPARATOR_TERTIARY)
 				.filter((category) => sortedDNACategories.includes(category)),
 		}));
 };

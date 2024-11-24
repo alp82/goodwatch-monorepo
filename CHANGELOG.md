@@ -5,6 +5,7 @@ Notable changes to GoodWatch will be documented in this file.
 ## [0.5.7] 2024-11-xx
 
 ### Added
+* Sign In via Email
 
 ### Changed
 

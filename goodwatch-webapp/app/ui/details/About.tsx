@@ -5,6 +5,7 @@ import type { MovieDetails, TVDetails } from "~/server/details.server";
 import Collection from "~/ui/details/Collection";
 import Description from "~/ui/details/Description";
 import { DNATag } from "~/ui/dna/DNATag";
+import { SEPARATOR_SECONDARY } from "~/utils/navigation";
 
 export interface AboutProps {
 	details: MovieDetails | TVDetails;
@@ -43,7 +44,7 @@ export default function About({ details }: AboutProps) {
 							</span>
 							<Link
 								className="px-3 py-0.5 border-2 border-gray-500 bg-slate-700 text-gray-100 text-sm text-center rounded-md hover:bg-slate-600 hover:text-white"
-								to={`/discover?type=all&similarTitles=${tmdb_id}:${media_type}:Themes`}
+								to={`/discover?type=all&similarTitles=${tmdb_id}${SEPARATOR_SECONDARY}${media_type}${SEPARATOR_SECONDARY}Themes`}
 								prefetch="viewport"
 							>
 								<CubeIcon className="w-4 h-4 inline-block mr-2" />
@@ -63,7 +64,7 @@ export default function About({ details }: AboutProps) {
 							</span>
 							<Link
 								className="px-2 py-0.5 border-2 border-gray-500 bg-slate-700 text-gray-100 text-sm text-center rounded-md hover:bg-slate-600 hover:text-white"
-								to={`/discover?type=all&similarTitles=${tmdb_id}:${media_type}:Mood`}
+								to={`/discover?type=all&similarTitles=${tmdb_id}${SEPARATOR_SECONDARY}${media_type}${SEPARATOR_SECONDARY}Mood`}
 								prefetch="viewport"
 							>
 								<CubeIcon className="w-4 h-4 inline-block mr-2" />

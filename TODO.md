@@ -779,6 +779,8 @@ streaming explanations
 android app
 iphone app
 
+analytics via clarity
+    https://clarity.microsoft.com/
 
 data source: existing crawlers use existing url instead of guessing
 data-source: letterboxd scores

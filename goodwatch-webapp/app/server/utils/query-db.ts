@@ -12,6 +12,7 @@ import {
 	VOTE_COUNT_THRESHOLD_HIGH,
 	VOTE_COUNT_THRESHOLD_LOW,
 } from "~/utils/constants";
+import { SEPARATOR_SECONDARY } from "~/utils/navigation";
 import { getRatingKeys } from "~/utils/ratings";
 import { duplicateProviders } from "~/utils/streaming-links";
 
@@ -358,7 +359,7 @@ const constructSimilarityQueryParams = ({
 		similarity || {};
 	const similarDNAList = similarDNA
 		? similarDNA.split(",").map((dna) => {
-				const [category, label] = dna.split(":", 2);
+				const [category, label] = dna.split(SEPARATOR_SECONDARY, 2);
 				return {
 					category,
 					label,

@@ -23,7 +23,7 @@ import Autocomplete, {
 import RadioBlock from "~/ui/form/RadioBlock";
 import { Tag } from "~/ui/tags/Tag";
 import { Ping } from "~/ui/wait/Ping";
-import { useNav } from "~/utils/navigation";
+import { SEPARATOR_SECONDARY, useNav } from "~/utils/navigation";
 import { useDebounce } from "~/utils/timing";
 
 interface SectionDNAParams {
@@ -74,7 +74,7 @@ export default function SectionDNA({
 		.split(",")
 		.filter(Boolean)
 		.map((dna) => {
-			const [category, label] = dna.split(":", 2);
+			const [category, label] = dna.split(SEPARATOR_SECONDARY, 2);
 			return {
 				category,
 				label,
@@ -84,7 +84,7 @@ export default function SectionDNA({
 	// autocomplete data
 
 	const autocompleteItems = dna.map((dna: DNAResult) => {
-		const key = `${dna.category}:${dna.label}`;
+		const key = `${dna.category}${SEPARATOR_SECONDARY}${dna.label}`;
 		const label = dna.label;
 		return {
 			key,
@@ -144,7 +144,7 @@ export default function SectionDNA({
 	) => {
 		updateQueryParams({
 			similarDNA: dnaToInclude
-				.map((dna) => `${dna.category}:${dna.label}`)
+				.map((dna) => `${dna.category}${SEPARATOR_SECONDARY}${dna.label}`)
 				.join(","),
 			similarDNACombinationType: updatedCombinationType,
 		});
@@ -155,7 +155,9 @@ export default function SectionDNA({
 	) => {
 		const updatedDNAToInclude: DNAResult[] = dnaKeys.includes(selectedItem.key)
 			? dnaToInclude.filter(
-					(dna) => `${dna.category}:${dna.label}` !== selectedItem.key,
+					(dna) =>
+						`${dna.category}${SEPARATOR_SECONDARY}${dna.label}` !==
+						selectedItem.key,
 				)
 			: [
 					...dnaToInclude,
@@ -171,8 +173,8 @@ export default function SectionDNA({
 	const handleDelete = (dnaToDelete: DNAResult) => {
 		const updatedDNAToInclude: DNAResult[] = dnaToInclude.filter(
 			(dna) =>
-				`${dna.category}:${dna.label}` !==
-				`${dnaToDelete.category}:${dnaToDelete.label}`,
+				`${dna.category}${SEPARATOR_SECONDARY}${dna.label}` !==
+				`${dnaToDelete.category}${SEPARATOR_SECONDARY}${dnaToDelete.label}`,
 		);
 		updateDNA(updatedDNAToInclude, combinationType);
 	};
@@ -236,7 +238,7 @@ export default function SectionDNA({
 						{dnaToInclude.length > 0 ? (
 							dnaToInclude.map((dna, index) => (
 								<OneOrMoreItems
-									key={`${dna.category}:${dna.label}`}
+									key={`${dna.category}${SEPARATOR_SECONDARY}${dna.label}`}
 									index={index}
 									amount={dnaToInclude.length}
 									mode={combinationType}

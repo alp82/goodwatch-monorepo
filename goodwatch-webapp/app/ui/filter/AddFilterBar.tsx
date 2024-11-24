@@ -1,93 +1,93 @@
-import { PlusIcon } from "@heroicons/react/24/solid"
-import { Link } from "@remix-run/react"
-import React from "react"
-import type { DiscoverParams } from "~/server/discover.server"
+import { PlusIcon } from "@heroicons/react/24/solid";
+import { Link } from "@remix-run/react";
+import React from "react";
+import type { DiscoverParams } from "~/server/discover.server";
 import {
 	type DiscoverFilterType,
 	discoverFilters,
-} from "~/server/types/discover-types"
-import UserAction from "~/ui/auth/UserAction"
-import FilterBarSection from "~/ui/filter/FilterBarSection"
-import Appear from "~/ui/fx/Appear"
+} from "~/server/types/discover-types";
+import UserAction from "~/ui/auth/UserAction";
+import FilterBarSection from "~/ui/filter/FilterBarSection";
+import Appear from "~/ui/fx/Appear";
 
 const presets = [
 	{
 		label: "Didn't Watch",
-		paramms: "watchedType=didnt-watch",
+		params: "watchedType=didnt-watch",
 	},
 	{
 		label: "My Streaming",
-		paramms: "streamingPreset=mine",
+		params: "streamingPreset=mine",
 	},
 	{
 		label: "Score above 80",
-		paramms: "minScore=80&maxScore=100",
+		params: "minScore=80&maxScore=100",
 	},
 	{
 		label: "Similar to The Truman Show",
-		paramms: "similarTitles=37165:movie:Sub-Genres;Mood;Themes;Plot",
+		params: "similarTitles=37165:movie:Sub-Genres;Mood;Themes;Plot",
 	},
 	{
 		label: "With a dark mood",
-		paramms: "similarDNA=Mood:Dark&similarDNACombinationType=any",
+		params: "similarDNA=Mood_Dark&similarDNACombinationType=any",
 	},
 	{
 		label: "About Time Travel",
-		paramms: "similarDNACombinationType=any&similarDNA=Themes:Time+Travel",
+		params: "similarDNACombinationType=any&similarDNA=Themes_Time+Travel",
 	},
 	{
 		label: "About Family Bonds",
-		paramms: "similarDNACombinationType=any&similarDNA=Themes:Family+Bonds",
+		params: "similarDNACombinationType=any&similarDNA=Themes_Family+Bonds",
 	},
 	{
 		label: "Launched a Franchise",
-		paramms:
-			"similarDNACombinationType=any&similarDNA=Cultural+Impact:Launched+A+Franchise",
+		params:
+			"similarDNACombinationType=any&similarDNA=Cultural+Impact_Launched+A+Franchise",
 	},
 	{
 		label: "Superhero with Inner Monologue",
-		paramms:
-			"similarDNACombinationType=all&similarDNA=Dialog:Inner+Monologue,Sub-Genres:Superhero",
+		params:
+			"similarDNACombinationType=all&similarDNA=Dialog_Inner+Monologue,Sub-Genres_Superhero",
 	},
 	{
 		label: "On the moon",
-		paramms:
-			"similarDNACombinationType=any&similarDNA=Place:Moon,Place:Moon+Surface,Place:Moon+Colony",
+		params:
+			"similarDNACombinationType=any&similarDNA=Place_Moon,Place_Moon+Surface,Place_Moon+Colony",
 	},
 	{
 		label: "In Medieval Times",
-		paramms: "similarDNACombinationType=any&similarDNA=Time:Medieval+Times",
+		params: "similarDNACombinationType=any&similarDNA=Time_Medieval+Times",
 	},
 	{
 		label: "Slapstick Humor",
-		paramms: "similarDNACombinationType=any&similarDNA=Humor:Slapstick",
+		params: "similarDNACombinationType=any&similarDNA=Humor_Slapstick",
 	},
 	{
 		label: "With Electronic Music",
-		paramms:
-			"similarDNA=Score+and+Sound:Electronic+Music&similarDNACombinationType=any",
+		params:
+			"similarDNA=Score+and+Sound_Electronic+Music&similarDNACombinationType=any",
 	},
 	{
 		label: "Dressed in Fantasy Costumes",
-		paramms:
-			"similarDNA=Costume+and+Set:Fantasy+Costumes&similarDNACombinationType=any",
+		params:
+			"similarDNA=Costume+and+Set_Fantasy+Costumes&similarDNACombinationType=any",
 	},
 	{
 		label: "Writing a Love Letter",
-		paramms: "similarDNA=Key+Props:Love+Letter&similarDNACombinationType=any",
+		params: "similarDNA=Key+Props_Love+Letter&similarDNACombinationType=any",
 	},
 	{
 		label: "Released after 2020",
-		paramms: `minYear=2020&maxYear=${new Date().getFullYear()}`,
+		params: `minYear=2020&maxYear=${new Date().getFullYear()}`,
 	},
-]
+];
 
-const randomPresets = presets.sort(() => Math.random() - 0.5).slice(0, 5)
+const randomPresets = presets.sort(() => Math.random() - 0.5).slice(0, 5);
 
 interface AddFilterBarParams {
-	params: DiscoverParams
-	isVisible: boolean
-	onSelect: (filterType: DiscoverFilterType) => void
+	params: DiscoverParams;
+	isVisible: boolean;
+	onSelect: (filterType: DiscoverFilterType) => void;
 }
 
 export default function AddFilterBar({
@@ -99,11 +99,11 @@ export default function AddFilterBar({
 		([_, discoverFilter]) => {
 			return (
 				discoverFilter.associatedParams.filter((associatedParam) => {
-					return params[associatedParam]
+					return params[associatedParam];
 				}).length === 0
-			)
+			);
 		},
-	)
+	);
 
 	return (
 		<div className="m-auto max-w-7xl w-full px-4 flex flex-col flex-wrap gap-1 text-sm border-gray-900 rounded-lg">
@@ -119,7 +119,7 @@ export default function AddFilterBar({
 							<Link
 								key={preset.label}
 								className="text-blue-400 hover:underline cursor-pointer"
-								to={`/discover?${preset.paramms}`}
+								to={`/discover?${preset.params}`}
 								prefetch="viewport"
 							>
 								{preset.label}
@@ -152,5 +152,5 @@ export default function AddFilterBar({
 				</div>
 			</Appear>
 		</div>
-	)
+	);
 }

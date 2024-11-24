@@ -11,6 +11,7 @@ import { MovieTvCard } from "~/ui/MovieTvCard";
 import { Poster } from "~/ui/Poster";
 import { DNATag } from "~/ui/dna/DNATag";
 import { spoilerCategories } from "~/ui/dna/dna_utils";
+import { SEPARATOR_SECONDARY } from "~/utils/navigation";
 
 export interface DNACategoryProps {
 	without: {
@@ -38,11 +39,15 @@ export default function DNACategory({
 
 	const discover = useDiscover({
 		params: {
-			similarTitles: `${without.tmdb_id}:${without.media_type}:${category}`,
+			type: "all",
+			similarTitles: `${without.tmdb_id}${SEPARATOR_SECONDARY}${without.media_type}${SEPARATOR_SECONDARY}${category}`,
+			sortBy: "popularity",
 		},
 	});
 
 	const results = discover.data || [];
+
+	// TODO this reorders the items by similarity score ascending (not sure why)
 	const categoryPreview = results
 		.filter(
 			(details) =>
@@ -94,7 +99,7 @@ export default function DNACategory({
 				<div className="mt-4">
 					<Link
 						className="px-3 py-2 border-2 border-gray-500 bg-slate-700 text-gray-100 text-sm rounded-md hover:bg-slate-600 hover:text-white"
-						to={`/discover?type=all&similarTitles=${without.tmdb_id}:${without.media_type}:${category}`}
+						to={`/discover?type=all&similarTitles=${without.tmdb_id}${SEPARATOR_SECONDARY}${without.media_type}${SEPARATOR_SECONDARY}${category}`}
 						prefetch="viewport"
 					>
 						<CubeIcon className="w-4 h-4 inline-block mr-2" />

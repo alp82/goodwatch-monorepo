@@ -1,6 +1,7 @@
 import { Link } from "@remix-run/react";
 import React from "react";
 import { getCategoryColor } from "~/ui/dna/dna_utils";
+import { SEPARATOR_SECONDARY } from "~/utils/navigation";
 
 export interface DNATagProps {
 	category: string;
@@ -28,7 +29,7 @@ export function DNATag({
 		tagElement
 	) : (
 		<Link
-			to={`/discover?type=all&similarDNA=${category}:${label}&similarDNACombinationType=any`}
+			to={`/discover?type=all&similarDNA=${category}${SEPARATOR_SECONDARY}${label}&similarDNACombinationType=any`}
 			prefetch="intent"
 		>
 			{tagElement}

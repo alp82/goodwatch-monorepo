@@ -1,22 +1,26 @@
-import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { FilmIcon } from "@heroicons/react/24/solid"
-import React from "react"
-import Highlighter from "react-highlight-words"
-import { convertSimilarTitles } from "~/routes/api.discover"
-import { useSimilarMedia } from "~/routes/api.similar-media"
-import type { DiscoverParams } from "~/server/discover.server"
-import { discoverFilters } from "~/server/types/discover-types"
-import { sortedDNACategories } from "~/ui/dna/dna_utils"
-import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
-import EditableSection from "~/ui/filter/sections/EditableSection"
+import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { FilmIcon } from "@heroicons/react/24/solid";
+import React from "react";
+import Highlighter from "react-highlight-words";
+import { convertSimilarTitles } from "~/routes/api.discover";
+import { useSimilarMedia } from "~/routes/api.similar-media";
+import type { DiscoverParams } from "~/server/discover.server";
+import { discoverFilters } from "~/server/types/discover-types";
+import { sortedDNACategories } from "~/ui/dna/dna_utils";
+import OneOrMoreItems from "~/ui/filter/OneOrMoreItems";
+import EditableSection from "~/ui/filter/sections/EditableSection";
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
-} from "~/ui/form/Autocomplete"
-import { Tag } from "~/ui/tags/Tag"
-import { Ping } from "~/ui/wait/Ping"
-import { useNav } from "~/utils/navigation"
-import { useDebounce } from "~/utils/timing"
+} from "~/ui/form/Autocomplete";
+import { Tag } from "~/ui/tags/Tag";
+import { Ping } from "~/ui/wait/Ping";
+import {
+	SEPARATOR_SECONDARY,
+	SEPARATOR_TERTIARY,
+	useNav,
+} from "~/utils/navigation";
+import { useDebounce } from "~/utils/timing";
 
 const presets: { label: string; categories: typeof sortedDNACategories }[] = [
 	{
@@ -45,13 +49,13 @@ const presets: { label: string; categories: typeof sortedDNACategories }[] = [
 			"Flag",
 		],
 	},
-]
+];
 
 interface SectionSimilarParams {
-	params: DiscoverParams
-	editing: boolean
-	onEdit: () => void
-	onClose: () => void
+	params: DiscoverParams;
+	editing: boolean;
+	onEdit: () => void;
+	onClose: () => void;
 }
 
 export default function SectionSimilar({
@@ -60,61 +64,61 @@ export default function SectionSimilar({
 	onEdit,
 	onClose,
 }: SectionSimilarParams) {
-	const [searchText, setSearchText] = React.useState("")
+	const [searchText, setSearchText] = React.useState("");
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchText(event.target.value)
-	}
-	const debouncedSearchText = useDebounce(searchText, 200)
+		setSearchText(event.target.value);
+	};
+	const debouncedSearchText = useDebounce(searchText, 200);
 
 	// data retrieval
-	const { similarTitles = "" } = params
-	const withSimilar = convertSimilarTitles(similarTitles)
+	const { similarTitles = "" } = params;
+	const withSimilar = convertSimilarTitles(similarTitles);
 	const withSimilarCategories = withSimilar.flatMap(
 		(similar) => similar.categories,
-	)
+	);
 	const categories =
 		withSimilarCategories.length > 0
 			? withSimilarCategories
-			: presets[0].categories
+			: presets[0].categories;
 	const matchesPreset = presets.find((preset) => {
 		return preset.categories.every((category) => {
-			return categories.includes(category)
-		})
-	})
+			return categories.includes(category);
+		});
+	});
 
 	const search = useSimilarMedia({
 		searchTerm: debouncedSearchText,
 		withSimilar,
-	})
-	const searchResults = search?.data?.movies?.concat(search?.data?.tv) || []
+	});
+	const searchResults = search?.data?.movies?.concat(search?.data?.tv) || [];
 
 	const selectedSimilar = searchResults.filter((searchResult) => {
 		return withSimilar.some((similar) => {
 			return (
 				similar.tmdbId === searchResult.tmdb_id.toString() &&
 				similar.mediaType === searchResult.media_type
-			)
-		})
-	})
+			);
+		});
+	});
 
 	// autocomplete data
 
 	const autocompleteItems = searchResults.map((searchResult) => {
 		return {
-			key: `${searchResult.tmdb_id.toString()}:${searchResult.media_type}`,
+			key: `${searchResult.tmdb_id.toString()}${SEPARATOR_SECONDARY}${searchResult.media_type}`,
 			label: `${searchResult.title} (${searchResult.release_year})`,
 			img: searchResult.poster_path,
-		}
-	})
+		};
+	});
 	const autocompleteRenderItem = ({
 		item,
 	}: RenderItemParams<AutocompleteItem & { img: string }>) => {
-		const [tmdbId, mediaType] = item.key.split(":")
+		const [tmdbId, mediaType] = item.key.split(SEPARATOR_SECONDARY);
 		const isSelected =
 			withSimilar.filter(
 				(similar) =>
 					similar.tmdbId === tmdbId && similar.mediaType === mediaType,
-			).length > 0
+			).length > 0;
 		return (
 			<div
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
@@ -141,33 +145,33 @@ export default function SectionSimilar({
 					/>
 				)}
 			</div>
-		)
-	}
+		);
+	};
 
 	// update handlers
 
-	const { updateQueryParams } = useNav<Pick<DiscoverParams, "similarTitles">>()
+	const { updateQueryParams } = useNav<Pick<DiscoverParams, "similarTitles">>();
 	const handleSelect = (updatedSimilar: (typeof autocompleteItems)[number]) => {
-		const updatedSimilarTitles = `${updatedSimilar.key}:${categories.join(";")}`
+		const updatedSimilarTitles = `${updatedSimilar.key}${SEPARATOR_SECONDARY}${categories.join(SEPARATOR_TERTIARY)}`;
 		updateQueryParams({
 			similarTitles: updatedSimilarTitles,
-		})
-	}
+		});
+	};
 
 	const handleSelectPreset = (preset: (typeof presets)[number]) => {
-		const [key, mediaType, _] = similarTitles.split(":")
-		const updatedSimilarTitles = `${key}:${mediaType}:${preset.categories.join(";")}`
+		const [key, mediaType, _] = similarTitles.split(SEPARATOR_SECONDARY);
+		const updatedSimilarTitles = `${key}${SEPARATOR_SECONDARY}${mediaType}${SEPARATOR_SECONDARY}${preset.categories.join(SEPARATOR_TERTIARY)}`;
 		updateQueryParams({
 			similarTitles: updatedSimilarTitles,
-		})
-	}
+		});
+	};
 
 	const handleRemoveAll = () => {
 		updateQueryParams({
 			similarTitles: "",
-		})
-		onClose()
-	}
+		});
+		onClose();
+	};
 
 	// rendering
 
@@ -207,8 +211,8 @@ export default function SectionSimilar({
 									<div className="flex flex-wrap gap-3 text-xs font-bold">
 										{presets.map((preset) => {
 											const isSelected = preset.categories.every((category) => {
-												return categories.includes(category)
-											})
+												return categories.includes(category);
+											});
 											return (
 												<button
 													key={preset.label}
@@ -221,7 +225,7 @@ export default function SectionSimilar({
 												>
 													{preset.label}
 												</button>
-											)
+											);
 										})}
 									</div>
 									{false && (
@@ -280,5 +284,5 @@ export default function SectionSimilar({
 				</div>
 			)}
 		</EditableSection>
-	)
+	);
 }

@@ -13,12 +13,18 @@ import {
 	ArrowTopRightOnSquareIcon,
 	BookmarkIcon,
 } from "@heroicons/react/20/solid";
-import { Cog6ToothIcon, CogIcon, EyeIcon } from "@heroicons/react/24/solid";
+import {
+	Cog6ToothIcon,
+	CogIcon,
+	EyeIcon,
+	UserCircleIcon,
+} from "@heroicons/react/24/solid";
 import { Link } from "@remix-run/react";
 import logo from "~/img/goodwatch-logo.png";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import Search from "~/ui/Search";
 import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
+import { SignInButton } from "~/ui/auth/SignInButton";
 import { SignOutLink } from "~/ui/auth/SignOutLink";
 import { GlobalLoading } from "~/ui/nav/GlobalLoading";
 import { useUser } from "~/utils/auth";
@@ -210,12 +216,16 @@ export default function Header() {
 									<Menu as="div" className="relative ml-2 flex-shrink-0">
 										<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
 											<span className="sr-only">Open user menu</span>
-											<img
-												className="h-8 w-8 rounded-[16px] hover:rounded-lg transition duration-200"
-												src={user.user_metadata.avatar_url}
-												alt={user?.user_metadata.name}
-												title={user?.user_metadata.name}
-											/>
+											{user?.user_metadata?.avatar_url ? (
+												<img
+													className="h-8 w-8 rounded-[16px] hover:rounded-lg brightness-75 hover:brightness-100 transition duration-200"
+													src={user?.user_metadata?.avatar_url}
+													alt={user?.user_metadata?.name}
+													title={user?.user_metadata?.name}
+												/>
+											) : (
+												<UserCircleIcon className="h-8 w-8 rounded-[16px] brightness-75 hover:brightness-100 transition duration-200" />
+											)}
 										</MenuButton>
 										<Transition
 											as={Fragment}
@@ -291,7 +301,7 @@ export default function Header() {
 										</Transition>
 									</Menu>
 								) : (
-									<GoogleSignInButton />
+									<SignInButton />
 								)}
 							</div>
 						</div>
