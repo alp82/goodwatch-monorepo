@@ -25,11 +25,6 @@ export const meta: MetaFunction = () => {
 
 const navigation = [
 	{
-		name: "Account",
-		to: "/settings/account",
-		icon: UserIcon,
-	},
-	{
 		name: "Country",
 		to: "/settings/country",
 		icon: FlagIcon,
@@ -39,6 +34,11 @@ const navigation = [
 		to: "/settings/streaming",
 		icon: TvIcon,
 	},
+	{
+		name: "Account",
+		to: "/settings/account",
+		icon: UserIcon,
+	},
 ];
 
 export default function Settings() {
@@ -47,15 +47,6 @@ export default function Settings() {
 		matches?.length > 0 ? matches[matches.length - 1] : { pathname: "" };
 	const checkIsCurrent = (to: string) => {
 		return route.pathname === to;
-	};
-
-	const setUserSettings = useSetUserSettings();
-	const handleResetOnboardingFlag = () => {
-		setUserSettings.mutate({
-			settings: {
-				onboarding_status: "incomplete",
-			},
-		});
 	};
 
 	const { user, loading } = useUser();
@@ -72,7 +63,7 @@ export default function Settings() {
 	if (!user) {
 		return (
 			<div className="max-w-7xl mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8">
-				<p className="py-3 px-5 text-lg text-blue-200 bg-blue-900">
+				<p className="py-3 px-5 text-lg border-l-8 border-blue-700 text-blue-200 bg-blue-900">
 					Please sign in to your account.
 				</p>
 			</div>
@@ -129,23 +120,6 @@ export default function Settings() {
 						<Outlet />
 					</div>
 				</div>
-
-				<button
-					type="button"
-					className="
-								flex items-center gap-2 flex-wrap mx-auto px-4 py-2
-								border border-gray-700 rounded-md bg-gray-700 hover:bg-indigo-800
-								font-medium text-gray-200 hover:text-white
-							"
-					onClick={handleResetOnboardingFlag}
-				>
-					Select my{" "}
-					<span>
-						<span className="font-extrabold text-emerald-500">Country</span>,
-					</span>
-					<span className="font-extrabold text-sky-500">Streaming</span> and{" "}
-					<span className="font-extrabold text-rose-500">Scores</span>
-				</button>
 			</div>
 		</div>
 	);

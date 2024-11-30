@@ -282,7 +282,7 @@ export default function Header() {
 												<MenuItem>
 													{({ focus }) => (
 														<Link
-															to="/settings/account"
+															to="/settings/country"
 															className={`w-full flex gap-2 items-center px-4 py-2 text-base font-medium ${
 																focus
 																	? "bg-gray-700 text-white"

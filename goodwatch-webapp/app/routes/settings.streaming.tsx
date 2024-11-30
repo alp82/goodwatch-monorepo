@@ -1,5 +1,6 @@
 import type { MetaFunction } from "@remix-run/node";
-import React from "react";
+import React, { type ReactNode, useEffect } from "react";
+import { useUserSettings } from "~/routes/api.user-settings.get";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import SelectStreaming from "~/ui/onboarding/SelectStreaming";
 import StreamingProviderSelection from "~/ui/onboarding/StreamingProviderSelection";
@@ -23,12 +24,27 @@ export const meta: MetaFunction = () => {
 };
 
 export default function SettingsStreaming() {
-	const { user, loading } = useUser();
-	const { supabase } = useSupabase();
-
-	const handleSubmit = () => {
-		console.log("submit");
+	const setUserSettings = useSetUserSettings();
+	const handleSubmit = (streamingProviderIds: string[]) => {
+		if (!streamingProviderIds) return;
+		setUserSettings.mutate({
+			settings: {
+				streaming_providers_default: streamingProviderIds.join(","),
+			},
+		});
 	};
+
+	// TODO workaround for loading user settings before the default is set from localstorage
+	const { data: userSettings } = useUserSettings();
+	const [streamingSettings, setStreamingSettings] =
+		React.useState<ReactNode | null>(null);
+	useEffect(() => {
+		if (!userSettings) return;
+
+		setStreamingSettings(
+			<SelectStreaming mode="settings" onSelect={handleSubmit} />,
+		);
+	}, [userSettings]);
 
 	return (
 		<div className="px-2 md:px-4 lg:px-8">
@@ -37,7 +53,7 @@ export default function SettingsStreaming() {
 					Streaming
 				</h2>
 
-				<SelectStreaming />
+				{streamingSettings}
 			</div>
 		</div>
 	);

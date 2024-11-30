@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { Link } from "@remix-run/react"
-import { AnimatePresence, motion } from "framer-motion"
-import type React from "react"
-import { useState } from "react"
-import logo from "~/img/goodwatch-logo.png"
-import { useSetUserSettings } from "~/routes/api.user-settings.set"
-import { OnboardingSuccess } from "~/ui/onboarding/OnboardingSuccess"
-import SelectCountry from "~/ui/onboarding/SelectCountry"
-import { SelectMedia } from "~/ui/onboarding/SelectMedia"
-import SelectStreaming from "~/ui/onboarding/SelectStreaming"
-import { useUser } from "~/utils/auth"
+import { Link } from "@remix-run/react";
+import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
+import { useState } from "react";
+import logo from "~/img/goodwatch-logo.png";
+import { useSetUserSettings } from "~/routes/api.user-settings.set";
+import { OnboardingSuccess } from "~/ui/onboarding/OnboardingSuccess";
+import SelectCountry from "~/ui/onboarding/SelectCountry";
+import { SelectMedia } from "~/ui/onboarding/SelectMedia";
+import SelectStreaming from "~/ui/onboarding/SelectStreaming";
+import { useUser } from "~/utils/auth";
 
 const steps = [
 	{
@@ -25,56 +25,54 @@ const steps = [
 	{
 		label: "Ratings",
 	},
-]
+];
 
 export default function Onboarding() {
-	const { user } = useUser()
-	const setUserSettings = useSetUserSettings()
+	const { user } = useUser();
+	const setUserSettings = useSetUserSettings();
 
 	// step progress
 
-	const [currentStep, setCurrentStep] = useState(0)
-	const MIN_PROGRESS = 10
+	const [currentStep, setCurrentStep] = useState(0);
+	const MIN_PROGRESS = 10;
 	const normalizedProgress =
 		MIN_PROGRESS +
-		(100 - 100 / steps.length) * (currentStep / (steps.length - 1))
+		(100 - 100 / steps.length) * (currentStep / (steps.length - 1));
 
 	// country selection
 
 	const handleSelectCountry = (country: string) => {
-		localStorage.setItem("country", country)
+		localStorage.setItem("country", country);
 		setUserSettings.mutate({
 			settings: {
 				country_default: country,
 			},
-		})
+		});
 
-		setCurrentStep(1)
-	}
+		setCurrentStep(1);
+	};
 
 	// streaming selection
 
 	const handleSelectStreaming = (selectedProviders: string[]) => {
-		const withStreamingProviders = selectedProviders
-			.map((item) => item)
-			.join(",")
+		const withStreamingProviders = selectedProviders.join(",");
 
-		localStorage.setItem("withStreamingProviders", withStreamingProviders)
+		localStorage.setItem("withStreamingProviders", withStreamingProviders);
 		setUserSettings.mutate({
 			settings: {
 				streaming_providers_default: withStreamingProviders,
 			},
-		})
+		});
 
-		setCurrentStep(2)
-	}
+		setCurrentStep(2);
+	};
 
 	// media onboarding finished
 
-	const [finalizeOnboarding, setFinalizeOnboarding] = useState(false)
+	const [finalizeOnboarding, setFinalizeOnboarding] = useState(false);
 	const handleFinishOnboarding = () => {
-		setFinalizeOnboarding(true)
-	}
+		setFinalizeOnboarding(true);
+	};
 
 	// if ((userLoading || userSettingsLoading) && currentStep === 0)
 	// 	return (
@@ -82,7 +80,7 @@ export default function Onboarding() {
 	// 			<Spinner size="large" />
 	// 		</div>
 	// 	)
-	if (finalizeOnboarding) return <OnboardingSuccess />
+	if (finalizeOnboarding) return <OnboardingSuccess />;
 
 	return (
 		<AnimatePresence mode="wait">
@@ -145,19 +143,19 @@ export default function Onboarding() {
 											? "text-indigo-300 hover:text-indigo-200"
 											: index === currentStep
 												? "text-amber-300"
-												: "text-gray-200"
+												: "text-gray-200";
 									const align =
 										index === 0
 											? "text-left"
 											: index < steps.length - 1
 												? "text-center"
-												: "text-right"
+												: "text-right";
 									const font =
 										index < currentStep
 											? ""
 											: index === currentStep
 												? "font-bold"
-												: ""
+												: "";
 
 									return (
 										<div
@@ -175,7 +173,7 @@ export default function Onboarding() {
 												step.label
 											)}
 										</div>
-									)
+									);
 								})}
 							</div>
 						</div>
@@ -189,7 +187,10 @@ export default function Onboarding() {
 							<SelectCountry onSelect={handleSelectCountry} />
 						)}
 						{currentStep === 1 && (
-							<SelectStreaming onSelect={handleSelectStreaming} />
+							<SelectStreaming
+								mode="onboarding"
+								onSelect={handleSelectStreaming}
+							/>
 						)}
 						{currentStep === 2 && (
 							<SelectMedia
@@ -201,5 +202,5 @@ export default function Onboarding() {
 				</main>
 			</motion.div>
 		</AnimatePresence>
-	)
+	);
 }

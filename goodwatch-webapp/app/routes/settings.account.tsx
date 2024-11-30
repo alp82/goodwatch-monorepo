@@ -1,6 +1,8 @@
 import { EnvelopeIcon } from "@heroicons/react/24/solid";
 import type { MetaFunction } from "@remix-run/node";
 import React from "react";
+import { useSetUserSettings } from "~/routes/api.user-settings.set";
+import SubmitButton from "~/ui/button/SubmitButton";
 import { PasswordInput } from "~/ui/form/PasswordInput";
 import { Spinner } from "~/ui/wait/Spinner";
 import { useSupabase, useUser } from "~/utils/auth";
@@ -105,6 +107,15 @@ export default function SettingsAccount() {
 		setConfirmPassword("");
 	};
 
+	const setUserSettings = useSetUserSettings();
+	const handleResetOnboardingFlag = () => {
+		setUserSettings.mutate({
+			settings: {
+				onboarding_status: "incomplete",
+			},
+		});
+	};
+
 	return (
 		<div className="px-2 md:px-4 lg:px-8">
 			<div className="flex flex-col gap-4 text-lg lg:text-2xl text-gray-300">
@@ -112,7 +123,7 @@ export default function SettingsAccount() {
 					Account
 				</h2>
 
-				<div className="mb-4 flex gap-2 items-center text-base md:text-lg">
+				<div className="flex gap-2 items-center text-base md:text-lg">
 					<span>You are logged in via:</span>
 					{userIdentityProviders.map((provider) => (
 						<span key={provider} className="h-5 w-5">
@@ -126,8 +137,12 @@ export default function SettingsAccount() {
 
 				{userHasEmailIdentity ? (
 					<>
+						<h3 className="mt-8 font-bold tracking-tight text-gray-100 text-base md:text-lg lg:text-xl">
+							Change Password
+						</h3>
+
 						{status === "success" ? (
-							<p className="py-3 px-5 text-lg text-green-200 bg-green-900">
+							<p className="py-3 px-5 text-lg border-l-8 border-green-700 text-green-200 bg-green-900">
 								Password changed successfully
 							</p>
 						) : null}
@@ -152,24 +167,49 @@ export default function SettingsAccount() {
 								onChange={setConfirmPassword}
 							/>
 
-							<button
-								type="submit"
-								className={`
-								inline-block mt-4 px-4 py-2
-								${status === "loading" ? "cursor-default" : ""}
-								border border-indigo-700 rounded-md 
-								${status === "loading" ? "bg-indigo-700/50" : "bg-indigo-700 hover:bg-indigo-800"}
-								${status === "loading" ? "text-gray-200/50" : "text-gray-200 hover:text-white"}
-								text-base font-medium 
-							`}
-								disabled={status === "loading"}
-								onClick={handleSubmit}
+							<SubmitButton
+								loading={status === "loading"}
+								onSubmit={handleSubmit}
 							>
-								{status === "loading" ? "Loading..." : "Change Password"}
-							</button>
+								Change Password
+							</SubmitButton>
 						</div>
 					</>
 				) : null}
+
+				<h3 className="mt-8 font-bold tracking-tight text-gray-100 text-base md:text-lg lg:text-xl">
+					Restart Onboarding
+				</h3>
+
+				<button
+					type="button"
+					className="
+								flex items-center gap-2 flex-wrap max-w-80 px-4 py-2
+								border border-slate-700 rounded-md bg-slate-800 hover:bg-slate-900
+								text-xl text-gray-200 hover:text-white
+								group
+							"
+					onClick={handleResetOnboardingFlag}
+				>
+					Select{" "}
+					<span>
+						<span className="font-extrabold text-emerald-300 group-hover:text-emerald-500">
+							Country
+						</span>
+						,
+					</span>
+					<span className="font-extrabold text-sky-300 group-hover:text-skyd-500">
+						Streaming
+					</span>{" "}
+					and{" "}
+					<span className="font-extrabold text-rose-300 group-hover:text-rose-500">
+						Scores
+					</span>
+				</button>
+
+				<p className="max-w-80 py-2 px-5 text-sm border-l-8 border-blue-700 text-blue-200 bg-blue-900">
+					Don't worry, you won't lose any previously saved settings.
+				</p>
 			</div>
 		</div>
 	);

@@ -6,6 +6,7 @@ import {
 } from "~/routes/api.streaming-providers";
 import { useUserSettings } from "~/routes/api.user-settings.get";
 import NextBackButtons from "~/ui/button/NextBackButtons";
+import SubmitButton from "~/ui/button/SubmitButton";
 import YesNoButtons from "~/ui/button/YesNoButtons";
 import { SearchInput } from "~/ui/form/SearchInput";
 import StreamingProviderSelection from "~/ui/onboarding/StreamingProviderSelection";
@@ -13,10 +14,14 @@ import StreamingProviderToggle from "~/ui/onboarding/StreamingProviderToggle";
 import { useAutoFocus } from "~/utils/form";
 
 interface SelectStreamingProps {
+	mode: "onboarding" | "settings";
 	onSelect: (streamingProviderIds: string[]) => void;
 }
 
-export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
+export default function SelectStreaming({
+	mode,
+	onSelect,
+}: SelectStreamingProps) {
 	const { data: userSettings } = useUserSettings();
 
 	// pre-selection
@@ -47,7 +52,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 	// toggle selection mode
 
 	const [streamingSelectionEnabled, setStreamingSelectionEnabled] = useState(
-		preselectedStreaming.length === 0,
+		preselectedStreaming.length === 0 || mode === "settings",
 	);
 	const handleStreamingDeclined = () => {
 		setStreamingSelectionEnabled(true);
@@ -124,10 +129,17 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 							</div>
 						)}
 					</div>
-					<NextBackButtons
-						onNext={handleStreamingConfirmed}
-						onBack={handleStreamingBack}
-					/>
+					{mode === "onboarding" && (
+						<NextBackButtons
+							onNext={handleStreamingConfirmed}
+							onBack={handleStreamingBack}
+						/>
+					)}
+					{mode === "settings" && (
+						<SubmitButton loading={false} onSubmit={handleStreamingConfirmed}>
+							Save Streaming Selection
+						</SubmitButton>
+					)}
 					<div className="mt-6 w-full flex items-center justify-center">
 						<SearchInput
 							id="search-streaming"

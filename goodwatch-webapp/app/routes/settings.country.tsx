@@ -41,9 +41,15 @@ export default function SettingsCountry() {
 		setSelectedCountry(country);
 	};
 
+	const setUserSettings = useSetUserSettings();
+
 	const handleSubmit = () => {
 		if (!selectedCountry) return;
-		console.log("submit", selectedCountry);
+		setUserSettings.mutate({
+			settings: {
+				country_default: selectedCountry,
+			},
+		});
 	};
 
 	return (
