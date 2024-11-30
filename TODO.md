@@ -12,6 +12,11 @@ similarity issues
 
 ---
 
+Upgrade Remix to RR7
+    https://reactrouter.com/upgrading/remix
+
+---
+
 user profile
     show all scores
     grouped by tier
@@ -55,6 +60,12 @@ cards with user actions
 
 ---
 
+analytics
+    https://plausible.io/
+    https://umami.is/
+
+---
+
 Show User Data In Movie Cards
     Trending
     Explore
@@ -72,13 +83,6 @@ home page categories:
 
 onboarding as CTA banner
     e.g. https://www.producthunt.com/
-
----
-
-sign up
-    redirect without jump to home
-    via email
-    
 
 ---
 
@@ -550,6 +554,11 @@ guide of the day
 
 ---
 
+feature voting
+    https://fider.io/docs/hosting-instance
+
+---
+
 movie site/app directory
     https://www.youtube.com/watch?v=hPveUtta0Es
 
@@ -636,7 +645,7 @@ anime
     https://www.anisearch.de/
     https://www.anime-planet.com/
     
-other sites
+other sites / inspiration
     https://simkl.com/
     https://www.thetvdb.com/
     https://mdblist.com/
@@ -644,6 +653,7 @@ other sites
     https://nanocrowd.com/
     https://app.nanocrowd.com/
     https://tastedive.com/
+    https://www.streamplus.app/
     
 other api's
     https://mdblist.docs.apiary.io/#reference/0/media-info/get-media-info
@@ -875,20 +885,20 @@ LIMIT 20;
 
 # Blog
 ```
+data pipeline with windmill:
+    data flow design
+    infrastructure
+    keep data up to date
+monorepo design
+from vercel to coolify
+    too many open files
+    transparency concerns: hidden costs
+db architecture: performance and scalability
+caching strategy
 remix: keep it simple with tailwind
     linting with biomejs
     component example: rating
 discover design
-data pipeline with windmill:
-    keep grow data and keep it up to date
-    infrastructure
-    data flow design
-monorepo design
-from vercel to coolify
-    too many open files
-    hidden costs
-db architecture: performance and scalability
-caching strategy
 zombie processes
     windmill -> chrome (playwright)
     "can't start new thread"
@@ -902,6 +912,7 @@ authentication
     https://www.dusanstam.com/posts/remix-supabase-authentication
 genome with LLM's
 recommendation engine
+monthly costs
 ```
 
 https://www.writebots.com/discord-text-formatting/

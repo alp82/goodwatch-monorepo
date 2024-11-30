@@ -6,10 +6,12 @@ Notable changes to GoodWatch will be documented in this file.
 
 ### Added
 * Sign In via Email
+* User Settings Page to change country, streaming and password
 
 ### Changed
 
 ### Fixed
+* Details: Some streaming links were not shown (e.g. parts of Amazon Prime and Apple TV Plus)
 
 ## [0.5.6] 2024-11-21
 

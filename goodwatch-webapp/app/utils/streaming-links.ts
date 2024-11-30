@@ -52,11 +52,9 @@ export const getStreamingUrl = (
 
 export const duplicateProviders = [
 	24, // Quickflix Store
-	119, // Amazon Prime Video
 	188, // YouTube Premium
 	210, // Sky
 	235, // YouTube Free
-	350, // Apple TV Plus
 	380, // BritBox
 	390, // Disney Plus
 	524, // Discovery+
@@ -65,10 +63,13 @@ export const duplicateProviders = [
 ];
 
 export const duplicateProviderMapping = {
-	9: [10],
+	2: [350], // Apple TV -> Apple TV Plus
+	9: [10, 119], // Amazon Prime Video -> Amazon Video, Amazon Prime Video
 };
 
 export const ignoredProviders = [
 	...duplicateProviders,
 	10, // Amazon Video
+	119, // Amazon Prime Video
+	350, // Apple TV Plus
 ];
