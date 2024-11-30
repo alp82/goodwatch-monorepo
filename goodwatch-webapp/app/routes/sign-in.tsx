@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { useSupabase, useUser } from "~/utils/auth";
 import loading = toast.loading;
 import { Spinner } from "~/ui/wait/Spinner";
+import type { ColorName } from "~/utils/color";
 
 export function headers() {
 	return {
@@ -56,25 +57,28 @@ export default function SignInRedirectTo() {
 	const { supabase } = useSupabase();
 
 	let content = null;
-	if (!supabase)
+	let color: ColorName = "gray";
+	if (!supabase) {
 		content = (
 			<p>
 				Sign In currently not available. Please contact support if this issue
 				persists.
 			</p>
 		);
-	else if (loading) content = <Spinner size="medium" />;
-	else if (user?.id)
+	} else if (loading) content = <Spinner size="medium" />;
+	else if (user?.id) {
+		color = "green";
 		content = (
 			<p className="flex gap-2 items-center justify-center">
-				You are already logged in, return to
+				🎉 <span className="font-semibold">You successfully logged in.</span>{" "}
+				Now you can return to
 				<Link to="/">
 					<button
 						type="button"
 						className="
 						px-2 py-1
-						bg-gray-800 hover:bg-gray-700
-						border-2 border-gray-700
+						bg-indigo-800 hover:bg-indigo-700
+						border-2 border-indigo-700 rounded
 					"
 					>
 						Home
@@ -82,7 +86,7 @@ export default function SignInRedirectTo() {
 				</Link>
 			</p>
 		);
-	else
+	} else
 		content = (
 			<Auth
 				supabaseClient={supabase}
@@ -95,12 +99,12 @@ export default function SignInRedirectTo() {
 
 	return (
 		<div
-			className="
+			className={`
         mt-16 mx-auto p-8 max-w-xl
         text-center
         rounded-xl shadow-black/70
-        bg-gray-950/70 shadow-xl
-      "
+        bg-${color}-950/70 shadow-xl
+      `}
 		>
 			{content}
 		</div>

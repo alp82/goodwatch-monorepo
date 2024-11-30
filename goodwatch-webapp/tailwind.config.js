@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
-const colors = require("tailwindcss/colors")
-const defaultTheme = require("tailwindcss/defaultTheme")
+const colors = require("tailwindcss/colors");
+const defaultTheme = require("tailwindcss/defaultTheme");
 
 module.exports = {
 	content: ["./app/**/*.{js,jsx,ts,tsx}"],
@@ -12,12 +12,13 @@ module.exports = {
 		require("@tailwindcss/forms"),
 		require("@tailwindcss/typography"),
 		require("tailwindcss/plugin")(({ addVariant }) => {
-			addVariant("search-cancel", "&::-webkit-search-cancel-button")
+			addVariant("search-cancel", "&::-webkit-search-cancel-button");
 		}),
 	],
 	safelist: [
 		{ pattern: /bg-vibe-[0-9]+/ },
 		{ pattern: /text-\w+-500/ },
+		{ pattern: /bg-\w+-950\/70/ }, // sign-in
 		{ pattern: /from-\w+-700\/[0-9]+/ },
 		{ pattern: /via-\w+-900\/[0-9]+/ },
 		{ pattern: /to-\w+-800\/[0-9]+/ },
@@ -65,4 +66,4 @@ module.exports = {
 			},
 		},
 	},
-}
+};

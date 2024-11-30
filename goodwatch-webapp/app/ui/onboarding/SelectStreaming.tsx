@@ -1,23 +1,23 @@
-import { FilmIcon } from "@heroicons/react/24/solid"
-import React, { useState } from "react"
+import { FilmIcon } from "@heroicons/react/24/solid";
+import React, { useState } from "react";
 import {
 	type StreamingProvider,
 	useStreamingProviders,
-} from "~/routes/api.streaming-providers"
-import { useUserSettings } from "~/routes/api.user-settings.get"
-import NextBackButtons from "~/ui/button/NextBackButtons"
-import YesNoButtons from "~/ui/button/YesNoButtons"
-import { TextInput } from "~/ui/form/TextInput"
-import StreamingProviderSelection from "~/ui/onboarding/StreamingProviderSelection"
-import StreamingProviderToggle from "~/ui/onboarding/StreamingProviderToggle"
-import { useAutoFocus } from "~/utils/form"
+} from "~/routes/api.streaming-providers";
+import { useUserSettings } from "~/routes/api.user-settings.get";
+import NextBackButtons from "~/ui/button/NextBackButtons";
+import YesNoButtons from "~/ui/button/YesNoButtons";
+import { SearchInput } from "~/ui/form/SearchInput";
+import StreamingProviderSelection from "~/ui/onboarding/StreamingProviderSelection";
+import StreamingProviderToggle from "~/ui/onboarding/StreamingProviderToggle";
+import { useAutoFocus } from "~/utils/form";
 
 interface SelectStreamingProps {
-	onSelect: (streamingProviderIds: string[]) => void
+	onSelect: (streamingProviderIds: string[]) => void;
 }
 
 export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
-	const { data: userSettings } = useUserSettings()
+	const { data: userSettings } = useUserSettings();
 
 	// pre-selection
 
@@ -25,48 +25,50 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 		userSettings?.streaming_providers_default ||
 		(typeof window !== "undefined"
 			? localStorage.getItem("withStreamingProviders")
-			: undefined)
-	const preselectedStreaming = storedStreaming ? storedStreaming.split(",") : []
+			: undefined);
+	const preselectedStreaming = storedStreaming
+		? storedStreaming.split(",")
+		: [];
 
 	// get all providers
 
-	const { data: streamingProviders } = useStreamingProviders()
+	const { data: streamingProviders } = useStreamingProviders();
 
 	// filtered streaming providers
 
-	const [filterText, setFilterText] = useState("")
+	const [filterText, setFilterText] = useState("");
 	const handleFilterByName = (text: string) => {
-		setFilterText(text)
-	}
+		setFilterText(text);
+	};
 	const filteredStreamingProviders = streamingProviders?.filter((provider) => {
-		return provider.name.toLowerCase().includes(filterText.toLowerCase())
-	})
+		return provider.name.toLowerCase().includes(filterText.toLowerCase());
+	});
 
 	// toggle selection mode
 
 	const [streamingSelectionEnabled, setStreamingSelectionEnabled] = useState(
 		preselectedStreaming.length === 0,
-	)
+	);
 	const handleStreamingDeclined = () => {
-		setStreamingSelectionEnabled(true)
-		setSelectedStreaming(preselectedStreaming)
-	}
+		setStreamingSelectionEnabled(true);
+		setSelectedStreaming(preselectedStreaming);
+	};
 	const handleStreamingBack = () => {
-		setStreamingSelectionEnabled(false)
-	}
+		setStreamingSelectionEnabled(false);
+	};
 
 	// streaming selection
 
-	const autoFocusRef = useAutoFocus<HTMLInputElement>()
+	const autoFocusRef = useAutoFocus<HTMLInputElement>();
 	const [selectedStreaming, setSelectedStreaming] =
-		useState<string[]>(preselectedStreaming)
+		useState<string[]>(preselectedStreaming);
 
 	const handleToggleProvider = (
 		provider: StreamingProvider,
 		selected: boolean,
 	) => {
 		setSelectedStreaming((prev) => {
-			const providerId = String(provider.id)
+			const providerId = String(provider.id);
 
 			// If selected and not already in the list, add it
 			if (selected && !(prev || []).includes(providerId)) {
@@ -76,27 +78,27 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 							(prev || []).includes(String(streamingProvider.id)) ||
 							String(streamingProvider.id) === providerId,
 					)
-					.map((streamingProvider) => String(streamingProvider.id))
+					.map((streamingProvider) => String(streamingProvider.id));
 			}
 
 			// If not selected, remove it
 			if (!selected) {
-				return (prev || []).filter((id) => id !== providerId)
+				return (prev || []).filter((id) => id !== providerId);
 			}
 
-			return prev
-		})
-	}
+			return prev;
+		});
+	};
 
 	const handleStreamingConfirmed = () => {
 		onSelect(
 			streamingSelectionEnabled ? selectedStreaming : preselectedStreaming,
-		)
-	}
+		);
+	};
 
 	const userStreaming = selectedStreaming.length
 		? selectedStreaming
-		: preselectedStreaming
+		: preselectedStreaming;
 
 	return (
 		<>
@@ -107,14 +109,14 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 							selectedStreaming.map((providerId) => {
 								const provider = streamingProviders?.find(
 									(provider) => provider.id === Number.parseInt(providerId),
-								)
-								if (!provider) return null
+								);
+								if (!provider) return null;
 								return (
 									<StreamingProviderSelection
 										key={provider.id}
 										provider={provider}
 									/>
-								)
+								);
 							})
 						) : (
 							<div className="p-2 bg-slate-800 border-2 border-slate-950 text-2xl italic">
@@ -127,7 +129,8 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 						onBack={handleStreamingBack}
 					/>
 					<div className="mt-6 w-full flex items-center justify-center">
-						<TextInput
+						<SearchInput
+							id="search-streaming"
 							label="Search"
 							placeholder="Search Streaming Providers"
 							icon={
@@ -149,7 +152,7 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 									selected={selectedStreaming.includes(String(provider.id))}
 									onToggle={handleToggleProvider}
 								/>
-							)
+							);
 						})}
 					</div>
 					<NextBackButtons
@@ -164,15 +167,15 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 							userStreaming.map((providerId) => {
 								const provider = streamingProviders?.find(
 									(provider) => provider.id === Number.parseInt(providerId),
-								)
-								if (!provider) return null
+								);
+								if (!provider) return null;
 								return (
 									<StreamingProviderToggle
 										key={provider.id}
 										provider={provider}
 										selectable={false}
 									/>
-								)
+								);
 							})
 						) : (
 							<div className="p-2 bg-slate-800 border-2 border-slate-950 text-2xl italic">
@@ -190,5 +193,5 @@ export default function SelectStreaming({ onSelect }: SelectStreamingProps) {
 				</>
 			)}
 		</>
-	)
+	);
 }

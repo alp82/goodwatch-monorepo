@@ -1,46 +1,40 @@
-import type React from "react"
-import { forwardRef } from "react"
-import type { ChangeEvent } from "react"
+import type React from "react";
+import { forwardRef } from "react";
+import type { ChangeEvent } from "react";
 
 export interface TextInputProps {
-	label: string
-	placeholder: string
-	icon?: React.ReactNode
-	initialValue?: string
-	onChange: (text: string) => void
+	id: string;
+	label: string;
+	placeholder: string;
+	initialValue?: string;
+	onChange: (text: string) => void;
 }
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
-	({ label, placeholder, icon, initialValue, onChange }, ref) => {
+	({ id, label, placeholder, initialValue, onChange }, ref) => {
 		const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-			onChange(event.target.value)
-		}
+			onChange(event.target.value);
+		};
 
 		return (
 			<>
 				<label
-					htmlFor="onboarding-search"
-					className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
+					htmlFor={id}
+					className="mb-2 text-sm font-medium sr-only text-white"
 				>
 					{label}
 				</label>
-				<div className="relative flex-grow max-w-md">
-					{icon && (
-						<div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-							{icon}
-						</div>
-					)}
-					<input
-						type="search"
-						className="block w-full p-4 ps-10 text-lg text-white placeholder-gray-400 border-2 border-slate-500 rounded-lg bg-slate-700 focus:ring-blue-500 focus:border-blue-500"
-						placeholder={placeholder}
-						defaultValue={initialValue}
-						required
-						onChange={handleChange}
-						ref={ref}
-					/>
-				</div>
+				<input
+					id={id}
+					type="text"
+					className="p-1 text-md text-white placeholder-gray-400 border-2 border-slate-500 rounded-sm bg-slate-700 focus:ring-blue-500 focus:border-blue-500"
+					placeholder={placeholder}
+					defaultValue={initialValue}
+					required
+					onChange={handleChange}
+					ref={ref}
+				/>
 			</>
-		)
+		);
 	},
-)
+);
