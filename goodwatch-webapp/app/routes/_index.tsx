@@ -21,8 +21,8 @@ import {
 import React, { useState } from "react"
 import { Autoplay, EffectCoverflow, FreeMode } from "swiper/modules"
 import { Swiper, SwiperSlide } from "swiper/react"
-import startBackground from "~/img/start-background.png"
-import startForeground from "~/img/start-foreground.png"
+import startBackground from "~/img/start-background.webp"
+import startForeground from "~/img/start-foreground.webp"
 import {
 	type PopularPicksMovie,
 	type PopularPicksTV,

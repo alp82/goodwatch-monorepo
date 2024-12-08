@@ -2,7 +2,16 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.7] 2024-11-xx
+## [0.5.8] 2024-12-xx
+
+### Added
+
+### Changed
+* Faster start page load with webp background images
+
+### Fixed
+
+## [0.5.7] 2024-11-30
 
 ### Added
 * Sign In via Email

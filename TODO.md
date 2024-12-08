@@ -49,6 +49,8 @@ tv seasons:
     get ratings
     show in details
     when last season/episode was released
+    score matrix
+        https://tvcharts.co/show/arcane-tt11126994
     recaps
 
 ---
@@ -161,6 +163,11 @@ add caching for user data
 ---
 
 move caddy proxy from db1 to vector
+
+---
+
+header glass
+    https://www.joshwcomeau.com/css/backdrop-filter/
 
 ---
 
@@ -582,6 +589,11 @@ what do they have in common?
 
 ---
 
+reddit sentiment analysis
+    https://www.reddit.com/r/BuyItForLife/comments/1h17xry/i_analyzed_the_25_most_recommended_vacuum/
+
+---
+
 all titles from a-z (search page?)
     difference between search, explore, discover, watch next, etc.?
     
@@ -610,6 +622,10 @@ fix high memory windmill scripts
     check db
 
 ---
+
+json-ld
+    https://schema.org/Movie
+    https://remix.run/docs/fr/main/route/meta
 
 drizzle
     remix server scripts with sql builder
@@ -646,17 +662,24 @@ anime
     https://www.anime-planet.com/
     
 other sites / inspiration
+    https://www.taste.io/
+    https://www.matched-app.com/
     https://simkl.com/
-    https://www.thetvdb.com/
+    https://tastedive.com/
+    https://www.streamplus.app/
+    https://moviechat.org/
+    https://app.moveme.tv/
+    https://filmfinder.ai/
+    https://agoodmovietowatch.com/
+    https://www.betterkritic.com/
+    
+other api's
     https://mdblist.com/
+    https://mdblist.docs.apiary.io/#reference/0/media-info/get-media-info
+    https://www.thetvdb.com/
     https://letterboxd.com/film/beetlejuice-beetlejuice/nanogenres/
     https://nanocrowd.com/
     https://app.nanocrowd.com/
-    https://tastedive.com/
-    https://www.streamplus.app/
-    
-other api's
-    https://mdblist.docs.apiary.io/#reference/0/media-info/get-media-info
 
 redistribute weight for gw score
 
@@ -719,7 +742,9 @@ report missing/wrong ratings
 report missing/wrong streaming providers
 report missing/wrong DNA
 
-decide together: watch party / watch together / swipe and watch
+decide together
+    watch party / watch together / swipe and watch
+    https://www.matched-app.com/
 
 reduce costs: show best streaming bundles for my likings
 

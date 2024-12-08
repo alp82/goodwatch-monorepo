@@ -1,6 +1,6 @@
 {
 	"name": "goodwatch-webapp",
-	"version": "0.5.7",
+	"version": "0.5.8",
 	"private": true,
 	"sideEffects": false,
 	"type": "module",
@@ -31,7 +31,7 @@
 		"is-ip": "^5.0.1",
 		"isbot": "^5.1.17",
 		"pg": "^8.13.1",
-		"posthog-js": "^1.181.0",
+		"posthog-js": "^1.194.5",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"react-highlight-words": "^0.20.0",
