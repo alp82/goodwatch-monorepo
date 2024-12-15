@@ -11,5 +11,6 @@ schema:
       description: ''
       default: []
       items:
-        type: object
+        type: string
+        enum: null
   required: []

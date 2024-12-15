@@ -3,8 +3,10 @@
 
 from datetime import datetime
 import gc
+
 from mongoengine import get_db
 from psycopg2.extras import execute_batch, execute_values
+from wmill import set_progress
 
 from f.db.mongodb import init_mongodb
 from f.db.postgres import init_postgres, generate_insert_query
@@ -117,8 +119,14 @@ def copy_streaming_provider_links(
     for i in range(0, count, BATCH_SIZE):
         end = min(count, i + BATCH_SIZE)
         print(f"Processing records {i} to {end}...")
+        #set_progress((BATCH_SIZE / count) / 2)
+
         providers = list(
-            mongo_db[mongo_collection].find(query_selector).skip(i).limit(BATCH_SIZE)
+            mongo_db[mongo_collection]
+                .find(query_selector)
+                .sort("tmdb_id", -1)
+                .skip(i)
+                .limit(BATCH_SIZE)
         )
         now = datetime.utcnow()
 
@@ -129,19 +137,19 @@ def copy_streaming_provider_links(
         placeholders = ",".join(["%s"] * len(tmdb_ids))
         pg_cursor.execute(
             f"""
-            SELECT
-                tmdb_id,
-                media_type,
-                provider_id,
-                country_code,
-                stream_type,
-                price_dollar,
-                quality,
-                obsolete_at
-            FROM {table_name}
-            WHERE tmdb_id IN ({placeholders})
-            AND media_type = %s;
-        """,
+                SELECT
+                    tmdb_id,
+                    media_type,
+                    provider_id,
+                    country_code,
+                    stream_type,
+                    price_dollar,
+                    quality,
+                    obsolete_at
+                FROM {table_name}
+                WHERE tmdb_id IN ({placeholders})
+                AND media_type = %s;
+            """,
             tmdb_ids + [media_type],
         )
         existing_links = pg_cursor.fetchall()
@@ -382,23 +390,23 @@ def main():
     init_mongodb()
     pg = init_postgres()
 
-    total_movie_count = copy_streaming_provider_links(
-        pg,
-        "movie",
-        "tmdb_movie_providers",
-        "tmdb_movie_details",
-    )
     total_tv_count = copy_streaming_provider_links(
         pg,
         "tv",
         "tmdb_tv_providers",
         "tmdb_tv_details",
     )
+    total_movie_count = copy_streaming_provider_links(
+        pg,
+        "movie",
+        "tmdb_movie_providers",
+        "tmdb_movie_details",
+    )
 
     pg.close()
     return {
-        "total_movie_count": total_movie_count,
         "total_tv_count": total_tv_count,
+        "total_movie_count": total_movie_count,
     }
 
 

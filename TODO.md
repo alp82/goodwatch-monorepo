@@ -3,6 +3,10 @@
 
 ---
 
+New cols:
+    is_duplicate_of
+    is_similar_to
+
 Solve issues with DNA data quality
     duplicate entries with similar wording
     overlaps between categories
@@ -12,8 +16,20 @@ similarity issues
 
 ---
 
-Upgrade Remix to RR7
-    https://reactrouter.com/upgrading/remix
+SEO optimization
+    https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
+    https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
+    
+---
+
+tv seasons:
+    get episodes
+    get ratings
+    show in details
+    when last season/episode was released
+    score matrix
+        https://tvcharts.co/show/arcane-tt11126994
+    recaps
 
 ---
 
@@ -44,21 +60,23 @@ plan to watch
 
 ---
 
-tv seasons:
-    get episodes
-    get ratings
-    show in details
-    when last season/episode was released
-    score matrix
-        https://tvcharts.co/show/arcane-tt11126994
-    recaps
-
----
-
 cards with user actions
     user score
     plan to watch
     favorite
+
+Show User Data In Movie Cards
+    Trending
+    Explore
+    Discover
+    Collections
+    etc.
+    
+---
+
+scraper proxy
+    https://scrapoxy.io/
+    https://github.com/scrapoxy/scrapoxy
 
 ---
 
@@ -68,23 +86,25 @@ analytics
 
 ---
 
-Show User Data In Movie Cards
-    Trending
-    Explore
-    Discover
-    Collections
-    etc.
-
----
-
 home page categories:
     top 5 ____
     ____ vs ____
     
 ---
 
+landing page redesign
+    https://superdevpro.com/
+
+---
+
 onboarding as CTA banner
     e.g. https://www.producthunt.com/
+
+---
+
+twitter gw
+    top lists, "if you like X then Y"
+    https://typefully.com/
 
 ---
 
@@ -131,6 +151,11 @@ delete explore page and BE
 
 ---
 
+invite link
+    badge
+
+---
+
 details
     DNA different sections
     top DNA categories, hide the rest
@@ -139,6 +164,12 @@ details
 movie card
     overlay: show movie or tv icon 
     
+---
+
+save main searches
+save filter searches
+save outbound links to data source websites
+
 ---
 
 new dna filters:
@@ -213,6 +244,11 @@ start page word carousel
 
 ---
 
+better URL and  query params management
+    https://nuqs.47ng.com/
+
+---
+
 roadmap + todo organization
     https://flowbite.com/docs/components/timeline/
 
@@ -269,6 +305,11 @@ user settings
 slow network emulation
     skeleton loading
     useQuery
+
+---
+
+Upgrade Remix to RR7
+    https://reactrouter.com/upgrading/remix
 
 ---
 
@@ -358,6 +399,11 @@ Randomize button
 watch filter
     only what I scored / didn't score
     only favs / not favs
+
+---
+
+trailer full screen issues
+    vertical scroll on wide screen
 
 ---
 
@@ -561,6 +607,15 @@ guide of the day
 
 ---
 
+reviews
+
+---
+
+gamification
+    top 5 engaged users (e.g. IndieVoice)
+
+---
+
 feature voting
     https://fider.io/docs/hosting-instance
 
@@ -627,8 +682,23 @@ json-ld
     https://schema.org/Movie
     https://remix.run/docs/fr/main/route/meta
 
+---
+
+email solution
+    https://react.email/
+    nodemailer (vs https://resend.com/)
+
+---
+
+domain provider check
+    cloudflare
+
+---
+
 drizzle
     remix server scripts with sql builder
+
+---
 
 server resource monitoring
     https://grafana.com/orgs/coinmatica/stacks/800134
@@ -636,6 +706,17 @@ server resource monitoring
 tvtropes number to string conversion
     https://chatgpt.com/g/g-FZtypBX5c-goodwatch-ai/c/9871cbb0-ca78-46a6-8cd1-732519e36f6e
 
+---
+
+launch
+    hackernews
+    ProductHunt
+    BetaList
+    Fazier
+    https://growstartup.co/directory-list/
+
+---
+    
 posthog custom events
     https://posthog.com/tutorials/remix-analytics#capturing-custom-events
 

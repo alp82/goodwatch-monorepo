@@ -1,0 +1,18 @@
+summary: ''
+description: ''
+lock: '!inline f/other/screenshot.script.lock'
+concurrency_time_window_s: 0
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order:
+    - url
+  properties:
+    url:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+  required:
+    - url

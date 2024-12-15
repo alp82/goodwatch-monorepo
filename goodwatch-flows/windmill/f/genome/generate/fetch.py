@@ -451,6 +451,7 @@ def store_result(next_entry: Union[GenomeMovie, GenomeTv], dna: dict):
     print(f"saving DNA for {next_entry.original_title} ({next_entry.release_year})")
 
     next_entry.dna = dna
+    next_entry.dna_old = None
     next_entry.updated_at = datetime.utcnow()
     next_entry.is_selected = False
     next_entry.save()

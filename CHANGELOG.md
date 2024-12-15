@@ -2,7 +2,15 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.8] 2024-12-xx
+## [0.5.9] 2024-12-xx
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.5.8] 2024-12-08
 
 ### Added
 

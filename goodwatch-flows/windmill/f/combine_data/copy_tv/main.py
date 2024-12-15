@@ -135,7 +135,11 @@ def copy_tv(pg, query_selector: dict = {}):
 
         tmdb_details_batch = list(
             # mongo_db.tmdb_tv_details.find({"original_title": "Breaking Bad"})
-            mongo_db.tmdb_tv_details.find(query_selector).skip(start).limit(BATCH_SIZE)
+            mongo_db.tmdb_tv_details
+                .find(query_selector)
+                .sort("tmdb_id", -1)
+                .skip(start)
+                .limit(BATCH_SIZE)
         )
         if not tmdb_details_batch:
             break

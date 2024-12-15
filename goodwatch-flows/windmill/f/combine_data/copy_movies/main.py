@@ -154,8 +154,9 @@ def copy_movies(pg, query_selector: dict = {}):
         tmdb_details_batch = list(
             # mongo_db.tmdb_movie_details.find({"original_title": "The Matrix"})
             mongo_db.tmdb_movie_details.find(query_selector)
-            .skip(start)
-            .limit(BATCH_SIZE)
+                .sort("tmdb_id", -1)
+                .skip(start)
+                .limit(BATCH_SIZE)
         )
         if not tmdb_details_batch:
             break
