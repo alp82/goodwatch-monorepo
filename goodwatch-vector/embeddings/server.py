@@ -14,7 +14,7 @@ app = FastAPI(title="Embeddings Server")
 
 # Constants
 MAX_TEXT_LENGTH = 8192     # Maximum tokens per text input
-MAX_BATCH_SIZE = 32        # Maximum number of texts per request
+MAX_BATCH_SIZE = 1000      # Maximum number of texts per request
 
 # Device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

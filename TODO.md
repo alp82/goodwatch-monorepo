@@ -1,11 +1,12 @@
 # TODO's
 ```
-
 ---
 
 New cols:
     is_duplicate_of
     is_similar_to
+    
+CREATE INDEX IF NOT EXISTS dna_vector_idx ON dna USING diskann (vector);
 
 Solve issues with DNA data quality
     duplicate entries with similar wording
@@ -16,10 +17,23 @@ similarity issues
 
 ---
 
-SEO optimization
+SEO optimization + marketing
     https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
     https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
+    https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
     
+---
+
+dna cleanup:
+    "Fantastical world with diverse environments (e.g."
+
+---
+
+landing page demo
+    https://x.com/jh3yy/status/1863858454751789400
+    https://codepen.io/jh3y/pen/MYgaaem
+    https://codepen.io/pxel/pen/EaYVZBO
+
 ---
 
 tv seasons:
@@ -30,6 +44,17 @@ tv seasons:
     score matrix
         https://tvcharts.co/show/arcane-tt11126994
     recaps
+
+---
+
+page speed insights
+    https://pagespeed.web.dev/analysis/https-goodwatch-app/ltmtcc644r?hl=en_GB&form_factor=mobile
+    
+---
+
+seo tester
+    https://seositecheckup.com/
+    https://www.seoggestion.com/
 
 ---
 
@@ -86,6 +111,11 @@ analytics
 
 ---
 
+donations
+    ko-fi
+
+---
+
 home page categories:
     top 5 ____
     ____ vs ____
@@ -118,6 +148,11 @@ streaming: show flatrate countries in rating block and streaming tab
 details:
     box office (e.g. Google)
     awards (grab from API)
+
+---
+
+strategy
+    https://www.reddit.com/r/SaaS/comments/1hfe8k9/i_grew_my_startup_to_67_users_in_10_days_without/
 
 ---
 
@@ -570,6 +605,11 @@ achievements
 
 ---
 
+testing
+    https://testcontainers.com/
+
+---
+
 postgres cluster health check
     SELECT 1 FROM pg_replication_slots WHERE active = 'true' AND slot_name = 'pgnode01';
 
@@ -713,6 +753,8 @@ launch
     ProductHunt
     BetaList
     Fazier
+    Uneed
+    https://docs.google.com/spreadsheets/u/0/d/1XNBDtreaotmXJRD3JOVdcAgRD9rO1GZjbjbrr1fHLMM/htmlview?pli=1 
     https://growstartup.co/directory-list/
 
 ---
