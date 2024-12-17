@@ -1,3 +1,6 @@
+pgadmin.goodwatch.app {
+  reverse_proxy http://coinmatica.net:6080
+}
 status.goodwatch.app {
   reverse_proxy http://coinmatica.net:4801
 }
