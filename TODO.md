@@ -18,6 +18,7 @@ similarity issues
 ---
 
 SEO optimization + marketing
+    https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
     https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
     https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
     https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
@@ -108,6 +109,12 @@ scraper proxy
 analytics
     https://plausible.io/
     https://umami.is/
+    https://clarity.microsoft.com/
+
+---
+
+ai flow
+    https://www.langflow.org/
 
 ---
 
@@ -124,6 +131,8 @@ home page categories:
 
 landing page redesign
     https://superdevpro.com/
+    https://www.landingly.co/
+    https://onepagelove.com/ 
 
 ---
 
@@ -937,9 +946,6 @@ streaming explanations
 android app
 iphone app
 
-analytics via clarity
-    https://clarity.microsoft.com/
-
 data source: existing crawlers use existing url instead of guessing
 data-source: letterboxd scores
 data-source: filmstarts scores
@@ -976,6 +982,10 @@ other media
     podcasts
     books
     audio books
+    shopping
+    restaurants
+    events
+    news
 
 ```
 
@@ -1037,6 +1047,9 @@ data pipeline with windmill:
     data flow design
     infrastructure
     keep data up to date
+dna journey
+    https://huggingface.co/models?pipeline_tag=sentence-similarity&sort=trending&search=negat
+    https://colab.research.google.com/drive/12mOUgSiy7eY_py3T66tlas8h4lgY8jKV#scrollTo=vad6_Ay41hMg
 monorepo design
 from vercel to coolify
     too many open files
