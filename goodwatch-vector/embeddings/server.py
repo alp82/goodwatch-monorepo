@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
