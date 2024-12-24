@@ -6,14 +6,18 @@ New cols:
     is_duplicate_of
     is_similar_to
     
-CREATE INDEX IF NOT EXISTS dna_vector_idx ON dna USING diskann (vector);
-
 Solve issues with DNA data quality
     duplicate entries with similar wording
     overlaps between categories
 
 similarity issues
     dark palette is close to vibrant palette
+
+---
+
+documentation
+    explain folders
+    explain webapp
 
 ---
 
@@ -986,7 +990,12 @@ other media
     restaurants
     events
     news
-
+    
+mini apps
+    quiz to recommendations (select x titles to get more)
+    "the opposite movie"
+    swipe to decide what to watch together
+    
 ```
 
 # Search
@@ -1049,7 +1058,9 @@ data pipeline with windmill:
     keep data up to date
 dna journey
     https://huggingface.co/models?pipeline_tag=sentence-similarity&sort=trending&search=negat
+    https://huggingface.co/czesty/ea-setfit-v1-classifier
     https://colab.research.google.com/drive/12mOUgSiy7eY_py3T66tlas8h4lgY8jKV#scrollTo=vad6_Ay41hMg
+    https://colab.research.google.com/drive/12EtiQRXZGsxCu3kA6T6mlekMq2j-XGBn#scrollTo=vad6_Ay41hMg
 monorepo design
 from vercel to coolify
     too many open files

@@ -2,13 +2,18 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.5.9] 2024-12-xx
+## [0.6.0] 2025-01-xx
+
+Minor Release: **Improved DNA**
 
 ### Added
+* Cluster detection for DNA tags
 
 ### Changed
+* Much better model for similarity calculation of DNA tags
 
 ### Fixed
+* Similarity issues, e.g. "Dark Palette" was too close to "Vibrant Palette" although they are visually very different
 
 ## [0.5.8] 2024-12-08
 
