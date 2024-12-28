@@ -761,11 +761,22 @@ tvtropes number to string conversion
 
 ---
 
+social media scheduling
+    https://postiz.com/
+
+---
+
 launch
-    hackernews
-    ProductHunt
+    alternativeto
     BetaList
+    devhunt
     Fazier
+    hackernews
+    indiehackers
+    microlaunch
+    ProductHunt
+    similarsites
+    slant
     Uneed
     https://docs.google.com/spreadsheets/u/0/d/1XNBDtreaotmXJRD3JOVdcAgRD9rO1GZjbjbrr1fHLMM/htmlview?pli=1 
     https://growstartup.co/directory-list/
