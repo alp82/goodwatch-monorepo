@@ -1,7 +1,7 @@
-version: "3.7"
-
 services:
   db:
+    env_file:
+      - ../.env
     deploy:
       # To use an external database, set replicas to 0 and set DATABASE_URL to the external database url in the .env file
       replicas: 0
@@ -18,8 +18,10 @@ services:
       retries: 5
 
   windmill_worker:
+    env_file:
+      - ../.env
     build:
-      context: ./worker
+      context: ../worker
       args:
         WM_IMAGE: ${WM_IMAGE}
     pull_policy: always

@@ -8,44 +8,56 @@
         update_cache: yes
       changed_when: false
 
-- name: Stop and upgrade Windmill workers on remote servers
-  hosts: servers
-  any_errors_fatal: true
-  tasks:
     - name: Pull latest git updates
       ansible.builtin.shell: git pull
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        chdir: /root/goodwatch/goodwatch-monorepo/
 
-    - name: Stop docker compose
-      ansible.builtin.shell: docker compose down
-      args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
-
+- name: Stop and upgrade Windmill default workers on remote servers
+  hosts: servers-default
+  strategy: free
+  any_errors_fatal: true
+  tasks:
     - name: Pull latest images
       ansible.builtin.shell: docker compose pull
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
 
     - name: Rebuild containers
       ansible.builtin.shell: docker compose build
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
 
-- name: Stop and upgrade Windmill workers on HQ
+    - name: Stop docker compose
+      ansible.builtin.shell: docker compose down
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
+
+- name: Stop and upgrade Windmill highperf workers on remote servers
+  hosts: servers-highperf
+  strategy: free
+  any_errors_fatal: true
+  tasks:
+    - name: Pull latest images
+      ansible.builtin.shell: docker compose pull
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
+
+    - name: Rebuild containers
+      ansible.builtin.shell: docker compose build
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
+
+    - name: Stop docker compose
+      ansible.builtin.shell: docker compose down
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
+
+- name: Stop and upgrade Windmill App on HQ
   hosts: local
+  strategy: free
   any_errors_fatal: true
   tasks:
-    - name: Pull latest git updates
-      ansible.builtin.shell: git pull
-      args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
-
-    - name: Stop docker compose
-      ansible.builtin.shell: docker compose down
-      args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
-
     - name: Pull latest images
       ansible.builtin.shell: docker compose pull
       args:
@@ -53,6 +65,11 @@
 
     - name: Rebuild containers
       ansible.builtin.shell: docker compose build
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
+
+    - name: Stop docker compose
+      ansible.builtin.shell: docker compose down
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
 
@@ -67,18 +84,29 @@
 
     - name: Wait for windmill service to be ready
       uri:
-        url: http://coinmatica.net:9000/api/version
+        url: https://windmill.goodwatch.app/api/version
         status_code: 200
       register: health_result
       until: health_result is success
       retries: 1000
       delay: 10
 
-- name: Start Windmill workers on remote servers once Windmill App is up and ready
-  hosts: servers
+- name: Start Windmill default workers on remote servers once Windmill App is up and ready
+  hosts: servers-default
+  strategy: free
   any_errors_fatal: true
   tasks:
     - name: Start docker compose
       ansible.builtin.shell: docker compose up -d
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
+
+- name: Start Windmill highperf workers on remote servers once Windmill App is up and ready
+  hosts: servers-highperf
+  strategy: free
+  any_errors_fatal: true
+  tasks:
+    - name: Start docker compose
+      ansible.builtin.shell: docker compose up -d
+      args:
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
