@@ -1,5 +1,5 @@
 ---
-- name: Install Docker SDK for Python on all hosts
+- name: Prepare system
   hosts: all
   any_errors_fatal: true
   tasks:
@@ -13,45 +13,25 @@
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/
 
-- name: Stop and upgrade Windmill default workers on remote servers
-  hosts: servers-default
+- name: Stop and upgrade Windmill workers on all servers
+  hosts: workers
   strategy: free
   any_errors_fatal: true
   tasks:
     - name: Pull latest images
       ansible.builtin.shell: docker compose pull
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
     - name: Rebuild containers
       ansible.builtin.shell: docker compose build
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
     - name: Stop docker compose
       ansible.builtin.shell: docker compose down
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
-
-- name: Stop and upgrade Windmill highperf workers on remote servers
-  hosts: servers-highperf
-  strategy: free
-  any_errors_fatal: true
-  tasks:
-    - name: Pull latest images
-      ansible.builtin.shell: docker compose pull
-      args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
-
-    - name: Rebuild containers
-      ansible.builtin.shell: docker compose build
-      args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
-
-    - name: Stop docker compose
-      ansible.builtin.shell: docker compose down
-      args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
 - name: Stop and upgrade Windmill App on HQ
   hosts: local
@@ -91,22 +71,11 @@
       retries: 1000
       delay: 10
 
-- name: Start Windmill default workers on remote servers once Windmill App is up and ready
-  hosts: servers-default
-  strategy: free
+- name: Start Windmill workers on all servers once Windmill App is up and ready
+  hosts: workers
   any_errors_fatal: true
   tasks:
     - name: Start docker compose
       ansible.builtin.shell: docker compose up -d
       args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/default/
-
-- name: Start Windmill highperf workers on remote servers once Windmill App is up and ready
-  hosts: servers-highperf
-  strategy: free
-  any_errors_fatal: true
-  tasks:
-    - name: Start docker compose
-      ansible.builtin.shell: docker compose up -d
-      args:
-        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/highperf/
+        chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
