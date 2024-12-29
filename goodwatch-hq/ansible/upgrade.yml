@@ -33,7 +33,7 @@
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
 - name: Stop and upgrade Windmill App on HQ
-  hosts: local
+  hosts: hq
   any_errors_fatal: true
   tasks:
     - name: Pull latest images
@@ -52,7 +52,7 @@
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
 
 - name: Run Windmill on HQ
-  hosts: local
+  hosts: hq
   any_errors_fatal: true
   tasks:
     - name: Start docker compose
