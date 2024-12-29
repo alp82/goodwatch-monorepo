@@ -15,7 +15,6 @@
 
 - name: Stop and upgrade Windmill workers on all servers
   hosts: workers
-  strategy: free
   any_errors_fatal: true
   tasks:
     - name: Pull latest images
@@ -35,7 +34,6 @@
 
 - name: Stop and upgrade Windmill App on HQ
   hosts: local
-  strategy: free
   any_errors_fatal: true
   tasks:
     - name: Pull latest images
