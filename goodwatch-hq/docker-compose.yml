@@ -53,7 +53,7 @@ services:
         WM_IMAGE: ${WM_IMAGE}
     pull_policy: always
     deploy:
-      replicas: ${WORKER_COUNT}
+      replicas: 0
       resources:
         limits:
           cpus: "1"
@@ -86,7 +86,7 @@ services:
     image: ${WM_IMAGE}
     pull_policy: always
     deploy:
-      replicas: 2
+      replicas: 0
       resources:
         limits:
           cpus: "0.1"
