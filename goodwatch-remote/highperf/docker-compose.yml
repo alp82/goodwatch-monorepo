@@ -1,6 +1,5 @@
 services:
   db:
-    env_file: ../.env
     deploy:
       # To use an external database, set replicas to 0 and set DATABASE_URL to the external database url in the .env file
       replicas: 0
@@ -16,8 +15,7 @@ services:
       timeout: 5s
       retries: 5
 
-  windmill_worker:
-    env_file: ../.env
+  highperf_worker:
     build:
       context: ../worker
       args:
