@@ -14,7 +14,7 @@
         chdir: /root/goodwatch/goodwatch-monorepo/
 
 - name: Stop and upgrade Windmill workers on all servers
-  hosts: workers
+  hosts: all
   any_errors_fatal: true
   tasks:
     - name: Pull latest images
@@ -70,7 +70,7 @@
       delay: 10
 
 - name: Start Windmill workers on all servers once Windmill App is up and ready
-  hosts: workers
+  hosts: all
   any_errors_fatal: true
   tasks:
     - name: Start docker compose
