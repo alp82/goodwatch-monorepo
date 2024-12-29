@@ -1,20 +1,4 @@
 services:
-  db:
-    deploy:
-      # To use an external database, set replicas to 0 and set DATABASE_URL to the external database url in the .env file
-      replicas: 0
-    image: postgres:14
-    restart: unless-stopped
-    expose:
-      - 5432
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   highperf_worker:
     build:
       context: ../worker
