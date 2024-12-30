@@ -36,6 +36,9 @@ landing page redesign
 tagline
     https://www.reddit.com/r/SaaS/comments/1hoth2s/i_analyzed_100_saas_headlines_and_realized_were/?share_id=ql5uTUQ151unOg4PvX-N8&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
 
+ai
+    https://www.freepik.com/pikaso/ai-video-generator
+    
 ---
 
 For You
