@@ -18,11 +18,14 @@
   tasks:
     # 1. Check Operating System
     - name: Check Operating System
-      command: >
-        {{
-          'lsb_release -si | tr "[:upper:]" "[:lower:]"' if ansible_os_family == 'Debian' else
-          'echo unsupported'
-        }}
+      shell: |
+        if [ -f /etc/lsb-release ]; then
+          echo "ubuntu"
+        elif [ -f /etc/debian_version ]; then
+          echo "debian"
+        else
+          echo "unsupported"
+        fi
       register: os_check
       changed_when: false
 
@@ -48,10 +51,11 @@
           - apt-get
 
     - name: Check Required Dependencies
-      command: "command -v {{ item }}"
+      command: "which {{ item }}"
       register: dependency_check
       loop: "{{ dependencies_list }}"
       ignore_errors: yes
+      changed_when: false
 
     - name: Collect missing dependencies
       set_fact:
@@ -193,8 +197,7 @@
         privileged_users: "{{ (sudo_users.stdout_lines + admin_users.stdout_lines) | unique | reject('equalto', '') | list }}"
 
     - name: Check Valid Shells for Sudo Users
-      command: |
-        getent passwd {{ item }} | cut -d: -f7
+      command: getent passwd {{ item }} | cut -d: -f7
       register: user_shells
       loop: "{{ privileged_users }}"
       when: privileged_users | length > 0
