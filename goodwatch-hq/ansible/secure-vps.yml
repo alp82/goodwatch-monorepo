@@ -78,7 +78,8 @@
       when: ufw_installed is defined
 
     - name: Check UFW Status
-      shell: ufw status | grep "Status: active"
+      shell: |
+        ufw status | grep "Status: active"
       register: ufw_active
       when: audit_results.ufw.installation.status == 'PASS'
       ignore_errors: yes
