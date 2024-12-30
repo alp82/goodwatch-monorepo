@@ -76,9 +76,25 @@
       when: ufw_installed and ufw_active and (not ufw_default_incoming_deny)
 
     # 4. Check if SSH service is enabled and running
+    - name: Identify SSH service name
+      set_fact:
+        ssh_service_name: >-
+          {% if 'ssh' in ansible_facts.services %}
+            ssh
+          {% elif 'sshd' in ansible_facts.services %}
+            sshd
+          {% else %}
+            ""
+          {% endif %}
+
     - name: Check if SSH service is enabled and running
       set_fact:
-        ssh_enabled: "{{ 'ssh' in ansible_facts.services and ansible_facts.services['ssh'].enabled and ansible_facts.services['ssh'].state == 'running' }}"
+        ssh_enabled: >-
+          {% if ssh_service_name != "" %}
+            {{ ansible_facts.services[ssh_service_name].enabled and ansible_facts.services[ssh_service_name].state == 'running' }}
+          {% else %}
+            false
+          {% endif %}
 
     - name: Print commands to enable and start SSH service
       debug:
@@ -89,7 +105,7 @@
           sudo systemctl enable ssh
           sudo systemctl start ssh
           ```
-      when: not ssh_enabled
+      when: ssh_service_name == "" or not ssh_enabled
 
     # 5. Check SSH configuration parameters
     ## a. PermitRootLogin
@@ -112,7 +128,7 @@
           sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
           ```
-      when: ssh_permit_root_login != 'no'
+      when: ssh_permit_root_login is defined and ssh_permit_root_login != 'no'
 
     ## b. PasswordAuthentication
     - name: Get PasswordAuthentication value
@@ -134,7 +150,7 @@
           sudo sed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
           ```
-      when: ssh_password_authentication != 'no'
+      when: ssh_password_authentication is defined and ssh_password_authentication != 'no'
 
     ## c. UsePAM
     - name: Get UsePAM value
@@ -156,7 +172,7 @@
           sudo sed -i 's/^UsePAM.*/UsePAM no/' /etc/ssh/sshd_config
           sudo systemctl restart ssh
           ```
-      when: ssh_use_pam != 'no'
+      when: ssh_use_pam is defined and ssh_use_pam != 'no'
 
     # 6. Check if authorized_keys are set up for non-root users
     - name: Find authorized_keys for non-root users
@@ -195,11 +211,19 @@
 
     - name: Combine sudo and admin group members
       set_fact:
-        privileged_users: "{{ (sudo_group.stdout | regex_replace('sudo:.*:', '')).split(',') + (admin_group.stdout | regex_replace('admin:.*:', '')).split(',') }}"
+        privileged_users: >-
+          {% set sudo_members = sudo_group.stdout | regex_replace('sudo:.*:', '') | split(',') %}
+          {% set admin_members = admin_group.stdout | regex_replace('admin:.*:', '') | split(',') %}
+          {{ sudo_members + admin_members }}
 
     - name: Filter out root and empty strings
       set_fact:
-        privileged_users_filtered: "{{ privileged_users | select('match', '^[^root].+$') | list | reject('equalto', '') | list }}"
+        privileged_users_filtered: >-
+          {{ privileged_users
+             | select('match', '^[^root].+$')
+             | list
+             | reject('equalto', '')
+             | list }}
 
     - name: Determine if there are non-root sudo users
       set_fact:
