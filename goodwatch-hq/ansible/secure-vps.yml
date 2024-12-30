@@ -1,0 +1,398 @@
+---
+- name: Security Audit and Fix Command Generator
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+
+    # Gather package and service facts
+    - name: Gather package facts
+      package_facts:
+        manager: auto
+
+    - name: Gather service facts
+      service_facts:
+
+    # 1. Check if UFW is installed
+    - name: Check if UFW is installed
+      set_fact:
+        ufw_installed: "{{ 'ufw' in ansible_facts.packages }}"
+
+    - name: Print command to install UFW if not installed
+      debug:
+        msg: |
+          **Issue**: UFW is not installed.
+          **Solution**: To install UFW, run the following commands:
+          ```
+          sudo apt-get update
+          sudo apt-get install ufw -y
+          ```
+      when: not ufw_installed
+
+    # 2. Check if UFW is active
+    - name: Check if UFW is active
+      set_fact:
+        ufw_active: "{{ 'ufw' in ansible_facts.services and ansible_facts.services['ufw'].state == 'running' }}"
+
+    - name: Print commands to enable UFW if not active
+      debug:
+        msg: |
+          **Issue**: UFW is installed but not active.
+          **Solution**: To enable UFW with basic settings, run the following commands:
+          ```
+          sudo ufw default deny incoming
+          sudo ufw default allow outgoing
+          sudo ufw allow OpenSSH
+          sudo ufw enable
+          ```
+      when: ufw_installed and (not ufw_active)
+
+    # 3. Check UFW default incoming policy
+    - name: Check UFW default incoming policy
+      command: ufw status verbose
+      register: ufw_verbose
+      when: ufw_installed and ufw_active
+      ignore_errors: yes
+
+    - name: Determine if default incoming policy is deny
+      set_fact:
+        ufw_default_incoming_deny: "{{ 'Default: deny' in ufw_verbose.stdout }}"
+      when: ufw_installed and ufw_active and not ufw_verbose.failed
+
+    - name: Set default incoming policy deny as false if command failed
+      set_fact:
+        ufw_default_incoming_deny: false
+      when: ufw_installed and ufw_active and ufw_verbose.failed
+
+    - name: Print command to set UFW default incoming policy to deny
+      debug:
+        msg: |
+          **Issue**: UFW default incoming policy is not set to 'deny'.
+          **Solution**: To set it, run the following command:
+          ```
+          sudo ufw default deny incoming
+          ```
+      when: ufw_installed and ufw_active and (not ufw_default_incoming_deny)
+
+    # 4. Check if SSH service is enabled and running
+    - name: Check if SSH service is enabled and running
+      set_fact:
+        ssh_enabled: "{{ 'ssh' in ansible_facts.services and ansible_facts.services['ssh'].enabled and ansible_facts.services['ssh'].state == 'running' }}"
+
+    - name: Print commands to enable and start SSH service
+      debug:
+        msg: |
+          **Issue**: SSH service is not enabled or not running.
+          **Solution**: To enable and start SSH service, run the following commands:
+          ```
+          sudo systemctl enable ssh
+          sudo systemctl start ssh
+          ```
+      when: not ssh_enabled
+
+    # 5. Check SSH configuration parameters
+    ## a. PermitRootLogin
+    - name: Get PermitRootLogin value
+      command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
+      register: permit_root_login
+      ignore_errors: yes
+
+    - name: Determine PermitRootLogin value
+      set_fact:
+        ssh_permit_root_login: "{{ permit_root_login.stdout | regex_replace('PermitRootLogin\\s+', '') }}"
+      when: not permit_root_login.failed
+
+    - name: Print command to set PermitRootLogin to no
+      debug:
+        msg: |
+          **Issue**: SSH PermitRootLogin is set to '{{ ssh_permit_root_login }}' (should be 'no').
+          **Solution**: To set it to 'no', run the following commands:
+          ```
+          sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          ```
+      when: ssh_permit_root_login != 'no'
+
+    ## b. PasswordAuthentication
+    - name: Get PasswordAuthentication value
+      command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
+      register: password_authentication
+      ignore_errors: yes
+
+    - name: Determine PasswordAuthentication value
+      set_fact:
+        ssh_password_authentication: "{{ password_authentication.stdout | regex_replace('PasswordAuthentication\\s+', '') }}"
+      when: not password_authentication.failed
+
+    - name: Print command to set PasswordAuthentication to no
+      debug:
+        msg: |
+          **Issue**: SSH PasswordAuthentication is set to '{{ ssh_password_authentication }}' (should be 'no').
+          **Solution**: To disable password authentication, run the following commands:
+          ```
+          sudo sed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          ```
+      when: ssh_password_authentication != 'no'
+
+    ## c. UsePAM
+    - name: Get UsePAM value
+      command: grep -E "^UsePAM" /etc/ssh/sshd_config
+      register: use_pam
+      ignore_errors: yes
+
+    - name: Determine UsePAM value
+      set_fact:
+        ssh_use_pam: "{{ use_pam.stdout | regex_replace('UsePAM\\s+', '') }}"
+      when: not use_pam.failed
+
+    - name: Print command to set UsePAM to no
+      debug:
+        msg: |
+          **Issue**: SSH UsePAM is set to '{{ ssh_use_pam }}' (should be 'no').
+          **Solution**: To disable UsePAM, run the following commands:
+          ```
+          sudo sed -i 's/^UsePAM.*/UsePAM no/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          ```
+      when: ssh_use_pam != 'no'
+
+    # 6. Check if authorized_keys are set up for non-root users
+    - name: Find authorized_keys for non-root users
+      find:
+        paths: /home
+        patterns: authorized_keys
+        file_type: file
+      register: authorized_keys_found
+
+    - name: Determine if authorized_keys are found
+      set_fact:
+        has_authorized_keys: "{{ authorized_keys_found.files | length > 0 }}"
+
+    - name: Print commands to set up authorized_keys
+      debug:
+        msg: |
+          **Issue**: No authorized_keys found for non-root users.
+          **Solution**: To set up authorized_keys, run the following commands:
+          ```
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          touch ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+          # Then add your public SSH key to authorized_keys
+          ```
+      when: not has_authorized_keys
+
+    # 7. Check for non-root users with sudo privileges
+    - name: Get sudo group members
+      command: getent group sudo
+      register: sudo_group
+
+    - name: Get admin group members
+      command: getent group admin
+      register: admin_group
+
+    - name: Combine sudo and admin group members
+      set_fact:
+        privileged_users: "{{ (sudo_group.stdout | regex_replace('sudo:.*:', '')).split(',') + (admin_group.stdout | regex_replace('admin:.*:', '')).split(',') }}"
+
+    - name: Filter out root and empty strings
+      set_fact:
+        privileged_users_filtered: "{{ privileged_users | select('match', '^[^root].+$') | list | reject('equalto', '') | list }}"
+
+    - name: Determine if there are non-root sudo users
+      set_fact:
+        has_non_root_sudo_user: "{{ privileged_users_filtered | length > 0 }}"
+
+    - name: Print commands to create a non-root sudo user if none exists
+      debug:
+        msg: |
+          **Issue**: No non-root users found with sudo privileges.
+          **Solution**: To create a non-root sudo user, run the following commands:
+          ```
+          sudo adduser <username>
+          sudo usermod -aG sudo <username>
+          ```
+          Replace `<username>` with your desired username.
+      when: not has_non_root_sudo_user
+
+    # 8. Check if unattended-upgrades is installed
+    - name: Check if unattended-upgrades is installed
+      set_fact:
+        unattended_upgrades_installed: "{{ 'unattended-upgrades' in ansible_facts.packages }}"
+
+    - name: Print command to install unattended-upgrades if not installed
+      debug:
+        msg: |
+          **Issue**: unattended-upgrades is not installed.
+          **Solution**: To install it, run the following commands:
+          ```
+          sudo apt-get update
+          sudo apt-get install unattended-upgrades -y
+          ```
+      when: not unattended_upgrades_installed
+
+    # 9. Check if unattended-upgrades service is running and enabled
+    - name: Check if unattended-upgrades service is enabled and running
+      set_fact:
+        unattended_service_enabled: "{{ 'unattended-upgrades' in ansible_facts.services and ansible_facts.services['unattended-upgrades'].enabled and ansible_facts.services['unattended-upgrades'].state == 'running' }}"
+      when: unattended_upgrades_installed
+
+    - name: Print commands to enable and start unattended-upgrades service
+      debug:
+        msg: |
+          **Issue**: unattended-upgrades service is not enabled or not running.
+          **Solution**: To enable and start the service, run the following commands:
+          ```
+          sudo systemctl enable unattended-upgrades
+          sudo systemctl start unattended-upgrades
+          ```
+      when: unattended_upgrades_installed and (not unattended_service_enabled)
+
+    # 10. Check if automatic updates are enabled in 20auto-upgrades
+    - name: Check if 20auto-upgrades file exists
+      stat:
+        path: /etc/apt/apt.conf.d/20auto-upgrades
+      register: auto_upgrades_file
+      when: unattended_upgrades_installed
+
+    - name: Read 20auto-upgrades file
+      slurp:
+        src: /etc/apt/apt.conf.d/20auto-upgrades
+      register: auto_upgrades_content
+      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists
+
+    - name: Set fact for auto upgrades content
+      set_fact:
+        auto_upgrades_decoded: "{{ auto_upgrades_content.content | b64decode }}"
+      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_content is defined
+
+    - name: Check APT::Periodic::Update-Package-Lists
+      set_fact:
+        update_package_lists_enabled: "{{ 'APT::Periodic::Update-Package-Lists "1";' in auto_upgrades_decoded }}"
+      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_decoded is defined
+
+    - name: Check APT::Periodic::Unattended-Upgrade
+      set_fact:
+        unattended_upgrade_enabled: "{{ 'APT::Periodic::Unattended-Upgrade "1";' in auto_upgrades_decoded }}"
+      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_decoded is defined
+
+    - name: Print command to enable automatic package list updates
+      debug:
+        msg: |
+          **Issue**: Automatic package list updates are disabled.
+          **Solution**: To enable them, run the following command:
+          ```
+          sudo sed -i 's|APT::Periodic::Update-Package-Lists "0";|APT::Periodic::Update-Package-Lists "1";|' /etc/apt/apt.conf.d/20auto-upgrades
+          ```
+      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and (not update_package_lists_enabled)
+
+    - name: Print command to enable automatic upgrades
+      debug:
+        msg: |
+          **Issue**: Automatic upgrades are disabled.
+          **Solution**: To enable them, run the following command:
+          ```
+          sudo sed -i 's|APT::Periodic::Unattended-Upgrade "0";|APT::Periodic::Unattended-Upgrade "1";|' /etc/apt/apt.conf.d/20auto-upgrades
+          ```
+      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and (not unattended_upgrade_enabled)
+
+    # 11. Check if Fail2ban is installed
+    - name: Check if Fail2ban is installed
+      set_fact:
+        fail2ban_installed: "{{ 'fail2ban' in ansible_facts.packages }}"
+
+    - name: Print command to install Fail2ban if not installed
+      debug:
+        msg: |
+          **Issue**: Fail2ban is not installed.
+          **Solution**: To install Fail2ban, run the following commands:
+          ```
+          sudo apt-get update
+          sudo apt-get install fail2ban -y
+          ```
+      when: not fail2ban_installed
+
+    # 12. Check if Fail2ban service is enabled and running
+    - name: Check if Fail2ban service is enabled and running
+      set_fact:
+        fail2ban_enabled: "{{ 'fail2ban' in ansible_facts.services and ansible_facts.services['fail2ban'].enabled and ansible_facts.services['fail2ban'].state == 'running' }}"
+      when: fail2ban_installed
+
+    - name: Print commands to enable and start Fail2ban service
+      debug:
+        msg: |
+          **Issue**: Fail2ban service is not enabled or not running.
+          **Solution**: To enable and start Fail2ban service, run the following commands:
+          ```
+          sudo systemctl enable fail2ban
+          sudo systemctl start fail2ban
+          ```
+      when: fail2ban_installed and (not fail2ban_enabled)
+
+    # 13. Check Fail2ban configuration
+    - name: Check if jail.local exists
+      stat:
+        path: /etc/fail2ban/jail.local
+      register: jail_local_file
+      when: fail2ban_installed
+
+    - name: Print commands to create jail.local if not exists
+      debug:
+        msg: |
+          **Issue**: jail.local configuration file not found.
+          **Solution**: To create it, run the following command:
+          ```
+          sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+          ```
+      when: fail2ban_installed and not jail_local_file.stat.exists
+
+    - name: Read jail.local content
+      slurp:
+        src: /etc/fail2ban/jail.local
+      register: jail_local_content
+      when: fail2ban_installed and jail_local_file.stat.exists
+
+    - name: Set fact for decoded jail.local content
+      set_fact:
+        jail_local_decoded: "{{ jail_local_content.content | b64decode }}"
+      when: fail2ban_installed and jail_local_file.stat.exists and jail_local_content is defined
+
+    - name: Check if SSH jail is enabled
+      set_fact:
+        fail2ban_ssh_jail_enabled: "{{ '[sshd]' in jail_local_decoded and 'enabled = true' in jail_local_decoded }}"
+      when: fail2ban_installed and jail_local_file.stat.exists and jail_local_decoded is defined
+
+    - name: Check if SSH jail mode is aggressive
+      set_fact:
+        fail2ban_ssh_jail_aggressive: "{{ '[sshd]' in jail_local_decoded and 'mode = aggressive' in jail_local_decoded }}"
+      when: fail2ban_installed and jail_local_file.stat.exists and jail_local_decoded is defined
+
+    - name: Print commands to enable SSH jail in Fail2ban
+      debug:
+        msg: |
+          **Issue**: SSH jail is not enabled in Fail2ban.
+          **Solution**: To enable SSH jail, run the following command:
+          ```
+          sudo sed -i '/\[sshd\]/,/^$/ s/enabled = false/enabled = true/' /etc/fail2ban/jail.local
+          ```
+      when: fail2ban_installed and jail_local_file.stat.exists and (not fail2ban_ssh_jail_enabled)
+
+    - name: Print commands to set SSH jail mode to aggressive
+      debug:
+        msg: |
+          **Issue**: SSH jail mode is not set to 'aggressive'.
+          **Solution**: To set SSH jail mode to 'aggressive', run the following commands:
+          ```
+          sudo sed -i '/\[sshd\]/,/^$/ s/mode = .*$/mode = aggressive/' /etc/fail2ban/jail.local
+          sudo systemctl restart fail2ban
+          ```
+      when: fail2ban_installed and jail_local_file.stat.exists and (not fail2ban_ssh_jail_aggressive)
+
+    # Summary
+    - name: Print audit complete message
+      debug:
+        msg: |
+          **Security Audit Complete**
+          Please review and execute the above commands to fix the detected issues.

@@ -21,7 +21,33 @@ documentation
 
 ---
 
+landing page demo
+    https://x.com/jh3yy/status/1863858454751789400
+    https://codepen.io/jh3y/pen/MYgaaem
+    https://codepen.io/pxel/pen/EaYVZBO
+
+---
+
+landing page redesign
+    https://superdevpro.com/
+    https://www.landingly.co/
+    https://onepagelove.com/ 
+
+tagline
+    https://www.reddit.com/r/SaaS/comments/1hoth2s/i_analyzed_100_saas_headlines_and_realized_were/?share_id=ql5uTUQ151unOg4PvX-N8&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
+
+---
+
+For You
+    Landing page with examples
+    Personal Recommendations by DNA category
+    bg color changes with scroll: https://fable.co/
+
+---
+
 SEO optimization + marketing
+    https://www.jacobparis.com/content/remix-og
+    https://www.reddit.com/r/SaaS/comments/1ho4hbu/best_free_seo_tools/
     https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
     https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
     https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
@@ -34,13 +60,6 @@ dna cleanup:
 
 ---
 
-landing page demo
-    https://x.com/jh3yy/status/1863858454751789400
-    https://codepen.io/jh3y/pen/MYgaaem
-    https://codepen.io/pxel/pen/EaYVZBO
-
----
-
 tv seasons:
     get episodes
     get ratings
@@ -49,6 +68,12 @@ tv seasons:
     score matrix
         https://tvcharts.co/show/arcane-tt11126994
     recaps
+
+---
+
+security audit
+    https://auditvps.com/
+    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
 
 ---
 
@@ -110,6 +135,11 @@ scraper proxy
 
 ---
 
+text effects
+     https://motion-primitives.com/docs
+
+---
+
 analytics
     https://plausible.io/
     https://umami.is/
@@ -131,13 +161,6 @@ home page categories:
     top 5 ____
     ____ vs ____
     
----
-
-landing page redesign
-    https://superdevpro.com/
-    https://www.landingly.co/
-    https://onepagelove.com/ 
-
 ---
 
 onboarding as CTA banner
@@ -164,23 +187,23 @@ details:
 
 ---
 
-strategy
+strategy / promotion
     https://www.reddit.com/r/SaaS/comments/1hfe8k9/i_grew_my_startup_to_67_users_in_10_days_without/
+    https://x.com/natiakourdadze/status/1866538738198655002
+    https://x.com/dswharshit/status/1849690811442614706
+    
+lead generation
+    https://www.redditscout.com/
+    https://www.subredditsignals.com/
 
 ---
 
 taste matching (logged in users only - or a teaser)
     you both like ABC
 
----
-
-recommendation
-
----
-
-For You
-    Landing page with examples
-    Personal Recommendations by DNA category
+recommendation engine
+    https://keras.io/
+    tiktok: https://github.com/bytedance/monolith
 
 ---
 
@@ -242,6 +265,12 @@ add caching for user data
 ---
 
 move caddy proxy from db1 to vector
+
+---
+
+crawling scores:
+    parse release year to catch wrong urls
+    e.g. https://goodwatch.app/movie/1399125-singin-in-the-rain
 
 ---
 
@@ -774,6 +803,7 @@ launch
     hackernews
     indiehackers
     microlaunch
+    https://www.tinylaun.ch/
     ProductHunt
     similarsites
     slant
@@ -819,6 +849,8 @@ other sites / inspiration
     https://filmfinder.ai/
     https://agoodmovietowatch.com/
     https://www.betterkritic.com/
+    https://fable.co/
+    headline: https://hamvocke.com/blog/a-guide-to-customizing-your-tmux-conf/
     
 other api's
     https://mdblist.com/
