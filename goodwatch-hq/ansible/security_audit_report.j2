@@ -1,0 +1,79 @@
+# Security Audit Report for {{ inventory_hostname }}
+
+## 1. Operating System Check
+- **Status**: {{ audit_results.os_check.status }}
+- **Message**: {{ audit_results.os_check.message }}
+
+## 2. Dependencies Check
+- **Status**: {{ audit_results.dependencies.status }}
+- **Message**: {{ audit_results.dependencies.message }}
+
+## 3. UFW Security Check
+### Installation
+- **Status**: {{ audit_results.ufw.installation.status }}
+- **Message**: {{ audit_results.ufw.installation.message }}
+
+### Active Status
+- **Status**: {{ audit_results.ufw.active_status.status }}
+- **Message**: {{ audit_results.ufw.active_status.message }}
+
+### Default Incoming Policy
+- **Status**: {{ audit_results.ufw.default_policy.status }}
+- **Message**: {{ audit_results.ufw.default_policy.message }}
+
+## 4. SSH Security Check
+### Service Status
+- **Status**: {{ audit_results.ssh.service_status.status }}
+- **Message**: {{ audit_results.ssh.service_status.message }}
+
+{% if audit_results.ssh.service_status.status == 'PASS' %}
+### Key-based Authentication
+- **Status**: {{ audit_results.ssh.key_auth.status }}
+- **Message**: {{ audit_results.ssh.key_auth.message }}
+
+### Configuration Settings
+- **PermitRootLogin**: {{ audit_results.ssh.config_PermitRootLogin.status }} - {{ audit_results.ssh.config_PermitRootLogin.message }}
+- **KbdInteractiveAuthentication**: {{ audit_results.ssh.config_KbdInteractiveAuthentication.status }} - {{ audit_results.ssh.config_KbdInteractiveAuthentication.message }}
+- **PasswordAuthentication**: {{ audit_results.ssh.config_PasswordAuthentication.status }} - {{ audit_results.ssh.config_PasswordAuthentication.message }}
+- **UsePAM**: {{ audit_results.ssh.config_UsePAM.status }} - {{ audit_results.ssh.config_UsePAM.message }}
+{% endif %}
+
+## 5. Non-Root User Check
+- **Status**: {{ audit_results.non_root_user.sudo_access.status }}
+- **Message**: {{ audit_results.non_root_user.sudo_access.message }}
+
+## 6. Unattended Upgrades Check
+### Installation
+- **Status**: {{ audit_results.unattended_upgrades.installation.status }}
+- **Message**: {{ audit_results.unattended_upgrades.installation.message }}
+
+{% if audit_results.unattended_upgrades.installation.status == 'PASS' %}
+### Service Status
+- **Status**: {{ audit_results.unattended_upgrades.service_status.status }}
+- **Message**: {{ audit_results.unattended_upgrades.service_status.message }}
+
+### Automatic Update Settings
+- **Automatic Package List Updates**: {{ audit_results.unattended_upgrades.auto_update.status }} - {{ audit_results.unattended_upgrades.auto_update.message }}
+- **Automatic Upgrades**: {{ audit_results.unattended_upgrades.auto_upgrade.status }} - {{ audit_results.unattended_upgrades.auto_upgrade.message }}
+{% endif %}
+
+## 7. Fail2ban Check
+### Installation
+- **Status**: {{ audit_results.fail2ban.installation.status }}
+- **Message**: {{ audit_results.fail2ban.installation.message }}
+
+{% if audit_results.fail2ban.installation.status == 'PASS' %}
+### Service Status
+- **Status**: {{ audit_results.fail2ban.service_enabled.status }}
+- **Message**: {{ audit_results.fail2ban.service_enabled.message }}
+
+### Configuration File
+- **Status**: {{ audit_results.fail2ban.config_file.status }}
+- **Message**: {{ audit_results.fail2ban.config_file.message }}
+
+{% if audit_results.fail2ban.config_file.status == 'PASS' %}
+### SSH Jail Configuration
+- **SSH Jail Enabled**: {{ audit_results.fail2ban.ssh_jail_enabled.status }} - {{ audit_results.fail2ban.ssh_jail_enabled.message }}
+- **SSH Jail Mode**: {{ audit_results.fail2ban.ssh_jail_mode.status }} - {{ audit_results.fail2ban.ssh_jail_mode.message }}
+{% endif %}
+{% endif %}

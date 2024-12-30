@@ -193,7 +193,8 @@
         privileged_users: "{{ (sudo_users.stdout_lines + admin_users.stdout_lines) | unique | reject('equalto', '') | list }}"
 
     - name: Check Valid Shells for Sudo Users
-      command: getent passwd {{ item }} | cut -d: -f7
+      command: |
+        getent passwd {{ item }} | cut -d: -f7
       register: user_shells
       loop: "{{ privileged_users }}"
       when: privileged_users | length > 0
