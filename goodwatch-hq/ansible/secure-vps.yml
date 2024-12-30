@@ -70,7 +70,7 @@
             audit_results | combine({
               'dependencies': {
                 'status': 'FAIL' if missing_dependencies | length > 0 else 'PASS',
-                'message': 'Missing dependencies: ' + missing_dependencies | join(', ') if missing_dependencies | length > 0 else 'All required dependencies are installed.'
+                'message': 'Missing dependencies: ' + ', '.join(missing_dependencies) if missing_dependencies | length > 0 else 'All required dependencies are installed.'
               }
             })
           }}
@@ -132,8 +132,8 @@
             audit_results | combine({
               'ufw': audit_results.ufw | combine({
                 'default_policy': {
-                  'status': 'PASS' if 'Default: deny (incoming)' in ufw_policy.stdout else 'FAIL',
-                  'message': 'Default incoming policy is set to deny.' if 'Default: deny (incoming)' in ufw_policy.stdout else 'Default incoming policy is not set to deny.'
+                  'status': 'PASS' if ufw_policy is defined and 'Default: deny (incoming)' in ufw_policy.stdout else 'FAIL',
+                  'message': 'Default incoming policy is set to deny.' if ufw_policy is defined and 'Default: deny (incoming)' in ufw_policy.stdout else 'Default incoming policy is not set to deny.'
                 }
               })
             })
@@ -151,8 +151,8 @@
             audit_results | combine({
               'ssh': {
                 'service_status': {
-                  'status': 'PASS' if ansible_facts.services['ssh.service'].state == 'running' else 'PASS_DISABLED',
-                  'message': 'SSH service is enabled.' if ansible_facts.services['ssh.service'].state == 'running' else 'SSH service is disabled.'
+                  'status': 'PASS' if ansible_facts.services['ssh.service'].state == 'running' else 'FAIL',
+                  'message': 'SSH service is running.' if ansible_facts.services['ssh.service'].state == 'running' else 'SSH service is not running.'
                 }
               }
             })
@@ -182,13 +182,13 @@
     # 5. Non-Root User Check
     - name: Check Non-Root Sudo Users
       shell: |
-        grep -Po '^sudo:.*:\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
+        grep -Po '^sudo:.*:\\K.*$' /etc/group | tr ',' '\\n' | grep -v '^root$'
       register: sudo_users
       changed_when: false
 
     - name: Check Admin Group Users
       shell: |
-        grep -Po '^admin:.*:\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
+        grep -Po '^admin:.*:\\K.*$' /etc/group | tr ',' '\\n' | grep -v '^root$'
       register: admin_users
       changed_when: false
 
