@@ -84,7 +84,7 @@
       when: ufw_installed is defined
 
     - name: Check UFW Status
-      shell: ufw status | grep "Status: active"
+      shell: 'ufw status | grep "Status: active"'
       register: ufw_active
       when: audit_results.ufw.installation.status == 'PASS'
       ignore_errors: yes
@@ -93,9 +93,9 @@
       set_fact:
         audit_results: "{{ audit_results | combine({'ufw': audit_ufw_updated}) }}"
       vars:
-        ufw_ufw_updated: "{{ audit_results.ufw | combine({'active_status': {'status': ufw_status, 'message': ufw_message}}) }}"
         ufw_status: "{{ 'PASS' if ufw_active.rc == 0 else 'FAIL' }}"
         ufw_message: "{{ 'UFW is active.' if ufw_active.rc == 0 else 'UFW is not active.' }}"
+        ufw_ufw_updated: "{{ audit_results.ufw | combine({'active_status': {'status': ufw_status, 'message': ufw_message}}) }}"
       when: ufw_active is defined and audit_results.ufw is defined
 
     - name: Check UFW Default Incoming Policy
@@ -111,7 +111,7 @@
       vars:
         ufw_policy_status: "{{ 'PASS' if ufw_default_incoming.stdout == 'deny' else 'FAIL' }}"
         ufw_policy_message: "{{ 'Default incoming policy is set to deny.' if ufw_default_incoming.stdout == 'deny' else 'Default incoming policy is not set to deny.' }}"
-        audit_ufw_policy: "{{ audit_results.ufw | combine({'default_policy': {'status': ufw_policy_status, 'message': ufw_policy_message}}) }}"
+        ufw_policy: "{{ audit_results.ufw | combine({'default_policy': {'status': ufw_policy_status, 'message': ufw_policy_message}}) }}"
       when: ufw_default_incoming is defined and audit_results.ufw is defined
 
     - name: Check SSH Service Status
@@ -338,8 +338,7 @@
       when: jail_local_file is defined and audit_results.fail2ban is defined
 
     - name: Check SSH Jail Enabled in Fail2ban
-      shell: |
-        grep -E "^\[sshd\]" -A5 /etc/fail2ban/jail.local | grep "^enabled = true"
+      shell: 'grep -E "^\[sshd\]" -A5 /etc/fail2ban/jail.local | grep "^enabled = true"'
       register: ssh_jail_enabled
       when:
         - jail_local_file.stat.exists
@@ -357,8 +356,7 @@
       when: ssh_jail_enabled is defined and audit_results.fail2ban is defined
 
     - name: Check SSH Jail Mode in Fail2ban
-      shell: |
-        grep -E "^\[sshd\]" -A10 /etc/fail2ban/jail.local | grep "^mode\s*=\s*aggressive"
+      shell: 'grep -E "^\[sshd\]" -A10 /etc/fail2ban/jail.local | grep "^mode\s*=\s*aggressive"'
       register: ssh_jail_mode
       when:
         - jail_local_file.stat.exists
