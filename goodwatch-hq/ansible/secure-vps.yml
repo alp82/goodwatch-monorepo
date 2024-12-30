@@ -4,6 +4,18 @@
   become: yes
   gather_facts: yes
 
+  pre_tasks:
+    - name: Install jq and curl if not present
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - jq
+        - curl
+      when: ansible_facts.os_family == "Debian"
+      tags: prepare_system
+
   vars:
     report_path: "./security_audit_report_{{ inventory_hostname }}.md"
     audit_results:
@@ -69,8 +81,8 @@
           {{
             audit_results | combine({
               'dependencies': {
-                'status': 'FAIL' if missing_dependencies | length > 0 else 'PASS',
-                'message': 'Missing dependencies: ' + ', '.join(missing_dependencies) if missing_dependencies | length > 0 else 'All required dependencies are installed.'
+                'status': 'FAIL' if (missing_dependencies | default([])) | length > 0 else 'PASS',
+                'message': 'Missing dependencies: ' + ', '.join(missing_dependencies) if (missing_dependencies | default([])) | length > 0 else 'All required dependencies are installed.'
               }
             })
           }}
@@ -132,8 +144,8 @@
             audit_results | combine({
               'ufw': audit_results.ufw | combine({
                 'default_policy': {
-                  'status': 'PASS' if ufw_policy is defined and 'Default: deny (incoming)' in ufw_policy.stdout else 'FAIL',
-                  'message': 'Default incoming policy is set to deny.' if ufw_policy is defined and 'Default: deny (incoming)' in ufw_policy.stdout else 'Default incoming policy is not set to deny.'
+                  'status': 'PASS' if (ufw_policy is defined and 'Default: deny (incoming)' in (ufw_policy.stdout | default(""))) else 'FAIL',
+                  'message': 'Default incoming policy is set to deny.' if (ufw_policy is defined and 'Default: deny (incoming)' in (ufw_policy.stdout | default(""))) else 'Default incoming policy is not set to deny.'
                 }
               })
             })
@@ -151,8 +163,8 @@
             audit_results | combine({
               'ssh': {
                 'service_status': {
-                  'status': 'PASS' if ansible_facts.services['ssh.service'].state == 'running' else 'FAIL',
-                  'message': 'SSH service is running.' if ansible_facts.services['ssh.service'].state == 'running' else 'SSH service is not running.'
+                  'status': 'PASS' if ('ssh.service' in ansible_facts.services and ansible_facts.services['ssh.service'].state == 'running') else 'FAIL',
+                  'message': 'SSH service is running.' if ('ssh.service' in ansible_facts.services and ansible_facts.services['ssh.service'].state == 'running') else 'SSH service is not running.'
                 }
               }
             })
@@ -182,13 +194,13 @@
     # 5. Non-Root User Check
     - name: Check Non-Root Sudo Users
       shell: |
-        grep -Po '^sudo:.*:\\K.*$' /etc/group | tr ',' '\\n' | grep -v '^root$'
+        grep -Po '^sudo:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
       register: sudo_users
       changed_when: false
 
     - name: Check Admin Group Users
       shell: |
-        grep -Po '^admin:.*:\\K.*$' /etc/group | tr ',' '\\n' | grep -v '^root$'
+        grep -Po '^admin:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
       register: admin_users
       changed_when: false
 
@@ -197,8 +209,7 @@
         privileged_users: "{{ (sudo_users.stdout_lines + admin_users.stdout_lines) | unique | reject('equalto', '') | list }}"
 
     - name: Check Valid Shells for Sudo Users
-      command: |
-        getent passwd {{ item }} | cut -d: -f7
+      command: getent passwd {{ item }} | cut -d: -f7
       register: user_shells
       loop: "{{ privileged_users }}"
       when: privileged_users | length > 0
@@ -211,8 +222,8 @@
             audit_results | combine({
               'non_root_user': {
                 'sudo_access': {
-                  'status': 'PASS' if user_shells.results | selectattr('stdout', 'match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length > 0 else 'FAIL',
-                  'message': 'Found valid non-root sudo users.' if user_shells.results | selectattr('stdout', 'match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length > 0 else 'No non-root users with sudo privileges have valid shells.'
+                  'status': 'PASS' if (user_shells.results | selectattr('stdout', 'match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'FAIL',
+                  'message': 'Found valid non-root sudo users.' if (user_shells.results | selectattr('stdout', 'match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'No non-root users with sudo privileges have valid shells.'
                 }
               }
             })
