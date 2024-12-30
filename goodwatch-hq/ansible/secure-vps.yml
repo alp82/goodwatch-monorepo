@@ -270,12 +270,12 @@
 
     - name: Check APT::Periodic::Update-Package-Lists
       set_fact:
-        update_package_lists_enabled: "{{ 'APT::Periodic::Update-Package-Lists "1";' in auto_upgrades_decoded }}"
+        update_package_lists_enabled: "{{ 'APT::Periodic::Update-Package-Lists \"1\";' in auto_upgrades_decoded }}"
       when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_decoded is defined
 
     - name: Check APT::Periodic::Unattended-Upgrade
       set_fact:
-        unattended_upgrade_enabled: "{{ 'APT::Periodic::Unattended-Upgrade "1";' in auto_upgrades_decoded }}"
+        unattended_upgrade_enabled: "{{ 'APT::Periodic::Unattended-Upgrade \"1\";' in auto_upgrades_decoded }}"
       when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_decoded is defined
 
     - name: Print command to enable automatic package list updates
