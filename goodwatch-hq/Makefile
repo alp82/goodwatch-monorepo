@@ -10,7 +10,7 @@ setup-cronjobs:
 	@echo "Setting up cronjobs on all hosts..."
 	cd ansible && ansible-playbook -i hosts.ini cron.yml
 
-.PHONY: secure-vpn
-secure-vpn:
-	@echo "Auditing VPN security..."
-	cd ansible && ansible-playbook -i hosts.ini secure-vpn.yml
+.PHONY: secure-vps
+secure-vps:
+	@echo "Auditing VPS security..."
+	cd ansible && ansible-playbook -i hosts.ini secure-vps.yml
