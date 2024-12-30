@@ -31,9 +31,10 @@
 
     - name: Record OS Check Result
       set_fact:
-        audit_results.os_check:
-          status: "{{ 'PASS' if os_check.stdout in ['ubuntu', 'debian'] else 'FAIL' }}"
-          message: "{{ 'Detected supported OS: ' + os_check.stdout if os_check.stdout in ['ubuntu', 'debian'] else 'Unsupported OS detected.' }}"
+        audit_results: "{{ audit_results | combine({'os_check': {'status': os_status, 'message': os_message}}) }}"
+      vars:
+        os_status: "{{ 'PASS' if os_check.stdout in ['ubuntu', 'debian'] else 'FAIL' }}"
+        os_message: "{{ 'Detected supported OS: ' + os_check.stdout if os_check.stdout in ['ubuntu', 'debian'] else 'Unsupported OS detected.' }}"
       when: os_check is defined
 
     - name: Define list of dependencies
@@ -58,9 +59,10 @@
 
     - name: Record Dependencies Check Result
       set_fact:
-        audit_results.dependencies:
-          status: "{{ 'FAIL' if missing_dependencies | length > 0 else 'PASS' }}"
-          message: "{{ 'Missing dependencies: ' + missing_dependencies | join(', ') if missing_dependencies | length > 0 else 'All required dependencies are installed.' }}"
+        audit_results: "{{ audit_results | combine({'dependencies': {'status': dep_status, 'message': dep_message}}) }}"
+      vars:
+        dep_status: "{{ 'FAIL' if missing_dependencies | length > 0 else 'PASS' }}"
+        dep_message: "{{ 'Missing dependencies: ' + missing_dependencies | join(', ') if missing_dependencies | length > 0 else 'All required dependencies are installed.' }}"
       when: dependency_check is defined
 
     - name: Check UFW Installation
@@ -73,23 +75,27 @@
 
     - name: Record UFW Installation Result
       set_fact:
-        audit_results.ufw.installation:
-          status: "{{ 'PASS' if ufw_installed.changed == False else 'FAIL' }}"
-          message: "{{ 'UFW is installed.' if ufw_installed.changed == False else 'UFW is not installed.' }}"
+        audit_results: "{{ audit_results | combine({'ufw': audit_ufw}) }}"
+      vars:
+        audit_ufw:
+          installation:
+            status: "{{ 'PASS' if ufw_installed.changed == False else 'FAIL' }}"
+            message: "{{ 'UFW is installed.' if ufw_installed.changed == False else 'UFW is not installed.' }}"
       when: ufw_installed is defined
 
     - name: Check UFW Status
-      shell: |
-        ufw status | grep "Status: active"
+      shell: ufw status | grep "Status: active"
       register: ufw_active
       when: audit_results.ufw.installation.status == 'PASS'
       ignore_errors: yes
 
     - name: Record UFW Active Status
       set_fact:
-        audit_results.ufw.active_status:
-          status: "{{ 'PASS' if ufw_active.rc == 0 else 'FAIL' }}"
-          message: "{{ 'UFW is active.' if ufw_active.rc == 0 else 'UFW is not active.' }}"
+        audit_results: "{{ audit_results | combine({'ufw': audit_ufw_updated}) }}"
+      vars:
+        ufw_ufw_updated: "{{ audit_results.ufw | combine({'active_status': {'status': ufw_status, 'message': ufw_message}}) }}"
+        ufw_status: "{{ 'PASS' if ufw_active.rc == 0 else 'FAIL' }}"
+        ufw_message: "{{ 'UFW is active.' if ufw_active.rc == 0 else 'UFW is not active.' }}"
       when: ufw_active is defined and audit_results.ufw is defined
 
     - name: Check UFW Default Incoming Policy
@@ -101,9 +107,11 @@
 
     - name: Record UFW Default Incoming Policy
       set_fact:
-        audit_results.ufw.default_policy:
-          status: "{{ 'PASS' if ufw_default_incoming.stdout == 'deny' else 'FAIL' }}"
-          message: "{{ 'Default incoming policy is set to deny.' if ufw_default_incoming.stdout == 'deny' else 'Default incoming policy is not set to deny.' }}"
+        audit_results: "{{ audit_results | combine({'ufw': audit_ufw_policy}) }}"
+      vars:
+        ufw_policy_status: "{{ 'PASS' if ufw_default_incoming.stdout == 'deny' else 'FAIL' }}"
+        ufw_policy_message: "{{ 'Default incoming policy is set to deny.' if ufw_default_incoming.stdout == 'deny' else 'Default incoming policy is not set to deny.' }}"
+        audit_ufw_policy: "{{ audit_results.ufw | combine({'default_policy': {'status': ufw_policy_status, 'message': ufw_policy_message}}) }}"
       when: ufw_default_incoming is defined and audit_results.ufw is defined
 
     - name: Check SSH Service Status
@@ -114,9 +122,12 @@
 
     - name: Record SSH Service Status
       set_fact:
-        audit_results.ssh.service_status:
-          status: "{{ 'PASS' if ssh_active.rc == 0 else 'PASS_DISABLED' }}"
-          message: "{{ 'SSH service is enabled.' if ssh_active.rc == 0 else 'SSH service is disabled.' }}"
+        audit_results: "{{ audit_results | combine({'ssh': ssh_service}) }}"
+      vars:
+        ssh_service:
+          service_status:
+            status: "{{ 'PASS' if ssh_active.rc == 0 else 'PASS_DISABLED' }}"
+            message: "{{ 'SSH service is enabled.' if ssh_active.rc == 0 else 'SSH service is disabled.' }}"
       when: ssh_active is defined
 
     - name: Check SSH Key-based Authentication
@@ -127,9 +138,12 @@
 
     - name: Record SSH Key-based Authentication Result
       set_fact:
-        audit_results.ssh.key_auth:
-          status: "{{ 'PASS' if ssh_auth_keys.stat.exists else 'FAIL' }}"
-          message: "{{ 'Key-based authentication is set up.' if ssh_auth_keys.stat.exists else 'No authorized_keys found in home directory.' }}"
+        audit_results: "{{ audit_results | combine({'ssh': ssh_ssh}) }}"
+      vars:
+        ssh_ssh:
+          key_auth:
+            status: "{{ 'PASS' if ssh_auth_keys.stat.exists else 'FAIL' }}"
+            message: "{{ 'Key-based authentication is set up.' if ssh_auth_keys.stat.exists else 'No authorized_keys found in home directory.' }}"
       when: ssh_auth_keys is defined and audit_results.ssh is defined
 
     - name: Check SSH Configuration Settings
@@ -150,18 +164,22 @@
 
     - name: Record SSH Configuration Results
       set_fact:
-        audit_results.ssh.config_PermitRootLogin:
-          status: "{{ 'PASS' if ssh_config.PermitRootLogin == 'no' else 'FAIL' }}"
-          message: "{{ 'PermitRootLogin is set to no.' if ssh_config.PermitRootLogin == 'no' else 'PermitRootLogin is set to ' + ssh_config.PermitRootLogin }}"
-        audit_results.ssh.config_KbdInteractiveAuthentication:
-          status: "{{ 'PASS' if ssh_config.KbdInteractiveAuthentication == 'no' else 'FAIL' }}"
-          message: "{{ 'KbdInteractiveAuthentication is set to no.' if ssh_config.KbdInteractiveAuthentication == 'no' else 'KbdInteractiveAuthentication is set to ' + ssh_config.KbdInteractiveAuthentication }}"
-        audit_results.ssh.config_PasswordAuthentication:
-          status: "{{ 'PASS' if ssh_config.PasswordAuthentication == 'no' else 'FAIL' }}"
-          message: "{{ 'PasswordAuthentication is set to no.' if ssh_config.PasswordAuthentication == 'no' else 'PasswordAuthentication is set to ' + ssh_config.PasswordAuthentication }}"
-        audit_results.ssh.config_UsePAM:
-          status: "{{ 'PASS' if ssh_config.UsePAM == 'no' else 'FAIL' }}"
-          message: "{{ 'UsePAM is set to no.' if ssh_config.UsePAM == 'no' else 'UsePAM is set to ' + ssh_config.UsePAM }}"
+        audit_results: "{{ audit_results | combine({'ssh': ssh_ssh_updated}) }}"
+      vars:
+        ssh_config_results:
+          config_PermitRootLogin:
+            status: "{{ 'PASS' if ssh_config.PermitRootLogin == 'no' else 'FAIL' }}"
+            message: "{{ 'PermitRootLogin is set to no.' if ssh_config.PermitRootLogin == 'no' else 'PermitRootLogin is set to ' + ssh_config.PermitRootLogin }}"
+          config_KbdInteractiveAuthentication:
+            status: "{{ 'PASS' if ssh_config.KbdInteractiveAuthentication == 'no' else 'FAIL' }}"
+            message: "{{ 'KbdInteractiveAuthentication is set to no.' if ssh_config.KbdInteractiveAuthentication == 'no' else 'KbdInteractiveAuthentication is set to ' + ssh_config.KbdInteractiveAuthentication }}"
+          config_PasswordAuthentication:
+            status: "{{ 'PASS' if ssh_config.PasswordAuthentication == 'no' else 'FAIL' }}"
+            message: "{{ 'PasswordAuthentication is set to no.' if ssh_config.PasswordAuthentication == 'no' else 'PasswordAuthentication is set to ' + ssh_config.PasswordAuthentication }}"
+          config_UsePAM:
+            status: "{{ 'PASS' if ssh_config.UsePAM == 'no' else 'FAIL' }}"
+            message: "{{ 'UsePAM is set to no.' if ssh_config.UsePAM == 'no' else 'UsePAM is set to ' + ssh_config.UsePAM }}"
+        ssh_ssh_updated: "{{ audit_results.ssh | combine(ssh_config_results) }}"
       when: ssh_config is defined and audit_results.ssh is defined
 
     - name: Check Non-Root Sudo Users
@@ -188,9 +206,12 @@
 
     - name: Record Non-Root Sudo Users Result
       set_fact:
-        audit_results.non_root_user.sudo_access:
-          status: "{{ 'PASS' if (user_shells.stdout_lines | select('match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'FAIL' }}"
-          message: "{{ 'Found valid non-root sudo users.' if (user_shells.stdout_lines | select('match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'No non-root users with sudo privileges have valid shells.' }}"
+        audit_results: "{{ audit_results | combine({'non_root_user': non_root_user_results}) }}"
+      vars:
+        non_root_user_results:
+          sudo_access:
+            status: "{{ 'PASS' if (user_shells.stdout_lines | select('match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'FAIL' }}"
+            message: "{{ 'Found valid non-root sudo users.' if (user_shells.stdout_lines | select('match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'No non-root users with sudo privileges have valid shells.' }}"
       when: user_shells is defined
 
     - name: Check Unattended Upgrades Installation
@@ -203,9 +224,12 @@
 
     - name: Record Unattended Upgrades Installation Result
       set_fact:
-        audit_results.unattended_upgrades.installation:
-          status: "{{ 'PASS' if unattended_upgrades_installed.changed == False else 'FAIL' }}"
-          message: "{{ 'unattended-upgrades package is installed.' if unattended_upgrades_installed.changed == False else 'unattended-upgrades package is not installed.' }}"
+        audit_results: "{{ audit_results | combine({'unattended_upgrades': unattended_upgrades}) }}"
+      vars:
+        unattended_upgrades:
+          installation:
+            status: "{{ 'PASS' if unattended_upgrades_installed.changed == False else 'FAIL' }}"
+            message: "{{ 'unattended-upgrades package is installed.' if unattended_upgrades_installed.changed == False else 'unattended-upgrades package is not installed.' }}"
       when: unattended_upgrades_installed is defined
 
     - name: Gather Service Facts for Unattended Upgrades
@@ -214,9 +238,12 @@
 
     - name: Record Unattended Upgrades Service Status
       set_fact:
-        audit_results.unattended_upgrades.service_status:
-          status: "{{ 'PASS' if (ansible_facts.services['unattended-upgrades.service'].state == 'running') else 'FAIL' }}"
-          message: "{{ 'unattended-upgrades service is running.' if (ansible_facts.services['unattended-upgrades.service'].state == 'running') else 'unattended-upgrades service is not running.' }}"
+        audit_results: "{{ audit_results | combine({'unattended_upgrades': unattended_upgrades_service}) }}"
+      vars:
+        unattended_upgrades_service:
+          service_status:
+            status: "{{ 'PASS' if (ansible_facts.services['unattended-upgrades.service'].state == 'running') else 'FAIL' }}"
+            message: "{{ 'unattended-upgrades service is running.' if (ansible_facts.services['unattended-upgrades.service'].state == 'running') else 'unattended-upgrades service is not running.' }}"
       when:
         - "'unattended-upgrades.service' in ansible_facts.services"
         - audit_results.unattended_upgrades.installation.status == 'PASS'
@@ -228,9 +255,12 @@
 
     - name: Record Automatic Upgrades Configuration File Result
       set_fact:
-        audit_results.unattended_upgrades.config_file:
-          status: "{{ 'PASS' if auto_upgrades_file.stat.exists else 'FAIL' }}"
-          message: "{{ 'Auto-upgrades configuration file exists.' if auto_upgrades_file.stat.exists else 'Auto-upgrades configuration file does not exist.' }}"
+        audit_results: "{{ audit_results | combine({'unattended_upgrades': unattended_upgrades_config}) }}"
+      vars:
+        unattended_upgrades_config:
+          config_file:
+            status: "{{ 'PASS' if auto_upgrades_file.stat.exists else 'FAIL' }}"
+            message: "{{ 'Auto-upgrades configuration file exists.' if auto_upgrades_file.stat.exists else 'Auto-upgrades configuration file does not exist.' }}"
       when: auto_upgrades_file is defined
 
     - name: Check Automatic Update Settings
@@ -241,17 +271,21 @@
           echo "0 0"
         fi
       register: auto_update_settings
-      when: auto_upgrades_file.stat.exists
+      when: audit_results.unattended_upgrades.config_file.status == 'PASS'
+      ignore_errors: yes
 
     - name: Record Automatic Update Settings Result
       set_fact:
-        audit_results.unattended_upgrades.auto_update:
-          status: "{{ 'PASS' if (auto_update_settings.stdout.split()[0] | int) > 0 else 'FAIL' }}"
-          message: "{{ 'Automatic package list updates are enabled.' if (auto_update_settings.stdout.split()[0] | int) > 0 else 'Automatic package list updates are disabled.' }}"
-        audit_results.unattended_upgrades.auto_upgrade:
-          status: "{{ 'PASS' if (auto_update_settings.stdout.split()[1] | int) > 0 else 'FAIL' }}"
-          message: "{{ 'Automatic upgrades are enabled.' if (auto_update_settings.stdout.split()[1] | int) > 0 else 'Automatic upgrades are disabled.' }}"
-      when: auto_update_settings is defined and auto_upgrades_file.stat.exists
+        audit_results: "{{ audit_results | combine({'unattended_upgrades': unattended_upgrades_auto}) }}"
+      vars:
+        unattended_upgrades_auto:
+          auto_update:
+            status: "{{ 'PASS' if (auto_update_settings.stdout.split()[0] | int) > 0 else 'FAIL' }}"
+            message: "{{ 'Automatic package list updates are enabled.' if (auto_update_settings.stdout.split()[0] | int) > 0 else 'Automatic package list updates are disabled.' }}"
+          auto_upgrade:
+            status: "{{ 'PASS' if (auto_update_settings.stdout.split()[1] | int) > 0 else 'FAIL' }}"
+            message: "{{ 'Automatic upgrades are enabled.' if (auto_update_settings.stdout.split()[1] | int) > 0 else 'Automatic upgrades are disabled.' }}"
+      when: auto_update_settings is defined and audit_results.unattended_upgrades.config_file.status == 'PASS'
 
     - name: Check Fail2ban Installation
       apt:
@@ -263,9 +297,12 @@
 
     - name: Record Fail2ban Installation Result
       set_fact:
-        audit_results.fail2ban.installation:
-          status: "{{ 'PASS' if fail2ban_installed.changed == False else 'FAIL' }}"
-          message: "{{ 'fail2ban package is installed.' if fail2ban_installed.changed == False else 'fail2ban package is not installed.' }}"
+        audit_results: "{{ audit_results | combine({'fail2ban': fail2ban}) }}"
+      vars:
+        fail2ban:
+          installation:
+            status: "{{ 'PASS' if fail2ban_installed.changed == False else 'FAIL' }}"
+            message: "{{ 'fail2ban package is installed.' if fail2ban_installed.changed == False else 'fail2ban package is not installed.' }}"
       when: fail2ban_installed is defined
 
     - name: Gather Service Facts for Fail2ban
@@ -274,9 +311,12 @@
 
     - name: Record Fail2ban Service Status
       set_fact:
-        audit_results.fail2ban.service_enabled:
-          status: "{{ 'PASS' if (ansible_facts.services['fail2ban.service'].state == 'running' and ansible_facts.services['fail2ban.service'].enabled) else 'FAIL' }}"
-          message: "{{ 'fail2ban service is enabled and running.' if (ansible_facts.services['fail2ban.service'].state == 'running' and ansible_facts.services['fail2ban.service'].enabled) else 'fail2ban service is not enabled or not running.' }}"
+        audit_results: "{{ audit_results | combine({'fail2ban': fail2ban_service}) }}"
+      vars:
+        fail2ban_service:
+          service_enabled:
+            status: "{{ 'PASS' if (ansible_facts.services['fail2ban.service'].state == 'running' and ansible_facts.services['fail2ban.service'].enabled) else 'FAIL' }}"
+            message: "{{ 'fail2ban service is enabled and running.' if (ansible_facts.services['fail2ban.service'].state == 'running' and ansible_facts.services['fail2ban.service'].enabled) else 'fail2ban service is not enabled or not running.' }}"
       when:
         - "'fail2ban.service' in ansible_facts.services"
         - audit_results.fail2ban.installation.status == 'PASS'
@@ -289,9 +329,12 @@
 
     - name: Record Fail2ban Configuration File Result
       set_fact:
-        audit_results.fail2ban.config_file:
-          status: "{{ 'PASS' if jail_local_file.stat.exists else 'FAIL' }}"
-          message: "{{ 'jail.local configuration file exists.' if jail_local_file.stat.exists else 'jail.local configuration file does not exist.' }}"
+        audit_results: "{{ audit_results | combine({'fail2ban': fail2ban_config}) }}"
+      vars:
+        fail2ban_config:
+          config_file:
+            status: "{{ 'PASS' if jail_local_file.stat.exists else 'FAIL' }}"
+            message: "{{ 'jail.local configuration file exists.' if jail_local_file.stat.exists else 'jail.local configuration file does not exist.' }}"
       when: jail_local_file is defined and audit_results.fail2ban is defined
 
     - name: Check SSH Jail Enabled in Fail2ban
@@ -305,9 +348,12 @@
 
     - name: Record SSH Jail Enabled Result
       set_fact:
-        audit_results.fail2ban.ssh_jail_enabled:
-          status: "{{ 'PASS' if ssh_jail_enabled.rc == 0 else 'FAIL' }}"
-          message: "{{ 'SSH jail is enabled in fail2ban.' if ssh_jail_enabled.rc == 0 else 'SSH jail is not enabled in fail2ban.' }}"
+        audit_results: "{{ audit_results | combine({'fail2ban': fail2ban_ssh_jail_enabled}) }}"
+      vars:
+        fail2ban_ssh_jail_enabled:
+          ssh_jail_enabled:
+            status: "{{ 'PASS' if ssh_jail_enabled.rc == 0 else 'FAIL' }}"
+            message: "{{ 'SSH jail is enabled in fail2ban.' if ssh_jail_enabled.rc == 0 else 'SSH jail is not enabled in fail2ban.' }}"
       when: ssh_jail_enabled is defined and audit_results.fail2ban is defined
 
     - name: Check SSH Jail Mode in Fail2ban
@@ -321,9 +367,12 @@
 
     - name: Record SSH Jail Mode Result
       set_fact:
-        audit_results.fail2ban.ssh_jail_mode:
-          status: "{{ 'PASS' if ssh_jail_mode.rc == 0 else 'FAIL' }}"
-          message: "{{ 'SSH jail is set to aggressive mode.' if ssh_jail_mode.rc == 0 else 'SSH jail is not set to aggressive mode.' }}"
+        audit_results: "{{ audit_results | combine({'fail2ban': fail2ban_ssh_jail_mode}) }}"
+      vars:
+        fail2ban_ssh_jail_mode:
+          ssh_jail_mode:
+            status: "{{ 'PASS' if ssh_jail_mode.rc == 0 else 'FAIL' }}"
+            message: "{{ 'SSH jail is set to aggressive mode.' if ssh_jail_mode.rc == 0 else 'SSH jail is not set to aggressive mode.' }}"
       when: ssh_jail_mode is defined and audit_results.fail2ban is defined
 
     - name: Create Jinja2 Template for Report
