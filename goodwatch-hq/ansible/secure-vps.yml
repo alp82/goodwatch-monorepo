@@ -1,422 +1,452 @@
 ---
-- name: Security Audit and Fix Command Generator
+- name: Security Audit Playbook
   hosts: all
   become: yes
-  gather_facts: yes
+  gather_facts: no
+
+  vars:
+    report_path: "./security_audit_report_{{ inventory_hostname }}.md"
+    audit_results:
+      os_check: {}
+      dependencies: {}
+      ufw: {}
+      ssh: {}
+      non_root_user: {}
+      unattended_upgrades: {}
+      fail2ban: {}
 
   tasks:
 
-    # Gather package and service facts
-    - name: Gather package facts
-      package_facts:
-        manager: auto
+    - name: Check Operating System
+      shell: |
+        if [ -f /etc/lsb-release ]; then
+          echo "ubuntu"
+        elif [ -f /etc/debian_version ]; then
+          echo "debian"
+        else
+          echo "unsupported"
+        fi
+      register: os_check
+      ignore_errors: yes
 
-    - name: Gather service facts
+    - name: Record OS Check Result
+      set_fact:
+        audit_results:
+          os_check:
+            status: "{{ 'pass' if os_check.stdout in ['ubuntu', 'debian'] else 'fail' }}"
+            message: "{{ 'Detected supported OS: ' + os_check.stdout if os_check.stdout in ['ubuntu', 'debian'] else 'Unsupported OS detected.' }}"
+      when: os_check is defined
+
+    - name: Check Required Dependencies
+      shell: |
+        missing=()
+        for cmd in curl jq systemctl apt-get; do
+          if ! command -v $cmd &> /dev/null; then
+            missing+=($cmd)
+          fi
+        done
+        if [ ${#missing[@]} -ne 0 ]; then
+          echo "${missing[@]}"
+        else
+          echo "none"
+        fi
+      register: dependencies_check
+
+    - name: Record Dependencies Check Result
+      set_fact:
+        audit_results:
+          dependencies:
+            status: "{{ 'fail' if dependencies_check.stdout != 'none' else 'pass' }}"
+            message: "{{ 'Missing dependencies: ' + dependencies_check.stdout if dependencies_check.stdout != 'none' else 'All required dependencies are installed.' }}"
+      when: dependencies_check is defined
+
+    - name: Check UFW Installation
+      command: dpkg -l ufw
+      register: ufw_installed
+      ignore_errors: yes
+
+    - name: Record UFW Installation Result
+      set_fact:
+        audit_results:
+          ufw:
+            installation:
+              status: "{{ 'pass' if ufw_installed.rc == 0 else 'fail' }}"
+              message: "{{ 'UFW is installed.' if ufw_installed.rc == 0 else 'UFW is not installed.' }}"
+      when: ufw_installed is defined
+
+    - name: Check UFW Status
+      shell: |
+        ufw status | grep "Status: active"
+      register: ufw_active
+      when: audit_results.ufw.installation.status == 'pass'
+      ignore_errors: yes
+
+    - name: Record UFW Active Status
+      set_fact:
+        audit_results:
+          ufw:
+            active_status:
+              status: "{{ 'pass' if ufw_active.rc == 0 else 'fail' }}"
+              message: "{{ 'UFW is active.' if ufw_active.rc == 0 else 'UFW is not active.' }}"
+      when: ufw_active is defined and audit_results.ufw is defined
+
+    - name: Check UFW Default Incoming Policy
+      shell: |
+        sudo ufw status verbose | grep "Default: " | awk '{print $2}'
+      register: ufw_default_incoming
+      when: audit_results.ufw.active_status.status == 'pass'
+      ignore_errors: yes
+
+    - name: Record UFW Default Incoming Policy
+      set_fact:
+        audit_results:
+          ufw:
+            default_policy:
+              status: "{{ 'pass' if ufw_default_incoming.stdout == 'deny' else 'fail' }}"
+              message: "{{ 'Default incoming policy is set to deny.' if ufw_default_incoming.stdout == 'deny' else 'Default incoming policy is not set to deny.' }}"
+      when: ufw_default_incoming is defined and audit_results.ufw is defined
+
+    - name: Check SSH Service Status
+      shell: |
+        systemctl is-active sshd || systemctl is-active ssh.service
+      register: ssh_active
+      ignore_errors: yes
+
+    - name: Record SSH Service Status
+      set_fact:
+        audit_results:
+          ssh:
+            service_status:
+              status: "{{ 'pass' if ssh_active.rc == 0 else 'pass_disabled' }}"
+              message: "{{ 'SSH service is enabled.' if ssh_active.rc == 0 else 'SSH service is disabled.' }}"
+      when: ssh_active is defined
+
+    - name: Check SSH Key-based Authentication
+      stat:
+        path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
+      register: ssh_auth_keys
+      when: audit_results.ssh.service_status.status == 'pass'
+
+    - name: Record SSH Key-based Authentication Result
+      set_fact:
+        audit_results:
+          ssh:
+            key_auth:
+              status: "{{ 'pass' if ssh_auth_keys.stat.exists else 'fail' }}"
+              message: "{{ 'Key-based authentication is set up.' if ssh_auth_keys.stat.exists else 'No authorized_keys found in home directory.' }}"
+      when: ssh_auth_keys is defined and audit_results.ssh is defined
+
+    - name: Check SSH Configuration Settings
+      shell: |
+        sudo sshd -T
+      register: sshd_config
+      when: audit_results.ssh.service_status.status == 'pass'
+      ignore_errors: yes
+
+    - name: Parse SSH Configuration
+      set_fact:
+        ssh_config:
+          PermitRootLogin: "{{ (sshd_config.stdout | regex_search('^permitrootlogin\\s+(\\S+)', '\\1', 'i')) | lower }}"
+          KbdInteractiveAuthentication: "{{ (sshd_config.stdout | regex_search('^kbdinteractiveauthentication\\s+(\\S+)', '\\1', 'i')) | lower }}"
+          PasswordAuthentication: "{{ (sshd_config.stdout | regex_search('^passwordauthentication\\s+(\\S+)', '\\1', 'i')) | lower }}"
+          UsePAM: "{{ (sshd_config.stdout | regex_search('^usepam\\s+(\\S+)', '\\1', 'i')) | lower }}"
+      when: sshd_config is defined and audit_results.ssh is defined
+
+    - name: Record SSH Configuration Results
+      set_fact:
+        audit_results:
+          ssh:
+            config_PermitRootLogin:
+              status: "{{ 'pass' if ssh_config.PermitRootLogin == 'no' else 'fail' }}"
+              message: "{{ 'PermitRootLogin is set to no.' if ssh_config.PermitRootLogin == 'no' else 'PermitRootLogin is set to ' + ssh_config.PermitRootLogin }}"
+
+            config_KbdInteractiveAuthentication:
+              status: "{{ 'pass' if ssh_config.KbdInteractiveAuthentication == 'no' else 'fail' }}"
+              message: "{{ 'KbdInteractiveAuthentication is set to no.' if ssh_config.KbdInteractiveAuthentication == 'no' else 'KbdInteractiveAuthentication is set to ' + ssh_config.KbdInteractiveAuthentication }}"
+
+            config_PasswordAuthentication:
+              status: "{{ 'pass' if ssh_config.PasswordAuthentication == 'no' else 'fail' }}"
+              message: "{{ 'PasswordAuthentication is set to no.' if ssh_config.PasswordAuthentication == 'no' else 'PasswordAuthentication is set to ' + ssh_config.PasswordAuthentication }}"
+
+            config_UsePAM:
+              status: "{{ 'pass' if ssh_config.UsePAM == 'no' else 'fail' }}"
+              message: "{{ 'UsePAM is set to no.' if ssh_config.UsePAM == 'no' else 'UsePAM is set to ' + ssh_config.UsePAM }}"
+      when: ssh_config is defined and audit_results.ssh is defined
+
+    - name: Check Non-Root Sudo Users
+      shell: |
+        grep -Po '^sudo:.*:\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
+      register: sudo_users
+
+    - name: Check Admin Group Users
+      shell: |
+        grep -Po '^admin:.*:\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
+      register: admin_users
+
+    - name: Combine Sudo and Admin Users
+      set_fact:
+        privileged_users: "{{ (sudo_users.stdout_lines + admin_users.stdout_lines) | unique | reject('equalto', '') | list }}"
+
+    - name: Check Valid Shells for Sudo Users
+      shell: |
+        for user in {{ privileged_users | join(' ') }}; do
+          getent passwd "$user" | cut -d: -f7
+        done
+      register: user_shells
+      when: privileged_users | length > 0
+
+    - name: Record Non-Root Sudo Users Result
+      set_fact:
+        audit_results:
+          non_root_user:
+            sudo_access:
+              status: "{{ 'pass' if (user_shells.stdout_lines | select('match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'fail' }}"
+              message: "{{ 'Found valid non-root sudo users.' if (user_shells.stdout_lines | select('match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'No non-root users with sudo privileges have valid shells.' }}"
+      when: user_shells is defined
+
+    - name: Check Unattended Upgrades Installation
+      dpkg_selections:
+        name: unattended-upgrades
+        state: present
+      register: unattended_upgrades_installed
+      ignore_errors: yes
+
+    - name: Record Unattended Upgrades Installation Result
+      set_fact:
+        audit_results:
+          unattended_upgrades:
+            installation:
+              status: "{{ 'pass' if unattended_upgrades_installed.state == 'installed' else 'fail' }}"
+              message: "{{ 'unattended-upgrades package is installed.' if unattended_upgrades_installed.state == 'installed' else 'unattended-upgrades package is not installed.' }}"
+      when: unattended_upgrades_installed is defined
+
+    - name: Check Unattended Upgrades Service Status
       service_facts:
 
-    # 1. Check if UFW is installed
-    - name: Check if UFW is installed
+    - name: Record Unattended Upgrades Service Status
       set_fact:
-        ufw_installed: "{{ 'ufw' in ansible_facts.packages }}"
+        audit_results:
+          unattended_upgrades:
+            service_status:
+              status: "{{ 'pass' if services['unattended-upgrades.service'].state == 'running' else 'fail' }}"
+              message: "{{ 'unattended-upgrades service is running.' if services['unattended-upgrades.service'].state == 'running' else 'unattended-upgrades service is not running.' }}"
+      when:
+        - 'unattended-upgrades.service' in services
+        - audit_results.unattended_upgrades.installation.status == 'pass'
 
-    - name: Print command to install UFW if not installed
-      debug:
-        msg: |
-          **Issue**: UFW is not installed.
-          **Solution**: To install UFW, run the following commands:
-          ```
-          sudo apt-get update
-          sudo apt-get install ufw -y
-          ```
-      when: not ufw_installed
-
-    # 2. Check if UFW is active
-    - name: Check if UFW is active
-      set_fact:
-        ufw_active: "{{ 'ufw' in ansible_facts.services and ansible_facts.services['ufw'].state == 'running' }}"
-
-    - name: Print commands to enable UFW if not active
-      debug:
-        msg: |
-          **Issue**: UFW is installed but not active.
-          **Solution**: To enable UFW with basic settings, run the following commands:
-          ```
-          sudo ufw default deny incoming
-          sudo ufw default allow outgoing
-          sudo ufw allow OpenSSH
-          sudo ufw enable
-          ```
-      when: ufw_installed and (not ufw_active)
-
-    # 3. Check UFW default incoming policy
-    - name: Check UFW default incoming policy
-      command: ufw status verbose
-      register: ufw_verbose
-      when: ufw_installed and ufw_active
-      ignore_errors: yes
-
-    - name: Determine if default incoming policy is deny
-      set_fact:
-        ufw_default_incoming_deny: "{{ 'Default: deny' in ufw_verbose.stdout }}"
-      when: ufw_installed and ufw_active and not ufw_verbose.failed
-
-    - name: Set default incoming policy deny as false if command failed
-      set_fact:
-        ufw_default_incoming_deny: false
-      when: ufw_installed and ufw_active and ufw_verbose.failed
-
-    - name: Print command to set UFW default incoming policy to deny
-      debug:
-        msg: |
-          **Issue**: UFW default incoming policy is not set to 'deny'.
-          **Solution**: To set it, run the following command:
-          ```
-          sudo ufw default deny incoming
-          ```
-      when: ufw_installed and ufw_active and (not ufw_default_incoming_deny)
-
-    # 4. Check if SSH service is enabled and running
-    - name: Identify SSH service name
-      set_fact:
-        ssh_service_name: >-
-          {% if 'ssh' in ansible_facts.services %}
-            ssh
-          {% elif 'sshd' in ansible_facts.services %}
-            sshd
-          {% else %}
-            ""
-          {% endif %}
-
-    - name: Check if SSH service is enabled and running
-      set_fact:
-        ssh_enabled: >-
-          {% if ssh_service_name != "" %}
-            {{ ansible_facts.services[ssh_service_name].enabled and ansible_facts.services[ssh_service_name].state == 'running' }}
-          {% else %}
-            false
-          {% endif %}
-
-    - name: Print commands to enable and start SSH service
-      debug:
-        msg: |
-          **Issue**: SSH service is not enabled or not running.
-          **Solution**: To enable and start SSH service, run the following commands:
-          ```
-          sudo systemctl enable ssh
-          sudo systemctl start ssh
-          ```
-      when: ssh_service_name == "" or not ssh_enabled
-
-    # 5. Check SSH configuration parameters
-    ## a. PermitRootLogin
-    - name: Get PermitRootLogin value
-      command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
-      register: permit_root_login
-      ignore_errors: yes
-
-    - name: Determine PermitRootLogin value
-      set_fact:
-        ssh_permit_root_login: "{{ permit_root_login.stdout | regex_replace('PermitRootLogin\\s+', '') }}"
-      when: not permit_root_login.failed
-
-    - name: Print command to set PermitRootLogin to no
-      debug:
-        msg: |
-          **Issue**: SSH PermitRootLogin is set to '{{ ssh_permit_root_login }}' (should be 'no').
-          **Solution**: To set it to 'no', run the following commands:
-          ```
-          sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-          sudo systemctl restart ssh
-          ```
-      when: ssh_permit_root_login is defined and ssh_permit_root_login != 'no'
-
-    ## b. PasswordAuthentication
-    - name: Get PasswordAuthentication value
-      command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
-      register: password_authentication
-      ignore_errors: yes
-
-    - name: Determine PasswordAuthentication value
-      set_fact:
-        ssh_password_authentication: "{{ password_authentication.stdout | regex_replace('PasswordAuthentication\\s+', '') }}"
-      when: not password_authentication.failed
-
-    - name: Print command to set PasswordAuthentication to no
-      debug:
-        msg: |
-          **Issue**: SSH PasswordAuthentication is set to '{{ ssh_password_authentication }}' (should be 'no').
-          **Solution**: To disable password authentication, run the following commands:
-          ```
-          sudo sed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-          sudo systemctl restart ssh
-          ```
-      when: ssh_password_authentication is defined and ssh_password_authentication != 'no'
-
-    ## c. UsePAM
-    - name: Get UsePAM value
-      command: grep -E "^UsePAM" /etc/ssh/sshd_config
-      register: use_pam
-      ignore_errors: yes
-
-    - name: Determine UsePAM value
-      set_fact:
-        ssh_use_pam: "{{ use_pam.stdout | regex_replace('UsePAM\\s+', '') }}"
-      when: not use_pam.failed
-
-    - name: Print command to set UsePAM to no
-      debug:
-        msg: |
-          **Issue**: SSH UsePAM is set to '{{ ssh_use_pam }}' (should be 'no').
-          **Solution**: To disable UsePAM, run the following commands:
-          ```
-          sudo sed -i 's/^UsePAM.*/UsePAM no/' /etc/ssh/sshd_config
-          sudo systemctl restart ssh
-          ```
-      when: ssh_use_pam is defined and ssh_use_pam != 'no'
-
-    # 6. Check if authorized_keys are set up for non-root users
-    - name: Find authorized_keys for non-root users
-      find:
-        paths: /home
-        patterns: authorized_keys
-        file_type: file
-      register: authorized_keys_found
-
-    - name: Determine if authorized_keys are found
-      set_fact:
-        has_authorized_keys: "{{ authorized_keys_found.files | length > 0 }}"
-
-    - name: Print commands to set up authorized_keys
-      debug:
-        msg: |
-          **Issue**: No authorized_keys found for non-root users.
-          **Solution**: To set up authorized_keys, run the following commands:
-          ```
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          touch ~/.ssh/authorized_keys
-          chmod 600 ~/.ssh/authorized_keys
-          # Then add your public SSH key to authorized_keys
-          ```
-      when: not has_authorized_keys
-
-    # 7. Check for non-root users with sudo privileges
-    - name: Get sudo group members
-      command: getent group sudo
-      register: sudo_group
-
-    - name: Get admin group members
-      command: getent group admin
-      register: admin_group
-
-    - name: Combine sudo and admin group members
-      set_fact:
-        privileged_users: >-
-          {% set sudo_members = sudo_group.stdout | regex_replace('sudo:.*:', '') | split(',') %}
-          {% set admin_members = admin_group.stdout | regex_replace('admin:.*:', '') | split(',') %}
-          {{ sudo_members + admin_members }}
-
-    - name: Filter out root and empty strings
-      set_fact:
-        privileged_users_filtered: >-
-          {{ privileged_users
-             | select('match', '^[^root].+$')
-             | list
-             | reject('equalto', '')
-             | list }}
-
-    - name: Determine if there are non-root sudo users
-      set_fact:
-        has_non_root_sudo_user: "{{ privileged_users_filtered | length > 0 }}"
-
-    - name: Print commands to create a non-root sudo user if none exists
-      debug:
-        msg: |
-          **Issue**: No non-root users found with sudo privileges.
-          **Solution**: To create a non-root sudo user, run the following commands:
-          ```
-          sudo adduser <username>
-          sudo usermod -aG sudo <username>
-          ```
-          Replace `<username>` with your desired username.
-      when: not has_non_root_sudo_user
-
-    # 8. Check if unattended-upgrades is installed
-    - name: Check if unattended-upgrades is installed
-      set_fact:
-        unattended_upgrades_installed: "{{ 'unattended-upgrades' in ansible_facts.packages }}"
-
-    - name: Print command to install unattended-upgrades if not installed
-      debug:
-        msg: |
-          **Issue**: unattended-upgrades is not installed.
-          **Solution**: To install it, run the following commands:
-          ```
-          sudo apt-get update
-          sudo apt-get install unattended-upgrades -y
-          ```
-      when: not unattended_upgrades_installed
-
-    # 9. Check if unattended-upgrades service is running and enabled
-    - name: Check if unattended-upgrades service is enabled and running
-      set_fact:
-        unattended_service_enabled: "{{ 'unattended-upgrades' in ansible_facts.services and ansible_facts.services['unattended-upgrades'].enabled and ansible_facts.services['unattended-upgrades'].state == 'running' }}"
-      when: unattended_upgrades_installed
-
-    - name: Print commands to enable and start unattended-upgrades service
-      debug:
-        msg: |
-          **Issue**: unattended-upgrades service is not enabled or not running.
-          **Solution**: To enable and start the service, run the following commands:
-          ```
-          sudo systemctl enable unattended-upgrades
-          sudo systemctl start unattended-upgrades
-          ```
-      when: unattended_upgrades_installed and (not unattended_service_enabled)
-
-    # 10. Check if automatic updates are enabled in 20auto-upgrades
-    - name: Check if 20auto-upgrades file exists
+    - name: Check Automatic Upgrades Configuration File
       stat:
         path: /etc/apt/apt.conf.d/20auto-upgrades
       register: auto_upgrades_file
-      when: unattended_upgrades_installed
 
-    - name: Read 20auto-upgrades file
-      slurp:
-        src: /etc/apt/apt.conf.d/20auto-upgrades
-      register: auto_upgrades_content
-      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists
-
-    - name: Set fact for auto upgrades content
+    - name: Record Automatic Upgrades Configuration File Result
       set_fact:
-        auto_upgrades_decoded: "{{ auto_upgrades_content.content | b64decode }}"
-      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_content is defined
+        audit_results:
+          unattended_upgrades:
+            config_file:
+              status: "{{ 'pass' if auto_upgrades_file.stat.exists else 'fail' }}"
+              message: "{{ 'Auto-upgrades configuration file exists.' if auto_upgrades_file.stat.exists else 'Auto-upgrades configuration file does not exist.' }}"
+      when: auto_upgrades_file is defined
 
-    - name: Check APT::Periodic::Update-Package-Lists
+    - name: Check Automatic Update Settings
+      shell: |
+        if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
+          grep -E "APT::Periodic::(Update-Package-Lists|Unattended-Upgrade)" /etc/apt/apt.conf.d/20auto-upgrades | awk '{print $3}'
+        else
+          echo "0 0"
+        fi
+      register: auto_update_settings
+
+    - name: Record Automatic Update Settings Result
       set_fact:
-        update_package_lists_enabled: "{{ 'APT::Periodic::Update-Package-Lists \"1\";' in auto_upgrades_decoded }}"
-      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_decoded is defined
+        audit_results:
+          unattended_upgrades:
+            auto_update:
+              status: "{{ 'pass' if auto_update_settings.stdout.split()[0] | int > 0 else 'fail' }}"
+              message: "{{ 'Automatic package list updates are enabled.' if auto_update_settings.stdout.split()[0] | int > 0 else 'Automatic package list updates are disabled.' }}"
+            auto_upgrade:
+              status: "{{ 'pass' if auto_update_settings.stdout.split()[1] | int > 0 else 'fail' }}"
+              message: "{{ 'Automatic upgrades are enabled.' if auto_update_settings.stdout.split()[1] | int > 0 else 'Automatic upgrades are disabled.' }}"
+      when: auto_update_settings is defined and auto_upgrades_file.stat.exists
 
-    - name: Check APT::Periodic::Unattended-Upgrade
+    - name: Check Fail2ban Installation
+      dpkg_selections:
+        name: fail2ban
+        state: present
+      register: fail2ban_installed
+      ignore_errors: yes
+
+    - name: Record Fail2ban Installation Result
       set_fact:
-        unattended_upgrade_enabled: "{{ 'APT::Periodic::Unattended-Upgrade \"1\";' in auto_upgrades_decoded }}"
-      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and auto_upgrades_decoded is defined
+        audit_results:
+          fail2ban:
+            installation:
+              status: "{{ 'pass' if fail2ban_installed.state == 'installed' else 'fail' }}"
+              message: "{{ 'fail2ban package is installed.' if fail2ban_installed.state == 'installed' else 'fail2ban package is not installed.' }}"
+      when: fail2ban_installed is defined
 
-    - name: Print command to enable automatic package list updates
-      debug:
-        msg: |
-          **Issue**: Automatic package list updates are disabled.
-          **Solution**: To enable them, run the following command:
-          ```
-          sudo sed -i 's|APT::Periodic::Update-Package-Lists "0";|APT::Periodic::Update-Package-Lists "1";|' /etc/apt/apt.conf.d/20auto-upgrades
-          ```
-      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and (not update_package_lists_enabled)
+    - name: Check Fail2ban Service Status
+      service_facts:
 
-    - name: Print command to enable automatic upgrades
-      debug:
-        msg: |
-          **Issue**: Automatic upgrades are disabled.
-          **Solution**: To enable them, run the following command:
-          ```
-          sudo sed -i 's|APT::Periodic::Unattended-Upgrade "0";|APT::Periodic::Unattended-Upgrade "1";|' /etc/apt/apt.conf.d/20auto-upgrades
-          ```
-      when: unattended_upgrades_installed and auto_upgrades_file.stat.exists and (not unattended_upgrade_enabled)
-
-    # 11. Check if Fail2ban is installed
-    - name: Check if Fail2ban is installed
+    - name: Record Fail2ban Service Status
       set_fact:
-        fail2ban_installed: "{{ 'fail2ban' in ansible_facts.packages }}"
+        audit_results:
+          fail2ban:
+            service_enabled:
+              status: "{{ 'pass' if services['fail2ban.service'].state != 'stopped' and services['fail2ban.service'].enabled else 'fail' }}"
+              message: "{{ 'fail2ban service is enabled and running.' if (services['fail2ban.service'].state == 'running' and services['fail2ban.service'].enabled) else 'fail2ban service is not enabled or not running.' }}"
+      when:
+        - 'fail2ban.service' in services
+        - audit_results.fail2ban.installation.status == 'pass'
 
-    - name: Print command to install Fail2ban if not installed
-      debug:
-        msg: |
-          **Issue**: Fail2ban is not installed.
-          **Solution**: To install Fail2ban, run the following commands:
-          ```
-          sudo apt-get update
-          sudo apt-get install fail2ban -y
-          ```
-      when: not fail2ban_installed
-
-    # 12. Check if Fail2ban service is enabled and running
-    - name: Check if Fail2ban service is enabled and running
-      set_fact:
-        fail2ban_enabled: "{{ 'fail2ban' in ansible_facts.services and ansible_facts.services['fail2ban'].enabled and ansible_facts.services['fail2ban'].state == 'running' }}"
-      when: fail2ban_installed
-
-    - name: Print commands to enable and start Fail2ban service
-      debug:
-        msg: |
-          **Issue**: Fail2ban service is not enabled or not running.
-          **Solution**: To enable and start Fail2ban service, run the following commands:
-          ```
-          sudo systemctl enable fail2ban
-          sudo systemctl start fail2ban
-          ```
-      when: fail2ban_installed and (not fail2ban_enabled)
-
-    # 13. Check Fail2ban configuration
-    - name: Check if jail.local exists
+    - name: Check Fail2ban Configuration File
       stat:
         path: /etc/fail2ban/jail.local
       register: jail_local_file
-      when: fail2ban_installed
+      when: audit_results.fail2ban.installation.status == 'pass'
 
-    - name: Print commands to create jail.local if not exists
-      debug:
-        msg: |
-          **Issue**: jail.local configuration file not found.
-          **Solution**: To create it, run the following command:
-          ```
-          sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-          ```
-      when: fail2ban_installed and not jail_local_file.stat.exists
-
-    - name: Read jail.local content
-      slurp:
-        src: /etc/fail2ban/jail.local
-      register: jail_local_content
-      when: fail2ban_installed and jail_local_file.stat.exists
-
-    - name: Set fact for decoded jail.local content
+    - name: Record Fail2ban Configuration File Result
       set_fact:
-        jail_local_decoded: "{{ jail_local_content.content | b64decode }}"
-      when: fail2ban_installed and jail_local_file.stat.exists and jail_local_content is defined
+        audit_results:
+          fail2ban:
+            config_file:
+              status: "{{ 'pass' if jail_local_file.stat.exists else 'fail' }}"
+              message: "{{ 'jail.local configuration file exists.' if jail_local_file.stat.exists else 'jail.local configuration file does not exist.' }}"
+      when: jail_local_file is defined and audit_results.fail2ban is defined
 
-    - name: Check if SSH jail is enabled
+    - name: Check SSH Jail Enabled in Fail2ban
+      shell: |
+        grep -E "^\[sshd\]" -A5 /etc/fail2ban/jail.local | grep "^enabled = true"
+      register: ssh_jail_enabled
+      when: jail_local_file.stat.exists and audit_results.fail2ban.installation.status == 'pass'
+      ignore_errors: yes
+
+    - name: Record SSH Jail Enabled Result
       set_fact:
-        fail2ban_ssh_jail_enabled: "{{ '[sshd]' in jail_local_decoded and 'enabled = true' in jail_local_decoded }}"
-      when: fail2ban_installed and jail_local_file.stat.exists and jail_local_decoded is defined
+        audit_results:
+          fail2ban:
+            ssh_jail_enabled:
+              status: "{{ 'pass' if ssh_jail_enabled.rc == 0 else 'fail' }}"
+              message: "{{ 'SSH jail is enabled in fail2ban.' if ssh_jail_enabled.rc == 0 else 'SSH jail is not enabled in fail2ban.' }}"
+      when: ssh_jail_enabled is defined and audit_results.fail2ban is defined
 
-    - name: Check if SSH jail mode is aggressive
+    - name: Check SSH Jail Mode in Fail2ban
+      shell: |
+        grep -E "^\[sshd\]" -A10 /etc/fail2ban/jail.local | grep "^mode\s*=\s*aggressive"
+      register: ssh_jail_mode
+      when: jail_local_file.stat.exists and audit_results.fail2ban.installation.status == 'pass'
+      ignore_errors: yes
+
+    - name: Record SSH Jail Mode Result
       set_fact:
-        fail2ban_ssh_jail_aggressive: "{{ '[sshd]' in jail_local_decoded and 'mode = aggressive' in jail_local_decoded }}"
-      when: fail2ban_installed and jail_local_file.stat.exists and jail_local_decoded is defined
+        audit_results:
+          fail2ban:
+            ssh_jail_mode:
+              status: "{{ 'pass' if ssh_jail_mode.rc == 0 else 'fail' }}"
+              message: "{{ 'SSH jail is set to aggressive mode.' if ssh_jail_mode.rc == 0 else 'SSH jail is not set to aggressive mode.' }}"
+      when: ssh_jail_mode is defined and audit_results.fail2ban is defined
 
-    - name: Print commands to enable SSH jail in Fail2ban
-      debug:
-        msg: |
-          **Issue**: SSH jail is not enabled in Fail2ban.
-          **Solution**: To enable SSH jail, run the following command:
-          ```
-          sudo sed -i '/\[sshd\]/,/^$/ s/enabled = false/enabled = true/' /etc/fail2ban/jail.local
-          ```
-      when: fail2ban_installed and jail_local_file.stat.exists and (not fail2ban_ssh_jail_enabled)
+    - name: Generate Markdown Report
+      template:
+        src: security_audit_report.j2
+        dest: "{{ report_path }}"
+      vars:
+        audit_results: "{{ audit_results }}"
+      # Inline the Jinja2 template
+      # To embed the template within the playbook, use the `copy` module first
+      # Alternatively, define the template inline using the `template` module's `content` option
+      # For simplicity, we'll use the `copy` module here
 
-    - name: Print commands to set SSH jail mode to aggressive
-      debug:
-        msg: |
-          **Issue**: SSH jail mode is not set to 'aggressive'.
-          **Solution**: To set SSH jail mode to 'aggressive', run the following commands:
-          ```
-          sudo sed -i '/\[sshd\]/,/^$/ s/mode = .*$/mode = aggressive/' /etc/fail2ban/jail.local
-          sudo systemctl restart fail2ban
-          ```
-      when: fail2ban_installed and jail_local_file.stat.exists and (not fail2ban_ssh_jail_aggressive)
+    - name: Create Jinja2 Template for Report
+      copy:
+        dest: "./security_audit_report.j2"
+        content: |
+          # Security Audit Report for {{ inventory_hostname }}
 
-    # Summary
-    - name: Print audit complete message
+          ## 1. Operating System Check
+          - **Status**: {{ audit_results.os_check.status | upper }}
+          - **Message**: {{ audit_results.os_check.message }}
+
+          ## 2. Dependencies Check
+          - **Status**: {{ audit_results.dependencies.status | upper }}
+          - **Message**: {{ audit_results.dependencies.message }}
+
+          ## 3. UFW Security Check
+          ### Installation
+          - **Status**: {{ audit_results.ufw.installation.status | upper }}
+          - **Message**: {{ audit_results.ufw.installation.message }}
+
+          ### Active Status
+          - **Status**: {{ audit_results.ufw.active_status.status | upper }}
+          - **Message**: {{ audit_results.ufw.active_status.message }}
+
+          ### Default Incoming Policy
+          - **Status**: {{ audit_results.ufw.default_policy.status | upper }}
+          - **Message**: {{ audit_results.ufw.default_policy.message }}
+
+          ## 4. SSH Security Check
+          ### Service Status
+          - **Status**: {{ audit_results.ssh.service_status.status | upper }}
+          - **Message**: {{ audit_results.ssh.service_status.message }}
+
+          {% if audit_results.ssh.service_status.status == 'pass' %}
+          ### Key-based Authentication
+          - **Status**: {{ audit_results.ssh.key_auth.status | upper }}
+          - **Message**: {{ audit_results.ssh.key_auth.message }}
+
+          ### Configuration Settings
+          - **PermitRootLogin**: {{ audit_results.ssh.config_PermitRootLogin.status | upper }} - {{ audit_results.ssh.config_PermitRootLogin.message }}
+          - **KbdInteractiveAuthentication**: {{ audit_results.ssh.config_KbdInteractiveAuthentication.status | upper }} - {{ audit_results.ssh.config_KbdInteractiveAuthentication.message }}
+          - **PasswordAuthentication**: {{ audit_results.ssh.config_PasswordAuthentication.status | upper }} - {{ audit_results.ssh.config_PasswordAuthentication.message }}
+          - **UsePAM**: {{ audit_results.ssh.config_UsePAM.status | upper }} - {{ audit_results.ssh.config_UsePAM.message }}
+          {% endif %}
+
+          ## 5. Non-Root User Check
+          - **Status**: {{ audit_results.non_root_user.sudo_access.status | upper }}
+          - **Message**: {{ audit_results.non_root_user.sudo_access.message }}
+
+          ## 6. Unattended Upgrades Check
+          ### Installation
+          - **Status**: {{ audit_results.unattended_upgrades.installation.status | upper }}
+          - **Message**: {{ audit_results.unattended_upgrades.installation.message }}
+
+          ### Service Status
+          - **Status**: {{ audit_results.unattended_upgrades.service_status.status | upper }}
+          - **Message**: {{ audit_results.unattended_upgrades.service_status.message }}
+
+          ### Automatic Update Settings
+          - **Automatic Package List Updates**: {{ audit_results.unattended_upgrades.auto_update.status | upper }} - {{ audit_results.unattended_upgrades.auto_update.message }}
+          - **Automatic Upgrades**: {{ audit_results.unattended_upgrades.auto_upgrade.status | upper }} - {{ audit_results.unattended_upgrades.auto_upgrade.message }}
+
+          ## 7. Fail2ban Check
+          ### Installation
+          - **Status**: {{ audit_results.fail2ban.installation.status | upper }}
+          - **Message**: {{ audit_results.fail2ban.installation.message }}
+
+          ### Service Status
+          - **Status**: {{ audit_results.fail2ban.service_enabled.status | upper }}
+          - **Message**: {{ audit_results.fail2ban.service_enabled.message }}
+
+          ### Configuration File
+          - **Status**: {{ audit_results.fail2ban.config_file.status | upper }}
+          - **Message**: {{ audit_results.fail2ban.config_file.message }}
+
+          {% if audit_results.fail2ban.config_file.status == 'pass' %}
+          ### SSH Jail Configuration
+          - **SSH Jail Enabled**: {{ audit_results.fail2ban.ssh_jail_enabled.status | upper }} - {{ audit_results.fail2ban.ssh_jail_enabled.message }}
+          - **SSH Jail Mode**: {{ audit_results.fail2ban.ssh_jail_mode.status | upper }} - {{ audit_results.fail2ban.ssh_jail_mode.message }}
+          {% endif %}
+
+          ---
+          *Report generated on {{ ansible_date_time.date }} at {{ ansible_date_time.time }}.*
+
+    - name: Generate Markdown Report After Template Creation
+      template:
+        src: security_audit_report.j2
+        dest: "{{ report_path }}"
+      vars:
+        audit_results: "{{ audit_results }}"
+
+    - name: Display Report Path
       debug:
-        msg: |
-          **Security Audit Complete**
-          Please review and execute the above commands to fix the detected issues.
+        msg: "Security audit report generated at {{ report_path }}"
