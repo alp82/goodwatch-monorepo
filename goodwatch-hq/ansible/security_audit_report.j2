@@ -64,8 +64,8 @@
 
 {% if audit_results.fail2ban.installation.status == 'PASS' %}
 ### Service Status
-- **Status**: {{ audit_results.fail2ban.service_enabled.status }}
-- **Message**: {{ audit_results.fail2ban.service_enabled.message }}
+- **Status**: {{ audit_results.fail2ban.installation.status }}
+- **Message**: {{ audit_results.fail2ban.installation.message }}
 
 ### Configuration File
 - **Status**: {{ audit_results.fail2ban.config_file.status }}
