@@ -16,8 +16,10 @@
       fail2ban: {}
 
   tasks:
+    ################################################################
     # 1. Check Operating System
-    - name: Confirm Operating System to be Ubuntu
+    ################################################################
+    - name: Detect OS (Ubuntu or Debian)
       shell: |
         if [ -f /etc/lsb-release ]; then
           echo "ubuntu"
@@ -31,38 +33,42 @@
 
     - name: Record OS Check Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'os_check': {
                 'status': 'PASS' if os_check.stdout in ['ubuntu', 'debian'] else 'FAIL',
-                'message': 'Detected supported OS: ' + os_check.stdout if os_check.stdout in ['ubuntu', 'debian'] else 'Unsupported OS detected.'
+                'message': (
+                  'Detected supported OS: ' + os_check.stdout
+                  if os_check.stdout in ['ubuntu', 'debian']
+                  else 'Unsupported OS detected.'
+                )
               }
             })
           }}
 
+    ################################################################
     # 2. Check Required Dependencies
+    ################################################################
     - name: Define list of dependencies
       set_fact:
         dependencies_list:
           - curl
           - jq
 
-    - name: Install jq and curl if not present
+    - name: Ensure dependencies are installed
       apt:
-        name: "{{ item }}"
+        name: "{{ dependencies_list }}"
         state: present
         update_cache: yes
-      loop: "{{ dependencies_list }}"
       when: ansible_facts.os_family == "Debian"
-      tags: prepare_system
 
-    - name: Check Required Dependencies
+    - name: Check if dependencies are installed
       command: "which {{ item }}"
       register: dependency_check
       loop: "{{ dependencies_list }}"
-      ignore_errors: yes
       changed_when: false
+      failed_when: false  # We handle pass/fail logic ourselves
 
     - name: Collect missing dependencies
       set_fact:
@@ -74,28 +80,34 @@
 
     - name: Record Dependencies Check Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'dependencies': {
-                'status': 'FAIL' if (missing_dependencies | default([])) | length > 0 else 'PASS',
-                'message': 'Missing dependencies: ' + ', '.join(missing_dependencies) if (missing_dependencies | default([])) | length > 0 else 'All required dependencies are installed.'
+                'status': 'FAIL' if (missing_dependencies|default([]))|length > 0 else 'PASS',
+                'message': (
+                  'Missing dependencies: ' + ', '.join(missing_dependencies)
+                  if (missing_dependencies|default([]))|length > 0
+                  else 'All required dependencies are installed.'
+                )
               }
             })
           }}
 
+    ################################################################
     # 3. UFW Security Check
-    - name: Check UFW Installation
+    ################################################################
+    - name: Check if UFW is installed
       apt:
         name: ufw
         state: present
-      check_mode: yes
+        update_cache: yes
       register: ufw_installed
       changed_when: false
 
     - name: Record UFW Installation Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ufw': {
@@ -115,13 +127,13 @@
 
     - name: Record UFW Active Status
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ufw': audit_results.ufw | combine({
                 'active_status': {
-                  'status': 'PASS' if 'Status: active' in ufw_status.stdout else 'FAIL',
-                  'message': 'UFW is active.' if 'Status: active' in ufw_status.stdout else 'UFW is not active.'
+                  'status': 'PASS' if ufw_status.stdout is search('Status: active') else 'FAIL',
+                  'message': 'UFW is active.' if ufw_status.stdout is search('Status: active') else 'UFW is not active.'
                 }
               })
             })
@@ -136,7 +148,7 @@
 
     - name: Record UFW Default Incoming Policy
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ufw': audit_results.ufw | combine({
@@ -149,13 +161,15 @@
           }}
       when: ufw_policy is defined
 
+    ################################################################
     # 4. SSH Security Check
-    - name: Check SSH Service Status
+    ################################################################
+    - name: Gather service facts (for SSH check)
       service_facts:
 
     - name: Record SSH Service Status
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ssh': {
@@ -172,16 +186,17 @@
         path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
       register: ssh_auth_keys
       when: audit_results.ssh.service_status.status == 'PASS'
+      changed_when: false
 
     - name: Record SSH Key-based Authentication Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ssh': audit_results.ssh | combine({
                 'key_auth': {
-                  'status': 'PASS' if ssh_auth_keys.stat.exists else 'FAIL',
-                  'message': 'Key-based authentication is set up.' if ssh_auth_keys.stat.exists else 'No authorized_keys found in home directory.'
+                  'status': 'PASS' if (ssh_auth_keys.stat.exists|default(false)) else 'FAIL',
+                  'message': 'Key-based authentication is set up.' if (ssh_auth_keys.stat.exists|default(false)) else 'No authorized_keys found in home directory.'
                 }
               })
             })
@@ -191,20 +206,19 @@
     - name: Check SSH PermitRootLogin
       command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
       register: ssh_permit_root_login
-      ignore_errors: yes
       changed_when: false
       failed_when: ssh_permit_root_login.rc not in [0, 1]
       when: audit_results.ssh.service_status.status == 'PASS'
 
     - name: Record SSH PermitRootLogin Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ssh': audit_results.ssh | combine({
                 'config_PermitRootLogin': {
-                  'status': 'PASS' if ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower() else 'FAIL',
-                  'message': 'PermitRootLogin is disabled.' if ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower() else 'PermitRootLogin is enabled or not properly configured.'
+                  'status': 'PASS' if (ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower()) else 'FAIL',
+                  'message': 'PermitRootLogin is disabled.' if (ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower()) else 'PermitRootLogin is enabled or not properly configured.'
                 }
               })
             })
@@ -213,20 +227,19 @@
     - name: Check SSH KbdInteractiveAuthentication
       command: grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config
       register: ssh_kbd_interactive_auth
-      ignore_errors: yes
       changed_when: false
       failed_when: ssh_kbd_interactive_auth.rc not in [0, 1]
       when: audit_results.ssh.service_status.status == 'PASS'
 
     - name: Record SSH KbdInteractiveAuthentication Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ssh': audit_results.ssh | combine({
                 'config_KbdInteractiveAuthentication': {
-                  'status': 'PASS' if ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'FAIL',
-                  'message': 'KbdInteractiveAuthentication is disabled.' if ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'KbdInteractiveAuthentication is enabled or not properly configured.'
+                  'status': 'PASS' if (ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower()) else 'FAIL',
+                  'message': 'KbdInteractiveAuthentication is disabled.' if (ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower()) else 'KbdInteractiveAuthentication is enabled or not properly configured.'
                 }
               })
             })
@@ -235,20 +248,19 @@
     - name: Check SSH PasswordAuthentication
       command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
       register: ssh_password_auth
-      ignore_errors: yes
       changed_when: false
       failed_when: ssh_password_auth.rc not in [0, 1]
       when: audit_results.ssh.service_status.status == 'PASS'
 
     - name: Record SSH PasswordAuthentication Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'ssh': audit_results.ssh | combine({
                 'config_PasswordAuthentication': {
-                  'status': 'PASS' if ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower() else 'FAIL',
-                  'message': 'PasswordAuthentication is disabled.' if ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower() else 'PasswordAuthentication is enabled or not properly configured.'
+                  'status': 'PASS' if (ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower()) else 'FAIL',
+                  'message': 'PasswordAuthentication is disabled.' if (ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower()) else 'PasswordAuthentication is enabled or not properly configured.'
                 }
               })
             })
@@ -257,79 +269,88 @@
     - name: Check SSH UsePAM
       command: grep -E "^UsePAM" /etc/ssh/sshd_config
       register: ssh_use_pam
-      ignore_errors: yes
       changed_when: false
       failed_when: ssh_use_pam.rc not in [0, 1]
       when: audit_results.ssh.service_status.status == 'PASS'
 
     - name: Record SSH UsePAM Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
-          audit_results | combine({
-          'ssh': audit_results.ssh | combine({
-          'config_UsePAM': {
-          'status': 'PASS' if ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower() else 'FAIL',
-          'message': 'UsePAM is enabled.' if ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower() else 'UsePAM is disabled or not properly configured.'
-          }
-          })
-          })
+            audit_results | combine({
+              'ssh': audit_results.ssh | combine({
+                'config_UsePAM': {
+                  'status': 'PASS' if (ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower()) else 'FAIL',
+                  'message': 'UsePAM is enabled.' if (ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower()) else 'UsePAM is disabled or not properly configured.'
+                }
+              })
+            })
           }}
 
+    ################################################################
     # 5. Non-Root User Check
-    - name: Check Non-Root Sudo Users
+    ################################################################
+    - name: Find users in sudo group
       shell: |
-        grep -Po '^sudo:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
+        grep -Po '^sudo:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$' || true
       register: sudo_users
       changed_when: false
-      failed_when: sudo_users.rc not in [0, 1]
 
-    - name: Check Admin Group Users
+    - name: Find users in admin group
       shell: |
-        grep -Po '^admin:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
+        grep -Po '^admin:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$' || true
       register: admin_users
       changed_when: false
-      failed_when: sudo_users.rc not in [0, 1]
 
-    - name: Combine Sudo and Admin Users
+    - name: Combine privileged users
       set_fact:
         privileged_users: "{{ (sudo_users.stdout_lines + admin_users.stdout_lines) | unique | reject('equalto', '') | list }}"
 
-    - name: Check Valid Shells for Sudo Users
-      command: |
-        getent passwd {{ item }} | cut -d: -f7
+    - name: Check valid shells for privileged users
+      command: getent passwd {{ item }} | cut -d: -f7
       register: user_shells
       loop: "{{ privileged_users }}"
-      when: privileged_users | length > 0
       changed_when: false
+      when: privileged_users | length > 0
 
     - name: Record Non-Root Sudo Users Result
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'non_root_user': {
                 'sudo_access': {
-                  'status': 'PASS' if (user_shells.results | selectattr('stdout', 'match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'FAIL',
-                  'message': 'Found valid non-root sudo users.' if (user_shells.results | selectattr('stdout', 'match', '^(?!/usr/sbin/nologin$)(?!/bin/false$).+') | list | length) > 0 else 'No non-root users with sudo privileges have valid shells.'
+                  'status': 'PASS'
+                    if (user_shells.results
+                        | selectattr('stdout','match','^(?!/usr/sbin/nologin$)(?!/bin/false$).+')
+                        | list
+                        | length) > 0
+                    else 'FAIL',
+                  'message': 'Found valid non-root sudo users.'
+                    if (user_shells.results
+                        | selectattr('stdout','match','^(?!/usr/sbin/nologin$)(?!/bin/false$).+')
+                        | list
+                        | length) > 0
+                    else 'No non-root users with sudo privileges have valid shells.'
                 }
               }
             })
           }}
-      when: user_shells is defined
 
+    ################################################################
     # 6. Unattended Upgrades Check
-    - name: Check Unattended Upgrades Installation
+    ################################################################
+    - name: Check if unattended-upgrades is installed
       apt:
         name: unattended-upgrades
         state: present
-      check_mode: yes
+        update_cache: yes
       register: unattended_upgrades_installed
       changed_when: false
 
-    - name: Record Unattended Upgrades Installation Result
+    - name: Record Unattended Upgrades Installation
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'unattended_upgrades': {
@@ -341,17 +362,16 @@
             })
           }}
 
-    - name: Check Unattended Upgrades Service Status
+    - name: Check unattended-upgrades service status
       command: systemctl is-active unattended-upgrades
       register: unattended_upgrades_service
-      ignore_errors: yes
       changed_when: false
-      failed_when: auto_upgrade.rc not in [0, 3]
+      failed_when: unattended_upgrades_service.rc not in [0,3]
       when: audit_results.unattended_upgrades.installation.status == 'PASS'
 
-    - name: Record Unattended Upgrades Service Status Result
+    - name: Record unattended-upgrades service status
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'unattended_upgrades': audit_results.unattended_upgrades | combine({
@@ -364,64 +384,62 @@
           }}
       when: unattended_upgrades_service is defined
 
-    # 6.1. Check Automatic Package List Updates
     - name: Check APT::Periodic::Update-Package-Lists
       command: grep -E '^APT::Periodic::Update-Package-Lists' /etc/apt/apt.conf.d/20auto-upgrades
       register: auto_update
-      ignore_errors: yes
       changed_when: false
-      failed_when: auto_update.rc not in [0, 1]
+      failed_when: auto_update.rc not in [0,1]
 
-    - name: Record Automatic Package List Updates Result
+    - name: Record Automatic Package List Updates
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'unattended_upgrades': audit_results.unattended_upgrades | combine({
                 'auto_update': {
-                  'status': 'PASS' if auto_update.rc == 0 and '"1"' in auto_update.stdout else 'FAIL',
-                  'message': 'Automatic package list updates are enabled.' if auto_update.rc == 0 and '"1"' in auto_update.stdout else 'Automatic package list updates are not enabled.'
+                  'status': 'PASS' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'FAIL',
+                  'message': 'Automatic package list updates are enabled.' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'Automatic package list updates are not enabled.'
                 }
               })
             })
           }}
       when: auto_update is defined
 
-    # 6.2. Check Automatic Upgrades
     - name: Check APT::Periodic::Unattended-Upgrade
       command: grep -E '^APT::Periodic::Unattended-Upgrade' /etc/apt/apt.conf.d/20auto-upgrades
       register: auto_upgrade
-      ignore_errors: yes
       changed_when: false
-      failed_when: auto_upgrade.rc not in [0, 1]
+      failed_when: auto_upgrade.rc not in [0,1]
 
-    - name: Record Automatic Upgrades Result
+    - name: Record Automatic Upgrades
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'unattended_upgrades': audit_results.unattended_upgrades | combine({
                 'auto_upgrade': {
-                  'status': 'PASS' if auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout else 'FAIL',
-                  'message': 'Automatic upgrades are enabled.' if auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout else 'Automatic upgrades are not enabled.'
+                  'status': 'PASS' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'FAIL',
+                  'message': 'Automatic upgrades are enabled.' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'Automatic upgrades are not enabled.'
                 }
               })
             })
           }}
       when: auto_upgrade is defined
 
+    ################################################################
     # 7. Fail2ban Check
-    - name: Check Fail2ban Installation
+    ################################################################
+    - name: Ensure fail2ban is installed
       apt:
         name: fail2ban
         state: present
-      check_mode: yes
+        update_cache: yes
       register: fail2ban_installed
       changed_when: false
 
-    - name: Record Fail2ban Installation Result
+    - name: Record Fail2ban Installation
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'fail2ban': {
@@ -436,14 +454,13 @@
     - name: Check Fail2ban Service Status
       command: systemctl is-active fail2ban
       register: fail2ban_service
-      ignore_errors: yes
       changed_when: false
-      failed_when: auto_upgrade.rc not in [0, 3]
+      failed_when: fail2ban_service.rc not in [0,3]
       when: audit_results.fail2ban.installation.status == 'PASS'
 
-    - name: Record Fail2ban Service Status Result
+    - name: Record Fail2ban Service Status
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'fail2ban': audit_results.fail2ban | combine({
@@ -456,40 +473,28 @@
           }}
       when: fail2ban_service is defined
 
-    - name: Check Fail2ban Configuration File Exists
+    - name: Check Fail2ban Configuration File
       stat:
         path: /etc/fail2ban/jail.local
       register: fail2ban_jail_local
       changed_when: false
       when: audit_results.fail2ban.installation.status == 'PASS'
 
-    - name: Record Fail2ban Configuration File Existence Result
+    - name: Record Fail2ban Configuration
       set_fact:
-        audit_results: >
+        audit_results: >-
           {{
             audit_results | combine({
               'fail2ban': audit_results.fail2ban | combine({
                 'config_file': {
-                  'status': 'PASS' if fail2ban_jail_local.stat.exists else 'FAIL',
-                  'message': 'Fail2ban configuration file exists at /etc/fail2ban/jail.local.' if fail2ban_jail_local.stat.exists else 'Fail2ban configuration file does not exist at /etc/fail2ban/jail.local.'
+                  'status': 'PASS' if fail2ban_jail_local.stat.exists|default(false) else 'FAIL',
+                  'message': 'Fail2ban config file exists at /etc/fail2ban/jail.local.' if fail2ban_jail_local.stat.exists|default(false) else 'Fail2ban config file is missing at /etc/fail2ban/jail.local.'
                 }
               })
             })
           }}
       when: fail2ban_jail_local is defined
 
-#    - name: Generate Markdown Report
-#      template:
-#        src: security_audit_report.j2
-#        dest: "{{ report_path }}"
-#      vars:
-#        audit_results: "{{ audit_results }}"
-#
-#    - name: Display Report Path
-#      debug:
-#        msg: "Security audit report generated at {{ report_path }}"
-
-# Generate Report
 - name: Generate Reports
   hosts: localhost
   gather_facts: no
