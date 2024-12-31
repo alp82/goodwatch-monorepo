@@ -189,7 +189,7 @@
       when: ssh_auth_keys is defined
 
     - name: Check SSH PermitRootLogin
-      command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
+      command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config || true
       register: ssh_permit_root_login
       ignore_errors: yes
       changed_when: false
@@ -202,15 +202,15 @@
             audit_results | combine({
               'ssh': audit_results.ssh | combine({
                 'config_PermitRootLogin': {
-                  'status': 'PASS' if ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower() else 'FAIL',
-                  'message': 'PermitRootLogin is disabled.' if ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower() else 'PermitRootLogin is enabled or not properly configured.'
+                  'status': 'PASS' if 'no' in ssh_permit_root_login.stdout.lower() else 'FAIL',
+                  'message': 'PermitRootLogin is disabled.' if 'no' in ssh_permit_root_login.stdout.lower() else 'PermitRootLogin is enabled or not properly configured.'
                 }
               })
             })
           }}
 
     - name: Check SSH KbdInteractiveAuthentication
-      command: grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config
+      command: grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config || true
       register: ssh_kbd_interactive_auth
       ignore_errors: yes
       changed_when: false
@@ -223,16 +223,16 @@
             audit_results | combine({
               'ssh': audit_results.ssh | combine({
                 'config_KbdInteractiveAuthentication': {
-                  'status': 'PASS' if ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'FAIL',
-                  'message': 'KbdInteractiveAuthentication is disabled.' if ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'KbdInteractiveAuthentication is enabled or not properly configured.'
+                  'status': 'PASS' if 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'FAIL',
+                  'message': 'KbdInteractiveAuthentication is disabled.' if 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'KbdInteractiveAuthentication is enabled or not properly configured.'
                 }
               })
             })
           }}
 
     - name: Check SSH PasswordAuthentication
-      command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
-      register: ssh_password_auth
+      command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config || true
+      register: ssh_password_auth || true
       ignore_errors: yes
       changed_when: false
       when: audit_results.ssh.service_status.status == 'PASS'
@@ -244,15 +244,15 @@
             audit_results | combine({
               'ssh': audit_results.ssh | combine({
                 'config_PasswordAuthentication': {
-                  'status': 'PASS' if ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower() else 'FAIL',
-                  'message': 'PasswordAuthentication is disabled.' if ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower() else 'PasswordAuthentication is enabled or not properly configured.'
+                  'status': 'PASS' if ssh_password_auth.stdout.lower() else 'FAIL',
+                  'message': 'PasswordAuthentication is disabled.' if 'no' in ssh_password_auth.stdout.lower() else 'PasswordAuthentication is enabled or not properly configured.'
                 }
               })
             })
           }}
 
     - name: Check SSH UsePAM
-      command: grep -E "^UsePAM" /etc/ssh/sshd_config
+      command: grep -E "^UsePAM" /etc/ssh/sshd_config || true
       register: ssh_use_pam
       ignore_errors: yes
       changed_when: false
@@ -264,8 +264,8 @@
           audit_results | combine({
           'ssh': audit_results.ssh | combine({
           'config_UsePAM': {
-          'status': 'PASS' if ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower() else 'FAIL',
-          'message': 'UsePAM is enabled.' if ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower() else 'UsePAM is disabled or not properly configured.'
+          'status': 'PASS' if 'yes' in ssh_use_pam.stdout.lower() else 'FAIL',
+          'message': 'UsePAM is enabled.' if 'yes' in ssh_use_pam.stdout.lower() else 'UsePAM is disabled or not properly configured.'
           }
           })
           })
@@ -337,7 +337,7 @@
           }}
 
     - name: Check Unattended Upgrades Service Status
-      command: systemctl is-active unattended-upgrades
+      command: systemctl is-active unattended-upgrades || true
       register: unattended_upgrades_service
       ignore_errors: yes
       changed_when: false
@@ -360,7 +360,7 @@
 
     # 6.1. Check Automatic Package List Updates
     - name: Check APT::Periodic::Update-Package-Lists
-      command: grep -E '^APT::Periodic::Update-Package-Lists' /etc/apt/apt.conf.d/20auto-upgrades
+      command: grep -E '^APT::Periodic::Update-Package-Lists' /etc/apt/apt.conf.d/20auto-upgrades || true
       register: auto_update
       ignore_errors: yes
       changed_when: false
@@ -372,8 +372,8 @@
             audit_results | combine({
               'unattended_upgrades': audit_results.unattended_upgrades | combine({
                 'auto_update': {
-                  'status': 'PASS' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'FAIL',
-                  'message': 'Automatic package list updates are enabled.' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'Automatic package list updates are not enabled.'
+                  'status': 'PASS' if '"1"' in auto_update.stdout else 'FAIL',
+                  'message': 'Automatic package list updates are enabled.' if '"1"' in auto_update.stdout else 'Automatic package list updates are not enabled.'
                 }
               })
             })
@@ -382,7 +382,7 @@
 
     # 6.2. Check Automatic Upgrades
     - name: Check APT::Periodic::Unattended-Upgrade
-      command: grep -E '^APT::Periodic::Unattended-Upgrade' /etc/apt/apt.conf.d/20auto-upgrades
+      command: grep -E '^APT::Periodic::Unattended-Upgrade' /etc/apt/apt.conf.d/20auto-upgrades || true
       register: auto_upgrade
       ignore_errors: yes
       changed_when: false
@@ -394,8 +394,8 @@
             audit_results | combine({
               'unattended_upgrades': audit_results.unattended_upgrades | combine({
                 'auto_upgrade': {
-                  'status': 'PASS' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'FAIL',
-                  'message': 'Automatic upgrades are enabled.' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'Automatic upgrades are not enabled.'
+                  'status': 'PASS' if '"1"' in auto_upgrade.stdout else 'FAIL',
+                  'message': 'Automatic upgrades are enabled.' if '"1"' in auto_upgrade.stdout else 'Automatic upgrades are not enabled.'
                 }
               })
             })
@@ -426,7 +426,7 @@
           }}
 
     - name: Check Fail2ban Service Status
-      command: systemctl is-active fail2ban
+      command: systemctl is-active fail2ban || true
       register: fail2ban_service
       ignore_errors: yes
       changed_when: false
