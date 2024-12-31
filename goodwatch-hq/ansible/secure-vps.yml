@@ -194,12 +194,14 @@
         grep -Po '^sudo:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
       register: sudo_users
       changed_when: false
+      failed_when: sudo_users.rc not in [0, 1]
 
     - name: Check Admin Group Users
       shell: |
         grep -Po '^admin:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$'
       register: admin_users
       changed_when: false
+      failed_when: sudo_users.rc not in [0, 1]
 
     - name: Combine Sudo and Admin Users
       set_fact:
