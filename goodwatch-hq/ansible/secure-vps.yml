@@ -333,6 +333,50 @@
             })
           }}
 
+    # 6.1. Check Automatic Package List Updates
+    - name: Check APT::Periodic::Update-Package-Lists
+      command: grep -E '^APT::Periodic::Update-Package-Lists' /etc/apt/apt.conf.d/20auto-upgrades
+      register: auto_update
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Record Automatic Package List Updates Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'unattended_upgrades': audit_results.unattended_upgrades | combine({
+                'auto_update': {
+                  'status': 'PASS' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'FAIL',
+                  'message': 'Automatic package list updates are enabled.' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'Automatic package list updates are not enabled.'
+                }
+              })
+            })
+          }}
+      when: auto_update is defined
+
+    # 6.2. Check Automatic Upgrades
+    - name: Check APT::Periodic::Unattended-Upgrade
+      command: grep -E '^APT::Periodic::Unattended-Upgrade' /etc/apt/apt.conf.d/20auto-upgrades
+      register: auto_upgrade
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Record Automatic Upgrades Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'unattended_upgrades': audit_results.unattended_upgrades | combine({
+                'auto_upgrade': {
+                  'status': 'PASS' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'FAIL',
+                  'message': 'Automatic upgrades are enabled.' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'Automatic upgrades are not enabled.'
+                }
+              })
+            })
+          }}
+      when: auto_upgrade is defined
+
     # 7. Fail2ban Check
     - name: Check Fail2ban Installation
       apt:
