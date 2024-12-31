@@ -1,4 +1,3 @@
----
 - name: Security Audit
   hosts: all
   become: yes
@@ -13,116 +12,96 @@
       upgrades: false
       fail2ban: false
 
-    # ANSI color codes
-    GREEN: '\033[0;32m'
-    RED: '\033[0;31m'
-    NC: '\033[0m'  # No Color
-
   tasks:
-    - name: Run All Security Checks
-      block:
-        # OS Check
-        - name: Check OS Type
-          set_fact:
-            checks: "{{ checks | combine({'os_check': true}) }}"
-          when: ansible_distribution in ['Ubuntu', 'Debian']
+    - name: Run OS Check
+      set_fact:
+        checks: "{{ checks | combine({'os_check': true}) }}"
+      when: ansible_distribution in ['Ubuntu', 'Debian']
 
-        # Dependencies Check
-        - name: Check Required Dependencies
-          command: which {{ item }}
-          register: dep_check
-          loop: [curl, jq]
-          changed_when: false
-          failed_when: false
+    - name: Check Dependencies
+      command: which {{ item }}
+      register: dep_check
+      loop: [curl, jq]
+      changed_when: false
+      failed_when: false
 
-        - name: Set Dependencies Status
-          set_fact:
-            checks: "{{ checks | combine({'dependencies': true}) }}"
-          when: "dep_check.results | map(attribute='rc') | list | unique == [0]"
+    - name: Set Dependencies Status
+      set_fact:
+        checks: "{{ checks | combine({'dependencies': true}) }}"
+      when: "dep_check.results | map(attribute='rc') | list | unique == [0]"
 
-        # UFW Check
-        - name: Check UFW Status
-          shell: |
-            ufw status verbose | grep -E "Status: active|Default: deny \(incoming\)"
-          register: ufw_check
-          changed_when: false
-          failed_when: false
+    - name: Check UFW
+      shell: |
+        ufw status verbose | grep -E "Status: active|Default: deny \(incoming\)"
+      register: ufw_check
+      changed_when: false
+      failed_when: false
 
-        - name: Set UFW Status
-          set_fact:
-            checks: "{{ checks | combine({'ufw': true}) }}"
-          when:
-            - "'Status: active' in (ufw_check.stdout | default(''))"
-            - "'Default: deny (incoming)' in (ufw_check.stdout | default(''))"
+    - name: Set UFW Status
+      set_fact:
+        checks: "{{ checks | combine({'ufw': true}) }}"
+      when:
+        - "'Status: active' in (ufw_check.stdout | default(''))"
+        - "'Default: deny (incoming)' in (ufw_check.stdout | default(''))"
 
-        # SSH Check
-        - name: Check SSH Config
-          shell: |
-            grep -E "^PasswordAuthentication no|^PermitRootLogin no|^KbdInteractiveAuthentication no|^UsePAM yes" /etc/ssh/sshd_config | wc -l
-          register: ssh_check
-          changed_when: false
-          failed_when: false
+    - name: Check SSH
+      shell: grep -E "^PasswordAuthentication no|^PermitRootLogin no|^KbdInteractiveAuthentication no|^UsePAM yes" /etc/ssh/sshd_config | wc -l
+      register: ssh_check
+      changed_when: false
+      failed_when: false
 
-        - name: Set SSH Status
-          set_fact:
-            checks: "{{ checks | combine({'ssh': true}) }}"
-          when: "ssh_check.stdout | int >= 4"
+    - name: Set SSH Status
+      set_fact:
+        checks: "{{ checks | combine({'ssh': true}) }}"
+      when: "ssh_check.stdout | int >= 4"
 
-        # Non-Root User Check
-        - name: Check Non-Root Sudo Users
-          shell: |
-            getent group sudo | cut -d: -f4 | grep -v '^root$' | grep -v '^$'
-          register: sudo_check
-          changed_when: false
-          failed_when: false
+    - name: Check Non-Root Users
+      shell: |
+        getent group sudo | cut -d: -f4 | grep -v '^root$' | grep -v '^$'
+      register: sudo_check
+      changed_when: false
+      failed_when: false
 
-        - name: Set Non-Root Status
-          set_fact:
-            checks: "{{ checks | combine({'non_root': true}) }}"
-          when: sudo_check.stdout != ""
+    - name: Set Non-Root Status
+      set_fact:
+        checks: "{{ checks | combine({'non_root': true}) }}"
+      when: sudo_check.stdout != ""
 
-        # Unattended Upgrades Check
-        - name: Check Unattended Upgrades
-          shell: |
-            systemctl is-active unattended-upgrades && 
-            grep -E "^APT::Periodic::(Update-Package-Lists|Unattended-Upgrade) \"1\";" /etc/apt/apt.conf.d/20auto-upgrades | wc -l
-          register: upgrades_check
-          changed_when: false
-          failed_when: false
+    - name: Check Upgrades
+      shell: systemctl is-active unattended-upgrades && grep -E "^APT::Periodic::(Update-Package-Lists|Unattended-Upgrade) \"1\";" /etc/apt/apt.conf.d/20auto-upgrades | wc -l
+      register: upgrades_check
+      changed_when: false
+      failed_when: false
 
-        - name: Set Upgrades Status
-          set_fact:
-            checks: "{{ checks | combine({'upgrades': true}) }}"
-          when:
-            - "'active' in (upgrades_check.stdout_lines[0] | default(''))"
-            - "upgrades_check.stdout_lines[-1] | int >= 2"
+    - name: Set Upgrades Status
+      set_fact:
+        checks: "{{ checks | combine({'upgrades': true}) }}"
+      when:
+        - "'active' in (upgrades_check.stdout_lines[0] | default(''))"
+        - "upgrades_check.stdout_lines[-1] | int >= 2"
 
-        # Fail2ban Check
-        - name: Check Fail2ban
-          shell: |
-            systemctl is-active fail2ban && test -f /etc/fail2ban/jail.local
-          register: fail2ban_check
-          changed_when: false
-          failed_when: false
+    - name: Check Fail2ban
+      shell: systemctl is-active fail2ban && test -f /etc/fail2ban/jail.local
+      register: fail2ban_check
+      changed_when: false
+      failed_when: false
 
-        - name: Set Fail2ban Status
-          set_fact:
-            checks: "{{ checks | combine({'fail2ban': true}) }}"
-          when: fail2ban_check.rc == 0
+    - name: Set Fail2ban Status
+      set_fact:
+        checks: "{{ checks | combine({'fail2ban': true}) }}"
+      when: fail2ban_check.rc == 0
 
-      always:
-        - name: Display Security Audit Results
-          ansible.builtin.debug:
-            msg: "{{ item }}"
-          loop:
-            - "\nSecurity Audit Results for {{ inventory_hostname }}"
-            - "========================================="
-            - "OS Check:              {{ GREEN }}PASS{{ NC if checks.os_check else RED + 'FAIL' + NC }}"
-            - "Dependencies:          {{ GREEN }}PASS{{ NC if checks.dependencies else RED + 'FAIL' + NC }}"
-            - "UFW Config:           {{ GREEN }}PASS{{ NC if checks.ufw else RED + 'FAIL' + NC }}"
-            - "SSH Security:         {{ GREEN }}PASS{{ NC if checks.ssh else RED + 'FAIL' + NC }}"
-            - "Non-Root User:        {{ GREEN }}PASS{{ NC if checks.non_root else RED + 'FAIL' + NC }}"
-            - "Unattended Upgrades:  {{ GREEN }}PASS{{ NC if checks.upgrades else RED + 'FAIL' + NC }}"
-            - "Fail2ban:             {{ GREEN }}PASS{{ NC if checks.fail2ban else RED + 'FAIL' + NC }}"
-            - "========================================="
-            - "Overall Status:        {{ GREEN }}PASS{{ NC if (checks.values() | list | unique == [true]) else RED + 'FAIL' + NC }}"
+    - name: Display Results
+      shell: |
+        echo -e "\nSecurity Audit Results for {{ inventory_hostname }}"
+        echo -e "========================================="
+        echo -e "OS Check:              $({{ 'echo -e "\\033[32mPASS\\033[0m"' if checks.os_check else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+        echo -e "Dependencies:          $({{ 'echo -e "\\033[32mPASS\\033[0m"' if checks.dependencies else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+        echo -e "UFW Config:           $({{ 'echo -e "\\033[32mPASS\\033[0m"' if checks.ufw else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+        echo -e "SSH Security:         $({{ 'echo -e "\\033[32mPASS\\033[0m"' if checks.ssh else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+        echo -e "Non-Root User:        $({{ 'echo -e "\\033[32mPASS\\033[0m"' if checks.non_root else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+        echo -e "Unattended Upgrades:  $({{ 'echo -e "\\033[32mPASS\\033[0m"' if checks.upgrades else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+        echo -e "Fail2ban:             $({{ 'echo -e "\\033[32mPASS\\033[0m"' if checks.fail2ban else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+        echo -e "========================================="
+        echo -e "Overall Status:        $({{ 'echo -e "\\033[32mPASS\\033[0m"' if (checks.values() | list | unique == [true]) else 'echo -e "\\033[31mFAIL\\033[0m"' }})"
+      changed_when: false
