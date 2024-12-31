@@ -466,14 +466,28 @@
           }}
       when: fail2ban_jail_local is defined
 
-      # Generate Report
-    - name: Generate Markdown Report
+#    - name: Generate Markdown Report
+#      template:
+#        src: security_audit_report.j2
+#        dest: "{{ report_path }}"
+#      vars:
+#        audit_results: "{{ audit_results }}"
+#
+#    - name: Display Report Path
+#      debug:
+#        msg: "Security audit report generated at {{ report_path }}"
+
+# Generate Report
+- name: Generate Reports
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Generate Markdown Report for Each Host
       template:
         src: security_audit_report.j2
-        dest: "{{ report_path }}"
+        dest: "./reports/security_audit_report_{{ item }}.md"
       vars:
-        audit_results: "{{ audit_results }}"
-
-    - name: Display Report Path
-      debug:
-        msg: "Security audit report generated at {{ report_path }}"
+        audit_results: "{{ hostvars[item].audit_results }}"
+      loop: "{{ groups['all'] }}"
+      run_once: true
+      delegate_to: localhost
