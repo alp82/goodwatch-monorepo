@@ -4,18 +4,6 @@
   become: yes
   gather_facts: yes
 
-  pre_tasks:
-    - name: Install jq and curl if not present
-      apt:
-        name: "{{ item }}"
-        state: present
-        update_cache: yes
-      loop:
-        - jq
-        - curl
-      when: ansible_facts.os_family == "Debian"
-      tags: prepare_system
-
   vars:
     report_path: "./security_audit_report_{{ inventory_hostname }}.md"
     audit_results:
@@ -29,7 +17,7 @@
 
   tasks:
     # 1. Check Operating System
-    - name: Check Operating System
+    - name: Confirm Operating System to be Ubuntu
       shell: |
         if [ -f /etc/lsb-release ]; then
           echo "ubuntu"
@@ -59,8 +47,15 @@
         dependencies_list:
           - curl
           - jq
-          - systemctl
-          - apt-get
+
+    - name: Install jq and curl if not present
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop: "{{ dependencies_list }}"
+      when: ansible_facts.os_family == "Debian"
+      tags: prepare_system
 
     - name: Check Required Dependencies
       command: "which {{ item }}"
@@ -74,6 +69,8 @@
         missing_dependencies: "{{ missing_dependencies | default([]) + [item.item] }}"
       when: item.rc != 0
       loop: "{{ dependency_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
 
     - name: Record Dependencies Check Result
       set_fact:
@@ -172,7 +169,7 @@
 
     - name: Check SSH Key-based Authentication
       stat:
-        path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+        path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
       register: ssh_auth_keys
       when: audit_results.ssh.service_status.status == 'PASS'
 
