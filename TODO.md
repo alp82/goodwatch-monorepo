@@ -138,6 +138,13 @@ scraper proxy
 
 ---
 
+mobile navigation
+    search icon
+    https://x.com/GavelCoding/status/1873665453907947904?t=AxOFmmxNmydAgK1m6t50_Q&s=03
+    https://codesandbox.io/p/sandbox/immutable-waterfall-jkn774?file=%2Fsrc%2FNavBar.tsx%3A13%2C1&workspaceId=ws_EQdCWeEK7JFjpJCiMqbbSK
+
+---
+
 text effects
      https://motion-primitives.com/docs
 
