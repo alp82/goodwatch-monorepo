@@ -188,6 +188,86 @@
           }}
       when: ssh_auth_keys is defined
 
+    - name: Check SSH PermitRootLogin
+      command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
+      register: ssh_permit_root_login
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Record SSH PermitRootLogin Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'ssh': audit_results.ssh | combine({
+                'config_PermitRootLogin': {
+                  'status': 'PASS' if ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower() else 'FAIL',
+                  'message': 'PermitRootLogin is disabled.' if ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower() else 'PermitRootLogin is enabled or not properly configured.'
+                }
+              })
+            })
+          }}
+
+    - name: Check SSH KbdInteractiveAuthentication
+      command: grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config
+      register: ssh_kbd_interactive_auth
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Record SSH KbdInteractiveAuthentication Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'ssh': audit_results.ssh | combine({
+                'config_KbdInteractiveAuthentication': {
+                  'status': 'PASS' if ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'FAIL',
+                  'message': 'KbdInteractiveAuthentication is disabled.' if ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower() else 'KbdInteractiveAuthentication is enabled or not properly configured.'
+                }
+              })
+            })
+          }}
+
+    - name: Check SSH PasswordAuthentication
+      command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
+      register: ssh_password_auth
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Record SSH PasswordAuthentication Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'ssh': audit_results.ssh | combine({
+                'config_PasswordAuthentication': {
+                  'status': 'PASS' if ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower() else 'FAIL',
+                  'message': 'PasswordAuthentication is disabled.' if ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower() else 'PasswordAuthentication is enabled or not properly configured.'
+                }
+              })
+            })
+          }}
+
+    - name: Check SSH UsePAM
+      command: grep -E "^UsePAM" /etc/ssh/sshd_config
+      register: ssh_use_pam
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Record SSH UsePAM Result
+      set_fact:
+        audit_results: >
+          {{
+          audit_results | combine({
+          'ssh': audit_results.ssh | combine({
+          'config_UsePAM': {
+          'status': 'PASS' if ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower() else 'FAIL',
+          'message': 'UsePAM is enabled.' if ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower() else 'UsePAM is disabled or not properly configured.'
+          }
+          })
+          })
+          }}
+
     # 5. Non-Root User Check
     - name: Check Non-Root Sudo Users
       shell: |
