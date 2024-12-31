@@ -1,779 +1,122 @@
 ---
-##############################################################################
-# 1. OS Checks
-##############################################################################
-- name: OS Checks
+- name: Security Audit
   hosts: all
   become: yes
   gather_facts: yes
   vars:
-    report_path: "./security_audit_report_{{ inventory_hostname }}.md"
-    audit_results:
-      os_check: {}
-      dependencies: {}
-      ufw: {}
-      ssh: {}
-      non_root_user: {}
-      unattended_upgrades: {}
-      fail2ban: {}
+    checks:
+      os_check: false
+      dependencies: false
+      ufw: false
+      ssh: false
+      non_root: false
+      upgrades: false
+      fail2ban: false
+
   tasks:
-    - name: Detect OS (Ubuntu or Debian)
-      shell: |
-        if [ -f /etc/lsb-release ]; then
-          echo "ubuntu"
-        elif [ -f /etc/debian_version ]; then
-          echo "debian"
-        else
-          echo "unsupported"
-        fi
-      register: os_check
-      changed_when: false
-
-    - name: Record OS Check Result
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'os_check': {
-                'status': 'PASS' if os_check.stdout in ['ubuntu', 'debian'] else 'FAIL',
-                'message': (
-                  'Detected supported OS: ' + os_check.stdout
-                  if os_check.stdout in ['ubuntu', 'debian']
-                  else 'Unsupported OS detected.'
-                )
-              }
-            })
-          }}
-
-    - name: Display OS Check Status
-      debug:
-        msg: >
-          {% if audit_results.os_check.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.os_check is defined
-
-##############################################################################
-# 2. Dependencies
-##############################################################################
-- name: Dependencies
-  hosts: all
-  become: yes
-  gather_facts: no
-  vars:
-    audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
-  tasks:
-    - name: Define list of dependencies
-      set_fact:
-        dependencies_list:
-          - curl
-          - jq
-
-    - name: Ensure dependencies are installed
-      apt:
-        name: "{{ dependencies_list }}"
-        state: present
-        update_cache: yes
-      when: ansible_facts.os_family == "Debian"
-
-    - name: Check if dependencies are installed
-      command: "which {{ item }}"
-      register: dependency_check
-      loop: "{{ dependencies_list }}"
-      changed_when: false
-      failed_when: false
-
-    - name: Collect missing dependencies
-      set_fact:
-        missing_dependencies: "{{ missing_dependencies | default([]) + [item.item] }}"
-      when: item.rc != 0
-      loop: "{{ dependency_check.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-
-    - name: Record Dependencies Check Result
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'dependencies': {
-                'status': 'FAIL' if (missing_dependencies|default([]))|length > 0 else 'PASS',
-                'message': (
-                  'Missing dependencies: ' + ', '.join(missing_dependencies)
-                  if (missing_dependencies|default([]))|length > 0
-                  else 'All required dependencies are installed.'
-                )
-              }
-            })
-          }}
-
-    - name: Display Dependencies Check Status
-      debug:
-        msg: >
-          {% if audit_results.dependencies.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.dependencies is defined
-
-##############################################################################
-# 3. UFW Checks
-##############################################################################
-- name: UFW Checks
-  hosts: all
-  become: yes
-  gather_facts: no
-  vars:
-    audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
-  tasks:
-    - name: Check if UFW is installed
-      apt:
-        name: ufw
-        state: present
-        update_cache: yes
-      register: ufw_installed
-      changed_when: false
-
-    - name: Record UFW Installation Result
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ufw': {
-                'installation': {
-                  'status': 'PASS' if ufw_installed is success else 'FAIL',
-                  'message': 'UFW is installed.' if ufw_installed is success else 'UFW is not installed.'
-                }
-              }
-            })
-          }}
-
-    - name: Display UFW Installation Status
-      debug:
-        msg: >
-          {% if audit_results.ufw.installation.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ufw.installation is defined
-
-    - name: Check UFW Status
-      command: ufw status
-      register: ufw_status
-      when: audit_results.ufw.installation.status == 'PASS'
-      changed_when: false
-
-    - name: Record UFW Active Status
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ufw': audit_results.ufw | combine({
-                'active_status': {
-                  'status': 'PASS' if ufw_status.stdout is search('Status: active') else 'FAIL',
-                  'message': 'UFW is active.' if ufw_status.stdout is search('Status: active') else 'UFW is not active.'
-                }
-              })
-            })
-          }}
-      when: ufw_status is defined
-
-    - name: Display UFW Active Status
-      debug:
-        msg: >
-          {% if audit_results.ufw.active_status.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ufw.active_status is defined
-
-    - name: Check UFW Default Incoming Policy
-      command: ufw status verbose
-      register: ufw_policy
-      when: audit_results.ufw.active_status.status == 'PASS'
-      changed_when: false
-
-    - name: Record UFW Default Incoming Policy
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ufw': audit_results.ufw | combine({
-                'default_policy': {
-                  'status': 'PASS'
-                    if (ufw_policy is defined and 'Default: deny (incoming)' in (ufw_policy.stdout | default("")))
-                    else 'FAIL',
-                  'message': 'Default incoming policy is set to deny.'
-                    if (ufw_policy is defined and 'Default: deny (incoming)' in (ufw_policy.stdout | default("")))
-                    else 'Default incoming policy is not set to deny.'
-                }
-              })
-            })
-          }}
-      when: ufw_policy is defined
-
-    - name: Display UFW Default Incoming Policy Status
-      debug:
-        msg: >
-          {% if audit_results.ufw.default_policy.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ufw.default_policy is defined
-
-##############################################################################
-# 4. SSH Checks
-##############################################################################
-- name: SSH Checks
-  hosts: all
-  become: yes
-  gather_facts: no
-  vars:
-    audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
-  tasks:
-    - name: Gather service facts (for SSH check)
-      service_facts:
-
-    - name: Determine SSH service name
-      set_fact:
-        ssh_service: >-
-          {% if 'sshd.service' in ansible_facts.services %}
-            sshd.service
-          {% elif 'ssh.service' in ansible_facts.services %}
-            ssh.service
-          {% else %}
-            null
-          {% endif %}
-
-    - name: Record SSH Service Status
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ssh': {
-                'service_status': {
-                  'status': 'PASS'
-                    if (ssh_service is not none and ansible_facts.services[ssh_service].state == 'running')
-                    else 'FAIL',
-                  'message': 'SSH service is running.'
-                    if (ssh_service is not none and ansible_facts.services[ssh_service].state == 'running')
-                    else ('SSH service is not running.' if ssh_service is not none else 'SSH service not found.')
-                }
-              }
-            })
-          }}
-
-    - name: Display SSH Service Status
-      debug:
-        msg: >
-          {% if audit_results.ssh.service_status.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ssh.service_status is defined
-
-    - name: Check SSH Key-based Authentication
-      stat:
-        path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
-      register: ssh_auth_keys
-      when: audit_results.ssh.service_status.status == 'PASS'
-      changed_when: false
-
-    - name: Record SSH Key-based Authentication Result
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ssh': audit_results.ssh | combine({
-                'key_auth': {
-                  'status': 'PASS' if (ssh_auth_keys.stat.exists|default(false)) else 'FAIL',
-                  'message': 'Key-based authentication is set up.' if (ssh_auth_keys.stat.exists|default(false)) else 'No authorized_keys found in home directory.'
-                }
-              })
-            })
-          }}
-
-    - name: Display SSH Key-based Authentication Status
-      debug:
-        msg: >
-          {% if audit_results.ssh.key_auth.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ssh.key_auth is defined
-
-    - name: Check SSH PermitRootLogin
-      command: |
-        grep -E "^PermitRootLogin" /etc/ssh/sshd_config
-      register: ssh_permit_root_login
-      changed_when: false
-      failed_when: ssh_permit_root_login.rc not in [0,1,2]  # allow missing/absent config
-      when: audit_results.ssh.service_status.status == 'PASS'
-
-    - name: Record SSH PermitRootLogin
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ssh': audit_results.ssh | combine({
-                'config_PermitRootLogin': {
-                  'status': 'PASS'
-                    if (ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower())
-                    else 'FAIL',
-                  'message': 'PermitRootLogin is disabled.'
-                    if (ssh_permit_root_login.rc == 0 and 'no' in ssh_permit_root_login.stdout.lower())
-                    else 'PermitRootLogin is enabled or not properly configured.'
-                }
-              })
-            })
-          }}
-
-    - name: Display SSH PermitRootLogin Status
-      debug:
-        msg: >
-          {% if audit_results.ssh.config_PermitRootLogin.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ssh.config_PermitRootLogin is defined
-
-    - name: Check SSH KbdInteractiveAuthentication
-      command: |
-        grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config
-      register: ssh_kbd_interactive_auth
-      changed_when: false
-      failed_when: ssh_kbd_interactive_auth.rc not in [0,1,2]  # allow missing/absent config
-      when: audit_results.ssh.service_status.status == 'PASS'
-
-    - name: Record SSH KbdInteractiveAuthentication
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ssh': audit_results.ssh | combine({
-                'config_KbdInteractiveAuthentication': {
-                  'status': 'PASS'
-                    if (ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower())
-                    else 'FAIL',
-                  'message': 'KbdInteractiveAuthentication is disabled.'
-                    if (ssh_kbd_interactive_auth.rc == 0 and 'no' in ssh_kbd_interactive_auth.stdout.lower())
-                    else 'KbdInteractiveAuthentication is enabled or not properly configured.'
-                }
-              })
-            })
-          }}
-
-    - name: Display SSH KbdInteractiveAuthentication Status
-      debug:
-        msg: >
-          {% if audit_results.ssh.config_KbdInteractiveAuthentication.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ssh.config_KbdInteractiveAuthentication is defined
-
-    - name: Check SSH PasswordAuthentication
-      command: |
-        grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
-      register: ssh_password_auth
-      changed_when: false
-      failed_when: ssh_password_auth.rc not in [0,1,2]  # allow missing/absent config
-      when: audit_results.ssh.service_status.status == 'PASS'
-
-    - name: Record SSH PasswordAuthentication
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ssh': audit_results.ssh | combine({
-                'config_PasswordAuthentication': {
-                  'status': 'PASS'
-                    if (ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower())
-                    else 'FAIL',
-                  'message': 'PasswordAuthentication is disabled.'
-                    if (ssh_password_auth.rc == 0 and 'no' in ssh_password_auth.stdout.lower())
-                    else 'PasswordAuthentication is enabled or not properly configured.'
-                }
-              })
-            })
-          }}
-
-    - name: Display SSH PasswordAuthentication Status
-      debug:
-        msg: >
-          {% if audit_results.ssh.config_PasswordAuthentication.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ssh.config_PasswordAuthentication is defined
-
-    - name: Check SSH UsePAM
-      command: |
-        grep -E "^UsePAM" /etc/ssh/sshd_config
-      register: ssh_use_pam
-      changed_when: false
-      failed_when: ssh_use_pam.rc not in [0,1,2]  # allow missing/absent config
-      when: audit_results.ssh.service_status.status == 'PASS'
-
-    - name: Record SSH UsePAM
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'ssh': audit_results.ssh | combine({
-                'config_UsePAM': {
-                  'status': 'PASS'
-                    if (ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower())
-                    else 'FAIL',
-                  'message': 'UsePAM is enabled.'
-                    if (ssh_use_pam.rc == 0 and 'yes' in ssh_use_pam.stdout.lower())
-                    else 'UsePAM is disabled or not properly configured.'
-                }
-              })
-            })
-          }}
-
-    - name: Display SSH UsePAM Status
-      debug:
-        msg: >
-          {% if audit_results.ssh.config_UsePAM.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.ssh.config_UsePAM is defined
-
-##############################################################################
-# 5. Non-Root User Check
-##############################################################################
-- name: Non-Root User Check
-  hosts: all
-  become: yes
-  gather_facts: no
-  vars:
-    audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
-  tasks:
-    - name: Find users in sudo group
-      shell: |
-        grep -Po '^sudo:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$' || true
-      register: sudo_users
-      changed_when: false
-
-    - name: Find users in admin group
-      shell: |
-        grep -Po '^admin:.*:\\K.*$' /etc/group | tr ',' '\n' | grep -v '^root$' || true
-      register: admin_users
-      changed_when: false
-
-    - name: Combine privileged users
-      set_fact:
-        privileged_users: "{{ (sudo_users.stdout_lines + admin_users.stdout_lines) | unique | reject('equalto', '') | list }}"
-
-    - name: Check valid shells for privileged users
-      command: |
-        getent passwd {{ item }} | cut -d: -f7
-      register: user_shells
-      loop: "{{ privileged_users }}"
-      changed_when: false
-      when: privileged_users | length > 0
-
-    - name: Record Non-Root Sudo Users Result
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'non_root_user': {
-                'sudo_access': {
-                  'status': 'PASS'
-                    if (user_shells.results
-                        | selectattr('stdout','match','^(?!/usr/sbin/nologin$)(?!/bin/false$).+')
-                        | list
-                        | length) > 0
-                    else 'FAIL',
-                  'message': 'Found valid non-root sudo users.'
-                    if (user_shells.results
-                        | selectattr('stdout','match','^(?!/usr/sbin/nologin$)(?!/bin/false$).+')
-                        | list
-                        | length) > 0
-                    else 'No non-root users with sudo privileges have valid shells.'
-                }
-              }
-            })
-          }}
-
-    - name: Display Non-Root Sudo Users Status
-      debug:
-        msg: >
-          {% if audit_results.non_root_user.sudo_access.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.non_root_user.sudo_access is defined
-
-##############################################################################
-# 6. Unattended Upgrades
-##############################################################################
-- name: Unattended Upgrades
-  hosts: all
-  become: yes
-  gather_facts: no
-  vars:
-    audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
-  tasks:
-    - name: Ensure unattended-upgrades is installed
-      apt:
-        name: unattended-upgrades
-        state: present
-        update_cache: yes
-      register: unattended_upgrades_installed
-      changed_when: false
-
-    - name: Record Unattended Upgrades Installation
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'unattended_upgrades': {
-                'installation': {
-                  'status': 'PASS' if unattended_upgrades_installed is success else 'FAIL',
-                  'message': 'unattended-upgrades package is installed.' if unattended_upgrades_installed is success else 'unattended-upgrades package is not installed.'
-                }
-              }
-            })
-          }}
-
-    - name: Display Unattended Upgrades Installation Status
-      debug:
-        msg: >
-          {% if audit_results.unattended_upgrades.installation.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.unattended_upgrades.installation is defined
-
-    - name: Check unattended-upgrades service status
-      command: systemctl is-active unattended-upgrades
-      register: unattended_upgrades_service
-      changed_when: false
-      failed_when: unattended_upgrades_service.rc not in [0,3]
-      when: audit_results.unattended_upgrades.installation.status == 'PASS'
-
-    - name: Record unattended-upgrades service status
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'unattended_upgrades': audit_results.unattended_upgrades | combine({
-                'service_status': {
-                  'status': 'PASS' if unattended_upgrades_service.stdout.strip() == 'active' else 'FAIL',
-                  'message': 'Unattended Upgrades service is running.' if unattended_upgrades_service.stdout.strip() == 'active' else 'Unattended Upgrades service is not running.'
-                }
-              })
-            })
-          }}
-
-    - name: Display unattended-upgrades Service Status
-      debug:
-        msg: >
-          {% if audit_results.unattended_upgrades.service_status.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.unattended_upgrades.service_status is defined
-
-    - name: Check APT::Periodic::Update-Package-Lists
-      command: grep -E '^APT::Periodic::Update-Package-Lists' /etc/apt/apt.conf.d/20auto-upgrades
-      register: auto_update
-      changed_when: false
-      failed_when: auto_update.rc not in [0,1,2]  # allow missing/absent file
-      when: audit_results.unattended_upgrades.installation.status == 'PASS'
-
-    - name: Record Automatic Package List Updates
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'unattended_upgrades': audit_results.unattended_upgrades | combine({
-                'auto_update': {
-                  'status': 'PASS' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'FAIL',
-                  'message': 'Automatic package list updates are enabled.' if (auto_update.rc == 0 and '"1"' in auto_update.stdout) else 'Automatic package list updates are not enabled.'
-                }
-              })
-            })
-          }}
-
-    - name: Display Automatic Package List Updates Status
-      debug:
-        msg: >
-          {% if audit_results.unattended_upgrades.auto_update.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.unattended_upgrades.auto_update is defined
-
-    - name: Check APT::Periodic::Unattended-Upgrade
-      command: grep -E '^APT::Periodic::Unattended-Upgrade' /etc/apt/apt.conf.d/20auto-upgrades
-      register: auto_upgrade
-      changed_when: false
-      failed_when: auto_upgrade.rc not in [0,1,2]  # allow missing/absent file
-      when: audit_results.unattended_upgrades.installation.status == 'PASS'
-
-    - name: Record Automatic Upgrades
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'unattended_upgrades': audit_results.unattended_upgrades | combine({
-                'auto_upgrade': {
-                  'status': 'PASS' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'FAIL',
-                  'message': 'Automatic upgrades are enabled.' if (auto_upgrade.rc == 0 and '"1"' in auto_upgrade.stdout) else 'Automatic upgrades are not enabled.'
-                }
-              })
-            })
-          }}
-
-    - name: Display Automatic Upgrades Status
-      debug:
-        msg: >
-          {% if audit_results.unattended_upgrades.auto_upgrade.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.unattended_upgrades.auto_upgrade is defined
-
-##############################################################################
-# 7. Fail2ban Checks
-##############################################################################
-- name: Fail2ban Checks
-  hosts: all
-  become: yes
-  gather_facts: no
-  vars:
-    audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
-  tasks:
-    - name: Ensure fail2ban is installed
-      apt:
-        name: fail2ban
-        state: present
-        update_cache: yes
-      register: fail2ban_installed
-      changed_when: false
-
-    - name: Record Fail2ban Installation
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'fail2ban': {
-                'installation': {
-                  'status': 'PASS' if fail2ban_installed is success else 'FAIL',
-                  'message': 'fail2ban package is installed.' if fail2ban_installed is success else 'fail2ban package is not installed.'
-                }
-              }
-            })
-          }}
-
-    - name: Display Fail2ban Installation Status
-      debug:
-        msg: >
-          {% if audit_results.fail2ban.installation.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.fail2ban.installation is defined
-
-    - name: Check Fail2ban Service Status
-      command: systemctl is-active fail2ban
-      register: fail2ban_service
-      changed_when: false
-      failed_when: fail2ban_service.rc not in [0,3]
-      when: audit_results.fail2ban.installation.status == 'PASS'
-
-    - name: Record Fail2ban Service Status
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'fail2ban': audit_results.fail2ban | combine({
-                'service_status': {
-                  'status': 'PASS' if fail2ban_service.stdout.strip() == 'active' else 'FAIL',
-                  'message': 'Fail2ban service is running.' if fail2ban_service.stdout.strip() == 'active' else 'Fail2ban service is not running.'
-                }
-              })
-            })
-          }}
-
-    - name: Display Fail2ban Service Status
-      debug:
-        msg: >
-          {% if audit_results.fail2ban.service_status.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.fail2ban.service_status is defined
-
-    - name: Check Fail2ban Configuration File
-      stat:
-        path: /etc/fail2ban/jail.local
-      register: fail2ban_jail_local
-      changed_when: false
-      when: audit_results.fail2ban.installation.status == 'PASS'
-
-    - name: Record Fail2ban Configuration
-      set_fact:
-        audit_results: >-
-          {{
-            audit_results | combine({
-              'fail2ban': audit_results.fail2ban | combine({
-                'config_file': {
-                  'status': 'PASS' if fail2ban_jail_local.stat.exists|default(false) else 'FAIL',
-                  'message': 'Fail2ban config file exists at /etc/fail2ban/jail.local.' if fail2ban_jail_local.stat.exists|default(false) else 'Fail2ban config file is missing at /etc/fail2ban/jail.local.'
-                }
-              })
-            })
-          }}
-
-    - name: Display Fail2ban Configuration File Status
-      debug:
-        msg: >
-          {% if audit_results.fail2ban.config_file.status == 'PASS' %}
-            \033[1;32mPASS\033[0m
-          {% else %}
-            \033[1;31mFAIL\033[0m
-          {% endif %}
-      when: audit_results.fail2ban.config_file is defined
-
-##############################################################################
-# 8. Generate Reports
-##############################################################################
-- name: Generate Reports
-  hosts: localhost
-  gather_facts: no
-  tasks:
-    - name: Generate Markdown Report for Each Host
-      template:
-        src: security_audit_report.j2
-        dest: "../security_audit_report_{{ item }}.md"
-      vars:
-        audit_results: "{{ hostvars[item].audit_results }}"
-      loop: "{{ groups['all'] }}"
-      run_once: true
-      delegate_to: localhost
+    - name: Run All Security Checks
+      block:
+        # OS Check
+        - name: Check OS Type
+          set_fact:
+            checks: "{{ checks | combine({'os_check': true}) }}"
+          when: ansible_distribution in ['Ubuntu', 'Debian']
+
+        # Dependencies Check
+        - name: Check Required Dependencies
+          command: which {{ item }}
+          register: dep_check
+          loop: [curl, jq]
+          changed_when: false
+          failed_when: false
+
+        - name: Set Dependencies Status
+          set_fact:
+            checks: "{{ checks | combine({'dependencies': true}) }}"
+          when: "dep_check.results | map(attribute='rc') | list | unique == [0]"
+
+        # UFW Check
+        - name: Check UFW Status
+          shell: |
+            ufw status verbose | grep -E "Status: active|Default: deny \(incoming\)"
+          register: ufw_check
+          changed_when: false
+          failed_when: false
+
+        - name: Set UFW Status
+          set_fact:
+            checks: "{{ checks | combine({'ufw': true}) }}"
+          when:
+            - "'Status: active' in (ufw_check.stdout | default(''))"
+            - "'Default: deny (incoming)' in (ufw_check.stdout | default(''))"
+
+        # SSH Check
+        - name: Check SSH Config
+          shell: |
+            grep -E "^PasswordAuthentication no|^PermitRootLogin no|^KbdInteractiveAuthentication no|^UsePAM yes" /etc/ssh/sshd_config | wc -l
+          register: ssh_check
+          changed_when: false
+          failed_when: false
+
+        - name: Set SSH Status
+          set_fact:
+            checks: "{{ checks | combine({'ssh': true}) }}"
+          when: "ssh_check.stdout | int >= 4"
+
+        # Non-Root User Check
+        - name: Check Non-Root Sudo Users
+          shell: |
+            getent group sudo | cut -d: -f4 | grep -v '^root$' | grep -v '^$'
+          register: sudo_check
+          changed_when: false
+          failed_when: false
+
+        - name: Set Non-Root Status
+          set_fact:
+            checks: "{{ checks | combine({'non_root': true}) }}"
+          when: sudo_check.stdout != ""
+
+        # Unattended Upgrades Check
+        - name: Check Unattended Upgrades
+          shell: |
+            systemctl is-active unattended-upgrades && 
+            grep -E "^APT::Periodic::(Update-Package-Lists|Unattended-Upgrade) \"1\";" /etc/apt/apt.conf.d/20auto-upgrades | wc -l
+          register: upgrades_check
+          changed_when: false
+          failed_when: false
+
+        - name: Set Upgrades Status
+          set_fact:
+            checks: "{{ checks | combine({'upgrades': true}) }}"
+          when:
+            - "'active' in (upgrades_check.stdout_lines[0] | default(''))"
+            - "upgrades_check.stdout_lines[-1] | int >= 2"
+
+        # Fail2ban Check
+        - name: Check Fail2ban
+          shell: |
+            systemctl is-active fail2ban && test -f /etc/fail2ban/jail.local
+          register: fail2ban_check
+          changed_when: false
+          failed_when: false
+
+        - name: Set Fail2ban Status
+          set_fact:
+            checks: "{{ checks | combine({'fail2ban': true}) }}"
+          when: fail2ban_check.rc == 0
+
+      always:
+        - name: Display Security Audit Results
+          debug:
+            msg: |
+              Security Audit Results for {{ inventory_hostname }}:
+              =========================================
+              OS Check:              {{ '[32mPASS[0m' if checks.os_check else '[31mFAIL[0m' }}
+              Dependencies:          {{ '[32mPASS[0m' if checks.dependencies else '[31mFAIL[0m' }}
+              UFW Config:           {{ '[32mPASS[0m' if checks.ufw else '[31mFAIL[0m' }}
+              SSH Security:         {{ '[32mPASS[0m' if checks.ssh else '[31mFAIL[0m' }}
+              Non-Root User:        {{ '[32mPASS[0m' if checks.non_root else '[31mFAIL[0m' }}
+              Unattended Upgrades:  {{ '[32mPASS[0m' if checks.upgrades else '[31mFAIL[0m' }}
+              Fail2ban:             {{ '[32mPASS[0m' if checks.fail2ban else '[31mFAIL[0m' }}
+              =========================================
+              Overall Status:        {{ '[32mPASS[0m' if (checks.values() | list | unique == [true]) else '[31mFAIL[0m' }}
