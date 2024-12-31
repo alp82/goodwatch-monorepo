@@ -346,6 +346,7 @@
       register: unattended_upgrades_service
       ignore_errors: yes
       changed_when: false
+      failed_when: auto_upgrade.rc not in [0, 3]
       when: audit_results.unattended_upgrades.installation.status == 'PASS'
 
     - name: Record Unattended Upgrades Service Status Result
@@ -437,6 +438,7 @@
       register: fail2ban_service
       ignore_errors: yes
       changed_when: false
+      failed_when: auto_upgrade.rc not in [0, 3]
       when: audit_results.fail2ban.installation.status == 'PASS'
 
     - name: Record Fail2ban Service Status Result
