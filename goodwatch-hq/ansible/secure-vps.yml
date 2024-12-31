@@ -193,6 +193,7 @@
       register: ssh_permit_root_login
       ignore_errors: yes
       changed_when: false
+      when: audit_results.ssh.service_status.status == 'PASS'
 
     - name: Record SSH PermitRootLogin Result
       set_fact:
@@ -213,6 +214,7 @@
       register: ssh_kbd_interactive_auth
       ignore_errors: yes
       changed_when: false
+      when: audit_results.ssh.service_status.status == 'PASS'
 
     - name: Record SSH KbdInteractiveAuthentication Result
       set_fact:
@@ -233,6 +235,7 @@
       register: ssh_password_auth
       ignore_errors: yes
       changed_when: false
+      when: audit_results.ssh.service_status.status == 'PASS'
 
     - name: Record SSH PasswordAuthentication Result
       set_fact:
@@ -485,7 +488,7 @@
     - name: Generate Markdown Report for Each Host
       template:
         src: security_audit_report.j2
-        dest: "./reports/security_audit_report_{{ item }}.md"
+        dest: "../security_audit_report_{{ item }}.md"
       vars:
         audit_results: "{{ hostvars[item].audit_results }}"
       loop: "{{ groups['all'] }}"
