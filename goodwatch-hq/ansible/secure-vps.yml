@@ -191,6 +191,9 @@
   vars:
     audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
   tasks:
+    - name: Gather service facts (for SSH check)
+      service_facts:
+
     - name: Record SSH Service Status
       set_fact:
         audit_results: >-
