@@ -233,10 +233,13 @@
 - name: SSH Checks
   hosts: all
   become: yes
-  gather_facts: yes  # To gather service_facts
+  gather_facts: no
   vars:
     audit_results: "{{ hostvars[inventory_hostname].audit_results | default({}) }}"
   tasks:
+    - name: Gather service facts (for SSH check)
+      service_facts:
+
     - name: Determine SSH service name
       set_fact:
         ssh_service: >-
@@ -308,7 +311,8 @@
       when: audit_results.ssh.key_auth is defined
 
     - name: Check SSH PermitRootLogin
-      command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
+      command: |
+        grep -E "^PermitRootLogin" /etc/ssh/sshd_config
       register: ssh_permit_root_login
       changed_when: false
       failed_when: ssh_permit_root_login.rc not in [0,1,2]  # allow missing/absent config
@@ -343,7 +347,8 @@
       when: audit_results.ssh.config_PermitRootLogin is defined
 
     - name: Check SSH KbdInteractiveAuthentication
-      command: grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config
+      command: |
+        grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config
       register: ssh_kbd_interactive_auth
       changed_when: false
       failed_when: ssh_kbd_interactive_auth.rc not in [0,1,2]  # allow missing/absent config
@@ -378,7 +383,8 @@
       when: audit_results.ssh.config_KbdInteractiveAuthentication is defined
 
     - name: Check SSH PasswordAuthentication
-      command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
+      command: |
+        grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
       register: ssh_password_auth
       changed_when: false
       failed_when: ssh_password_auth.rc not in [0,1,2]  # allow missing/absent config
@@ -413,7 +419,8 @@
       when: audit_results.ssh.config_PasswordAuthentication is defined
 
     - name: Check SSH UsePAM
-      command: grep -E "^UsePAM" /etc/ssh/sshd_config
+      command: |
+        grep -E "^UsePAM" /etc/ssh/sshd_config
       register: ssh_use_pam
       changed_when: false
       failed_when: ssh_use_pam.rc not in [0,1,2]  # allow missing/absent config
