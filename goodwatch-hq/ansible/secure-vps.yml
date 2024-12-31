@@ -47,14 +47,13 @@
 
     - name: Display OS Check Status
       debug:
-        msg: "{{ audit_results.os_check.status }}"
+        msg: >
+          {% if audit_results.os_check.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.os_check is defined
-      msg: >
-        {% if audit_results.os_check.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
 ##############################################################################
 # 2. Dependencies
@@ -112,14 +111,13 @@
 
     - name: Display Dependencies Check Status
       debug:
-        msg: "{{ audit_results.dependencies.status }}"
+        msg: >
+          {% if audit_results.dependencies.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.dependencies is defined
-      msg: >
-        {% if audit_results.dependencies.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
 ##############################################################################
 # 3. UFW Checks
@@ -155,14 +153,13 @@
 
     - name: Display UFW Installation Status
       debug:
-        msg: "{{ audit_results.ufw.installation.status }}"
+        msg: >
+          {% if audit_results.ufw.installation.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ufw.installation is defined
-      msg: >
-        {% if audit_results.ufw.installation.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check UFW Status
       command: ufw status
@@ -187,14 +184,13 @@
 
     - name: Display UFW Active Status
       debug:
-        msg: "{{ audit_results.ufw.active_status.status }}"
+        msg: >
+          {% if audit_results.ufw.active_status.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ufw.active_status is defined
-      msg: >
-        {% if audit_results.ufw.active_status.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check UFW Default Incoming Policy
       command: ufw status verbose
@@ -223,14 +219,13 @@
 
     - name: Display UFW Default Incoming Policy Status
       debug:
-        msg: "{{ audit_results.ufw.default_policy.status }}"
+        msg: >
+          {% if audit_results.ufw.default_policy.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ufw.default_policy is defined
-      msg: >
-        {% if audit_results.ufw.default_policy.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
 ##############################################################################
 # 4. SSH Checks
@@ -273,14 +268,13 @@
 
     - name: Display SSH Service Status
       debug:
-        msg: "{{ audit_results.ssh.service_status.status }}"
+        msg: >
+          {% if audit_results.ssh.service_status.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ssh.service_status is defined
-      msg: >
-        {% if audit_results.ssh.service_status.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check SSH Key-based Authentication
       stat:
@@ -305,14 +299,13 @@
 
     - name: Display SSH Key-based Authentication Status
       debug:
-        msg: "{{ audit_results.ssh.key_auth.status }}"
+        msg: >
+          {% if audit_results.ssh.key_auth.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ssh.key_auth is defined
-      msg: >
-        {% if audit_results.ssh.key_auth.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check SSH PermitRootLogin
       command: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
@@ -341,14 +334,13 @@
 
     - name: Display SSH PermitRootLogin Status
       debug:
-        msg: "{{ audit_results.ssh.config_PermitRootLogin.status }}"
+        msg: >
+          {% if audit_results.ssh.config_PermitRootLogin.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ssh.config_PermitRootLogin is defined
-      msg: >
-        {% if audit_results.ssh.config_PermitRootLogin.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check SSH KbdInteractiveAuthentication
       command: grep -E "^KbdInteractiveAuthentication" /etc/ssh/sshd_config
@@ -377,14 +369,13 @@
 
     - name: Display SSH KbdInteractiveAuthentication Status
       debug:
-        msg: "{{ audit_results.ssh.config_KbdInteractiveAuthentication.status }}"
+        msg: >
+          {% if audit_results.ssh.config_KbdInteractiveAuthentication.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ssh.config_KbdInteractiveAuthentication is defined
-      msg: >
-        {% if audit_results.ssh.config_KbdInteractiveAuthentication.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check SSH PasswordAuthentication
       command: grep -E "^PasswordAuthentication" /etc/ssh/sshd_config
@@ -413,14 +404,13 @@
 
     - name: Display SSH PasswordAuthentication Status
       debug:
-        msg: "{{ audit_results.ssh.config_PasswordAuthentication.status }}"
+        msg: >
+          {% if audit_results.ssh.config_PasswordAuthentication.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ssh.config_PasswordAuthentication is defined
-      msg: >
-        {% if audit_results.ssh.config_PasswordAuthentication.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check SSH UsePAM
       command: grep -E "^UsePAM" /etc/ssh/sshd_config
@@ -449,14 +439,13 @@
 
     - name: Display SSH UsePAM Status
       debug:
-        msg: "{{ audit_results.ssh.config_UsePAM.status }}"
+        msg: >
+          {% if audit_results.ssh.config_UsePAM.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.ssh.config_UsePAM is defined
-      msg: >
-        {% if audit_results.ssh.config_UsePAM.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
 ##############################################################################
 # 5. Non-Root User Check
@@ -518,14 +507,13 @@
 
     - name: Display Non-Root Sudo Users Status
       debug:
-        msg: "{{ audit_results.non_root_user.sudo_access.status }}"
+        msg: >
+          {% if audit_results.non_root_user.sudo_access.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.non_root_user.sudo_access is defined
-      msg: >
-        {% if audit_results.non_root_user.sudo_access.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
 ##############################################################################
 # 6. Unattended Upgrades
@@ -561,14 +549,13 @@
 
     - name: Display Unattended Upgrades Installation Status
       debug:
-        msg: "{{ audit_results.unattended_upgrades.installation.status }}"
+        msg: >
+          {% if audit_results.unattended_upgrades.installation.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.unattended_upgrades.installation is defined
-      msg: >
-        {% if audit_results.unattended_upgrades.installation.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check unattended-upgrades service status
       command: systemctl is-active unattended-upgrades
@@ -593,14 +580,13 @@
 
     - name: Display unattended-upgrades Service Status
       debug:
-        msg: "{{ audit_results.unattended_upgrades.service_status.status }}"
+        msg: >
+          {% if audit_results.unattended_upgrades.service_status.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.unattended_upgrades.service_status is defined
-      msg: >
-        {% if audit_results.unattended_upgrades.service_status.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check APT::Periodic::Update-Package-Lists
       command: grep -E '^APT::Periodic::Update-Package-Lists' /etc/apt/apt.conf.d/20auto-upgrades
@@ -625,14 +611,13 @@
 
     - name: Display Automatic Package List Updates Status
       debug:
-        msg: "{{ audit_results.unattended_upgrades.auto_update.status }}"
+        msg: >
+          {% if audit_results.unattended_upgrades.auto_update.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.unattended_upgrades.auto_update is defined
-      msg: >
-        {% if audit_results.unattended_upgrades.auto_update.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check APT::Periodic::Unattended-Upgrade
       command: grep -E '^APT::Periodic::Unattended-Upgrade' /etc/apt/apt.conf.d/20auto-upgrades
@@ -657,14 +642,13 @@
 
     - name: Display Automatic Upgrades Status
       debug:
-        msg: "{{ audit_results.unattended_upgrades.auto_upgrade.status }}"
+        msg: >
+          {% if audit_results.unattended_upgrades.auto_upgrade.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.unattended_upgrades.auto_upgrade is defined
-      msg: >
-        {% if audit_results.unattended_upgrades.auto_upgrade.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
 ##############################################################################
 # 7. Fail2ban Checks
@@ -700,14 +684,13 @@
 
     - name: Display Fail2ban Installation Status
       debug:
-        msg: "{{ audit_results.fail2ban.installation.status }}"
+        msg: >
+          {% if audit_results.fail2ban.installation.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.fail2ban.installation is defined
-      msg: >
-        {% if audit_results.fail2ban.installation.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check Fail2ban Service Status
       command: systemctl is-active fail2ban
@@ -732,14 +715,13 @@
 
     - name: Display Fail2ban Service Status
       debug:
-        msg: "{{ audit_results.fail2ban.service_status.status }}"
+        msg: >
+          {% if audit_results.fail2ban.service_status.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.fail2ban.service_status is defined
-      msg: >
-        {% if audit_results.fail2ban.service_status.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
     - name: Check Fail2ban Configuration File
       stat:
@@ -764,14 +746,13 @@
 
     - name: Display Fail2ban Configuration File Status
       debug:
-        msg: "{{ audit_results.fail2ban.config_file.status }}"
+        msg: >
+          {% if audit_results.fail2ban.config_file.status == 'PASS' %}
+            \033[1;32mPASS\033[0m
+          {% else %}
+            \033[1;31mFAIL\033[0m
+          {% endif %}
       when: audit_results.fail2ban.config_file is defined
-      msg: >
-        {% if audit_results.fail2ban.config_file.status == 'PASS' %}
-          \033[1;32mPASS\033[0m
-        {% else %}
-          \033[1;31mFAIL\033[0m
-        {% endif %}
 
 ##############################################################################
 # 8. Generate Reports
