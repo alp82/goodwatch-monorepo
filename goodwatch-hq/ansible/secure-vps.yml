@@ -13,6 +13,11 @@
       upgrades: false
       fail2ban: false
 
+    # ANSI color codes
+    GREEN: '\033[0;32m'
+    RED: '\033[0;31m'
+    NC: '\033[0m'  # No Color
+
   tasks:
     - name: Run All Security Checks
       block:
@@ -107,16 +112,17 @@
 
       always:
         - name: Display Security Audit Results
-          debug:
-            msg: |
-              Security Audit Results for {{ inventory_hostname }}:
-              =========================================
-              OS Check:              {{ '[32mPASS[0m' if checks.os_check else '[31mFAIL[0m' }}
-              Dependencies:          {{ '[32mPASS[0m' if checks.dependencies else '[31mFAIL[0m' }}
-              UFW Config:           {{ '[32mPASS[0m' if checks.ufw else '[31mFAIL[0m' }}
-              SSH Security:         {{ '[32mPASS[0m' if checks.ssh else '[31mFAIL[0m' }}
-              Non-Root User:        {{ '[32mPASS[0m' if checks.non_root else '[31mFAIL[0m' }}
-              Unattended Upgrades:  {{ '[32mPASS[0m' if checks.upgrades else '[31mFAIL[0m' }}
-              Fail2ban:             {{ '[32mPASS[0m' if checks.fail2ban else '[31mFAIL[0m' }}
-              =========================================
-              Overall Status:        {{ '[32mPASS[0m' if (checks.values() | list | unique == [true]) else '[31mFAIL[0m' }}
+          ansible.builtin.debug:
+            msg: "{{ item }}"
+          loop:
+            - "\nSecurity Audit Results for {{ inventory_hostname }}"
+            - "========================================="
+            - "OS Check:              {{ GREEN }}PASS{{ NC if checks.os_check else RED + 'FAIL' + NC }}"
+            - "Dependencies:          {{ GREEN }}PASS{{ NC if checks.dependencies else RED + 'FAIL' + NC }}"
+            - "UFW Config:           {{ GREEN }}PASS{{ NC if checks.ufw else RED + 'FAIL' + NC }}"
+            - "SSH Security:         {{ GREEN }}PASS{{ NC if checks.ssh else RED + 'FAIL' + NC }}"
+            - "Non-Root User:        {{ GREEN }}PASS{{ NC if checks.non_root else RED + 'FAIL' + NC }}"
+            - "Unattended Upgrades:  {{ GREEN }}PASS{{ NC if checks.upgrades else RED + 'FAIL' + NC }}"
+            - "Fail2ban:             {{ GREEN }}PASS{{ NC if checks.fail2ban else RED + 'FAIL' + NC }}"
+            - "========================================="
+            - "Overall Status:        {{ GREEN }}PASS{{ NC if (checks.values() | list | unique == [true]) else RED + 'FAIL' + NC }}"
