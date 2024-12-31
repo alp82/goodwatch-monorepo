@@ -49,8 +49,8 @@
 
 {% if audit_results.unattended_upgrades.installation.status == 'PASS' %}
 ### Service Status
-- **Status**: {{ audit_results.unattended_upgrades.service_status.status }}
-- **Message**: {{ audit_results.unattended_upgrades.service_status.message }}
+- **Status**: {{ audit_results.unattended_upgrades.installation.status }}
+- **Message**: {{ audit_results.unattended_upgrades.installation.message }}
 
 ### Automatic Update Settings
 - **Automatic Package List Updates**: {{ audit_results.unattended_upgrades.auto_update.status }} - {{ audit_results.unattended_upgrades.auto_update.message }}
