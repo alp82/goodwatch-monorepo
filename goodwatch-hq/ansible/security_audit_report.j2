@@ -49,8 +49,8 @@
 
 {% if audit_results.unattended_upgrades.installation.status == 'PASS' %}
 ### Service Status
-- **Status**: {{ audit_results.unattended_upgrades.installation.status }}
-- **Message**: {{ audit_results.unattended_upgrades.installation.message }}
+- **Status**: {{ audit_results.unattended_upgrades.service_status.status }}
+- **Message**: {{ audit_results.unattended_upgrades.service_status.message }}
 
 ### Automatic Update Settings
 - **Automatic Package List Updates**: {{ audit_results.unattended_upgrades.auto_update.status }} - {{ audit_results.unattended_upgrades.auto_update.message }}
@@ -64,8 +64,8 @@
 
 {% if audit_results.fail2ban.installation.status == 'PASS' %}
 ### Service Status
-- **Status**: {{ audit_results.fail2ban.installation.status }}
-- **Message**: {{ audit_results.fail2ban.installation.message }}
+- **Status**: {{ audit_results.fail2ban.service_status.status }}
+- **Message**: {{ audit_results.fail2ban.service_status.message }}
 
 ### Configuration File
 - **Status**: {{ audit_results.fail2ban.config_file.status }}

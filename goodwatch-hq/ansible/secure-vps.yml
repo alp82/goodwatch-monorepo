@@ -333,6 +333,28 @@
             })
           }}
 
+    - name: Check Unattended Upgrades Service Status
+      command: systemctl is-active unattended-upgrades
+      register: unattended_upgrades_service
+      ignore_errors: yes
+      changed_when: false
+      when: audit_results.unattended_upgrades.installation.status == 'PASS'
+
+    - name: Record Unattended Upgrades Service Status Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'unattended_upgrades': audit_results.unattended_upgrades | combine({
+                'service_status': {
+                  'status': 'PASS' if unattended_upgrades_service.stdout.strip() == 'active' else 'FAIL',
+                  'message': 'Unattended Upgrades service is running.' if unattended_upgrades_service.stdout.strip() == 'active' else 'Unattended Upgrades service is not running.'
+                }
+              })
+            })
+          }}
+      when: unattended_upgrades_service is defined
+
     # 6.1. Check Automatic Package List Updates
     - name: Check APT::Periodic::Update-Package-Lists
       command: grep -E '^APT::Periodic::Update-Package-Lists' /etc/apt/apt.conf.d/20auto-upgrades
@@ -400,7 +422,51 @@
             })
           }}
 
-    # Generate Report
+    - name: Check Fail2ban Service Status
+      command: systemctl is-active fail2ban
+      register: fail2ban_service
+      ignore_errors: yes
+      changed_when: false
+      when: audit_results.fail2ban.installation.status == 'PASS'
+
+    - name: Record Fail2ban Service Status Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'fail2ban': audit_results.fail2ban | combine({
+                'service_status': {
+                  'status': 'PASS' if fail2ban_service.stdout.strip() == 'active' else 'FAIL',
+                  'message': 'Fail2ban service is running.' if fail2ban_service.stdout.strip() == 'active' else 'Fail2ban service is not running.'
+                }
+              })
+            })
+          }}
+      when: fail2ban_service is defined
+
+    - name: Check Fail2ban Configuration File Exists
+      stat:
+        path: /etc/fail2ban/jail.local
+      register: fail2ban_jail_local
+      changed_when: false
+      when: audit_results.fail2ban.installation.status == 'PASS'
+
+    - name: Record Fail2ban Configuration File Existence Result
+      set_fact:
+        audit_results: >
+          {{
+            audit_results | combine({
+              'fail2ban': audit_results.fail2ban | combine({
+                'config_file': {
+                  'status': 'PASS' if fail2ban_jail_local.stat.exists else 'FAIL',
+                  'message': 'Fail2ban configuration file exists at /etc/fail2ban/jail.local.' if fail2ban_jail_local.stat.exists else 'Fail2ban configuration file does not exist at /etc/fail2ban/jail.local.'
+                }
+              })
+            })
+          }}
+      when: fail2ban_jail_local is defined
+
+      # Generate Report
     - name: Generate Markdown Report
       template:
         src: security_audit_report.j2
