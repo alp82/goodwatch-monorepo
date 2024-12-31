@@ -307,7 +307,8 @@
         privileged_users: "{{ (sudo_users.stdout_lines + admin_users.stdout_lines) | unique | reject('equalto', '') | list }}"
 
     - name: Check valid shells for privileged users
-      command: getent passwd {{ item }} | cut -d: -f7
+      command: |
+        getent passwd {{ item }} | cut -d: -f7
       register: user_shells
       loop: "{{ privileged_users }}"
       changed_when: false
