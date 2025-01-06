@@ -1,75 +1,75 @@
-import type { WithSimilar } from "~/routes/api.similar-media";
+import type { WithSimilar } from "~/routes/api.similar-media"
 import type {
 	CombinationType,
 	StreamingPreset,
 	WatchedType,
-} from "~/server/discover.server";
+} from "~/server/discover.server"
 import {
 	mapCategoryToVectorName,
 	sortedDNACategories,
-} from "~/ui/dna/dna_utils";
+} from "~/ui/dna/dna_utils"
 import {
 	VOTE_COUNT_THRESHOLD_HIGH,
 	VOTE_COUNT_THRESHOLD_LOW,
-} from "~/utils/constants";
-import { SEPARATOR_SECONDARY } from "~/utils/navigation";
-import { getRatingKeys } from "~/utils/ratings";
-import { duplicateProviders } from "~/utils/streaming-links";
+} from "~/utils/constants"
+import { SEPARATOR_SECONDARY } from "~/utils/navigation"
+import { getRatingKeys } from "~/utils/ratings"
+import { duplicateProviders } from "~/utils/streaming-links"
 
-export const mediaTypes = ["movie", "tv"] as const;
-export type MediaType = (typeof mediaTypes)[number];
+export const mediaTypes = ["movie", "tv"] as const
+export type MediaType = (typeof mediaTypes)[number]
 
-export const filterMediaTypes = ["all", "movies", "tv"] as const;
-export type FilterMediaType = (typeof filterMediaTypes)[number];
+export const filterMediaTypes = ["all", "movies", "tv"] as const
+export type FilterMediaType = (typeof filterMediaTypes)[number]
 
-type StreamType = "flatrate" | "free" | "ads" | "buy" | "rent";
+type StreamType = "flatrate" | "free" | "ads" | "buy" | "rent"
 
 interface StreamingConfig {
-	streamingPreset?: StreamingPreset;
-	countryCode?: string;
-	streamTypes?: StreamType[];
-	providerIds?: number[];
+	streamingPreset?: StreamingPreset
+	countryCode?: string
+	streamTypes?: StreamType[]
+	providerIds?: number[]
 }
 
 interface Media {
-	type: MediaType;
-	tmdb_id: number;
+	type: MediaType
+	tmdb_id: number
 }
 
 interface Similarity {
-	category: string;
-	similarDNA: string;
-	similarDNACombinationType: CombinationType;
-	withSimilar: WithSimilar[];
-	media?: Media;
+	category: string
+	similarDNAIds: number[]
+	similarDNACombinationType: CombinationType
+	withSimilar: WithSimilar[]
+	media?: Media
 }
 
 interface Conditions {
-	minScore?: string;
-	maxScore?: string;
-	minYear?: string;
-	maxYear?: string;
-	similarityVector?: string;
-	watchedType?: WatchedType;
-	withCast?: string;
-	withCastCombinationType?: CombinationType;
-	withoutCast?: string;
-	withCrew?: string;
-	withCrewCombinationType?: CombinationType;
-	withoutCrew?: string;
-	withGenres?: string[];
-	withoutGenres?: string[];
+	minScore?: string
+	maxScore?: string
+	minYear?: string
+	maxYear?: string
+	similarityVector?: string
+	watchedType?: WatchedType
+	withCast?: string
+	withCastCombinationType?: CombinationType
+	withoutCast?: string
+	withCrew?: string
+	withCrewCombinationType?: CombinationType
+	withoutCrew?: string
+	withGenres?: string[]
+	withoutGenres?: string[]
 }
 
 interface ConstructSimilarityQueryParams {
-	type: MediaType;
-	similarity?: Similarity;
+	type: MediaType
+	similarity?: Similarity
 }
 
 interface ConstructUserQueryParams {
-	userId?: string;
-	type: MediaType;
-	watchedType?: WatchedType;
+	userId?: string
+	type: MediaType
+	watchedType?: WatchedType
 }
 
 interface OrderByConfig {
@@ -77,22 +77,22 @@ interface OrderByConfig {
 		| "popularity"
 		| "aggregated_overall_score_normalized_percent"
 		| "release_date"
-		| "vector";
-	direction: "ASC" | "DESC";
+		| "vector"
+	direction: "ASC" | "DESC"
 }
 interface ConstructSelectQueryParams {
-	userId?: string;
-	type: MediaType;
-	streaming?: StreamingConfig;
-	similarity?: Similarity;
-	conditions: Conditions;
-	orderBy: OrderByConfig;
-	limit: number;
+	userId?: string
+	type: MediaType
+	streaming?: StreamingConfig
+	similarity?: Similarity
+	conditions: Conditions
+	orderBy: OrderByConfig
+	limit: number
 }
 
 interface ConstructUnionQueryParams
 	extends Omit<ConstructSelectQueryParams, "type"> {
-	filterMediaType: FilterMediaType;
+	filterMediaType: FilterMediaType
 }
 
 interface ConstructFullQueryParams extends ConstructUnionQueryParams {}
@@ -112,12 +112,12 @@ export const constructFullQuery = ({
 		"aggregated_overall_score_normalized_percent",
 		"release_date",
 		"vector",
-	];
+	]
 	if (!validOrderByColumns.includes(orderBy.column)) {
-		throw new Error("Invalid orderBy.column");
+		throw new Error("Invalid orderBy.column")
 	}
 	if (!["ASC", "DESC"].includes(orderBy.direction)) {
-		throw new Error("Invalid orderBy.direction");
+		throw new Error("Invalid orderBy.direction")
 	}
 
 	// Validate similarity.category
@@ -125,7 +125,7 @@ export const constructFullQuery = ({
 		similarity?.category &&
 		!sortedDNACategories.includes(similarity.category)
 	) {
-		throw new Error("Invalid similarity category");
+		throw new Error("Invalid similarity category")
 	}
 
 	// Construct the query and collect parameters
@@ -137,7 +137,7 @@ export const constructFullQuery = ({
 		similarity,
 		orderBy,
 		limit,
-	});
+	})
 
 	// Build the final query
 	const namedQuery = `
@@ -156,18 +156,18 @@ export const constructFullQuery = ({
 				: `${orderBy.column} ${orderBy.direction}`
 		}
 			LIMIT :::limit
-	`;
+	`
 
 	// Collect additional parameters for the final query
 	const params: Record<string, unknown> = {
 		...collectedParams,
 		similarityVector: conditions.similarityVector,
 		limit: limit,
-	};
+	}
 
 	// Convert named parameters to positional parameters once
-	return convertNamedToPositionalParams(namedQuery, params);
-};
+	return convertNamedToPositionalParams(namedQuery, params)
+}
 
 const constructUnionQuery = ({
 	userId,
@@ -178,8 +178,8 @@ const constructUnionQuery = ({
 	orderBy,
 	limit,
 }: ConstructUnionQueryParams) => {
-	const selectQueries = [];
-	let collectedParams: Record<string, unknown> = {};
+	const selectQueries = []
+	let collectedParams: Record<string, unknown> = {}
 
 	if (["all", "movies"].includes(filterMediaType)) {
 		const { query: selectMovies, params: paramsMovies } = constructSelectQuery({
@@ -190,9 +190,9 @@ const constructUnionQuery = ({
 			conditions,
 			orderBy,
 			limit,
-		});
-		selectQueries.push(selectMovies);
-		collectedParams = { ...collectedParams, ...paramsMovies };
+		})
+		selectQueries.push(selectMovies)
+		collectedParams = { ...collectedParams, ...paramsMovies }
 	}
 
 	if (["all", "tv"].includes(filterMediaType)) {
@@ -204,19 +204,19 @@ const constructUnionQuery = ({
 			conditions,
 			orderBy,
 			limit,
-		});
-		selectQueries.push(selectTv);
-		collectedParams = { ...collectedParams, ...paramsTv };
+		})
+		selectQueries.push(selectTv)
+		collectedParams = { ...collectedParams, ...paramsTv }
 	}
 
 	const unionQuery = `
 		WITH media AS (
 			${selectQueries.map((query) => `(${query})`).join("\nUNION\n")}
 			)
-	`;
+	`
 
-	return { query: unionQuery, params: collectedParams };
-};
+	return { query: unionQuery, params: collectedParams }
+}
 
 const constructSelectQuery = ({
 	userId,
@@ -238,34 +238,34 @@ const constructSelectQuery = ({
 		withCrew,
 		withCrewCombinationType,
 		withGenres,
-	} = conditions;
+	} = conditions
 
 	// Validate type
 	if (!["movie", "tv"].includes(type)) {
-		throw new Error("Invalid media type");
+		throw new Error("Invalid media type")
 	}
 
-	const userJoin = constructUserQuery({ userId, type, watchedType });
+	const userJoin = constructUserQuery({ userId, type, watchedType })
 
 	// Get similarity joins and parameters
 	const { similarityJoins, similarityParams } = constructSimilarityQueryParams({
 		type,
 		similarity,
-	});
+	})
 
 	// Prepare castIds and crewIds, ensuring they are valid numbers
 	const castIds = (withCast || "")
 		.split(",")
 		.map((castId) => Number(castId))
-		.filter((id) => !Number.isNaN(id));
+		.filter((id) => !Number.isNaN(id))
 	const crewIds = (withCrew || "")
 		.split(",")
 		.map((crewId) => Number(crewId))
-		.filter((id) => !Number.isNaN(id));
+		.filter((id) => !Number.isNaN(id))
 
 	// Get streaming condition and parameters
 	const { condition: streamingCondition, params: streamingParams } =
-		getStreamingLinksCondition(type, streaming);
+		getStreamingLinksCondition(type, streaming)
 
 	// Build the query with placeholders
 	const query = `
@@ -275,8 +275,8 @@ const constructSelectQuery = ({
 				similarity?.withSimilar?.[0]?.categories
 					? `(${similarity.withSimilar[0].categories
 							.map((category) => {
-								const categoryName = mapCategoryToVectorName(category);
-								return `(COALESCE(vm.${categoryName}_vector <=> vm1.${categoryName}_vector, 1))`;
+								const categoryName = mapCategoryToVectorName(category)
+								return `(COALESCE(vm.${categoryName}_vector <=> vm1.${categoryName}_vector, 1))`
 							})
 							.join(" + ")}) as similarity_score,`
 					: ""
@@ -333,7 +333,7 @@ const constructSelectQuery = ({
 					: `${orderBy.column} ${orderBy.direction}`
 			}
 			LIMIT :::limit
-	`;
+	`
 
 	// Collect parameters
 	const params: Record<string, unknown> = {
@@ -346,67 +346,50 @@ const constructSelectQuery = ({
 		userId,
 		...similarityParams,
 		...streamingParams,
-	};
+	}
 
-	return { query, params };
-};
+	return { query, params }
+}
 
 const constructSimilarityQueryParams = ({
 	type,
 	similarity,
 }: ConstructSimilarityQueryParams) => {
-	const { similarDNA, similarDNACombinationType, withSimilar } =
-		similarity || {};
-	const similarDNAList = similarDNA
-		? similarDNA.split(",").map((dna) => {
-				const [category, label] = dna.split(SEPARATOR_SECONDARY, 2);
-				return {
-					category,
-					label,
-				};
-			})
-		: [];
+	const {
+		similarDNAIds = [],
+		similarDNACombinationType,
+		withSimilar,
+	} = similarity || {}
 
-	const similarityParams: Record<string, unknown> = {};
+	const similarityParams: Record<string, unknown> = {}
 
 	const similarDNAJoins =
-		similarDNAList.length > 0
+		similarDNAIds.length > 0
 			? similarDNACombinationType === "all"
 				? // For "all", join each category/label pair as a separate JOIN
-					similarDNAList
-						.map((dna, index) => {
-							// Validate category and label
-							if (!sortedDNACategories.includes(dna.category)) {
-								throw new Error("Invalid DNA category");
-							}
+					similarDNAIds
+						.map((dnaId, index) => {
 							// Use parameter placeholders
-							similarityParams[`dnaCategory${index}`] = dna.category;
-							similarityParams[`dnaLabel${index}`] = dna.label;
+							similarityParams[`dnaId${index}`] = dnaId
 							return `JOIN dna d${index} ON m.tmdb_id = ANY(d${index}.${type}_tmdb_id)
-							 AND d${index}.category = :::dnaCategory${index} 
-							 AND d${index}.label = :::dnaLabel${index}`;
+							  		  AND d${index}.id = :::dnaId${index}`
 						})
 						.join("\n")
 				: // For "any", join once with OR conditions
 					(() => {
-						const conditions = similarDNAList
-							.map((dna, index) => {
-								// Validate category and label
-								if (!sortedDNACategories.includes(dna.category)) {
-									throw new Error("Invalid DNA category");
-								}
+						const conditions = similarDNAIds
+							.map((dnaId, index) => {
 								// Use parameter placeholders
-								similarityParams[`dnaCategory${index}`] = dna.category;
-								similarityParams[`dnaLabel${index}`] = dna.label;
-								return `(d.category = :::dnaCategory${index} AND d.label = :::dnaLabel${index})`;
+								similarityParams[`dnaId${index}`] = dnaId
+								return `d.id = :::dnaId${index}`
 							})
-							.join(" OR ");
+							.join(" OR ")
 						return `JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id) 
-					   AND (${conditions})`;
+					   AND (${conditions})`
 					})()
-			: "";
+			: ""
 
-	const withSimilarList = withSimilar || [];
+	const withSimilarList = withSimilar || []
 	const similarTitleJoins =
 		withSimilarList.length > 0
 			? [
@@ -414,31 +397,31 @@ const constructSimilarityQueryParams = ({
 					...withSimilarList.map((similar, index) => {
 						// Validate mediaType
 						if (!["movie", "tv"].includes(similar.mediaType)) {
-							throw new Error("Invalid similar mediaType");
+							throw new Error("Invalid similar mediaType")
 						}
 						// Use parameter placeholders
-						similarityParams[`similarTmdbId${index}`] = similar.tmdbId;
+						similarityParams[`similarTmdbId${index}`] = similar.tmdbId
 						return `
 							JOIN vectors_media vm1 ON vm1.tmdb_id = :::similarTmdbId${index} AND vm1.media_type = '${similar.mediaType}'
-						`;
+						`
 					}),
 				].join("\n")
-			: "";
+			: ""
 
 	return {
 		similarityJoins: [similarDNAJoins, similarTitleJoins]
 			.filter(Boolean)
 			.join("\n"),
 		similarityParams,
-	};
-};
+	}
+}
 
 const constructUserQuery = ({
 	userId,
 	type,
 	watchedType,
 }: ConstructUserQueryParams) => {
-	if (!userId || !watchedType) return "";
+	if (!userId || !watchedType) return ""
 
 	if (watchedType === "watched") {
 		return `
@@ -446,7 +429,7 @@ const constructUserQuery = ({
 				uwh.user_id = :::userId
 				AND uwh.tmdb_id = m.tmdb_id 
 				AND uwh.media_type = '${type}' 
-		`;
+		`
 	}
 	if (watchedType === "didnt-watch") {
 		// requires addition WHERE condition
@@ -455,7 +438,7 @@ const constructUserQuery = ({
 				uwh.user_id = :::userId
 				AND uwh.tmdb_id = m.tmdb_id 
 				AND uwh.media_type = '${type}' 
-		`;
+		`
 	}
 	if (watchedType === "plan-to-watch") {
 		return `
@@ -463,9 +446,9 @@ const constructUserQuery = ({
 				uwl.user_id = :::userId
 				AND uwl.tmdb_id = m.tmdb_id 
 				AND uwl.media_type = '${type}' 
-		`;
+		`
 	}
-};
+}
 
 const getCommonFields = () => {
 	return [
@@ -478,8 +461,8 @@ const getCommonFields = () => {
 		"popularity",
 		"streaming_providers",
 		...getRatingKeys(),
-	];
-};
+	]
+}
 
 const getStreamingLinksCondition = (
 	type: MediaType,
@@ -500,7 +483,7 @@ const getStreamingLinksCondition = (
 		providerIds,
 		streamTypes,
 		countryCode,
-	);
+	)
 
 	return {
 		condition: `EXISTS (
@@ -514,8 +497,8 @@ const getStreamingLinksCondition = (
 			LIMIT 1
 		)`,
 		params,
-	};
-};
+	}
+}
 
 const getStreamingLinksJoin = ({
 	streamingPreset,
@@ -529,7 +512,7 @@ const getStreamingLinksJoin = ({
 			providerIds,
 			streamTypes,
 			countryCode,
-		);
+		)
 
 	return `
 		SELECT json_agg(json_build_object(
@@ -554,8 +537,8 @@ const getStreamingLinksJoin = ({
 					 ORDER BY spl.provider_id, spl.quality DESC, spl.price_dollar ASC
 				 ) spl
 					 INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
-	`;
-};
+	`
+}
 
 // Generic query helper
 
@@ -563,24 +546,24 @@ const convertNamedToPositionalParams = <T extends string>(
 	query: string,
 	params: Partial<Record<T, unknown>>,
 ) => {
-	let index = 1;
-	const nameToIndex: Partial<Record<T, string>> = {};
-	const orderedValues: unknown[] = [];
+	let index = 1
+	const nameToIndex: Partial<Record<T, string>> = {}
+	const orderedValues: unknown[] = []
 
 	const positionalQuery = query.replace(/:::(\w+)/g, (_, name) => {
 		if (!(name in nameToIndex)) {
 			if (Object.prototype.hasOwnProperty.call(params, name)) {
-				nameToIndex[name as T] = `$${index++}`;
-				orderedValues.push(params[name as T]);
+				nameToIndex[name as T] = `$${index++}`
+				orderedValues.push(params[name as T])
 			} else {
-				throw new Error(`Parameter '${name}' is missing in the params object`);
+				throw new Error(`Parameter '${name}' is missing in the params object`)
 			}
 		}
-		return nameToIndex[name as T] as string;
-	});
+		return nameToIndex[name as T] as string
+	})
 
-	return { query: positionalQuery, params: orderedValues };
-};
+	return { query: positionalQuery, params: orderedValues }
+}
 
 function prepareStreamingConditions(
 	streamingPreset: "everywhere" | "mine" | "custom" | undefined,
@@ -588,39 +571,39 @@ function prepareStreamingConditions(
 	streamTypes: StreamType[] | undefined,
 	countryCode: string | undefined,
 ) {
-	const params: Record<string, unknown> = {};
-	let providerCondition = "";
+	const params: Record<string, unknown> = {}
+	let providerCondition = ""
 	if (streamingPreset !== "everywhere" && providerIds) {
-		const validProviderIds = providerIds.filter((id) => !Number.isNaN(id));
+		const validProviderIds = providerIds.filter((id) => !Number.isNaN(id))
 		validProviderIds.forEach((id, idx) => {
-			params[`providerId${idx}`] = id;
-		});
+			params[`providerId${idx}`] = id
+		})
 		providerCondition = `IN (${validProviderIds
 			.map((_, idx) => `:::providerId${idx}`)
-			.join(",")})`;
+			.join(",")})`
 	} else {
-		providerCondition = `NOT IN (${duplicateProviders.join(",")})`;
+		providerCondition = `NOT IN (${duplicateProviders.join(",")})`
 	}
 
-	let streamTypeCondition = "";
+	let streamTypeCondition = ""
 	if (streamTypes) {
 		streamTypeCondition = `AND spl.stream_type IN (${streamTypes
 			.map((streamType, idx) => {
-				params[`streamType${idx}`] = streamType;
-				return `:::streamType${idx}`;
+				params[`streamType${idx}`] = streamType
+				return `:::streamType${idx}`
 			})
-			.join(",")})`;
+			.join(",")})`
 	}
 
-	let countryCodeCondition = "";
+	let countryCodeCondition = ""
 	if (streamingPreset !== "everywhere" && countryCode) {
-		params.countryCode = countryCode;
-		countryCodeCondition = "AND spl.country_code = :::countryCode";
+		params.countryCode = countryCode
+		countryCodeCondition = "AND spl.country_code = :::countryCode"
 	}
 	return {
 		providerCondition,
 		streamTypeCondition,
 		countryCodeCondition,
 		params,
-	};
+	}
 }

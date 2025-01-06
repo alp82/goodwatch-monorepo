@@ -4,43 +4,41 @@ import {
 	MenuItem,
 	MenuItems,
 	Transition,
-} from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import React, { Fragment } from "react";
-import { useLocation } from "react-router";
+} from "@headlessui/react"
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
+import React, { Fragment } from "react"
+import { useLocation } from "react-router"
 
 import {
 	ArrowTopRightOnSquareIcon,
 	BookmarkIcon,
-} from "@heroicons/react/20/solid";
+} from "@heroicons/react/20/solid"
 import {
 	Cog6ToothIcon,
-	CogIcon,
 	EyeIcon,
 	UserCircleIcon,
-} from "@heroicons/react/24/solid";
-import { Link } from "@remix-run/react";
-import logo from "~/img/goodwatch-logo.png";
-import { useSetUserSettings } from "~/routes/api.user-settings.set";
-import Search from "~/ui/Search";
-import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
-import { SignInButton } from "~/ui/auth/SignInButton";
-import { SignOutLink } from "~/ui/auth/SignOutLink";
-import { GlobalLoading } from "~/ui/nav/GlobalLoading";
-import { useUser } from "~/utils/auth";
+} from "@heroicons/react/24/solid"
+import { Link } from "@remix-run/react"
+import logoCircle from "~/img/goodwatch-logo-circle.svg"
+import logo from "~/img/goodwatch-logo-white.svg"
+import Search from "~/ui/Search"
+import { SignInButton } from "~/ui/auth/SignInButton"
+import { SignOutLink } from "~/ui/auth/SignOutLink"
+import { GlobalLoading } from "~/ui/nav/GlobalLoading"
+import { useUser } from "~/utils/auth"
 
 export default function Header() {
-	const location = useLocation();
-	const isPage = (pathname: string) => location.pathname.startsWith(pathname);
-	const isPageExact = (pathname: string) => location.pathname === pathname;
+	const location = useLocation()
+	const isPage = (pathname: string) => location.pathname.startsWith(pathname)
+	const isPageExact = (pathname: string) => location.pathname === pathname
 
-	const { user, loading } = useUser();
+	const { user, loading } = useUser()
 
 	return (
 		<div className="fixed top-0 z-50 w-full bg-gray-900">
 			<GlobalLoading />
 			<nav className="bg-gray-950/35">
-				<div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
+				<div className="mx-auto max-w-7xl px-4">
 					<div className="relative flex h-16 items-center justify-between">
 						{/* Mobile menu button */}
 						<div className="flex lg:hidden">
@@ -172,35 +170,32 @@ export default function Header() {
 							</Menu>
 						</div>
 						{/* Logo and desktop links */}
-						<div className="flex items-center px-2 lg:px-0">
+						<div className="flex items-baseline px-2 lg:px-0">
 							<div className="flex-shrink-0">
 								<Link to="/" prefetch="render">
-									<img
-										className="h-10 w-auto"
-										src={logo}
-										alt="GoodWatch Logo"
-									/>
+									<img className="h-7 w-auto" src={logo} alt="GoodWatch Logo" />
 								</Link>
 							</div>
 							<Link to="/" prefetch="render">
-								<div className="brand-header hidden md:block ml-2 text-2xl text-gray-100">
-									GoodWatch
+								<div className="brand-header hidden md:block ml-0.5 text-4xl text-gray-100">
+									<span className="hidden">G</span>oodWatch
 								</div>
 							</Link>
-							<div className="hidden lg:ml-6 lg:block">
-								<div className="flex space-x-4">
-									<Link
-										className={`rounded-md px-3 py-2 text-md font-semibold ${
-											isPage("/discover")
-												? "text-white bg-indigo-800"
-												: "text-gray-300"
-										} hover:bg-indigo-900 hover:text-white`}
-										to="/discover"
-										prefetch="render"
-									>
-										Discover
-									</Link>
-								</div>
+						</div>
+						{/* Main nav */}
+						<div className="hidden lg:ml-6 lg:block">
+							<div className="flex space-x-4">
+								<Link
+									className={`rounded-md px-3 py-2 text-md font-semibold ${
+										isPage("/discover")
+											? "text-white bg-indigo-800"
+											: "text-gray-300"
+									} hover:bg-indigo-900 hover:text-white`}
+									to="/discover"
+									prefetch="render"
+								>
+									Discover
+								</Link>
 							</div>
 						</div>
 						{/* Search bar */}
@@ -309,5 +304,5 @@ export default function Header() {
 				</div>
 			</nav>
 		</div>
-	);
+	)
 }

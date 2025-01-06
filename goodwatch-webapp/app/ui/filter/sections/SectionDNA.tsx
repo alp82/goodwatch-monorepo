@@ -3,34 +3,38 @@ import {
 	CheckIcon,
 	MagnifyingGlassIcon,
 	TagIcon,
-} from "@heroicons/react/20/solid";
-import React from "react";
-import Highlighter from "react-highlight-words";
-import { useDNA } from "~/routes/api.dna";
-import type { CombinationType, DiscoverParams } from "~/server/discover.server";
-import type { DNAResult } from "~/server/dna.server";
+} from "@heroicons/react/20/solid"
+import React from "react"
+import Highlighter from "react-highlight-words"
+import { useDNA } from "~/routes/api.dna"
+import type { CombinationType, DiscoverParams } from "~/server/discover.server"
+import type { DNAResult } from "~/server/dna.server"
 import {
 	type CombinationTypeOption,
 	combinationTypeOptions,
 	discoverFilters,
-} from "~/server/types/discover-types";
-import OneOrMoreItems from "~/ui/filter/OneOrMoreItems";
-import EditableSection from "~/ui/filter/sections/EditableSection";
+} from "~/server/types/discover-types"
+import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
+import EditableSection from "~/ui/filter/sections/EditableSection"
 import Autocomplete, {
 	type AutocompleteItem,
 	type RenderItemParams,
-} from "~/ui/form/Autocomplete";
-import RadioBlock from "~/ui/form/RadioBlock";
-import { Tag } from "~/ui/tags/Tag";
-import { Ping } from "~/ui/wait/Ping";
-import { SEPARATOR_SECONDARY, useNav } from "~/utils/navigation";
-import { useDebounce } from "~/utils/timing";
+} from "~/ui/form/Autocomplete"
+import RadioBlock from "~/ui/form/RadioBlock"
+import { Tag } from "~/ui/tags/Tag"
+import { Ping } from "~/ui/wait/Ping"
+import {
+	SEPARATOR_SECONDARY,
+	SEPARATOR_TERTIARY,
+	useNav,
+} from "~/utils/navigation"
+import { useDebounce } from "~/utils/timing"
 
 interface SectionDNAParams {
-	params: DiscoverParams;
-	editing: boolean;
-	onEdit: () => void;
-	onClose: () => void;
+	params: DiscoverParams
+	editing: boolean
+	onEdit: () => void
+	onClose: () => void
 }
 
 export default function SectionDNA({
@@ -39,66 +43,70 @@ export default function SectionDNA({
 	onEdit,
 	onClose,
 }: SectionDNAParams) {
-	const [searchText, setSearchText] = React.useState("");
+	const [searchText, setSearchText] = React.useState("")
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchText(event.target.value);
-	};
-	const debouncedSearchText = useDebounce(searchText, 200);
+		setSearchText(event.target.value)
+	}
+	const debouncedSearchText = useDebounce(searchText, 200)
 
 	const [combinationType, setCombinationType] = React.useState<CombinationType>(
 		params.similarDNACombinationType || combinationTypeOptions[0].name,
-	);
+	)
 	const selectedCombinationTypeOption = combinationTypeOptions.find(
 		(option) => option.name === combinationType,
-	);
+	)
 	const handleChangeCombinationType = (
 		combinationTypeOption: CombinationTypeOption,
 	) => {
-		const combinationType = combinationTypeOption.name;
-		setCombinationType(combinationType);
+		const combinationType = combinationTypeOption.name
+		setCombinationType(combinationType)
 		updateQueryParams({
 			similarDNACombinationType: combinationType,
-		});
-	};
+		})
+	}
 
 	// data retrieval
 
 	const dnaResult = useDNA({
 		text: debouncedSearchText,
-	});
-	const dna = dnaResult.data?.result || [];
+	})
+	const dna = dnaResult.data?.result || []
 
-	const { similarDNA = "" } = params;
-	const dnaKeys = (similarDNA || "").split(",").filter(Boolean);
+	const { similarDNA = "" } = params
+	const dnaKeys = (similarDNA || "").split(",").filter(Boolean)
 	const dnaToInclude = similarDNA
 		.split(",")
 		.filter(Boolean)
 		.map((dna) => {
-			const [category, label] = dna.split(SEPARATOR_SECONDARY, 2);
+			const [id, tag] = dna.split(SEPARATOR_SECONDARY, 2)
+			const [category, label] = (tag || "").split(SEPARATOR_TERTIARY, 2)
 			return {
+				id,
 				category,
 				label,
-			};
-		});
+			}
+		})
 
 	// autocomplete data
 
 	const autocompleteItems = dna.map((dna: DNAResult) => {
-		const key = `${dna.category}${SEPARATOR_SECONDARY}${dna.label}`;
-		const label = dna.label;
+		const key = dna.id
+		const alias = dna.aliases?.[0]
+		const label = `${dna.label}${alias ? ` (${alias})` : ""}`
 		return {
 			key,
 			label,
 			category: dna.category,
 			count: dna.count_all,
-		};
-	});
+		}
+	})
 	const autocompleteRenderItem = ({
 		item,
 	}: RenderItemParams<
-		AutocompleteItem & { category: string; count: number }
+		AutocompleteItem & { id: number; category: string; count: number }
 	>) => {
-		const isSelected = dnaKeys.includes(item.key);
+		const dnaIds = dnaToInclude.map((dna) => dna.id)
+		const isSelected = dnaIds.includes(item.key.toString())
 		return (
 			<div
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
@@ -131,59 +139,63 @@ export default function SectionDNA({
 					/>
 				)}
 			</div>
-		);
-	};
+		)
+	}
 
 	// update handlers
 
 	const { updateQueryParams } =
-		useNav<Pick<DiscoverParams, "similarDNA" | "similarDNACombinationType">>();
+		useNav<Pick<DiscoverParams, "similarDNA" | "similarDNACombinationType">>()
 	const updateDNA = (
 		dnaToInclude: DNAResult[],
 		updatedCombinationType: string,
 	) => {
 		updateQueryParams({
 			similarDNA: dnaToInclude
-				.map((dna) => `${dna.category}${SEPARATOR_SECONDARY}${dna.label}`)
+				.map(
+					(dna) =>
+						`${dna.id}${SEPARATOR_SECONDARY}${dna.category}${SEPARATOR_TERTIARY}${dna.label}`,
+				)
 				.join(","),
 			similarDNACombinationType: updatedCombinationType,
-		});
-	};
+		})
+	}
 
 	const handleSelect = (
-		selectedItem: AutocompleteItem & { category: string; count: number },
+		selectedItem: AutocompleteItem & {
+			id: number
+			category: string
+			count: number
+		},
 	) => {
-		const updatedDNAToInclude: DNAResult[] = dnaKeys.includes(selectedItem.key)
-			? dnaToInclude.filter(
-					(dna) =>
-						`${dna.category}${SEPARATOR_SECONDARY}${dna.label}` !==
-						selectedItem.key,
-				)
+		const updatedDNAToInclude: DNAResult[] = dnaToInclude.find(
+			(dna) => dna.id === selectedItem.key.toString(),
+		)
+			? dnaToInclude.filter((dna) => dna.id !== selectedItem.key.toString())
 			: [
 					...dnaToInclude,
 					{
+						id: selectedItem.key.toString(),
 						category: selectedItem.category,
 						label: selectedItem.label,
 						count_all: selectedItem.count,
 					},
-				];
-		updateDNA(updatedDNAToInclude, combinationType);
-	};
+				]
+		updateDNA(updatedDNAToInclude, combinationType)
+	}
 
 	const handleDelete = (dnaToDelete: DNAResult) => {
 		const updatedDNAToInclude: DNAResult[] = dnaToInclude.filter(
-			(dna) =>
-				`${dna.category}${SEPARATOR_SECONDARY}${dna.label}` !==
-				`${dnaToDelete.category}${SEPARATOR_SECONDARY}${dnaToDelete.label}`,
-		);
-		updateDNA(updatedDNAToInclude, combinationType);
-	};
+			(dna) => dna.id !== dnaToDelete.id.toString(),
+		)
+		updateDNA(updatedDNAToInclude, combinationType)
+	}
 
 	const handleRemoveAll = () => {
-		updateDNA([], "");
-		setSearchText("");
-		onClose();
-	};
+		updateDNA([], "")
+		setSearchText("")
+		onClose()
+	}
 
 	// rendering
 
@@ -238,7 +250,7 @@ export default function SectionDNA({
 						{dnaToInclude.length > 0 ? (
 							dnaToInclude.map((dna, index) => (
 								<OneOrMoreItems
-									key={`${dna.category}${SEPARATOR_SECONDARY}${dna.label}`}
+									key={`${dna.id}`}
 									index={index}
 									amount={dnaToInclude.length}
 									mode={combinationType}
@@ -261,5 +273,5 @@ export default function SectionDNA({
 				</div>
 			)}
 		</EditableSection>
-	);
+	)
 }

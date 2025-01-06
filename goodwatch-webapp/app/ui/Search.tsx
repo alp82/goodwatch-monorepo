@@ -73,7 +73,7 @@ export default function Search() {
 				className="flex justify-center"
 			>
 				<div
-					className="flex items-center w-36 h-9 max-w-[calc(theme(maxWidth.7xl)-3em) py-2 px-4 group-focus-within:h-12
+					className="flex items-center h-9 min-w-24 max-w-[calc(theme(maxWidth.7xl)-3em) py-2 px-4 group-focus-within:h-12
 					rounded-md bg-gray-800 border-slate-700 border-2 text-gray-200 hover:border-slate-600 group-focus-within:bg-slate-700 group-focus-within:border-slate-600
 					group-focus-within:absolute group-focus-within:top-2 group-focus-within:left-0 group-focus-within:w-full group-focus-within:z-10
 					transition-all duration-150 ease-in-out transform"

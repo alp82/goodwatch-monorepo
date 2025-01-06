@@ -1,37 +1,57 @@
 # TODO's
 ```
+dna autocomplete uses only primary
+
+dna search uses all aliases
+
+create normalized dna with primary tags
+    add average vector
+
 ---
 
-New cols:
-    is_duplicate_of
-    is_similar_to
+404 / 500 fixes
+
+remove sitemaps
+
+---
+
+SEO analysis
+    http://guidetodatamining.com/ngramAnalyzer/index.php
     
-Solve issues with DNA data quality
-    duplicate entries with similar wording
-    overlaps between categories
+SEO optimization + marketing
+    https://www.jacobparis.com/content/remix-og
+    https://www.reddit.com/r/SaaS/comments/1ho4hbu/best_free_seo_tools/
+    https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
+    https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
+    https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
+    https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
+    
+New SEO topics pages
+    update main navigation
 
-similarity issues
-    dark palette is close to vibrant palette
+Create new sitemaps
 
 ---
 
-documentation
-    explain folders
-    explain webapp
-
----
-
-landing page demo
-    https://x.com/jh3yy/status/1863858454751789400
-    https://codepen.io/jh3y/pen/MYgaaem
-    https://codepen.io/pxel/pen/EaYVZBO
+landing page inspiration
+    https://waku.gg/
+    https://superdevpro.com/
+    https://www.firewatchgame.com/
+    https://www.screenspace.io/
+    https://dribbble.com/shots/18008814-Osnaria-Game-Web-Landing-Page-With-Illustrations
 
 ---
 
 landing page redesign
-    https://superdevpro.com/
+    show DNA in covers
+    hibba: https://www.figma.com/design/Kv0ESmxOOFYuW8OVq6od9i/Goodwatch?node-id=0-1&p=f&t=z7iZzVGPfgqjznOf-0
     https://www.landingly.co/
     https://onepagelove.com/ 
+    https://handyarrows.com/
+    scroll words
+        https://x.com/jh3yy/status/1863858454751789400
+        https://codepen.io/pxel/pen/EaYVZBO
+        https://codepen.io/jh3y/pen/MYgaaem
 
 tagline
     https://www.reddit.com/r/SaaS/comments/1hoth2s/i_analyzed_100_saas_headlines_and_realized_were/?share_id=ql5uTUQ151unOg4PvX-N8&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
@@ -48,18 +68,25 @@ For You
 
 ---
 
-SEO optimization + marketing
-    https://www.jacobparis.com/content/remix-og
-    https://www.reddit.com/r/SaaS/comments/1ho4hbu/best_free_seo_tools/
-    https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
-    https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
-    https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
-    https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
-    
+Cast / Crew pages
+    DNA overview (e.g. most common DNA tags for "Henry Cavill")
+
+---
+
+documentation
+    explain folders
+    explain webapp
+    https://github.com/daccotta-org/daccotta
+
 ---
 
 dna cleanup:
     "Fantastical world with diverse environments (e.g."
+
+---
+
+dna time categories:
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/676920c6-3828-8001-8b03-966adf5d0d80
 
 ---
 
@@ -115,6 +142,11 @@ plan to watch
     easy adding more
     
     remove separate wishlist page?
+
+---
+
+goodwatch tiktok channel
+    https://clideo.com/de/account/projects
 
 ---
 
@@ -265,6 +297,11 @@ new sorting:
 
 ---
 
+user feedback
+    https://userjot.com/
+
+---
+
 add caching for user settings
     invalidate cache in setter
 
@@ -286,6 +323,11 @@ crawling scores:
 
 header glass
     https://www.joshwcomeau.com/css/backdrop-filter/
+
+---
+
+investor
+    https://www.basecase.sh/
 
 ---
 
@@ -522,11 +564,13 @@ filter inspiration:
 Thanks page
     tools & libraries
     content creators
-        josh
+        josh w. cameau
     beta tester shoutouts
     community shoutouts
         Lost Design
         Mohit UX audit
+        hibba design
+        Harrie SEO strategy
     credits for design inspiration
         https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&node-type=canvas&t=HNeQ9QDw29BnwYEl-0
         https://imdb.shyakadavis.me/title#technical-specs
@@ -776,7 +820,11 @@ json-ld
 
 ---
 
-email solution
+email marketing
+    https://x.com/StewartSwayze/status/1876116900364861613
+        kit: https://kit.com/pricing
+        ghost
+        substack
     https://react.email/
     nodemailer (vs https://resend.com/)
 
@@ -820,6 +868,16 @@ launch
     Uneed
     https://docs.google.com/spreadsheets/u/0/d/1XNBDtreaotmXJRD3JOVdcAgRD9rO1GZjbjbrr1fHLMM/htmlview?pli=1 
     https://growstartup.co/directory-list/
+    https://www.effortlessbacklinks.com/
+    https://www.getmorebacklinks.org/
+
+---
+
+open source events
+    https://gssoc.girlscript.tech/
+    https://hacktoberfest.com/
+    https://buildspace.so/s5/welcome
+    https://solvearn.net/
 
 ---
     
@@ -1114,6 +1172,14 @@ dna journey
     https://huggingface.co/czesty/ea-setfit-v1-classifier
     https://colab.research.google.com/drive/12mOUgSiy7eY_py3T66tlas8h4lgY8jKV#scrollTo=vad6_Ay41hMg
     https://colab.research.google.com/drive/12EtiQRXZGsxCu3kA6T6mlekMq2j-XGBn#scrollTo=vad6_Ay41hMg
+dna clustering
+    https://windmill.goodwatch.app/run/0194257e-7845-8b5b-a6b0-1b2d307de565?workspace=flickvibe
+        Processing item 331000/331073 - Clusters: 66,807 - Largest cluster: 5711 (Elapsed: 523.11m)
+        Clustering complete in 523.37 minutes.
+        Total clusters formed: 66,819
+        Largest cluster size: 5714
+        Largest cluster representative label: Forbidden Resurrection
+        Largest cluster labels (up to 10): ['Forbidden Resurrection', 'Legacy Of Evil', 'Underdog Against Authority', 'Reluctant Mentorship', 'Unholy Resurrection', 'Misguided Justice', 'Insignificant Protagonist', 'Naive Inventor', 'Clueless Parent', 'Misunderstood Outcasts']
 monorepo design
 from vercel to coolify
     too many open files
