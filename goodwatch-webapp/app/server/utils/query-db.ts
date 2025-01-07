@@ -366,26 +366,28 @@ const constructSimilarityQueryParams = ({
 	const similarDNAJoins =
 		similarDNAIds.length > 0
 			? similarDNACombinationType === "all"
-				? // For "all", join each category/label pair as a separate JOIN
-					similarDNAIds
+				? similarDNAIds
 						.map((dnaId, index) => {
 							// Use parameter placeholders
 							similarityParams[`dnaId${index}`] = dnaId
+							// Join condition now includes both primary DNA and cluster members
 							return `JOIN dna d${index} ON m.tmdb_id = ANY(d${index}.${type}_tmdb_id)
-							  		  AND d${index}.id = :::dnaId${index}`
+                    AND (
+                      d${index}.id = :::dnaId${index} OR 
+                      d${index}.cluster_id = :::dnaId${index}
+                    )`
 						})
 						.join("\n")
-				: // For "any", join once with OR conditions
-					(() => {
+				: (() => {
 						const conditions = similarDNAIds
 							.map((dnaId, index) => {
 								// Use parameter placeholders
 								similarityParams[`dnaId${index}`] = dnaId
-								return `d.id = :::dnaId${index}`
+								return `(d.id = :::dnaId${index} OR d.cluster_id = :::dnaId${index})`
 							})
 							.join(" OR ")
 						return `JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id) 
-					   AND (${conditions})`
+                  AND (${conditions})`
 					})()
 			: ""
 
@@ -402,8 +404,8 @@ const constructSimilarityQueryParams = ({
 						// Use parameter placeholders
 						similarityParams[`similarTmdbId${index}`] = similar.tmdbId
 						return `
-							JOIN vectors_media vm1 ON vm1.tmdb_id = :::similarTmdbId${index} AND vm1.media_type = '${similar.mediaType}'
-						`
+              JOIN vectors_media vm1 ON vm1.tmdb_id = :::similarTmdbId${index} AND vm1.media_type = '${similar.mediaType}'
+            `
 					}),
 				].join("\n")
 			: ""

@@ -165,6 +165,7 @@ async function _getDiscoverResults({
 	const similarDNAIds = similarDNA
 		.split(SEPARATOR_PRIMARY)
 		.map((idAndLabel) => idAndLabel.split(SEPARATOR_SECONDARY, 2)[0])
+		.filter(Boolean)
 	const withSimilar = convertSimilarTitles(similarTitles)
 
 	const { query, params } = constructFullQuery({
