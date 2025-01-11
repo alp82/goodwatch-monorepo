@@ -4,10 +4,7 @@ import type { DNAItem } from "~/server/details.server"
 import Sparkles from "~/ui/Sparkles"
 import { sections } from "~/ui/details/common"
 import { DNATag } from "~/ui/dna/DNATag"
-import {
-	getDNAForCategory,
-	getSortedCategories,
-} from "~/ui/dna/dna_utils"
+import { getDNAForCategory, getSortedCategories } from "~/ui/dna/dna_utils"
 import Cycle from "~/ui/list/Cycle"
 import type { Section } from "~/utils/scroll"
 
