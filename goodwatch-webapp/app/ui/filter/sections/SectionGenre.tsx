@@ -33,27 +33,27 @@ export default function SectionGenre({
 }: SectionGenreParams) {
 	// data retrieval
 
-	const genresResult = useGenres()
-	const genres = genresResult?.data || []
+	const allGenresResult = useGenres()
+	const allGenres = allGenresResult?.data || []
 
 	const { withGenres = "", withoutGenres = "" } = params
 	const genreIds = (withGenres || "")
 		.split(",")
 		.filter((genre) => Boolean(genre))
-	const selectedGenres = (genres || [])
+	const selectedGenres = (allGenres || [])
 		.filter((genre) => genreIds.includes(genre.id.toString()))
 		.map((genre) => genre.name)
 
-	const genresToInclude = genres.filter((genre) =>
+	const genresToInclude = allGenres.filter((genre) =>
 		withGenres.includes(genre.id.toString()),
 	)
-	const genresToExclude = genres.filter((genre) =>
+	const genresToExclude = allGenres.filter((genre) =>
 		withoutGenres.includes(genre.id.toString()),
 	)
 
 	// autocomplete data
 
-	const autocompleteItems = genres.map((genre: Genre) => {
+	const autocompleteItems = allGenres.map((genre: Genre) => {
 		return {
 			key: genre.id.toString(),
 			label: genre.name,
@@ -162,7 +162,7 @@ export default function SectionGenre({
 									</Tag>
 								</OneOrMoreItems>
 							))
-						) : genres.length === 0 ? (
+						) : allGenres.length === 0 ? (
 							<div className="relative h-8">
 								<Ping size="small" />
 							</div>

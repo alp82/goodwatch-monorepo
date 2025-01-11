@@ -1,26 +1,27 @@
-import { CubeIcon } from "@heroicons/react/24/solid";
-import { Link } from "@remix-run/react";
-import React from "react";
-import type { MovieDetails, TVDetails } from "~/server/details.server";
-import Collection from "~/ui/details/Collection";
-import Description from "~/ui/details/Description";
-import { DNATag } from "~/ui/dna/DNATag";
-import { SEPARATOR_SECONDARY } from "~/utils/navigation";
+import { CubeIcon } from "@heroicons/react/24/solid"
+import { Link } from "@remix-run/react"
+import React from "react"
+import type { MovieDetails, TVDetails } from "~/server/details.server"
+import Collection from "~/ui/details/Collection"
+import Description from "~/ui/details/Description"
+import { DNATag } from "~/ui/dna/DNATag"
+import { getDNAForCategory } from "~/ui/dna/dna_utils"
+import { SEPARATOR_SECONDARY } from "~/utils/navigation"
 
 export interface AboutProps {
-	details: MovieDetails | TVDetails;
+	details: MovieDetails | TVDetails
 }
 
 export default function About({ details }: AboutProps) {
-	const { dna, tmdb_id, media_type, synopsis, tagline } = details;
+	const { dna, tmdb_id, media_type, synopsis, tagline } = details
 
-	let collection: MovieDetails["collection"] | undefined;
+	let collection: MovieDetails["collection"] | undefined
 	if (media_type === "movie") {
-		collection = details.collection;
+		collection = details.collection
 	}
 
-	const mood = dna.Mood || [];
-	const themes = dna.Themes || [];
+	const mood = getDNAForCategory(dna, "Mood")
+	const themes = getDNAForCategory(dna, "Themes")
 
 	return (
 		<>
@@ -38,8 +39,13 @@ export default function About({ details }: AboutProps) {
 						<>
 							<span className="pt-1 font-semibold text-sm">Themes:</span>
 							<span className="flex flex-wrap gap-2">
-								{themes.map((value) => (
-									<DNATag key={value} category="Themes" label={value} />
+								{themes.map((dnaItem) => (
+									<DNATag
+										key={dnaItem.id}
+										id={dnaItem.id}
+										category={dnaItem.category}
+										label={dnaItem.label}
+									/>
 								))}
 							</span>
 							<Link
@@ -58,8 +64,13 @@ export default function About({ details }: AboutProps) {
 								Mood:
 							</span>
 							<span className="flex flex-wrap gap-2">
-								{mood.map((value) => (
-									<DNATag key={value} category="Mood" label={value} />
+								{mood.map((dnaItem) => (
+									<DNATag
+										key={dnaItem.id}
+										id={dnaItem.id}
+										category={dnaItem.category}
+										label={dnaItem.label}
+									/>
 								))}
 							</span>
 							<Link
@@ -79,5 +90,5 @@ export default function About({ details }: AboutProps) {
 				<Collection collection={collection} movieId={details.tmdb_id} />
 			)}
 		</>
-	);
+	)
 }

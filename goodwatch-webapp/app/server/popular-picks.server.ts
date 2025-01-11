@@ -1,7 +1,5 @@
 import {
-	MovieDetails,
 	type StreamingProviders,
-	TVDetails,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
 import {

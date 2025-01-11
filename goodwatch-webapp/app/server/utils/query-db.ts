@@ -11,6 +11,10 @@ import {
 import {
 	VOTE_COUNT_THRESHOLD_HIGH,
 	VOTE_COUNT_THRESHOLD_LOW,
+	VOTE_COUNT_THRESHOLD_MID,
+	WEIGHT_CLUSTER_TAG_PRIMARY,
+	WEIGHT_CLUSTER_TAG_SECONDARY,
+	WEIGHT_ORIGINAL_TAG,
 } from "~/utils/constants"
 import { SEPARATOR_SECONDARY } from "~/utils/navigation"
 import { getRatingKeys } from "~/utils/ratings"
@@ -149,13 +153,13 @@ export const constructFullQuery = ({
 		JOIN LATERAL (
 			${getStreamingLinksJoin(streaming)}
 		) sl on TRUE
-		${similarity?.withSimilar?.[0]?.categories ? "WHERE similarity_score IS NOT NULL" : ""}
+		${similarity?.withSimilar?.length ? "WHERE similarity_score IS NOT NULL" : ""}
 		ORDER BY ${
-			similarity?.category
-				? `m.${similarity.category}_vector <=> :::similarityVector ASC`
+			similarity?.withSimilar?.length
+				? `similarity_score DESC, ${orderBy.column} ${orderBy.direction}`
 				: `${orderBy.column} ${orderBy.direction}`
 		}
-			LIMIT :::limit
+		LIMIT :::limit
 	`
 
 	// Collect additional parameters for the final query
@@ -212,7 +216,7 @@ const constructUnionQuery = ({
 	const unionQuery = `
 		WITH media AS (
 			${selectQueries.map((query) => `(${query})`).join("\nUNION\n")}
-			)
+		)
 	`
 
 	return { query: unionQuery, params: collectedParams }
@@ -229,9 +233,9 @@ const constructSelectQuery = ({
 }: ConstructSelectQueryParams) => {
 	const {
 		minYear,
-		maxYear,
-		minScore,
 		maxScore,
+		minScore,
+		maxYear,
 		watchedType,
 		withCast,
 		withCastCombinationType,
@@ -247,8 +251,14 @@ const constructSelectQuery = ({
 
 	const userJoin = constructUserQuery({ userId, type, watchedType })
 
-	// Get similarity joins and parameters
-	const { similarityJoins, similarityParams } = constructSimilarityQueryParams({
+	// Construct similarity CTE and conditions if similarity is requested
+	const categories = similarity?.withSimilar?.[0]?.categories || []
+	const { similarityCTE, similarityJoins } = constructSimilarityQuery({
+		type,
+		similarity,
+	})
+
+	const { dnaJoins, dnaParams } = constructDNAQuery({
 		type,
 		similarity,
 	})
@@ -269,23 +279,16 @@ const constructSelectQuery = ({
 
 	// Build the query with placeholders
 	const query = `
+		${similarityCTE}
 		SELECT DISTINCT
 			'${type}' as media_type,
-			${
-				similarity?.withSimilar?.[0]?.categories
-					? `(${similarity.withSimilar[0].categories
-							.map((category) => {
-								const categoryName = mapCategoryToVectorName(category)
-								return `(COALESCE(vm.${categoryName}_vector <=> vm1.${categoryName}_vector, 1))`
-							})
-							.join(" + ")}) as similarity_score,`
-					: ""
-			}
-			${getCommonFields()
+			${similarity?.withSimilar?.length ? "m_similar.shared_dna_score as similarity_score," : ""}
+		  ${getCommonFields()
 				.map((field) => `m.${field}`)
 				.join(",\n\t")}
 		FROM ${type === "movie" ? "movies" : "tv"} m
 			${similarityJoins}
+			${dnaJoins}
 			${userJoin}
 		WHERE
 			m.title IS NOT NULL
@@ -319,7 +322,7 @@ const constructSelectQuery = ({
 				)
 					? `AND m.aggregated_overall_score_voting_count >= ${
 							orderBy.column === "aggregated_overall_score_normalized_percent"
-								? VOTE_COUNT_THRESHOLD_HIGH
+								? VOTE_COUNT_THRESHOLD_MID
 								: VOTE_COUNT_THRESHOLD_LOW
 						}`
 					: ""
@@ -328,8 +331,8 @@ const constructSelectQuery = ({
 			${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}
 		ORDER BY
 			${
-				similarity?.withSimilar?.[0]?.categories
-					? "similarity_score ASC NULLS LAST"
+				similarity?.withSimilar?.length
+					? `similarity_score DESC, ${orderBy.column} ${orderBy.direction}`
 					: `${orderBy.column} ${orderBy.direction}`
 			}
 			LIMIT :::limit
@@ -344,24 +347,160 @@ const constructSelectQuery = ({
 		withGenres: withGenres || [],
 		limit,
 		userId,
-		...similarityParams,
 		...streamingParams,
+		...dnaParams,
+	}
+
+	// Add categories to params if similarity is being used
+	if (similarity?.withSimilar?.length) {
+		params.categories = categories
 	}
 
 	return { query, params }
 }
 
-const constructSimilarityQueryParams = ({
+const constructSimilarityQuery = ({
+	type,
+	similarity,
+}: ConstructSimilarityQueryParams): {
+	similarityCTE: string
+	similarityJoins: string
+} => {
+	if (!similarity?.withSimilar?.length) {
+		return { similarityCTE: "", similarityJoins: "" }
+	}
+
+	// Separate movie and TV IDs from the similarity items
+	const movieIds = similarity.withSimilar
+		.filter((item) => item.mediaType === "movie")
+		.map((item) => item.tmdbId)
+	const tvIds = similarity.withSimilar
+		.filter((item) => item.mediaType === "tv")
+		.map((item) => item.tmdbId)
+
+	const similarityCTE = `
+    WITH input_items AS (
+      SELECT 
+        ${movieIds.length ? `ARRAY[${movieIds.join(",")}]` : "ARRAY[]::int[]"} AS movie_ids,
+        ${tvIds.length ? `ARRAY[${tvIds.join(",")}]` : "ARRAY[]::int[]"} AS tv_ids
+    ),
+		source_tags AS (
+			-- First get the initial tags that match our movie/tv criteria
+			SELECT DISTINCT d.id, d.cluster_id
+			FROM dna d
+			CROSS JOIN input_items i
+			WHERE (
+				d.movie_tmdb_id && i.movie_ids
+				OR d.tv_tmdb_id && i.tv_ids
+			)
+			AND d.category = ANY(:::categories::text[])
+		),
+		source_dnas AS (
+		  -- For each tag, get all related tags in its cluster with weights
+		  SELECT DISTINCT
+			 d.*,
+			 CASE
+				 WHEN st.id = d.id THEN ${WEIGHT_ORIGINAL_TAG}  -- Original tag
+				 WHEN st.cluster_id IS NULL AND d.cluster_id = st.id THEN ${WEIGHT_CLUSTER_TAG_SECONDARY}  -- Other tags in cluster of a primary tag
+				 WHEN st.cluster_id IS NOT NULL THEN
+					 CASE
+						 WHEN d.id = st.cluster_id THEN ${WEIGHT_CLUSTER_TAG_PRIMARY}  -- Primary tag of a secondary tag's cluster
+						 ELSE ${WEIGHT_CLUSTER_TAG_SECONDARY}  -- Other secondary tags in the same cluster
+						 END
+				 END as weight
+		  FROM source_tags st
+			JOIN dna d ON
+			  CASE
+				  WHEN st.cluster_id IS NULL THEN
+					  d.cluster_id = st.id OR d.id = st.id
+				  ELSE
+					  d.cluster_id = st.cluster_id
+						  OR d.id = st.cluster_id
+						  OR d.id = st.id
+				  END
+		  WHERE d.count_all >= 2
+		  ORDER BY d.count_all DESC
+			LIMIT 100
+		),
+		popular_items AS (
+			SELECT
+				tmdb_id as item_id,
+				title,
+				release_year,
+				popularity,
+				aggregated_overall_score_voting_count,
+				'movie'::text as media_type
+			FROM movies
+			WHERE popularity >= 10 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_HIGH}
+			UNION ALL
+			SELECT
+				tmdb_id as item_id,
+				title,
+				release_year,
+				popularity,
+				aggregated_overall_score_voting_count,
+				'tv'::text as media_type
+			FROM tv
+			WHERE popularity >= 10 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_HIGH}
+		),
+    matching_items AS (
+      SELECT
+        sub.item_id,
+        SUM(
+          CASE d.category 
+						WHEN 'Plot' THEN 10
+						WHEN 'Sub-Genres' THEN 6
+						WHEN 'Mood' THEN 5
+            WHEN 'Themes' THEN 4
+						WHEN 'Cinematic Style' THEN 4
+						WHEN 'Character Types' THEN 4
+						WHEN 'Dialog' THEN 3
+						WHEN 'Narrative' THEN 3
+						WHEN 'Humor' THEN 3
+						WHEN 'Time' THEN 3
+						WHEN 'Place' THEN 3
+						WHEN 'Score and Sound' THEN 3
+						WHEN 'Costume and Set' THEN 3
+						WHEN 'Pacing' THEN 2
+						WHEN 'Key Props' THEN 3
+						WHEN 'Cultural Impact' THEN 2
+						WHEN 'Target Audience' THEN 2
+						WHEN 'Flag' THEN 2
+            ELSE 1 
+          END * s.weight
+			  ) AS shared_dna_score,
+        sub.media_type
+      FROM dna d
+      CROSS JOIN LATERAL (
+        SELECT unnest(movie_tmdb_id) AS item_id, 'movie'::text AS media_type
+        UNION ALL
+        SELECT unnest(tv_tmdb_id) AS item_id, 'tv'::text AS media_type
+      ) sub
+      JOIN source_dnas s ON s.id = d.id
+      JOIN popular_items pop ON pop.item_id = sub.item_id AND pop.media_type = sub.media_type
+      AND NOT (
+        (sub.media_type='movie' AND sub.item_id = ANY((SELECT movie_ids FROM input_items LIMIT 1)::int[]))
+        OR (sub.media_type='tv' AND sub.item_id = ANY((SELECT tv_ids FROM input_items LIMIT 1)::int[]))
+      )  
+      GROUP BY sub.item_id, sub.media_type
+    )`
+
+	const similarityJoins = `
+    JOIN matching_items m_similar 
+			ON m.tmdb_id = m_similar.item_id 
+			AND m_similar.media_type = '${type}'
+	`
+
+	return { similarityCTE, similarityJoins }
+}
+
+const constructDNAQuery = ({
 	type,
 	similarity,
 }: ConstructSimilarityQueryParams) => {
-	const {
-		similarDNAIds = [],
-		similarDNACombinationType,
-		withSimilar,
-	} = similarity || {}
+	const { similarDNAIds = [], similarDNACombinationType } = similarity || {}
 
-	const similarityParams: Record<string, unknown> = {}
+	const dnaParams: Record<string, unknown> = {}
 
 	const similarDNAJoins =
 		similarDNAIds.length > 0
@@ -369,11 +508,11 @@ const constructSimilarityQueryParams = ({
 				? similarDNAIds
 						.map((dnaId, index) => {
 							// Use parameter placeholders
-							similarityParams[`dnaId${index}`] = dnaId
+							dnaParams[`dnaId${index}`] = dnaId
 							// Join condition now includes both primary DNA and cluster members
 							return `JOIN dna d${index} ON m.tmdb_id = ANY(d${index}.${type}_tmdb_id)
                     AND (
-                      d${index}.id = :::dnaId${index} OR 
+                      d${index}.id = :::dnaId${index} OR
                       d${index}.cluster_id = :::dnaId${index}
                     )`
 						})
@@ -382,39 +521,37 @@ const constructSimilarityQueryParams = ({
 						const conditions = similarDNAIds
 							.map((dnaId, index) => {
 								// Use parameter placeholders
-								similarityParams[`dnaId${index}`] = dnaId
+								dnaParams[`dnaId${index}`] = dnaId
 								return `(d.id = :::dnaId${index} OR d.cluster_id = :::dnaId${index})`
 							})
 							.join(" OR ")
-						return `JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id) 
+						return `JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id)
                   AND (${conditions})`
 					})()
 			: ""
 
-	const withSimilarList = withSimilar || []
-	const similarTitleJoins =
-		withSimilarList.length > 0
-			? [
-					`JOIN vectors_media vm ON vm.tmdb_id = m.tmdb_id AND vm.media_type = '${type}'`,
-					...withSimilarList.map((similar, index) => {
-						// Validate mediaType
-						if (!["movie", "tv"].includes(similar.mediaType)) {
-							throw new Error("Invalid similar mediaType")
-						}
-						// Use parameter placeholders
-						similarityParams[`similarTmdbId${index}`] = similar.tmdbId
-						return `
-              JOIN vectors_media vm1 ON vm1.tmdb_id = :::similarTmdbId${index} AND vm1.media_type = '${similar.mediaType}'
-            `
-					}),
-				].join("\n")
-			: ""
+	// const withSimilarList = withSimilar || []
+	// const similarTitleJoins =
+	// 	withSimilarList.length > 0
+	// 		? [
+	// 				`JOIN vectors_media vm ON vm.tmdb_id = m.tmdb_id AND vm.media_type = '${type}'`,
+	// 				...withSimilarList.map((similar, index) => {
+	// 					// Validate mediaType
+	// 					if (!["movie", "tv"].includes(similar.mediaType)) {
+	// 						throw new Error("Invalid similar mediaType")
+	// 					}
+	// 					// Use parameter placeholders
+	// 					dnaParams[`similarTmdbId${index}`] = similar.tmdbId
+	// 					return `
+	//             JOIN vectors_media vm1 ON vm1.tmdb_id = :::similarTmdbId${index} AND vm1.media_type = '${similar.mediaType}'
+	//           `
+	// 				}),
+	// 			].join("\n")
+	// 		: ""
 
 	return {
-		similarityJoins: [similarDNAJoins, similarTitleJoins]
-			.filter(Boolean)
-			.join("\n"),
-		similarityParams,
+		dnaJoins: [similarDNAJoins].filter(Boolean).join("\n"),
+		dnaParams,
 	}
 }
 
@@ -529,16 +666,16 @@ const getStreamingLinksJoin = ({
 			'quality', spl.quality
 										)) AS streaming_links
 		FROM (
-					 SELECT DISTINCT ON (spl.provider_id) spl.*
-					 FROM streaming_provider_links spl
-					 WHERE spl.tmdb_id = m.tmdb_id
-						 AND spl.media_type = m.media_type
-						 AND spl.provider_id ${providerCondition}
-						 ${countryCodeCondition}
-						 ${streamTypeCondition}
-					 ORDER BY spl.provider_id, spl.quality DESC, spl.price_dollar ASC
-				 ) spl
-					 INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
+			SELECT DISTINCT ON (spl.provider_id) spl.*
+			FROM streaming_provider_links spl
+			WHERE spl.tmdb_id = m.tmdb_id
+				AND spl.media_type = m.media_type
+				AND spl.provider_id ${providerCondition}
+			${countryCodeCondition}
+			${streamTypeCondition}
+			ORDER BY spl.provider_id, spl.quality DESC, spl.price_dollar ASC
+		) spl
+		INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
 	`
 }
 

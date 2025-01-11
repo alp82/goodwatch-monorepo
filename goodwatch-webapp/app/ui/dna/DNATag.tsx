@@ -1,17 +1,19 @@
-import { Link } from "@remix-run/react";
-import React from "react";
-import { getCategoryColor } from "~/ui/dna/dna_utils";
-import { SEPARATOR_SECONDARY } from "~/utils/navigation";
+import { Link } from "@remix-run/react"
+import React from "react"
+import { type DNACategoryName, getCategoryColor } from "~/ui/dna/dna_utils"
+import { SEPARATOR_SECONDARY, SEPARATOR_TERTIARY } from "~/utils/navigation"
 
 export interface DNATagProps {
-	category: string;
-	label: string;
-	size?: "normal" | "small";
-	onClick?: () => void;
-	linkDisabled?: boolean;
+	id: number
+	category: DNACategoryName
+	label: string
+	size?: "normal" | "small"
+	onClick?: () => void
+	linkDisabled?: boolean
 }
 
 export function DNATag({
+	id,
 	category,
 	label,
 	size = "normal",
@@ -23,16 +25,16 @@ export function DNATag({
 		>
 			{label}
 		</span>
-	);
+	)
 
 	return linkDisabled ? (
 		tagElement
 	) : (
 		<Link
-			to={`/discover?type=all&similarDNA=${category}${SEPARATOR_SECONDARY}${label}&similarDNACombinationType=any`}
+			to={`/discover?type=all&similarDNA=${id}${SEPARATOR_SECONDARY}${category}${SEPARATOR_TERTIARY}${label}&similarDNACombinationType=any`}
 			prefetch="intent"
 		>
 			{tagElement}
 		</Link>
-	);
+	)
 }

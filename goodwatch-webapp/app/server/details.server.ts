@@ -2,6 +2,7 @@ import {
 	increasePriorityForMovies,
 	increasePriorityForTVs,
 } from "~/server/utils/priority"
+import type { DNACategoryName } from "~/ui/dna/dna_utils"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
@@ -16,10 +17,15 @@ export interface Collection {
 	movie_ids: number[]
 }
 
-export type DNA = Record<string, string[]>
+export interface DNAItem {
+	id: number
+	category: DNACategoryName
+	label: string
+	count_all: number
+}
 
 export interface BaseDetails extends AllRatings {
-	dna: DNA
+	dna: DNAItem[]
 	genres: string[]
 	keywords: string[]
 	release_year: string
@@ -372,7 +378,6 @@ const movieFields = [
 	"certifications",
 	"crew",
 	"collection",
-	"dna",
 	"keywords",
 	"genres",
 	"poster_path",
@@ -392,7 +397,6 @@ const tvFields = [
 	"cast",
 	"certifications",
 	"crew",
-	"dna",
 	"keywords",
 	"genres",
 	"number_of_episodes",
@@ -407,49 +411,88 @@ const tvFields = [
 	...getRatingKeys(),
 ]
 
+const dnaFragment = (tableAlias: string) => `
+  COALESCE(
+    (
+      SELECT json_agg(
+        json_build_object(
+          'id', d.id,
+          'category', d.category,
+          'label', d.label,
+          'count_all', d.count_all
+        )
+      )
+      FROM dna d
+      WHERE EXISTS (
+        SELECT 1
+        FROM jsonb_each(${tableAlias}.dna) AS j(category, labels)
+        WHERE j.category = d.category 
+        AND d.label = ANY(ARRAY(SELECT jsonb_array_elements_text(j.labels)))
+      )
+    ),
+    '[]'::json
+  ) as dna`
+
+const streamingLinksFragment = `
+  json_agg(
+    json_build_object(
+      'provider_id', spl.provider_id,
+      'provider_name', sp.name,
+      'provider_logo_path', sp.logo_path,
+      'tmdb_url', spl.tmdb_url,
+      'stream_type', spl.stream_type,
+      'stream_url', spl.stream_url,
+      'price_dollar', spl.price_dollar,
+      'quality', spl.quality,
+      'display_priority', spl.display_priority
+    )
+  ) AS streaming_links`
+
+const createBaseQuery = (
+	tableAlias: string,
+	mediaType: "movie" | "tv",
+	fields: string[],
+) => `
+  SELECT
+    ${fields
+			.map((field) => (field !== "dna" ? `${tableAlias}.${field}` : ""))
+			.filter(Boolean)
+			.join(", ")},
+    ${dnaFragment(tableAlias)},
+    ${streamingLinksFragment}
+  FROM
+    ${mediaType === "movie" ? "movies" : "tv"} ${tableAlias}
+  LEFT JOIN
+    streaming_provider_links spl
+  ON
+    spl.tmdb_id = ${tableAlias}.tmdb_id
+    AND spl.media_type = '${mediaType}'
+    AND spl.country_code = $1
+    AND spl.provider_id NOT IN (${duplicateProviders.join(",")})
+  LEFT JOIN
+    streaming_providers sp
+  ON
+    spl.provider_id = sp.id
+  WHERE
+    ${tableAlias}.tmdb_id = $2
+  GROUP BY
+    ${fields.map((field) => `${tableAlias}.${field}`).join(", ")}
+  ORDER BY
+    MIN(sp.display_priority)`
+
+// Movie query using the base query
+const movieQuery = createBaseQuery("m", "movie", movieFields)
+
+// TV query using the base query
+const tvQuery = createBaseQuery("t", "tv", tvFields)
+
 // TODO language
 export async function _getDetailsForMovie({
 	movieId,
 	country,
 	language,
 }: DetailsMovieParams): Promise<MovieDetails> {
-	const query = `
-    SELECT
-      ${movieFields.map((field) => `m.${field}`).join(", ")},
-      json_agg(
-        json_build_object(
-          'provider_id', spl.provider_id,
-          'provider_name', sp.name,
-          'provider_logo_path', sp.logo_path,
-          'tmdb_url', spl.tmdb_url,
-          'stream_type', spl.stream_type,
-          'stream_url', spl.stream_url,
-          'price_dollar', spl.price_dollar,
-          'quality', spl.quality,
-          'display_priority', spl.display_priority
-        )
-      ) AS streaming_links
-    FROM
-      movies m
-    LEFT JOIN
-      streaming_provider_links spl
-    ON
-      spl.tmdb_id = m.tmdb_id
-      AND spl.media_type = 'movie'
-      AND spl.country_code = $1
-      AND spl.provider_id NOT IN (${duplicateProviders.join(",")})
-    LEFT JOIN
-      streaming_providers sp
-    ON
-      spl.provider_id = sp.id
-    WHERE
-      m.tmdb_id = $2
-    GROUP BY
-      m.tmdb_id
-    ORDER BY
-      MIN(sp.display_priority);
-  `
-	const result = await executeQuery(query, [country, movieId])
+	const result = await executeQuery(movieQuery, [country, movieId])
 
 	if (!result.rows.length) {
 		// TODO fallback page
@@ -472,42 +515,7 @@ export async function _getDetailsForTV({
 	country,
 	language,
 }: DetailsTVParams): Promise<TVDetails> {
-	const query = `
-    SELECT
-      ${tvFields.map((field) => `t.${field}`).join(", ")},
-      json_agg(
-        json_build_object(
-          'provider_id', spl.provider_id,
-          'provider_name', sp.name,
-          'provider_logo_path', sp.logo_path,
-          'stream_type', spl.stream_type,
-          'stream_url', spl.stream_url,
-          'price_dollar', spl.price_dollar,
-          'quality', spl.quality,
-          'display_priority', spl.display_priority
-        )
-      ) AS streaming_links
-    FROM
-      tv t
-    LEFT JOIN
-      streaming_provider_links spl
-    ON
-      spl.tmdb_id = t.tmdb_id
-      AND spl.media_type = 'tv'
-      AND spl.country_code = $1
-      AND spl.provider_id NOT IN (${duplicateProviders.join(",")})
-    LEFT JOIN
-      streaming_providers sp
-    ON
-      spl.provider_id = sp.id
-    WHERE
-      t.tmdb_id = $2
-    GROUP BY
-      t.tmdb_id
-    ORDER BY
-      MIN(sp.display_priority);
-  `
-	const result = await executeQuery(query, [country, tvId])
+	const result = await executeQuery(tvQuery, [country, tvId])
 
 	if (!result.rows.length) {
 		// TODO fallback page

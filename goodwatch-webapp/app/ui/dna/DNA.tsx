@@ -1,27 +1,27 @@
-import React, { useEffect, useState } from "react";
-import type { DNA, MovieDetails, TVDetails } from "~/server/details.server";
-import InfoBox from "~/ui/InfoBox";
-import DNACategory from "~/ui/dna/DNACategory";
-import { getSortedCategories } from "~/ui/dna/dna_utils";
-import { Spinner } from "~/ui/wait/Spinner";
+import React, { useEffect, useState } from "react"
+import type { DNAItem, MovieDetails, TVDetails } from "~/server/details.server"
+import InfoBox from "~/ui/InfoBox"
+import DNACategory from "~/ui/dna/DNACategory"
+import { getDNAForCategory, getSortedCategories } from "~/ui/dna/dna_utils"
+import { Spinner } from "~/ui/wait/Spinner"
 
 export interface DNAProps {
-	details: MovieDetails | TVDetails;
+	details: MovieDetails | TVDetails
 }
 
 export default function DNA({ details }: DNAProps) {
-	const [hasDNA, setHasDNA] = useState<boolean | null>(null);
-	const { dna = {} } = details;
+	const [hasDNA, setHasDNA] = useState<boolean | null>(null)
+	const { dna = [] } = details
 
 	useEffect(() => {
-		setHasDNA(Object.keys(dna).length > 0);
-	}, []);
-	const sortedCategories = getSortedCategories(dna, true, false);
+		setHasDNA(Object.keys(dna).length > 0)
+	}, [])
+	const sortedCategories = getSortedCategories(dna, true, false)
 
-	const [spoilerVisible, setSpoilerVisible] = React.useState(false);
+	const [spoilerVisible, setSpoilerVisible] = React.useState(false)
 	const handleRevealSpoiler = () => {
-		setSpoilerVisible(true);
-	};
+		setSpoilerVisible(true)
+	}
 
 	return (
 		<div>
@@ -41,7 +41,7 @@ export default function DNA({ details }: DNAProps) {
 							without={details}
 							key={category}
 							category={category}
-							tags={dna[category]}
+							dna={getDNAForCategory(dna, category)}
 							spoilerVisible={spoilerVisible}
 							onRevealSpoiler={handleRevealSpoiler}
 						/>
@@ -53,5 +53,5 @@ export default function DNA({ details }: DNAProps) {
 				<Spinner size="large" />
 			)}
 		</div>
-	);
+	)
 }

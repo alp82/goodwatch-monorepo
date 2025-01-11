@@ -1,15 +1,13 @@
 # TODO's
+
+
 ```
-dna autocomplete uses only primary
-
-dna search uses all aliases
-
-create normalized dna with primary tags
-    add average vector
+fix similarity order
 
 ---
 
 404 / 500 fixes
+    check sentry
 
 remove sitemaps
 
@@ -33,11 +31,21 @@ Create new sitemaps
 
 ---
 
+Sequels wrong
+    http://localhost:3003/movie/550-fight-club
+
+---
+
+multiple similar titles
+
+---
+
 landing page inspiration
     https://waku.gg/
     https://superdevpro.com/
     https://www.firewatchgame.com/
     https://www.screenspace.io/
+    https://www.dize.app/
     https://dribbble.com/shots/18008814-Osnaria-Game-Web-Landing-Page-With-Illustrations
 
 ---
@@ -196,6 +204,11 @@ ai flow
 
 donations
     ko-fi
+    https://boosty.to/
+
+---
+
+plot similarity combined with tvtropes
 
 ---
 
@@ -1163,6 +1176,9 @@ LIMIT 20;
 
 # Blog
 ```
+hydration errors
+    https://github.com/facebook/react/issues/24519#issuecomment-1122780621
+    https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render
 data pipeline with windmill:
     data flow design
     infrastructure

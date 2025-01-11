@@ -1,51 +1,51 @@
-import { CubeIcon } from "@heroicons/react/24/solid";
-import { Link, useNavigate, useRouteError } from "@remix-run/react";
-import { useInView } from "framer-motion";
-import React, { useRef } from "react";
-import { Spoiler } from "spoiled";
-import { useDiscover } from "~/routes/api.discover";
-import { useExplore } from "~/routes/api.explore";
-import type { ExploreParams } from "~/server/explore.server";
-import type { MediaType } from "~/server/utils/query-db";
-import { MovieTvCard } from "~/ui/MovieTvCard";
-import { Poster } from "~/ui/Poster";
-import { DNATag } from "~/ui/dna/DNATag";
-import { spoilerCategories } from "~/ui/dna/dna_utils";
-import { SEPARATOR_SECONDARY } from "~/utils/navigation";
+import { CubeIcon } from "@heroicons/react/24/solid"
+import { Link } from "@remix-run/react"
+import { useInView } from "framer-motion"
+import React, { useRef } from "react"
+import { Spoiler } from "spoiled"
+import { useDiscover } from "~/routes/api.discover"
+import type { DNAItem } from "~/server/details.server"
+import type { MediaType } from "~/server/utils/query-db"
+import { MovieTvCard } from "~/ui/MovieTvCard"
+import { Poster } from "~/ui/Poster"
+import { DNATag } from "~/ui/dna/DNATag"
+import { type DNACategoryName, spoilerCategories } from "~/ui/dna/dna_utils"
+import { SEPARATOR_SECONDARY } from "~/utils/navigation"
 
 export interface DNACategoryProps {
 	without: {
-		tmdb_id: number;
-		media_type: MediaType;
-	};
-	category: ExploreParams["category"];
-	tags: string[];
-	spoilerVisible: boolean;
-	onRevealSpoiler: () => void;
+		tmdb_id: number
+		media_type: MediaType
+	}
+	category: DNACategoryName
+	dna: DNAItem[]
+	spoilerVisible: boolean
+	onRevealSpoiler: () => void
 }
 
 export default function DNACategory({
 	without,
 	category,
-	tags,
+	dna,
 	spoilerVisible,
 	onRevealSpoiler,
 }: DNACategoryProps) {
-	const isSpoiler = spoilerCategories.includes(category);
+	const isSpoiler = spoilerCategories.includes(category)
 
-	const ref = useRef(null);
-	const isInView = useInView(ref);
-	const text = tags.join(", ");
+	const ref = useRef(null)
+	const isInView = useInView(ref)
+	const text = dna.join(", ")
 
 	const discover = useDiscover({
 		params: {
 			type: "all",
+			minScore: "50",
 			similarTitles: `${without.tmdb_id}${SEPARATOR_SECONDARY}${without.media_type}${SEPARATOR_SECONDARY}${category}`,
-			sortBy: "popularity",
+			sortBy: "aggregated_score",
 		},
-	});
+	})
 
-	const results = discover.data || [];
+	const results = discover.data || []
 
 	// TODO this reorders the items by similarity score ascending (not sure why)
 	const categoryPreview = results
@@ -54,7 +54,7 @@ export default function DNACategory({
 				details.tmdb_id !== without.tmdb_id &&
 				details.media_type !== without.media_type,
 		)
-		.slice(0, 4);
+		.slice(0, 4)
 
 	return (
 		<div
@@ -72,25 +72,26 @@ export default function DNACategory({
 				</h3>
 				<div
 					className={`
-										mt-1 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-2 
-										${spoilerCategories.includes(category) && !spoilerVisible ? "cursor-pointer" : ""}
-									`}
+						mt-1 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-2 
+						${spoilerCategories.includes(category) && !spoilerVisible ? "cursor-pointer" : ""}
+					`}
 					onClick={
 						spoilerCategories.includes(category) ? onRevealSpoiler : undefined
 					}
 					onKeyDown={() => null}
 				>
-					{tags.map((tag) => (
+					{dna.map((dnaItem) => (
 						<Spoiler
-							key={tag}
+							key={dnaItem.id}
 							hidden={isSpoiler && !spoilerVisible}
 							theme="dark"
 							accentColor={"#55c8f7"}
 							density={0.15}
 						>
 							<DNATag
-								category={category}
-								label={tag}
+								id={dnaItem.id}
+								category={dnaItem.category}
+								label={dnaItem.label}
 								linkDisabled={isSpoiler && !spoilerVisible}
 							/>
 						</Spoiler>
@@ -99,7 +100,7 @@ export default function DNACategory({
 				<div className="mt-4">
 					<Link
 						className="px-3 py-2 border-2 border-gray-500 bg-slate-700 text-gray-100 text-sm rounded-md hover:bg-slate-600 hover:text-white"
-						to={`/discover?type=all&similarTitles=${without.tmdb_id}${SEPARATOR_SECONDARY}${without.media_type}${SEPARATOR_SECONDARY}${category}`}
+						to={`/discover?type=all&minScore=50&maxScore=100&similarTitles=${without.tmdb_id}${SEPARATOR_SECONDARY}${without.media_type}${SEPARATOR_SECONDARY}${category}&sortBy=aggregated_score`}
 						prefetch="viewport"
 					>
 						<CubeIcon className="w-4 h-4 inline-block mr-2" />
@@ -138,5 +139,5 @@ export default function DNACategory({
 				}
 			</div>
 		</div>
-	);
+	)
 }

@@ -1,36 +1,44 @@
 import React, { type ReactNode } from "react"
 import dnaIcon from "~/img/dna-icon.svg"
-import type { DNA } from "~/server/details.server"
-import type { ExploreParams } from "~/server/explore.server"
+import type { DNAItem } from "~/server/details.server"
 import Sparkles from "~/ui/Sparkles"
 import { sections } from "~/ui/details/common"
 import { DNATag } from "~/ui/dna/DNATag"
-import { getCategoryColor, getSortedCategories } from "~/ui/dna/dna_utils"
+import {
+	getDNAForCategory,
+	getSortedCategories,
+} from "~/ui/dna/dna_utils"
 import Cycle from "~/ui/list/Cycle"
 import type { Section } from "~/utils/scroll"
 
 export interface DNAProps {
-	dna: DNA
+	dna: DNAItem[]
 	navigateToSection: (section: Section) => void
 }
 
-export default function DNAPreview({ dna = {}, navigateToSection }: DNAProps) {
+export default function DNAPreview({ dna = [], navigateToSection }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 
 	const sortedCategories = getSortedCategories(dna, false)
 	const itemsToCycle = sortedCategories
 		.reduce<ReactNode[]>((items, category) => {
+			const dnaForCategory = getDNAForCategory(dna, category)
 			return [
 				...items,
-				...dna[category].map((label) => (
+				...dnaForCategory.map((dnaItem) => (
 					<button
-						key={`${category}-${label}`}
+						key={dnaItem.id}
 						type="button"
 						className="py-1 px-3 flex items-center gap-2 w-full bg-gray-700 border-2 border-gray-700 hover:bg-gray-600 hover:border-gray-500 rounded-md"
 						onClick={() => navigateToSection(sections.dna)}
 					>
 						<span className="font-semibold">{category}:</span>
-						<DNATag category={category} label={label} linkDisabled={true} />
+						<DNATag
+							id={dnaItem.id}
+							category={dnaItem.category}
+							label={dnaItem.label}
+							linkDisabled={true}
+						/>
 					</button>
 				)),
 			]
