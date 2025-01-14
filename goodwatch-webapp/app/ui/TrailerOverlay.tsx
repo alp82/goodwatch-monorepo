@@ -4,7 +4,11 @@ import {
 	Transition,
 	TransitionChild,
 } from "@headlessui/react"
-import { PlayCircleIcon } from "@heroicons/react/24/solid"
+import {
+	ArrowLeftIcon,
+	PlayCircleIcon,
+	XMarkIcon,
+} from "@heroicons/react/24/solid"
 import React, { Fragment, useState } from "react"
 import ReactPlayer from "react-player/youtube"
 import type { Videos } from "~/server/details.server"
@@ -46,11 +50,11 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 								leaveFrom="opacity-100"
 								leaveTo="opacity-0"
 							>
-								<div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" />
+								<div className="fixed inset-0 bg-black bg-opacity-70 transition-opacity" />
 							</TransitionChild>
 
 							<div className="fixed inset-0 w-screen overflow-y-auto">
-								<div className="flex min-h-full items-center justify-center p-4 text-center">
+								<div className="flex max-h-screen items-center justify-center p-4 text-center">
 									<TransitionChild
 										as={Fragment}
 										enter="ease-out duration-300"
@@ -60,8 +64,23 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 										leaveFrom="opacity-100 translate-y-0 sm:scale-100"
 										leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-75"
 									>
-										<DialogPanel className="relative mt-12 w-full transform overflow-hidden rounded-lg bg-slate-700 p-4 shadow-xl transition-all">
-											<div className="aspect-w-16 aspect-h-9">
+										<DialogPanel className="relative w-full h-screen transform overflow-hidden rounded-lg bg-slate-900/50 shadow-xl transition-all">
+											<div className="mt-12 mx-4 pb-24 h-full">
+												<button
+													type="button"
+													onClick={() => setOpen(false)}
+													className="absolute top-2 left-4 p-2 flex gap-2 rounded  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+												>
+													<ArrowLeftIcon className="w-6 h-6" />
+													<span>Back to Details</span>
+												</button>
+												<button
+													type="button"
+													onClick={() => setOpen(false)}
+													className="absolute top-2 right-4 p-2 flex gap-2 rounded  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+												>
+													<XMarkIcon className="w-6 h-6" />
+												</button>
 												<ReactPlayer
 													url={`https://www.youtube.com/watch?v=${videos.trailers[0].key}`}
 													width="100%"

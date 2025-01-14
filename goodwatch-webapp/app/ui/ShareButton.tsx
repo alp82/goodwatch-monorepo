@@ -3,7 +3,7 @@ import {
 	ShareIcon,
 } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
-import React from "react"
+import React, { useState } from "react"
 import { toast } from "react-toastify"
 
 const isBrowser = typeof window !== "undefined"
@@ -27,12 +27,21 @@ export default function ShareButton({ link }: ShareButtonProps) {
 		}
 	}
 
+	const [isSharing, setIsSharing] = useState(false)
 	const handleOpenShareMenu = async () => {
-		const shareData = {
-			url: linkToShare,
+		if (isSharing) return
+
+		try {
+			setIsSharing(true)
+			const shareData = {
+				url: linkToShare,
+			}
+			await navigator.share(shareData)
+		} catch (error) {
+			console.error("Error while sharing:", error)
+		} finally {
+			setIsSharing(false)
 		}
-		await navigator.share(shareData)
-		console.log("Shared link successfully")
 	}
 
 	const handleCopyLink = () => {

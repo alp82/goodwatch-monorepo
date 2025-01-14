@@ -17,8 +17,8 @@ export default function DNAPreview({ dna = [], navigateToSection }: DNAProps) {
 	const hasDNA = Object.keys(dna).length > 0
 
 	const sortedCategories = getSortedCategories(dna, false)
-	const itemsToCycle = sortedCategories
-		.reduce<ReactNode[]>((items, category) => {
+	const itemsToCycle = sortedCategories.reduce<ReactNode[]>(
+		(items, category) => {
 			const dnaForCategory = getDNAForCategory(dna, category)
 			return [
 				...items,
@@ -39,8 +39,9 @@ export default function DNAPreview({ dna = [], navigateToSection }: DNAProps) {
 					</button>
 				)),
 			]
-		}, [])
-		.sort(() => Math.random() - 0.5)
+		},
+		[],
+	)
 
 	return (
 		<>

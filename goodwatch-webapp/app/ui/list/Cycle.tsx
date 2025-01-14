@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect, useState } from "react"
+import { type ReactNode, useCallback, useState } from "react"
+import { useOnceMounted } from "~/utils/hydration"
 
 export interface CycleProps {
 	items: ReactNode[]
@@ -7,13 +8,17 @@ export interface CycleProps {
 export default function Cycle({ items }: CycleProps) {
 	const [currentIndex, setCurrentIndex] = useState(0)
 
-	useEffect(() => {
+	const updateCycle = useCallback(() => {
 		const intervalId = setInterval(() => {
-			setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length)
+			setCurrentIndex(Math.floor(Math.random() * items.length))
 		}, 4000)
 
 		return () => clearInterval(intervalId)
-	}, [items.length])
+	}, [])
+
+	const isMounted = useOnceMounted({
+		onMount: updateCycle,
+	})
 
 	return (
 		<div className="flex items-center">

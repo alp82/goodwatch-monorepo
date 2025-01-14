@@ -63,7 +63,7 @@ export default function Streaming({
 						{flatrateLinks.map((link) => {
 							return (
 								<a
-									key={link.display_priority}
+									key={link.provider_id}
 									href={getStreamingUrl(link, details, media_type)}
 									target="_blank"
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"

@@ -9,7 +9,7 @@ function GlobalLoading() {
 	const [animationComplete, setAnimationComplete] = useState(true)
 
 	useEffect(() => {
-		if (!ref.current) return
+		if (!ref.current?.getAnimations) return
 		if (active) setAnimationComplete(false)
 
 		Promise.allSettled(

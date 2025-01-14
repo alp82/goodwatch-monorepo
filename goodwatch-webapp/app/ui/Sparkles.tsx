@@ -1,10 +1,24 @@
-import React from "react"
+import React, { useCallback } from "react"
+import { useOnceMounted } from "~/utils/hydration"
 import { usePrefersReducedMotion } from "~/utils/motion"
 import { random, randomEdge, useRandomInterval } from "~/utils/random"
 import { range } from "~/utils/range"
 
 const DEFAULT_COLOR = "#FFFFCC"
-const generateSparkle = (color: string) => {
+
+interface Sparkle {
+	id: string
+	createdAt: number
+	color: string
+	size: number
+	style: {
+		top: string
+		left: string
+		animation: string
+	}
+}
+
+const generateSparkle = (color: string): Sparkle => {
 	const isHorizontal = Math.random() > 0.5
 	return {
 		id: String(random(10000, 99999)),
@@ -20,12 +34,20 @@ const generateSparkle = (color: string) => {
 }
 
 const Sparkles = ({ color = DEFAULT_COLOR, children, ...delegated }) => {
-	const [sparkles, setSparkles] = React.useState(() => {
-		return range(3).map(() => generateSparkle(color))
+	const [sparkles, setSparkles] = React.useState<Sparkle[]>([])
+
+	const updateSparkles = useCallback(() => {
+		setSparkles(range(3).map(() => generateSparkle(color)))
+	}, [color])
+
+	const isMounted = useOnceMounted({
+		onMount: updateSparkles,
 	})
+
 	const prefersReducedMotion = usePrefersReducedMotion()
 	useRandomInterval(
 		() => {
+			if (!isMounted) return
 			const sparkle = generateSparkle(color)
 			const now = Date.now()
 			const nextSparkles = sparkles.filter((sp) => {

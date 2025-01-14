@@ -1,20 +1,23 @@
-import React from "react";
-import tmdb_logo from "~/img/tmdb-logo.svg";
+import React from "react"
+import tmdb_logo from "~/img/tmdb-logo.svg"
 import type {
 	MovieDetails,
 	StreamingLink,
 	TVDetails,
-} from "~/server/details.server";
-import { sections } from "~/ui/details/common";
-import type { Section } from "~/utils/scroll";
-import { getStreamingUrl } from "~/utils/streaming-links";
+} from "~/server/details.server"
+import { sections } from "~/ui/details/common"
+import type { Section } from "~/utils/scroll"
+import {
+	duplicateProviderMapping,
+	getStreamingUrl,
+} from "~/utils/streaming-links"
 
 export interface StreamingBadgesProps {
-	details: MovieDetails | TVDetails;
-	media_type: "movie" | "tv";
-	links: StreamingLink[];
-	countryCodes: string[];
-	navigateToSection: (section: Section) => void;
+	details: MovieDetails | TVDetails
+	media_type: "movie" | "tv"
+	links: StreamingLink[]
+	countryCodes: string[]
+	navigateToSection: (section: Section) => void
 }
 
 export default function StreamingBadges({
@@ -24,37 +27,33 @@ export default function StreamingBadges({
 	countryCodes = [],
 	navigateToSection,
 }: StreamingBadgesProps) {
-	// const flatrateLinks = links.filter((link: StreamingLink) =>
-	// 	["flatrate", "free"].includes(link.stream_type),
+	// const prioritizedLinks = Object.values(
+	// 	links.reduce((acc: Record<number, StreamingLink>, link) => {
+	// 		const providerId = link.provider_id
+	// 		const existing = acc[providerId]
+	//
+	// 		// If we already have a flatrate for this provider, skip
+	// 		if (existing?.stream_type === "flatrate") return acc
+	//
+	// 		// If current link is flatrate or (free and no existing link), update
+	// 		if (
+	// 			link.stream_type === "flatrate" ||
+	// 			(link.stream_type === "free" && !existing)
+	// 		) {
+	// 			acc[providerId] = link
+	// 		}
+	//
+	// 		return acc
+	// 	}, {}),
 	// )
-	const prioritizedFreeLinks = links.reduce(
-		(result: Record<number, StreamingLink[]>, link: StreamingLink) => {
-			const { provider_id, stream_type } = link;
-
-			// Initialize the provider group if not already created
-			if (!result[provider_id]) {
-				result[provider_id] = [];
-			}
-
-			// Add only "flatrate" links to the group or "free" if no "flatrate" exists
-			if (stream_type === "flatrate") {
-				result[provider_id] = [link]; // Override with flatrate
-			} else if (
-				stream_type === "free" &&
-				!result[provider_id].some((l) => l.stream_type === "flatrate")
-			) {
-				result[provider_id].push(link); // Add free only if no flatrate exists
-			}
-
-			return result;
-		},
-		{},
-	);
-	const flatrateLinks = Object.values(prioritizedFreeLinks).flat();
+	// const flatrateLinks = Object.values(prioritizedLinks).flat()
+	const flatrateLinks = (links || []).filter((link: StreamingLink) =>
+		["flatrate", "free"].includes(link.stream_type),
+	)
 
 	const buyLinks = links.filter(
 		(link: StreamingLink) => link.stream_type === "buy",
-	);
+	)
 
 	const PoweredBy = () => {
 		return (
@@ -87,11 +86,11 @@ export default function StreamingBadges({
 					</a>
 				</div>
 			</>
-		);
-	};
+		)
+	}
 
-	const hasFlatrate = Boolean(flatrateLinks.length);
-	const hasBuy = Boolean(buyLinks.length);
+	const hasFlatrate = Boolean(flatrateLinks.length)
+	const hasBuy = Boolean(buyLinks.length)
 	if (!hasFlatrate) {
 		return hasBuy ? (
 			<div>
@@ -125,7 +124,7 @@ export default function StreamingBadges({
 			<div className="textsm md:text-lg">
 				Not available for streaming right now
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -135,7 +134,7 @@ export default function StreamingBadges({
 					{flatrateLinks.map((link, index) => {
 						return (
 							<a
-								key={link.display_priority}
+								key={link.provider_id}
 								href={getStreamingUrl(link, details, media_type)}
 								target="_blank"
 								className="flex items-center gap-2 bg-gray-700 text-sm font-semibold shadow-2xl rounded-xl border-4 border-gray-600 hover:border-gray-500"
@@ -152,11 +151,11 @@ export default function StreamingBadges({
 									{link.provider_name}
 								</span>
 							</a>
-						);
+						)
 					})}
 				</div>
 				<PoweredBy />
 			</div>
 		</>
-	);
+	)
 }

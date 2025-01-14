@@ -1,15 +1,219 @@
 # TODO's
 
-
 ```
-fix similarity order
+type = movies | tv shows
 
 ---
 
+default filter
+    score: 60-100
+
+additional filters (pick 1 or 2)
+
+streaming:
+    anywhere
+    netflix
+    amazon prime
+    ...
+
+genre:
+    any
+    comedy
+    thriller
+    action
+    ...
+
+release:
+    of all time
+    2024
+    2023
+    2000s
+    90s
+    80s
+    classic
+
+language:
+    all
+    indian
+    korean
+    ...
+
+---
+
+genre:
+    best comedy [type]
+    best thriller [type]
+    best action [type]
+    best horror [type]
+    best fantasy [type]
+    best western [type]
+    best sci fi [type]
+    ...
+
+??franchise??:
+    best disney [type]
+    best star wars [type]
+    best studio ghibli [type]
+    best marvel [type]
+    best james bond [type]
+    best pixar [type]
+    best godzilla [type]
+    best stephen king [type]
+
+streaming:
+    [type] to stream (right now)
+    new [type] to stream
+    best [type] to stream
+    best streaming [type] (right now)
+    best [type] on netflix
+    best [type] on amazon prime
+    best [type] on hulu
+    best [type] on disney plus
+    best [type] on hbo
+    best [type] on [streamer] free
+    best new [type] on [streamer]
+    best free [type] on [streamer]
+    ...
+
+release:
+    best [type] of all time
+    best [type] (of) [year]
+    best 80s [type]
+    best 90s [type]
+    best [type] of the 2000s
+    best [type] since [year]
+    best classic [type]
+    best old [type]
+
+mood:
+    best scary [type]
+    best feel good [type]
+        Mood: Feel-Good, Mood: Joyful or Mood: Heartwarming
+    best suspense [type]
+    best motivational [type]
+    best funny [type]
+    best psychological [type]
+
+??subgenre / theme / plot??:
+    best [thing] [type] to stream
+    best anime [type]
+    best bollywood [type]
+    best zombie [type]
+    best space [type]
+    best ww2 [type]
+    best detective [type]
+    best alien [type]
+    best heist [type]
+    best sports [type]
+    best murder mystery [type]
+    best time travel [type]
+    best love story [type]
+    best vampire [type]
+    best military [type]
+    best disaster [type]
+    best gangster [type]
+    best rom com [type]
+    best superhero [type]
+        Sub-Genres: Superhero or Sub-Genres: Superhero Comedy
+    best revenge [type]
+    best mafia [type]
+        Sub-Genres: Mafia Film, Plot: Criminal Underworld or Character Types: Crime Boss
+    best apocalyptic [type]
+        Time: Post-Apocalyptic Future or Plot: Post-Apocalyptic Survival
+    best samurai [type]
+    best shark [type]
+    best car [type]
+    best dystopian [type]
+    best serial killer [type]
+    best martial arts [type]
+    best medieval [type]
+    best football [type]
+    best baseball [type]
+    best dog [type]
+    best true story [type]
+    best kung fu [type]
+    best fighting [type]
+    best coming of age [type]
+    best monster [type]
+    best boxing [type]
+    best basketball [type]
+    best mob [type]
+    best slasher [type]
+    best werewolf [type]
+    best ghost [type]
+    best business [type]
+    best end of the world [type]
+    best spy [type]
+
+??season/holiday??:
+    best halloween [type]
+    best christmas [type]
+    best thanksgiving [type]
+    best fall [type]
+    best eve [type]
+
+??audience??:
+    best family [type]
+    best kids [type]
+    best teen [type]
+    best [audience] [type]
+    best [type] to watch with [audience]
+
+??language??:
+    best korean [type]
+    best malayalam [type]
+    best english [type]
+    best hindi [type]
+    best telugu [type]
+    best tamil [type]
+    best japanese [type]
+    best french [type]
+    best chinese [type]
+    best [lang] [type]
+
+actor:
+    best adam sandler [type]
+    best ma dong-seok [type]
+    best jackie chan [type]
+    best jason statham [type]
+    best jake gyllenhaal [type]
+    best leonardo dicaprio [type]
+    best denzel washington [type]
+
+director:
+    best quentin tarantino [type]
+    best steven spielberg [type]
+
+quality
+    best 4k [type]
+    best hd [type]
+
+genre + streaming:
+    best [genre] [type] on [streamer]
+
+genre + release:
+    best [genre] [type] of all time
+    best [genre] [type] [year]
+
+streaming + release:
+    best [type] of [streamer] [year]
+
+holiday + audience:
+    best christmas [type] for [audience]
+
+```
+
+```
+explore/all|movie|tv/[category]/[label],[label]
+    https://remix.run/docs/en/main/utils/redirect
+    
+meta tags & json-ld
+    all routes
+```
+
+```
 404 / 500 fixes
     check sentry
-
-remove sitemaps
 
 ---
 
@@ -31,12 +235,9 @@ Create new sitemaps
 
 ---
 
-Sequels wrong
-    http://localhost:3003/movie/550-fight-club
-
----
-
-multiple similar titles
+similar filter
+    multiple similar titles
+    fix similarity order
 
 ---
 
@@ -67,6 +268,11 @@ tagline
 ai
     https://www.freepik.com/pikaso/ai-video-generator
     
+---
+
+Sequels wrong
+    http://localhost:3003/movie/550-fight-club
+
 ---
 
 For You

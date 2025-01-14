@@ -8,6 +8,10 @@ import tsconfigPaths from "vite-tsconfig-paths"
 installGlobals()
 
 export default defineConfig({
+	define: {
+		"process.env.NODE_ENV": '"development"',
+	},
+
 	server: {
 		port: 3003,
 	},

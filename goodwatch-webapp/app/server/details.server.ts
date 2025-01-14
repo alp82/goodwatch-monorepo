@@ -6,7 +6,10 @@ import type { DNACategoryName } from "~/ui/dna/dna_utils"
 import { cached } from "~/utils/cache"
 import { executeQuery } from "~/utils/postgres"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
-import { duplicateProviders } from "~/utils/streaming-links"
+import {
+	duplicateProviderMapping,
+	duplicateProviders,
+} from "~/utils/streaming-links"
 
 export interface Collection {
 	id: number
@@ -343,6 +346,10 @@ export const getCountrySpecificDetails = (
 		details.streaming_providers?.[country.toUpperCase()]
 	details.streaming_providers = streaming_providers || null
 
+	if (details.streaming_links) {
+		details.streaming_links = processStreamingLinks(details.streaming_links)
+	}
+
 	const translations = (details.translations || []).filter(
 		(translation: Record<string, string>) =>
 			translation.iso_3166_1 === country || translation.iso_639_1 === language,
@@ -447,6 +454,43 @@ const streamingLinksFragment = `
       'display_priority', spl.display_priority
     )
   ) AS streaming_links`
+
+function processStreamingLinks(links: StreamingLink[]): StreamingLink[] {
+	// Map to track the main provider for each group
+	const providerGroups: Record<number, StreamingLink> = {}
+
+	// Helper to get the main provider ID
+	const getMainProviderId = (id: number): number => {
+		for (const [mainId, duplicateIds] of Object.entries(
+			duplicateProviderMapping,
+		)) {
+			const mainProviderId = Number(mainId)
+			if (duplicateIds.includes(id)) return mainProviderId
+			if (id === mainProviderId) return mainProviderId
+		}
+		return id
+	}
+
+	// Process each link
+	for (const link of links) {
+		const mainProviderId = getMainProviderId(link.provider_id)
+		const existing = providerGroups[mainProviderId]
+
+		// Update if: no existing link, or current is flatrate, or (current is free and existing isn't flatrate)
+		if (
+			!existing ||
+			link.stream_type === "flatrate" ||
+			(link.stream_type === "free" && existing.stream_type !== "flatrate")
+		) {
+			providerGroups[mainProviderId] = link
+		}
+	}
+
+	// Convert back to array and sort by display_priority
+	return Object.values(providerGroups).sort(
+		(a, b) => a.display_priority - b.display_priority,
+	)
+}
 
 const createBaseQuery = (
 	tableAlias: string,

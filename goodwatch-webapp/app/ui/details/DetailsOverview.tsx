@@ -83,12 +83,12 @@ export default function DetailsOverview({
 						<div className="flex gap-4 items-center flex-wrap mb-4">
 							{ageRating && (
 								<>
-									<AgeRating ageRating={ageRating} /> ·
+									<AgeRating ageRating={ageRating} /> &middot;
 								</>
 							)}
 							{runtime ? (
 								<>
-									<Runtime minutes={runtime} /> ·
+									<Runtime minutes={runtime} /> &middot;
 								</>
 							) : null}
 							{number_of_episodes && number_of_seasons ? (
@@ -99,7 +99,7 @@ export default function DetailsOverview({
 										<strong>{number_of_seasons}</strong>
 										Season{number_of_seasons === 1 ? "" : "s"}
 									</span>
-									<span className="hidden sm:inline">·</span>
+									<span className="hidden sm:inline">&middot;</span>
 								</>
 							) : null}
 							<div className="hidden sm:flex items-center gap-4">
