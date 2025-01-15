@@ -1,14 +1,15 @@
-import { PlusIcon } from "@heroicons/react/24/solid";
-import { Link } from "@remix-run/react";
-import React from "react";
-import type { DiscoverParams } from "~/server/discover.server";
+import { PlusIcon } from "@heroicons/react/24/solid"
+import { Link } from "@remix-run/react"
+import React, { useState } from "react"
+import type { DiscoverParams } from "~/server/discover.server"
 import {
 	type DiscoverFilterType,
 	discoverFilters,
-} from "~/server/types/discover-types";
-import UserAction from "~/ui/auth/UserAction";
-import FilterBarSection from "~/ui/filter/FilterBarSection";
-import Appear from "~/ui/fx/Appear";
+} from "~/server/types/discover-types"
+import UserAction from "~/ui/auth/UserAction"
+import FilterBarSection from "~/ui/filter/FilterBarSection"
+import Appear from "~/ui/fx/Appear"
+import { useOnceMounted } from "~/utils/hydration"
 
 const presets = [
 	{
@@ -80,14 +81,12 @@ const presets = [
 		label: "Released after 2020",
 		params: `minYear=2020&maxYear=${new Date().getFullYear()}`,
 	},
-];
-
-const randomPresets = presets.sort(() => Math.random() - 0.5).slice(0, 5);
+]
 
 interface AddFilterBarParams {
-	params: DiscoverParams;
-	isVisible: boolean;
-	onSelect: (filterType: DiscoverFilterType) => void;
+	params: DiscoverParams
+	isVisible: boolean
+	onSelect: (filterType: DiscoverFilterType) => void
 }
 
 export default function AddFilterBar({
@@ -95,15 +94,23 @@ export default function AddFilterBar({
 	isVisible,
 	onSelect,
 }: AddFilterBarParams) {
+	const [randomPresets, setRandomPresets] = useState(presets)
+
+	useOnceMounted({
+		onMount: () => {
+			setRandomPresets(presets.sort(() => Math.random() - 0.5).slice(0, 5))
+		},
+	})
+
 	const unusedFilters = Object.entries(discoverFilters).filter(
 		([_, discoverFilter]) => {
 			return (
 				discoverFilter.associatedParams.filter((associatedParam) => {
-					return params[associatedParam];
+					return params[associatedParam]
 				}).length === 0
-			);
+			)
 		},
-	);
+	)
 
 	return (
 		<div className="m-auto max-w-7xl w-full px-4 flex flex-col flex-wrap gap-1 text-sm border-gray-900 rounded-lg">
@@ -152,5 +159,5 @@ export default function AddFilterBar({
 				</div>
 			</Appear>
 		</div>
-	);
+	)
 }
