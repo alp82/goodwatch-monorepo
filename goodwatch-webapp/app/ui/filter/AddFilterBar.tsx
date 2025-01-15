@@ -25,57 +25,67 @@ const presets = [
 		params: "minScore=80&maxScore=100",
 	},
 	{
-		label: "Similar to The Truman Show",
-		params: "similarTitles=37165:movie:Sub-Genres;Mood;Themes;Plot",
+		label: "Similar to The Boys",
+		params: "similarTitles=76479_tv_Sub-Genres|Mood|Themes|Plot",
+	},
+	{
+		label: "Martial Arts",
+		params:
+			"similarDNA=307909_Sub-Genres|Martial+Arts&similarDNACombinationType=all",
 	},
 	{
 		label: "With a dark mood",
-		params: "similarDNA=Mood_Dark&similarDNACombinationType=any",
+		params: "similarDNA=308064_Mood|Dark&similarDNACombinationType=any",
 	},
 	{
 		label: "About Time Travel",
-		params: "similarDNACombinationType=any&similarDNA=Themes_Time+Travel",
+		params:
+			"similarDNACombinationType=any&similarDNA=293197_Sub-Genres|Time+Travel,309362_Key+Props|Time+Machine+%28Time+Travel+Machine%29",
 	},
 	{
 		label: "About Family Bonds",
-		params: "similarDNACombinationType=any&similarDNA=Themes_Family+Bonds",
+		params:
+			"similarDNA=308029_Themes|Family+Bonds&similarDNACombinationType=any",
 	},
 	{
 		label: "Launched a Franchise",
 		params:
-			"similarDNACombinationType=any&similarDNA=Cultural+Impact_Launched+A+Franchise",
+			"similarDNA=309817_Cultural+Impact|Launched+A+Franchise&similarDNACombinationType=any",
 	},
 	{
 		label: "Superhero with Inner Monologue",
 		params:
-			"similarDNACombinationType=all&similarDNA=Dialog_Inner+Monologue,Sub-Genres_Superhero",
+			"similarDNACombinationType=all&similarDNA=275104_Dialog|Inner+Monologue,308743_Sub-Genres|Superhero&type=all",
 	},
 	{
 		label: "On the moon",
 		params:
-			"similarDNACombinationType=any&similarDNA=Place_Moon,Place_Moon+Surface,Place_Moon+Colony",
+			"similarDNACombinationType=any&similarDNA=267072_Place|Moon,249760_Place|Lunar+Surface+%28Moon+Landscape%29,224294_Place|Moon+Base,167708_Plot|Journey+To+The+Moon&type=all",
 	},
 	{
 		label: "In Medieval Times",
-		params: "similarDNACombinationType=any&similarDNA=Time_Medieval+Times",
+		params:
+			"similarDNACombinationType=any&similarDNA=308692_Time|Medieval+Times&type=all",
 	},
 	{
 		label: "Slapstick Humor",
-		params: "similarDNACombinationType=any&similarDNA=Humor_Slapstick",
+		params:
+			"similarDNACombinationType=all&similarDNA=307874_Humor|Slapstick&type=all",
 	},
 	{
 		label: "With Electronic Music",
 		params:
-			"similarDNA=Score+and+Sound_Electronic+Music&similarDNACombinationType=any",
+			"similarDNACombinationType=all&similarDNA=308078_Score+and+Sound|Electronic+Music&type=all",
 	},
 	{
 		label: "Dressed in Fantasy Costumes",
 		params:
-			"similarDNA=Costume+and+Set_Fantasy+Costumes&similarDNACombinationType=any",
+			"similarDNACombinationType=all&type=all&similarDNA=292569_Costume+and+Set|Fantasy+Costumes",
 	},
 	{
 		label: "Writing a Love Letter",
-		params: "similarDNA=Key+Props_Love+Letter&similarDNACombinationType=any",
+		params:
+			"similarDNA=308059_Key+Props|Love+Letters&similarDNACombinationType=any",
 	},
 	{
 		label: "Released after 2020",
