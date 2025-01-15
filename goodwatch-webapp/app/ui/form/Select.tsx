@@ -1,9 +1,15 @@
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
-import { useVirtualizer } from '@tanstack/react-virtual'
-import type React from 'react'
-import { Fragment, useEffect, useRef, useState } from 'react'
-import { useAutoFocus } from '~/utils/form'
+import {
+	Listbox,
+	ListboxButton,
+	ListboxOption,
+	ListboxOptions,
+	Transition,
+} from "@headlessui/react"
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid"
+import { useVirtualizer } from "@tanstack/react-virtual"
+import type React from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
+import { useAutoFocus } from "~/utils/form"
 
 export interface SelectItem {
 	key: string
@@ -101,7 +107,8 @@ export default function Select<RenderItem extends SelectItem>({
 			multiple={withMultiSelection}
 		>
 			{({ open }) => {
-				setIsDropdownOpen(open)
+				if (open && !isDropdownOpen) setIsDropdownOpen(true)
+				if (!open && isDropdownOpen) setIsDropdownOpen(false)
 				return (
 					<>
 						<div className="relative">
