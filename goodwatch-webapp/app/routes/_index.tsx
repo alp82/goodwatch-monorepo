@@ -120,7 +120,7 @@ export default function Index() {
 		popularPicksType === "movies" ? popularPicksMovies : popularPicksTV
 
 	return (
-		<div>
+		<>
 			<div
 				className="relative w-full h-screen flex flex-col select-none bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.25]"
 				style={{
@@ -308,6 +308,6 @@ export default function Index() {
 					</div>
 				)}
 			</div>
-		</div>
+		</>
 	)
 }
