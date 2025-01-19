@@ -49,9 +49,11 @@ else
   echo "Deleting old files on remote server:"
   for file in "${FILES_TO_DELETE[@]}"; do
     echo "Deleting $file"
-    ssh -p ${}REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST} "rm $file"
+    ssh -p ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST} "rm \"$file\""
   done
 fi
+
+exit
 
 # Step 6: Delete local backup files older than RETENTION_DAYS_LOCAL
 echo "Deleting local backup files older than ${RETENTION_DAYS_LOCAL} days."
