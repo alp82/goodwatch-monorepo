@@ -53,8 +53,6 @@ else
   done
 fi
 
-exit
-
 # Step 6: Delete local backup files older than RETENTION_DAYS_LOCAL
 echo "Deleting local backup files older than ${RETENTION_DAYS_LOCAL} days."
 find ${BACKUP_DIR} -name "${DBNAME}_*.sql.gz" -type f -mtime +${RETENTION_DAYS_LOCAL} -exec rm {} \;
