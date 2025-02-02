@@ -1,24 +1,19 @@
 import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
 import type { MetaFunction } from "@remix-run/node"
 import { useNavigate, useRouteError } from "@remix-run/react"
-import { AnimatePresence, motion } from "framer-motion"
 import React, { useState } from "react"
-import { useDiscover } from "~/routes/api.discover"
 import type {
 	DiscoverParams,
-	DiscoverResult,
 	DiscoverResults,
 	DiscoverSortBy,
 } from "~/server/discover.server"
 import type { DiscoverFilterType } from "~/server/types/discover-types"
 import type { FilterMediaType } from "~/server/utils/query-db"
-import { MovieTvCard } from "~/ui/MovieTvCard"
+import MovieTvGrid from "~/ui/explore/MovieTvGrid"
 import AddFilterBar from "~/ui/filter/AddFilterBar"
 import FilterBar from "~/ui/filter/FilterBar"
-import Appear from "~/ui/fx/Appear"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
-import { Spinner } from "~/ui/wait/Spinner"
 import { useNav } from "~/utils/navigation"
 
 export function headers() {
@@ -66,8 +61,6 @@ export type LoaderData = {
 
 export default function Discover() {
 	const { currentParams, updateQueryParams } = useNav<DiscoverParams>()
-	const discover = useDiscover({ params: currentParams })
-	const results = discover.data || []
 
 	const sortByTabs: Tab<DiscoverSortBy>[] = [
 		{
@@ -144,56 +137,11 @@ export default function Discover() {
 				</div>
 			</div>
 			<div className="max-w-7xl mx-auto px-4 flex flex-col gap-4">
-				<Appear isVisible={results.length > 1}>
-					<div className="mt-2">
-						{/*TODO prefetch tab links*/}
-						<Tabs
-							tabs={sortByTabs}
-							pills={true}
-							onSelect={handleSortBySelect}
-						/>
-					</div>
-				</Appear>
-				<div
-					className={
-						"relative mt-4 grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5"
-					}
-				>
-					{discover.isLoading && <Spinner size="medium" />}
-					{!results.length && discover.isSuccess && (
-						<div className="my-6 text-lg italic">
-							No results. Try to change your search filters.
-						</div>
-					)}
-					{results.length > 0 && discover.isSuccess && (
-						<AnimatePresence>
-							{results.map((result: DiscoverResult, index) => {
-								return (
-									<div key={`${result.media_type}-${result.tmdb_id}`}>
-										<motion.div
-											initial={{
-												y: `-${Math.floor(Math.random() * 12) + 6}%`,
-												opacity: 0,
-											}}
-											animate={{ y: "0", opacity: 1 }}
-											exit={{
-												y: `${Math.floor(Math.random() * 12) + 6}%`,
-												opacity: 0,
-											}}
-											transition={{ duration: 0.3, type: "tween" }}
-										>
-											<MovieTvCard
-												details={result as DiscoverResult}
-												mediaType={result.media_type}
-												prefetch={index < 6}
-											/>
-										</motion.div>
-									</div>
-								)
-							})}
-						</AnimatePresence>
-					)}
+				<div className="mt-2">
+					{/*TODO prefetch tab links*/}
+					<Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
 				</div>
+				<MovieTvGrid discoverParams={currentParams} />
 			</div>
 		</>
 	)

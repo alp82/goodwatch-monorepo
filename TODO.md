@@ -1,5 +1,6 @@
 # TODO's
 
+
 ```
 type = movies | tv shows
 
@@ -22,6 +23,9 @@ genre:
     thriller
     action
     ...
+    
+subgenre
+    ...
 
 release:
     of all time
@@ -39,6 +43,22 @@ language:
     ...
 
 ---
+
+new themes:
+    magic?
+    fantastic
+    survival adventure (hunger games)
+    hacker
+    robot / ai
+    ancient rome
+    viking
+    desert
+    ocean
+    cult classics
+    dance
+    ice hockey
+    tennis
+    golf
 
 genre:
     best comedy [type]
@@ -114,12 +134,9 @@ mood:
     best gangster [type]
     best rom com [type]
     best superhero [type]
-        Sub-Genres: Superhero or Sub-Genres: Superhero Comedy
     best revenge [type]
     best mafia [type]
-        Sub-Genres: Mafia Film, Plot: Criminal Underworld or Character Types: Crime Boss
     best apocalyptic [type]
-        Time: Post-Apocalyptic Future or Plot: Post-Apocalyptic Survival
     best samurai [type]
     best shark [type]
     best car [type]
@@ -204,11 +221,36 @@ holiday + audience:
 ```
 
 ```
+order
+    highest score
+    most controversial (critics vs. audience)
+    trending
+
+internal links
+    action -> superhero
+    if you like X, check out these Y
+```
+
+```
+subgenre descriptions
+    https://www.studiobinder.com/blog/movie-genres-list/
+
+search
+    https://github.com/quickwit-oss/tantivy
+```
+
+```
 explore/all|movie|tv/[category]/[label],[label]
     https://remix.run/docs/en/main/utils/redirect
     
 meta tags & json-ld
     all routes
+    schema.org
+        Movie, TVSeries, AggregateRating
+        ItemList or CollectionPage
+        
+og images
+    https://tailwind-generator.com/og-image-generator/generator
 ```
 
 ```
@@ -762,6 +804,11 @@ data flows ignore list:
 
 ---
 
+graph db
+    https://age.apache.org/
+
+---
+
 error boundaries
     add for each page
     better error display
@@ -1072,6 +1119,15 @@ social media scheduling
 
 ---
 
+error monitoring
+    https://glitchtip.com/
+    sentry self hosted
+
+---
+
+launch strategy
+    https://www.notion.so/ScreenSpace-2-0-Launch-Support-1831647101ea80858e7ce3ee766ba7e6
+
 launch
     alternativeto
     BetaList
@@ -1097,6 +1153,11 @@ open source events
     https://hacktoberfest.com/
     https://buildspace.so/s5/welcome
     https://solvearn.net/
+
+---
+
+light and dark mode switch
+    https://admin.forem.com/
 
 ---
     
@@ -1277,6 +1338,9 @@ zombie processes:
 score explanations
 streaming explanations
 
+llm orchestration
+    https://flowiseai.com/
+
 android app
 iphone app
 
@@ -1382,13 +1446,13 @@ LIMIT 20;
 
 # Blog
 ```
+seo
+from vercel to coolify
+    too many open files
+    transparency concerns: hidden costs
 hydration errors
     https://github.com/facebook/react/issues/24519#issuecomment-1122780621
     https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render
-data pipeline with windmill:
-    data flow design
-    infrastructure
-    keep data up to date
 dna journey
     https://huggingface.co/models?pipeline_tag=sentence-similarity&sort=trending&search=negat
     https://huggingface.co/czesty/ea-setfit-v1-classifier
@@ -1402,28 +1466,28 @@ dna clustering
         Largest cluster size: 5714
         Largest cluster representative label: Forbidden Resurrection
         Largest cluster labels (up to 10): ['Forbidden Resurrection', 'Legacy Of Evil', 'Underdog Against Authority', 'Reluctant Mentorship', 'Unholy Resurrection', 'Misguided Justice', 'Insignificant Protagonist', 'Naive Inventor', 'Clueless Parent', 'Misunderstood Outcasts']
-monorepo design
-from vercel to coolify
-    too many open files
-    transparency concerns: hidden costs
-db architecture: performance and scalability
-caching strategy
-remix: keep it simple with tailwind
-    linting with biomejs
-    component example: rating
-discover design
-zombie processes
+windmill & playwright: zombie processes
     windmill -> chrome (playwright)
     "can't start new thread"
     "IO error: Resource temporarily unavailable (os error 11)"
     kill windmill every 24 hours
+authentication
+    https://www.dusanstam.com/posts/remix-supabase-authentication
+    from supabase cloud to better auth
+monorepo design
+db architecture: performance and scalability
+    index optimizations
+    fast queries
+caching strategy
+    redis
+remix: keep it simple with tailwind
+    linting with biomejs
+    component example: rating
 server architecture
     deployment with docker compose
     ansible for worker upgrades
-monitoring with uptime kuma
-authentication
-    https://www.dusanstam.com/posts/remix-supabase-authentication
-genome with LLM's
+    security audit & hardening
+    monitoring with uptime kuma + ?
 recommendation engine
 monthly costs
 ```

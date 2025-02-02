@@ -27,6 +27,21 @@ import { SignOutLink } from "~/ui/auth/SignOutLink"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useUser } from "~/utils/auth"
 
+const mainNav = [
+	{
+		label: "Movies",
+		path: "/movies",
+	},
+	{
+		label: "TV Shows",
+		path: "/tv-shows",
+	},
+	{
+		label: "Discover",
+		path: "/discover",
+	},
+]
+
 export default function Header() {
 	const location = useLocation()
 	const isPage = (pathname: string) => location.pathname.startsWith(pathname)
@@ -185,17 +200,20 @@ export default function Header() {
 						{/* Main nav */}
 						<div className="hidden lg:ml-6 lg:block">
 							<div className="flex space-x-4">
-								<Link
-									className={`rounded-md px-3 py-2 text-md font-semibold ${
-										isPage("/discover")
-											? "text-white bg-indigo-800"
-											: "text-gray-300"
-									} hover:bg-indigo-900 hover:text-white`}
-									to="/discover"
-									prefetch="render"
-								>
-									Discover
-								</Link>
+								{mainNav.map((nav) => (
+									<Link
+										key={nav.path}
+										className={`rounded-md px-3 py-2 text-md font-semibold ${
+											isPage(nav.path)
+												? "text-white bg-indigo-800"
+												: "text-gray-300"
+										} hover:bg-indigo-900 hover:text-white`}
+										to={nav.path}
+										prefetch="render"
+									>
+										{nav.label}
+									</Link>
+								))}
 							</div>
 						</div>
 						{/* Search bar */}

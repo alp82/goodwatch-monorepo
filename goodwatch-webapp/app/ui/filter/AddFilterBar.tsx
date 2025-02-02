@@ -1,4 +1,3 @@
-import { PlusIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import React, { useState } from "react"
 import type { DiscoverParams } from "~/server/discover.server"
@@ -55,32 +54,31 @@ const presets = [
 	{
 		label: "Superhero with Inner Monologue",
 		params:
-			"similarDNACombinationType=all&similarDNA=275104_Dialog|Inner+Monologue,308743_Sub-Genres|Superhero&type=all",
+			"similarDNACombinationType=all&similarDNA=275104_Dialog|Inner+Monologue,308743_Sub-Genres|Superhero",
 	},
 	{
 		label: "On the moon",
 		params:
-			"similarDNACombinationType=any&similarDNA=267072_Place|Moon,249760_Place|Lunar+Surface+%28Moon+Landscape%29,224294_Place|Moon+Base,167708_Plot|Journey+To+The+Moon&type=all",
+			"similarDNACombinationType=any&similarDNA=267072_Place|Moon,249760_Place|Lunar+Surface+%28Moon+Landscape%29,224294_Place|Moon+Base,167708_Plot|Journey+To+The+Moon",
 	},
 	{
 		label: "In Medieval Times",
 		params:
-			"similarDNACombinationType=any&similarDNA=308692_Time|Medieval+Times&type=all",
+			"similarDNACombinationType=any&similarDNA=308692_Time|Medieval+Times",
 	},
 	{
 		label: "Slapstick Humor",
-		params:
-			"similarDNACombinationType=all&similarDNA=307874_Humor|Slapstick&type=all",
+		params: "similarDNACombinationType=all&similarDNA=307874_Humor|Slapstick",
 	},
 	{
 		label: "With Electronic Music",
 		params:
-			"similarDNACombinationType=all&similarDNA=308078_Score+and+Sound|Electronic+Music&type=all",
+			"similarDNACombinationType=all&similarDNA=308078_Score+and+Sound|Electronic+Music",
 	},
 	{
 		label: "Dressed in Fantasy Costumes",
 		params:
-			"similarDNACombinationType=all&type=all&similarDNA=292569_Costume+and+Set|Fantasy+Costumes",
+			"similarDNACombinationType=all&similarDNA=292569_Costume+and+Set|Fantasy+Costumes",
 	},
 	{
 		label: "Writing a Love Letter",

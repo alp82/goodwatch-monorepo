@@ -157,6 +157,22 @@ export interface ReleaseDate {
 	type: number
 }
 
+export interface ImageResult {
+	iso_639_1?: string
+	file_path: string
+	width: number
+	height: number
+	aspect_ratio: number
+	vote_count: number
+	vote_average: number
+}
+
+export interface Images {
+	backdrops: ImageResult[]
+	logos: ImageResult[]
+	posters: ImageResult[]
+}
+
 export interface VideoResult {
 	iso_639_1: string
 	iso_3166_1: string
@@ -187,6 +203,7 @@ export interface MovieDetails extends BaseDetails {
 	collection?: Collection
 	crew: Cast[]
 	homepage: string
+	images: Images
 	imdb_id: string
 	original_language: string
 	original_title: string
@@ -195,19 +212,19 @@ export interface MovieDetails extends BaseDetails {
 	production_companies: ProductionCompany[]
 	production_countries: ProductionCountry[]
 	release_date: string
+	recommendations: Recommendations
 	revenue: number
 	runtime: number
 	spoken_languages: SpokenLanguage[]
 	status: string
+	streaming_providers: StreamingProviders
 	synopsis: string
 	tagline: string
 	title: string
 	video: boolean
+	videos: Videos
 	vote_average: number
 	vote_count: number
-	recommendations: Recommendations
-	videos: Videos
-	streaming_providers: StreamingProviders
 }
 
 export interface CreatedBy {
@@ -275,6 +292,7 @@ export interface TVDetails extends BaseDetails {
 	external_ids: ExternalIds
 	first_air_date: string
 	homepage: string
+	images: Images
 	in_production: boolean
 	languages: string[]
 	last_air_date: string
@@ -387,6 +405,7 @@ const movieFields = [
 	"collection",
 	"keywords",
 	"genres",
+	"images",
 	"poster_path",
 	"release_year",
 	"runtime",
@@ -406,6 +425,7 @@ const tvFields = [
 	"crew",
 	"keywords",
 	"genres",
+	"images",
 	"number_of_episodes",
 	"number_of_seasons",
 	"poster_path",
