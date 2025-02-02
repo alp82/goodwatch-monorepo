@@ -16,7 +16,7 @@ import {
 	navLabel,
 	validUrlParams,
 } from "~/ui/explore/config"
-import { mainHierarchy } from "~/ui/explore/main-nav"
+import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 import { convertHyphensToWords } from "~/utils/string"
@@ -27,13 +27,15 @@ export const meta: MetaFunction = ({ params }) => {
 	const category = params.category || ""
 	const page = params.page || ""
 
-	const typeLabel = navLabel[type]
+	const typeLabel = navLabel?.[type]
+	const mainData = mainNavigation?.[category]
+	const pageData = mainHierarchy?.[category]?.[page]
 
 	const pageMeta: PageMeta = {
-		title: `${convertHyphensToWords(page)} | ${category} | Best ${typeLabel} to Watch Online | GoodWatch`,
-		description: `Discover the best ${typeLabel} to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find ${typeLabel} by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.`,
-		url: `https://goodwatch.app/${type}`,
-		image: "https://goodwatch.app/images/hero-movies.png",
+		title: `${convertHyphensToWords(page)} | ${convertHyphensToWords(category)} | Best ${typeLabel} to Watch Online | GoodWatch`,
+		description: `Discover the best ${pageData.label} ${typeLabel} to watch right now. ${pageData.subtitle}: ${pageData.description}`,
+		url: `https://goodwatch.app/${type}/${category}/${page}`,
+		image: `https://goodwatch.app/images/hero-${type}.png`,
 		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
 	}
 
@@ -63,7 +65,7 @@ export const loader: LoaderFunction = async ({
 	if (!validUrlParams.category.includes(category)) return redirect(`/${type}`)
 	// TODO check page
 
-	const pageData = mainHierarchy[category][page]
+	const pageData = mainHierarchy?.[category]?.[page]
 
 	return {
 		type,

@@ -13,21 +13,23 @@ import {
 	navLabel,
 	validUrlParams,
 } from "~/ui/explore/config"
-import { mainHierarchy } from "~/ui/explore/main-nav"
+import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
+import { convertHyphensToWords } from "~/utils/string"
 
 export const meta: MetaFunction = ({ data, params }) => {
 	const type = params.type || ""
 	const category = params.category || ""
 
-	const typeLabel = navLabel[type]
+	const typeLabel = navLabel?.[type]
+	const mainData = mainNavigation?.[category]
 
 	const pageMeta: PageMeta = {
-		title: `${category} | Best ${typeLabel} to Watch Online | GoodWatch`,
-		description: `Discover the best ${typeLabel} to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find ${typeLabel} by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.`,
-		url: `https://goodwatch.app/${type}`,
-		image: "https://goodwatch.app/images/hero-movies.png",
+		title: `${convertHyphensToWords(category)} | Best ${typeLabel} to Watch Online | GoodWatch`,
+		description: `Discover the best ${mainData.label} ${typeLabel} to watch right now. ${mainData.subtitle}: ${mainData.description}`,
+		url: `https://goodwatch.app/${type}/${category}`,
+		image: `https://goodwatch.app/images/hero-${type}.png`,
 		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
 	}
 

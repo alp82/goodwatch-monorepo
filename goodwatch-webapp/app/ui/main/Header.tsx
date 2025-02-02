@@ -99,21 +99,23 @@ export default function Header() {
 														</Link>
 													)}
 												</MenuItem>
-												<MenuItem>
-													{({ focus }) => (
-														<Link
-															to="/discover"
-															prefetch="render"
-															className={`block px-4 py-2 text-base font-medium ${
-																isPage("/discover")
-																	? "bg-indigo-900 text-white"
-																	: "text-gray-300"
-															} ${focus ? "bg-gray-700 text-white" : ""}`}
-														>
-															Discover
-														</Link>
-													)}
-												</MenuItem>
+												{mainNav.map((nav) => (
+													<MenuItem key={nav.path}>
+														{({ focus }) => (
+															<Link
+																to={nav.path}
+																prefetch="render"
+																className={`block px-4 py-2 text-base font-medium ${
+																	isPage("/discover")
+																		? "bg-indigo-900 text-white"
+																		: "text-gray-300"
+																} ${focus ? "bg-gray-700 text-white" : ""}`}
+															>
+																{nav.label}
+															</Link>
+														)}
+													</MenuItem>
+												))}
 												<div className="border-t border-gray-500">
 													<MenuItem>
 														{({ focus }) => (
