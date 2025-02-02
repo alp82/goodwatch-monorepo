@@ -3,6 +3,7 @@ import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	json,
+	redirect,
 } from "@remix-run/node"
 import {
 	useLoaderData,
@@ -83,6 +84,8 @@ export const loader: LoaderFunction = async ({
 	// TODO guess country
 	const country = (url.searchParams.get("country") ||
 		"US") as ExploreParams["country"]
+
+	return redirect(`/${type === "movies" ? "movies" : "tv-shows"}`)
 
 	const exploreParams = {
 		type,
