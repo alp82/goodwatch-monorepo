@@ -149,7 +149,8 @@ export default function Index() {
 					<div className="my-12 w-full">
 						<Swiper
 							autoplay={{
-								delay: 4000,
+								delay: 5000,
+								pauseOnMouseEnter: true,
 							}}
 							breakpoints={{
 								"@0.50": {
