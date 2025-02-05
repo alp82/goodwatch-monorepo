@@ -14,6 +14,7 @@ import {
 
 export interface StreamingBadgesProps {
 	details: MovieDetails | TVDetails
+	country: string
 	media_type: "movie" | "tv"
 	links: StreamingLink[]
 	countryCodes: string[]
@@ -22,6 +23,7 @@ export interface StreamingBadgesProps {
 
 export default function StreamingBadges({
 	details,
+	country,
 	media_type,
 	links = [],
 	countryCodes = [],
@@ -135,7 +137,7 @@ export default function StreamingBadges({
 						return (
 							<a
 								key={link.provider_id}
-								href={getStreamingUrl(link, details, media_type)}
+								href={getStreamingUrl(link, details, country, media_type)}
 								target="_blank"
 								className="flex items-center gap-2 bg-gray-700 text-sm font-semibold shadow-2xl rounded-xl border-4 border-gray-600 hover:border-gray-500"
 								rel="noreferrer"

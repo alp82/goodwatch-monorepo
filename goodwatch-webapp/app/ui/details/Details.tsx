@@ -41,7 +41,11 @@ export default function Details({ details, country }: DetailsProps) {
 
 			<div className="relative flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl z-30">
-					<DetailsContent details={details} sectionProps={sectionProps} />
+					<DetailsContent
+						details={details}
+						country={country}
+						sectionProps={sectionProps}
+					/>
 				</div>
 			</div>
 		</>

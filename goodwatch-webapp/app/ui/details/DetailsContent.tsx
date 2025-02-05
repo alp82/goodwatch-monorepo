@@ -1,28 +1,30 @@
-import React from "react";
-import type { MovieDetails, TVDetails } from "~/server/details.server";
-import About from "~/ui/details/About";
-import Cast from "~/ui/details/Cast";
-import Collection from "~/ui/details/Collection";
-import Crew from "~/ui/details/Crew";
-import Description from "~/ui/details/Description";
-import Videos from "~/ui/details/Videos";
-import type { SectionIds } from "~/ui/details/common";
-import Ratings from "~/ui/ratings/Ratings";
-import Streaming from "~/ui/streaming/Streaming";
-import { extractRatings } from "~/utils/ratings";
-import type { SectionProps } from "~/utils/scroll";
-import DNA from "../dna/DNA";
+import React from "react"
+import type { MovieDetails, TVDetails } from "~/server/details.server"
+import About from "~/ui/details/About"
+import Cast from "~/ui/details/Cast"
+import Collection from "~/ui/details/Collection"
+import Crew from "~/ui/details/Crew"
+import Description from "~/ui/details/Description"
+import Videos from "~/ui/details/Videos"
+import type { SectionIds } from "~/ui/details/common"
+import Ratings from "~/ui/ratings/Ratings"
+import Streaming from "~/ui/streaming/Streaming"
+import { extractRatings } from "~/utils/ratings"
+import type { SectionProps } from "~/utils/scroll"
+import DNA from "../dna/DNA"
 
 export interface DetailsContentProps {
-	details: MovieDetails | TVDetails;
-	sectionProps: SectionProps<SectionIds>;
+	details: MovieDetails | TVDetails
+	country: string
+	sectionProps: SectionProps<SectionIds>
 }
 
 export default function DetailsContent({
 	details,
+	country,
 	sectionProps,
 }: DetailsContentProps) {
-	const ratings = extractRatings(details);
+	const ratings = extractRatings(details)
 
 	const {
 		cast,
@@ -35,11 +37,11 @@ export default function DetailsContent({
 		synopsis,
 		tagline,
 		videos,
-	} = details;
+	} = details
 
-	let collection: MovieDetails["collection"] | undefined;
+	let collection: MovieDetails["collection"] | undefined
 	if (media_type === "movie") {
-		collection = details.collection;
+		collection = details.collection
 	}
 
 	return (
@@ -72,6 +74,7 @@ export default function DetailsContent({
 					details={details}
 					media_type={media_type}
 					links={streaming_links}
+					currentCountryCode={country}
 					countryCodes={streaming_country_codes}
 				/>
 			</div>
@@ -79,5 +82,5 @@ export default function DetailsContent({
 				<Videos videos={videos || []} />
 			</div>
 		</div>
-	);
+	)
 }

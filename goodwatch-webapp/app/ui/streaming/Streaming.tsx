@@ -14,6 +14,7 @@ export interface StreamingProps {
 	details: MovieDetails | TVDetails
 	media_type: "movie" | "tv"
 	links: StreamingLink[]
+	currentCountryCode: string
 	countryCodes: string[]
 }
 
@@ -21,6 +22,7 @@ export default function Streaming({
 	details,
 	media_type,
 	links,
+	currentCountryCode,
 	countryCodes = [],
 }: StreamingProps) {
 	const flatrateLinks = (links || []).filter((link: StreamingLink) =>
@@ -64,7 +66,12 @@ export default function Streaming({
 							return (
 								<a
 									key={link.provider_id}
-									href={getStreamingUrl(link, details, media_type)}
+									href={getStreamingUrl(
+										link,
+										details,
+										currentCountryCode,
+										media_type,
+									)}
 									target="_blank"
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
@@ -88,7 +95,12 @@ export default function Streaming({
 							return (
 								<a
 									key={link.display_priority}
-									href={getStreamingUrl(link, details, media_type)}
+									href={getStreamingUrl(
+										link,
+										details,
+										currentCountryCode,
+										media_type,
+									)}
 									target="_blank"
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
@@ -112,7 +124,12 @@ export default function Streaming({
 							return (
 								<a
 									key={link.display_priority}
-									href={getStreamingUrl(link, details, media_type)}
+									href={getStreamingUrl(
+										link,
+										details,
+										currentCountryCode,
+										media_type,
+									)}
 									target="_blank"
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
