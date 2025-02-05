@@ -78,13 +78,19 @@ export const loader: LoaderFunction = async ({
 	const pageData = mainHierarchy?.[category]?.[page]
 	const requestParams = await buildDiscoverParams(request)
 	const discoverType = type === "tv-shows" ? "tv" : type
-	const discoverParams: DiscoverParams = {
-		...defaultDiscoverParams,
+	const discoverParamsFull: DiscoverParams = {
 		...requestParams,
+		...defaultDiscoverParams,
 		type: discoverType,
 		...pageData.discoverParams,
 	}
-	const results = await getDiscoverResults(discoverParams)
+	const results = await getDiscoverResults(discoverParamsFull)
+
+	const discoverParams = Object.fromEntries(
+		Object.entries(discoverParamsFull).filter(
+			([_, v]) => v != null && v !== "",
+		),
+	)
 
 	return {
 		type,

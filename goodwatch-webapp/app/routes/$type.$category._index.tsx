@@ -97,8 +97,8 @@ export const loader: LoaderFunction = async ({
 	const pageResults: PageResult[] = await Promise.all(
 		pageItems.map(async (pageData) => {
 			const discoverParams: DiscoverParams = {
-				...defaultDiscoverParams,
 				...requestParams,
+				...defaultDiscoverParams,
 				type: discoverType,
 				...pageData.discoverParams,
 			}
