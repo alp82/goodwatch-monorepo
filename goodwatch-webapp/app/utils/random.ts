@@ -3,6 +3,11 @@ import React from "react"
 export const random = (min: number, max: number) =>
 	Math.floor(Math.random() * (max - min)) + min
 
+export const seededRandom = (seed: number) => {
+	const x = Math.sin(seed) * 10000
+	return x - Math.floor(x)
+}
+
 export const randomEdge = (min: number, max: number, percent: number) => {
 	const val = Math.random() > 0.5 ? min : max
 	const rand = random(0, 100) * (percent / 100)

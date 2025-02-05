@@ -6,7 +6,11 @@ import {
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
-import type { DiscoverParams } from "~/server/discover.server"
+import type { GetDiscoverResult } from "~/routes/api.discover"
+import {
+	type DiscoverParams,
+	getDiscoverResults,
+} from "~/server/discover.server"
 import FAQ from "~/ui/explore/FAQ"
 import MovieTvGrid from "~/ui/explore/MovieTvGrid"
 import {
@@ -18,6 +22,7 @@ import {
 } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
+import { buildDiscoverParams } from "~/utils/discover"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 import { convertHyphensToWords } from "~/utils/string"
 import { jsonToUrlString } from "~/utils/url"
@@ -51,11 +56,15 @@ interface LoaderData {
 	page: string
 	path: string
 	pageData: PageData
+	results: GetDiscoverResult
+	discoverParams: DiscoverParams
 }
 
 export const loader: LoaderFunction = async ({
 	params,
+	request,
 }: LoaderFunctionArgs) => {
+	// url input validation
 	const type = params.type || ""
 	const category = params.category || ""
 	const page = params.page || ""
@@ -65,7 +74,17 @@ export const loader: LoaderFunction = async ({
 	if (!validUrlParams.category.includes(category)) return redirect(`/${type}`)
 	// TODO check page
 
+	// discover call
 	const pageData = mainHierarchy?.[category]?.[page]
+	const requestParams = await buildDiscoverParams(request)
+	const discoverType = type === "tv-shows" ? "tv" : type
+	const discoverParams: DiscoverParams = {
+		...defaultDiscoverParams,
+		...requestParams,
+		type: discoverType,
+		...pageData.discoverParams,
+	}
+	const results = await getDiscoverResults(discoverParams)
 
 	return {
 		type,
@@ -73,17 +92,14 @@ export const loader: LoaderFunction = async ({
 		page,
 		path,
 		pageData,
+		discoverParams,
+		results,
 	}
 }
 
 export default function MoviesCategoryPage() {
-	const { type, category, page, path, pageData } = useLoaderData<LoaderData>()
-	const discoverType = type === "tv-shows" ? "tv" : type
-	const discoverParams: Partial<DiscoverParams> = {
-		...defaultDiscoverParams,
-		type: discoverType,
-		...pageData.discoverParams,
-	}
+	const { type, category, page, path, pageData, discoverParams, results } =
+		useLoaderData<LoaderData>()
 
 	return (
 		<>
@@ -109,7 +125,7 @@ export default function MoviesCategoryPage() {
 						Advanced Search
 					</Link>
 				</div>
-				<MovieTvGrid discoverParams={discoverParams} />
+				<MovieTvGrid discoverResults={results} />
 			</div>
 			<div>
 				<FAQ faq={pageData.faq} />

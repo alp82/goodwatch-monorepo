@@ -1,17 +1,24 @@
 import React from "react"
 import { FreeMode } from "swiper/modules"
 import { Swiper, SwiperSlide } from "swiper/react"
-import { useDiscover } from "~/routes/api.discover"
+import { type GetDiscoverResult, useDiscover } from "~/routes/api.discover"
 import type { DiscoverParams } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 
 export interface MovieTvListParams {
-	discoverParams: Partial<DiscoverParams>
+	discoverParams?: Partial<DiscoverParams>
+	discoverResults?: GetDiscoverResult
 }
 
-export default function MovieTvList({ discoverParams }: MovieTvListParams) {
-	const discover = useDiscover({ params: discoverParams })
-	const results = discover.data || []
+export default function MovieTvList({
+	discoverParams,
+	discoverResults,
+}: MovieTvListParams) {
+	const discover = useDiscover({
+		params: discoverParams,
+		enabled: !discoverResults,
+	})
+	const results = discoverResults || discover.data || []
 
 	return (
 		<div className="flex gap-8 items-center">
@@ -34,12 +41,12 @@ export default function MovieTvList({ discoverParams }: MovieTvListParams) {
 							slidesPerView: 8,
 						},
 					}}
-					freeMode={{
-						enabled: true,
-					}}
-					grabCursor={true}
-					loop={true}
-					modules={[FreeMode]}
+					// freeMode={{
+					// 	enabled: true,
+					// }}
+					// grabCursor={true}
+					// loop={true}
+					// modules={[FreeMode]}
 					slidesPerView={2}
 				>
 					{results.map((details) => (
@@ -47,7 +54,7 @@ export default function MovieTvList({ discoverParams }: MovieTvListParams) {
 							<div className="w-32 xl:w-44 transition-transform ease-in-out duration-200">
 								<MovieTvCard
 									details={details}
-									mediaType={discoverParams.type === "movies" ? "movie" : "tv"}
+									mediaType={details.media_type}
 									prefetch={false}
 								/>
 							</div>
