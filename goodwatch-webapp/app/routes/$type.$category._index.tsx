@@ -130,7 +130,7 @@ export default function MoviesCategory_index() {
 			<Breadcrumbs path={path} />
 
 			<div className="max-w-7xl mx-auto p-4 flex flex-col gap-12">
-				<h2 className="text-4xl font-medium text-gray-100">
+				<h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-gray-100">
 					The best{" "}
 					<span className="font-extrabold accent">
 						{mainNavigation[category].label}
@@ -142,12 +142,12 @@ export default function MoviesCategory_index() {
 					<div key={pageResult.path} className="flex flex-col gap-4">
 						<Link
 							to={pageResult.path}
-							className="flex items-end gap-1 py-2 px-4 rounded-lg bg-gray-950/50 hover:bg-gray-950/70 transition-all group"
+							className="flex flex-col md:flex-row gap-1 md:gap-4 items-start md:items-end py-2 px-4 rounded-lg bg-gray-950/50 hover:bg-gray-950/70 transition-all group"
 						>
-							<span className="text-6xl font-extrabold opacity-60 text-gray-400 group-hover:opacity-80 group-hover:text-amber-400">
+							<span className="text-4xl md:text-6xl font-extrabold opacity-60 text-gray-400 group-hover:opacity-80 group-hover:text-amber-400">
 								{pageResult.label}
 							</span>
-							<span className="flex gap-1.5 ml-4 text-lg font-semibold text-indigo-500 group-hover:text-indigo-400 ">
+							<span className="flex gap-1.5 text-base font-semibold text-indigo-500 group-hover:text-indigo-400 ">
 								Show all
 								<ArrowRightCircleIcon className="w-5" />
 							</span>
