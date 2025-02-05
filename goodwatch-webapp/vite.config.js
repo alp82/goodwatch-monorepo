@@ -7,9 +7,9 @@ import tsconfigPaths from "vite-tsconfig-paths"
 
 installGlobals()
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	define: {
-		"process.env.NODE_ENV": '"development"',
+		"process.env.NODE_ENV": JSON.stringify(mode),
 	},
 
 	server: {
@@ -41,4 +41,4 @@ export default defineConfig({
 	build: {
 		sourcemap: true,
 	},
-})
+}))

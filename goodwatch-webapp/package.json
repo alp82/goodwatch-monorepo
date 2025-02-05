@@ -6,8 +6,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "remix vite:dev",
-		"start": "NODE_ENV=production remix-serve ./build/server/index.js",
-		"build": "NODE_ENV=production remix vite:build",
+		"start": "remix-serve ./build/server/index.js",
+		"build": "remix vite:build",
 		"typecheck": "tsc"
 	},
 	"dependencies": {
