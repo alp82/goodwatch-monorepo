@@ -151,7 +151,7 @@ export function ErrorBoundary() {
 		<html lang="en">
 			<head>
 				<title>Oh no!</title>
-				<meta charSet="utf-8" />
+				<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
 				<Links />
@@ -242,7 +242,9 @@ function Root() {
 							</HydrationBoundary>
 						</AuthContext.Provider>
 					</LocaleContext.Provider>
-					<ReactQueryDevtools initialIsOpen={false} />
+					{process.env.NODE_ENV === "development" && (
+						<ReactQueryDevtools initialIsOpen={false} />
+					)}
 				</QueryClientProvider>
 			</body>
 		</html>
