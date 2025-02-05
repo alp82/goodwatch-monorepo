@@ -2,6 +2,25 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
+## [0.6.2] 2025-02-xx
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.6.1] 2025-02-01
+
+### Added
+* New main navigation for Movies and TV Shows
+* Explore titles by detailed categories powered by DNA
+* Proper Meta tags and JSON-LD data for SEO
+
+### Changed
+
+### Fixed
+
 ## [0.6.0] 2025-01-11
 
 Minor Release: **Improved DNA**

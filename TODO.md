@@ -1,15 +1,9 @@
 # TODO's
 
-
 ```
-type = movies | tv shows
-
----
-
-default filter
-    score: 60-100
-
 additional filters (pick 1 or 2)
+
+hide already watched
 
 streaming:
     anywhere
@@ -42,7 +36,71 @@ language:
     korean
     ...
 
+order by
+    popularity
+    score
+    most recent
+    
 ---
+
+meta tags & json-ld
+    all routes
+    schema.org
+        Movie, TVSeries, AggregateRating
+        ItemList or CollectionPage
+        
+og images
+    https://tailwind-generator.com/og-image-generator/generator
+
+---
+
+404 / 500 fixes
+    check sentry
+
+---
+
+SEO analysis
+    http://guidetodatamining.com/ngramAnalyzer/index.php
+    
+SEO optimization + marketing
+    https://www.jacobparis.com/content/remix-og
+    https://www.reddit.com/r/SaaS/comments/1ho4hbu/best_free_seo_tools/
+    https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
+    https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
+    https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
+    https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
+    
+New SEO topics pages
+    update main navigation
+
+Create new sitemaps
+
+---
+
+---
+
+discover pagination
+    tabs with total number of results (100+)
+    load more on scroll?
+    filter suggestions at the bottom?
+
+additional info
+    preview count for selections in edited sections (100+)
+    note: available in your region
+    for plan to watch: show note that some are hidden due to filters
+
+save discover filters in db
+    
+---
+
+similar filter
+    multiple similar titles
+    fix similarity order
+
+---
+
+subgenre descriptions
+    https://www.studiobinder.com/blog/movie-genres-list/
 
 new themes:
     magic?
@@ -60,17 +118,7 @@ new themes:
     tennis
     golf
 
-genre:
-    best comedy [type]
-    best thriller [type]
-    best action [type]
-    best horror [type]
-    best fantasy [type]
-    best western [type]
-    best sci fi [type]
-    ...
-
-??franchise??:
+franchise:
     best disney [type]
     best star wars [type]
     best studio ghibli [type]
@@ -105,78 +153,21 @@ release:
     best classic [type]
     best old [type]
 
-mood:
-    best scary [type]
-    best feel good [type]
-        Mood: Feel-Good, Mood: Joyful or Mood: Heartwarming
-    best suspense [type]
-    best motivational [type]
-    best funny [type]
-    best psychological [type]
-
-??subgenre / theme / plot??:
-    best [thing] [type] to stream
-    best anime [type]
-    best bollywood [type]
-    best zombie [type]
-    best space [type]
-    best ww2 [type]
-    best detective [type]
-    best alien [type]
-    best heist [type]
-    best sports [type]
-    best murder mystery [type]
-    best time travel [type]
-    best love story [type]
-    best vampire [type]
-    best military [type]
-    best disaster [type]
-    best gangster [type]
-    best rom com [type]
-    best superhero [type]
-    best revenge [type]
-    best mafia [type]
-    best apocalyptic [type]
-    best samurai [type]
-    best shark [type]
-    best car [type]
-    best dystopian [type]
-    best serial killer [type]
-    best martial arts [type]
-    best medieval [type]
-    best football [type]
-    best baseball [type]
-    best dog [type]
-    best true story [type]
-    best kung fu [type]
-    best fighting [type]
-    best coming of age [type]
-    best monster [type]
-    best boxing [type]
-    best basketball [type]
-    best mob [type]
-    best slasher [type]
-    best werewolf [type]
-    best ghost [type]
-    best business [type]
-    best end of the world [type]
-    best spy [type]
-
-??season/holiday??:
+season/holiday:
     best halloween [type]
     best christmas [type]
     best thanksgiving [type]
     best fall [type]
     best eve [type]
 
-??audience??:
+audience:
     best family [type]
     best kids [type]
     best teen [type]
     best [audience] [type]
     best [type] to watch with [audience]
 
-??language??:
+language:
     best korean [type]
     best malayalam [type]
     best english [type]
@@ -218,69 +209,6 @@ streaming + release:
 holiday + audience:
     best christmas [type] for [audience]
 
-```
-
-```
-order
-    highest score
-    most controversial (critics vs. audience)
-    trending
-
-internal links
-    action -> superhero
-    if you like X, check out these Y
-```
-
-```
-subgenre descriptions
-    https://www.studiobinder.com/blog/movie-genres-list/
-
-search
-    https://github.com/quickwit-oss/tantivy
-```
-
-```
-explore/all|movie|tv/[category]/[label],[label]
-    https://remix.run/docs/en/main/utils/redirect
-    
-meta tags & json-ld
-    all routes
-    schema.org
-        Movie, TVSeries, AggregateRating
-        ItemList or CollectionPage
-        
-og images
-    https://tailwind-generator.com/og-image-generator/generator
-```
-
-```
-404 / 500 fixes
-    check sentry
-
----
-
-SEO analysis
-    http://guidetodatamining.com/ngramAnalyzer/index.php
-    
-SEO optimization + marketing
-    https://www.jacobparis.com/content/remix-og
-    https://www.reddit.com/r/SaaS/comments/1ho4hbu/best_free_seo_tools/
-    https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
-    https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
-    https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
-    https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
-    
-New SEO topics pages
-    update main navigation
-
-Create new sitemaps
-
----
-
-similar filter
-    multiple similar titles
-    fix similarity order
-
 ---
 
 landing page inspiration
@@ -312,6 +240,11 @@ ai
     
 ---
 
+search
+    https://github.com/quickwit-oss/tantivy
+
+---
+
 Sequels wrong
     http://localhost:3003/movie/550-fight-club
 
@@ -326,6 +259,23 @@ For You
 
 Cast / Crew pages
     DNA overview (e.g. most common DNA tags for "Henry Cavill")
+
+---
+
+security audit
+    https://auditvps.com/
+    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
+
+---
+
+page speed insights
+    https://pagespeed.web.dev/analysis/https-goodwatch-app/ltmtcc644r?hl=en_GB&form_factor=mobile
+    
+---
+
+seo tester
+    https://seositecheckup.com/
+    https://www.seoggestion.com/
 
 ---
 
@@ -357,23 +307,6 @@ tv seasons:
 
 ---
 
-security audit
-    https://auditvps.com/
-    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
-
----
-
-page speed insights
-    https://pagespeed.web.dev/analysis/https-goodwatch-app/ltmtcc644r?hl=en_GB&form_factor=mobile
-    
----
-
-seo tester
-    https://seositecheckup.com/
-    https://www.seoggestion.com/
-
----
-
 user profile
     show all scores
     grouped by tier
@@ -401,8 +334,16 @@ plan to watch
 
 ---
 
-goodwatch tiktok channel
-    https://clideo.com/de/account/projects
+discover order
+    highest score
+    most controversial (critics vs. audience)
+    trending
+
+---
+
+explore: internal links
+    action -> superhero
+    if you like X, check out these Y
 
 ---
 
@@ -420,16 +361,51 @@ Show User Data In Movie Cards
     
 ---
 
-scraper proxy
-    https://scrapoxy.io/
-    https://github.com/scrapoxy/scrapoxy
-
----
-
 mobile navigation
     search icon
     https://x.com/GavelCoding/status/1873665453907947904?t=AxOFmmxNmydAgK1m6t50_Q&s=03
     https://codesandbox.io/p/sandbox/immutable-waterfall-jkn774?file=%2Fsrc%2FNavBar.tsx%3A13%2C1&workspaceId=ws_EQdCWeEK7JFjpJCiMqbbSK
+
+---
+
+onboarding as CTA banner
+    e.g. https://www.producthunt.com/
+    
+onboarding
+    better instructions for step 2
+    card titles above poster (better for long titles)
+    Search slow and bad at long ones like "orange is the new black"
+    
+    remove gladiator 1992 as first movie
+    switch order based on last rating
+    user settings cache + invalidation
+    
+    better mobile support
+        Drag rating not working
+        Smaller text above
+        Button sticky
+        search not focused (only on mobile?) 
+        Double skip button at the bottom
+    
+    Success notification for milestones
+    
+---
+
+goodwatch tiktok channel
+    https://clideo.com/de/account/projects
+
+---
+
+tv: watched vs currently watching (finished show)
+
+combined collection score
+    franchise and collection pages
+
+streaming: show flatrate countries in rating block and streaming tab
+
+details:
+    box office (e.g. Google)
+    awards (grab from API)
 
 ---
 
@@ -466,27 +442,15 @@ home page categories:
     
 ---
 
-onboarding as CTA banner
-    e.g. https://www.producthunt.com/
-
----
-
 twitter gw
     top lists, "if you like X then Y"
     https://typefully.com/
 
 ---
 
-tv: watched vs currently watching (finished show)
-
-combined collection score
-    franchise and collection pages
-
-streaming: show flatrate countries in rating block and streaming tab
-
-details:
-    box office (e.g. Google)
-    awards (grab from API)
+scraper proxy
+    https://scrapoxy.io/
+    https://github.com/scrapoxy/scrapoxy
 
 ---
 
@@ -590,17 +554,6 @@ header glass
 investor
     https://www.basecase.sh/
 
----
-
-discover pagination
-    tabs with total number of results (100+)
-    load more on scroll?
-    filter suggestions at the bottom?
-
-preview count for selections in edited sections (100+)
-
-save discover filters in db
-    
 ---
 
 Posthog
@@ -722,22 +675,6 @@ tropes
 
 remmove prefetch component
 
----
-
-onboarding
-    better instructions for step 2
-    card titles above poster (better for long titles)
-    Search slow and bad at long ones like "orange is the new black"
-    
-    better mobile support
-        Drag rating not working
-        Smaller text above
-        Button sticky
-        search not focused (only on mobile?) 
-        Double skip button at the bottom
-    
-    Success notification for milestones
-    
 ---
 
 header
@@ -1054,6 +991,12 @@ reddit sentiment analysis
 all titles from a-z (search page?)
     difference between search, explore, discover, watch next, etc.?
     
+---
+
+container management
+    https://www.nomadproject.io/
+    k8s
+
 ---
 
 import watchlist / ratings

@@ -242,9 +242,7 @@ function Root() {
 							</HydrationBoundary>
 						</AuthContext.Provider>
 					</LocaleContext.Provider>
-					{process.env.NODE_ENV === "development" && (
-						<ReactQueryDevtools initialIsOpen={false} />
-					)}
+					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>
 			</body>
 		</html>
