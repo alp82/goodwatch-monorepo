@@ -1,5 +1,4 @@
 import { convertSimilarTitles } from "~/routes/api.discover"
-import type { WithSimilar } from "~/routes/api.similar-media"
 import {
 	type StreamingLink,
 	type StreamingProviders,

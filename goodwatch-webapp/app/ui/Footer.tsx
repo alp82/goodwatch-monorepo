@@ -7,8 +7,9 @@ import tmdbLogo from "~/img/tmdb-logo.svg"
 
 const navigation = {
 	main: [
-		{ name: "Discover Movies", href: "/discover/movies" },
-		{ name: "Discover TV Shows", href: "/discover/tv" },
+		{ name: "Movies", href: "/movies" },
+		{ name: "TV Shows", href: "/tv-shows" },
+		{ name: "Discover", href: "/discover" },
 	],
 	social: [
 		// {
@@ -102,16 +103,36 @@ export type FooterProps = {}
 export default function Footer({}: FooterProps) {
 	return (
 		<footer className="mt-8 bg-gray-950">
-			<div className="mx-auto max-w-7xl overflow-hidden py-12 px-6 sm:py-16 lg:px-8">
-				<div className="flex justify-center">{/*TODO DISCORD BLOCK*/}</div>
+			<div className="max-w-7xl mx-auto overflow-hidden py-12 px-6 sm:py-16 lg:px-8 flex flex-col gap-8">
+				{/*<div className="flex justify-center">/!*TODO DISCORD BLOCK*!/</div>*/}
+
+				<div className="flex flex-col items-center">
+					<span className="text-xl text-gray-200 mb-2">
+						Join the Community:
+					</span>
+					<div className="flex justify-center space-x-10">
+						{navigation.social.map((item) => (
+							<a
+								key={item.name}
+								href={item.href}
+								className="text-gray-400 hover:text-gray-200"
+								target="_blank"
+								rel="noreferrer"
+							>
+								<span className="sr-only">{item.name}</span>
+								<item.icon className="h-16 w-16" aria-hidden="true" />
+							</a>
+						))}
+					</div>
+				</div>
 
 				<nav
-					className="-mb-6 columns-2 flex justify-center space-x-12"
+					className="columns-2 flex justify-center space-x-12"
 					aria-label="Footer"
 				>
 					<div>
 						{navigation.main.map((item) => (
-							<div key={item.name} className="mb-2">
+							<div key={item.name} className="mt-2">
 								<Link
 									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 									to={item.href}
@@ -121,7 +142,7 @@ export default function Footer({}: FooterProps) {
 								</Link>
 							</div>
 						))}
-						<div className="mb-2">
+						<div className="mt-6">
 							<a
 								href="https://status.goodwatch.app/status/services"
 								className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100"
@@ -134,7 +155,7 @@ export default function Footer({}: FooterProps) {
 						</div>
 					</div>
 					<div>
-						<div className="mb-2">
+						<div className="mt-2">
 							<Link
 								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 								to="/about"
@@ -143,7 +164,7 @@ export default function Footer({}: FooterProps) {
 								About
 							</Link>
 						</div>
-						<div className="mb-2">
+						<div className="mt-2">
 							<Link
 								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 								to="/how-it-works"
@@ -152,7 +173,7 @@ export default function Footer({}: FooterProps) {
 								How it works
 							</Link>
 						</div>
-						<div className="mb-2">
+						<div className="mt-2">
 							<Link
 								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 								to="/disclaimer"
@@ -161,7 +182,7 @@ export default function Footer({}: FooterProps) {
 								Disclaimer
 							</Link>
 						</div>
-						<div className="mb-2">
+						<div className="mt-6">
 							<a
 								href="https://dev.to/t/goodwatch"
 								className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100"
@@ -174,24 +195,8 @@ export default function Footer({}: FooterProps) {
 						</div>
 					</div>
 				</nav>
-				<div className="mt-16 flex flex-col items-center">
-					<span className="text-gray-200 mb-2">Join the community:</span>
-					<div className="flex justify-center space-x-10">
-						{navigation.social.map((item) => (
-							<a
-								key={item.name}
-								href={item.href}
-								className="text-gray-400 hover:text-gray-200"
-								target="_blank"
-								rel="noreferrer"
-							>
-								<span className="sr-only">{item.name}</span>
-								<item.icon className="h-12 w-12" aria-hidden="true" />
-							</a>
-						))}
-					</div>
-				</div>
-				<div className="my-16 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
+
+				<div className="mt-8 mb-16 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
 					<small>powered by</small>
 					<a
 						href="https://www.themoviedb.org"

@@ -4,10 +4,7 @@ import type {
 	StreamingPreset,
 	WatchedType,
 } from "~/server/discover.server"
-import {
-	mapCategoryToVectorName,
-	sortedDNACategories,
-} from "~/ui/dna/dna_utils"
+import { sortedDNACategories } from "~/ui/dna/dna_utils"
 import {
 	VOTE_COUNT_THRESHOLD_HIGH,
 	VOTE_COUNT_THRESHOLD_LOW,
@@ -16,7 +13,6 @@ import {
 	WEIGHT_CLUSTER_TAG_SECONDARY,
 	WEIGHT_ORIGINAL_TAG,
 } from "~/utils/constants"
-import { SEPARATOR_SECONDARY } from "~/utils/navigation"
 import { getRatingKeys } from "~/utils/ratings"
 import { duplicateProviders } from "~/utils/streaming-links"
 

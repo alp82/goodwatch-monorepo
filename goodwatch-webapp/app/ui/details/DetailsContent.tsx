@@ -2,9 +2,7 @@ import React from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import About from "~/ui/details/About"
 import Cast from "~/ui/details/Cast"
-import Collection from "~/ui/details/Collection"
 import Crew from "~/ui/details/Crew"
-import Description from "~/ui/details/Description"
 import Videos from "~/ui/details/Videos"
 import type { SectionIds } from "~/ui/details/common"
 import Ratings from "~/ui/ratings/Ratings"
@@ -29,20 +27,11 @@ export default function DetailsContent({
 	const {
 		cast,
 		crew,
-		dna,
-		keywords,
 		media_type,
 		streaming_country_codes,
 		streaming_links,
-		synopsis,
-		tagline,
 		videos,
 	} = details
-
-	let collection: MovieDetails["collection"] | undefined
-	if (media_type === "movie") {
-		collection = details.collection
-	}
 
 	return (
 		<div className="flex flex-col gap-12">

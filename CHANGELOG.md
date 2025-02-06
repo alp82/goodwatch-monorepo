@@ -5,10 +5,13 @@ Notable changes to GoodWatch will be documented in this file.
 ## [0.6.2] 2025-02-xx
 
 ### Added
+* More and better meta tags for SEO
+* Added more moods to explore pages
 
 ### Changed
 
 ### Fixed
+* Removed hardcoded development environment to speed up the page and hide internal devtools
 
 ## [0.6.1] 2025-02-01
 
