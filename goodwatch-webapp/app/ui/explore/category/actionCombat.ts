@@ -91,7 +91,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "yaI572p8048aC0dP2oPQ32q5yrz.jpg",
 		discoverParams: {
 			similarDNA:
-				"316135_Key+Props|Classic+Cars,296320_Place|Racing+Tracks+%28Race+Cars%29,318259_Key+Props|Customized+Cars,198360_Cultural+Impact|Iconic+Car+Chases,304847_Plot|Car+Chase,277941_Cinematic+Style|Car+Chase+Scenes",
+				"296320_Place|Racing+Tracks+%28Race+Cars%29,318259_Key+Props|Customized+Cars,198360_Cultural+Impact|Iconic+Car+Chases,304847_Plot|Car+Chase,277941_Cinematic+Style|Car+Chase+Scenes",
 			similarDNACombinationType: "any",
 		},
 		faq: [
