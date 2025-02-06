@@ -131,7 +131,7 @@ export const moods: Record<string, PageData> = {
 		backdrop_path: "p1PLSI5Nw2krGxD7X4ulul1tDAk.jpg",
 		discoverParams: {
 			similarDNA:
-				"308075_Sub-Genres|Psychological+Thriller,292610_Plot|Psychological+Manipulation,307929_Themes|The+Human+Condition,308577_Plot|Mind+Games,275946_Pacing|Twisting",
+				"308075_Sub-Genres|Psychological+Thriller,292610_Plot|Psychological+Manipulation,308577_Plot|Mind+Games,275946_Pacing|Twisting,256726_Character+Types|Psychopath",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -142,6 +142,105 @@ export const moods: Record<string, PageData> = {
 			{
 				q: "Are these stories always dark?",
 				a: "While many explore complex themes, some use psychological elements for clever puzzles or fascinating character studies. The mind itself is the main antagonist.",
+			},
+		],
+	},
+	nostalgic: {
+		type: "all",
+		label: "Nostalgic 🎞",
+		path: "nostalgic",
+		subtitle: "Remembering the Good Times",
+		description:
+			"Films that transport you back with warm memories and a reflective vibe.",
+		backdrop_path: "rhy8pbeNdfUGX5DkR0Zv1zswP2d.jpg",
+		discoverParams: {
+			minYear: "1900",
+			maxYear: "2000",
+			similarDNA:
+				"309125_Mood|Nostalgic,309653_Themes|Nostalgia,295261_Themes|The+Power+Of+Nostalgia,240310_Plot|Hometown+Nostalgia,289059_Place|Nostalgic+Locations",
+			similarDNACombinationType: "any",
+		},
+		faq: [
+			{
+				q: "What makes a movie nostalgic?",
+				a: "It evokes the past with warmth and a hint of longing.",
+			},
+		],
+	},
+	melancholic: {
+		type: "all",
+		label: "Melancholic 🌧",
+		path: "melancholic",
+		subtitle: "Somber & Reflective",
+		description:
+			"Films that stir deep emotions with a mix of beauty and sorrow.",
+		backdrop_path: "fAuXblS0qUiQ2SWJzpvFMH1su6i.jpg",
+		discoverParams: {
+			similarDNA: "309132_Mood|Melancholic",
+			similarDNACombinationType: "any",
+		},
+		faq: [
+			{
+				q: "What defines a melancholic film?",
+				a: "It blends sadness and beauty, inviting introspection.",
+			},
+		],
+	},
+	bittersweet: {
+		type: "all",
+		label: "Bittersweet 🍂",
+		path: "bittersweet",
+		subtitle: "Joy with a Touch of Sorrow",
+		description:
+			"Stories where happy moments mix with the sting of loss, echoing real life.",
+		backdrop_path: "zZRXGoHo5TeUD0L1LqYIJjlPvJC.jpg",
+		discoverParams: {
+			similarDNA: "308845_Mood|Bittersweet",
+			similarDNACombinationType: "any",
+		},
+		faq: [
+			{
+				q: "Why opt for bittersweet?",
+				a: "It mirrors life—joy and pain often go hand in hand.",
+			},
+		],
+	},
+	whimsical: {
+		type: "all",
+		label: "Whimsical ✨",
+		path: "whimsical",
+		subtitle: "Playful & Dreamlike",
+		description:
+			"Lighthearted films that embrace the quirky and imaginative side of life.",
+		backdrop_path: "dfQtPf0lw9C1MWYFMJseM5RZI6P.jpg",
+		discoverParams: {
+			similarDNA: "292374_Mood|Whimsical,282315_Mood|Dreamy",
+			similarDNACombinationType: "any",
+		},
+		faq: [
+			{
+				q: "What makes a film whimsical?",
+				a: "It charms with playful twists and unexpected magic.",
+			},
+		],
+	},
+	peaceful: {
+		type: "all",
+		label: "Peaceful 🌿",
+		path: "peaceful",
+		subtitle: "Calm & Serene",
+		description:
+			"Films that offer a quiet, soothing escape for reflection and relaxation.",
+		backdrop_path: "syfmYmITnWPJU3hhaP0ckny5hMN.jpg",
+		discoverParams: {
+			similarDNA:
+				"312653_Mood|Peaceful,295792_Mood|Quiet,313637_Pacing|Balanced,286223_Mood|Calm,308241_Mood|Relaxed",
+			similarDNACombinationType: "any",
+		},
+		faq: [
+			{
+				q: "What defines a peaceful film?",
+				a: "A calming atmosphere that helps you unwind and find balance.",
 			},
 		],
 	},

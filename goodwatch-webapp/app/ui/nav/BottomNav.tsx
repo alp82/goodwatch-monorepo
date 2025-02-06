@@ -1,4 +1,4 @@
-import { CubeIcon, HomeIcon } from "@heroicons/react/24/solid"
+import { CubeIcon, FilmIcon, HomeIcon, TvIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type { ComponentType, HTMLAttributes } from "react"
 
@@ -27,8 +27,10 @@ export default function BottomNav() {
 
 	return (
 		<div className="lg:hidden fixed bottom-0 left-0 z-50 w-full h-16 border-t bg-gray-950 border-gray-800">
-			<div className="grid h-full max-w-lg grid-cols-2 mx-auto font-medium">
+			<div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
 				{createButton("Home", HomeIcon, "/")}
+				{createButton("Movies", FilmIcon, "/movies")}
+				{createButton("TV Shows", TvIcon, "/tv-shows")}
 				{createButton("Discover", CubeIcon, "/discover")}
 			</div>
 		</div>

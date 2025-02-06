@@ -112,24 +112,33 @@ export default function MoviesCategoryPage() {
 			<Breadcrumbs path={path} />
 
 			<div className="max-w-7xl mx-auto p-4 flex flex-col gap-4">
-				<h2 className="text-6xl font-extrabold text-gray-300">
-					{pageData.label}{" "}
-					<span className="text-4xl text-gray-600">
-						{convertHyphensToWords(type)}
-					</span>
-				</h2>
-				<div className="text-3xl font-bold text-gray-100">
-					{pageData.subtitle}
-				</div>
-				<div className="text-lg text-gray-300">{pageData.description}</div>
-				<div>
-					<Link
-						to={`/discover?${jsonToUrlString(discoverParams)}`}
-						prefetch="viewport"
-						className="px-2 py-1 rounded border-2 border-gray-700 bg-indigo-950 hover:bg-indigo-900"
-					>
-						Advanced Search
-					</Link>
+				<div
+					className="relative py-8 px-4 rounded-lg bg-cover bg-top bg-no-repeat before:bg-black/70 before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0"
+					style={{
+						backgroundImage: `url('https://image.tmdb.org/t/p/w1280/${pageData.backdrop_path}')`,
+					}}
+				>
+					<div className="relative m-auto ow-full max-w-7xl z-20">
+						<h2 className="mb-4 text-6xl font-extrabold text-gray-300">
+							{pageData.label}{" "}
+							<span className="text-4xl text-gray-500">
+								{convertHyphensToWords(type)}
+							</span>
+						</h2>
+						<div className="text-3xl font-bold text-gray-100">
+							{pageData.subtitle}
+						</div>
+						<div className="text-lg text-gray-300">{pageData.description}</div>
+						<div className="mt-8">
+							<Link
+								to={`/discover?${jsonToUrlString(discoverParams)}`}
+								prefetch="viewport"
+								className="px-2 py-1 rounded border-2 border-gray-700 bg-indigo-950 hover:bg-indigo-900"
+							>
+								Advanced Search
+							</Link>
+						</div>
+					</div>
 				</div>
 				<MovieTvGrid discoverResults={results} />
 			</div>

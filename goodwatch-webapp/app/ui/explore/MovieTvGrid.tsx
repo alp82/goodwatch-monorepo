@@ -15,10 +15,12 @@ export default function MovieTvGrid({
 	discoverParams,
 	discoverResults,
 }: MovieTvGridParams) {
+	const discoverEnabled = !discoverResults
 	const discover = useDiscover({
 		params: discoverParams,
-		enabled: !discoverResults,
+		enabled: discoverEnabled,
 	})
+	const loading = discoverEnabled && discover.isLoading
 	const results = discoverResults || discover.data || []
 
 	return (
@@ -27,12 +29,17 @@ export default function MovieTvGrid({
 				"relative mt-4 grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5"
 			}
 		>
-			{!results.length && (
+			{!results.length && !loading && (
 				<div className="my-6 text-lg italic">
 					No results. Try to change your search filters.
 				</div>
 			)}
-			{results.length > 0 && (
+			{loading && (
+				<div className="my-6 text-lg italic">
+					<Spinner size="large" />
+				</div>
+			)}
+			{results.length > 0 && !loading && (
 				<AnimatePresence>
 					{results.map((result: DiscoverResult, index) => {
 						const offset = Math.floor(seededRandom(index + 1) * 12) + 6
