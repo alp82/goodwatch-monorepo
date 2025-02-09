@@ -21,9 +21,12 @@ import {
 	validUrlParams,
 } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
+import { DidntWatchCheckbox } from "~/ui/filter/explore/DidntWatchCheckbox"
+import { MyStreamingCheckbox } from "~/ui/filter/explore/MyStreamingCheckbox"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { buildDiscoverParams } from "~/utils/discover"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
+import { useNav } from "~/utils/navigation"
 import { convertHyphensToWords } from "~/utils/string"
 import { jsonToUrlString } from "~/utils/url"
 
@@ -74,6 +77,9 @@ export const loader: LoaderFunction = async ({
 	if (!validUrlParams.category.includes(category)) return redirect(`/${type}`)
 	// TODO check page
 
+	const url = new URL(request.url)
+	const watchedType = url.searchParams.get("watchedType") || ""
+
 	// discover call
 	const pageData = mainHierarchy?.[category]?.[page]
 	const requestParams = await buildDiscoverParams(request)
@@ -83,6 +89,7 @@ export const loader: LoaderFunction = async ({
 		...defaultDiscoverParams,
 		type: discoverType,
 		...pageData.discoverParams,
+		watchedType,
 	}
 	const results = await getDiscoverResults(discoverParamsFull)
 
@@ -107,6 +114,30 @@ export default function MoviesCategoryPage() {
 	const { type, category, page, path, pageData, discoverParams, results } =
 		useLoaderData<LoaderData>()
 
+	const { currentParams, updateQueryParams } =
+		useNav<
+			Pick<
+				DiscoverParams,
+				| "watchedType"
+				| "streamingPreset"
+				| "withStreamingProviders"
+				| "withStreamingTypes"
+				| "country"
+			>
+		>()
+	const handleFilterByDidntWatch = (filterByDidntWatch: boolean) => {
+		updateQueryParams({
+			watchedType: filterByDidntWatch ? "didnt-watch" : undefined,
+		})
+	}
+	const handleFilterByMyStreaming = (filterByMyStreaming: boolean) => {
+		updateQueryParams({
+			streamingPreset: filterByMyStreaming ? "mine" : undefined,
+			// withStreamingTypes: "",
+			// country: ""
+		})
+	}
+
 	return (
 		<>
 			<Breadcrumbs path={path} />
@@ -129,13 +160,23 @@ export default function MoviesCategoryPage() {
 							{pageData.subtitle}
 						</div>
 						<div className="text-lg text-gray-300">{pageData.description}</div>
-						<div className="mt-8">
+						<div className="mt-8 flex items-center justify-between gap-8">
+							<div className="flex gap-2">
+								<MyStreamingCheckbox
+									initialEnabled={currentParams.streamingPreset === "mine"}
+									onChange={handleFilterByMyStreaming}
+								/>
+								<DidntWatchCheckbox
+									initialEnabled={currentParams.watchedType === "didnt-watch"}
+									onChange={handleFilterByDidntWatch}
+								/>
+							</div>
 							<Link
 								to={`/discover?${jsonToUrlString(discoverParams)}`}
 								prefetch="viewport"
 								className="px-2 py-1 rounded border-2 border-gray-700 bg-indigo-950 hover:bg-indigo-900"
 							>
-								Advanced Search
+								Advanced Filters
 							</Link>
 						</div>
 					</div>

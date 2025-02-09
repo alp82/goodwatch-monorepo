@@ -1,30 +1,30 @@
-import React, { useEffect, useMemo } from "react";
-import { useCountries } from "~/routes/api.countries";
-import { useStreamingProviders } from "~/routes/api.streaming-providers";
+import React, { useEffect, useMemo } from "react"
+import { useCountries } from "~/routes/api.countries"
+import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import {
 	useUserCountry,
 	useUserStreamingProviders,
-} from "~/routes/api.user-settings.get";
-import type { DiscoverParams, StreamingPreset } from "~/server/discover.server";
-import { discoverFilters } from "~/server/types/discover-types";
-import OneOrMoreItems from "~/ui/filter/OneOrMoreItems";
-import EditableSection from "~/ui/filter/sections/EditableSection";
-import Checkbox from "~/ui/form/Checkbox";
-import Select, { type SelectItem } from "~/ui/form/Select";
-import Tabs, { type Tab } from "~/ui/tabs/Tabs";
-import { Ping } from "~/ui/wait/Ping";
-import { Spinner } from "~/ui/wait/Spinner";
-import { useUser } from "~/utils/auth";
-import useLocale from "~/utils/locale";
-import { useNav } from "~/utils/navigation";
+} from "~/routes/api.user-settings.get"
+import type { DiscoverParams, StreamingPreset } from "~/server/discover.server"
+import { discoverFilters } from "~/server/types/discover-types"
+import OneOrMoreItems from "~/ui/filter/OneOrMoreItems"
+import EditableSection from "~/ui/filter/sections/EditableSection"
+import Checkbox from "~/ui/form/Checkbox"
+import Select, { type SelectItem } from "~/ui/form/Select"
+import Tabs, { type Tab } from "~/ui/tabs/Tabs"
+import { Ping } from "~/ui/wait/Ping"
+import { Spinner } from "~/ui/wait/Spinner"
+import { useUser } from "~/utils/auth"
+import useLocale from "~/utils/locale"
+import { useNav } from "~/utils/navigation"
 
-const EVERYWHERE_LIMIT = 3;
+const EVERYWHERE_LIMIT = 3
 
 interface SectionStreamingParams {
-	params: DiscoverParams;
-	editing: boolean;
-	onEdit: () => void;
-	onClose: () => void;
+	params: DiscoverParams
+	editing: boolean
+	onEdit: () => void
+	onClose: () => void
 }
 
 export default function SectionStreaming({
@@ -34,29 +34,29 @@ export default function SectionStreaming({
 	onClose,
 }: SectionStreamingParams) {
 	// local data
-	const { withStreamingTypes = "" } = params;
+	const { withStreamingTypes = "" } = params
 
-	const { locale } = useLocale();
+	const { locale } = useLocale()
 	const localStreamingProviders = useMemo(() => {
 		return (
 			(typeof window !== "undefined" &&
 				localStorage.getItem("withStreamingProviders")) ||
 			"8,9,337"
-		);
-	}, [typeof window]);
+		)
+	}, [typeof window])
 
 	const localCountry = useMemo(() => {
 		return (
 			(typeof window !== "undefined" && localStorage.getItem("country")) ||
 			locale.country
-		);
-	}, [typeof window, locale.country]);
+		)
+	}, [typeof window, locale.country])
 
 	// tabs
 
 	const [selectedTab, setSelectedTab] = React.useState<StreamingPreset>(
 		params.streamingPreset || "everywhere",
-	);
+	)
 	const streamingTabs: Tab<StreamingPreset>[] = [
 		{
 			key: "everywhere",
@@ -69,8 +69,9 @@ export default function SectionStreaming({
 			current: selectedTab === "mine",
 			requiresLoginContent: (
 				<>
-					Select your <strong>streaming services</strong> and{" "}
-					<strong>country</strong> once to quickly find what you're looking for.
+					Only show what's available on your <strong>streaming services</strong>{" "}
+					in your <strong>country</strong> to quickly find what you're looking
+					for.
 				</>
 			),
 		},
@@ -79,69 +80,69 @@ export default function SectionStreaming({
 			label: "Custom",
 			current: selectedTab === "custom",
 		},
-	];
+	]
 
 	// selection logic
 
 	const onSelectStreamingPreset = (streamingPreset: StreamingPreset) => {
-		setSelectedTab(streamingPreset);
+		setSelectedTab(streamingPreset)
 
-		let withStreamingProviders = "";
-		let country = "";
+		let withStreamingProviders = ""
+		let country = ""
 		if (streamingPreset === "custom") {
 			if (!params.withStreamingProviders)
-				withStreamingProviders = localStreamingProviders;
-			if (!params.country) country = localCountry;
+				withStreamingProviders = localStreamingProviders
+			if (!params.country) country = localCountry
 		}
 
 		updateQueryParams({
 			streamingPreset,
 			withStreamingProviders,
 			country,
-		});
-	};
+		})
+	}
 
-	const { user } = useUser();
+	const { user } = useUser()
 	useEffect(() => {
 		if (!editing || params.streamingPreset) {
-			setSelectedTab(params.streamingPreset || "everywhere");
-			return;
+			setSelectedTab(params.streamingPreset || "everywhere")
+			return
 		}
 
-		const streamingPreset = user?.id ? "mine" : "everywhere";
-		onSelectStreamingPreset(streamingPreset);
-	}, [user?.id, params.streamingPreset, editing]);
+		const streamingPreset = user?.id ? "mine" : "everywhere"
+		onSelectStreamingPreset(streamingPreset)
+	}, [user?.id, params.streamingPreset, editing])
 
 	// data retrieval
 
-	const streamingProvidersResult = useStreamingProviders();
-	const streamingProviders = streamingProvidersResult?.data || [];
+	const streamingProvidersResult = useStreamingProviders()
+	const streamingProviders = streamingProvidersResult?.data || []
 
-	const userStreamingProviders = useUserStreamingProviders();
-	let streamingProviderIds: string[] = [];
+	const userStreamingProviders = useUserStreamingProviders()
+	let streamingProviderIds: string[] = []
 	if (selectedTab === "mine") {
 		streamingProviderIds = userStreamingProviders?.map((provider) =>
 			provider.id.toString(),
-		);
+		)
 	} else if (selectedTab === "custom") {
 		streamingProviderIds = (
 			params.withStreamingProviders || localStreamingProviders
-		).split(",");
+		).split(",")
 	}
 
-	const countriesResult = useCountries();
-	const countries = countriesResult?.data || [];
+	const countriesResult = useCountries()
+	const countries = countriesResult?.data || []
 
-	const userCountry = useUserCountry();
-	let country = "";
+	const userCountry = useUserCountry()
+	let country = ""
 	if (selectedTab === "mine") {
-		country = userCountry || "";
+		country = userCountry || ""
 	} else if (selectedTab === "custom") {
-		country = params.country || localCountry;
+		country = params.country || localCountry
 	} else {
-		country = localCountry;
+		country = localCountry
 	}
-	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`;
+	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`
 
 	// autocomplete data
 
@@ -152,21 +153,21 @@ export default function SectionStreaming({
 			icon: provider.logo_path
 				? `https://image.tmdb.org/t/p/w45${provider.logo_path}`
 				: undefined,
-		};
-	});
+		}
+	})
 	const selectedStreamingProviderItems = streamingProviderItems.filter(
 		(provider) => {
-			return streamingProviderIds.includes(provider.key.toString());
+			return streamingProviderIds.includes(provider.key.toString())
 		},
-	);
+	)
 
 	const countryItems = countries.map((country) => {
 		return {
 			key: country.code,
 			label: country.name,
 			icon: `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`,
-		};
-	});
+		}
+	})
 
 	// update handlers
 
@@ -179,41 +180,41 @@ export default function SectionStreaming({
 				| "withStreamingTypes"
 				| "country"
 			>
-		>();
+		>()
 
 	const handleSelectStreamingProviders = (selectedItems: SelectItem[]) => {
 		const withStreamingProviders = selectedItems
 			.map((item) => item.key)
-			.join(",");
+			.join(",")
 		updateQueryParams({
 			withStreamingProviders,
-		});
-		localStorage.setItem("withStreamingProviders", withStreamingProviders);
-	};
+		})
+		localStorage.setItem("withStreamingProviders", withStreamingProviders)
+	}
 
 	const handleSelectCountry = (selectedItem: SelectItem) => {
-		const country = selectedItem.key;
+		const country = selectedItem.key
 		updateQueryParams({
 			country,
-		});
-		localStorage.setItem("country", country);
-	};
+		})
+		localStorage.setItem("country", country)
+	}
 
 	const handleIncludeBuyRentChange = (checked: boolean) => {
-		const withStreamingTypes = checked ? "flatrate,free,buy,rent" : "";
+		const withStreamingTypes = checked ? "flatrate,free,buy,rent" : ""
 		updateQueryParams({
 			withStreamingTypes,
-		});
-	};
+		})
+	}
 
 	const handleRemoveAll = () => {
-		onClose();
+		onClose()
 		updateQueryParams({
 			streamingPreset: undefined,
 			withStreamingProviders: "",
 			country: "",
-		});
-	};
+		})
+	}
 
 	// rendering
 
@@ -341,6 +342,7 @@ export default function SectionStreaming({
 										key={provider.key}
 										index={index}
 										amount={selectedStreamingProviderItems.length}
+										mode="any"
 									>
 										<span className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded">
 											<img
@@ -377,5 +379,5 @@ export default function SectionStreaming({
 				</div>
 			)}
 		</EditableSection>
-	);
+	)
 }

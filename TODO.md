@@ -86,8 +86,9 @@ discover pagination
 
 additional info
     preview count for selections in edited sections (100+)
-    note: available in your region
-    for plan to watch: show note that some are hidden due to filters
+    bottom note after results
+        streaming: Some of the content is hidden based on your location and streaming preferences
+        for plan to watch: show note that some are hidden due to filters
 
 save discover filters in db
     
@@ -96,6 +97,12 @@ save discover filters in db
 similar filter
     multiple similar titles
     fix similarity order
+
+---
+
+start page
+    make movietvlist compatible with swiper
+    pick best 10 page data categories to display
 
 ---
 
@@ -311,6 +318,7 @@ user profile
     show all scores
     grouped by tier
     shareable link
+    links to other profiles: MAL, ...
     
 watched/ratings page:
     rating stats (1-10 distribution)
