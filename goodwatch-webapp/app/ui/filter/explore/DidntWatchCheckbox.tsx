@@ -39,13 +39,13 @@ export const DidntWatchCheckbox = ({
 				<input
 					type="checkbox"
 					checked={checked}
-					className="w-4 h-4 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"
+					className="w-4 h-4 text-orange-600 bg-gray-300 border-gray-600 rounded focus:ring-orange-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"
 				/>
 				<Tag
-					color={checked ? didntWatchOption?.color : "gray"}
+					color={checked ? didntWatchOption?.color : "white"}
 					icon={didntWatchOption?.icon}
 				>
-					{didntWatchOption?.label}
+					Show only what I didn't watch
 				</Tag>
 			</div>
 		</UserAction>

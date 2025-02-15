@@ -3,24 +3,6 @@
 ```
 additional filters (pick 1 or 2)
 
-hide already watched
-
-streaming:
-    anywhere
-    netflix
-    amazon prime
-    ...
-
-genre:
-    any
-    comedy
-    thriller
-    action
-    ...
-    
-subgenre
-    ...
-
 release:
     of all time
     2024
@@ -29,12 +11,6 @@ release:
     90s
     80s
     classic
-
-language:
-    all
-    indian
-    korean
-    ...
 
 order by
     popularity
@@ -55,7 +31,33 @@ og images
 ---
 
 404 / 500 fixes
+    hydration errors
     check sentry
+
+---
+
+discover pagination
+    tabs with total number of results (100+)
+    load more on scroll?
+    filter suggestions at the bottom?
+
+additional info
+    preview count for selections in edited sections (100+)
+    bottom note after results
+        streaming: Some of the content is hidden based on your location and streaming preferences
+        for plan to watch: show note that some are hidden due to filters
+
+save discover filters in db
+    
+---
+
+security audit
+    https://auditvps.com/
+    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
+    
+penetration test
+    evan | scraping & automationss
+    jared | infracharm
 
 ---
 
@@ -75,23 +77,6 @@ New SEO topics pages
 
 Create new sitemaps
 
----
-
----
-
-discover pagination
-    tabs with total number of results (100+)
-    load more on scroll?
-    filter suggestions at the bottom?
-
-additional info
-    preview count for selections in edited sections (100+)
-    bottom note after results
-        streaming: Some of the content is hidden based on your location and streaming preferences
-        for plan to watch: show note that some are hidden due to filters
-
-save discover filters in db
-    
 ---
 
 similar filter
@@ -247,6 +232,12 @@ ai
     
 ---
 
+tropes
+    show in details
+    add discover filter
+
+---
+
 search
     https://github.com/quickwit-oss/tantivy
 
@@ -266,12 +257,6 @@ For You
 
 Cast / Crew pages
     DNA overview (e.g. most common DNA tags for "Henry Cavill")
-
----
-
-security audit
-    https://auditvps.com/
-    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
 
 ---
 
@@ -532,6 +517,9 @@ new sorting:
 
 user feedback
     https://userjot.com/
+    https://astuto.io/
+    https://github.com/clearflask/clearflask#self-hosting
+    https://fider.io/
 
 ---
 
@@ -671,13 +659,6 @@ discover sidebar
 discover release
     filter by month
     add index
-
----
-
-tropes
-    show in details
-    add discover filter
-
 
 ---
 

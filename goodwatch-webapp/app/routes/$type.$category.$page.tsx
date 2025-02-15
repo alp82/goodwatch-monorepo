@@ -160,8 +160,8 @@ export default function MoviesCategoryPage() {
 							{pageData.subtitle}
 						</div>
 						<div className="text-lg text-gray-300">{pageData.description}</div>
-						<div className="mt-8 flex items-center justify-between gap-8">
-							<div className="flex gap-2">
+						<div className="mt-8 flex items-center justify-between gap-8 flex-wrap">
+							<div className="flex gap-2 flex-wrap">
 								<MyStreamingCheckbox
 									initialEnabled={currentParams.streamingPreset === "mine"}
 									onChange={handleFilterByMyStreaming}

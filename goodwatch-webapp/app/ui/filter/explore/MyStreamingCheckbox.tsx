@@ -42,10 +42,10 @@ export const MyStreamingCheckbox = ({
 				<input
 					type="checkbox"
 					checked={checked}
-					className="w-4 h-4 text-emerald-600 bg-gray-700 border-gray-600 rounded focus:ring-emerald-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"
+					className="w-4 h-4 text-emerald-600 bg-gray-300 border-gray-600 rounded focus:ring-emerald-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"
 				/>
-				<Tag color={checked ? streamingFilter?.color : "gray"}>
-					My Streaming Services
+				<Tag color={checked ? streamingFilter?.color : "white"}>
+					Available on my Streaming Services
 				</Tag>
 			</div>
 		</UserAction>
