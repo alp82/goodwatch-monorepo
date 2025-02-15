@@ -65,7 +65,7 @@ export const meta: MetaFunction<typeof loader> = () => {
 	// TODO
 	const items: PageItem[] = []
 
-	return buildMeta(pageMeta, items)
+	return buildMeta({ pageMeta, items })
 }
 
 type LoaderData = {

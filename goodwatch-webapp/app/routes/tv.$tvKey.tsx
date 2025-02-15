@@ -31,10 +31,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		alt: `Learn all about the TV show "${data.details.title} (${data.details.release_year})"`,
 	}
 
-	// TODO
-	const items: PageItem[] = []
-
-	return buildMeta(pageMeta, items)
+	return buildMeta({ pageMeta, item: data.details })
 }
 
 type LoaderData = {

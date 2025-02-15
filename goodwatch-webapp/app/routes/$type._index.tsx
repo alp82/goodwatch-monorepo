@@ -25,7 +25,7 @@ export const meta: MetaFunction = ({ params }) => {
 	// TODO
 	const items: PageItem[] = []
 
-	return buildMeta(pageMeta, items)
+	return buildMeta({ pageMeta, items })
 }
 
 interface LoaderData {

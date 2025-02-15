@@ -55,7 +55,7 @@ export const meta: MetaFunction = ({ data, params }) => {
 		},
 	]
 
-	return buildMeta(pageMeta, items)
+	return buildMeta({ pageMeta, items })
 }
 
 interface PageResult {

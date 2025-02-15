@@ -36,7 +36,7 @@ export const meta: MetaFunction = () => {
 	// TODO
 	const items: PageItem[] = []
 
-	return buildMeta(pageMeta, items)
+	return buildMeta({ pageMeta, items })
 }
 
 export function ErrorBoundary() {
