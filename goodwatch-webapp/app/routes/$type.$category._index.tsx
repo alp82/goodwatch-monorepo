@@ -37,7 +37,7 @@ export const meta: MetaFunction = ({ data, params }) => {
 		title: `${convertHyphensToWords(category)} | Best ${typeLabel} to Watch Online | GoodWatch`,
 		description: `Discover the best ${mainData.label} ${typeLabel} to watch right now. ${mainData.subtitle}: ${mainData.description}`,
 		url: `https://goodwatch.app/${type}/${category}`,
-		image: `https://goodwatch.app/images/hero-${type}.png`,
+		image: `https://goodwatch.app/images/heroes/hero-${type}.png`,
 		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
 	}
 

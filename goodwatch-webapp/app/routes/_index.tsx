@@ -43,6 +43,7 @@ import { getLocaleFromRequest } from "~/utils/locale"
 import "swiper/css"
 import "swiper/css/effect-coverflow"
 import RemoteControl from "~/ui/start/RemoteControl"
+import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
 export const headers: HeadersFunction = () => {
 	return {
@@ -52,13 +53,18 @@ export const headers: HeadersFunction = () => {
 }
 
 export const meta: MetaFunction<typeof loader> = () => {
-	return [
-		{ title: "GoodWatch" },
-		{
-			description:
-				"What do you want to watch next? All movie and tv show ratings and streaming providers on one page.",
-		},
-	]
+	const pageMeta: PageMeta = {
+		title: "GoodWatch - Find the best movies and tv shows to watch",
+		description: `Discover the best movies and tv shows to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find ${typeLabel} by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.`,
+		url: "https://goodwatch.app",
+		image: "https://goodwatch.app/images/heroes/hero-movies.png",
+		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
+	}
+
+	// TODO
+	const items: PageItem[] = []
+
+	return buildMeta(pageMeta, items)
 }
 
 type LoaderData = {

@@ -1,23 +1,6 @@
 # TODO's
 
 ```
-additional filters (pick 1 or 2)
-
-release:
-    of all time
-    2024
-    2023
-    2000s
-    90s
-    80s
-    classic
-
-order by
-    popularity
-    score
-    most recent
-    
----
 
 meta tags & json-ld
     all routes
@@ -286,6 +269,24 @@ dna cleanup:
 dna time categories:
     https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/676920c6-3828-8001-8b03-966adf5d0d80
 
+---
+
+additional filters (pick 1 or 2)
+
+release:
+    of all time
+    2024
+    2023
+    2000s
+    90s
+    80s
+    classic
+
+order by
+    popularity
+    score
+    most recent
+    
 ---
 
 tv seasons:
