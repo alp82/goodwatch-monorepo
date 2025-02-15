@@ -2,17 +2,6 @@
 
 ```
 
-meta tags & json-ld
-    all routes
-    schema.org
-        Movie, TVSeries, AggregateRating
-        ItemList or CollectionPage
-        
-og images
-    https://tailwind-generator.com/og-image-generator/generator
-
----
-
 404 / 500 fixes
     hydration errors
     check sentry
@@ -297,6 +286,11 @@ tv seasons:
     score matrix
         https://tvcharts.co/show/arcane-tt11126994
     recaps
+
+---
+
+og images
+    https://tailwind-generator.com/og-image-generator/generator
 
 ---
 
