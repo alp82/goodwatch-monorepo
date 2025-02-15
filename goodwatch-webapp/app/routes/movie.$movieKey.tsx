@@ -11,7 +11,9 @@ import { type MovieDetails, getDetailsForMovie } from "~/server/details.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
+import { titleToDashed } from "~/utils/helpers"
 import useLocale from "~/utils/locale"
+import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
 export function headers() {
 	return {
@@ -21,14 +23,18 @@ export function headers() {
 }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
-	return [
-		{
-			title: `${data.details.title} (${data.details.release_year}) | Movie | GoodWatch`,
-		},
-		{
-			description: `Learn all about the movie "${data.details.title} (${data.details.release_year})". Scores, where to watch it and much more.`,
-		},
-	]
+	const pageMeta: PageMeta = {
+		title: `${data.details.title} (${data.details.release_year}) | Movie | GoodWatch`,
+		description: `Learn all about the movie "${data.details.title} (${data.details.release_year})". Scores, where to watch it and much more.`,
+		url: `https://goodwatch.app/movie/${data.details.tmdb_id}-${titleToDashed(data.details.title)}`,
+		image: `https://image.tmdb.org/t/p/w1280/${data.details.images.backdrops?.[0]?.file_path}`,
+		alt: `Learn all about the movie "${data.details.title} (${data.details.release_year})"`,
+	}
+
+	// TODO
+	const items: PageItem[] = []
+
+	return buildMeta(pageMeta, items)
 }
 
 export type LoaderData = {
