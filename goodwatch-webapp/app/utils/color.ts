@@ -18,3 +18,4 @@ export type ColorName =
 	| "fuchsia"
 	| "rose"
 	| "orange"
+	| "white"
