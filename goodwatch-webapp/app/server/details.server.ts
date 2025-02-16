@@ -27,10 +27,17 @@ export interface DNAItem {
 	count_all: number
 }
 
+export interface Trope {
+	url: string
+	name: string
+	html: string
+}
+
 export interface BaseDetails extends AllRatings {
 	dna: DNAItem[]
 	genres: string[]
 	keywords: string[]
+	tropes: Trope[]
 	release_year: string
 	streaming_links: StreamingLink[]
 	streaming_country_codes: string[]
@@ -404,6 +411,7 @@ const movieFields = [
 	"crew",
 	"collection",
 	"keywords",
+	"tropes",
 	"genres",
 	"images",
 	"poster_path",
@@ -424,6 +432,7 @@ const tvFields = [
 	"certifications",
 	"crew",
 	"keywords",
+	"tropes",
 	"genres",
 	"images",
 	"number_of_episodes",

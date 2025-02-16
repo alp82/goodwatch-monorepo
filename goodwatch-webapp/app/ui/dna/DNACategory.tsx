@@ -59,7 +59,7 @@ export default function DNACategory({
 	return (
 		<div
 			ref={ref}
-			className="mb-12 bg-gray-800 grid grid-cols-1 md:grid-cols-2"
+			className="mb-12 bg-gray-800 grid grid-cols-1 md:grid-cols-2 h-[470px] md:h-60"
 		>
 			<div className="pl-4 py-4 flex flex-col gap-4">
 				<h3 className="text-3xl font-extrabold text-gray-400">
@@ -108,7 +108,7 @@ export default function DNACategory({
 					</Link>
 				</div>
 			</div>
-			<div className="mt-8 md:mt-0 w-auto h-full flex items-center gap-2">
+			<div className="w-auto flex items-center gap-2 overflow-hidden">
 				{
 					results.length ? (
 						<>

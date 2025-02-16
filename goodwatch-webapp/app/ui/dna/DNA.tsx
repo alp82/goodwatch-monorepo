@@ -10,12 +10,8 @@ export interface DNAProps {
 }
 
 export default function DNA({ details }: DNAProps) {
-	const [hasDNA, setHasDNA] = useState<boolean | null>(null)
 	const { dna = [] } = details
-
-	useEffect(() => {
-		setHasDNA(Object.keys(dna).length > 0)
-	}, [])
+	const hasDNA = dna.length > 0
 	const sortedCategories = getSortedCategories(dna, true, false)
 
 	const [spoilerVisible, setSpoilerVisible] = React.useState(false)
@@ -46,11 +42,41 @@ export default function DNA({ details }: DNAProps) {
 							onRevealSpoiler={handleRevealSpoiler}
 						/>
 					))}
+					{/*<h3 className="text-xl font-bold">Tropes</h3>*/}
+					{/*<p>*/}
+					{/*	powered by{" "}*/}
+					{/*	<a*/}
+					{/*		href="https://tvtropes.org/"*/}
+					{/*		target="_blank"*/}
+					{/*		rel="noreferrer"*/}
+					{/*		className="text-blue-400 hover:text-blue-500 cursor-pointer"*/}
+					{/*	>*/}
+					{/*		TV Tropes*/}
+					{/*	</a>*/}
+					{/*</p>*/}
+					{/*<div className="mt-4 flex flex-col gap-2 tropes">*/}
+					{/*	{details.tropes.map((trope) => {*/}
+					{/*		return (*/}
+					{/*			<div key={trope.name} className="grid grid-cols-4 gap-4">*/}
+					{/*				<a*/}
+					{/*					href={trope.url}*/}
+					{/*					target="_blank"*/}
+					{/*					rel="noreferrer"*/}
+					{/*					className="text-blue-400 hover:text-blue-500 cursor-pointer"*/}
+					{/*				>*/}
+					{/*					{trope.name}*/}
+					{/*				</a>*/}
+					{/*				<div*/}
+					{/*					className="col-span-3"*/}
+					{/*					dangerouslySetInnerHTML={{ __html: trope.html }}*/}
+					{/*				/>*/}
+					{/*			</div>*/}
+					{/*		)*/}
+					{/*	})}*/}
+					{/*</div>*/}
 				</div>
-			) : hasDNA === false ? (
-				<InfoBox text="No DNA found for this title. Please try again later, we are working on it." />
 			) : (
-				<Spinner size="large" />
+				<InfoBox text="No DNA found for this title. Please try again later, we are working on it." />
 			)}
 		</div>
 	)

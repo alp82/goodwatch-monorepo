@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import ReactPlayer from "react-player/youtube"
+import { ClientOnly } from "remix-utils/client-only"
 import type { Videos as VideosType } from "~/server/details.server"
 import InfoBox from "~/ui/InfoBox"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
@@ -81,17 +82,18 @@ export default function Videos({ videos }: VideosProps) {
 						</div>
 					)}
 					{selectedVideos[selectedNumber]?.key && (
-						<div className="aspect-w-16 aspect-h-9">
-							<ReactPlayer
-								url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
-								width="100%"
-								height="100%"
-								controls={true}
-								config={{
-									playerVars: {},
-								}}
-							/>
-						</div>
+						<ClientOnly fallback={<div>Loading video…</div>}>
+							{() => (
+								<div className="aspect-w-16 aspect-h-9">
+									<ReactPlayer
+										url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
+										width="100%"
+										height="100%"
+										controls
+									/>
+								</div>
+							)}
+						</ClientOnly>
 					)}
 				</>
 			) : (

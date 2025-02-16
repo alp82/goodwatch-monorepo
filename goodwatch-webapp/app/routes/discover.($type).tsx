@@ -14,7 +14,7 @@ import AddFilterBar from "~/ui/filter/AddFilterBar"
 import FilterBar from "~/ui/filter/FilterBar"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
-import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
 
 export function headers() {
