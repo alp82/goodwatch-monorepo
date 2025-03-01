@@ -2,10 +2,6 @@
 
 ```
 
-Create new sitemaps
-
----
-
 security audit
     https://auditvps.com/
     https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
