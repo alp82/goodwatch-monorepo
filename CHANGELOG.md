@@ -2,13 +2,24 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.6.3] 2025-02-xx
+## [0.6.4] 2025-03-xx
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+## [0.6.3] 2025-03-01
+
+### Added
+
+### Changed
+
+### Fixed
+* Hydration Errors
+* Sitemaps
+* Database scaling failure
 
 ## [0.6.2] 2025-02-09
 

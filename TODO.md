@@ -2,9 +2,17 @@
 
 ```
 
-404 / 500 fixes
-    hydration errors
-    check sentry
+Create new sitemaps
+
+---
+
+security audit
+    https://auditvps.com/
+    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
+    
+penetration test
+    evan | scraping & automations
+    jared | infracharm
 
 ---
 
@@ -23,16 +31,6 @@ save discover filters in db
     
 ---
 
-security audit
-    https://auditvps.com/
-    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
-    
-penetration test
-    evan | scraping & automationss
-    jared | infracharm
-
----
-
 SEO analysis
     http://guidetodatamining.com/ngramAnalyzer/index.php
     
@@ -44,11 +42,6 @@ SEO optimization + marketing
     https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
     https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
     
-New SEO topics pages
-    update main navigation
-
-Create new sitemaps
-
 ---
 
 similar filter
