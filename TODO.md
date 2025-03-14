@@ -2,16 +2,6 @@
 
 ```
 
-security audit
-    https://auditvps.com/
-    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
-    
-penetration test
-    evan | scraping & automations
-    jared | infracharm
-
----
-
 discover pagination
     tabs with total number of results (100+)
     load more on scroll?
@@ -24,7 +14,25 @@ additional info
         for plan to watch: show note that some are hidden due to filters
 
 save discover filters in db
+
+---    
+
+search
+    search results page
+
+resources
+    https://github.com/quickwit-oss/tantivy
+
+---
+
+security audit
+    https://auditvps.com/
+    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
     
+penetration test
+    evan | scraping & automations
+    jared | infracharm
+
 ---
 
 SEO analysis
@@ -196,11 +204,6 @@ ai
 tropes
     show in details
     add discover filter
-
----
-
-search
-    https://github.com/quickwit-oss/tantivy
 
 ---
 
@@ -1197,8 +1200,6 @@ similarity
 recommendation directory
     https://www.reddit.com/r/MovieSuggestions/wiki/frequently_requested/?utm_medium=android_app&utm_source=share
 
-search page
-
 explore button for media titles (prefilled discover, map feature)
 
 random full screen: album cover (good roulette)
@@ -1306,58 +1307,6 @@ mini apps
     "the opposite movie"
     swipe to decide what to watch together
     
-```
-
-# Search
-```
-https://leandronsp.com/a-powerful-full-text-search-in-postgresql-in-less-than-20-lines
-https://rachbelaid.com/postgres-full-text-search-is-good-enough/
-https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-HEADLINE
-
-(similarity)
-(unaccent(...))
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE EXTENSION IF NOT EXISTS unaccent;
-
-CREATE INDEX movie_details_search_idx ON movie_details USING GIN (to_tsvector(movie_details.original_title || movie_details.tagline || movie_details.overview))
-
-WITH search_query AS (
-  SELECT 'carnage' AS query
-)
-SELECT
-  media.*,
-  (
-	COALESCE(rank_title, 0) * 10 +
-	COALESCE(rank_alternative_titles, 5) +
-	COALESCE(rank_tagline, 0) * 4 +
-	COALESCE(rank_synopsis, 0) * 2 +
-	1 / (1 + exp(-10*(COALESCE(similarity, 0)-0.5))) * log10(popularity + 1)
-  ) weighted_rank
-FROM
-  media
-LEFT JOIN (
-  SELECT
-    media.id,
-    ts_rank_cd(to_tsvector('english', unaccent(original_title)), plainto_tsquery('english', query)) as rank_title,
-    ts_rank_cd(to_tsvector('english', unaccent(tagline)), plainto_tsquery('english', query)) as rank_tagline,
-    ts_rank_cd(to_tsvector('english', unaccent(synopsis)), plainto_tsquery('english', query)) as rank_synopsis,
-    ts_rank_cd(to_tsvector('english', unaccent(string_agg(DISTINCT alternative_titles.title::text, ' '))), plainto_tsquery('english', query)) as rank_alternative_titles,
-    word_similarity(query, original_title) as similarity
-  FROM
-    media
-    LEFT JOIN media_alternative_titles AS alternative_titles ON alternative_titles.media_id = media.id,
-	search_query
-  GROUP BY media.id, query
-) as ranks ON media.id = ranks.id
-WHERE
-  ranks.rank_title > 0 OR
-  ranks.rank_alternative_titles > 0 OR
-  ranks.rank_tagline > 0 OR
-  ranks.rank_synopsis > 0 OR
-  similarity > 0
-ORDER BY
-  weighted_rank DESC NULLS LAST
-LIMIT 20;
 ```
 
 # Blog
