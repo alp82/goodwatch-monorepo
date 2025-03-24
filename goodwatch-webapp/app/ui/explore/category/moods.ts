@@ -10,8 +10,7 @@ export const moods: Record<string, PageData> = {
 			"Heart-pounding moments that'll make you check the locks twice. From jump scares that hit like espresso shots to lingering dread that sticks around like uninvited guests.",
 		backdrop_path: "qtWjZgCmslPwjP4DFUcLBUj13GV.jpg",
 		discoverParams: {
-			similarDNA:
-				"307964_Target+Audience|Horror+Enthusiasts+%28Scary+Screams%29,309526_Mood|Haunting+%28Scary+Whispers%29,307934_Mood|Scary",
+			withGenres: "27",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -35,7 +34,7 @@ export const moods: Record<string, PageData> = {
 		backdrop_path: "i9zpVfvLYJpoenHkklveIR07Em5.jpg",
 		discoverParams: {
 			similarDNA:
-				"313752_Mood|Feel-Good,86269_Mood|Joyful,307865_Mood|Heartwarming",
+				"36380351_Mood|Feel-Good,36377413_Mood|Joyful,36373018_Mood|Heartwarming",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -59,7 +58,7 @@ export const moods: Record<string, PageData> = {
 		backdrop_path: "kZGaVeXSkkvrpMYvD97sxHj291k.jpg",
 		discoverParams: {
 			similarDNA:
-				"298969_Sub-Genres|Suspense,308236_Pacing|Increasing+Suspense",
+				"36373373_Pacing|Building+Suspense,36374361_Pacing|Increasing+Suspense,36377765_Sub-Genres|Suspense",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -83,7 +82,7 @@ export const moods: Record<string, PageData> = {
 		backdrop_path: "8OGGM7clS3CN4n2pTEZs6tRll4n.jpg",
 		discoverParams: {
 			similarDNA:
-				"309829_Dialog|Motivational+Speeches,5848336_Dialog|Motivational+Instructions,69527_Score+and+Sound|Motivational+Themes,5848335_Plot|Motivational+Guidance",
+				"36381420_Dialog|Motivational+Speeches,36697700_Dialog|Motivational+Instructions,40141891_Dialog|Motivational+Rhetoric,40083275_Cultural+Impact|Motivational+Story",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -107,7 +106,7 @@ export const moods: Record<string, PageData> = {
 		backdrop_path: "8tZ90NxuoXjkHXELFOcnZDRr63G.jpg",
 		discoverParams: {
 			similarDNA:
-				"275087_Mood|Funny,307872_Humor|Situational+Comedy,307874_Humor|Slapstick,307884_Sub-Genres|Buddy+Comedy,312780_Sub-Genres|Teen+Comedy",
+				"36373052_Mood|Funny,36373061_Humor|Situational+Comedy,36373062_Humor|Slapstick,36373520_Sub-Genres|Buddy+Comedy,36377772_Sub-Genres|Teen+Comedy",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -131,7 +130,7 @@ export const moods: Record<string, PageData> = {
 		backdrop_path: "p1PLSI5Nw2krGxD7X4ulul1tDAk.jpg",
 		discoverParams: {
 			similarDNA:
-				"308075_Sub-Genres|Psychological+Thriller,292610_Plot|Psychological+Manipulation,308577_Plot|Mind+Games,275946_Pacing|Twisting,256726_Character+Types|Psychopath",
+				"36373403_Sub-Genres|Psychological+Thriller,36374366_Plot|Psychological+Manipulation,36378034_Plot|Mind+Games,36373072_Pacing|Twisting,36399617_Character+Types|Psychopath",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -157,7 +156,7 @@ export const moods: Record<string, PageData> = {
 			minYear: "1900",
 			maxYear: "2000",
 			similarDNA:
-				"309125_Mood|Nostalgic,309653_Themes|Nostalgia,295261_Themes|The+Power+Of+Nostalgia,240310_Plot|Hometown+Nostalgia,289059_Place|Nostalgic+Locations",
+				"36373019_Mood|Nostalgic,36383303_Themes|Nostalgia,36386515_Themes|The+Power+Of+Nostalgia,36408837_Plot|Hometown+Nostalgia,36471681_Place|Nostalgic+Locations",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -176,7 +175,7 @@ export const moods: Record<string, PageData> = {
 			"Films that stir deep emotions with a mix of beauty and sorrow.",
 		backdrop_path: "fAuXblS0qUiQ2SWJzpvFMH1su6i.jpg",
 		discoverParams: {
-			similarDNA: "309132_Mood|Melancholic",
+			similarDNA: "36372984_Mood|Melancholic",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -195,7 +194,8 @@ export const moods: Record<string, PageData> = {
 			"Stories where happy moments mix with the sting of loss, echoing real life.",
 		backdrop_path: "zZRXGoHo5TeUD0L1LqYIJjlPvJC.jpg",
 		discoverParams: {
-			similarDNA: "308845_Mood|Bittersweet",
+			similarDNA:
+				"36416556_Plot|Bittersweet+Memories,36373460_Mood|Bittersweet",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -214,7 +214,7 @@ export const moods: Record<string, PageData> = {
 			"Lighthearted films that embrace the quirky and imaginative side of life.",
 		backdrop_path: "dfQtPf0lw9C1MWYFMJseM5RZI6P.jpg",
 		discoverParams: {
-			similarDNA: "292374_Mood|Whimsical,282315_Mood|Dreamy",
+			similarDNA: "36373054_Mood|Whimsical,36388861_Mood|Dreamy",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -233,8 +233,7 @@ export const moods: Record<string, PageData> = {
 			"Films that offer a quiet, soothing escape for reflection and relaxation.",
 		backdrop_path: "syfmYmITnWPJU3hhaP0ckny5hMN.jpg",
 		discoverParams: {
-			similarDNA:
-				"312653_Mood|Peaceful,295792_Mood|Quiet,313637_Pacing|Balanced,286223_Mood|Calm,308241_Mood|Relaxed",
+			similarDNA: "36383932_Mood|Quiet,36442062_Mood|Calm",
 			similarDNACombinationType: "any",
 		},
 		faq: [

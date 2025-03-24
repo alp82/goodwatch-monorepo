@@ -11,7 +11,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "dcqI4l0vvGAyLsGGxobNsCVQdNK.jpg",
 		discoverParams: {
 			similarDNA:
-				"293447_Costume+and+Set|Military+Uniforms,308323_Sub-Genres|Military+Drama,314823_Place|Military+Base,313613_Dialog|Military+Jargon,309069_Plot|Military+Strategy,150829_Sub-Genres|Military+Film",
+				"36373578_Costume+and+Set|Military+Uniforms,36374408_Sub-Genres|Military+Drama,36373571_Place|Military+Base,36376817_Dialog|Military+Jargon,36381546_Plot|Military+Strategy",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +31,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "wdHIYawEp7lnf1XNzp6rWxLYgUG.jpg",
 		discoverParams: {
 			similarDNA:
-				"307909_Sub-Genres|Martial+Arts,312883_Plot|Martial+Arts+Tournament,314123_Flag|Martial+Arts+Violence",
+				"36373553_Sub-Genres|Martial+Arts,36389740_Plot|Martial+Arts+Tournament,36374951_Flag|Martial+Arts+Violence",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -51,7 +51,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "bJLGy57UQyJk0D0V9vYPXLcMQdx.jpg",
 		discoverParams: {
 			similarDNA:
-				"234186_Target+Audience|Kung+Fu+Enthusiasts,295761_Sub-Genres|Kung+Fu,237805_Plot|Kung+Fu+Training,195818_Place|Shaolin+Temple,195594_Key+Props|Shaolin+Manual",
+				"36401926_Sub-Genres|Kung+Fu,36707627_Target+Audience|Kung+Fu+Enthusiasts,36412754_Plot|Kung+Fu+Training,36412587_Place|Shaolin+Temple,36428529_Key+Props|Shaolin+Manual",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -71,7 +71,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "2bHoj05gR7I5gp4oeoDCY6bU42d.jpg",
 		discoverParams: {
 			similarDNA:
-				"300418_Sub-Genres|Samurai+Film,239833_Character+Types|Samurai,301362_Plot|Samurai+Training,270283_Target+Audience|Samurai+Enthusiasts",
+				"36375917_Sub-Genres|Samurai+Film,36420570_Character+Types|Samurai,36728330_Plot|Samurai+Training,36444957_Target+Audience|Samurai+Film+Enthusiasts",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -91,7 +91,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "yaI572p8048aC0dP2oPQ32q5yrz.jpg",
 		discoverParams: {
 			similarDNA:
-				"296320_Place|Racing+Tracks+%28Race+Cars%29,318259_Key+Props|Customized+Cars,198360_Cultural+Impact|Iconic+Car+Chases,304847_Plot|Car+Chase,277941_Cinematic+Style|Car+Chase+Scenes",
+				"36398021_Key+Props|Racing+Cars,36396010_Key+Props|Customized+Cars,36377392_Plot|Car+Chases,36380668_Plot|Car+Chase,36375981_Cinematic+Style|Car+Chase+Scenes",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -111,7 +111,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "rvebaEirVZ10pq2AnkxzyGnczfZ.jpg",
 		discoverParams: {
 			similarDNA:
-				"249568_Plot|Underground+Fighting,298653_Plot|Street+Fighting,82185_Plot|Underground+Fighting+Rings,300607_Place|Underground+Fight+Clubs,281982_Plot|Underground+Fighting+Tournaments",
+				"36389686_Plot|Underground+Fighting,36375783_Plot|Street+Fights,36397014_Plot|Street+Fighting,36459090_Plot|Underground+Fighting+Ring,36377863_Place|Underground+Fight+Clubs,36429492_Plot|Underground+Fighting+Tournaments",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -131,7 +131,7 @@ export const actionCombat: Record<string, PageData> = {
 		backdrop_path: "zb7b40ieuRGiIc9ebIEapneaCsl.jpg",
 		discoverParams: {
 			similarDNA:
-				"315259_Sub-Genres|Boxing+Film,294468_Place|Boxing+Gym,295378_Plot|Boxing+Matches",
+				"36381423_Sub-Genres|Boxing+Film,36373927_Place|Boxing+Gym,36380696_Plot|Boxing+Matches",
 			similarDNACombinationType: "any",
 		},
 		faq: [

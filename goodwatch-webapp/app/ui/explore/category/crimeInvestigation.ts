@@ -11,7 +11,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "bPLRjO2pcBx0WL73WUPzuNzQ3YN.jpg",
 		discoverParams: {
 			similarDNA:
-				"308193_Character+Types|Detective,308831_Plot|Detective+Work,315045_Key+Props|Detective%27s+Notebook,308925_Plot|Detective+Investigations,301812_Character+Types|Female+Detective,308073_Key+Props|Crime+Scene+Evidence,309586_Target+Audience|Crime+Drama+Enthusiasts",
+				"36374073_Character+Types|Detective,36374217_Plot|Detective+Work,36379826_Key+Props|Detective%27s+Notebook,36380260_Plot|Detective+Investigations,36432025_Character+Types|Female+Detective,36390177_Key+Props|Crime+Scene+Evidence,36390104_Plot|Crime+Scene+Investigation",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +31,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "l9QRe9V5e5qghzXlre1B3cyg4Tc.jpg",
 		discoverParams: {
 			similarDNA:
-				"308979_Plot|Heist+Planning,308991_Sub-Genres|Heist+Film,301810_Key+Props|Heist+Tools",
+				"36373851_Plot|Heist+Planning,36373863_Sub-Genres|Heist+Film,36375977_Plot|High-Stakes+Heist,36394816_Key+Props|Heist+Tools",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -51,7 +51,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "fkdMSS93pFBzNW9OByNpi8i2UYg.jpg",
 		discoverParams: {
 			similarDNA:
-				"308842_Plot|Murder+Mystery,297471_Plot|Suburban+Murder+Mystery,1950856_Plot|True-Crime+Murder+Mystery,4737968_Plot|Mystery+Of+The+Murderer,5103520_Plot|Mass+Murder+Mystery",
+				"36375352_Plot|Murder+Mystery,36428263_Sub-Genres|True+Crime,40054424_Narrative|Murder+Mystery,40084311_Plot|Murder+Mystery+Game,40171285_Plot|Mystery+Murder,40097677_Plot|Past+Murder+Mystery",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -71,7 +71,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
 		discoverParams: {
 			similarDNA:
-				"300524_Character+Types|Gangster,295198_Character+Types|Crime+Boss+%28Gangster+Underworld%29,300605_Plot|Mob+Wars+%28Gangster+Warfare%29,265385_Plot|Criminal+Rise+To+Power+%28Gangster+Rise+To+Power%29",
+				"36383356_Character+Types|Gangster,36406733_Character+Types|Crime+Boss,36374356_Sub-Genres|Gangster+Film,36414480_Plot|Rise+And+Fall+Of+A+Criminal+Empire",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -91,7 +91,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "swpjSgGmBCx6QgfO4rgv5vBzqHL.jpg",
 		discoverParams: {
 			similarDNA:
-				"292373_Themes|Justice+Vs.+Revenge,310184_Plot|Revenge+Plot,308751_Themes|Revenge",
+				"36373658_Themes|Justice+Vs.+Revenge,36373089_Plot|Revenge+Plot,36375826_Themes|Revenge,36384615_Mood|Revengeful,36373657_Themes|The+Cost+Of+Revenge,36444033_Plot|Blood+Feud+%28Revenge+Drama%29,36552671_Plot|Payback",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -111,7 +111,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "gILte6Zd7m1YneIr6MVhh30S9pr.jpg",
 		discoverParams: {
 			similarDNA:
-				"245595_Sub-Genres|Mafia+Film,293149_Plot|Criminal+Underworld+%28Mafia+Activities%29,295198_Character+Types|Crime+Boss+%28Mafia+Boss%29,279887_Plot|Underworld+Politics+%28Mafia+Politics%29",
+				"36385183_Sub-Genres|Mafia+Film,36400587_Plot|Mafia+Involvement,36399684_Plot|Mafia+Mafia Infiltration,36419649_Character+Types|Mafia+Boss,36397621_Character+Types|Mob+Boss,36444479_Plot|Mafia+Politics,36374356_Sub-Genres|Gangster+Film",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -131,7 +131,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "tZ358Wk4BnOc4FjdGsiexAUvCMH.jpg",
 		discoverParams: {
 			similarDNA:
-				"309626_Plot|Serial+Killer+Pursuit,303056_Plot|Serial+Killer+On+The+Loose,228595_Key+Props|Serial+Killer%27s+Trophies,287726_Plot|Serial+Killings,7946_Plot|Serial+Killing+Spree",
+				"36374039_Plot|Serial+Killer+Pursuit,36385962_Plot|Serial+Killer+On+The+Loose,36376510_Character+Types|Serial+Killer,36379825_Plot|Serial+Killer,36402559_Plot|Serial+Killings",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -151,7 +151,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "hsofdfyJos7CXUOODP1XaYosFcK.jpg",
 		discoverParams: {
 			similarDNA:
-				"239861_Plot|Mob+Involvement,213570_Plot|Mobster+Life,295198_Character+Types|Crime+Boss",
+				"36398440_Character+Types|Mobster,36397621_Character+Types|Mob Boss,36406733_Character+Types|Crime+Boss,36408533_Plot|Mob+Involvement,36451772_Plot|Mobster+Life",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -171,7 +171,7 @@ export const crimeInvestigation: Record<string, PageData> = {
 		backdrop_path: "8gaS9YFtarOdDrOSdZkNvgBplCg.jpg",
 		discoverParams: {
 			similarDNA:
-				"296353_Character+Types|Spy,316163_Sub-Genres|Spy+Comedy,312749_Sub-Genres|Spy+Thriller",
+				"36375331_Character+Types|Spy,36377773_Sub-Genres|Spy+Comedy,36375643_Sub-Genres|Spy+Thriller,36376048_key+Props|Spy+Gadgets,36378711_Plot|Spy+Missions",
 			similarDNACombinationType: "any",
 		},
 		faq: [

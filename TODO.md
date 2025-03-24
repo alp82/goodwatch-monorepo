@@ -17,6 +17,16 @@ save discover filters in db
 
 ---    
 
+DNA clusters only over same category
+
+---    
+
+postgres stability
+    WAL max size
+    disk space monitoring
+
+---    
+
 search
     search results page
 
@@ -428,9 +438,10 @@ twitter gw
 
 ---
 
-scraper proxy
+scraper solutions
     https://scrapoxy.io/
     https://github.com/scrapoxy/scrapoxy
+    https://www.firecrawl.dev/
 
 ---
 
