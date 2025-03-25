@@ -10,8 +10,7 @@ export const historicalPeriod: Record<string, PageData> = {
 			"Frontline heroism, homefront sacrifices, and moral choices in impossible circumstances. History that feels urgent enough to dust off your grandfather's medals.",
 		backdrop_path: "mrPT9CpjjvACGuHpCILHTRCHhYb.jpg",
 		discoverParams: {
-			similarDNA:
-				"309104_Time|World+War+Ii,214821_Plot|World+War+Ii+Resistance,4657002_Costume+and+Set|World+War+Ii+Uniforms,5853149_Target+Audience|World+War+Ii+Veterans,8361605_Target+Audience|World+War+Ii+Enthusiasts",
+			similarDNA: "36375538_Time|World+War+Ii,36416588_Time|World+War+I+Era",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +30,7 @@ export const historicalPeriod: Record<string, PageData> = {
 		backdrop_path: "a0yry0OKdBl1G1Dv6H6BeIW2ER1.jpg",
 		discoverParams: {
 			similarDNA:
-				"308692_Time|Medieval+Times,297621_Time|Medieval+Fantasy,16779_Target+Audience|Medieval+Fantasy+Fans",
+				"36374205_Time|Medieval+Times,36442944_Time|Medieval+Fantasy,36378948_Costume+and+Set|Medieval+Sets",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -51,7 +50,7 @@ export const historicalPeriod: Record<string, PageData> = {
 		backdrop_path: "oK9UByMkurtsUYFsJB7V1CdiXfD.jpg",
 		discoverParams: {
 			similarDNA:
-				"309011_Cultural+Impact|Based+On+A+True+Story,310003_Cultural+Impact|Based+On+True+Events",
+				"36373847_Cultural+Impact|Based+On+A+True+Story,36380585_Cultural+Impact|Based+On+True+Events",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -71,7 +70,7 @@ export const historicalPeriod: Record<string, PageData> = {
 		backdrop_path: "blbA7NEHARQOWy5i9VF5K2kHrPc.jpg",
 		discoverParams: {
 			similarDNA:
-				"311015_Plot|Business+Rivalry,292321_Key+Props|Business+Documents,311220_Plot|Family+Business,296426_Plot|Startup+Culture,316851_Plot|Business+Ventures",
+				"36377101_Plot|Business+Rivalry,36387053_Key+Props|Business+Documents,36406938_Plot|Business+Startup,36425290_Plot|Business+Ventures",
 			similarDNACombinationType: "any",
 		},
 		faq: [

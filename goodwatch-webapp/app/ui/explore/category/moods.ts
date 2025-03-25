@@ -10,7 +10,8 @@ export const moods: Record<string, PageData> = {
 			"Heart-pounding moments that'll make you check the locks twice. From jump scares that hit like espresso shots to lingering dread that sticks around like uninvited guests.",
 		backdrop_path: "qtWjZgCmslPwjP4DFUcLBUj13GV.jpg",
 		discoverParams: {
-			withGenres: "27",
+			similarDNA:
+				"36458446_Mood|Terrifying,36393865_Plot|Psychological+Terror,36384843_Cinematic+Style|Jump+Scares,36373732_Sub-Genres|Supernatural+Horror,36373989_Sub-Genres|Sci-Fi+Horror,36376768_Sub-Genres|Teen+Horror",
 			similarDNACombinationType: "any",
 		},
 		faq: [

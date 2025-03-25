@@ -11,7 +11,7 @@ export const romanceRelationships: Record<string, PageData> = {
 		backdrop_path: "pow3n5l3m0pvLRYcLqOnY1IWV6U.jpg",
 		discoverParams: {
 			similarDNA:
-				"308329_Plot|First+Love,312708_Themes|Love+At+First+Sight,245241_Plot|Teenage+Romance,312350_Plot|Summer+Romance,297314_Plot|College+Romance,304329_Plot|Royal+Romance",
+				"36374793_Plot|First+Love,36375984_Themes|Love+At+First+Sight,36380636_Plot|Teenage+Romance,36374189_Plot|Summer+Romance,36375996_Plot|Worklplace+Romance,36375132_Plot|Unconventional+Romance",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +31,7 @@ export const romanceRelationships: Record<string, PageData> = {
 		backdrop_path: "8qzaTArPaabLnf5qoqagXXnNpRb.jpg",
 		discoverParams: {
 			similarDNA:
-				"307918_Target+Audience|Teens+%28Teenager%29,307949_Themes|Coming+Of+Age",
+				"36375776_Target+Audience|Teenagers,36373044_Sub-Genres|Coming-Of-Age,36373007_Sub-Genres|Coming-Of-Age+Drama",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -51,7 +51,7 @@ export const romanceRelationships: Record<string, PageData> = {
 		backdrop_path: "qLDeXoAf0phZDbBEaUK0ZHOmMoA.jpg",
 		discoverParams: {
 			similarDNA:
-				"229703_Target+Audience|Romcom+Enthusiasts,260163_Target+Audience|Rom-Com+Fans,33242_Plot|Rom-Com+Misadventures,59415_Plot|Rom-Com+Tropes,291239_Humor|Romantic+Comedy+Tropes,26057_Humor|Romantic+Satire,308060_Sub+Genre|Romantic+Comedy",
+				"36374500_Sub-Genres|Romantic+Comedy,36374514_Humor|Romantic+Comedy,36469845_Target+Audience|Rom-Com+Fans,36417593_Plot|Rom-Com+Hijinks,36715059_Plot|Rom-Com+Misunderstandings,36436803_Humor|Romantic+Satire",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -71,7 +71,7 @@ export const romanceRelationships: Record<string, PageData> = {
 		backdrop_path: "3Sdi32wfIIOtDz1hYik6bGe1iWC.jpg",
 		discoverParams: {
 			similarDNA:
-				"274730_Key+Props|Dog+Collar,303559_Key+Props|Dog,248877_Target+Audience|Dog+Lovers",
+				"36639029_Character+Types|Dog+Companion,36394609_Key+Props|Dog+Collar,36379609_Key+Props|Dog,36427029_Key+Props|Puppy,36420520_Target+Audience|Dog+Lovers",
 			similarDNACombinationType: "any",
 		},
 		faq: [

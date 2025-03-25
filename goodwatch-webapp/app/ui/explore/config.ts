@@ -41,6 +41,6 @@ export const validUrlParams = {
 }
 
 export const defaultDiscoverParams: Partial<DiscoverParams> = {
-	minScore: "60",
+	minScore: "40",
 	maxScore: "100",
 }

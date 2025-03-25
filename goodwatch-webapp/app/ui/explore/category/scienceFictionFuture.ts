@@ -11,7 +11,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "oxv9a3dJvs4aAi5ctB4pQSdTji3.jpg",
 		discoverParams: {
 			similarDNA:
-				"292710_Place|Space+Station,316248_Sub-Genres|Space+Opera,316237_Plot|Space+Exploration,313891_Place|Space,309406_Place|Outer+Space,296712_Place|Space+Ship",
+				"36373427_Place|Space+Station,36373188_Sub-Genres|Space+Opera,36375577_Plot|Space+Exploration,36375554_Place|Space,309406_Place|Outer+Space,36378020_Place|Space+Ship",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +31,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "zFKPAMN9kWr1hJF4owR83DrwjK6.jpg",
 		discoverParams: {
 			similarDNA:
-				"312027_Sub-Genres|Alien+Invasion,315344_Plot|Alien+Encounters,292768_Place|Alien+Planets,312028_Character+Types|Alien,114587_Sub-Genres|Alien+Film",
+				"36373991_Sub-Genres|Alien+Invasion,36374399_Plot|Alien+Encounter,36375275_Place|Alien+Planet,36381171_Character+Types|Alien,36375227_Key+Props|Alien+Technology",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -51,7 +51,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "xqUr7Mr9kFStiay0HS4zq2h9xPQ.jpg",
 		discoverParams: {
 			similarDNA:
-				"293197_Sub-Genres|Time+Travel,309362_Key+Props|Time+Machine,309364_Character+Types|Time+Traveler,306759_Humor|Time+Travel+Humor",
+				"36373815_Sub-Genres|Time+Travel,36373432_Key+Props|Time+Machine,36381531_Character+Types|Time+Traveler,36375187_Themes|Time+Travel+Consequences",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -71,7 +71,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "b3u3ayecSfwak4hyRbvRiI3pxTM.jpg",
 		discoverParams: {
 			similarDNA:
-				"232174_Plot|Natural+Disaster+Survival,260903_Plot|Nuclear+Disaster,274843_Sub-Genres|Natural+Disaster+Film,246445_Plot|Post-Disaster+Recovery,193203_Plot|Disaster+Preparedness",
+				"36374130_Plot|Natural+Disasters,36392252_Plot|Nuclear+Disaster,36376535_Sub-Genres|Natural+Disaster+Film",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -91,7 +91,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "dLWoJnYXhFeNouon4NmBLAr92rf.jpg",
 		discoverParams: {
 			similarDNA:
-				"308743_Sub-Genres|Superhero,310315_Plot|Superhero+Origin+Story,309416_Target+Audience|Superhero+Fans,313683_Key+Props|Superhero+Suit,309413_Sub-Genres|Superhero+Comedy,10643284_Sub-Genres|Superhero+Drama",
+				"36375057_Sub-Genres|Superhero,36381563_Plot|Superhero+Origin+Story,36376455_Target+Audience|Superhero+Fans,36377934_Key+Props|Superhero+Suit,36376583_Sub-Genres|Superhero+Comedy,40173943_Sub-Genres|Superhero+Drama",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -111,7 +111,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "79sykEPGRMvRDy1hqkpeitejW0R.jpg",
 		discoverParams: {
 			similarDNA:
-				"276184_Time|Post-Apocalyptic+Future,310959_Plot|Post-Apocalyptic+Survival,309122_Sub+Genres|Post-Apocalyptic,308715_Sub+Genres|Apocalyptic,229315_Mood|Apocalyptic",
+				"36375666_Time|Post-Apocalyptic+Future,36374992_Plot|Apocalypse+Survival,36375000_Sub+Genres|Post-Apocalyptic,36373974_Mood|Apocalyptic",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -131,7 +131,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "askFH4GSk2u9z3ZE5ypdKIMeqLJ.jpg",
 		discoverParams: {
 			similarDNA:
-				"292635_Sub-Genres|Dystopian,308605_Sub-Genres|Dystopian+Satire,312433_Place|Dystopian+Metropolis,316608_Plot|Dystopian+Society,308571_Plot|Dystopian+Future",
+				"36373453_Sub-Genres|Dystopian,36378628_Sub-Genres|Dystopian+Satire,36375442_Place|Dystopian+Metropolis,36391313_Plot|Dystopian+Society,36391421_Time|Dystopian+Future",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -151,7 +151,7 @@ export const scienceFictionFuture: Record<string, PageData> = {
 		backdrop_path: "ezk6gCvmIntgBnHPyPgnzWplXIP.jpg",
 		discoverParams: {
 			similarDNA:
-				"288148_Themes|End+Times,10235_Time|End+Times,308710_Themes|End+Of+The+World,268598_Plot|Human+Extinction",
+				"36381916_Themes|End+Times,36399210_Plot|End+Times,36395739_Themes|End+Of+The+World,36398737_Themes|End Of Days,36409219_Plot|Human+Extinction",
 			similarDNACombinationType: "any",
 		},
 		faq: [

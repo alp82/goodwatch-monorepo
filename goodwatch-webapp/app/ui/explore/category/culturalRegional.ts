@@ -11,7 +11,7 @@ export const culturalRegional: Record<string, PageData> = {
 		backdrop_path: "8x9iKH8kWA0zdkgNdpAew7OstYe.jpg",
 		discoverParams: {
 			similarDNA:
-				"308633_Sub-Genres|Anime,292627_Target+Audience|Anime+Fans,310183_Sub-Genres|Anime-Influenced,253089_Sub-Genres|Idol+Anime,208666_Sub-Genres|School+Anime",
+				"36378726_Sub-Genres|Anime,36375004_Target+Audience|Anime+Fans,36378727_Sub-Genres|Anime-Influenced,36401449_Cinematic+Style|Anime+Aesthectics,36399452_Cinematic+Style|Anime+Style",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +31,7 @@ export const culturalRegional: Record<string, PageData> = {
 		backdrop_path: "AcLsfw3TVZGFFT8yRA5StPKk65y.jpg",
 		discoverParams: {
 			similarDNA:
-				"294710_Sub-Genres|Bollywood,254037_Target+Audience|Bollywood+Fans,254036_Score+and+Sound|Bollywood+Soundtrack,10220_Costume+and+Set|Bollywood+Costumes,287269_Place|Rural+India,219574_Place|Indian+Subcontinent",
+				"36393008_Sub-Genres|Bollywood,36459074_Sub-Genres|Bollywood+Film,36406177_Target+Audience|Bollywood+Fans,36393014_Score+and+Sound|Bollywood+Music,36415686_Place|Rural+India,36388020_Place|Indian+Subcontinent,36407265_Costume+and+Set|Traditional+Indian+Attire",
 			similarDNACombinationType: "any",
 		},
 		faq: [

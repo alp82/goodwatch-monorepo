@@ -11,7 +11,7 @@ export const supernaturalMonsters: Record<string, PageData> = {
 		backdrop_path: "oOZtWMhJft0QvPcnJXFgGlt0Jn7.jpg",
 		discoverParams: {
 			similarDNA:
-				"316449_Plot|Zombie+Outbreak,292940_Plot|Battle+Against+Zombies,317281_Place|Zombie-Infested+Areas,314948_Sub-Genres|Zombie+Comedy,4685460_Sub-Genres|Zombie+Movie,5054166_Sub-Genres|Zombie+Thriller,5054167_Sub-Genres|Zombie,6648856_Sub-Genres|Zombie+Drama,4685458_Themes|Zombie+Horror",
+				"36379464_Plot|Zombie+Outbreak,36406707_Plot|Battle+Against+Zombies,36444256_Place|Zombie-Infested+Areas,36375238_Sub-Genres|Zombie+Horror,36565868_Sub-Genres|Zombie+Thriller,36459602_Sub-Genres|Zombie+Apocalypse,36671062_Sub-Genres|Zombie+Drama,36380728_Plot|Zombie+Apocalypse",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +31,7 @@ export const supernaturalMonsters: Record<string, PageData> = {
 		backdrop_path: "j9E1pGqx2ZYnyGQYMB1JYtUxJ6u.jpg",
 		discoverParams: {
 			similarDNA:
-				"309816_Key+Props|Vampire+Fangs,307210_Character+Types|Vampire,304954_Plot|Vampire+Hunting,206775_Plot|Vampire+Attacks",
+				"36376181_Sub-Genres|Vampire+Film,36380684_Key+Props|Vampire+Fangs,36401520_Character+Types|Vampire,36386463_Plot|Vampire+Hunting,36374853_Plot|Vampire+Attacks",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -51,7 +51,7 @@ export const supernaturalMonsters: Record<string, PageData> = {
 		backdrop_path: "xgU3KkqiME9pGe5gGCNpUYkoSWg.jpg",
 		discoverParams: {
 			similarDNA:
-				"132233_Key+Props|Shark+Cage,159462_Plot|Shark+Attacks,146529_Key+Props|Shark+Repellent",
+				"36378082_Key+Props|Shark+Cage,36388853_Plot|Shark+Attacks,36411279_Key+Props|Shark+Repellent,36454082_Key+Props|Shark+Fin",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -71,7 +71,7 @@ export const supernaturalMonsters: Record<string, PageData> = {
 		backdrop_path: "oSJV6nAfHzyE9v6oEAXmDjbko00.jpg",
 		discoverParams: {
 			similarDNA:
-				"309813_Plot|Monster+Attacks,295891_Sub-Genres|Monster+Movie,292417_Character+Types|Monster",
+				"309813_Plot|Monster+Attacks,36374861_Sub-Genres|Monster+Movie,36382887_Character+Types|Monster,36378229_Plot|Battle+Against+Monsters",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -90,7 +90,7 @@ export const supernaturalMonsters: Record<string, PageData> = {
 			"Masked killers, reckless teenagers, and horror movie rules that everyone knows but nobody follows. Don't split up, don't say 'I'll be right back.'",
 		backdrop_path: "1AjHJ0NP7BTI4zOVvmrmTXwGwvv.jpg",
 		discoverParams: {
-			similarDNA: "312394_Sub-Genres|Slasher",
+			similarDNA: "36376767_Sub-Genres|Slasher",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -110,7 +110,7 @@ export const supernaturalMonsters: Record<string, PageData> = {
 		backdrop_path: "psJX2MNGqngThU1fL7ECmbPxbYP.jpg",
 		discoverParams: {
 			similarDNA:
-				"260938_Sub-Genres|Werewolf+Film,201122_Plot|Werewolf+Transformation,219182_Character+Types|Werewolf",
+				"36376182_Sub-Genres|Werewolf+Film,36387742_Plot|Werewolf+Transformation,36422468_Character+Types|Werewolf",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -129,7 +129,8 @@ export const supernaturalMonsters: Record<string, PageData> = {
 			"Haunted houses, unfinished business, and spirits who won't rest until their stories are told. Death is just the beginning.",
 		backdrop_path: "yt2WimJVx0fmRh3ty2ral4UcYNj.jpg",
 		discoverParams: {
-			similarDNA: "312970_Sub-Genres|Ghost+Story,314469_Character+Types|Ghosts",
+			similarDNA:
+				"36375965_Sub-Genres|Ghost+Story,36375966_Character+Types|Ghost,36375966_Plot|Ghost+Hunting",
 			similarDNACombinationType: "any",
 		},
 		faq: [

@@ -11,7 +11,7 @@ export const sportsCompetition: Record<string, PageData> = {
 		backdrop_path: "w8Zc27VbwvaWPqDyCRES68TtfVV.jpg",
 		discoverParams: {
 			similarDNA:
-				"293335_Key+Props|Football,315524_Place|Football+Field,294470_Target+Audience|Football+Fans,316664_Key+Props|Soccer+Ball,260245_Place|Soccer+Fields",
+				"36382538_Key+Props|Football,36388849_Place|Football+Field,36472220_Target+Audience|Football+Fans,36377284_Key+Props|Soccer+Ball,36377282_Place|Soccer+Fields",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -31,7 +31,7 @@ export const sportsCompetition: Record<string, PageData> = {
 		backdrop_path: "UGjqtFPoAmerCtqjvWqGzzNPnh.jpg",
 		discoverParams: {
 			similarDNA:
-				"279520_Key+Props|Baseball+Glove,307027_Place|Baseball+Stadium,277594_Key+Props|Baseball+Equipment,287004_Key+Props|Baseball,249548_Sub-Genres|Baseball+Film",
+				"36374803_Key+Props|Baseball+Glove,36395203_Place|Baseball+Stadium,36395725_Key+Props|Baseball+Equipment,36385194_Key+Props|Baseball,36425701_Sub-Genres|Baseball+Film",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -51,7 +51,7 @@ export const sportsCompetition: Record<string, PageData> = {
 		backdrop_path: "fy3WUGHWoTnxZKhWics6fSFL5i0.jpg",
 		discoverParams: {
 			similarDNA:
-				"310139_Key+Props|Basketball,277247_Place|Basketball+Court,233888_Plot|Basketball+Tournament",
+				"36385142_Key+Props|Basketball,36390796_Place|Basketball+Court,36423796_Plot|Basketball+Tournament",
 			similarDNACombinationType: "any",
 		},
 		faq: [
@@ -71,7 +71,7 @@ export const sportsCompetition: Record<string, PageData> = {
 		backdrop_path: "lrviX1RwNTfeq4Z9KjeqoxSyqtK.jpg",
 		discoverParams: {
 			similarDNA:
-				"310058_Sub-Genres|Sports+Drama,310063_Target+Audience|Sports+Enthusiasts,308248_Target+Audience|Sports+Fans,310062_Costume+and+Set|Sports+Uniforms",
+				"36373930_Sub-Genres|Sports+Drama,36382543_Target+Audience|Sports+Enthusiasts,36376247_Target+Audience|Sports+Fans,36382540_Costume+and+Set|Sports+Uniforms",
 			similarDNACombinationType: "any",
 		},
 		faq: [

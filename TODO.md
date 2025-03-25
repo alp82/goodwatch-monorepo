@@ -58,6 +58,12 @@ SEO optimization + marketing
     
 ---
 
+DB optimization
+    separate vector db?
+    https://qdrant.tech/benchmarks/#filtered-results
+
+---
+
 similar filter
     multiple similar titles
     fix similarity order
