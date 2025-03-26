@@ -147,51 +147,67 @@ export function ErrorBoundary() {
 	const error = useRouteError()
 	console.error(error)
 	captureRemixErrorBoundaryError(error)
+
+	const [queryClient] = React.useState(
+		() =>
+			new QueryClient({
+				defaultOptions: {
+					queries: {
+						// With SSR, we usually want to set some default staleTime
+						// above 0 to avoid refetching immediately on the client
+						staleTime: 60 * 1000,
+					},
+				},
+			}),
+	)
+
 	return (
 		<html lang="en">
 			<head>
 				<title>Oh no!</title>
-				<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+				<meta httpEquiv="Content-Type" content="text/html;charset=utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
 				<Links />
 			</head>
 			<body className="flex flex-col h-screen bg-gray-900">
-				<Header />
-				<main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-					<InfoBox text="Sorry, but an error occurred" />
-					<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
-						{/* Error message */}
-						<strong className="text-xl text-white">
-							{error.message || error.data}
-						</strong>
+				<QueryClientProvider client={queryClient}>
+					<Header />
+					<main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+						<InfoBox text="Sorry, but an error occurred" />
+						<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
+							{/* Error message */}
+							<strong className="text-xl text-white">
+								{error?.message || error?.data}
+							</strong>
 
-						{/* Try Again button */}
-						<button
-							type="button"
-							className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
-							onClick={() => window.location.reload()}
-						>
-							Try Again
-						</button>
+							{/* Try Again button */}
+							<button
+								type="button"
+								className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
+								onClick={() => window.location.reload()}
+							>
+								Try Again
+							</button>
 
-						{/* Error stack trace */}
-						{error.stack && (
-							<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
-								<pre className="whitespace-pre-wrap break-words">
-									{error.stack}
-								</pre>
-							</div>
-						)}
-					</div>
-				</main>
-				<Footer />
-				<BottomNav />
-				<ToastContainer />
-				<CookieConsent />
-				<PostHogInit />
-				<ScrollRestoration />
-				<Scripts />
+							{/* Error stack trace */}
+							{error?.stack && (
+								<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
+									<pre className="whitespace-pre-wrap break-words">
+										{error.stack}
+									</pre>
+								</div>
+							)}
+						</div>
+					</main>
+					<Footer />
+					<BottomNav />
+					<ToastContainer />
+					<CookieConsent />
+					<PostHogInit />
+					<ScrollRestoration />
+					<Scripts />
+				</QueryClientProvider>
 			</body>
 		</html>
 	)

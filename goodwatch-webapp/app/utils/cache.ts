@@ -18,18 +18,26 @@ const clusterNodes: ClusterNode[] = [
 	},
 ]
 const redisOptions: ClusterOptions = {
-	clusterRetryStrategy: (times) => {
-		// Stop after first failure so we don't block requests
-		return times > 0 ? null : 0
+	clusterRetryStrategy: (times, reason) => {
+		console.warn("clusterRetryStrategy:", times, reason)
+		// Return null to stop retrying after first failure
+		return times > 0 ? null : 100
 	},
 	dnsLookup: (address, callback) => callback(null, address),
 	lazyConnect: true,
 	slotsRefreshTimeout: 500,
 	redisOptions: {
 		connectTimeout: 1000,
-		offlineQueue: false,
 		lazyConnect: true,
+		maxLoadingRetryTime: 1000,
+		maxRetriesPerRequest: 1,
+		offlineQueue: false,
 		password: process.env.REDIS_PASS || "",
+		sentinelRetryStrategy: (retryAttempts) => {
+			console.warn("sentinelRetryStrategy:", retryAttempts)
+			// Return null to stop retrying after first failure
+			return retryAttempts > 0 ? null : 100
+		},
 	},
 }
 
@@ -38,23 +46,31 @@ let redisCluster: Cluster
 const connectToRedisCluster = async () => {
 	return new Promise((resolve, reject) => {
 		try {
-			console.log("connecting to redis...")
-			redisCluster = new Redis.Cluster(clusterNodes, redisOptions)
-			redisCluster.on("error", (err) => {
-				console.error("Redis Cluster Error:", err)
-			})
-			resolve(redisCluster)
-		} catch (e) {
-			console.error("Failed connection to Redis Cluster")
-			reject(e)
+			console.log("Connecting to Redis Cluster...")
+			const cluster = new Redis.Cluster(clusterNodes, redisOptions)
+
+			try {
+				cluster.connect()
+				cluster.on("ready", () => {
+					console.log("Connected to Redis Cluster")
+					redisCluster = cluster
+					redisCluster.on("error", (err) => {
+						console.error("Redis Cluster Error:", err)
+					})
+					resolve(redisCluster)
+				})
+			} catch (err) {
+				console.error("Redis unavailable, skipping:", err)
+				// Move on without blocking.
+			}
+		} catch (err) {
+			console.error("Failed to connect to Redis Cluster:", err)
 		}
 	})
 }
 
 // connect to redis optionally
-connectToRedisCluster().catch((e) => {
-	console.error("failed to connect to redis:", e)
-})
+connectToRedisCluster()
 
 const getRedisCluster = () => redisCluster
 
