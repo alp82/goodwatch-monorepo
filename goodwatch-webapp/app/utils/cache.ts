@@ -39,11 +39,11 @@ const connectToRedisCluster = async () => {
 	return new Promise((resolve, reject) => {
 		try {
 			console.log("connecting to redis...")
-			const cluster = new Redis.Cluster(clusterNodes, redisOptions)
-			cluster.on("error", (err) => {
+			redisCluster = new Redis.Cluster(clusterNodes, redisOptions)
+			redisCluster.on("error", (err) => {
 				console.error("Redis Cluster Error:", err)
 			})
-			resolve(cluster)
+			resolve(redisCluster)
 		} catch (e) {
 			console.error("Failed connection to Redis Cluster")
 			reject(e)
@@ -52,11 +52,9 @@ const connectToRedisCluster = async () => {
 }
 
 // connect to redis optionally
-try {
-	await connectToRedisCluster()
-} catch (e) {
+connectToRedisCluster().catch((e) => {
 	console.error("failed to connect to redis:", e)
-}
+})
 
 const getRedisCluster = () => redisCluster
 

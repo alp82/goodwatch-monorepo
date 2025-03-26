@@ -1,6 +1,6 @@
 {
 	"name": "goodwatch-webapp",
-	"version": "0.6.4",
+	"version": "0.6.5",
 	"private": true,
 	"sideEffects": false,
 	"type": "module",
@@ -25,7 +25,7 @@
 		"@tanstack/react-virtual": "^3.10.9",
 		"@types/accept-language-parser": "^1.5.6",
 		"accept-language-parser": "^1.5.0",
-		"axios": "^1.7.7",
+		"axios": "^1.8.4",
 		"framer-motion": "^11.11.11",
 		"ioredis": "^5.4.1",
 		"is-ip": "^5.0.1",
