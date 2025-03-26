@@ -2,13 +2,15 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.6.4] 2025-03-xx
+## [0.6.4] 2025-03-26
 
 ### Added
 
 ### Changed
+* Redis cache connections are now optional. If the cluster is down, the website still works
 
 ### Fixed
+* Updated DNA explore queries to work with new ID's that needed to be recreated due to data corruption when Postgres cluster failed syncing 
 
 ## [0.6.3] 2025-03-01
 

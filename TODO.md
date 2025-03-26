@@ -693,10 +693,6 @@ famous quotes section
 
 ---
 
-redis optional
-
----
-
 postgres cluster config in repo
     https://github.com/vitabaks/postgresql_cluster
     
