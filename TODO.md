@@ -32,6 +32,7 @@ search
 
 resources
     https://github.com/quickwit-oss/tantivy
+    https://openpipe.ai/blog/pii-redact
 
 ---
 

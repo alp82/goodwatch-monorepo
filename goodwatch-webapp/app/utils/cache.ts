@@ -99,7 +99,7 @@ async function cacheSet<CacheData extends JsonData>(
 	ttl: number,
 ): Promise<void> {
 	const redis = getRedisCluster()
-	if (!redis) return new Promise((resolve) => resolve())
+	if (!redis) return
 
 	const namespaceKey = `${namespace}:${key}`
 	const timestamp = Date.now()
@@ -107,7 +107,12 @@ async function cacheSet<CacheData extends JsonData>(
 		data,
 		timestamp,
 	})
-	await redis.setex(namespaceKey, ttl || 1, jsonData)
+
+	try {
+		await redis.setex(namespaceKey, ttl || 1, jsonData)
+	} catch (e) {
+		console.log("Error while setting cache value:", e)
+	}
 }
 
 async function cacheGet<CacheData extends JsonData>(
@@ -115,19 +120,30 @@ async function cacheGet<CacheData extends JsonData>(
 	key: string,
 ): Promise<CacheData | null> {
 	const redis = getRedisCluster()
-	if (!redis) return new Promise((resolve) => resolve())
+	if (!redis) return null
 
 	const namespaceKey = `${namespace}:${key}`
-	const result = await redis.get(namespaceKey)
-	return result ? JSON.parse(result) : null
+
+	try {
+		const result = await redis.get(namespaceKey)
+		return result ? JSON.parse(result) : null
+	} catch (e) {
+		console.log("Error while getting cache value:", e)
+		return null
+	}
 }
 
 async function cacheDelete(namespace: string, key: string): Promise<number> {
 	const redis = getRedisCluster()
-	if (!redis) return new Promise((resolve) => resolve())
+	if (!redis) return 0
 
 	const namespaceKey = `${namespace}:${key}`
-	return await redis.del(namespaceKey)
+	try {
+		return await redis.del(namespaceKey)
+	} catch (e) {
+		console.log("Error while deleting cache value:", e)
+		return 0
+	}
 }
 
 export type TargetFunction<Params, Return> = (args: Params) => Promise<Return>
