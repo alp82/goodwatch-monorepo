@@ -34,14 +34,17 @@ prometheus.relabel "add_instance_label" {
     replacement  = env("VPS_INSTANCE_NAME") // The value for the instance label
   }
 
-  // Optional Rule: Ensure job label is set correctly.
-  // node_exporter usually provides job='node_exporter' or similar by default.
-  // You could uncomment this if you want to force a specific job name like 'hetzner-vps/node'.
-  // rule {
-  //   action       = "replace"
-  //   target_label = "job"
-  //   replacement  = "hetzner-vps/node" // Force specific job name
-  // }
+  rule {
+      action        = "replace"
+      source_labels = ["instance"]
+      target_label  = "host"
+    }
+
+  rule {
+    action       = "replace"
+    target_label = "job"
+    replacement  = "vps_node_metrics"
+  }
 }
 
 // 3. Send relabeled metrics to Grafana Cloud Prometheus Remote Write endpoint.
