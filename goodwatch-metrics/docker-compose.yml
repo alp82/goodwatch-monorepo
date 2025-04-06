@@ -16,8 +16,8 @@ services:
     # ports:
     #   - "127.0.0.1:12345:12345" # Expose only on localhost for security
     restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
+    #security_opt:
+    #  - apparmor:unconfined
     # Run Alloy with the specified configuration file
     command: run /etc/alloy/config.alloy
     # Security Context: Important for accessing host metrics
@@ -29,4 +29,4 @@ services:
     #   - SYS_TIME # Allows changing system time (less likely needed for exporter)
     #   - NET_ADMIN # Often needed for detailed network interface statistics
     #   - SYS_PTRACE # Needed for some process metrics
-    # privileged: true # Avoid if possible, grants full host access
+    privileged: true # Avoid if possible, grants full host access
