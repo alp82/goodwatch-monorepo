@@ -2,7 +2,13 @@
 
 ```
 
+server resource monitoring
+    https://grafana.com/orgs/coinmatica/stacks/800134
+
+---
+
 discover pagination
+    https://developers.google.com/search/blog/2014/02/infinite-scroll-search-friendly
     tabs with total number of results (100+)
     load more on scroll?
     filter suggestions at the bottom?
@@ -17,13 +23,15 @@ save discover filters in db
 
 ---    
 
-DNA clusters only over same category
+redis stability
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/67ea276c-4af8-8001-b6d0-fa89c4fb4058
 
 ---    
 
 postgres stability
     WAL max size
     disk space monitoring
+    new setup? https://autobase.tech/docs/overview/requirements
 
 ---    
 
@@ -596,6 +604,11 @@ better URL and  query params management
 roadmap + todo organization
     https://flowbite.com/docs/components/timeline/
 
+---    
+
+DNA clusters only over same category?
+    good for some, bad for others
+
 ---
 
 details
@@ -1039,9 +1052,6 @@ drizzle
 
 ---
 
-server resource monitoring
-    https://grafana.com/orgs/coinmatica/stacks/800134
-
 tvtropes number to string conversion
     https://chatgpt.com/g/g-FZtypBX5c-goodwatch-ai/c/9871cbb0-ca78-46a6-8cd1-732519e36f6e
 
@@ -1061,7 +1071,7 @@ error monitoring
 launch strategy
     https://www.notion.so/ScreenSpace-2-0-Launch-Support-1831647101ea80858e7ce3ee766ba7e6
 
-launch
+launch / promo
     alternativeto
     BetaList
     devhunt
@@ -1074,6 +1084,7 @@ launch
     similarsites
     slant
     Uneed
+    https://listd.in/
     https://docs.google.com/spreadsheets/u/0/d/1XNBDtreaotmXJRD3JOVdcAgRD9rO1GZjbjbrr1fHLMM/htmlview?pli=1 
     https://growstartup.co/directory-list/
     https://www.effortlessbacklinks.com/
