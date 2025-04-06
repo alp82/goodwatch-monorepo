@@ -3,19 +3,41 @@ logging {
   format = "logfmt"
 }
 
-// Scrape the separate node_exporter container
+// 1. Scrape the separate node_exporter container
 prometheus.scrape "node" {
   targets = [
-    // Target the node-exporter service name on its default port (9100)
-    // Docker Compose DNS resolves 'node-exporter' to the container's IP.
     {"__address__" = "node-exporter:9100"},
   ]
-  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
-  // Optional: Add scrape job label if desired
-  // scrape_interval = "15s" // Default
+  // Forward raw scraped metrics to the relabel component's receiver
+  forward_to = [prometheus.relabel.add_instance_label.receiver]
 }
 
-// Send metrics to Grafana Cloud (no changes here)
+// 2. Relabel the scraped metrics before sending them
+prometheus.relabel "add_instance_label" {
+  // Forward relabeled metrics to the remote_write component's receiver
+  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+
+  // Rule to add the 'instance' label using the value from the environment variable.
+  // This rule uses __address__ (which always exists after scraping) as an anchor
+  // to ensure the rule always runs, then replaces/adds the 'instance' label.
+  rule {
+    action       = "replace"
+    source_labels = ["__address__"] // Anchor label, value doesn't matter here
+    target_label = "instance"       // The label we want to create/set
+    replacement  = env("VPS_INSTANCE_NAME") // The value for the instance label
+  }
+
+  // Optional Rule: Ensure job label is set correctly.
+  // node_exporter usually provides job='node_exporter' or similar by default.
+  // You could uncomment this if you want to force a specific job name like 'hetzner-vps/node'.
+  // rule {
+  //   action       = "replace"
+  //   target_label = "job"
+  //   replacement  = "hetzner-vps/node" // Force specific job name
+  // }
+}
+
+// 3. Send relabeled metrics to Grafana Cloud Prometheus Remote Write endpoint.
 prometheus.remote_write "grafana_cloud" {
   endpoint {
     url = env("GRAFANA_CLOUD_PROM_URL")
@@ -23,19 +45,5 @@ prometheus.remote_write "grafana_cloud" {
       username = env("GRAFANA_CLOUD_PROM_USER")
       password = env("GRAFANA_CLOUD_PROM_PASSWORD")
     }
-    write_relabel_configs = [
-      {
-        target_label = "instance",
-        replacement  = env("VPS_INSTANCE_NAME"),
-      },
-      // Make sure the job label here reflects scraping node_exporter
-      // Can use the default 'node' job label from node_exporter itself
-      // or relabel it here if needed.
-      // {
-      //   source_labels = ["job"],
-      //   target_label = "job",
-      //   replacement = "vps/node",
-      // },
-    ]
   }
 }
