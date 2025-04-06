@@ -1,12 +1,7 @@
-// config.alloy (Revised for external node_exporter)
-
 logging {
   level  = "info"
   format = "logfmt"
 }
-
-// --- REMOVED prometheus.exporter.unix "default" block ---
-// We are no longer using the embedded exporter.
 
 // Scrape the separate node_exporter container
 prometheus.scrape "node" {
@@ -30,18 +25,17 @@ prometheus.remote_write "grafana_cloud" {
     }
     write_relabel_configs = [
       {
-        target_label = "instance"
-        replacement  = env("VPS_INSTANCE_NAME")
+        target_label = "instance",
+        replacement  = env("VPS_INSTANCE_NAME"),
       },
       // Make sure the job label here reflects scraping node_exporter
       // Can use the default 'node' job label from node_exporter itself
-      // or relabel it here if needed. Let's keep it simple for now.
-      // Example: override job label if needed
+      // or relabel it here if needed.
       // {
-      //  source_labels = ["job"],
-      //  target_label = "job",
-      //  replacement = "hetzner-vps/node"
-      // }
+      //   source_labels = ["job"],
+      //   target_label = "job",
+      //   replacement = "vps/node",
+      // },
     ]
   }
 }
