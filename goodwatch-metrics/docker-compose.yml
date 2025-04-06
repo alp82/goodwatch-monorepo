@@ -1,32 +1,50 @@
 services:
+  # Grafana Alloy - now without host /proc and /sys mounts
   grafana-alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.7.5 # Keep pinned version for now
     container_name: grafana-alloy
     env_file:
       - .env
     volumes:
-      # Mount the configuration file read-only
+      # Only mount the configuration file
       - ./config.alloy:/etc/alloy/config.alloy:ro
-      # Mount necessary host directories for the node_exporter component (read-only)
-      - /proc:/proc:ro
-      - /sys:/sys:ro
-      # Mount root filesystem read-only if filesystem metrics are needed (usually covered by /proc, /sys)
-      # - /:/host/root:ro # Might be needed for specific collectors, start without it.
-    # Ports (Optional): Expose Alloy's own UI/metrics endpoint if enabled in config.alloy
-    # ports:
-    #   - "127.0.0.1:12345:12345" # Expose only on localhost for security
+      # NO /proc or /sys mounts here anymore
     restart: unless-stopped
+    # Keep this for now, although it might not be strictly needed anymore
+    # if removing the volumes fixes the init issue. Start with it included.
     security_opt:
       - apparmor:unconfined
-    # Run Alloy with the specified configuration file
+    # OR privileged: true # You only need one, use security_opt first.
     command: run /etc/alloy/config.alloy
-    # Security Context: Important for accessing host metrics
-    # The node_exporter component needs access to host resources.
-    # Start with minimal privileges. If metrics are missing (e.g., detailed network stats),
-    # you might need to add capabilities or, as a last resort, run as privileged/host PID.
-    # pid: host # If process-related metrics are missing
-    # cap_add:
-    #   - SYS_TIME # Allows changing system time (less likely needed for exporter)
-    #   - NET_ADMIN # Often needed for detailed network interface statistics
-    #   - SYS_PTRACE # Needed for some process metrics
-    privileged: true # Avoid if possible, grants full host access
+    # Alloy depends on node-exporter being available
+    depends_on:
+      - node-exporter
+
+  # Separate Node Exporter container
+  node-exporter:
+    image: prom/node-exporter:latest # Use official node_exporter image
+    container_name: node-exporter
+    restart: unless-stopped
+    # Node Exporter needs access to host resources
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro # Mount host root for filesystem metrics
+    # Needs host PID namespace to read all processes correctly
+    pid: host
+    # Command line arguments for node_exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host/root'
+      # Optional: Disable collectors you don't need, e.g.:
+      # - '--collector.textfile.directory=/var/lib/node_exporter/' # Example default
+      # - '--no-collector.arp'
+      # - '--no-collector.netstat'
+    # No ports needed externally, Alloy scrapes it via Docker network
+    # Ports are mapped internally by Docker Compose networking
+
+# Define the default bridge network if not already explicit
+# networks:
+#   default:
+#     driver: bridge

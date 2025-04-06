@@ -1,58 +1,47 @@
-// Basic logging configuration
+// config.alloy (Revised for external node_exporter)
+
 logging {
   level  = "info"
   format = "logfmt"
 }
 
-// Configure the embedded node_exporter (prometheus.exporter.unix)
-// This component collects host metrics like CPU, memory, disk, network, etc.
-prometheus.exporter.unix "default" {
-  // You can explicitly enable/disable collectors if needed, but defaults cover the basics.
-  // For example, to only get the required metrics explicitly:
-  // set_collectors = [
-  //   "cpu", "meminfo", "diskstats", "netdev", "filesystem"
-  // ]
-  // By default, it includes many useful system metrics.
-}
+// --- REMOVED prometheus.exporter.unix "default" block ---
+// We are no longer using the embedded exporter.
 
-// Scrape the metrics exposed by the embedded exporter above.
+// Scrape the separate node_exporter container
 prometheus.scrape "node" {
-  targets    = prometheus.exporter.unix.default.targets // Scrapes the exporter defined above
-  forward_to = [prometheus.remote_write.grafana_cloud.receiver] // Sends the scraped data to the remote_write block
+  targets = [
+    // Target the node-exporter service name on its default port (9100)
+    // Docker Compose DNS resolves 'node-exporter' to the container's IP.
+    {"__address__" = "node-exporter:9100"},
+  ]
+  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+  // Optional: Add scrape job label if desired
+  // scrape_interval = "15s" // Default
 }
 
-// Configure sending metrics to Grafana Cloud Prometheus Remote Write endpoint.
+// Send metrics to Grafana Cloud (no changes here)
 prometheus.remote_write "grafana_cloud" {
   endpoint {
-    url = env("GRAFANA_CLOUD_PROM_URL") // Read URL from .env file
-
+    url = env("GRAFANA_CLOUD_PROM_URL")
     basic_auth {
-      username = env("GRAFANA_CLOUD_PROM_USER")     // Read User ID from .env file
-      password = env("GRAFANA_CLOUD_PROM_PASSWORD") // Read API Key from .env file
+      username = env("GRAFANA_CLOUD_PROM_USER")
+      password = env("GRAFANA_CLOUD_PROM_PASSWORD")
     }
-
-    // Add identifying labels to all metrics sent from this instance.
-    // This is crucial for filtering and grouping in Grafana.
     write_relabel_configs = [
       {
-        // Add an 'instance' label using the unique name from the .env file
         target_label = "instance"
         replacement  = env("VPS_INSTANCE_NAME")
       },
-      {
-        // Add a 'job' label to identify the type of metrics
-        target_label = "job"
-        replacement  = "vps/node" // Descriptive job name
-      }
+      // Make sure the job label here reflects scraping node_exporter
+      // Can use the default 'node' job label from node_exporter itself
+      // or relabel it here if needed. Let's keep it simple for now.
+      // Example: override job label if needed
+      // {
+      //  source_labels = ["job"],
+      //  target_label = "job",
+      //  replacement = "hetzner-vps/node"
+      // }
     ]
   }
 }
-
-// Optional: Expose Alloy's own operational metrics and UI for debugging
-// Useful to see if Alloy itself is running correctly. Access via http://<VPS_IP>:12345
-// server {
-//   http {
-//     listen_addr = "0.0.0.0"
-//     listen_port = 12345
-//   }
-// }
