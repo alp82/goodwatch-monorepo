@@ -1,28 +1,20 @@
 services:
-  # Grafana Alloy - now without host /proc and /sys mounts
   grafana-alloy:
-    image: grafana/alloy:v1.7.5 # Keep pinned version for now
+    image: grafana/alloy:v1.7.5
     container_name: grafana-alloy
     env_file:
       - .env
     volumes:
-      # Only mount the configuration file
       - ./config.alloy:/etc/alloy/config.alloy:ro
-      # NO /proc or /sys mounts here anymore
     restart: unless-stopped
-    # Keep this for now, although it might not be strictly needed anymore
-    # if removing the volumes fixes the init issue. Start with it included.
     security_opt:
       - apparmor:unconfined
-    # OR privileged: true # You only need one, use security_opt first.
     command: run /etc/alloy/config.alloy
-    # Alloy depends on node-exporter being available
     depends_on:
       - node-exporter
 
-  # Separate Node Exporter container
   node-exporter:
-    image: prom/node-exporter:latest # Use official node_exporter image
+    image: prom/node-exporter:latest
     container_name: node-exporter
     restart: unless-stopped
     # Node Exporter needs access to host resources

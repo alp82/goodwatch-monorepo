@@ -8,8 +8,15 @@ prometheus.scrape "node" {
   targets = [
     {"__address__" = "node-exporter:9100"},
   ]
-  // Forward raw scraped metrics to the relabel component's receiver
   forward_to = [prometheus.relabel.add_instance_label.receiver]
+
+  # Add this line for better scrape monitoring:
+  extra_metrics = true
+
+  # Optional: You could uncomment and adjust these if needed later
+  scrape_interval = "10s"
+  scrape_timeout = "5s"
+  # job_name = "node_exporter" # If you prefer a different job label
 }
 
 // 2. Relabel the scraped metrics before sending them
