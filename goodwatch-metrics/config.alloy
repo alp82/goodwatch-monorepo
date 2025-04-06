@@ -10,13 +10,13 @@ prometheus.scrape "node" {
   ]
   forward_to = [prometheus.relabel.add_instance_label.receiver]
 
-  # Add this line for better scrape monitoring:
+  // Add this line for better scrape monitoring:
   extra_metrics = true
 
-  # Optional: You could uncomment and adjust these if needed later
+  // Optional: You could uncomment and adjust these if needed later
   scrape_interval = "10s"
   scrape_timeout = "5s"
-  # job_name = "node_exporter" # If you prefer a different job label
+  // job_name = "node_exporter"
 }
 
 // 2. Relabel the scraped metrics before sending them

@@ -18,6 +18,7 @@ services:
       - 'REDISCLI_AUTH=${REDIS_PASSWORD}'
       - 'REDIS_CLUSTER_REPLICAS=0'
       - 'REDIS_CLUSTER_CREATOR=yes'
+      - 'REDIS_EXTRA_FLAGS=--maxmemory 6000mb --maxmemory-policy allkeys-lfu'
     logging:
       driver: "json-file"
       options:
