@@ -13,6 +13,23 @@ export interface MovieTvGridParams {
 	initialParams: Omit<DiscoverParams, "page">
 }
 
+// Throttle function to limit how often a function can be called
+function throttle<T extends (...args: any[]) => any>(
+	func: T,
+	limit: number
+): (...args: Parameters<T>) => void {
+	let inThrottle = false
+	return function(this: any, ...args: Parameters<T>) {
+		if (!inThrottle) {
+			func.apply(this, args)
+			inThrottle = true
+			setTimeout(() => {
+				inThrottle = false
+			}, limit)
+		}
+	}
+}
+
 export default function MovieTvGrid({
 	initialData,
 	initialParams,
@@ -43,7 +60,13 @@ export default function MovieTvGrid({
 		return Number(params.get("page") || "1")
 	})
 	
-	// Calculate approximate items per page
+	// Grab current values as refs to use in throttled functions without stale closures
+	const currentPageRef = useRef(currentPage)
+	useEffect(() => {
+		currentPageRef.current = currentPage
+	}, [currentPage])
+	
+	// Calculate approximate items per page - highly memoized
 	const itemsPerPage = useMemo(() => {
 		if (!discover.data?.pages.length) return 20 // Default assumption
 		
@@ -53,77 +76,187 @@ export default function MovieTvGrid({
 		return Math.ceil(totalItems / pageCount)
 	}, [discover.data?.pages, discover.data?.pageParams.length])
 	
-	// Handle scroll events to determine current page
-	const handleScroll = useCallback(() => {
-		if (!gridRef.current || !discover.data?.pageParams.length) return
+	// Memoize available pages to prevent recalculation
+	const availablePages = useMemo(() => 
+		discover.data?.pageParams || [1], 
+	[discover.data?.pageParams])
+	
+	// Flag to track if initial scroll has been applied
+	const initialScrollApplied = useRef(false)
+	
+	// Jump to the specified page position on initial load - only run once
+	useEffect(() => {
+		// Only run once when data is first available and we have a grid to measure
+		if (
+			!discover.data || 
+			!gridRef.current || 
+			!discover.data.pageParams || 
+			initialScrollApplied.current
+		) return
+		
+		const params = new URLSearchParams(location.search)
+		const targetPage = Number(params.get("page") || "1")
+		
+		// Skip for page 1 or if target is higher than what we can fetch
+		if (targetPage <= 1 || targetPage > 100) {
+			initialScrollApplied.current = true
+			return
+		}
+			
+		// Check if we have loaded the requested page
+		const hasTargetPage = discover.data.pageParams.some(p => p === targetPage)
+		
+		if (hasTargetPage) {
+			// Calculate approximate scroll position
+			const grid = gridRef.current
+			const gridTop = grid.offsetTop
+			const columnCount = Math.max(2, Math.floor(grid.clientWidth / 200))
+			const approximateItemHeight = 250
+			
+			// Use cached page index lookup if possible
+			const targetPageIndex = discover.data.pageParams.indexOf(targetPage)
+			
+			// Only compute items for pages we actually need
+			let itemsBeforePage = 0
+			if (targetPageIndex > 0) {
+				// Calculate the cumulative items without examining every page
+				for (let i = 0; i < targetPageIndex; i++) {
+					itemsBeforePage += discover.data.pages[i]?.length || 0
+				}
+			}
+			
+			// Calculate rows and scroll position
+			const approxRows = Math.ceil(itemsBeforePage / columnCount)
+			const scrollTarget = gridTop + (approxRows * approximateItemHeight) - (window.innerHeight / 3)
+			
+			// Use single rAF to ensure DOM is ready
+			requestAnimationFrame(() => {
+				window.scrollTo({
+					top: scrollTarget,
+					behavior: "auto"
+				})
+				
+				// Mark as done
+				initialScrollApplied.current = true
+			})
+		} else if (discover.hasNextPage && !discover.isFetchingNextPage) {
+			// Only fetch once and let the data update trigger this effect again
+			discover.fetchNextPage()
+		}
+	}, [discover.data, discover.hasNextPage, discover.isFetchingNextPage, location.search])
+	
+	// Handle scroll events to determine current page with throttling
+	const handleScroll = useCallback(throttle(() => {
+		if (!gridRef.current || !availablePages.length) return
 		
 		const grid = gridRef.current
-		const scrollPosition = window.scrollY + window.innerHeight / 2 // Middle of viewport
+		const scrollPosition = window.scrollY + window.innerHeight / 2
 		const gridTop = grid.offsetTop
 		const scrollRelativeToGrid = scrollPosition - gridTop
 		
-		// Estimate which page we're on based on scroll position
+		// Fast path - if we're above the grid, always page 1
 		if (scrollRelativeToGrid <= 0) {
-			// Above the grid, set to page 1
-			setCurrentPage(1)
+			if (currentPageRef.current !== 1) {
+				setCurrentPage(1)
+			}
 			return
 		}
 		
-		// Estimate how many items are visible based on scroll position
-		// This is an approximation and might need adjustment based on your layout
-		const itemHeight = 250 // Approximate height of each item in pixels
+		// Efficient calculation with fewer operations
+		const itemHeight = 250
 		const gridWidth = grid.clientWidth
-		const columnsPerRow = Math.max(2, Math.floor(gridWidth / 200)) // Estimate columns based on grid width
+		const columnsPerRow = Math.max(2, Math.floor(gridWidth / 200))
 		const visibleItems = Math.floor(scrollRelativeToGrid / itemHeight) * columnsPerRow
 		
-		// Calculate the page based on visible items and items per page
+		// Fast integer division
 		const estimatedPage = Math.max(1, Math.ceil(visibleItems / itemsPerPage))
 		
-		// Find the closest actual page we have loaded
-		const availablePages = discover.data.pageParams
-		const closestPage = availablePages.reduce((prev, curr) => 
-			Math.abs(curr - estimatedPage) < Math.abs(prev - estimatedPage) ? curr : prev
-		, availablePages[0])
+		// Find closest page with minimal iteration
+		let closestPage = availablePages[0]
+		let minDiff = Math.abs(estimatedPage - closestPage)
 		
-		setCurrentPage(closestPage)
-	}, [discover.data?.pageParams, itemsPerPage])
-	
-	// Set up scroll event listener
-	useEffect(() => {
-		window.addEventListener("scroll", handleScroll, { passive: true })
-		
-		// Initial check
-		handleScroll()
-		
-		return () => {
-			window.removeEventListener("scroll", handleScroll)
+		for (let i = 1; i < availablePages.length; i++) {
+			const diff = Math.abs(availablePages[i] - estimatedPage)
+			if (diff < minDiff) {
+				minDiff = diff
+				closestPage = availablePages[i]
+			}
 		}
-	}, [handleScroll])
+		
+		// Only update if the page has changed
+		if (closestPage !== currentPageRef.current) {
+			setCurrentPage(closestPage)
+		}
+	}, 100), [availablePages, itemsPerPage]) // Limit dependencies to reduce recreation
 	
-	// Update URL when current page changes
+	// Set up scroll event listener with cleanup
 	useEffect(() => {
+		// Skip attaching listeners if we don't have data yet
+		if (!discover.data) return
+		
+		const throttledScroll = handleScroll
+		
+		// Use a simple cleanup function that doesn't depend on refs
+		const addScrollListener = () => {
+			window.addEventListener("scroll", throttledScroll, { passive: true })
+		}
+		
+		const removeScrollListener = () => {
+			window.removeEventListener("scroll", throttledScroll)
+		}
+		
+		// Add listener and do initial calculation
+		addScrollListener()
+		throttledScroll()
+		
+		// Simple cleanup that doesn't access potentially nullified refs
+		return removeScrollListener
+	}, [handleScroll, discover.data])
+	
+	// Debounced URL updates to prevent too many history entries
+	useEffect(() => {
+		// Skip URL updates during initial load or data fetching
+		if (!discover.data || discover.isFetching) return
+		
 		const currentSearchParams = new URLSearchParams(location.search)
 		
 		if (currentSearchParams.get("page") !== String(currentPage)) {
-			currentSearchParams.set("page", String(currentPage))
+			// Store timer ID in a variable
+			let timerId: ReturnType<typeof setTimeout> | undefined = undefined
 			
-			navigate(`${location.pathname}?${currentSearchParams.toString()}`, {
-				replace: true,
-				preventScrollReset: true,
-			})
+			// Create the timeout
+			timerId = setTimeout(() => {
+				// Only proceed if we're still mounted and have data
+				if (discover.data) {
+					const newParams = new URLSearchParams(location.search)
+					newParams.set("page", String(currentPage))
+					
+					navigate(`${location.pathname}?${newParams.toString()}`, {
+						replace: true,
+						preventScrollReset: true,
+					})
+				}
+			}, 300) // Debounce URL updates by 300ms
+			
+			// Clear timeout on cleanup
+			return () => {
+				if (timerId) clearTimeout(timerId)
+			}
 		}
-	}, [currentPage, navigate, location.pathname, location.search])
-
-	// Load more data when scrolling to the bottom
+		
+		// Empty cleanup when no timer was set
+		return () => {}
+	}, [currentPage, navigate, location.pathname, location.search, discover.data, discover.isFetching])
+	
+	// Load more data when scrolling to the bottom - keep this simple
 	useEffect(() => {
-		if (inView && discover.hasNextPage && !discover.isFetchingNextPage && !discover.isLoading) {
+		if (inView && discover.hasNextPage && !discover.isFetchingNextPage) {
 			discover.fetchNextPage()
 		}
 	}, [
 		inView,
 		discover.hasNextPage,
 		discover.isFetchingNextPage,
-		discover.isLoading,
 		discover.fetchNextPage,
 	])
 
@@ -207,8 +340,6 @@ export default function MovieTvGrid({
 			{/* SEO Link - Conditionally rendered or hidden */}
 			{nextPageUrl && (
 				<div className="h-0 overflow-hidden">
-					{" "}
-					{/* Hide visually but keep in DOM */}
 					<Link
 						to={nextPageUrl}
 						prefetch="intent"
