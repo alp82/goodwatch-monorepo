@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import { type GetDiscoverResult, useDiscover } from "~/routes/api.discover"
 import type { DiscoverParams } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
@@ -16,7 +16,12 @@ export default function MovieTvList({
 		params: discoverParams,
 		enabled: !discoverResults,
 	})
-	const results = discoverResults || discover.data || []
+	// const results = discoverResults || discover.data || []
+
+	const results = useMemo(
+		() => (discoverResults || discover.data?.pages.flat()) ?? [],
+		[discoverResults, discover.data],
+	)
 
 	return (
 		<div className="grid grid-flow-col gap-2 auto-cols-[minmax(8rem,12rem)] overflow-hidden">

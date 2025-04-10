@@ -1,7 +1,7 @@
 import { CubeIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useInView } from "framer-motion"
-import React, { useRef } from "react"
+import React, { useMemo, useRef } from "react"
 import { Spoiler } from "spoiled"
 import { useDiscover } from "~/routes/api.discover"
 import type { DNAItem } from "~/server/details.server"
@@ -45,7 +45,10 @@ export default function DNACategory({
 		},
 	})
 
-	const results = discover.data || []
+	const results = useMemo(
+		() => discover.data?.pages.flat() ?? [],
+		[discover.data],
+	)
 
 	// TODO this reorders the items by similarity score ascending (not sure why)
 	const categoryPreview = results
