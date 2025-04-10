@@ -51,25 +51,40 @@ export const loader = async ({
 	request,
 	params: routeParams,
 }: LoaderFunctionArgs) => {
-	// TODO fetch correct page on initial load
-	const page = 1
-
+	// Extract page from URL parameters
+	const url = new URL(request.url)
+	const urlParams = new URLSearchParams(url.search)
+	const requestedPage = parseInt(urlParams.get("page") || "1", 10)
+	
+	// Determine how many pages to load initially
+	const pagesToLoad = Math.min(requestedPage, 5) // Load up to 5 pages at once
+	
 	const baseParams = await buildDiscoverParams(request)
-	const discoverParamsWithPage: DiscoverParams = {
-		...baseParams,
-		type: (routeParams.type as FilterMediaType) || "all",
-		page,
-	}
 	const initialParams: Omit<DiscoverParams, "page"> = {
 		...baseParams,
-		type: discoverParamsWithPage.type,
+		type: (routeParams.type as FilterMediaType) || "all",
 	}
-
-	const firstPageResults = await getDiscoverResults(discoverParamsWithPage)
+	
+	// Load multiple pages in parallel for better performance
+	const pagePromises = []
+	for (let page = 1; page <= pagesToLoad; page++) {
+		const discoverParamsWithPage: DiscoverParams = {
+			...baseParams,
+			type: (routeParams.type as FilterMediaType) || "all",
+			page,
+		}
+		pagePromises.push(getDiscoverResults(discoverParamsWithPage))
+	}
+	
+	// Wait for all pages to load
+	const results = await Promise.all(pagePromises)
+	
+	// Format initial data with all loaded pages
 	const initialResults = {
-		pages: [firstPageResults],
-		pageParams: [page],
+		pages: results,
+		pageParams: Array.from({ length: pagesToLoad }, (_, i) => i + 1),
 	}
+	
 	return { initialResults, initialParams }
 }
 
