@@ -57,6 +57,10 @@ export const buildDiscoverParams = async (request: Request) => {
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
 		| "asc"
 		| "desc"
+	const page = Math.max(
+		1,
+		Number.parseInt(url.searchParams.get("page") || "1", 10),
+	)
 
 	return {
 		userId,
@@ -88,5 +92,6 @@ export const buildDiscoverParams = async (request: Request) => {
 		similarTitles,
 		sortBy,
 		sortDirection,
+		page,
 	}
 }

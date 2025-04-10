@@ -12,6 +12,7 @@ import {
 	filterMediaTypes,
 } from "~/server/utils/query-db"
 import { cached } from "~/utils/cache"
+import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
 import { SEPARATOR_PRIMARY, SEPARATOR_SECONDARY } from "~/utils/navigation"
 import { executeQuery } from "~/utils/postgres"
 import type { AllRatings } from "~/utils/ratings"
@@ -52,6 +53,7 @@ export interface DiscoverParams {
 	similarTitles: string
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
+	page: number
 }
 
 export interface DiscoverResult extends AllRatings {
@@ -106,6 +108,7 @@ async function _getDiscoverResults({
 	similarTitles,
 	sortBy,
 	sortDirection,
+	page,
 }: DiscoverParams): Promise<DiscoverResults> {
 	if (!filterMediaTypes.includes(type))
 		throw new Error(`Invalid type for Discover: ${type}`)
@@ -199,7 +202,8 @@ async function _getDiscoverResults({
 			column,
 			direction,
 		},
-		limit: 100,
+		page,
+		pageSize: DISCOVER_PAGE_SIZE,
 	})
 
 	const result = await executeQuery(query, params)

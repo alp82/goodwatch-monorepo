@@ -1,20 +1,21 @@
 import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node"
 
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import type { WithSimilar } from "~/routes/api.similar-media"
 import {
 	type DiscoverParams,
-	type DiscoverResult,
+	type DiscoverResults,
 	getDiscoverResults,
 } from "~/server/discover.server"
 import type { MediaType } from "~/server/utils/query-db"
 import { sortedDNACategories } from "~/ui/dna/dna_utils"
 import { buildDiscoverParams } from "~/utils/discover"
 import { SEPARATOR_SECONDARY, SEPARATOR_TERTIARY } from "~/utils/navigation"
+import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
 
 // type definitions
 
-export type GetDiscoverResult = DiscoverResult[]
+export type GetDiscoverResult = DiscoverResults
 
 // API endpoint
 
@@ -31,17 +32,46 @@ export const queryKeyDiscover = ["discover"]
 
 export interface UseDiscoverParams {
 	params?: Partial<DiscoverParams>
+	initialData?: { pages: DiscoverResults[]; pageParams: number[] }
 	enabled?: boolean
 }
 
-export const useDiscover = ({ params, enabled = true }: UseDiscoverParams) => {
-	const queryParams = new URLSearchParams(params)
+export const useDiscover = ({
+	params,
+	initialData,
+	enabled = true,
+}: UseDiscoverParams) => {
+	const initialPageParam = params?.page || 1
+	if (params?.page) {
+		delete params.page
+	}
+	const queryParams = new URLSearchParams(params as Record<string, string>)
 	const queryString = queryParams.toString()
-
-	const url = `/api/discover?${queryString}`
-	return useQuery<GetDiscoverResult>({
+	return useInfiniteQuery<GetDiscoverResult>({
 		queryKey: [...queryKeyDiscover, queryString],
-		queryFn: async () => await (await fetch(url)).json(),
+		queryFn: async ({ pageParam }) => {
+			queryParams.set("page", String(pageParam))
+			const queryString = queryParams.toString()
+			const url = `/api/discover?${queryString}`
+
+			const response = await fetch(url)
+			if (!response.ok) {
+				throw new Error(`API request failed with status ${response.status}`)
+			}
+			const data: DiscoverResults = await response.json()
+			if ("error" in data) {
+				throw new Error((data.error as string) || "Unknown API error")
+			}
+			return data
+		},
+		getNextPageParam: (lastPage, allPages, lastPageParam) => {
+			if (lastPage.length === DISCOVER_PAGE_SIZE) {
+				return lastPageParam + 1
+			}
+			return undefined // Returning undefined signals no next page
+		},
+		initialPageParam,
+		initialData,
 		enabled,
 	})
 }

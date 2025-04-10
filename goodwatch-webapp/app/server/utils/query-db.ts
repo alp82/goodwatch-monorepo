@@ -87,7 +87,8 @@ interface ConstructSelectQueryParams {
 	similarity?: Similarity
 	conditions: Conditions
 	orderBy: OrderByConfig
-	limit: number
+	page: number
+	pageSize: number
 }
 
 interface ConstructUnionQueryParams
@@ -104,7 +105,8 @@ export const constructFullQuery = ({
 	similarity,
 	conditions,
 	orderBy,
-	limit,
+	page,
+	pageSize,
 }: ConstructFullQueryParams) => {
 	// Validate orderBy.column and orderBy.direction
 	const validOrderByColumns = [
@@ -128,6 +130,8 @@ export const constructFullQuery = ({
 		throw new Error("Invalid similarity category")
 	}
 
+	const offset = (page - 1) * pageSize
+
 	// Construct the query and collect parameters
 	const { query: unionQuery, params: collectedParams } = constructUnionQuery({
 		userId,
@@ -136,7 +140,8 @@ export const constructFullQuery = ({
 		conditions,
 		similarity,
 		orderBy,
-		limit,
+		page,
+		pageSize,
 	})
 
 	// Build the final query
@@ -154,15 +159,17 @@ export const constructFullQuery = ({
 			similarity?.withSimilar?.length
 				? `similarity_score DESC, ${orderBy.column} ${orderBy.direction}`
 				: `${orderBy.column} ${orderBy.direction}`
-		}
-		LIMIT :::limit
+		} NULLS LAST
+		LIMIT :::pageSize OFFSET :::offset
 	`
 
 	// Collect additional parameters for the final query
 	const params: Record<string, unknown> = {
 		...collectedParams,
 		similarityVector: conditions.similarityVector,
-		limit: limit,
+		limit: pageSize,
+		offset,
+		subquery_limit: pageSize * page,
 	}
 
 	// Convert named parameters to positional parameters once
@@ -176,7 +183,8 @@ const constructUnionQuery = ({
 	similarity,
 	conditions,
 	orderBy,
-	limit,
+	page,
+	pageSize,
 }: ConstructUnionQueryParams) => {
 	const selectQueries = []
 	let collectedParams: Record<string, unknown> = {}
@@ -189,7 +197,8 @@ const constructUnionQuery = ({
 			similarity,
 			conditions,
 			orderBy,
-			limit,
+			page,
+			pageSize,
 		})
 		selectQueries.push(selectMovies)
 		collectedParams = { ...collectedParams, ...paramsMovies }
@@ -203,7 +212,8 @@ const constructUnionQuery = ({
 			similarity,
 			conditions,
 			orderBy,
-			limit,
+			page,
+			pageSize,
 		})
 		selectQueries.push(selectTv)
 		collectedParams = { ...collectedParams, ...paramsTv }
@@ -225,7 +235,8 @@ const constructSelectQuery = ({
 	similarity,
 	conditions,
 	orderBy,
-	limit,
+	page,
+	pageSize,
 }: ConstructSelectQueryParams) => {
 	const {
 		minYear,
@@ -331,7 +342,8 @@ const constructSelectQuery = ({
 					? `similarity_score DESC, ${orderBy.column} ${orderBy.direction}`
 					: `${orderBy.column} ${orderBy.direction}`
 			}
-			LIMIT :::limit
+		  -- TODO: performance hack but not accurate
+			LIMIT :::subquery_limit
 	`
 
 	// Collect parameters
@@ -341,7 +353,8 @@ const constructSelectQuery = ({
 		minYear,
 		maxYear,
 		withGenres: withGenres || [],
-		limit,
+		page,
+		pageSize,
 		userId,
 		...streamingParams,
 		...dnaParams,

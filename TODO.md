@@ -2,11 +2,6 @@
 
 ```
 
-server resource monitoring
-    https://grafana.com/orgs/coinmatica/stacks/800134
-
----
-
 discover pagination
     https://developers.google.com/search/blog/2014/02/infinite-scroll-search-friendly
     tabs with total number of results (100+)
@@ -20,6 +15,10 @@ additional info
         for plan to watch: show note that some are hidden due to filters
 
 save discover filters in db
+
+---    
+
+DNA alternative to huggingface
 
 ---    
 

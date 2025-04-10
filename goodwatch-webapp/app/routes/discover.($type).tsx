@@ -1,11 +1,12 @@
 import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
-import type { MetaFunction } from "@remix-run/node"
-import { useNavigate, useRouteError } from "@remix-run/react"
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
+import { useLoaderData, useNavigate, useRouteError } from "@remix-run/react"
 import React, { useState } from "react"
-import type {
-	DiscoverParams,
-	DiscoverResults,
-	DiscoverSortBy,
+import {
+	type DiscoverParams,
+	type DiscoverResults,
+	type DiscoverSortBy,
+	getDiscoverResults,
 } from "~/server/discover.server"
 import type { DiscoverFilterType } from "~/server/types/discover-types"
 import type { FilterMediaType } from "~/server/utils/query-db"
@@ -16,6 +17,7 @@ import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
+import { buildDiscoverParams } from "~/utils/discover"
 
 export function headers() {
 	return {
@@ -40,6 +42,37 @@ export const meta: MetaFunction = () => {
 	return buildMeta({ pageMeta, items })
 }
 
+interface LoaderData {
+	initialResults: { pages: DiscoverResults[]; pageParams: [number] }
+	initialParams: Omit<DiscoverParams, "page">
+}
+
+export const loader = async ({
+	request,
+	params: routeParams,
+}: LoaderFunctionArgs) => {
+	// TODO fetch correct page on initial load
+	const page = 1
+
+	const baseParams = await buildDiscoverParams(request)
+	const discoverParamsWithPage: DiscoverParams = {
+		...baseParams,
+		type: (routeParams.type as FilterMediaType) || "all",
+		page,
+	}
+	const initialParams: Omit<DiscoverParams, "page"> = {
+		...baseParams,
+		type: discoverParamsWithPage.type,
+	}
+
+	const firstPageResults = await getDiscoverResults(discoverParamsWithPage)
+	const initialResults = {
+		pages: [firstPageResults],
+		pageParams: [page],
+	}
+	return { initialResults, initialParams }
+}
+
 export function ErrorBoundary() {
 	const error = useRouteError()
 	const navigate = useNavigate()
@@ -61,12 +94,8 @@ export function ErrorBoundary() {
 	)
 }
 
-export type LoaderData = {
-	params: DiscoverParams
-	results: DiscoverResults
-}
-
 export default function Discover() {
+	const { initialResults, initialParams } = useLoaderData<LoaderData>()
 	const { currentParams, updateQueryParams } = useNav<DiscoverParams>()
 
 	const sortByTabs: Tab<DiscoverSortBy>[] = [
@@ -92,6 +121,7 @@ export default function Discover() {
 
 	const handleTabSelect = (tab: Tab<FilterMediaType>) => {
 		updateQueryParams({
+			page: 1,
 			type: tab.key,
 		})
 	}
@@ -148,7 +178,11 @@ export default function Discover() {
 					{/*TODO prefetch tab links*/}
 					<Tabs tabs={sortByTabs} pills={true} onSelect={handleSortBySelect} />
 				</div>
-				<MovieTvGrid discoverParams={currentParams} />
+				<MovieTvGrid
+					initialData={initialResults}
+					initialParams={initialParams}
+					discoverParams={currentParams}
+				/>
 			</div>
 		</>
 	)
