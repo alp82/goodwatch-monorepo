@@ -114,6 +114,8 @@ export default function MoviesCategoryPage() {
 	const { type, category, page, path, pageData, discoverParams, results } =
 		useLoaderData<LoaderData>()
 
+	const discoverType = type === "movies" ? "movies" : "tv"
+
 	const { currentParams, updateQueryParams } =
 		useNav<
 			Pick<
@@ -172,7 +174,7 @@ export default function MoviesCategoryPage() {
 								/>
 							</div>
 							<Link
-								to={`/discover?${jsonToUrlString(discoverParams)}`}
+								to={`/discover/${discoverType}?${jsonToUrlString(discoverParams)}`}
 								prefetch="viewport"
 								className="px-2 py-1 rounded border-2 border-gray-700 bg-indigo-950 hover:bg-indigo-900"
 							>
@@ -181,7 +183,16 @@ export default function MoviesCategoryPage() {
 						</div>
 					</div>
 				</div>
-				<MovieTvGrid discoverResults={results} />
+				<MovieTvGrid
+					initialData={{
+						pages: [results],
+						pageParams: [1],
+					}}
+					initialParams={{
+						...discoverParams,
+						page: undefined,
+					}}
+				/>
 			</div>
 			<div>
 				<FAQ faq={pageData.faq} />
