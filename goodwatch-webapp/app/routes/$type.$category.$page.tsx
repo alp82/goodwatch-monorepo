@@ -95,7 +95,7 @@ export const loader: LoaderFunction = async ({
 
 	const discoverParams = Object.fromEntries(
 		Object.entries(discoverParamsFull).filter(
-			([_, v]) => v != null && v !== "",
+			([key, v]) => key !== "userId" && v != null && v !== "",
 		),
 	)
 
