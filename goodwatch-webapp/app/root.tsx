@@ -9,6 +9,7 @@ import {
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
+	useLocation,
 	useRouteError,
 } from "@remix-run/react"
 import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix"
@@ -215,6 +216,29 @@ export function ErrorBoundary() {
 
 function Root() {
 	const { locale, env } = useLoaderData<LoaderData>()
+	const location = useLocation()
+
+	// Add check for custom scroll handling
+	const [shouldUseScrollRestoration, setShouldUseScrollRestoration] = React.useState(true)
+	
+	// Effect to check if we should use scroll restoration
+	React.useEffect(() => {
+		if (typeof document !== 'undefined') {
+			const checkScrollAttribute = () => {
+				const hasCustomScroll = document.documentElement.hasAttribute('data-custom-scroll')
+				setShouldUseScrollRestoration(!hasCustomScroll)
+			}
+			
+			// Check immediately
+			checkScrollAttribute()
+			
+			// Also check when attributes change (in case the attribute is added after initial render)
+			const observer = new MutationObserver(checkScrollAttribute)
+			observer.observe(document.documentElement, { attributes: true })
+			
+			return () => observer.disconnect()
+		}
+	}, [])
 
 	const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
 
@@ -253,7 +277,7 @@ function Root() {
 								<CookieConsent />
 								<ToastContainer />
 								<PostHogInit />
-								<ScrollRestoration />
+								{shouldUseScrollRestoration && <ScrollRestoration />}
 								<Scripts />
 							</HydrationBoundary>
 						</AuthContext.Provider>
