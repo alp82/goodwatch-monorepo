@@ -1,6 +1,11 @@
 import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
-import { useLoaderData, useNavigate, useRouteError } from "@remix-run/react"
+import {
+	useLoaderData,
+	useLocation,
+	useNavigate,
+	useRouteError,
+} from "@remix-run/react"
 import React, { useState } from "react"
 import {
 	type DiscoverParams,
@@ -45,6 +50,7 @@ export const meta: MetaFunction = () => {
 interface LoaderData {
 	initialResults: { pages: DiscoverResults[]; pageParams: [number] }
 	initialParams: Omit<DiscoverParams, "page">
+	mediaType: FilterMediaType
 }
 
 export const loader = async ({
@@ -54,38 +60,45 @@ export const loader = async ({
 	// Extract page from URL parameters
 	const url = new URL(request.url)
 	const urlParams = new URLSearchParams(url.search)
-	const requestedPage = parseInt(urlParams.get("page") || "1", 10)
-	
+	const requestedPage = Number.parseInt(urlParams.get("page") || "1", 10)
+
 	// Determine how many pages to load initially
 	const pagesToLoad = Math.min(requestedPage, 5) // Load up to 5 pages at once
-	
+
 	const baseParams = await buildDiscoverParams(request)
+
+	// Ensure the type parameter is one of the valid values
+	const routeType = routeParams.type as string
+	const mediaType = ["all", "movies", "tv"].includes(routeType)
+		? routeType
+		: "all"
+
 	const initialParams: Omit<DiscoverParams, "page"> = {
 		...baseParams,
-		type: (routeParams.type as FilterMediaType) || "all",
+		type: mediaType as FilterMediaType,
 	}
-	
+
 	// Load multiple pages in parallel for better performance
 	const pagePromises = []
 	for (let page = 1; page <= pagesToLoad; page++) {
 		const discoverParamsWithPage: DiscoverParams = {
 			...baseParams,
-			type: (routeParams.type as FilterMediaType) || "all",
+			type: mediaType as FilterMediaType,
 			page,
 		}
 		pagePromises.push(getDiscoverResults(discoverParamsWithPage))
 	}
-	
+
 	// Wait for all pages to load
 	const results = await Promise.all(pagePromises)
-	
+
 	// Format initial data with all loaded pages
 	const initialResults = {
 		pages: results,
 		pageParams: Array.from({ length: pagesToLoad }, (_, i) => i + 1),
 	}
-	
-	return { initialResults, initialParams }
+
+	return { initialResults, initialParams, mediaType }
 }
 
 export function ErrorBoundary() {
@@ -110,8 +123,11 @@ export function ErrorBoundary() {
 }
 
 export default function Discover() {
-	const { initialResults, initialParams } = useLoaderData<LoaderData>()
+	const { initialResults, initialParams, mediaType } =
+		useLoaderData<LoaderData>()
 	const { currentParams, updateQueryParams } = useNav<DiscoverParams>()
+	const navigate = useNavigate()
+	const location = useLocation()
 
 	const sortByTabs: Tab<DiscoverSortBy>[] = [
 		{
@@ -135,10 +151,16 @@ export default function Discover() {
 	]
 
 	const handleTabSelect = (tab: Tab<FilterMediaType>) => {
-		updateQueryParams({
-			page: 1,
-			type: tab.key,
-		})
+		// Navigate to the correct route path instead of just updating query params
+		const newParams = new URLSearchParams(location.search)
+		// Remove the type from query params as it will be in the path
+		newParams.delete("type")
+		// Reset to page 1 when changing media type
+		newParams.set("page", "1")
+
+		const queryString = newParams.toString() ? `?${newParams.toString()}` : ""
+		// Use the actual URL path for media type selection
+		navigate(`/discover/${tab.key !== "all" ? tab.key : ""}${queryString}`)
 	}
 
 	const handleSortBySelect = (tab: Tab<DiscoverSortBy>) => {
@@ -175,10 +197,7 @@ export default function Discover() {
 			</div>
 			<div className="w-full bg-gray-950/35 pb-4">
 				<div className="max-w-7xl mx-auto px-4 flex flex-col gap-4">
-					<MediaTypeTabs
-						selected={currentParams.type || "all"}
-						onSelect={handleTabSelect}
-					/>
+					<MediaTypeTabs selected={mediaType} onSelect={handleTabSelect} />
 					{/*<PrefetchPageLinks*/}
 					{/*	key="discover-type"*/}
 					{/*	page={constructUrl({*/}

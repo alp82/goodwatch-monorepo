@@ -19,7 +19,7 @@ import { duplicateProviders } from "~/utils/streaming-links"
 export const mediaTypes = ["movie", "tv"] as const
 export type MediaType = (typeof mediaTypes)[number]
 
-export const filterMediaTypes = ["all", "movies", "tv"] as const
+export const filterMediaTypes = ["all", "movies", "movie", "tv"] as const
 export type FilterMediaType = (typeof filterMediaTypes)[number]
 
 type StreamType = "flatrate" | "free" | "ads" | "buy" | "rent"
@@ -189,7 +189,7 @@ const constructUnionQuery = ({
 	const selectQueries = []
 	let collectedParams: Record<string, unknown> = {}
 
-	if (["all", "movies"].includes(filterMediaType)) {
+	if (["all", "movies", "movie"].includes(filterMediaType)) {
 		const { query: selectMovies, params: paramsMovies } = constructSelectQuery({
 			userId,
 			type: "movie",
