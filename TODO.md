@@ -2,35 +2,9 @@
 
 ```
 
-discover pagination
-    https://developers.google.com/search/blog/2014/02/infinite-scroll-search-friendly
-    tabs with total number of results (100+)
-    load more on scroll?
-    filter suggestions at the bottom?
-
-additional info
-    preview count for selections in edited sections (100+)
-    bottom note after results
-        streaming: Some of the content is hidden based on your location and streaming preferences
-        for plan to watch: show note that some are hidden due to filters
-
-save discover filters in db
-
 ---    
 
-DNA alternative to huggingface
-
----    
-
-redis stability
-    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/67ea276c-4af8-8001-b6d0-fa89c4fb4058
-
----    
-
-postgres stability
-    WAL max size
-    disk space monitoring
-    new setup? https://autobase.tech/docs/overview/requirements
+details page redesign
 
 ---    
 
@@ -231,6 +205,22 @@ tropes
 
 ---
 
+DNA alternative to huggingface
+
+---    
+
+redis stability
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/67ea276c-4af8-8001-b6d0-fa89c4fb4058
+
+---    
+
+postgres stability
+    WAL max size
+    disk space monitoring
+    new setup? https://autobase.tech/docs/overview/requirements
+
+---
+
 Sequels wrong
     http://localhost:3003/movie/550-fight-club
 
@@ -399,6 +389,17 @@ goodwatch tiktok channel
     https://clideo.com/de/account/projects
 
 ---
+
+discover
+    save discover filters in db
+    filter suggestions at the bottom?
+    preview count for selections in edited sections (100+)
+    bottom note after results
+        streaming: Some of the content is hidden based on your location and streaming preferences
+        for plan to watch: show note that some are hidden due to filters
+
+
+---    
 
 tv: watched vs currently watching (finished show)
 

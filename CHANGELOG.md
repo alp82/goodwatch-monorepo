@@ -2,11 +2,14 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.6.5] 2025-03-26
+## [0.6.5] 2025-04-11
 
 ### Added
+* Show more than 100 results by using infinite scroll. Works both for the Explore and Discover screens
+* Added resource monitoring for all servers via Grafana
 
 ### Changed
+* Redis Cache is optional and won't throw an error if unavailable
 
 ### Fixed
 
