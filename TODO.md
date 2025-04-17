@@ -1,10 +1,53 @@
 # TODO's
 
 ```
-
 ---    
 
 details page redesign
+    DNA different sections
+    top DNA categories, hide the rest
+    swiper for discover preview
+    
+    show tropes
+    show images
+
+    box office (e.g. Google)
+    awards (grab from API)
+    
+    share button sticky
+    guess country
+    age restriction by country
+    streaming section favors user selected providers
+    web links section
+    sequels section
+    
+    show title in current language
+    images section
+    images and videos as gallery
+    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&t=DM0lDYiEkBYUsMZY-0
+
+    empty sections:
+        http://localhost:3003/movie/46388-a-ghost-of-a-chantz
+        http://localhost:3003/movie/1261489-betrayal
+        http://localhost:3003/movie/974995-identity 
+    mobile: user action buttons below poster directly
+    https://imdb.shyakadavis.me/title#overview
+
+    fragment for scroll position (auto update)
+    
+    about section
+        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+
+movie card
+    overlay: show movie or tv icon 
+
+remove obsolete code
+    updateUrlParams.tsx
+
+---    
+
+DNA redesign
+    https://gemini.google.com/app/38fd8b42c3385597
 
 ---    
 
@@ -200,7 +243,6 @@ ai
 ---
 
 tropes
-    show in details
     add discover filter
 
 ---
@@ -211,6 +253,11 @@ DNA alternative to huggingface
 
 redis stability
     https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/67ea276c-4af8-8001-b6d0-fa89c4fb4058
+
+---    
+
+mongo stability
+    https://gemini.google.com/app/257a0ae729c06ae1
 
 ---    
 
@@ -403,16 +450,16 @@ discover
 
 tv: watched vs currently watching (finished show)
 
+---    
+
 combined collection score
     franchise and collection pages
 
+---    
+
 streaming: show flatrate countries in rating block and streaming tab
 
-details:
-    box office (e.g. Google)
-    awards (grab from API)
-
----
+---    
 
 text effects
      https://motion-primitives.com/docs
@@ -498,16 +545,6 @@ delete explore page and BE
 invite link
     badge
 
----
-
-details
-    DNA different sections
-    top DNA categories, hide the rest
-    swiper for discover preview
-
-movie card
-    overlay: show movie or tv icon 
-    
 ---
 
 save main searches
@@ -611,36 +648,6 @@ DNA clusters only over same category?
 
 ---
 
-details
-    share button sticky
-    guess country
-    age restriction by country
-    streaming section favors user selected providers
-    web links section
-    sequels section
-    
-    show title in current language
-    images section
-    images and videos as gallery
-    https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&t=DM0lDYiEkBYUsMZY-0
-
-    empty sections:
-        http://localhost:3003/movie/46388-a-ghost-of-a-chantz
-        http://localhost:3003/movie/1261489-betrayal
-        http://localhost:3003/movie/974995-identity 
-    mobile: user action buttons below poster directly
-    https://imdb.shyakadavis.me/title#overview
-
-    fragment for scroll position (auto update)
-    
-    about section
-        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
-
-remove obsolete code
-    updateUrlParams.tsx
-
----
-    
 clips
     https://ensembledata.com/pricing
     tiktok
