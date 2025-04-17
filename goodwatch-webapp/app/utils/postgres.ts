@@ -17,12 +17,14 @@ export async function executeQuery<T extends {}>(
 	try {
 		const res = await pool.query<T>(query, params)
 		const duration = Date.now() - start
-		console.log("executed query", {
-			query,
-			params,
-			duration,
-			rowCount: res.rowCount,
-		})
+		if (duration > 1000) {
+			console.log("executed query", {
+				query,
+				params,
+				duration,
+				rowCount: res.rowCount,
+			})
+		}
 		return res
 	} catch (err) {
 		console.error("error executing query", { query, params, error: err })

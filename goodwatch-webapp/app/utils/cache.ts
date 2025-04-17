@@ -242,7 +242,7 @@ export const cached = async <
 				if (sizeKB >= 300) {
 					console.warn("cached (big)", { cacheName, size, params })
 				} else {
-					console.info("cached", { cacheName, params })
+					// console.info("cached", { cacheName, params })
 				}
 				return data as Return
 			}
