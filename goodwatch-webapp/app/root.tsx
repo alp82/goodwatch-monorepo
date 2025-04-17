@@ -219,23 +219,25 @@ function Root() {
 	const location = useLocation()
 
 	// Add check for custom scroll handling
-	const [shouldUseScrollRestoration, setShouldUseScrollRestoration] = React.useState(true)
-	
+	const [shouldUseScrollRestoration, setShouldUseScrollRestoration] =
+		React.useState(true)
+
 	// Effect to check if we should use scroll restoration
 	React.useEffect(() => {
-		if (typeof document !== 'undefined') {
+		if (typeof document !== "undefined") {
 			const checkScrollAttribute = () => {
-				const hasCustomScroll = document.documentElement.hasAttribute('data-custom-scroll')
+				const hasCustomScroll =
+					document.documentElement.hasAttribute("data-custom-scroll")
 				setShouldUseScrollRestoration(!hasCustomScroll)
 			}
-			
+
 			// Check immediately
 			checkScrollAttribute()
-			
+
 			// Also check when attributes change (in case the attribute is added after initial render)
 			const observer = new MutationObserver(checkScrollAttribute)
 			observer.observe(document.documentElement, { attributes: true })
-			
+
 			return () => observer.disconnect()
 		}
 	}, [])
@@ -263,15 +265,22 @@ function Root() {
 			// style={{ scrollbarGutter: "stable" }}
 		>
 			<head>
-				<script async src="https://www.googletagmanager.com/gtag/js?id=G-5NK4EX51SM" />
-				<script>
-					window.dataLayer = window.dataLayer || [];
-					function gtag(){dataLayer.push(arguments);}
-					gtag('js', new Date());
-					gtag('config', 'G-5NK4EX51SM');
-				</script>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<script
+					async
+					src="https://www.googletagmanager.com/gtag/js?id=G-5NK4EX51SM"
+				/>
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `
+window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-5NK4EX51SM');
+				`,
+					}}
+				/>
 				<Meta />
 				<Links />
 			</head>
