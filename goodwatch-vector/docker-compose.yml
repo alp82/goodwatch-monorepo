@@ -1,4 +1,19 @@
 services:
+  embeddings:
+    build:
+      context: ./embeddings
+      dockerfile: Dockerfile
+    ports:
+      - "7997:80"
+    restart: unless-stopped
+    environment:
+      - HUGGING_FACE_HUB_TOKEN
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
 #  embeddings:
 #    image: michaelf34/infinity:latest
 #    restart: unless-stopped
@@ -11,18 +26,5 @@ services:
 #      --model-id BAAI/bge-m3
 #      --port 7997
 
-  embeddings:
-    build:
-      context: ./embeddings
-      dockerfile: Dockerfile
-    ports:
-      - "7997:80"
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "10"
-
-volumes:
-  embeddings_cache:
+#volumes:
+#  embeddings_cache:
