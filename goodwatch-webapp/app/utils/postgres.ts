@@ -17,7 +17,7 @@ export async function executeQuery<T extends {}>(
 	try {
 		const res = await pool.query<T>(query, params)
 		const duration = Date.now() - start
-		if (duration > 1000) {
+		if (duration > 5000) {
 			console.log("executed query", {
 				query,
 				params,

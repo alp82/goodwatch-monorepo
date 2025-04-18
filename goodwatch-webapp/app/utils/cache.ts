@@ -239,7 +239,7 @@ export const cached = async <
 				)
 				const size =
 					sizeKB < 1000 ? `${sizeKB} KB` : `${(sizeKB / 1024).toFixed(2)} MB`
-				if (sizeKB >= 300) {
+				if (sizeKB >= 500) {
 					console.warn("cached (big)", { cacheName, size, params })
 				} else {
 					// console.info("cached", { cacheName, params })
