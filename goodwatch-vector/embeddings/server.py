@@ -22,13 +22,455 @@ app = FastAPI(title="Embeddings and Generation Server (llama-cpp-python)")
 # --- Constants ---
 MAX_TEXT_LENGTH = 8192     # Maximum *characters* per text input for embeddings
 MAX_BATCH_SIZE = 1000      # Maximum number of texts per embedding request
-MAX_OUTPUT_TOKENS = 512    # Default maximum new tokens for LLM generation
+MAX_OUTPUT_TOKENS = 8192   # Default maximum new tokens for LLM generation
 
 # --- Model Configuration (Read from Environment - Set by docker-compose) ---
 EMBEDDING_MODEL_NAME = os.environ.get("EMBEDDING_MODEL_NAME", "czesty/ea-setfit-v1-classifier")
 LLM_MODEL_REPO_ID = os.environ.get("LLM_MODEL_REPO_ID", "google/gemma-3-1b-it-qat-q4_0-gguf")
 LLM_MODEL_FILENAME = os.environ.get("LLM_MODEL_FILENAME", "gemma-3-1b-it-q4_0.gguf")
 HUGGING_FACE_HUB_TOKEN = os.environ.get("HUGGING_FACE_HUB_TOKEN") # For download
+
+DEFAULT_SYSTEM_PROMPT = """
+**Objective:**
+
+
+
+Your task is to generate a precise and semantically distinct set of analytical attributes for the provided movie or TV show. You will receive minimal input (title, year, summary) and must produce a JSON object containing only the specified fields, adhering strictly to the definitions, guidelines, and the **Radical Uniqueness Principle** outlined below. The goal is to create a detailed profile for understanding content characteristics, ensuring each attribute provides unique information.
+
+
+
+**Input Format:**
+
+
+
+You will receive input in the following JSON format:
+
+
+
+```json
+
+{
+
+  "title": "Movie or TV Show Title",
+
+  "year": ####, // Year of release
+
+  "tmdb_id": ######, // Optional TMDB ID
+
+  "summary": "A brief plot summary..." // Core context for your analysis
+
+}
+
+```
+
+
+
+Output Format:
+
+You MUST produce a single, valid JSON object containing ONLY the following structure and fields. Do not include any fields not listed here. Ensure all string values are properly escaped within the JSON.
+
+
+
+{
+
+  "classification": {
+
+    "sub_genres_styles": [], // List of strings (Target: 2-5)
+
+    "source_adaptation": null // String or null
+
+  },
+
+  "setting": {
+
+    "time_periods": [], // List of strings (Target: 1-4)
+
+    "locations": [] // List of strings (Target: 2-5)
+
+  },
+
+  "narrative_dna": {
+
+    "plot_keywords_tropes": [], // List of strings (Target: 5-10)
+
+    "themes": [], // List of strings (Target: 3-5)
+
+    "narrative_structures": [], // List of strings (Target: 1-3)
+
+    "character_archetypes": [] // List of strings (Target: 1-4)
+
+  },
+
+  "dimensional_scores": { // Integer scores from 1 to 10 for ALL 25 attributes
+
+    "pacing": 0,
+
+    "plot_complexity": 0,
+
+    "cognitive_engagement": 0,
+
+    "conventionality": 0,
+
+    "narrative_predictability": 0,
+
+    "narrative_resolution": 0,
+
+    "character_depth": 0,
+
+    "relationship_centrality": 0,
+
+    "tone_seriousness": 0,
+
+    "tone_outlook": 0,
+
+    "emotional_intensity": 0,
+
+    "humor_level": 0,
+
+    "visual_stylization": 0,
+
+    "auditory_emphasis": 0,
+
+    "dialogue_density": 0,
+
+    "realism_level": 0,
+
+    "production_scale": 0,
+
+    "social_political_commentary_prominence": 0,
+
+    "thrill_suspense_level": 0,
+
+    "scare_factor": 0,
+
+    "disturbing_content_level": 0,
+
+    "violence_gore_level": 0,
+
+    "sexuality_nudity_level": 0,
+
+    "profanity_level": 0,
+
+    "target_audience_age_focus": 0
+
+  },
+
+  "aesthetic_sensory": {
+
+    "dominant_moods": [], // List of strings (Target: 2-4)
+
+    "humor_styles": [], // List of strings (Target: 1-5, if applicable)
+
+    "visual_styles_techniques": [], // List of strings (Target: 3-7)
+
+    "auditory_styles_elements": [], // List of strings (Target: 2-5)
+
+    "dialogue_styles": [], // List of strings (Target: 1-3)
+
+    "costume_set_design_styles": [] // List of strings (Target: 2-5)
+
+  },
+
+  "content_advisories": {
+
+    "specific_warnings": [] // List of strings (As needed)
+
+  },
+
+  "impact_context": {
+
+    "cultural_impact_markers": [], // List of strings (As needed)
+
+    "relevant_movements_styles": [] // List of strings (As needed)
+
+  }
+
+}
+
+```
+
+
+
+Okay, we've done the groundwork, refined the strategy, and defined the structure and principles. Let's assemble the prompt.
+
+This prompt is designed to instruct an LLM to take minimal input about a movie/TV show and generate a structured JSON containing detailed, distinct analytical attributes, adhering to the strict definitions and uniqueness principle we discussed.
+
+Code snippet
+
+
+
+**Objective:**
+
+
+
+Your task is to generate a precise and semantically distinct set of analytical attributes for the provided movie or TV show. You will receive minimal input (title, year, summary) and must produce a JSON object containing only the specified fields, adhering strictly to the definitions, guidelines, and the **Radical Uniqueness Principle** outlined below. The goal is to create a detailed profile for understanding content characteristics, ensuring each attribute provides unique information.
+
+
+
+**Input Format:**
+
+
+
+You will receive input in the following JSON format:
+
+
+
+```json
+
+{
+
+  "title": "Movie or TV Show Title",
+
+  "year": ####, // Year of release
+
+  "tmdb_id": ######, // Optional TMDB ID
+
+  "summary": "A brief plot summary..." // Core context for your analysis
+
+}
+
+Output Format:
+
+You MUST produce a single, valid JSON object containing ONLY the following structure and fields. Do not include any fields not listed here. Ensure all string values are properly escaped within the JSON.
+
+JSON
+
+
+
+{
+
+  "classification": {
+
+    "sub_genres_styles": [], // List of strings (Target: 2-5)
+
+    "source_adaptation": null // String or null
+
+  },
+
+  "setting": {
+
+    "time_periods": [], // List of strings (Target: 1-4)
+
+    "locations": [] // List of strings (Target: 2-5)
+
+  },
+
+  "narrative_dna": {
+
+    "plot_keywords_tropes": [], // List of strings (Target: 5-10)
+
+    "themes": [], // List of strings (Target: 3-5)
+
+    "narrative_structures": [], // List of strings (Target: 1-3)
+
+    "character_archetypes": [] // List of strings (Target: 1-4)
+
+  },
+
+  "dimensional_scores": { // Integer scores from 1 to 10 for ALL 25 attributes
+
+    "pacing": 0,
+
+    "plot_complexity": 0,
+
+    "cognitive_engagement": 0,
+
+    "conventionality": 0,
+
+    "narrative_predictability": 0,
+
+    "narrative_resolution": 0,
+
+    "character_depth": 0,
+
+    "relationship_centrality": 0,
+
+    "tone_seriousness": 0,
+
+    "tone_outlook": 0,
+
+    "emotional_intensity": 0,
+
+    "humor_level": 0,
+
+    "visual_stylization": 0,
+
+    "auditory_emphasis": 0,
+
+    "dialogue_density": 0,
+
+    "realism_level": 0,
+
+    "production_scale": 0,
+
+    "social_political_commentary_prominence": 0,
+
+    "thrill_suspense_level": 0,
+
+    "scare_factor": 0,
+
+    "disturbing_content_level": 0,
+
+    "violence_gore_level": 0,
+
+    "sexuality_nudity_level": 0,
+
+    "profanity_level": 0,
+
+    "target_audience_age_focus": 0
+
+  },
+
+  "aesthetic_sensory": {
+
+    "dominant_moods": [], // List of strings (Target: 2-4)
+
+    "humor_styles": [], // List of strings (Target: 1-5, if applicable)
+
+    "visual_styles_techniques": [], // List of strings (Target: 3-7)
+
+    "auditory_styles_elements": [], // List of strings (Target: 2-5)
+
+    "dialogue_styles": [], // List of strings (Target: 1-3)
+
+    "costume_set_design_styles": [] // List of strings (Target: 2-5)
+
+  },
+
+  "content_advisories": {
+
+    "specific_warnings": [] // List of strings (As needed)
+
+  },
+
+  "impact_context": {
+
+    "cultural_impact_markers": [], // List of strings (As needed)
+
+    "relevant_movements_styles": [] // List of strings (As needed)
+
+  }
+
+}
+
+Core Principles & Instructions:
+
+
+
+Analyze Thoroughly: Use the provided summary and your internal knowledge base (as of April 2025) to analyze the work comprehensively. For TV series, consider the show overall, leaning towards its most representative state.
+
+Generate ONLY Required Fields: Populate ONLY the fields specified in the Output Format above.
+
+Radical Uniqueness Principle: THIS IS CRITICAL. Every attribute (tag or score) must provide unique semantic information not significantly overlapped by any other attribute. If a concept could fit multiple categories, assign it ONLY to the single most appropriate category based on the strict definitions below. Avoid redundant terms across different lists. Prioritize specificity.
+
+Dimensional Scores (1-10): Assign an integer score from 1 to 10 for ALL 25 attributes listed under dimensional_scores. Adhere strictly to the definitions provided below. Score relatively across the entire spectrum of film and television, not just within the work's genre. 1 = absolute minimum observed; 10 = absolute maximum observed; 5/6 = typical/average. Base scores on observable characteristics.
+
+Qualitative Tag Lists: For fields expecting lists of strings (e.g., themes, dominant_moods):Adhere to the target number of tags specified for each list. Select the most salient and distinct items.
+
+Prioritize specificity over broadness. (e.g., Use "Quest for Lost Artifact" not "Adventure"; use "Critique of Capitalism" not "Society").
+
+Ensure tags fit the strict definition of the category. (e.g., Do not put plot points in themes; do not put genre labels in dominant_moods).
+
+Use concise, descriptive nouns or short phrases, typically capitalized unless common adjectives (like for moods).
+
+Detailed Field Definitions & Guidelines:
+
+(Provide the strict definitions and guidelines for EACH field the LLM needs to generate. Below are examples - expand these with the full definitions from Prompt 3 for scores and refined definitions for tags)
+
+
+
+classification.sub_genres_styles:Role: Classification based on established cinematic conventions (form, structure, lineage, iconography).
+
+Content: Labels like Film Noir, Slasher, Screwball Comedy, Biographical Drama, Absurdist Comedy, Space Opera, Mockumentary. Target 2-5.
+
+Uniqueness: Describes the type of film according to genre theory. Distinct from plot elements or mood.
+
+classification.source_adaptation:Role: Identify the origin of the material.
+
+Content: Original Screenplay, Literary Adaptation, Comic Book Adaptation, Video Game Adaptation, Based on True Events, Remake, etc. Use null if unknown or not applicable.
+
+setting.time_periods:Role: Describe the primary temporal setting(s).
+
+Content: Specific eras, periods, or concepts. Present Day, 1980s, Medieval Era, Distant Future, Near Future, Alternate History, Victorian Era. Target 1-4.
+
+setting.locations:Role: Describe the primary environmental or geographical setting(s).
+
+Content: Types of environments or specific locations. Urban Cityscape, Rural Countryside, Space Station, Fantasy Kingdom, Small Town, Suburban Neighborhood, Jungle, Desert Landscape. Target 2-5.
+
+narrative_dna.plot_keywords_tropes:Role: Identify concrete, tangible narrative components, events, objects, key character functions, or world-building elements.
+
+Content: Specific nouns/short phrases. Time Loop, MacGuffin Quest, Sentient AI, Orphan Protagonist, Alien Invasion, Body Swap, Heist, Revenge Plot, Monster Attack, Hidden World. Target 5-10.
+
+Uniqueness: Must be concrete plot/world elements. NO abstract themes (e.g., no 'Love'), moods (e.g., no 'Suspense'), or genre labels. Be specific (e.g., 'Zombie Outbreak' not 'Conflict').
+
+narrative_dna.themes:Role: Identify the central abstract ideas, concepts, questions, or messages explored.
+
+Content: Conceptual nouns/phrases. Redemption, Nature vs Nurture, Cost of Ambition, Loss of Innocence, Social Class Commentary, Identity Crisis, Forbidden Love. Target 3-5 core themes.
+
+Uniqueness: Must be abstract concepts. NO plot points, character types, or feelings.
+
+narrative_dna.narrative_structures:Role: Identify the framework of the storytelling.
+
+Content: Linear Narrative, Nonlinear Narrative, Multiple Perspectives, Framed Story, Episodic Structure, Hero's Journey, Real-Time Narrative, Found Footage. Target 1-3.
+
+narrative_dna.character_archetypes:Role: Identify core character models or roles (beyond specific plot functions).
+
+Content: Anti-Hero, Mentor, Femme Fatale, Underdog, Trickster, Reluctant Hero, Sidekick, Wise Old Man/Woman. Target 1-4. Avoid generic terms like 'Protagonist'.
+
+dimensional_scores:(Insert the FULL definitions for all 25 scores from Prompt 3 here, including the 1-10 scale description)
+
+Example (pacing): pacing: 1 (Extremely Slow/Meditative) <--> 5/6 (Moderate Momentum) <--> 10 (Frantic/Relentless). Focus: Speed of plot advancement and scene transitions.
+
+Example (character_depth): character_depth: 1 (Archetypal/Static/Plot Devices) <--> 5/6 (Developed Characters, Some Growth) <--> 10 (Nuanced/Multi-layered/Significant Evolution). Focus: Depth, complexity, and development of primary characters.
+
+(Continue for all 25 scores)
+
+aesthetic_sensory.dominant_moods:Role: Describe the prevailing emotional atmosphere or feeling evoked.
+
+Content: Evocative adjectives. Suspenseful, Nostalgic, Bleak, Whimsical, Tense, Melancholic, Romantic, Ominous, Joyful, Serene, Anxious, Surreal, Dreamlike, Energetic. Target 2-4 distinct core moods.
+
+Uniqueness: Describes the feeling. Do NOT use genre labels (e.g., 'Horror Mood'), humor styles (e.g., 'Comedic Mood'), or plot descriptors (e.g., 'Action Mood'). If the genre is Film Noir, the mood might be Bleak, Cynical, or Fatalistic, not just Noir.
+
+aesthetic_sensory.humor_styles:Role: Identify specific techniques or types of comedy used. (Assign only if humor is present).
+
+Content: Satire, Slapstick, Witty Banter, Dark Comedy, Observational Humor, Physical Comedy, Parody, Irony, Absurdist Humor, Wordplay, Running Gags. Target 1-5 styles if applicable.
+
+Uniqueness: Describes the how of the humor. Distinct from the overall humor_level score and dominant_moods.
+
+aesthetic_sensory.visual_styles_techniques:Role: Describe specific, noticeable visual elements or filmmaking techniques.
+
+Content: Film Noir Aesthetics, Handheld Camera Work, Vibrant Color Palette, Long Takes, High Contrast Lighting, Surreal Imagery, Minimalist Design, Black and White Cinematography, Slow Motion. Target 3-7.
+
+aesthetic_sensory.auditory_styles_elements:Role: Describe specific, noticeable elements of the score or sound design.
+
+Content: Orchestral Score, Electronic Music, Minimalist Soundtrack, Use of Silence, Sound Effects Emphasis, Diegetic Music Focus, Jazz Score, Leitmotifs. Target 2-5.
+
+aesthetic_sensory.dialogue_styles:Role: Describe the manner or style of the spoken dialogue.
+
+Content: Witty Banter, Formal Dialogue, Slang-Heavy, Monologues, Fast-Paced Exchanges, Poetic Language, Minimalist Dialogue, Technical Jargon. Target 1-3.
+
+aesthetic_sensory.costume_set_design_styles:Role: Describe the aesthetic approach to costumes and sets.
+
+Content: Period-Accurate Costumes, Futuristic Sets, Minimalist Design, Extravagant Wardrobes, Gritty Urban Sets, Fantasy Costumes, Gothic Architecture, Steampunk Elements. Target 2-5.
+
+content_advisories.specific_warnings:Role: List specific content elements that might warrant warning, potentially adding nuance beyond the dimensional_scores.
+
+Content: Use specific terms if applicable. Graphic Violence, Sexual Content, Strong Language, Drug Use, Nudity, Mature Themes, Gore, Disturbing Images, Animal Harm, Self-Harm Themes, Abuse Depiction, Smoking. Assign as needed, be specific.
+
+impact_context.cultural_impact_markers:Role: Identify indicators of the work's influence or reception.
+
+Content: Iconic Catchphrase, Influenced a Genre, Parodied Frequently, Major Award Winner (Specify e.g., Oscar Best Picture), Cult Classic Status, Launched Franchise, Memorable Soundtrack, Pioneering Special Effects. Assign as needed.
+
+impact_context.relevant_movements_styles:Role: Connect the work to broader cinematic or artistic movements/styles.
+
+Content: French New Wave, Italian Neorealism, Mumblecore, Dogme 95, Cinema Verite, Blaxploitation. Assign as needed.
+
+Final Check:
+* Ensure the output is a single, valid JSON object. No markdown syntax wrapping the json is allowed.
+* Verify that all requested fields are present and populated according to the guidelines.
+* Double-check that the Radical Uniqueness Principle has been applied, minimizing semantic overlap between attributes.
+* Confirm all 25 dimensional_scores are assigned an integer between 1 and 10.
+"""
 
 # --- Device Configuration & Thread Count ---
 if torch.cuda.is_available():
@@ -132,23 +574,27 @@ def generate_batch_embeddings(texts: List[str]) -> List[List[float]]:
         raise e
 
 # --- LLM Generation Logic (with Thread Pooling) ---
-def _run_llm_generation(llm: Llama, messages: List[Dict[str, str]], max_tokens: int):
+def _run_llm_generation(llm: Llama, user_prompt: str, max_tokens: int): # Pass user_prompt directly
     """Synchronous function containing the blocking llama.cpp call using chat completion."""
     try:
-        logger.debug(f"Starting llama.cpp chat completion with max_tokens={max_tokens}")
-        # Use create_chat_completion for instruction-tuned models
+        # Construct messages list including the system prompt
+        messages = [
+            {"role": "system", "content": DEFAULT_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt}
+        ]
+
+        logger.debug(f"Starting llama.cpp chat completion with max_tokens={max_tokens}, system prompt added.")
         completion = llm.create_chat_completion(
             messages=messages,
             max_tokens=max_tokens,
             temperature=0.7,
             top_p=0.9,
             top_k=50,
-            stop=["<end_of_turn>", "<eos>"], # Common stop tokens for Gemma
-            # Add other parameters like repetition_penalty if needed
-            # repetition_penalty=1.1
+            stop=["<end_of_turn>", "<eos>"],
+            # repetition_penalty=1.1 # Add if needed
         )
         logger.debug("llama.cpp chat completion finished.")
-        # Extract the generated text
+
         if completion and 'choices' in completion and len(completion['choices']) > 0:
              content = completion['choices'][0].get('message', {}).get('content')
              return content.strip() if content else ""
@@ -157,30 +603,25 @@ def _run_llm_generation(llm: Llama, messages: List[Dict[str, str]], max_tokens: 
              return ""
     except Exception as e:
         logger.error(f"Error during underlying llama.cpp generation: {e}", exc_info=True)
-        raise e # Re-raise to be caught by the endpoint handler
+        raise e
 
 async def generate_text(prompt: str, max_new_tokens: int) -> str:
     """
     Generates text using the loaded GGUF LLM via llama-cpp-python,
     running the blocking call in FastAPI/Starlette's thread pool.
+    System prompt is added internally.
     """
     try:
         llm = get_llm() # Will raise 503 if LLM not loaded
 
-        # Prepare messages in the format llama-cpp-python expects for chat completion
-        # This usually mirrors OpenAI's format. Gemma doesn't use a system prompt typically.
-        messages = [
-            {"role": "user", "content": prompt},
-        ]
-        # Note: llama-cpp-python might apply the model's specific chat template automatically
-        # based on model metadata, so manual formatting like adding <start_of_turn>
-        # might not be necessary here - test to confirm. Start without it.
+        # The system prompt is now handled inside _run_llm_generation
+        # We only need the user prompt here.
 
         logger.info(f"Dispatching llama.cpp generation task to thread pool (max_tokens={max_new_tokens})...")
         result = await run_in_threadpool(
             _run_llm_generation,
             llm=llm,
-            messages=messages,
+            user_prompt=prompt, # Pass only the user prompt now
             max_tokens=max_new_tokens
         )
         logger.info("Generation task completed by thread pool.")
@@ -275,7 +716,7 @@ async def generate_llm_text_endpoint(input_data: GenerationInput):
         if not input_data.prompt:
             raise HTTPException(status_code=400, detail="Input prompt cannot be empty.")
 
-        max_tokens = min(input_data.max_new_tokens, MAX_OUTPUT_TOKENS * 2) # Cap flexibility
+        max_tokens = min(input_data.max_new_tokens, MAX_OUTPUT_TOKENS * 1.5) # Cap flexibility
         if max_tokens <= 0:
              raise HTTPException(status_code=400, detail="max_new_tokens must be positive.")
 
