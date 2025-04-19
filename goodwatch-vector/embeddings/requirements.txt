@@ -1,8 +1,11 @@
-accelerate
-bitsandbytes
 fastapi
+huggingface-hub
+llama-cpp-python
 pydantic
+python-dotenv
+pyyaml
+requests
 sentence-transformers
+starlette
 torch
-transformers
 uvicorn[standard]

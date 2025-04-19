@@ -47,6 +47,7 @@ remove obsolete code
 ---    
 
 DNA redesign
+    https://gemini.google.com/app/939d66e003582351
     https://gemini.google.com/app/38fd8b42c3385597
 
 ---    

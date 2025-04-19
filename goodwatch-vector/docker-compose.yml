@@ -3,28 +3,26 @@ services:
     build:
       context: ./embeddings
       dockerfile: Dockerfile
+      args:
+        HUGGING_FACE_HUB_TOKEN: ${HUGGING_FACE_HUB_TOKEN}
+        EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+        LLM_MODEL_REPO_ID: ${LLM_MODEL_REPO_ID}
+        LLM_MODEL_FILENAME: ${LLM_MODEL_FILENAME}
     ports:
       - "7997:80"
     restart: unless-stopped
     environment:
-      - HUGGING_FACE_HUB_TOKEN
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}
+      - LLM_MODEL_REPO_ID=${LLM_MODEL_REPO_ID}
+      - LLM_MODEL_FILENAME=${LLM_MODEL_FILENAME}
+    volumes:
+      - embeddings_cache:/app/.cache/huggingface
     logging:
       driver: "json-file"
       options:
         max-size: "100m"
         max-file: "10"
 
-#  embeddings:
-#    image: michaelf34/infinity:latest
-#    restart: unless-stopped
-#    ports:
-#      - "7997:7997"
-#    volumes:
-#      - embeddings_cache:/app/.cache
-#    command: >
-#      v2
-#      --model-id BAAI/bge-m3
-#      --port 7997
-
-#volumes:
-#  embeddings_cache:
+volumes:
+  embeddings_cache:
