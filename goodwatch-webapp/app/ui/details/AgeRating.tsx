@@ -9,11 +9,9 @@ export default function AgeRating({ ageRating }: AgeRatingProps) {
 	return (
 		<>
 			{ageRating && (
-				<>
-					<div className="inline-block md:py-1 px-1 md:px-2 leading-4 md:leading-4 border-2 text-xs md:text-md font-bold text-center">
-						{ageRating.certification || ageRating.rating}
-					</div>
-				</>
+				<span className="px-1.5 py-0.5 bg-gray-700/50 rounded text-[80%] text-white font-medium">
+					{ageRating.certification || ageRating.rating}
+				</span>
 			)}
 		</>
 	)

@@ -23,20 +23,28 @@ export default function WatchHistoryButton({
 	const WatchHistoryIcon = isInWatchHistory && isActive ? EyeSlashIcon : EyeIcon
 	const watchHistoryColor =
 		isInWatchHistory && isActive ? "text-green-300" : "text-gray-300"
-	const watchHistoryText = isInWatchHistory ? "Seen this" : "Didn't see this"
+	const watchHistoryText = isInWatchHistory ? "Seen this" : "Mark as Seen"
 	const watchHistoryAction = isInWatchHistory
-		? "I didn't see this"
-		: "I've seen this"
+		? "Remove as Seen"
+		: "Mark as Seen"
 
 	return (
 		<WatchHistoryAction details={details} onChange={onChange}>
 			<button
 				type="button"
-				className={`${isInWatchHistory ? "bg-green-800" : "bg-zinc-700"} rounded-md w-full px-3.5 py-2.5 flex items-center justify-center gap-2 text-sm md:text-md font-semibold text-white shadow-sm hover:bg-green-800/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-800/70`}
+				className={`
+					${isInWatchHistory ? "bg-green-800" : "bg-zinc-700"}
+					rounded-md w-full px-1 py-2 lg:px-3.5 lg:py-2.5
+					flex items-center justify-center gap-2
+					text-xs md:text-sm lg:text-md font-semibold text-white
+					shadow-sm hover:bg-green-800/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-800/70
+				`}
 				onPointerEnter={() => setIsActive(true)}
 				onPointerLeave={() => setIsActive(false)}
 			>
-				<WatchHistoryIcon className={`h-5 w-auto ${watchHistoryColor}`} />
+				<WatchHistoryIcon
+					className={`h-4 lg:h-5 w-auto ${watchHistoryColor}`}
+				/>
 				{isActive ? watchHistoryAction : watchHistoryText}
 			</button>
 		</WatchHistoryAction>
