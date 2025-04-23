@@ -31,7 +31,7 @@ export const useScrollSections = <T extends string>({
 				id as T,
 				{
 					id: id as T,
-					className: "scroll-mt-32",
+					className: "scroll-mt-56 2xl:scroll-mt-40",
 					ref: (element: HTMLDivElement) => {
 						sectionRefs.current[id as T] = element
 					},
@@ -45,6 +45,7 @@ export const useScrollSections = <T extends string>({
 		sectionRefs.current[section.id as T]?.scrollIntoView({
 			behavior: "smooth",
 			block: "start",
+			inline: "nearest",
 		})
 
 		// Update the URL hash without causing a page refresh
@@ -61,8 +62,8 @@ export const useScrollSections = <T extends string>({
 	useEffect(() => {
 		const options = {
 			root: null,
-			rootMargin: "0px",
-			threshold: [0.03],
+			rootMargin: "-256px 0px -128px 0px",
+			threshold: [0.05],
 		}
 
 		const callback = (entries: IntersectionObserverEntry[]) => {

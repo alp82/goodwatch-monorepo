@@ -6,6 +6,7 @@ import DetailsOverview from "~/ui/details/DetailsOverview"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/common"
 import { useScrollSections } from "~/utils/scroll"
+import DetailsHeader from "~/ui/details/DetailsHeader"
 
 export interface DetailsProps {
 	details: MovieDetails | TVDetails
@@ -13,6 +14,8 @@ export interface DetailsProps {
 }
 
 export default function Details({ details, country }: DetailsProps) {
+	const { media_type, release_year, title } = details
+
 	// Scroll Sections
 	const { activeSections, sectionProps, navigateToSection } = useScrollSections(
 		{
@@ -22,6 +25,15 @@ export default function Details({ details, country }: DetailsProps) {
 
 	return (
 		<>
+			<DetailsHeader
+				title={title}
+				releaseYear={release_year}
+				mediaType={media_type}
+				activeSections={activeSections}
+				navigateToSection={navigateToSection}
+				// TODO: wire up isFavorite, onToggleFavorite, rating, onRate as needed
+			/>
+
 			<DetailsSideNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
@@ -31,11 +43,6 @@ export default function Details({ details, country }: DetailsProps) {
 				details={details}
 				country={country}
 				sectionProps={sectionProps}
-				navigateToSection={navigateToSection}
-			/>
-
-			<DetailsInlineNav
-				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
 

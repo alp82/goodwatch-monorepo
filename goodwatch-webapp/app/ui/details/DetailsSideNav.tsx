@@ -15,7 +15,7 @@ export default function DetailsSideNav({
 		<div className="absolute top-0 left-0 right-0 h-full z-20 hidden 2xl:flex justify-center">
 			<div className="max-w-[104em] w-full flex justify-end">
 				<div className="relative">
-					<aside className="sticky top-32 mr-2">
+					<aside className="sticky top-44 mr-2">
 						<nav className="flex flex-col p-2 bg-black/20 text-lg space-y-1">
 							{Object.values(sections).map((section) => (
 								<div

@@ -4,12 +4,17 @@
 ---    
 
 details page redesign
+    https://replit.com/@alperortac1/GoodWatch-Details
+
     DNA different sections
     top DNA categories, hide the rest
     swiper for discover preview
     
     show tropes
     show images
+    
+    tabs/menu improvements:
+        https://stepperize.vercel.app/docs/react/api-references/define#usage
 
     box office (e.g. Google)
     awards (grab from API)
@@ -49,6 +54,14 @@ remove obsolete code
 DNA redesign
     https://gemini.google.com/app/939d66e003582351
     https://gemini.google.com/app/38fd8b42c3385597
+
+---    
+
+DB research
+    https://gemini.google.com/u/0/app/5767cc373c28c472?pli=1
+    https://arangodb.com/
+    https://www.tigergraph.com/
+    https://aerospike.com/
 
 ---    
 

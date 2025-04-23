@@ -6,9 +6,9 @@ import type {
 	TVDetails,
 } from "~/server/details.server"
 import { Poster } from "~/ui/Poster"
-import ShareButton from "~/ui/ShareButton"
 import TrailerOverlay from "~/ui/TrailerOverlay"
 import AgeRating from "~/ui/details/AgeRating"
+import DetailsHeader from "~/ui/details/DetailsHeader"
 import Genres from "~/ui/details/Genres"
 import Runtime from "~/ui/details/Runtime"
 import type { SectionIds } from "~/ui/details/common"
@@ -43,7 +43,6 @@ export default function DetailsOverview({
 		genres,
 		media_type,
 		poster_path,
-		release_year,
 		streaming_country_codes,
 		streaming_links,
 		title,
@@ -73,13 +72,8 @@ export default function DetailsOverview({
 					backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}')`,
 				}}
 			>
-				<div className="relative m-auto ow-full max-w-7xl z-20">
+				<div className="relative m-auto w-full max-w-7xl z-20">
 					<div className="ml-4">
-						<h1 className="mb-4 mr-24 text-2xl md:text-3xl lg:text-4xl">
-							<span className="font-bold pr-2">{title}</span>{" "}
-							<small>({release_year})</small>
-						</h1>
-
 						<div className="flex gap-4 items-center flex-wrap mb-4">
 							{ageRating && (
 								<>
@@ -163,28 +157,27 @@ export default function DetailsOverview({
 							</div>
 						</div>
 					</div>
-					<ShareButton />
-				</div>
-				<div className="flex gap-4 px-3 w-full">
-					<div className="relative flex-1 mt-2">
-						<div className="sm:hidden mb-4">
-							<StreamingBlock
-								details={details}
-								media_type={media_type}
-								links={streaming_links}
-								countryCodes={streaming_country_codes}
-								currentCountryCode={country}
-								navigateToSection={navigateToSection}
-							/>
-						</div>
-						<div className="sm:hidden mb-4">
-							<RatingBlock
-								ratings={ratings}
-								navigateToSection={navigateToSection}
-							/>
-						</div>
-						<div className="md:hidden mb-4">
-							<ScoreSelector details={details} />
+					<div className="flex gap-4 px-3 w-full">
+						<div className="relative flex-1 mt-2">
+							<div className="sm:hidden mb-4">
+								<StreamingBlock
+									details={details}
+									media_type={media_type}
+									links={streaming_links}
+									countryCodes={streaming_country_codes}
+									currentCountryCode={country}
+									navigateToSection={navigateToSection}
+								/>
+							</div>
+							<div className="sm:hidden mb-4">
+								<RatingBlock
+									ratings={ratings}
+									navigateToSection={navigateToSection}
+								/>
+							</div>
+							<div className="md:hidden mb-4">
+								<ScoreSelector details={details} />
+							</div>
 						</div>
 					</div>
 				</div>
