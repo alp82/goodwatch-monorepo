@@ -8,10 +8,12 @@ export interface PageMeta {
 	alt: string
 }
 
+export type PageItem = MovieDetails | TVDetails
+
 export interface MetaOptions {
 	pageMeta: PageMeta
-	item?: MovieDetails | TVDetails
-	items?: (MovieDetails | TVDetails)[]
+	item?: PageItem
+	items?: PageItem[]
 }
 
 export const buildMeta = (params: MetaOptions) => {
@@ -28,15 +30,23 @@ export const buildMeta = (params: MetaOptions) => {
 		{ name: "description", content: params.pageMeta.description },
 
 		// Canonical URL
-		{ rel: "canonical", href: params.pageMeta.url },
+		{
+			tagName: "link",
+			rel: "canonical",
+			href: params.pageMeta.url,
+		},
+
+		// Additional SEO tags
+		{ name: "robots", content: "index, follow" },
+		{ name: "google", content: "notranslate" },
 
 		// Open Graph
 		{
 			property: "og:type",
 			content: params.item
 				? params.item.media_type === "movie"
-					? "movie"
-					: "tv_show"
+					? "video.movie"
+					: "video.tv_show"
 				: "website",
 		},
 		{ property: "og:site_name", content: "GoodWatch" },
@@ -52,10 +62,6 @@ export const buildMeta = (params: MetaOptions) => {
 		{ name: "twitter:title", content: params.pageMeta.title },
 		{ name: "twitter:description", content: params.pageMeta.description },
 		{ name: "twitter:image", content: params.pageMeta.image },
-
-		// Additional SEO tags
-		{ name: "robots", content: "index, follow" },
-		{ name: "google", content: "notranslate" },
 
 		// JSON-LD Schema
 		{ "script:ld+json": jsonLdContent },
@@ -102,7 +108,7 @@ const buildJsonLdDetail = (
 	if (detail.aggregated_overall_score_normalized_percent) {
 		jsonLd.aggregateRating = {
 			"@type": "AggregateRating",
-			name: "GoodWatch",
+			name: "GoodWatch Score",
 			bestRating: "100",
 			ratingValue:
 				detail.aggregated_overall_score_normalized_percent.toString(),
