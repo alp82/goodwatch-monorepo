@@ -10,6 +10,9 @@ details page redesign
     top DNA categories, hide the rest
     swiper for discover preview
     
+    similar movies
+        https://letterboxd.com/film/dune-part-two/themes/
+    
     show tropes
     show images
     
@@ -42,6 +45,9 @@ details page redesign
     
     about section
         infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+        
+    json-ld movie/tv
+    image preview generated with background + ratings + streaming
 
 movie card
     overlay: show movie or tv icon 

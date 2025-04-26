@@ -1,8 +1,9 @@
 import { HeartIcon } from "@heroicons/react/24/solid"
-import React, { useState } from "react"
+import React from "react"
 import { useUserData } from "~/routes/api.user-data"
 import FavoriteAction from "~/ui/user/actions/FavoriteAction"
 import type { UserActionDetails } from "~/ui/user/actions/types"
+import ActionButton from "~/ui/button/ActionButton"
 
 export interface FavoriteButtonProps {
 	details: UserActionDetails
@@ -14,36 +15,25 @@ export default function FavoriteButton({
 	onChange,
 }: FavoriteButtonProps) {
 	const { tmdb_id, media_type } = details
-	const [isActive, setIsActive] = useState(false)
 
 	const { data: userData } = useUserData()
 	const userDataItem = userData?.[media_type]?.[tmdb_id]
-	const isFavorite = userDataItem?.onFavorites
-
-	const FavoriteIcon = HeartIcon
-	const favoriteColor = isFavorite ? "text-rose-300" : "text-gray-300"
-	const favoriteText = isFavorite ? "Favorite" : "Favorite"
-	const favoriteAction = isFavorite
-		? "Remove from Favorites"
-		: "Add to Favorites"
+	const isFavorite = Boolean(userDataItem?.onFavorites)
+	const labelText = isFavorite ? "Favorite" : "Favorite"
+	const labelAction = isFavorite ? "Favorite" : "Favorite"
 
 	return (
-		<FavoriteAction details={details} onChange={onChange}>
-			<button
-				type="button"
-				className={`
-					${isFavorite ? "bg-rose-800" : "bg-zinc-700"}
-					rounded-md w-full px-1 py-2 lg:px-3.5 lg:py-2.5
-					flex items-center justify-center gap-2
-					text-xs md:text-sm lg:text-md font-semibold text-white
-					shadow-sm hover:bg-rose-800/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-800/70
-				`}
-				onPointerEnter={() => setIsActive(true)}
-				onPointerLeave={() => setIsActive(false)}
-			>
-				<FavoriteIcon className={`h-4 lg:h-5 w-auto ${favoriteColor}`} />
-				{isActive ? favoriteAction : favoriteText}
-			</button>
-		</FavoriteAction>
+		<ActionButton
+			details={details}
+			isActive={isFavorite}
+			actionElement={FavoriteAction}
+			iconElement={HeartIcon}
+			onChange={onChange}
+			bg="bg-rose-800"
+			outline="outline-rose-300"
+			color="text-rose-300"
+			labelText={labelText}
+			labelAction={labelAction}
+		/>
 	)
 }

@@ -59,12 +59,20 @@ export interface StreamingProviders {
 	rent: ProviderData[]
 }
 
+export type StreamType =
+	| "ads"
+	| "buy"
+	| "flatrate"
+	| "flatrate_and_buy"
+	| "free"
+	| "rent"
+
 export interface StreamingLink {
 	provider_id: number
 	provider_name: string
 	provider_logo_path: string
 	tmdb_url: string
-	stream_type: "ads" | "buy" | "flatrate" | "flatrate_and_buy" | "free" | "rent"
+	stream_type: StreamType
 	stream_url: string
 	price_dollar: number
 	quality: string

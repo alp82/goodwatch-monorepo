@@ -4,6 +4,43 @@ import type {
 	TVDetails,
 } from "~/server/details.server"
 
+export const duplicateProviders = [
+	24, // Quickflix Store
+	188, // YouTube Premium
+	210, // Sky
+	235, // YouTube Free
+	380, // BritBox
+	390, // Disney Plus
+	524, // Discovery+
+	1796, // Netflix basic with Ads
+	2100, // Amazon Prime Video with Ads
+]
+
+export const duplicateProviderMapping: Record<number, number[]> = {
+	2: [350], // Apple TV -> Apple TV Plus
+	9: [10, 119], // Amazon Prime Video -> Amazon Video, Amazon Prime Video
+}
+
+export const ignoredProviders = [
+	...duplicateProviders,
+	10, // Amazon Video
+	119, // Amazon Prime Video
+	350, // Apple TV Plus
+]
+
+export const getShorterProviderLabel = (label: string) => {
+	switch (label) {
+		case "Amazon Video":
+		case "Amazon Prime Video":
+		case "Amazon Prime Video with Ads":
+			return "Prime"
+		case "Apple TV Plus":
+			return "Apple TV"
+		default:
+			return label
+	}
+}
+
 export const getStreamingUrl = (
 	link: StreamingLink,
 	details: MovieDetails | TVDetails,
@@ -50,27 +87,3 @@ export const getStreamingUrl = (
 
 	return link.tmdb_url
 }
-
-export const duplicateProviders = [
-	24, // Quickflix Store
-	188, // YouTube Premium
-	210, // Sky
-	235, // YouTube Free
-	380, // BritBox
-	390, // Disney Plus
-	524, // Discovery+
-	1796, // Netflix basic with Ads
-	2100, // Amazon Prime Video with Ads
-]
-
-export const duplicateProviderMapping = {
-	2: [350], // Apple TV -> Apple TV Plus
-	9: [10, 119], // Amazon Prime Video -> Amazon Video, Amazon Prime Video
-}
-
-export const ignoredProviders = [
-	...duplicateProviders,
-	10, // Amazon Video
-	119, // Amazon Prime Video
-	350, // Apple TV Plus
-]

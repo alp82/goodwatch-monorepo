@@ -16,7 +16,7 @@ import DNAPreview from "~/ui/dna/DNAPreview"
 import { getDNAForCategory } from "~/ui/dna/dna_utils"
 import RatingBlock from "~/ui/ratings/RatingBlock"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
-import StreamingBlock from "~/ui/streaming/StreamingBlock"
+import CountrySelector from "~/ui/streaming/CountrySelector"
 import ScoreSelector from "~/ui/user/ScoreSelector"
 import WatchStatusBlock from "~/ui/user/WatchStatusBlock"
 import { extractRatings } from "~/utils/ratings"
@@ -137,10 +137,8 @@ export default function DetailsOverview({
 								<WatchStatusBlock details={details} />
 							</div>
 							<div className="hidden sm:block mb-4">
-								<StreamingBlock
-									details={details}
+								<CountrySelector
 									media_type={media_type}
-									links={streaming_links}
 									countryCodes={streaming_country_codes}
 									currentCountryCode={country}
 									navigateToSection={navigateToSection}
@@ -160,10 +158,8 @@ export default function DetailsOverview({
 					<div className="flex gap-4 px-3 w-full">
 						<div className="relative flex-1 mt-2">
 							<div className="sm:hidden mb-4">
-								<StreamingBlock
-									details={details}
+								<CountrySelector
 									media_type={media_type}
-									links={streaming_links}
 									countryCodes={streaming_country_codes}
 									currentCountryCode={country}
 									navigateToSection={navigateToSection}

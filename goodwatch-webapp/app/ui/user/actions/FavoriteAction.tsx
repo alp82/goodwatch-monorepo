@@ -5,14 +5,13 @@ import type {
 	UpdateFavoritesResult,
 } from "~/server/favorites.server"
 import UserAction from "~/ui/auth/UserAction"
-import type { UserActionDetails } from "~/ui/user/actions/types"
+import {
+	UserActionDetails,
+	type UserActionProps,
+} from "~/ui/user/actions/types"
 import { useAPIAction } from "~/utils/api-action"
 
-export interface FavoriteActionProps {
-	children: React.ReactElement
-	details: UserActionDetails
-	onChange?: () => void
-}
+export interface FavoriteActionProps extends UserActionProps {}
 
 export default function FavoriteAction({
 	children,

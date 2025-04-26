@@ -15,7 +15,8 @@ export interface DetailsProps {
 }
 
 export default function Details({ details, country }: DetailsProps) {
-	const { media_type, release_year, title } = details
+	const { backdrop_path } = details
+	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
 
 	// Scroll Sections
 	const { activeSections, sectionProps, navigateToSection } = useScrollSections(
@@ -26,6 +27,19 @@ export default function Details({ details, country }: DetailsProps) {
 
 	return (
 		<>
+			{backdrop_path && (
+				<div
+					className="pointer-events-none absolute top-0 z-0 w-full h-full"
+					aria-hidden="true"
+					style={{
+						backgroundImage: `url(${backdropUrl})`,
+						backgroundSize: "cover",
+						backgroundPosition: "center",
+						filter: "blur(28px) brightness(0.15)",
+					}}
+				/>
+			)}
+
 			<DetailsHeader
 				details={details}
 				activeSections={activeSections}
@@ -45,15 +59,15 @@ export default function Details({ details, country }: DetailsProps) {
 				navigateToSection={navigateToSection}
 			/>
 
-			<DetailsOverview
-				details={details}
-				country={country}
-				sectionProps={sectionProps}
-				navigateToSection={navigateToSection}
-			/>
+			{/*<DetailsOverview*/}
+			{/*	details={details}*/}
+			{/*	country={country}*/}
+			{/*	sectionProps={sectionProps}*/}
+			{/*	navigateToSection={navigateToSection}*/}
+			{/*/>*/}
 
-			<div className="relative flex flex-col items-center">
-				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl z-30">
+			<div className="isolate flex flex-col items-center">
+				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 					<DetailsContent
 						details={details}
 						country={country}

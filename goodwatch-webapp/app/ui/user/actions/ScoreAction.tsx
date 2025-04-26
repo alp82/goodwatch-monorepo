@@ -7,14 +7,14 @@ import type {
 } from "~/server/scores.server"
 import type { UpdateWatchHistoryPayload } from "~/server/watchHistory.server"
 import UserAction from "~/ui/auth/UserAction"
-import type { UserActionDetails } from "~/ui/user/actions/types"
+import {
+	UserActionDetails,
+	type UserActionProps,
+} from "~/ui/user/actions/types"
 import { useAPIAction } from "~/utils/api-action"
 
-export interface ScoreActionProps {
-	children: React.ReactElement
-	details: UserActionDetails
+export interface ScoreActionProps extends UserActionProps {
 	score: Score | null
-	onChange?: () => void
 }
 
 export default function ScoreAction({

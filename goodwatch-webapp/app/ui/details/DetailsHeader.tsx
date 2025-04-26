@@ -53,17 +53,17 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	}
 
 	return (
-		<div className="sticky top-16 z-50 bg-black/80 backdrop-blur border-b border-white/15">
+		<div className="sticky top-16 z-40 bg-black/80 backdrop-blur border-b border-white/15">
 			<div className="relative m-auto px-4 py-3 w-full max-w-7xl">
 				<div className="flex items-center justify-between gap-4">
-					<div className="flex flex-col md:gap-1 min-w-0">
+					<div className="flex flex-col md:gap-2 min-w-0">
 						<h1 className="text-xl md:text-2xl lg:text-3xl font-medium whitespace-nowrap overflow-hidden text-ellipsis">
 							{title}
 						</h1>
 						<span className="text-xs md:text-sm lg:text-base text-gray-400 flex items-center">
 							{release_year && (
 								<>
-									<span className="font-normal">{release_year}</span>
+									<span className="font-semibold">{release_year}</span>
 									<span className="mx-2">&middot;</span>
 								</>
 							)}

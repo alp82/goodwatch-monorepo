@@ -5,14 +5,13 @@ import type {
 	UpdateSkippedResult,
 } from "~/server/skipped.server"
 import UserAction from "~/ui/auth/UserAction"
-import type { UserActionDetails } from "~/ui/user/actions/types"
+import {
+	UserActionDetails,
+	type UserActionProps,
+} from "~/ui/user/actions/types"
 import { useAPIAction } from "~/utils/api-action"
 
-export interface SkippedActionProps {
-	children: React.ReactElement
-	details: UserActionDetails
-	onChange?: () => void
-}
+export interface SkippedActionProps extends UserActionProps {}
 
 export default function SkippedAction({
 	children,
