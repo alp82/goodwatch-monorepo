@@ -1,4 +1,3 @@
 User-agent: *
 
-Sitemap: https://goodwatch.app/sitemaps/sitemap_index_movies.xml
-Sitemap: https://goodwatch.app/sitemaps/sitemap_index_tv.xml
+Sitemap: https://goodwatch.app/sitemaps/sitemap.xml
