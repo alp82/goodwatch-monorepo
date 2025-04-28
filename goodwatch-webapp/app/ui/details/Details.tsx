@@ -8,6 +8,8 @@ import { sections } from "~/ui/details/common"
 import { useScrollSections } from "~/utils/scroll"
 import DetailsHeader from "~/ui/details/DetailsHeader"
 import DetailsMain from "~/ui/details/DetailsMain"
+import DetailsRatings from "~/ui/details/DetailsRatings"
+import DetailsSreaming from "~/ui/details/DetailsStreaming"
 
 export interface DetailsProps {
 	details: MovieDetails | TVDetails
@@ -52,7 +54,11 @@ export default function Details({ details, country }: DetailsProps) {
 				navigateToSection={navigateToSection}
 			/>
 
-			<DetailsMain
+			<DetailsMain details={details} sectionProps={sectionProps} />
+
+			<DetailsRatings details={details} sectionProps={sectionProps} />
+
+			<DetailsSreaming
 				details={details}
 				country={country}
 				sectionProps={sectionProps}
@@ -72,6 +78,7 @@ export default function Details({ details, country }: DetailsProps) {
 						details={details}
 						country={country}
 						sectionProps={sectionProps}
+						navigateToSection={navigateToSection}
 					/>
 				</div>
 			</div>

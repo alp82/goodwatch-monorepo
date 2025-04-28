@@ -31,7 +31,8 @@ export const useScrollSections = <T extends string>({
 				id as T,
 				{
 					id: id as T,
-					className: "scroll-mt-56 2xl:scroll-mt-40",
+					className:
+						"scroll-mt-52 sm:scroll-mt-56 md:scroll-mt-60 2xl:scroll-mt-48",
 					ref: (element: HTMLDivElement) => {
 						sectionRefs.current[id as T] = element
 					},

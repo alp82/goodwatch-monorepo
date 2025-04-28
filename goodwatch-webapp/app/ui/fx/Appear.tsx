@@ -11,9 +11,10 @@ export default function Appear({ isVisible, children }: AppearParams) {
 		<AnimatePresence>
 			{isVisible && (
 				<motion.div
-					initial={{ opacity: 0, height: 0 }}
-					animate={{ opacity: 1, height: "auto" }}
-					exit={{ opacity: 0, height: 0 }}
+					initial={{ opacity: 0, height: 0, y: -20 }}
+					animate={{ opacity: 1, height: "auto", y: 0 }}
+					exit={{ opacity: 0, height: 0, y: -20 }}
+					style={{ overflow: "hidden" }}
 				>
 					{children}
 				</motion.div>

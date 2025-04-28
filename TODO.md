@@ -48,6 +48,9 @@ details page redesign
         
     json-ld movie/tv
     image preview generated with background + ratings + streaming
+    
+    score prediction
+        92% Match
 
 movie card
     overlay: show movie or tv icon 
@@ -87,6 +90,11 @@ security audit
 penetration test
     evan | scraping & automations
     jared | infracharm
+
+---
+
+better og images
+    https://gemini.google.com/app/8f9832dc2c62d13a
 
 ---
 

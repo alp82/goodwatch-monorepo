@@ -44,6 +44,8 @@ export default function FilterCountries({
 		return a.label.localeCompare(b.label)
 	})
 
+	const selectedItem = selectItems.find((item) => item.key === selectedCountry)
+
 	const handleSelect = (selectedItem: SelectItem) => {
 		const country = selectedItem.key
 		onChange(country)
@@ -51,19 +53,14 @@ export default function FilterCountries({
 	}
 
 	return (
-		<div className="min-w-40 w-64 max-w-64">
-			{countriesFetcher.state === "idle" ? (
-				<Select<SelectItem>
-					selectItems={selectItems}
-					selectedItems={selectItems.find(
-						(item) => item.key === selectedCountry,
-					)}
-					withSearch={true}
-					onSelect={handleSelect}
-				/>
-			) : (
-				<span className="text-sm">Loading countries...</span>
-			)}
+		<div className="w-full min-w-36 max-w-64 text-right">
+			<Select<SelectItem>
+				selectItems={selectItems}
+				selectedItems={selectedItem}
+				withSearch={true}
+				isLoading={countriesFetcher.state !== "idle"}
+				onSelect={handleSelect}
+			/>
 		</div>
 	)
 }

@@ -71,7 +71,7 @@ export async function _getPopularPicksMovies({
   `)
 	if (!result.rows.length) throw Error("no popular picks for movies found")
 
-	increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
+	// increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>
 		getCountrySpecificDetails(row, country, language),
 	)
@@ -111,7 +111,7 @@ export async function _getPopularPicksTV({
   `)
 	if (!result.rows.length) throw Error("no popular picks for tv shows found")
 
-	increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
+	// increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>
 		getCountrySpecificDetails(row, country, language),
 	)

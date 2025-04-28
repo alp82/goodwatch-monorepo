@@ -61,12 +61,12 @@ export const loader: LoaderFunction = async ({
 		language,
 	})
 
-	return json<LoaderData>({
+	return {
 		details,
 		params: {
 			country,
 		},
-	})
+	}
 }
 
 export default function DetailsMovie() {

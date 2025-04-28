@@ -21,6 +21,7 @@ export interface SelectItem {
 export interface SelectPropsBase<RenderItem> {
 	selectItems: RenderItem[]
 	withSearch?: boolean
+	isLoading?: boolean
 }
 
 export interface SelectPropsSingle<RenderItem>
@@ -46,6 +47,7 @@ export default function Select<RenderItem extends SelectItem>({
 	selectedItems,
 	withSearch,
 	withMultiSelection,
+	isLoading = false,
 	onSelect,
 }: SelectProps<RenderItem>) {
 	const autoFocusRef = useAutoFocus<HTMLInputElement>()
@@ -114,8 +116,8 @@ export default function Select<RenderItem extends SelectItem>({
 						<div className="relative">
 							<ListboxButton
 								className="
-								relative w-full py-2 pl-3 pr-10
-								rounded-md shadow-sm cursor-pointer bg-stone-700
+								relative w-full py-1.5 pl-2 pr-10
+								rounded-md shadow-sm cursor-pointer bg-stone-700 hover:bg-stone-600
 								ring-1 ring-inset ring-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-400
 								text-left text-gray-100 text-sm sm:text-base
 							"
@@ -149,6 +151,8 @@ export default function Select<RenderItem extends SelectItem>({
 											</span>
 										</span>
 									)
+								) : isLoading ? (
+									<span className="text-sm animate-pulse">Loading...</span>
 								) : (
 									<span className="ml-3 block truncate">&nbsp;</span>
 								)}
@@ -209,7 +213,7 @@ export default function Select<RenderItem extends SelectItem>({
 													className={({ focus }) => `
 														absolute top-0 left-0 w-full
 														cursor-default select-none py-2 pl-3 pr-9
-														${focus ? "bg-indigo-600 text-white" : "text-gray-100"}
+														${focus ? "bg-amber-500 text-black" : "text-gray-100"}
 													`}
 													style={{
 														height: `${virtualItem.size}px`,
@@ -245,7 +249,7 @@ export default function Select<RenderItem extends SelectItem>({
 																		className={`
 																		absolute inset-y-0 right-0
 																		flex items-center pr-4
-																		${focus ? "text-white" : "text-indigo-300"}
+																		${focus ? "text-white" : "text-amber-300"}
 																	`}
 																	>
 																		<CheckIcon

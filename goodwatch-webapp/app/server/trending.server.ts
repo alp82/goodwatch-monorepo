@@ -73,7 +73,7 @@ export async function _getTrendingMovies({
       popularity;
   `)
 
-	increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
+	// increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>
 		getCountrySpecificDetails(row, country, language),
 	)
@@ -117,7 +117,7 @@ export async function _getTrendingTV({
       popularity;
   `)
 
-	increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
+	// increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
 	return result.rows.map((row) =>
 		getCountrySpecificDetails(row, country, language),
 	)

@@ -12,7 +12,7 @@ export interface DNAProps {
 export default function DNA({ details }: DNAProps) {
 	const { dna = [] } = details
 	const hasDNA = dna.length > 0
-	const sortedCategories = getSortedCategories(dna, true, false)
+	const sortedCategories = getSortedCategories(dna, true)
 
 	const [spoilerVisible, setSpoilerVisible] = React.useState(false)
 	const handleRevealSpoiler = () => {

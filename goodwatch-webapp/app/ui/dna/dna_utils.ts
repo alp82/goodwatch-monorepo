@@ -26,7 +26,6 @@ export type DNACategoryName = (typeof sortedDNACategories)[number]
 const emptyValues = ["None", "N/A", "", null, undefined]
 
 export const spoilerCategories = ["Plot"]
-export const inlineCategories = ["Sub-Genres", "Mood", "Themes"]
 
 export const getDNAForCategory = (
 	dna: DNAItem[],
@@ -35,19 +34,14 @@ export const getDNAForCategory = (
 	return (dna || []).filter((dnaItem) => dnaItem.category === category)
 }
 
-export const getSortedCategories = (
-	dna: DNAItem[],
-	withSpoilers = true,
-	withInlined = true,
-) => {
+export const getSortedCategories = (dna: DNAItem[], withSpoilers = true) => {
 	return sortedDNACategories.filter((category) => {
 		const dnaForCategory = getDNAForCategory(dna, category)
 		return (
 			Array.isArray(dnaForCategory) &&
 			dnaForCategory.length &&
 			!emptyValues.includes(dnaForCategory[0].label) &&
-			(withSpoilers || !spoilerCategories.includes(category)) &&
-			(withInlined || !inlineCategories.includes(category))
+			(withSpoilers || !spoilerCategories.includes(category))
 		)
 	})
 }

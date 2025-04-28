@@ -1,11 +1,8 @@
 import type React from "react"
-import ShareButton from "~/ui/ShareButton"
-import {
-	HeartIcon as HeartOutline,
-	HeartIcon as HeartSolid,
-} from "@heroicons/react/24/solid"
-import { HandThumbUpIcon as HandThumbUpOutline } from "@heroicons/react/24/outline"
-import type { MediaType } from "~/server/utils/query-db"
+import ShareButton from "~/ui/button/ShareButton"
+import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline"
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid"
+import { HandThumbUpIcon } from "@heroicons/react/24/solid"
 import DetailsInlineNav from "~/ui/details/DetailsInlineNav"
 import type { Section } from "~/utils/scroll"
 import type {
@@ -96,32 +93,32 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						</span>
 					</div>
 					<div className="flex items-center gap-4 flex-shrink-0">
-						<button
-							type="button"
-							aria-label={
-								isFavorite ? "Remove from favorites" : "Add to favorites"
-							}
-							onClick={onToggleFavorite}
-							className={
-								"h-7 w-7 text-pink-400 hover:text-pink-500 focus:outline-none"
-							}
-						>
-							{isFavorite ? (
-								<HeartSolid className="h-7 w-7 fill-pink-400" />
-							) : (
-								<HeartOutline className="h-7 w-7 stroke-pink-400" />
-							)}
-						</button>
-						<button
-							type="button"
-							aria-label="Rate"
-							onClick={onRate}
-							className={
-								"h-7 w-7 text-blue-400 hover:text-blue-500 focus:outline-none"
-							}
-						>
-							<HandThumbUpOutline className="h-7 w-7 stroke-blue-400" />
-						</button>
+						{/*<button*/}
+						{/*	type="button"*/}
+						{/*	aria-label={*/}
+						{/*		isFavorite ? "Remove from favorites" : "Add to favorites"*/}
+						{/*	}*/}
+						{/*	onClick={onToggleFavorite}*/}
+						{/*	className={*/}
+						{/*		"h-7 w-7 text-pink-400 hover:text-pink-500 focus:outline-none"*/}
+						{/*	}*/}
+						{/*>*/}
+						{/*	{isFavorite ? (*/}
+						{/*		<HeartSolid className="h-7 w-7 fill-pink-400" />*/}
+						{/*	) : (*/}
+						{/*		<HeartOutline className="h-7 w-7 stroke-pink-400" />*/}
+						{/*	)}*/}
+						{/*</button>*/}
+						{/*<button*/}
+						{/*	type="button"*/}
+						{/*	aria-label="Rate"*/}
+						{/*	onClick={onRate}*/}
+						{/*	className={*/}
+						{/*		"h-7 w-7 text-blue-400 hover:text-blue-500 focus:outline-none"*/}
+						{/*	}*/}
+						{/*>*/}
+						{/*	<HandThumbUpIcon className="h-7 w-7 stroke-blue-400" />*/}
+						{/*</button>*/}
 						<ShareButton />
 					</div>
 				</div>

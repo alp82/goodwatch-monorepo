@@ -21,7 +21,7 @@ export default function CountrySelector({
 
 	const navigate = useNavigate()
 	const handleCountryChange = (newCountry: string) => {
-		navigate(`?tab=streaming&country=${newCountry}`)
+		navigate(`?country=${newCountry}`)
 	}
 
 	return (

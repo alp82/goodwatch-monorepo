@@ -91,7 +91,7 @@ export default function Header() {
 															prefetch="render"
 															className={`block px-4 py-2 text-base font-medium ${
 																isPageExact("/")
-																	? "bg-indigo-900 text-white"
+																	? "bg-amber-900 text-white"
 																	: "text-gray-300"
 															} ${focus ? "bg-gray-700 text-white" : ""}`}
 														>
@@ -107,7 +107,7 @@ export default function Header() {
 																prefetch="render"
 																className={`block px-4 py-2 text-base font-medium ${
 																	isPage("/discover")
-																		? "bg-indigo-900 text-white"
+																		? "bg-amber-900 text-white"
 																		: "text-gray-300"
 																} ${focus ? "bg-gray-700 text-white" : ""}`}
 															>
@@ -124,7 +124,7 @@ export default function Header() {
 																prefetch="viewport"
 																className={`block px-4 py-2 text-base font-medium ${
 																	isPage("/about")
-																		? "bg-indigo-900 text-white"
+																		? "bg-amber-900 text-white"
 																		: "text-gray-300"
 																} ${focus ? "bg-gray-700 text-white" : ""}`}
 															>
@@ -139,7 +139,7 @@ export default function Header() {
 																prefetch="viewport"
 																className={`block px-4 py-2 text-base font-medium ${
 																	isPage("/disclaimer")
-																		? "bg-indigo-900 text-white"
+																		? "bg-amber-900 text-white"
 																		: "text-gray-300"
 																} ${focus ? "bg-gray-700 text-white" : ""}`}
 															>
@@ -207,9 +207,9 @@ export default function Header() {
 										key={nav.path}
 										className={`rounded-md px-3 py-2 text-md font-semibold ${
 											isPage(nav.path)
-												? "text-white bg-indigo-800"
+												? "text-white bg-amber-800"
 												: "text-gray-300"
-										} hover:bg-indigo-900 hover:text-white`}
+										} hover:bg-amber-900 hover:text-white`}
 										to={nav.path}
 										prefetch="render"
 									>

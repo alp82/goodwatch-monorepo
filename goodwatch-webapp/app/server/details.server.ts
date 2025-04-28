@@ -396,8 +396,8 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 		name: "details-movie",
 		target: _getDetailsForMovie,
 		params,
-		ttlMinutes: 20,
-		// ttlMinutes: 0,
+		// ttlMinutes: 20,
+		ttlMinutes: 0,
 	})
 }
 
@@ -493,8 +493,8 @@ const streamingLinksFragment = `
   ) AS streaming_links`
 
 function processStreamingLinks(links: StreamingLink[]): StreamingLink[] {
-	// Map to track the main provider for each group
-	const providerGroups: Record<number, StreamingLink> = {}
+	// Map to track providers grouped by main provider and stream type
+	const providerGroups: Record<number, Record<string, StreamingLink>> = {}
 
 	// Helper to get the main provider ID
 	const getMainProviderId = (id: number): number => {
@@ -511,22 +511,23 @@ function processStreamingLinks(links: StreamingLink[]): StreamingLink[] {
 	// Process each link
 	for (const link of links) {
 		const mainProviderId = getMainProviderId(link.provider_id)
-		const existing = providerGroups[mainProviderId]
-
-		// Update if: no existing link, or current is flatrate, or (current is free and existing isn't flatrate)
-		if (
-			!existing ||
-			link.stream_type === "flatrate" ||
-			(link.stream_type === "free" && existing.stream_type !== "flatrate")
-		) {
-			providerGroups[mainProviderId] = link
+		if (!providerGroups[mainProviderId]) {
+			providerGroups[mainProviderId] = {}
+		}
+		const existing = providerGroups[mainProviderId][link.stream_type]
+		if (!existing) {
+			providerGroups[mainProviderId][link.stream_type] = link
 		}
 	}
 
-	// Convert back to array and sort by display_priority
-	return Object.values(providerGroups).sort(
-		(a, b) => a.display_priority - b.display_priority,
-	)
+	// Flatten the nested structure and sort by display_priority
+	const result: StreamingLink[] = []
+	for (const group of Object.values(providerGroups)) {
+		for (const link of Object.values(group)) {
+			result.push(link)
+		}
+	}
+	return result.sort((a, b) => a.display_priority - b.display_priority)
 }
 
 const createBaseQuery = (
