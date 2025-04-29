@@ -7,6 +7,7 @@ import type { SectionIds } from "~/ui/details/common"
 import ScoreSelector from "~/ui/user/ScoreSelector"
 import Appear from "~/ui/fx/Appear"
 import { StarIcon } from "@heroicons/react/20/solid"
+import Drawer from "~/ui/modal/Drawer"
 
 interface DetailsRatingsProps {
 	details: MovieDetails | TVDetails
@@ -20,8 +21,10 @@ export default function DetailsRatings({
 	const ratings = extractRatings(details)
 
 	const [ratingVisible, setRatingVisible] = useState(false)
+	const [drawerOpen, setDrawerOpen] = useState(false)
 	const handleToggleRate = () => {
 		setRatingVisible((prev) => !prev)
+		setDrawerOpen((prev) => !prev)
 	}
 
 	return (
@@ -54,13 +57,24 @@ export default function DetailsRatings({
 								onToggleRate={handleToggleRate}
 							/>
 						</div>
-						<Appear isVisible={ratingVisible}>
-							<div className="py-2 px-4 bg-gray-900/50">
-								<div>
-									<ScoreSelector details={details} />
+						{/* Desktop: show ScoreSelector inline, mobile: use Drawer */}
+						<div className="hidden md:block">
+							<Appear isVisible={ratingVisible}>
+								<div className="py-2 px-4 bg-gray-900/50">
+									<div>
+										<ScoreSelector details={details} />
+									</div>
 								</div>
-							</div>
-						</Appear>
+							</Appear>
+						</div>
+
+						{/* Mobile Drawer */}
+						<Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+							<ScoreSelector
+								details={details}
+								onCancel={() => setDrawerOpen(false)}
+							/>
+						</Drawer>
 					</div>
 				</div>
 			</div>

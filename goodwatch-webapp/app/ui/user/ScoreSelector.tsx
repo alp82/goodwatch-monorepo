@@ -9,11 +9,13 @@ import { scoreLabels } from "~/utils/ratings"
 interface ScoreSelectorProps {
 	details: MovieDetails | TVDetails
 	onChange?: (score: Score | null) => void
+	onCancel?: () => void
 }
 
 export default function ScoreSelector({
 	details,
 	onChange,
+	onCancel,
 }: ScoreSelectorProps) {
 	const { tmdb_id, media_type } = details
 
@@ -171,10 +173,18 @@ export default function ScoreSelector({
 					{score && (!hoveredScore || hoveredScore === score) && (
 						<span className="flex items-center gap-2">
 							<ScoreAction details={details} score={null}>
-								<span className="px-2 py-1 text-red-400 hover:text-red-600 text-xs cursor-pointer">
-									Clear
+								<span className="px-2 py-1 text-red-400 hover:text-red-300 text-xs cursor-pointer">
+									Remove Score
 								</span>
 							</ScoreAction>
+							<button
+								type="button"
+								className="px-3 py-2 border-2 border-slate-800 hover:border-slate-600 text-gray-400 hover:text-gray-300 text-xs cursor-pointer"
+								onClick={onCancel}
+								onKeyDown={() => {}}
+							>
+								Cancel
+							</button>
 							<div
 								className={`${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
 							>
@@ -182,7 +192,7 @@ export default function ScoreSelector({
 									<span
 										className={`
 										sm:hidden px-3 py-2
-										bg-slate-950 hover:bg-slate-950 border-2 border-slate-800 hover:border-slate-600
+										bg-slate-950 hover:bg-black border-2 border-slate-800 hover:border-slate-700
 										text-slate-100 text-base font-semibold
 										rounded cursor-pointer
 									`}
