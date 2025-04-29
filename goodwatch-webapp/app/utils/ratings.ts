@@ -77,3 +77,17 @@ export const extractRatings = (
 		}
 	}, {}) as AllRatings
 }
+
+export const scoreLabels = [
+	"Not Rated",
+	"Unwatchable",
+	"Terrible",
+	"Bad",
+	"Weak",
+	"Mediocre",
+	"Decent",
+	"Good",
+	"Great",
+	"Excellent",
+	"Must Watch",
+]

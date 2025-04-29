@@ -35,13 +35,13 @@ export default function FilterCountries({
 		}
 	})
 	selectItems.sort((a, b) => {
-		const aIsAvailable = (availableCountryCodes || []).includes(a.key)
-		const bIsAvailable = (availableCountryCodes || []).includes(b.key)
+		const aIsAvailable = (availableCountryCodes || []).includes(a.label)
+		const bIsAvailable = (availableCountryCodes || []).includes(b.label)
 
 		if (aIsAvailable && !bIsAvailable) return -1
 		if (!aIsAvailable && bIsAvailable) return 1
 
-		return a.label.localeCompare(b.label)
+		return a.label.localeCompare(b.key)
 	})
 
 	const selectedItem = selectItems.find((item) => item.key === selectedCountry)

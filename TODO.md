@@ -53,16 +53,11 @@ details page redesign
         92% Match
 
 movie card
+    popout design
     overlay: show movie or tv icon 
 
 remove obsolete code
     updateUrlParams.tsx
-
----    
-
-DNA redesign
-    https://gemini.google.com/app/939d66e003582351
-    https://gemini.google.com/app/38fd8b42c3385597
 
 ---    
 
@@ -72,29 +67,27 @@ DB research
     https://www.tigergraph.com/
     https://aerospike.com/
 
+DB optimization
+    separate vector db?
+    https://qdrant.tech/benchmarks/#filtered-results
+    
+---    
+
+DNA redesign
+    https://gemini.google.com/app/939d66e003582351
+    https://gemini.google.com/app/38fd8b42c3385597
+    Franchise
+    Anime yes/no
+
 ---    
 
 search
     search results page
+    LLM search
 
 resources
     https://github.com/quickwit-oss/tantivy
     https://openpipe.ai/blog/pii-redact
-
----
-
-security audit
-    https://auditvps.com/
-    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
-    
-penetration test
-    evan | scraping & automations
-    jared | infracharm
-
----
-
-better og images
-    https://gemini.google.com/app/8f9832dc2c62d13a
 
 ---
 
@@ -111,9 +104,18 @@ SEO optimization + marketing
     
 ---
 
-DB optimization
-    separate vector db?
-    https://qdrant.tech/benchmarks/#filtered-results
+security audit
+    https://auditvps.com/
+    https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
+    
+penetration test
+    evan | scraping & automations
+    jared | infracharm
+
+---
+
+better og images
+    https://gemini.google.com/app/8f9832dc2c62d13a
 
 ---
 

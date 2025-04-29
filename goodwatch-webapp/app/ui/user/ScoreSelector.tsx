@@ -4,7 +4,7 @@ import { useUserData } from "~/routes/api.user-data"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { Score } from "~/server/scores.server"
 import ScoreAction from "~/ui/user/actions/ScoreAction"
-import WatchHistoryAction from "~/ui/user/actions/WatchHistoryAction"
+import { scoreLabels } from "~/utils/ratings"
 
 interface ScoreSelectorProps {
 	details: MovieDetails | TVDetails
@@ -24,20 +24,6 @@ export default function ScoreSelector({
 	const [hoveredScore, setHoveredScore] = useState<Score | null>(null)
 	const [clearedScore, setClearedScore] = useState<Score | null>(null)
 
-	const scoreLabels = [
-		"Not Rated",
-		"Unwatchable",
-		"Terrible",
-		"Bad",
-		"Weak",
-		"Mediocre",
-		"Decent",
-		"Good",
-		"Great",
-		"Excellent",
-		"Must Watch",
-	]
-
 	useEffect(() => {
 		if (score === userScore) return
 		setScore(userScore)
@@ -55,8 +41,8 @@ export default function ScoreSelector({
 	}
 
 	const getLabelColor = () => {
-		if (score && !clearedScore) {
-			const vibeColorIndex = (score || -1) * 10
+		if ((hoveredScore || score) && !clearedScore) {
+			const vibeColorIndex = (hoveredScore || score || -1) * 10
 			return `text-vibe-${vibeColorIndex}`
 		}
 		return "text-vibe-gray-500"
@@ -65,8 +51,9 @@ export default function ScoreSelector({
 	const getLabelText = () => {
 		if (score !== clearedScore || hoveredScore !== clearedScore) {
 			if (hoveredScore) return `${scoreLabels[hoveredScore]} (${hoveredScore})`
-			// if (score) return `${scoreLabels[score]} (${score})`
-			if (score) return scoreLabels[score]
+			if (score) return `${scoreLabels[score]} (${score})`
+			// if (hoveredScore) return scoreLabels[hoveredScore]
+			// if (score) return scoreLabels[score]
 		}
 		return scoreLabels[0]
 	}
@@ -169,28 +156,18 @@ export default function ScoreSelector({
 			onTouchMove={handleTouchMove}
 			onTouchEnd={handleTouchEnd}
 		>
-			<div className="px-6 py-2">
+			<div className="px-5 pt-4">
 				<div className="h-12 md:h-8 flex items-center justify-between gap-2">
+					{/* Score Preview */}
 					<div className="flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
-						<div className="text-sm text-gray-300">My score:</div>
 						<div className="flex items-center gap-2">
-							{score && (
-								<div
-									className={`
-										hidden sm:flex items-center
-										p-0.5 w-7 h-7
-										rounded-full ${getColorForIndex(score, false)} 
-										text-lg font-semibold text-center text-white
-									`}
-								>
-									<span className="w-full">{score}</span>
-								</div>
-							)}
 							<span className={`font-semibold ${getLabelColor()}`}>
 								{getLabelText()}
 							</span>
 						</div>
 					</div>
+
+					{/* User Actions */}
 					{score && (!hoveredScore || hoveredScore === score) && (
 						<span className="flex items-center gap-2">
 							<ScoreAction details={details} score={null}>
@@ -218,6 +195,8 @@ export default function ScoreSelector({
 					)}
 				</div>
 			</div>
+
+			{/* Mobile: Score Slider */}
 			<div className="sm:hidden flex flex-col items-center px-6 py-8">
 				<div className="relative w-full flex items-center justify-center">
 					<input
@@ -255,6 +234,8 @@ export default function ScoreSelector({
 					</div>
 				</div>
 			</div>
+
+			{/* Desktop: Score Selector */}
 			<div className="hidden sm:flex px-4 transition duration-150 ease-in-out">
 				{Array.from({ length: 10 }, (_, i: number) => {
 					const scoreIndex = (i + 1) as Score
