@@ -102,7 +102,7 @@ export default function RatingBadges({
 
 			<div className="w-full sm:w-auto flex items-center justify-between gap-3 sm:gap-1.5 md:gap-4 lg:gap-6">
 				<a
-					className=""
+					className="w-full max-w-36"
 					href={ratings?.imdb_url}
 					target="_blank"
 					rel="noreferrer"
@@ -110,18 +110,18 @@ export default function RatingBadges({
 					<dl
 						className={`
 							${ratings?.imdb_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"}
-							h-full py-0.5 sm:py-2 px-4 xs:px-8 sm:px-3
+							h-full py-0.5 sm:py-2 px-2
 							flex flex-col items-center gap-1
 							bg-imdb shadow-2xl overflow-hidden rounded-lg
 							text-center brightness-[.8] hover:brightness-100
 						`}
 					>
 						<img
-							className="block h-6 sm:h-4 md:h-6 object-contain"
+							className="block h-6 object-contain"
 							src={imdbLogo}
 							alt="IMDb Logo"
 						/>
-						<dd className="text-lg sm:text-lg md:text-2xl font-semibold tracking-tight text-gray-900">
+						<dd className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
 							{ratings?.imdb_user_score_original
 								? ratings?.imdb_user_score_original.toFixed(1)
 								: "–"}
@@ -130,7 +130,7 @@ export default function RatingBadges({
 				</a>
 
 				<a
-					className=""
+					className="w-full max-w-36"
 					href={ratings?.metacritic_url}
 					target="_blank"
 					rel="noreferrer"
@@ -138,18 +138,18 @@ export default function RatingBadges({
 					<dl
 						className={`
 							${ratings?.metacritic_url ? "hover:border-black/[.45] active:border-black/[.45]" : "opacity-60"}
-							h-full py-1 sm:py-2 px-4 xs:px-8 sm:px-3
+							h-full py-1 sm:py-2 px-1 xs:px-3
 							flex flex-col items-center gap-0.5 sm:gap-2
 							bg-metacritic shadow-2xl overflow-hidden rounded-lg
 							text-center brightness-[.8] hover:brightness-100
 						`}
 					>
 						<img
-							className="h-7 sm:h-5 md:h-7 object-contain"
+							className="block h-6 object-contain"
 							src={metacriticLogo}
 							alt="Metacritic Logo"
 						/>
-						<dd className="flex gap-1 xs:gap-2 text-lg md:text-2xl font-semibold tracking-tight text-gray-100">
+						<dd className="flex gap-1 xs:gap-2 text-xl md:text-2xl font-semibold tracking-tight text-gray-100">
 							<span>
 								{ratings?.metacritic_meta_score_original
 									? Math.floor(ratings?.metacritic_meta_score_original)
@@ -166,7 +166,7 @@ export default function RatingBadges({
 				</a>
 
 				<a
-					className=""
+					className="w-full max-w-36"
 					href={ratings?.rotten_tomatoes_url}
 					target="_blank"
 					rel="noreferrer"
@@ -174,18 +174,18 @@ export default function RatingBadges({
 					<dl
 						className={`
 							${ratings?.rotten_tomatoes_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"}
-							h-full py-1 sm:py-2 px-4 xs:px-8 sm:px-3
+							h-full py-1 sm:py-2 px-1 xs:px-3
 							flex flex-col items-center gap-0.5 sm:gap-2
 							bg-rotten shadow-2xl overflow-hidden rounded-lg
 							text-center brightness-[0.8] hover:brightness-100
 						`}
 					>
 						<img
-							className="block h-6 sm:h-4 md:h-6 object-contain"
+							className="block h-6 object-contain"
 							src={rottenLogo}
 							alt="Rotten Tomatoes Logo"
 						/>
-						<dd className="flex gap-1 xs:gap-2 text-lg md:text-2xl font-semibold tracking-tight text-gray-50">
+						<dd className="flex gap-1 xs:gap-2 text-xl md:text-2xl font-semibold tracking-tight text-gray-50">
 							<span>
 								{ratings?.rotten_tomatoes_tomato_score_original
 									? Math.floor(ratings?.rotten_tomatoes_tomato_score_original)

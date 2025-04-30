@@ -30,7 +30,9 @@ export default function About({ details, navigateToSection }: AboutProps) {
 				</div>
 			)}
 			<Description description={synopsis} />
-			<DNAPreview dna={dna} navigateToSection={navigateToSection} />
+			{/*<div className="pt-4">*/}
+			{/*	<DNAPreview dna={dna} navigateToSection={navigateToSection} />*/}
+			{/*</div>*/}
 		</>
 	)
 }

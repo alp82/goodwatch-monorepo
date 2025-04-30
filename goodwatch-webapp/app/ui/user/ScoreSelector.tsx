@@ -5,6 +5,8 @@ import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { Score } from "~/server/scores.server"
 import ScoreAction from "~/ui/user/actions/ScoreAction"
 import { scoreLabels } from "~/utils/ratings"
+import { CheckIcon } from "@heroicons/react/20/solid"
+import { XMarkIcon } from "@heroicons/react/24/outline"
 
 interface ScoreSelectorProps {
 	details: MovieDetails | TVDetails
@@ -173,17 +175,29 @@ export default function ScoreSelector({
 					{score && (!hoveredScore || hoveredScore === score) && (
 						<span className="flex items-center gap-2">
 							<ScoreAction details={details} score={null}>
-								<span className="px-2 py-1 text-red-400 hover:text-red-300 text-xs cursor-pointer">
+								<span
+									className="
+										px-2 py-1
+										text-red-400 hover:text-red-300 text-xs
+										transition duration-100 cursor-pointer
+									"
+								>
 									Remove Score
 								</span>
 							</ScoreAction>
 							<button
 								type="button"
-								className="px-3 py-2 border-2 border-slate-800 hover:border-slate-600 text-gray-400 hover:text-gray-300 text-xs cursor-pointer"
+								className="
+									flex items-center gap-2 px-2 py-1.5
+									 bg-slate-950 hover:bg-black border-2 border-slate-800 hover:border-slate-700
+									 text-slate-300 hover:text-slate-100
+									 transition duration-100 cursor-pointer
+								"
 								onClick={onCancel}
 								onKeyDown={() => {}}
 							>
-								Cancel
+								<XMarkIcon className="h-4 w-4" aria-hidden="true" />
+								Close
 							</button>
 							<div
 								className={`${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
@@ -191,12 +205,13 @@ export default function ScoreSelector({
 								<ScoreAction details={details} score={score}>
 									<span
 										className={`
-										sm:hidden px-3 py-2
-										bg-slate-950 hover:bg-black border-2 border-slate-800 hover:border-slate-700
-										text-slate-100 text-base font-semibold
-										rounded cursor-pointer
+										sm:hidden flex items-center gap-2 px-2 py-1.5
+										bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded border-amber-800 hover:border-amber-700
+										text-slate-300 hover:text-slate-100 font-semibold
+										transition duration-100 cursor-pointer
 									`}
 									>
+										<CheckIcon className="h-4 w-4" aria-hidden="true" />
 										Save
 									</span>
 								</ScoreAction>

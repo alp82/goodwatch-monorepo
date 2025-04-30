@@ -104,6 +104,11 @@ SEO optimization + marketing
     
 ---
 
+details streaming
+    action button in header row to select streaming services (mobile: drawer)
+
+---
+
 security audit
     https://auditvps.com/
     https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
