@@ -40,8 +40,6 @@ import { prefetchUserData } from "~/server/userData.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { getLocaleFromRequest } from "~/utils/locale"
 
-import "swiper/css"
-import "swiper/css/effect-coverflow"
 import RemoteControl from "~/ui/start/RemoteControl"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 

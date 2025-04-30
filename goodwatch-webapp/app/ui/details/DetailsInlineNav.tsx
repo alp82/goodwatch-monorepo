@@ -56,7 +56,7 @@ export default function DetailsInlineNav({
 		<nav className="2xl:hidden bg-white/5 border-t border-white/10">
 			<div className="relative m-auto px-4 pt-1 pb-3 w-full max-w-7xl">
 				{/* Mobile: dropdown + progress bar */}
-				<div className="sm:hidden w-full flex items-center gap-3 relative">
+				<div className="md:hidden w-full flex items-center gap-3 relative">
 					{/* Progress circle */}
 					<svg
 						width="18"
@@ -139,7 +139,7 @@ export default function DetailsInlineNav({
 				</div>
 
 				{/* Desktop: inline nav */}
-				<div className="hidden sm:flex mt-2 text-xs md:text-sm lg:text-md xl:text-base flex-row w-full">
+				<div className="hidden md:flex mt-2 md:text-xs lg:text-sm xl:text-md flex-row w-full">
 					{sectionList.map((section, idx, arr) => (
 						<div
 							key={section.id}

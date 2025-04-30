@@ -7,7 +7,7 @@ import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/common"
 import { useScrollSections } from "~/utils/scroll"
 import DetailsHeader from "~/ui/details/DetailsHeader"
-import DetailsMain from "~/ui/details/DetailsMain"
+import DetailsOverview from "~/ui/details/DetailsOverview"
 import DetailsRatings from "~/ui/details/DetailsRatings"
 import DetailsSreaming from "~/ui/details/DetailsStreaming"
 
@@ -37,7 +37,7 @@ export default function Details({ details, country }: DetailsProps) {
 						backgroundImage: `url(${backdropUrl})`,
 						backgroundSize: "cover",
 						backgroundPosition: "center",
-						filter: "blur(28px) brightness(0.15)",
+						filter: "blur(64px) brightness(0.17)",
 					}}
 				/>
 			)}
@@ -46,7 +46,6 @@ export default function Details({ details, country }: DetailsProps) {
 				details={details}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
-				// TODO: wire up isFavorite, onToggleFavorite, rating, onRate as needed
 			/>
 
 			<DetailsSideNav
@@ -54,7 +53,7 @@ export default function Details({ details, country }: DetailsProps) {
 				navigateToSection={navigateToSection}
 			/>
 
-			<DetailsMain details={details} sectionProps={sectionProps} />
+			<DetailsOverview details={details} sectionProps={sectionProps} />
 
 			<DetailsRatings details={details} sectionProps={sectionProps} />
 
@@ -64,13 +63,6 @@ export default function Details({ details, country }: DetailsProps) {
 				sectionProps={sectionProps}
 				navigateToSection={navigateToSection}
 			/>
-
-			{/*<DetailsOverview*/}
-			{/*	details={details}*/}
-			{/*	country={country}*/}
-			{/*	sectionProps={sectionProps}*/}
-			{/*	navigateToSection={navigateToSection}*/}
-			{/*/>*/}
 
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">

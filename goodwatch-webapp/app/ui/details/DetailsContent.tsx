@@ -11,6 +11,7 @@ import { extractRatings } from "~/utils/ratings"
 import type { SectionProps } from "~/utils/scroll"
 import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import DetailsDNA from "~/ui/details/DetailsDNA"
+import DetailsSimilar from "~/ui/details/DetailsSimilar"
 
 export interface DetailsContentProps {
 	details: MovieDetails | TVDetails
@@ -43,7 +44,9 @@ export default function DetailsContent({
 			</div>
 			<div {...sectionProps.dna}>
 				<DetailsDNA details={details} />
-				{/*<DNA details={details} />*/}
+			</div>
+			<div {...sectionProps.similar}>
+				<DetailsSimilar details={details} />
 			</div>
 			<div {...sectionProps.sequels}>
 				<SequelsPrequelsFranchise details={details} />

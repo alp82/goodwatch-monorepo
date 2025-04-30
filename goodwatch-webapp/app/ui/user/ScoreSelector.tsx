@@ -188,7 +188,7 @@ export default function ScoreSelector({
 							<button
 								type="button"
 								className="
-									flex items-center gap-2 px-2 py-1.5
+									flex md:hidden items-center gap-2 px-2 py-1.5
 									 bg-slate-950 hover:bg-black border-2 border-slate-800 hover:border-slate-700
 									 text-slate-300 hover:text-slate-100
 									 transition duration-100 cursor-pointer

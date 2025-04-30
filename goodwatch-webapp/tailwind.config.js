@@ -19,6 +19,7 @@ module.exports = {
 		{ pattern: /bg-vibe-[0-9]+/ },
 		{ pattern: /text-vibe-[0-9]+/ },
 		{ pattern: /text-\w+-500/ },
+		{ pattern: /bg-\w+-900\/50/ }, // dna tags
 		{ pattern: /bg-\w+-950\/70/ }, // sign-in
 		{ pattern: /from-\w+-700\/[0-9]+/ },
 		{ pattern: /via-\w+-900\/[0-9]+/ },

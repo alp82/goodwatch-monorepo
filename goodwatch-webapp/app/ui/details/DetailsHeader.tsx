@@ -13,26 +13,21 @@ import type {
 } from "~/server/details.server"
 import AgeRating from "~/ui/details/AgeRating"
 import Runtime from "~/ui/details/Runtime"
+import { getDNAForCategory } from "~/ui/dna/dna_utils"
+import Genres from "~/ui/details/Genres"
 
 interface DetailsHeaderProps {
 	details: MovieDetails | TVDetails
 	activeSections: string[]
 	navigateToSection: (section: Section) => void
-	isFavorite?: boolean
-	onToggleFavorite?: () => void
-	onRate?: () => void
 }
 
 const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	details,
 	activeSections,
 	navigateToSection,
-	// TODO wire up props
-	isFavorite = false,
-	onToggleFavorite,
-	onRate,
 }) => {
-	const { media_type, release_year, title } = details
+	const { genres, media_type, release_year, title } = details
 
 	let ageRating: ContentRatingResult | ReleaseDate | undefined
 	let number_of_episodes: number | undefined
@@ -53,11 +48,11 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 		<div className="sticky top-16 z-40 bg-black/80 backdrop-blur border-b border-white/15">
 			<div className="relative m-auto px-4 py-3 w-full max-w-7xl">
 				<div className="flex items-center justify-between gap-4">
-					<div className="flex flex-col md:gap-2 min-w-0">
-						<h1 className="text-xl md:text-2xl lg:text-3xl font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+					<div className="flex flex-col gap-2 min-w-0">
+						<h1 className="text-xl sm:text-2xl lg:text-3xl font-medium whitespace-nowrap overflow-hidden text-ellipsis">
 							{title}
 						</h1>
-						<div className="text-xs md:text-sm lg:text-base text-gray-400 flex flex-col xs:flex-row xs:items-center gap-1">
+						<div className="text-xs md:text-sm lg:text-base text-gray-400 flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-0">
 							<div className="flex items-center">
 								{release_year && (
 									<>
@@ -67,6 +62,14 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 								)}
 								<span className="font-normal">
 									{media_type === "movie" ? "Movie" : "TV Show"}
+								</span>
+								<span className="hidden xs:inline mx-2">&middot;</span>
+								<span className="hidden xs:inline">
+									<Genres
+										genres={genres.slice(0, 2)}
+										type={media_type}
+										compact={true}
+									/>
 								</span>
 							</div>
 							<div className="flex items-center">

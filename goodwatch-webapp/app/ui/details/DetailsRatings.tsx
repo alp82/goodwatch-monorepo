@@ -57,6 +57,7 @@ export default function DetailsRatings({
 								onToggleRate={handleToggleRate}
 							/>
 						</div>
+
 						{/* Desktop: show ScoreSelector inline, mobile: use Drawer */}
 						<div className="hidden md:block">
 							<Appear isVisible={ratingVisible}>
@@ -69,12 +70,14 @@ export default function DetailsRatings({
 						</div>
 
 						{/* Mobile Drawer */}
-						<Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-							<ScoreSelector
-								details={details}
-								onCancel={() => setDrawerOpen(false)}
-							/>
-						</Drawer>
+						<div className="md:hidden">
+							<Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+								<ScoreSelector
+									details={details}
+									onCancel={() => setDrawerOpen(false)}
+								/>
+							</Drawer>
+						</div>
 					</div>
 				</div>
 			</div>

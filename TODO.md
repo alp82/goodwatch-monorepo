@@ -84,6 +84,7 @@ DNA redesign
 search
     search results page
     LLM search
+    https://typesense.org/
 
 resources
     https://github.com/quickwit-oss/tantivy

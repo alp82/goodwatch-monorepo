@@ -19,6 +19,10 @@ export const sections = {
 		id: "dna",
 		label: "DNA",
 	},
+	similar: {
+		id: "similar",
+		label: "Similar",
+	},
 	sequels: {
 		id: "sequels",
 		label: "Sequels",

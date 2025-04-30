@@ -21,7 +21,7 @@ export function DNATag({
 }: DNATagProps) {
 	const tagElement = (
 		<span
-			className={`px-2 py-0.5 ${getCategoryColor(category)} hover:brightness-125 text-white text-xs sm:text-sm md:text-md border-gray-600 border-2 rounded-md`}
+			className={`px-2 py-0.5 ${getCategoryColor(category)}/50 hover:brightness-125 text-white text-xs sm:text-sm md:text-md border-gray-600 border-2 rounded-md`}
 		>
 			{label}
 		</span>
