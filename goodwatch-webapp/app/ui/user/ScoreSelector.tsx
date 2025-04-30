@@ -161,9 +161,9 @@ export default function ScoreSelector({
 			onTouchEnd={handleTouchEnd}
 		>
 			<div className="px-5 pt-4">
-				<div className="h-12 md:h-8 flex items-center justify-between gap-2">
-					{/* Score Preview */}
-					<div className="flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
+				<div className="h-12 md:h-8 flex items-center justify-end sm:justify-between gap-2">
+					{/* Desktop: Score Preview */}
+					<div className="hidden sm:flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
 						<div className="flex items-center gap-2">
 							<span className={`font-semibold ${getLabelColor()}`}>
 								{getLabelText()}
@@ -200,12 +200,12 @@ export default function ScoreSelector({
 								Close
 							</button>
 							<div
-								className={`${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
+								className={`sm:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
 							>
 								<ScoreAction details={details} score={score}>
 									<span
 										className={`
-										sm:hidden flex items-center gap-2 px-2 py-1.5
+										flex items-center gap-2 px-2 py-1.5
 										bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded border-amber-800 hover:border-amber-700
 										text-slate-300 hover:text-slate-100 font-semibold
 										transition duration-100 cursor-pointer
@@ -218,6 +218,17 @@ export default function ScoreSelector({
 							</div>
 						</span>
 					)}
+				</div>
+			</div>
+
+			<div>
+				{/* Mobile: Score Preview*/}
+				<div className="sm:hidden mt-6 mx-6 flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
+					<div className="flex items-center gap-2">
+						<span className={`font-semibold ${getLabelColor()}`}>
+							{getLabelText()}
+						</span>
+					</div>
 				</div>
 			</div>
 
