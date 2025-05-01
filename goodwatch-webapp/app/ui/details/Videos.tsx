@@ -84,7 +84,7 @@ export default function Videos({ videos }: VideosProps) {
 					{selectedVideos[selectedNumber]?.key && (
 						<ClientOnly fallback={<div>Loading video…</div>}>
 							{() => (
-								<div className="aspect-w-16 aspect-h-9">
+								<div className="aspect-16/9">
 									<ReactPlayer
 										url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
 										width="100%"

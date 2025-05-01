@@ -6,22 +6,17 @@
 details page redesign
     https://replit.com/@alperortac1/GoodWatch-Details
 
-    DNA different sections
-    top DNA categories, hide the rest
-    swiper for discover preview
+    my score not rated
+        empty state with pulsate animation
     
     similar movies
         https://letterboxd.com/film/dune-part-two/themes/
-    
-    show tropes
-    show images
-    
-    tabs/menu improvements:
-        https://stepperize.vercel.app/docs/react/api-references/define#usage
+ 
+    about section
+        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+        
+    show title in current language
 
-    box office (e.g. Google)
-    awards (grab from API)
-    
     share button sticky
     guess country
     age restriction by country
@@ -29,7 +24,6 @@ details page redesign
     web links section
     sequels section
     
-    show title in current language
     images section
     images and videos as gallery
     https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&t=DM0lDYiEkBYUsMZY-0
@@ -43,11 +37,8 @@ details page redesign
 
     fragment for scroll position (auto update)
     
-    about section
-        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
-        
     json-ld movie/tv
-    image preview generated with background + ratings + streaming
+        image preview generated with background + ratings + streaming
     
     score prediction
         92% Match
@@ -411,6 +402,14 @@ plan to watch
     
     remove separate wishlist page?
 
+---
+
+ details more data:
+    show tropes
+    show images
+    box office (e.g. Google)
+    awards (grab from API)
+    
 ---
 
 discover order

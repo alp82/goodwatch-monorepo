@@ -84,7 +84,7 @@ export default function Movies() {
 											key={item.path}
 											to={`/${type}/${navItem.path}/${item.path}`}
 											prefetch="viewport"
-											className="group relative block w-full aspect-2 overflow-hidden transition-transform duration-200 hover:scale-105"
+											className="group relative block w-full aspect-7/4 overflow-hidden transition-transform duration-200 hover:scale-105"
 										>
 											<div
 												className="absolute inset-0 bg-cover bg-center"

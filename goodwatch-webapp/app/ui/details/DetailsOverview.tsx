@@ -30,7 +30,7 @@ export default function DetailsOverview({
 						<Poster path={poster_path} title={title} />
 					</div>
 					<div className="relative grow min-w-[220px] flex items-center justify-center">
-						<div className="aspect-video w-full max-h-full relative rounded-md overflow-hidden">
+						<div className="w-full max-h-full relative rounded-md overflow-hidden">
 							<img
 								src={backdropUrl}
 								alt="Backdrop"
