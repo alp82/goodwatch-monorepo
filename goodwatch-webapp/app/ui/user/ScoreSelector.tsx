@@ -206,7 +206,7 @@ export default function ScoreSelector({
 									<span
 										className={`
 										flex items-center gap-2 px-2 py-1.5
-										bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded border-amber-800 hover:border-amber-700
+										bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded-sm border-amber-800 hover:border-amber-700
 										text-slate-300 hover:text-slate-100 font-semibold
 										transition duration-100 cursor-pointer
 									`}

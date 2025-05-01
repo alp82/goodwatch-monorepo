@@ -26,10 +26,10 @@ export default function DetailsOverview({
 			<div {...sectionProps.overview}>
 				{/* Poster and Trailer */}
 				<div className="flex justify-center gap-2">
-					<div className="relative w-[calc(21.8%-0.125rem)] min-w-[3.8rem] flex-shrink-0">
+					<div className="relative w-[calc(21.8%-0.125rem)] min-w-[3.8rem] shrink-0">
 						<Poster path={poster_path} title={title} />
 					</div>
-					<div className="relative flex-grow min-w-[220px] flex items-center justify-center">
+					<div className="relative grow min-w-[220px] flex items-center justify-center">
 						<div className="aspect-video w-full max-h-full relative rounded-md overflow-hidden">
 							<img
 								src={backdropUrl}

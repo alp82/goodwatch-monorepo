@@ -118,7 +118,7 @@ export default function Select<RenderItem extends SelectItem>({
 								className="
 								relative w-full py-1.5 pl-2 pr-10
 								rounded-md shadow-sm cursor-pointer bg-stone-700 hover:bg-stone-600
-								ring-1 ring-inset ring-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-400
+								ring-1 ring-inset ring-stone-600 focus:outline-hidden focus:ring-2 focus:ring-stone-400
 								text-left text-gray-100 text-sm sm:text-base
 							"
 							>
@@ -131,7 +131,7 @@ export default function Select<RenderItem extends SelectItem>({
 														src={item.icon}
 														alt={item.label}
 														title={item.label}
-														className="h-5 w-5 flex-shrink-0 rounded-full"
+														className="h-5 w-5 shrink-0 rounded-full"
 													/>
 													<span className="sr-only ml-3 block truncate">
 														{item.label}
@@ -144,7 +144,7 @@ export default function Select<RenderItem extends SelectItem>({
 											<img
 												src={selectedItems.icon}
 												alt={selectedItems.label}
-												className="h-5 w-5 flex-shrink-0 rounded-full"
+												className="h-5 w-5 shrink-0 rounded-full"
 											/>
 											<span className="ml-3 block truncate">
 												{selectedItems.label}
@@ -178,7 +178,7 @@ export default function Select<RenderItem extends SelectItem>({
 									className={`
 									absolute top-10 z-50 mt-1 max-h-96 w-full overflow-auto
 									rounded-md bg-stone-800
-									shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none
+									shadow-lg ring-1 ring-black/5 focus:outline-hidden-none
 									text-sm sm:text-base
 								`}
 									ref={scrollRef}
@@ -234,7 +234,7 @@ export default function Select<RenderItem extends SelectItem>({
 																		<img
 																			src={item.icon}
 																			alt=""
-																			className="h-5 w-5 flex-shrink-0 rounded-full"
+																			className="h-5 w-5 shrink-0 rounded-full"
 																		/>
 																	)}
 																	<span

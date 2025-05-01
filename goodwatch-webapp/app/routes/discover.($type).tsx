@@ -113,7 +113,7 @@ export function ErrorBoundary() {
 			</p>
 			<button
 				type="button"
-				className="w-40 px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
+				className="w-40 px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
 				onClick={() => navigate("/discover")}
 			>
 				Go Back

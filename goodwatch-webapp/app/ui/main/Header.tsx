@@ -60,7 +60,7 @@ export default function Header() {
 							<Menu as="div" className="relative inline-block text-left">
 								{({ open }) => (
 									<>
-										<MenuButton className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+										<MenuButton className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-white">
 											<span className="sr-only">Open main menu</span>
 											{open ? (
 												<XMarkIcon
@@ -83,7 +83,7 @@ export default function Header() {
 											leaveFrom="transform opacity-100 scale-100"
 											leaveTo="transform opacity-0 scale-95"
 										>
-											<MenuItems className="absolute left-0 z-50 mt-2 w-64 origin-top-left rounded-md bg-gray-950 py-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+											<MenuItems className="absolute left-0 z-50 mt-2 w-64 origin-top-left rounded-md bg-gray-950 py-2 shadow-lg ring-1 ring-black/5 focus:outline-hidden">
 												<MenuItem>
 													{({ focus }) => (
 														<Link
@@ -188,7 +188,7 @@ export default function Header() {
 						</div>
 						{/* Logo and desktop links */}
 						<div className="flex items-baseline px-2 lg:px-0">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<Link to="/" prefetch="render">
 									<img className="h-7 w-auto" src={logo} alt="GoodWatch Logo" />
 								</Link>
@@ -228,8 +228,8 @@ export default function Header() {
 						<div className="lg:ml-2">
 							<div className="flex items-center">
 								{loading ? null : user ? (
-									<Menu as="div" className="relative ml-2 flex-shrink-0">
-										<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+									<Menu as="div" className="relative ml-2 shrink-0">
+										<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
 											<span className="sr-only">Open user menu</span>
 											{user?.user_metadata?.avatar_url ? (
 												<img
@@ -251,7 +251,7 @@ export default function Header() {
 											leaveFrom="transform opacity-100 scale-100"
 											leaveTo="transform opacity-0 scale-95"
 										>
-											<MenuItems className="absolute right-0 z-50 mt-2 w-72 origin-top-right border-2 border-gray-800 rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+											<MenuItems className="absolute right-0 z-50 mt-2 w-72 origin-top-right border-2 border-gray-800 rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden">
 												<MenuItem>
 													{({ focus }) => (
 														<Link

@@ -26,7 +26,7 @@ function GlobalLoading() {
 		>
 			<div
 				ref={ref}
-				className={`h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-1000 ease-in-out
+				className={`h-full bg-linear-to-r from-blue-500 to-indigo-500 transition-all duration-1000 ease-in-out
           ${
 						navigation.state === "idle" &&
 						animationComplete &&

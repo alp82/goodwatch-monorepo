@@ -45,7 +45,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	}
 
 	return (
-		<div className="sticky top-16 z-40 bg-black/80 backdrop-blur border-b border-white/15">
+		<div className="sticky top-16 z-40 bg-black/80 backdrop-blur-sm border-b border-white/15">
 			<div className="relative m-auto px-4 py-3 w-full max-w-7xl">
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex flex-col gap-2 min-w-0">
@@ -99,7 +99,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 							</div>
 						</div>
 					</div>
-					<div className="flex items-center gap-4 flex-shrink-0">
+					<div className="flex items-center gap-4 shrink-0">
 						{/*<button*/}
 						{/*	type="button"*/}
 						{/*	aria-label={*/}
@@ -107,7 +107,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						{/*	}*/}
 						{/*	onClick={onToggleFavorite}*/}
 						{/*	className={*/}
-						{/*		"h-7 w-7 text-pink-400 hover:text-pink-500 focus:outline-none"*/}
+						{/*		"h-7 w-7 text-pink-400 hover:text-pink-500 focus:outline-hidden"*/}
 						{/*	}*/}
 						{/*>*/}
 						{/*	{isFavorite ? (*/}
@@ -121,7 +121,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						{/*	aria-label="Rate"*/}
 						{/*	onClick={onRate}*/}
 						{/*	className={*/}
-						{/*		"h-7 w-7 text-blue-400 hover:text-blue-500 focus:outline-none"*/}
+						{/*		"h-7 w-7 text-blue-400 hover:text-blue-500 focus:outline-hidden"*/}
 						{/*	}*/}
 						{/*>*/}
 						{/*	<HandThumbUpIcon className="h-7 w-7 stroke-blue-400" />*/}

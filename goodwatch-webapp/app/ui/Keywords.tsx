@@ -11,7 +11,7 @@ const Keyword = ({ keyword, type }: KeywordProps) => {
 	return (
 		<Link
 			key={keyword}
-			className="px-2 py-0.5 rounded text-xs font-medium border-2 border-sky-800 text-sky-100 bg-sky-950 hover:text-white hover:bg-sky-900"
+			className="px-2 py-0.5 rounded-sm text-xs font-medium border-2 border-sky-800 text-sky-100 bg-sky-950 hover:text-white hover:bg-sky-900"
 			to={`/discover/all?withKeywords=${keyword}`}
 			prefetch="intent"
 		>

@@ -74,7 +74,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 								leaveFrom="opacity-100"
 								leaveTo="opacity-0"
 							>
-								<div className="fixed inset-0 bg-black bg-opacity-70 transition-opacity" />
+								<div className="fixed inset-0 bg-black/70 transition-opacity" />
 							</TransitionChild>
 
 							<div className="fixed inset-0 w-screen overflow-y-auto">
@@ -93,7 +93,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 												<button
 													type="button"
 													onClick={() => setOpen(false)}
-													className="absolute top-2 left-4 p-2 flex gap-2 rounded  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+													className="absolute top-2 left-4 p-2 flex gap-2 rounded-sm  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
 												>
 													<ArrowLeftIcon className="w-6 h-6" />
 													<span>Back to Details</span>
@@ -101,7 +101,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 												<button
 													type="button"
 													onClick={() => setOpen(false)}
-													className="absolute top-2 right-4 p-2 flex gap-2 rounded  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+													className="absolute top-2 right-4 p-2 flex gap-2 rounded-sm  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
 												>
 													<XMarkIcon className="w-6 h-6" />
 												</button>

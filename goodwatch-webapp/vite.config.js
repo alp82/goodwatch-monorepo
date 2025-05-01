@@ -1,6 +1,7 @@
 import { vitePlugin as remix } from "@remix-run/dev"
 import { installGlobals } from "@remix-run/node"
 import { sentryVitePlugin } from "@sentry/vite-plugin"
+import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 // import { remixDevTools } from "remix-development-tools/vite";
 import tsconfigPaths from "vite-tsconfig-paths"
@@ -36,6 +37,7 @@ export default defineConfig(({ mode }) => ({
 			org: "goodwatch",
 			project: "webapp",
 		}),
+		tailwindcss(),
 	],
 
 	build: {

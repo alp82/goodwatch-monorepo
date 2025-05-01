@@ -177,7 +177,7 @@ export function ErrorBoundary() {
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
 					<Header />
-					<main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+					<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
 						<InfoBox text="Sorry, but an error occurred" />
 						<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
 							{/* Error message */}
@@ -188,7 +188,7 @@ export function ErrorBoundary() {
 							{/* Try Again button */}
 							<button
 								type="button"
-								className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
+								className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
 								onClick={() => window.location.reload()}
 							>
 								Try Again

@@ -50,9 +50,9 @@ export function MovieTvCard({
 
 				<div
 					className="
-						hidden @max-sm/card:flex items-end
+						hidden @sm/card:flex items-end
 						absolute bottom-0 w-full min-h-40 px-2 py-2
-						bg-gradient-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
+						bg-linear-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
 						overflow-hidden
 					"
 				>

@@ -118,7 +118,7 @@ export default function DetailsInlineNav({
 						</button>
 						{/* Dropdown menu */}
 						{dropdownOpen && (
-							<ul className="absolute left-0 right-0 mt-1 z-10 bg-neutral-900 border border-white/20 rounded shadow-lg">
+							<ul className="absolute left-0 right-0 mt-1 z-10 bg-neutral-900 border border-white/20 rounded-sm shadow-lg">
 								{sectionList.map((section) => (
 									<li key={section.id}>
 										<button

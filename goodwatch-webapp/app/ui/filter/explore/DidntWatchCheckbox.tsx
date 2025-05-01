@@ -40,7 +40,7 @@ export const DidntWatchCheckbox = ({
 					type="checkbox"
 					checked={checked}
 					onChange={() => {}}
-					className="w-4 h-4 text-orange-600 bg-gray-300 border-gray-600 rounded focus:ring-orange-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"
+					className="w-4 h-4 text-orange-600 bg-gray-300 border-gray-600 rounded-sm focus:ring-orange-600 ring-offset-gray-800 focus:ring-2 cursor-pointer"
 				/>
 				<Tag
 					color={checked ? didntWatchOption?.color : "white"}

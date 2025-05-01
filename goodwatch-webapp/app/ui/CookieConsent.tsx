@@ -25,7 +25,7 @@ export const CookieConsent = () => {
 	return (
 		<>
 			{consentGiven === "undecided" ? (
-				<div className="fixed z-[200] bottom-0 left-1/2 transform -translate-x-1/2 w-full sm:max-w-4xl transition-transform duration-75">
+				<div className="fixed z-200 bottom-0 left-1/2 transform -translate-x-1/2 w-full sm:max-w-4xl transition-transform duration-75">
 					<div className=" m-2 bg-slate-900 border-4 border-slate-700 rounded-lg text-gray-200">
 						<div className="grid gap-2">
 							<div className="border-b border-slate-700 h-14 flex items-center justify-between p-4 text-2xl ">

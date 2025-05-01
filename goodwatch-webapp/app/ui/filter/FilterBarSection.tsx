@@ -28,7 +28,7 @@ export default function FilterBarSection({
 		<div
 			className={`
 				flex flex-col flex-wrap gap-2 ${isCompact ? "px-1 justify-center" : "p-2 justify-between grow"}
-				bg-gradient-to-br from-${color}-700/${transparency} via-${color}-900/${transparency} to-${color}-800/${transparency}
+				bg-linear-to-br from-${color}-700/${transparency} via-${color}-900/${transparency} to-${color}-800/${transparency}
 				border-4 ${isActive ? "border-white/50" : "border-white/10"}
 				transition duration-150 
 				${isActive ? "bg-[length:200%_200%] animate-gradient-x via-50% to-70%" : ""}

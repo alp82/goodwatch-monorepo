@@ -1,85 +1,85 @@
-import { BookmarkIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { FilmIcon, ForwardIcon, TvIcon } from "@heroicons/react/24/solid";
-import React, { useEffect, useState } from "react";
-import { useOnboardingMedia } from "~/routes/api.onboarding.media";
-import { type GetUserDataResult, useUserData } from "~/routes/api.user-data";
-import type { OnboardingResult } from "~/server/onboarding-media.server";
-import { Poster } from "~/ui/Poster";
-import NextBackButtons from "~/ui/button/NextBackButtons";
-import { SearchInput } from "~/ui/form/SearchInput";
-import PlanToWatchButton from "~/ui/user/PlanToWatchButton";
-import ScoreSelector from "~/ui/user/ScoreSelector";
-import SkipButton from "~/ui/user/SkipButton";
-import { Spinner } from "~/ui/wait/Spinner";
-import { useAutoFocus } from "~/utils/form";
-import { useDebounce } from "~/utils/timing";
-import { getSortedUserData } from "~/utils/user-data";
+import { BookmarkIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
+import { FilmIcon, ForwardIcon, TvIcon } from "@heroicons/react/24/solid"
+import React, { useEffect, useState } from "react"
+import { useOnboardingMedia } from "~/routes/api.onboarding.media"
+import { type GetUserDataResult, useUserData } from "~/routes/api.user-data"
+import type { OnboardingResult } from "~/server/onboarding-media.server"
+import { Poster } from "~/ui/Poster"
+import NextBackButtons from "~/ui/button/NextBackButtons"
+import { SearchInput } from "~/ui/form/SearchInput"
+import PlanToWatchButton from "~/ui/user/PlanToWatchButton"
+import ScoreSelector from "~/ui/user/ScoreSelector"
+import SkipButton from "~/ui/user/SkipButton"
+import { Spinner } from "~/ui/wait/Spinner"
+import { useAutoFocus } from "~/utils/form"
+import { useDebounce } from "~/utils/timing"
+import { getSortedUserData } from "~/utils/user-data"
 
 export interface SelectMediaProps {
-	onSelect: () => void;
-	onBack: () => void;
+	onSelect: () => void
+	onBack: () => void
 }
 
 export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	// search state
-	const autoFocusRef = useAutoFocus<HTMLInputElement>();
-	const [searchTerm, setSearchTerm] = useState("");
-	const debouncedSearchTerm = useDebounce(searchTerm, 200);
+	const autoFocusRef = useAutoFocus<HTMLInputElement>()
+	const [searchTerm, setSearchTerm] = useState("")
+	const debouncedSearchTerm = useDebounce(searchTerm, 200)
 
 	const handleSearchByTerm = (term: string) => {
-		if (term.length === 1) return;
-		setSearchTerm(term);
-	};
+		if (term.length === 1) return
+		setSearchTerm(term)
+	}
 
 	// get media titles for rating and user scores
 
 	const onboardingMedia = useOnboardingMedia({
 		searchTerm: debouncedSearchTerm,
-	});
-	const movies = onboardingMedia.data?.movies || [];
-	const tv = onboardingMedia.data?.tv || [];
+	})
+	const movies = onboardingMedia.data?.movies || []
+	const tv = onboardingMedia.data?.tv || []
 
-	const { data: userData } = useUserData();
+	const { data: userData } = useUserData()
 
 	// media titles to display
 
 	const [previousMediaToDisplay, setPreviousMediaToDisplay] = useState<
 		OnboardingResult | undefined
-	>();
+	>()
 
 	const handlePreviousMediaToggle = (media: OnboardingResult) => {
 		if (previousMediaToDisplay?.tmdb_id === media.tmdb_id) {
-			setPreviousMediaToDisplay(undefined);
+			setPreviousMediaToDisplay(undefined)
 		} else {
-			setPreviousMediaToDisplay(media);
+			setPreviousMediaToDisplay(media)
 		}
-	};
+	}
 	const handlePreviousMediaHide = () => {
-		setPreviousMediaToDisplay(undefined);
-	};
+		setPreviousMediaToDisplay(undefined)
+	}
 	const tmdb_ids = [
 		...movies.map((m) => m.tmdb_id),
 		...tv.map((m) => m.tmdb_id),
-	].join(",");
+	].join(",")
 	useEffect(() => {
-		if (!previousMediaToDisplay) return;
-		handlePreviousMediaHide();
-	}, [tmdb_ids]);
+		if (!previousMediaToDisplay) return
+		handlePreviousMediaHide()
+	}, [tmdb_ids])
 
 	const allMedia = [
 		...(previousMediaToDisplay ? [previousMediaToDisplay] : []),
 		...movies,
 		...tv,
-	];
+	]
 
 	const sortedMedia = getSortedUserData(userData as GetUserDataResult, [
 		"onScoresSince",
 		"onSkippedSince",
 		"onWishListSince",
-	]).slice(0, 7);
+	]).slice(0, 7)
 	const scoredMediaAmount = getSortedUserData(userData as GetUserDataResult, [
 		"onScoresSince",
-	]).length;
+	]).length
 
 	// user actions
 
@@ -88,44 +88,44 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 			media.tmdb_id !== previousMediaToDisplay?.tmdb_id ||
 			media.media_type !== previousMediaToDisplay?.media_type
 		) {
-			return;
+			return
 		}
 
-		setPreviousMediaToDisplay(undefined);
-	};
+		setPreviousMediaToDisplay(undefined)
+	}
 
 	// score display
 
 	const getBgColorName = (score: number | null) => {
-		const vibeColorIndex = (score || -1) * 10;
-		return `bg-vibe-${vibeColorIndex}`;
-	};
+		const vibeColorIndex = (score || -1) * 10
+		return `bg-vibe-${vibeColorIndex}`
+	}
 
-	let scoreCountHint = "";
-	let scoreCountBadgeClasses = "";
+	let scoreCountHint = ""
+	let scoreCountBadgeClasses = ""
 	if (scoredMediaAmount >= 25) {
 		scoreCountHint =
-			"Nice! You can finish the onboarding now or keep going. The more you rate, the better your recommendations.";
-		scoreCountBadgeClasses = "bg-green-800 text-green-300";
+			"Nice! You can finish the onboarding now or keep going. The more you rate, the better your recommendations."
+		scoreCountBadgeClasses = "bg-green-800 text-green-300"
 	} else if (scoredMediaAmount >= 10) {
 		scoreCountHint =
-			"Good start! Aim for 25 scores and you'll get more personalized results.";
-		scoreCountBadgeClasses = "bg-yellow-800 text-yellow-300";
+			"Good start! Aim for 25 scores and you'll get more personalized results."
+		scoreCountBadgeClasses = "bg-yellow-800 text-yellow-300"
 	} else {
-		scoreCountHint = "Please rate at least 10 titles to get recommendations.";
-		scoreCountBadgeClasses = "bg-red-900 text-red-300";
+		scoreCountHint = "Please rate at least 10 titles to get recommendations."
+		scoreCountBadgeClasses = "bg-red-900 text-red-300"
 	}
-	const didntScoreEnoughForRecommendations = scoredMediaAmount < 10;
+	const didntScoreEnoughForRecommendations = scoredMediaAmount < 10
 
 	// handle navigation
 
 	const handleMediaRatingsConfirmed = () => {
-		onSelect();
-	};
+		onSelect()
+	}
 
 	const handleMediaRatingsBack = () => {
-		onBack();
-	};
+		onBack()
+	}
 
 	const getMedia = (media: OnboardingResult[]) => {
 		return (
@@ -195,15 +195,15 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					</div>
 				)}
 			</div>
-		);
-	};
+		)
+	}
 
 	const nextBackButtons = (
 		<NextBackButtons
 			nextLabel={didntScoreEnoughForRecommendations ? "Skip for now" : "Finish"}
 			nextBadge={
 				<span
-					className={`text-base font-medium me-2 px-2.5 py-0.5 rounded ${scoreCountBadgeClasses}`}
+					className={`text-base font-medium me-2 px-2.5 py-0.5 rounded-sm ${scoreCountBadgeClasses}`}
 				>
 					{scoredMediaAmount}
 				</span>
@@ -211,7 +211,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 			onNext={handleMediaRatingsConfirmed}
 			onBack={handleMediaRatingsBack}
 		/>
-	);
+	)
 
 	return (
 		<>
@@ -307,5 +307,5 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 				{nextBackButtons}
 			</div>
 		</>
-	);
-};
+	)
+}

@@ -38,7 +38,7 @@ export default function DetailsRatings({
 						className="
 							flex items-center gap-2 px-3 py-1.5
 							text-gray-300 hover:text-gray-100 bg-black/20 hover:bg-black/30 rounded-lg border-2 border-gray-700
-							font-semibold  text-xs md:text-sm shadow transition-all duration-100
+							font-semibold  text-xs md:text-sm shadow-sm transition-all duration-100
 						"
 						type="button"
 						aria-label="Rate This"

@@ -104,7 +104,7 @@ const Drawer: React.FC<DrawerProps> = ({
 
 	return (
 		<div
-			className={`fixed inset-0 z-[100] flex items-end md:hidden ${isOpen ? "visible" : "invisible pointer-events-none"}`}
+			className={`fixed inset-0 z-100 flex items-end md:hidden ${isOpen ? "visible" : "invisible pointer-events-none"}`}
 			aria-modal="true"
 			tabIndex={-1}
 		>

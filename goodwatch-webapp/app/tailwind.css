@@ -1,3 +1,65 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Safelist */
+@source inline("bg-vibe-{{0..100..10}}");
+@source inline("text-vibe-{{0..100..10}}");
+@source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/50"); /* DNA tags */
+@source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-950/70"); /* Sign in */
+@source inline("from-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-700/{80,50}"); /* Discover filters */
+@source inline("via-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/{80,50}"); /* Discover filters */
+@source inline("to-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-800/{80,50}"); /* Discover filters */
+
+@theme {
+	--breakpoint-xs: 475px;
+
+	--color-gray-950: #060606;
+
+	--color-vibe-0: #d61f1f;
+	--color-vibe-10: #d61f1f;
+	--color-vibe-20: #d61f1f;
+	--color-vibe-30: #d61f1f;
+	--color-vibe-40: #d0481c;
+	--color-vibe-50: #ba7215;
+	--color-vibe-60: #a9930a;
+	--color-vibe-70: #86a61a;
+	--color-vibe-80: #3b9011;
+	--color-vibe-90: #0d8033;
+	--color-vibe-100: #0d8033;
+
+	--color-imdb: #f6c800;
+	--color-metacritic: #010101;
+	--color-rotten: #f83309;
+
+	--animate-gradient-x: gradient-move-x 5s ease infinite;
+
+	@keyframes gradient-move-x {
+		0%,
+		100% {
+			background-position: 0% 0%;
+		}
+		50% {
+			background-position: 50% 50%;
+		}
+	}
+}
+
+@custom-variant sm-h {
+	@media (max-height: 1000px) {
+		@slot;
+	}
+}
+@custom-variant lg-h {
+	@media (min-height: 1001px) {
+		@slot;
+	}
+}
+@custom-variant xl-h {
+	@media (min-height: 1301px) {
+		@slot;
+	}
+}
+
+/* TODO check if still needed. Used for main search? */
+input[type="search"]::-webkit-search-cancel-button {
+	appearance: none;
+}

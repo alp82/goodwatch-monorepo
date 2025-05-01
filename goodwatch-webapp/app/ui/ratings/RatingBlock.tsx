@@ -1,14 +1,14 @@
-import React from "react";
-import { sections } from "~/ui/details/common";
-import RatingBadges from "~/ui/ratings/RatingBadges";
-import type { AllRatings } from "~/utils/ratings";
-import type { Section } from "~/utils/scroll";
+import React from "react"
+import { sections } from "~/ui/details/common"
+import RatingBadges from "~/ui/ratings/RatingBadges"
+import type { AllRatings } from "~/utils/ratings"
+import type { Section } from "~/utils/scroll"
 
 export interface RatingBlockProps {
-	ratings?: AllRatings;
-	title?: string;
-	compact?: boolean;
-	navigateToSection: (section: Section) => void;
+	ratings?: AllRatings
+	title?: string
+	compact?: boolean
+	navigateToSection: (section: Section) => void
 }
 
 export default function RatingBlock({
@@ -16,7 +16,7 @@ export default function RatingBlock({
 	navigateToSection,
 }: RatingBlockProps) {
 	return (
-		<div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900 bg-opacity-70 shadow-lg">
+		<div className="divide-y divide-gray-600 overflow-hidden rounded-lg bg-gray-900/70 shadow-lg">
 			<div className="px-4 py-2 sm:px-6 font-bold">
 				<button
 					type="button"
@@ -31,5 +31,5 @@ export default function RatingBlock({
 				<RatingBadges ratings={ratings} />
 			</div>
 		</div>
-	);
+	)
 }

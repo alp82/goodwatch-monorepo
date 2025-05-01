@@ -21,7 +21,7 @@ export default function StreamingTypeSelector({
 			{types.map((type) => (
 				<button
 					key={type.value}
-					className={`w-full max-w-36 px-3 py-1.5 rounded border text-sm transition-colors ${
+					className={`w-full max-w-36 px-3 py-1.5 rounded-sm border text-sm transition-colors ${
 						value === type.value
 							? "text-black border-amber-700 bg-amber-500 "
 							: " text-white border-stone-500 bg-stone-700 hover:bg-stone-600"

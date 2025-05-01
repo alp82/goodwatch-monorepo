@@ -44,7 +44,7 @@ export default function Search() {
 	}: { item: SearchAutocompleteItem; selected: boolean }) => {
 		return (
 			<div className="w-full flex items-center p-2 hover:bg-slate-800 cursor-pointer">
-				<img src={item.imageUrl} alt="" className="h-16 w-12 flex-shrink-0" />
+				<img src={item.imageUrl} alt="" className="h-16 w-12 shrink-0" />
 				<div>
 					<div className={classNames("ml-3 text-lg truncate font-bold")}>
 						{item.label}
