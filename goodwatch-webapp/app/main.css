@@ -62,30 +62,6 @@
 	}
 }
 
-/* Swiper */
-
-:root {
-	--swiper-navigation-size: 24px;
-	--swiper-navigation-color: #ccc;
-	--swiper-navigation-top-offset: 45%;
-	--swiper-navigation-sides-offset: 4px;
-}
-
-.swiper-button-prev,
-.swiper-button-next {
-	padding: 1.5rem;
-	border-radius: 100%;
-	border: 0.5rem solid rgba(0, 0, 0, 0.7);
-	background-color: rgba(0, 0, 0, 0.8);
-	transition: all 0.1s ease-in-out;
-}
-
-.swiper-button-prev:hover,
-.swiper-button-next:hover {
-	border: 0.5rem solid rgba(0, 0, 0, 0.8);
-	background-color: rgba(0, 0, 0, 0.9);
-}
-
 /* Tropes */
 
 .tropes img {

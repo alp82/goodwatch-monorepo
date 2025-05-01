@@ -31,10 +31,11 @@ export function MovieTvCard({
 	return (
 		<Link
 			className="
-				@container/card
+				@container
 				flex flex-col w-full
 				bg-gray-900 hover:bg-gray-800
-				border-4 rounded-md border-gray-800 hover:border-indigo-700
+				border-4 rounded-lg border-gray-800 hover:border-amber-700/50
+				transition-transform duration-100 transform scale-95 hover:scale-100
 				group
 			"
 			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
@@ -50,7 +51,7 @@ export function MovieTvCard({
 
 				<div
 					className="
-						hidden @sm/card:flex items-end
+						hidden @6xs:flex items-end
 						absolute bottom-0 w-full min-h-40 px-2 py-2
 						bg-linear-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
 						overflow-hidden
@@ -58,9 +59,9 @@ export function MovieTvCard({
 				>
 					<span
 						className="
-						text-sm font-bold text-white
-						transition-transform duration-200 group-hover:-translate-y-1
-					"
+							text-sm font-bold text-white
+							transition-transform duration-200 group-hover:-translate-y-1
+						"
 					>
 						{details.title}
 						{details.release_year ? ` (${details.release_year})` : ""}

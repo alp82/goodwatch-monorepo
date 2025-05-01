@@ -17,7 +17,7 @@ export default function StreamingOverlay({ links }: StreamingOverlayProps) {
 		.slice(0, 5)
 
 	return (
-		<div className="hidden md:block absolute top-5 left-1 w-full overflow-hidden flex items-center gap-1 opacity-80">
+		<div className="hidden @5xs:flex items-center gap-1 absolute top-5 left-1 w-full overflow-hidden opacity-80">
 			{hasProviders ? (
 				uniqueLinks.map((link, index) => (
 					<img

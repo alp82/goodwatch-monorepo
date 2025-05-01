@@ -12,6 +12,11 @@
 @theme {
 	--breakpoint-xs: 475px;
 
+	--container-7xs: 8rem;
+	--container-6xs: 10rem;
+	--container-5xs: 12rem;
+	--container-4xs: 14rem;
+
 	--color-gray-950: #060606;
 
 	--color-vibe-0: #d61f1f;

@@ -33,7 +33,6 @@ import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 
 import "swiper/css"
 import "swiper/css/effect-coverflow"
-import "swiper/css/navigation"
 import cssTailwind from "~/tailwind.css?url"
 import cssToastify from "react-toastify/dist/ReactToastify.css?url"
 import App from "~/app"
