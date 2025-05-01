@@ -1,6 +1,5 @@
-import { Link, PrefetchPageLinks } from "@remix-run/react"
+import { Link } from "@remix-run/react"
 import type React from "react"
-import { useState } from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { ExploreResult } from "~/server/explore.server"
@@ -32,6 +31,7 @@ export function MovieTvCard({
 	return (
 		<Link
 			className="
+				@container/card
 				flex flex-col w-full
 				bg-gray-900 hover:bg-gray-800
 				border-4 rounded-md border-gray-800 hover:border-indigo-700
@@ -50,8 +50,8 @@ export function MovieTvCard({
 
 				<div
 					className="
+						hidden @max-sm/card:flex items-end
 						absolute bottom-0 w-full min-h-40 px-2 py-2
-						flex items-end
 						bg-gradient-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
 						overflow-hidden
 					"

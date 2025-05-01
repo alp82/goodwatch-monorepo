@@ -20,7 +20,7 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 	const progressPosition = typeof score === "number" ? score : 50
 
 	return (
-		<div className="absolute -top-1 w-full rounded-t-md bg-gray-800 h-5">
+		<div className="hidden md:block absolute -top-1 w-full rounded-t-md bg-gray-800 h-5">
 			{hasScore && (
 				<>
 					<div

@@ -279,11 +279,13 @@ ai
 ---
 
 tropes
+    add to details
     add discover filter
 
 ---
 
-DNA alternative to huggingface
+gif support
+    images section with giphy integration
 
 ---    
 

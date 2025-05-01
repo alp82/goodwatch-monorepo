@@ -11,35 +11,34 @@ export interface MovieTvSwiperProps {
 export default function MovieTvSwiper({ results }: MovieTvSwiperProps) {
 	return (
 		<Swiper
-			breakpoints={{
-				480: {
-					slidesPerView: 3,
-					slidesPerGroup: 3,
-				},
-				640: {
-					slidesPerView: 4,
-					slidesPerGroup: 4,
-				},
-				768: {
-					slidesPerView: 5,
-					slidesPerGroup: 5,
-				},
-				1024: {
-					slidesPerView: 6,
-					slidesPerGroup: 6,
-				},
-				1280: {
-					slidesPerView: 6,
-					slidesPerGroup: 6,
-				},
-			}}
+			// breakpoints={{
+			// 	480: {
+			// 		slidesPerView: 5,
+			// 		slidesPerGroup: 5,
+			// 	},
+			// 	640: {
+			// 		slidesPerView: 6,
+			// 		slidesPerGroup: 6,
+			// 	},
+			// 	768: {
+			// 		slidesPerView: 7,
+			// 		slidesPerGroup: 7,
+			// 	},
+			// 	1024: {
+			// 		slidesPerView: 8,
+			// 		slidesPerGroup: 8,
+			// 	},
+			// 	1280: {
+			// 		slidesPerView: 9,
+			// 		slidesPerGroup: 9,
+			// 	},
+			// }}
 			freeMode={true}
 			grabCursor={true}
-			loop={true}
 			modules={[Navigation, FreeMode]}
 			navigation={true}
-			slidesPerView={2}
-			slidesPerGroup={2}
+			slidesPerView={4}
+			slidesPerGroup={4}
 			spaceBetween={8}
 			speed={100}
 		>
