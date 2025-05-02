@@ -30,7 +30,18 @@ function SimilarSwiper({
 }
 
 export default function DetailsSimilar({ details }: DetailsSimilarProps) {
-	const similarityCategories = ["Sub-Genres", "Mood", "Themes", "Plot"]
+	const similarityCategories = [
+		"Sub-Genres",
+		"Mood",
+		"Themes",
+		"Plot",
+		"Pacing",
+		"Narrative",
+		"Dialog",
+		"Outcast",
+		"Time",
+		"Place",
+	]
 
 	const discoverMovies = useDiscover({
 		params: {

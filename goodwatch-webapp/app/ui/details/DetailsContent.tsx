@@ -70,15 +70,15 @@ export default function DetailsContent({
 			<div {...sectionProps.videos}>
 				<Videos videos={videos || []} />
 			</div>
-			<div>
-				<Streaming
-					details={details}
-					media_type={media_type}
-					links={streaming_links}
-					currentCountryCode={country}
-					countryCodes={streaming_country_codes}
-				/>
-			</div>
+			{/*<div>*/}
+			{/*	<Streaming*/}
+			{/*		details={details}*/}
+			{/*		media_type={media_type}*/}
+			{/*		links={streaming_links}*/}
+			{/*		currentCountryCode={country}*/}
+			{/*		countryCodes={streaming_country_codes}*/}
+			{/*	/>*/}
+			{/*</div>*/}
 		</div>
 	)
 }

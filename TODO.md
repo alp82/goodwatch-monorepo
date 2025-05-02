@@ -14,6 +14,9 @@ details page redesign
  
     about section
         infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+       
+    streaming section
+        mark/reorder available countries
         
     show title in current language
 

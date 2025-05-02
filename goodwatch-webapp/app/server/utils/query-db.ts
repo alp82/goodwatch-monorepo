@@ -427,7 +427,7 @@ const constructSimilarityQuery = ({
 						  OR d.id = st.cluster_id
 						  OR d.id = st.id
 				  END
-		  WHERE d.count_all >= 2
+		  WHERE d.count_all >= 5
 		  ORDER BY d.count_all DESC
 			LIMIT 100
 		),
@@ -440,7 +440,7 @@ const constructSimilarityQuery = ({
 				aggregated_overall_score_voting_count,
 				'movie'::text as media_type
 			FROM movies
-			WHERE popularity >= 10 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_HIGH}
+			WHERE popularity >= 2 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID}
 			UNION ALL
 			SELECT
 				tmdb_id as item_id,
@@ -450,27 +450,27 @@ const constructSimilarityQuery = ({
 				aggregated_overall_score_voting_count,
 				'tv'::text as media_type
 			FROM tv
-			WHERE popularity >= 10 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_HIGH}
+			WHERE popularity >= 2 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID}
 		),
     matching_items AS (
       SELECT
         sub.item_id,
         SUM(
           CASE d.category 
-						WHEN 'Plot' THEN 10
-						WHEN 'Sub-Genres' THEN 6
-						WHEN 'Mood' THEN 5
-            WHEN 'Themes' THEN 4
+						WHEN 'Sub-Genres' THEN 30
+						WHEN 'Mood' THEN 20
+						WHEN 'Plot' THEN 15
+            WHEN 'Themes' THEN 15
+						WHEN 'Dialog' THEN 10
+						WHEN 'Narrative' THEN 5
+						WHEN 'Pacing' THEN 5
 						WHEN 'Cinematic Style' THEN 4
 						WHEN 'Character Types' THEN 4
-						WHEN 'Dialog' THEN 3
-						WHEN 'Narrative' THEN 3
 						WHEN 'Humor' THEN 3
 						WHEN 'Time' THEN 3
 						WHEN 'Place' THEN 3
 						WHEN 'Score and Sound' THEN 3
 						WHEN 'Costume and Set' THEN 3
-						WHEN 'Pacing' THEN 2
 						WHEN 'Key Props' THEN 3
 						WHEN 'Cultural Impact' THEN 2
 						WHEN 'Target Audience' THEN 2

@@ -1,10 +1,10 @@
 import { Link } from "@remix-run/react"
 import React from "react"
-import { Swiper, SwiperSlide } from "swiper/react"
-import { FreeMode, Navigation } from "swiper/modules"
+import { SwiperSlide } from "swiper/react"
 import "swiper/css"
 import "swiper/css/navigation"
 import type { Cast as CastType } from "~/server/details.server"
+import ListSwiper from "~/ui/ListSwiper"
 
 export interface CastProps {
 	cast: CastType[]
@@ -18,24 +18,7 @@ export default function Cast({ cast }: CastProps) {
 	return (
 		<>
 			<h2 className="text-2xl font-bold mb-4">Cast</h2>
-			<Swiper
-				breakpoints={{
-					480: { slidesPerView: 4, slidesPerGroup: 4 },
-					640: { slidesPerView: 5, slidesPerGroup: 5 },
-					768: { slidesPerView: 6, slidesPerGroup: 6 },
-					1024: { slidesPerView: 7, slidesPerGroup: 7 },
-					1280: { slidesPerView: 8, slidesPerGroup: 8 },
-				}}
-				freeMode={true}
-				grabCursor={true}
-				modules={[Navigation, FreeMode]}
-				navigation={true}
-				slidesPerView={3}
-				slidesPerGroup={3}
-				spaceBetween={4}
-				speed={100}
-				className="cast-swiper pb-6"
-			>
+			<ListSwiper>
 				{castWithPhotos.map((castMember) => {
 					const character =
 						castMember.character || castMember.roles?.[0]?.character
@@ -71,7 +54,7 @@ export default function Cast({ cast }: CastProps) {
 						</SwiperSlide>
 					)
 				})}
-			</Swiper>
+			</ListSwiper>
 		</>
 	)
 }
