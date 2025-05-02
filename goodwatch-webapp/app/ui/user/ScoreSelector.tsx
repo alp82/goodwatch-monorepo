@@ -41,23 +41,31 @@ export default function ScoreSelector({
 			const vibeColorIndex = (hoveredScore || score || -1) * 10
 			return `bg-vibe-${vibeColorIndex}`
 		}
+
+		// Handle the unrated state for desktop explicitly
+		// if (!score && !hoveredScore && !clearedScore && withDimming) {
+		// 	return "bg-gray-600/70 animate-pulse"
+		// }
+
+		// Dimmed background for inactive bars or the base unrated state
 		return `bg-vibe-${index * 10}${withDimming ? "/35" : ""}`
 	}
 
-	const getLabelColor = () => {
-		if ((hoveredScore || score) && !clearedScore) {
-			const vibeColorIndex = (hoveredScore || score || -1) * 10
+	const getLabelColor = (targetScore?: Score | null) => {
+		const effectiveScore = targetScore ?? hoveredScore ?? score
+		if (effectiveScore && (!clearedScore || effectiveScore !== clearedScore)) {
+			const vibeColorIndex = effectiveScore * 10
 			return `text-vibe-${vibeColorIndex}`
 		}
-		return "text-vibe-gray-500"
+		return "text-gray-500"
 	}
 
-	const getLabelText = () => {
-		if (score !== clearedScore || hoveredScore !== clearedScore) {
-			if (hoveredScore) return `${scoreLabels[hoveredScore]} (${hoveredScore})`
-			if (score) return `${scoreLabels[score]} (${score})`
-			// if (hoveredScore) return scoreLabels[hoveredScore]
-			// if (score) return scoreLabels[score]
+	const getLabelText = (targetScore?: Score | null) => {
+		const effectiveScore = targetScore ?? hoveredScore ?? score
+		// if (score !== clearedScore || hoveredScore !== clearedScore) {
+		if (effectiveScore && (!clearedScore || effectiveScore !== clearedScore)) {
+			return `${scoreLabels[effectiveScore]} (${effectiveScore})`
+			// return scoreLabels[effectiveScore]
 		}
 		return scoreLabels[0]
 	}
@@ -153,6 +161,55 @@ export default function ScoreSelector({
 		setLastTouchedElement(null) // Reset the last touched element after submission
 	}
 
+	// marker indicators
+
+	const Markers = ({ mode = "bar" }: { mode?: "bar" | "slider" }) => {
+		if (mode === "slider") {
+			// 10 markers, spaced evenly, positioned absolutely
+			return (
+				<div className="relative w-full h-6">
+					{Array.from({ length: 10 }, (_, i) => {
+						const scoreIndex = i + 1;
+						return (
+							<div
+								key={scoreIndex}
+								className="absolute flex flex-col items-center"
+								style={{
+									left: `calc(${i === 9 ? 100 : (scoreIndex - 1) * 100 / 9}% - 0.5px)`,
+									transform: i === 0 ? "translateX(0)" : i === 9 ? "translateX(-100%)" : "translateX(-50%)",
+								}}
+							>
+								<div className="h-2 w-0.5 bg-gray-600" />
+								<span className={`text-xs font-medium ${getLabelColor(scoreIndex as Score)} transition-colors duration-200`}>
+									{scoreIndex}
+								</span>
+							</div>
+						);
+					})}
+				</div>
+			);
+		}
+
+		// bar mode (desktop)
+		return (
+			<div className="relative w-full flex h-6 -mt-1">
+				{Array.from({ length: 10 }, (_, i) => {
+					const scoreIndex = i + 1;
+					return (
+						<div key={scoreIndex} className="flex-1 flex justify-center items-start">
+							<div className="flex flex-col items-center">
+								<div className="h-2 w-0.5 bg-gray-600" />
+								<span className={`text-xs font-medium ${getLabelColor(scoreIndex as Score)} transition-colors duration-200`}>
+									{scoreIndex}
+								</span>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		);
+	};
+
 	return (
 		<div
 			ref={containerRef}
@@ -172,8 +229,8 @@ export default function ScoreSelector({
 					</div>
 
 					{/* User Actions */}
-					{score && (!hoveredScore || hoveredScore === score) && (
-						<span className="flex items-center gap-2">
+					<span className="flex items-center gap-2">
+						{score && (!hoveredScore || hoveredScore === score) && (
 							<ScoreAction details={details} score={null}>
 								<span
 									className="
@@ -185,39 +242,39 @@ export default function ScoreSelector({
 									Remove Score
 								</span>
 							</ScoreAction>
-							<button
-								type="button"
-								className="
+						)}
+						<button
+							type="button"
+							className="
 									flex md:hidden items-center gap-2 px-2 py-1.5
 									 bg-slate-950 hover:bg-black border-2 border-slate-800 hover:border-slate-700
 									 text-slate-300 hover:text-slate-100
 									 transition duration-100 cursor-pointer
 								"
-								onClick={onCancel}
-								onKeyDown={() => {}}
-							>
-								<XMarkIcon className="h-4 w-4" aria-hidden="true" />
-								Close
-							</button>
-							<div
-								className={`sm:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
-							>
-								<ScoreAction details={details} score={score}>
-									<span
-										className={`
+							onClick={onCancel}
+							onKeyDown={() => {}}
+						>
+							<XMarkIcon className="h-4 w-4" aria-hidden="true" />
+							Close
+						</button>
+						<div
+							className={`sm:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
+						>
+							<ScoreAction details={details} score={score}>
+								<span
+									className={`
 										flex items-center gap-2 px-2 py-1.5
 										bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded-sm border-amber-800 hover:border-amber-700
 										text-slate-300 hover:text-slate-100 font-semibold
 										transition duration-100 cursor-pointer
 									`}
-									>
-										<CheckIcon className="h-4 w-4" aria-hidden="true" />
-										Save
-									</span>
-								</ScoreAction>
-							</div>
-						</span>
-					)}
+								>
+									<CheckIcon className="h-4 w-4" aria-hidden="true" />
+									Save
+								</span>
+							</ScoreAction>
+						</div>
+					</span>
 				</div>
 			</div>
 
@@ -234,7 +291,7 @@ export default function ScoreSelector({
 
 			{/* Mobile: Score Slider */}
 			<div className="sm:hidden flex flex-col items-center px-6 py-8">
-				<div className="relative w-full flex items-center justify-center">
+				<div className="relative mb-6 w-full flex items-center justify-center">
 					<input
 						type="range"
 						className="w-full h-6 rounded-lg appearance-none bg-gray-700 cursor-grab"
@@ -259,8 +316,8 @@ export default function ScoreSelector({
 								pointer-events-none cursor-grab
 							`}
 							style={{
-								left: `calc(${((score || 5) - 1) * 11.11}% - 30px)`,
-								top: "-30px",
+								left: `calc(${((score || 5) - 1) * 11.11}% - 28px)`,
+								top: "-28px", // Adjust based on new handle size
 							}}
 						>
 							<span className="text-3xl font-bold text-white drop-shadow-md">
@@ -269,36 +326,45 @@ export default function ScoreSelector({
 						</div>
 					</div>
 				</div>
+
+				<Markers mode="slider" />
 			</div>
 
 			{/* Desktop: Score Selector */}
-			<div className="hidden sm:flex px-4 transition duration-150 ease-in-out">
-				{Array.from({ length: 10 }, (_, i: number) => {
-					const scoreIndex = (i + 1) as Score
-					return (
-						<ScoreAction
-							key={i + 1}
-							details={details}
-							score={scoreIndex === score ? null : scoreIndex}
-						>
-							<div
-								className="w-full py-4 md:py-6 transition duration-200 ease-in-out transform origin-50 hover:scale-y-125 cursor-pointer"
-								onTouchStart={(event) => handlePointerEnter(event, scoreIndex)}
-								onMouseEnter={(event) => handlePointerEnter(event, scoreIndex)}
-								onMouseLeave={handlePointerLeave}
-								onClick={() => handleClick(scoreIndex)}
-								onKeyUp={() => null}
+			<div className="hidden sm:block pb-8 px-4 transition duration-150 ease-in-out">
+				<div className="flex">
+					{Array.from({ length: 10 }, (_, i: number) => {
+						const scoreIndex = (i + 1) as Score
+						return (
+							<ScoreAction
+								key={i + 1}
+								details={details}
+								score={scoreIndex === score ? null : scoreIndex}
 							>
 								<div
-									className={`h-8 w-full border-2 border-gray-800 rounded-md transition-all duration-200 ${getColorForIndex(
-										scoreIndex,
-										true,
-									)}`}
-								/>
-							</div>
-						</ScoreAction>
-					)
-				})}
+									className="w-full py-4 md:py-6 transition duration-100 ease-in-out transform origin-bottom hover:scale-y-125 cursor-pointer group"
+									onTouchStart={(event) =>
+										handlePointerEnter(event, scoreIndex)
+									}
+									onMouseEnter={(event) =>
+										handlePointerEnter(event, scoreIndex)
+									}
+									onMouseLeave={handlePointerLeave}
+									onClick={() => handleClick(scoreIndex)}
+									onKeyUp={() => null}
+								>
+									<div
+										className={`h-8 w-full border-2 border-gray-800 rounded-md transition-all duration-100 group-hover:border-gray-600 ${getColorForIndex(
+											scoreIndex,
+											true,
+										)}`}
+									/>
+								</div>
+							</ScoreAction>
+						)
+					})}
+				</div>
+				<Markers mode="bar" />
 			</div>
 		</div>
 	)

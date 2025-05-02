@@ -38,7 +38,7 @@ export default function DetailsRatings({
 						className="
 							flex items-center gap-2 px-3 py-1.5
 							text-gray-300 hover:text-gray-100 bg-black/20 hover:bg-black/30 rounded-lg border-2 border-gray-700
-							font-semibold  text-xs md:text-sm shadow-sm transition-all duration-100
+							font-semibold  text-xs md:text-sm shadow-sm transition-all duration-100 cursor-pointer
 						"
 						type="button"
 						aria-label="Rate This"
@@ -49,7 +49,7 @@ export default function DetailsRatings({
 					</button>
 				</div>
 				<div className="rounded-xl bg-gray-700/50">
-					<div className="flex flex-col divide-y divide-gray-700 ">
+					<div className="flex flex-col">
 						<div className="py-3 px-4 flex-1 flex flex-col items-center md:items-start">
 							<RatingBadges
 								details={details}
@@ -61,7 +61,7 @@ export default function DetailsRatings({
 						{/* Desktop: show ScoreSelector inline, mobile: use Drawer */}
 						<div className="hidden md:block">
 							<Appear isVisible={ratingVisible}>
-								<div className="py-2 px-4 bg-gray-900/50">
+								<div className="py-2 px-4 bg-gray-900/50 border-t-[1px] border-gray-700">
 									<div>
 										<ScoreSelector details={details} />
 									</div>

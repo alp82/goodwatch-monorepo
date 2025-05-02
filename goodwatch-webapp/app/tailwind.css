@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Safelist */
-@source inline("bg-vibe-{{0..100..10}}");
+@source inline("bg-vibe-{{0..100..10}}{/35,}"); /* /35 for desktop score selector*/
 @source inline("text-vibe-{{0..100..10}}");
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/50"); /* DNA tags */
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-950/70"); /* Sign in */
