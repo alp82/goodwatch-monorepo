@@ -3,25 +3,16 @@
 ```
 ---    
 
-details page redesign
-    https://replit.com/@alperortac1/GoodWatch-Details
-
-    my score not rated
-        empty state with pulsate animation
-    
-    similar movies
-        https://letterboxd.com/film/dune-part-two/themes/
- 
-    about section
-        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
-       
+details
     streaming section
         mark/reorder available countries
         
-    show title in current language
-
-    share button sticky
     guess country
+    show title in current language
+    
+    about section
+        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+
     age restriction by country
     streaming section favors user selected providers
     web links section
@@ -298,6 +289,12 @@ postgres stability
     disk space monitoring
     new setup? https://autobase.tech/docs/overview/requirements
 
+---
+
+DNA + Similar subpage
+    similar movies
+        https://letterboxd.com/film/dune-part-two/themes/
+ 
 ---
 
 Sequels wrong

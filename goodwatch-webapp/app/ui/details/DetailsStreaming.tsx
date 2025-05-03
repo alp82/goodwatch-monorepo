@@ -39,7 +39,7 @@ export default function DetailsStreaming({
 					Where to Watch
 				</h2>
 
-				<div className="rounded-xl bg-gray-700/50 divide-y divide-gray-700">
+				<div className="rounded-xl bg-gray-700/50">
 					<div className="my-2 py-3 px-4 flex items-center justify-between gap-4">
 						<StreamingBadges
 							details={details}
@@ -60,8 +60,8 @@ export default function DetailsStreaming({
 						</button>
 					</div>
 					<Appear isVisible={showSelectors}>
-						<div className="py-3 px-4 flex flex-col gap-2 items-center bg-gray-900/50">
-							<div className="mt-4 w-full flex flex-col xs:flex-row gap-2 xs:gap-8 items-center justify-between">
+						<div className="py-3 px-4 flex flex-col gap-2 items-center bg-gray-900/50 border-t-[1px] border-gray-700">
+							<div className="pt-4 w-full flex flex-col xs:flex-row gap-2 xs:gap-8 items-center justify-between">
 								<StreamingTypeSelector
 									value={streamingType}
 									onChange={setStreamingType}

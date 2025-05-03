@@ -169,46 +169,58 @@ export default function ScoreSelector({
 			return (
 				<div className="relative w-full h-6">
 					{Array.from({ length: 10 }, (_, i) => {
-						const scoreIndex = i + 1;
+						const scoreIndex = i + 1
 						return (
 							<div
 								key={scoreIndex}
 								className="absolute flex flex-col items-center"
 								style={{
-									left: `calc(${i === 9 ? 100 : (scoreIndex - 1) * 100 / 9}% - 0.5px)`,
-									transform: i === 0 ? "translateX(0)" : i === 9 ? "translateX(-100%)" : "translateX(-50%)",
+									left: `calc(${i === 9 ? 100 : ((scoreIndex - 1) * 100) / 9}% - 0.5px)`,
+									transform:
+										i === 0
+											? "translateX(0)"
+											: i === 9
+												? "translateX(-100%)"
+												: "translateX(-50%)",
 								}}
 							>
 								<div className="h-2 w-0.5 bg-gray-600" />
-								<span className={`text-xs font-medium ${getLabelColor(scoreIndex as Score)} transition-colors duration-200`}>
+								<span
+									className={`text-xs font-medium ${getLabelColor(scoreIndex as Score)} transition-colors duration-200`}
+								>
 									{scoreIndex}
 								</span>
 							</div>
-						);
+						)
 					})}
 				</div>
-			);
+			)
 		}
 
 		// bar mode (desktop)
 		return (
 			<div className="relative w-full flex h-6 -mt-1">
 				{Array.from({ length: 10 }, (_, i) => {
-					const scoreIndex = i + 1;
+					const scoreIndex = i + 1
 					return (
-						<div key={scoreIndex} className="flex-1 flex justify-center items-start">
+						<div
+							key={scoreIndex}
+							className="flex-1 flex justify-center items-start"
+						>
 							<div className="flex flex-col items-center">
 								<div className="h-2 w-0.5 bg-gray-600" />
-								<span className={`text-xs font-medium ${getLabelColor(scoreIndex as Score)} transition-colors duration-200`}>
+								<span
+									className={`text-xs font-medium ${getLabelColor(scoreIndex as Score)} transition-colors duration-200`}
+								>
 									{scoreIndex}
 								</span>
 							</div>
 						</div>
-					);
+					)
 				})}
 			</div>
-		);
-	};
+		)
+	}
 
 	return (
 		<div
@@ -229,25 +241,12 @@ export default function ScoreSelector({
 					</div>
 
 					{/* User Actions */}
-					<span className="flex items-center gap-2">
-						{score && (!hoveredScore || hoveredScore === score) && (
-							<ScoreAction details={details} score={null}>
-								<span
-									className="
-										px-2 py-1
-										text-red-400 hover:text-red-300 text-xs
-										transition duration-100 cursor-pointer
-									"
-								>
-									Remove Score
-								</span>
-							</ScoreAction>
-						)}
+					<span className="w-full flex items-center justify-between gap-4">
 						<button
 							type="button"
 							className="
 									flex md:hidden items-center gap-2 px-2 py-1.5
-									 bg-slate-950 hover:bg-black border-2 border-slate-800 hover:border-slate-700
+									 bg-slate-950 hover:bg-black rounded-full border-2 border-slate-800 hover:border-slate-700
 									 text-slate-300 hover:text-slate-100
 									 transition duration-100 cursor-pointer
 								"
@@ -255,25 +254,39 @@ export default function ScoreSelector({
 							onKeyDown={() => {}}
 						>
 							<XMarkIcon className="h-4 w-4" aria-hidden="true" />
-							Close
 						</button>
-						<div
-							className={`sm:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
-						>
-							<ScoreAction details={details} score={score}>
-								<span
-									className={`
-										flex items-center gap-2 px-2 py-1.5
-										bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded-sm border-amber-800 hover:border-amber-700
-										text-slate-300 hover:text-slate-100 font-semibold
-										transition duration-100 cursor-pointer
-									`}
-								>
-									<CheckIcon className="h-4 w-4" aria-hidden="true" />
-									Save
-								</span>
-							</ScoreAction>
-						</div>
+						<span className="flex items-center gap-2">
+							{score && (!hoveredScore || hoveredScore === score) && (
+								<ScoreAction details={details} score={null}>
+									<span
+										className="
+											px-2 py-1
+											text-red-400 hover:text-red-300 text-xs
+											transition duration-100 cursor-pointer
+										"
+									>
+										Remove Score
+									</span>
+								</ScoreAction>
+							)}
+							<div
+								className={`sm:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
+							>
+								<ScoreAction details={details} score={score}>
+									<span
+										className={`
+											flex items-center gap-2 px-2 py-1.5
+											bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded-sm border-amber-800 hover:border-amber-700
+											text-slate-300 hover:text-slate-100 font-semibold
+											transition duration-100 cursor-pointer
+										`}
+									>
+										<CheckIcon className="h-4 w-4" aria-hidden="true" />
+										Save
+									</span>
+								</ScoreAction>
+							</div>
+						</span>
 					</span>
 				</div>
 			</div>

@@ -19,22 +19,27 @@ export default function ListSwiper<T>({ children }: ListSwiperProps<T>) {
 				480: {
 					slidesPerView: 5,
 					slidesPerGroup: 5,
+					spaceBetween: 5,
 				},
 				640: {
 					slidesPerView: 6,
 					slidesPerGroup: 6,
+					spaceBetween: 6,
 				},
 				768: {
 					slidesPerView: 7,
 					slidesPerGroup: 7,
+					spaceBetween: 7,
 				},
 				1024: {
 					slidesPerView: 8,
 					slidesPerGroup: 8,
+					spaceBetween: 8,
 				},
 				1280: {
 					slidesPerView: 9,
 					slidesPerGroup: 9,
+					spaceBetween: 9,
 				},
 			}}
 			freeMode={true}
@@ -48,7 +53,7 @@ export default function ListSwiper<T>({ children }: ListSwiperProps<T>) {
 			rewind={true}
 			slidesPerView={4}
 			slidesPerGroup={4}
-			spaceBetween={8}
+			spaceBetween={4}
 			speed={100}
 			onBeforeInit={(swiper) => {
 				swiper.params.navigation.prevEl = navigationPrevRef.current

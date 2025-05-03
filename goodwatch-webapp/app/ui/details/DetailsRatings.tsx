@@ -62,9 +62,7 @@ export default function DetailsRatings({
 						<div className="hidden md:block">
 							<Appear isVisible={ratingVisible}>
 								<div className="py-2 px-4 bg-gray-900/50 border-t-[1px] border-gray-700">
-									<div>
-										<ScoreSelector details={details} />
-									</div>
+									<ScoreSelector details={details} />
 								</div>
 							</Appear>
 						</div>

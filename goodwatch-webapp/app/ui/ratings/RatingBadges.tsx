@@ -52,9 +52,7 @@ export default function RatingBadges({
 										ratings?.aggregated_overall_score_normalized_percent,
 									)}
 								</span>
-								<span className="hidden xs:inline text-gray-300 font-normal">
-									/100
-								</span>
+								<span className="text-gray-300 font-normal">/100</span>
 							</>
 						) : (
 							"-"
