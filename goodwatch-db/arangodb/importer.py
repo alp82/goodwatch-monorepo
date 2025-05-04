@@ -10,6 +10,10 @@ import re
 from config import get_arango_client, get_arango_db, get_arango_sys_db, ARANGO_DB, ARANGO_USER, ARANGO_PASSWORD
 import time
 
+# Pre-compile regex patterns
+_HUMAN_KEY_PATTERN = re.compile(r'[^a-z0-9_\-]')
+_SAFE_KEY_PATTERN = re.compile(r'[^a-zA-Z0-9_\-]')
+
 class MovieImporter:
     def __init__(self, pg_cfg):
         self.pg_cfg = pg_cfg
@@ -118,10 +122,9 @@ class MovieImporter:
 
     @staticmethod
     def make_human_key(*args):
-        import re
         raw = '_'.join(str(a) for a in args if a is not None)
         key = raw.lower().replace(' ', '_')
-        key = re.sub(r'[^a-z0-9_\-]', '', key)
+        key = _HUMAN_KEY_PATTERN.sub('', key)
         return key[:128]
 
     def import_items(self, *, query, collection_name, id_prefix, type_label):
@@ -180,7 +183,7 @@ class MovieImporter:
             main_docs = []
 
             def safe_key(val):
-                return re.sub(r'[^a-zA-Z0-9_\-]', '', str(val).replace(' ', '_')).lower()[:128]
+                return _SAFE_KEY_PATTERN.sub('', str(val).replace(' ', '_')).lower()[:128]
 
             def normalize_named_list(lst):
                 norm = []
@@ -669,6 +672,18 @@ class MovieImporter:
                         doc.pop('seasons', None)
                 main_docs.append(doc)
 
+            # Deduplicate simple node collections before bulk insert
+            simple_colls = [
+                'genres', 'keywords', 'tropes', 'languages', 'countries',
+                'persons', 'streaming_services', 'movie_series',
+                'alternative_titles', 'certifications'
+            ]
+            for simple_coll in simple_colls:
+                if simple_coll in batch_docs:
+                    unique_docs = {doc['_key']: doc for doc in batch_docs[simple_coll] if '_key' in doc}
+                    batch_docs[simple_coll] = list(unique_docs.values())
+                    node_counts[simple_coll] = len(unique_docs)
+
             # BULK INSERTS for related collections
             if main_docs:
                 unique_main_keys = {d['_key'] for d in main_docs if '_key' in d}
@@ -676,22 +691,15 @@ class MovieImporter:
                 try:
                     self.collections[collection_name].import_bulk(main_docs, overwrite=True)
                 except Exception as e:
-                    print(f"[WARNING] Bulk insert for main docs failed: {e}. Falling back to per-item insert.")
-                    for d in main_docs:
-                        try:
-                            self.collections[collection_name].insert(d, overwrite=True)
-                        except Exception as ie:
-                            print(f"[ERROR] Failed to insert main doc with _key={d.get('_key')}: {ie}")
+                    print(f"[WARNING] Bulk insert for main docs failed: {e}.")
             for cname, docs in batch_docs.items():
                 if docs:
                     unique_keys = {d['_key'] for d in docs if '_key' in d}
                     node_counts[cname] = len(unique_keys)
                     try:
                         self.collections[cname].import_bulk(docs, overwrite=True)
-                    except Exception:
-                        # fallback to per-item insert if bulk insert fails
-                        for d in docs:
-                            self.collections[cname].insert(d, overwrite=True)
+                    except Exception as e:
+                        print(f"[WARNING] Bulk insert for {cname} failed: {e}.")
 
             # EDGE INSERTS (count all attempted, since edges are always many-to-many)
             if alt_title_country_edges:
@@ -753,9 +761,8 @@ class MovieImporter:
                     node_counts[edge_name] = len(edges)
                     try:
                         self.graph.edge_collection(edge_name).import_bulk(edges)
-                    except Exception:
-                        for e in edges:
-                            self.graph.edge_collection(edge_name).insert(e)
+                    except Exception as e:
+                        print(f"[WARNING] Bulk insert for edge {edge_name} failed: {e}.")
 
             print(f"Successfully imported/updated {imported_count} {type_label} into ArangoDB.")
             print("[RELATED NODES CREATED]:")
