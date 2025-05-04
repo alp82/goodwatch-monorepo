@@ -784,10 +784,6 @@ class MovieImporter:
                     )
 
             print(f"Successfully imported/updated {imported_count} {type_label} into ArangoDB.")
-            print("[RELATED NODES CREATED]:")
-            for k, v in node_counts.items():
-                if v > 0:
-                    print(f"  {k}: {v}")
         except Exception as e:
             import traceback
             print(f"\n{'='*40}\n[IMPORT ERROR] {type_label.capitalize()}\n{'='*40}")
@@ -931,6 +927,40 @@ def main():
     try:
         importer.import_movies()
         importer.import_shows()
+        # After both imports succeed, display top 20 collections/edges by size and count
+        db = importer.db
+        all_colls = db.collections()
+        stats = []
+        for coll_info in all_colls:
+            cname = coll_info['name']
+            ctype = coll_info['type']
+            coll = db.collection(cname)
+            docCount = coll.count()
+            cstats = coll.statistics()
+            docSize = cstats.get('documents_size')
+            indexSize = cstats.get('indexes').get('size')
+            stats.append({
+                'name': cname,
+                'type': ctype,
+                'docCount': docCount,
+                'docSize': docSize,
+                'indexSize': indexSize,
+            })
+        stats.sort(key=lambda x: x['docSize'], reverse=True)
+        print("\nTop 20 collections/edges by size (MB):")
+        for i, s in enumerate(stats[:20], 1):
+            print(f"{i}. {s['name']} (type: {s['type']}) - {s['docCount']} entries, {s['docSize']/1024/1024:.2f} MB (Docs), {s['indexSize']/1024/1024:.2f} MB (Index)")
+
+        # Print totals for all collections
+        total_nodes = sum(s['docCount'] for s in stats if s['type'] == 'document')
+        total_edges = sum(s['docCount'] for s in stats if s['type'] == 'edge')
+        total_doc_size = sum(s['docSize'] or 0 for s in stats)
+        total_index_size = sum(s['indexSize'] or 0 for s in stats)
+        print("\n=== DATABASE TOTALS ===")
+        print(f"Total nodes: {total_nodes}")
+        print(f"Total edges: {total_edges}")
+        print(f"Total doc size: {total_doc_size/1024/1024:.2f} MB")
+        print(f"Total index size: {total_index_size/1024/1024:.2f} MB")
     finally:
         importer.close_postgres()
 
