@@ -684,22 +684,37 @@ class MovieImporter:
                     batch_docs[simple_coll] = list(unique_docs.values())
                     node_counts[simple_coll] = len(unique_docs)
 
-            # BULK INSERTS for related collections
+            def batch_insert(collection, docs, insert_fn, batch_size=1000, **kwargs):
+                for i in range(0, len(docs), batch_size):
+                    batch = docs[i:i+batch_size]
+                    try:
+                        insert_fn(batch, **kwargs)
+                    except Exception as e:
+                        print(f"[WARNING] Bulk insert failed for {collection}: {e} (batch {i//batch_size+1})")
+
             if main_docs:
                 unique_main_keys = {d['_key'] for d in main_docs if '_key' in d}
                 imported_count = len(unique_main_keys)
-                try:
-                    self.collections[collection_name].import_bulk(main_docs, overwrite=True)
-                except Exception as e:
-                    print(f"[WARNING] Bulk insert for main docs failed: {e}.")
+                batch_insert(
+                    collection_name,
+                    main_docs,
+                    self.collections[collection_name].insert_many,
+                    overwrite=True,
+                    overwrite_mode='update',
+                    silent=False
+                )
             for cname, docs in batch_docs.items():
                 if docs:
                     unique_keys = {d['_key'] for d in docs if '_key' in d}
                     node_counts[cname] = len(unique_keys)
-                    try:
-                        self.collections[cname].import_bulk(docs, overwrite=True)
-                    except Exception as e:
-                        print(f"[WARNING] Bulk insert for {cname} failed: {e}.")
+                    batch_insert(
+                        cname,
+                        docs,
+                        self.collections[cname].insert_many,
+                        overwrite=True,
+                        overwrite_mode='ignore',
+                        silent=False
+                    )
 
             # EDGE INSERTS (count all attempted, since edges are always many-to-many)
             if alt_title_country_edges:
@@ -759,10 +774,14 @@ class MovieImporter:
             for edge_name, edges in batch_edges.items():
                 if edges:
                     node_counts[edge_name] = len(edges)
-                    try:
-                        self.graph.edge_collection(edge_name).import_bulk(edges)
-                    except Exception as e:
-                        print(f"[WARNING] Bulk insert for edge {edge_name} failed: {e}.")
+                    batch_insert(
+                        edge_name,
+                        edges,
+                        self.graph.edge_collection(edge_name).insert_many,
+                        overwrite=True,
+                        overwrite_mode='ignore',
+                        silent=False
+                    )
 
             print(f"Successfully imported/updated {imported_count} {type_label} into ArangoDB.")
             print("[RELATED NODES CREATED]:")
@@ -815,7 +834,7 @@ class MovieImporter:
               tmdb_details_updated_at, tmdb_providers_updated_at, imdb_ratings_updated_at, metacritic_ratings_updated_at, rotten_tomatoes_ratings_updated_at, tvtropes_tags_updated_at, dna_updated_at
             FROM movies
             ORDER BY popularity DESC NULLS LAST
-            LIMIT 10;
+            LIMIT 100;
         '''
         self.import_items(query=query, collection_name='movies', id_prefix='movies', type_label='movies')
 
@@ -856,7 +875,7 @@ class MovieImporter:
               tmdb_details_updated_at, tmdb_providers_updated_at, imdb_ratings_updated_at, metacritic_ratings_updated_at, rotten_tomatoes_ratings_updated_at, tvtropes_tags_updated_at, dna_updated_at
             FROM tv
             ORDER BY popularity DESC NULLS LAST
-            LIMIT 10;
+            LIMIT 100;
         '''
         self.import_items(query=query, collection_name='shows', id_prefix='shows', type_label='shows')
 
