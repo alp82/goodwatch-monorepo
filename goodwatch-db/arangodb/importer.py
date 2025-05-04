@@ -8,6 +8,7 @@ from decimal import Decimal
 import json
 import re
 from config import get_arango_client, get_arango_db, get_arango_sys_db, ARANGO_DB, ARANGO_USER, ARANGO_PASSWORD
+import time
 
 class MovieImporter:
     def __init__(self, pg_cfg):
@@ -59,6 +60,51 @@ class MovieImporter:
         self.graph = graph
         return graph
 
+    def setup_schema(self):
+        # Ensure all collections
+        collections = [
+            'movies', 'shows', 'persons', 'genres', 'keywords', 'tropes',
+            'movie_series', 'production_companies',
+            'translations', 'images', 'videos', 'alternative_titles', 'certifications',
+            'countries', 'languages', 'streaming_services', 'streaming_offers', 'seasons', 'scores'
+        ]
+        for name in collections:
+            if not self.db.has_collection(name):
+                self.db.create_collection(name)
+            self.collections[name] = self.db.collection(name)
+
+        # Edge definitions
+        edge_defs = [
+            ('has_translation', ['movies', 'shows'], ['translations']),
+            ('has_image', ['movies', 'shows'], ['images']),
+            ('has_video', ['movies', 'shows'], ['videos']),
+            ('has_alternative_title', ['movies', 'shows'], ['alternative_titles']),
+            ('has_certification', ['movies', 'shows'], ['certifications']),
+            ('belongs_to_movie_series', ['movies'], ['movie_series']),
+            ('produced_by', ['movies'], ['production_companies']),
+            ('originates_from_country', ['movies', 'shows'], ['countries']),
+            ('has_original_language', ['movies', 'shows'], ['languages']),
+            ('has_spoken_language', ['movies', 'shows'], ['languages']),
+            ('certification_for_country', ['certifications'], ['countries']),
+            ('translation_in_language', ['translations'], ['languages']),
+            ('alt_title_for_country', ['alternative_titles'], ['countries']),
+            ('available_in_country', ['movies', 'shows'], ['countries']),
+            ('has_streaming_offer', ['movies', 'shows'], ['streaming_offers']),
+            ('offer_for_streaming_service', ['streaming_offers'], ['streaming_services']),
+            ('offer_in_country', ['streaming_offers'], ['countries']),
+            ('has_season', ['shows'], ['seasons']),
+            ('has_score', ['movies', 'shows'], ['scores'])
+        ]
+        if not self.graph:
+            raise Exception("Graph not initialized. Call connect_arango() and ensure_graph() first.")
+        for edge, froms, tos in edge_defs:
+            if not self.graph.has_edge_definition(edge):
+                self.graph.create_edge_definition(
+                    edge_collection=edge,
+                    from_vertex_collections=froms,
+                    to_vertex_collections=tos
+                )
+
     def connect_postgres(self):
         self.pg_conn = psycopg2.connect(**self.pg_cfg)
         self.pg_cur = self.pg_conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -78,11 +124,59 @@ class MovieImporter:
         return key[:128]
 
     def import_items(self, *, query, collection_name, id_prefix, type_label):
+        start_time = time.time()
         try:
             self.pg_cur.execute(query)
             items = self.pg_cur.fetchall()
             print(f'Fetched {len(items)} {type_label} from PostgreSQL.')
             imported_count = 0
+
+            # Debug counters for related collections
+            node_counts = {
+                'persons': 0,
+                'translations': 0,
+                'alternative_titles': 0,
+                'images': 0,
+                'videos': 0,
+                'certifications': 0,
+                'movie_series': 0,
+                'production_companies': 0,
+                'countries': 0,
+                'languages': 0,
+                'streaming_services': 0,
+                'streaming_offers': 0,
+                'seasons': 0,
+                'scores': 0,
+                'genres': 0,
+                'keywords': 0,
+                'tropes': 0
+            }
+
+            # Prepare batch insert buffers for each related collection
+            batch_docs = {
+                'persons': [],
+                'translations': [],
+                'alternative_titles': [],
+                'images': [],
+                'videos': [],
+                'certifications': [],
+                'movie_series': [],
+                'production_companies': [],
+                'countries': [],
+                'languages': [],
+                'streaming_services': [],
+                'streaming_offers': [],
+                'seasons': [],
+                'scores': [],
+                'genres': [],
+                'keywords': [],
+                'tropes': []
+            }
+            batch_edges = {}
+            # Edge collections used in this import
+            edge_collections = set()
+
+            main_docs = []
 
             def safe_key(val):
                 return re.sub(r'[^a-zA-Z0-9_\-]', '', str(val).replace(' ', '_')).lower()[:128]
@@ -116,164 +210,6 @@ class MovieImporter:
                     return s[:200] + ('...' if len(s) > 200 else '')
                 except Exception:
                     return str(val)
-
-            # Ensure translations collection and edge
-            if 'translations' not in self.collections:
-                if not self.db.has_collection('translations'):
-                    self.db.create_collection('translations')
-                self.collections['translations'] = self.db.collection('translations')
-            if not self.graph.has_edge_definition('has_translation'):
-                self.graph.create_edge_definition(
-                    edge_collection='has_translation',
-                    from_vertex_collections=['movies', 'shows'],
-                    to_vertex_collections=['translations']
-                )
-
-            # Ensure images/videos collections and edges
-            if 'images' not in self.collections:
-                if not self.db.has_collection('images'):
-                    self.db.create_collection('images')
-                self.collections['images'] = self.db.collection('images')
-            if 'videos' not in self.collections:
-                if not self.db.has_collection('videos'):
-                    self.db.create_collection('videos')
-                self.collections['videos'] = self.db.collection('videos')
-            if not self.graph.has_edge_definition('has_image'):
-                self.graph.create_edge_definition(
-                    edge_collection='has_image',
-                    from_vertex_collections=['movies', 'shows'],
-                    to_vertex_collections=['images']
-                )
-            if not self.graph.has_edge_definition('has_video'):
-                self.graph.create_edge_definition(
-                    edge_collection='has_video',
-                    from_vertex_collections=['movies', 'shows'],
-                    to_vertex_collections=['videos']
-                )
-
-            # Ensure alternative_titles collection and edge
-            if 'alternative_titles' not in self.collections:
-                if not self.db.has_collection('alternative_titles'):
-                    self.db.create_collection('alternative_titles')
-                self.collections['alternative_titles'] = self.db.collection('alternative_titles')
-            if not self.graph.has_edge_definition('has_alternative_title'):
-                self.graph.create_edge_definition(
-                    edge_collection='has_alternative_title',
-                    from_vertex_collections=['movies', 'shows'],
-                    to_vertex_collections=['alternative_titles']
-                )
-
-            # Ensure certifications collection and edge
-            if 'certifications' not in self.collections:
-                if not self.db.has_collection('certifications'):
-                    self.db.create_collection('certifications')
-                self.collections['certifications'] = self.db.collection('certifications')
-            if not self.graph.has_edge_definition('has_certification'):
-                self.graph.create_edge_definition(
-                    edge_collection='has_certification',
-                    from_vertex_collections=['movies', 'shows'],
-                    to_vertex_collections=['certifications']
-                )
-
-            # Ensure movie_series and production_companies collections and edges
-            if 'movie_series' not in self.collections:
-                if not self.db.has_collection('movie_series'):
-                    self.db.create_collection('movie_series')
-                self.collections['movie_series'] = self.db.collection('movie_series')
-            if 'production_companies' not in self.collections:
-                if not self.db.has_collection('production_companies'):
-                    self.db.create_collection('production_companies')
-                self.collections['production_companies'] = self.db.collection('production_companies')
-            for edge_def in [
-                ('belongs_to_movie_series', ['movies'], ['movie_series']),
-                ('produced_by', ['movies'], ['production_companies']),
-            ]:
-                if not self.graph.has_edge_definition(edge_def[0]):
-                    self.graph.create_edge_definition(
-                        edge_collection=edge_def[0],
-                        from_vertex_collections=edge_def[1],
-                        to_vertex_collections=edge_def[2]
-                    )
-
-            # Ensure countries and languages collections and edges
-            if 'countries' not in self.collections:
-                if not self.db.has_collection('countries'):
-                    self.db.create_collection('countries')
-                self.collections['countries'] = self.db.collection('countries')
-            if 'languages' not in self.collections:
-                if not self.db.has_collection('languages'):
-                    self.db.create_collection('languages')
-                self.collections['languages'] = self.db.collection('languages')
-            for edge_def in [
-                ('originates_from_country', ['movies', 'shows'], ['countries']),
-                ('has_original_language', ['movies', 'shows'], ['languages']),
-                ('has_spoken_language', ['movies', 'shows'], ['languages']),
-            ]:
-                if not self.graph.has_edge_definition(edge_def[0]):
-                    self.graph.create_edge_definition(
-                        edge_collection=edge_def[0],
-                        from_vertex_collections=edge_def[1],
-                        to_vertex_collections=edge_def[2]
-                    )
-
-            # Ensure edges for code normalization in subdocs
-            for edge_def in [
-                ('certification_for_country', ['certifications'], ['countries']),
-                ('translation_in_language', ['translations'], ['languages']),
-                ('alt_title_for_country', ['alternative_titles'], ['countries']),
-            ]:
-                if not self.graph.has_edge_definition(edge_def[0]):
-                    self.graph.create_edge_definition(
-                        edge_collection=edge_def[0],
-                        from_vertex_collections=edge_def[1],
-                        to_vertex_collections=edge_def[2]
-                    )
-
-            # Ensure streaming collections and edges
-            if 'streaming_services' not in self.collections:
-                if not self.db.has_collection('streaming_services'):
-                    self.db.create_collection('streaming_services')
-                self.collections['streaming_services'] = self.db.collection('streaming_services')
-            if 'streaming_offers' not in self.collections:
-                if not self.db.has_collection('streaming_offers'):
-                    self.db.create_collection('streaming_offers')
-                self.collections['streaming_offers'] = self.db.collection('streaming_offers')
-            for edge_def in [
-                ('available_in_country', ['movies', 'shows'], ['countries']),
-                ('has_streaming_offer', ['movies', 'shows'], ['streaming_offers']),
-                ('offer_for_streaming_service', ['streaming_offers'], ['streaming_services']),
-                ('offer_in_country', ['streaming_offers'], ['countries']),
-            ]:
-                if not self.graph.has_edge_definition(edge_def[0]):
-                    self.graph.create_edge_definition(
-                        edge_collection=edge_def[0],
-                        from_vertex_collections=edge_def[1],
-                        to_vertex_collections=edge_def[2]
-                    )
-
-            # Ensure seasons collection and edge for shows
-            if 'seasons' not in self.collections:
-                if not self.db.has_collection('seasons'):
-                    self.db.create_collection('seasons')
-                self.collections['seasons'] = self.db.collection('seasons')
-            if not self.graph.has_edge_definition('has_season'):
-                self.graph.create_edge_definition(
-                    edge_collection='has_season',
-                    from_vertex_collections=['shows'],
-                    to_vertex_collections=['seasons']
-                )
-
-            # Ensure scores collection and has_score edge
-            if 'scores' not in self.collections:
-                if not self.db.has_collection('scores'):
-                    self.db.create_collection('scores')
-                self.collections['scores'] = self.db.collection('scores')
-            if not self.graph.has_edge_definition('has_score'):
-                self.graph.create_edge_definition(
-                    edge_collection='has_score',
-                    from_vertex_collections=['movies', 'shows'],
-                    to_vertex_collections=['scores']
-                )
 
             for item in items:
                 doc = dict(item)
@@ -337,7 +273,7 @@ class MovieImporter:
                         }
                         if 'data' in t and isinstance(t['data'], dict):
                             tdoc.update(t['data'])
-                        translation_docs.append(tdoc)
+                        batch_docs['translations'].append(tdoc)
                         translation_edges.append({
                             '_from': f"{id_prefix}/{doc['_key']}",
                             '_to': f"translations/{tkey}"
@@ -351,7 +287,7 @@ class MovieImporter:
                         atdoc = dict(alt)
                         atdoc['_key'] = at_key
                         atdoc['parent_key'] = doc['_key']
-                        alt_title_docs.append(atdoc)
+                        batch_docs['alternative_titles'].append(atdoc)
                         alt_title_edges.append({
                             '_from': f"{id_prefix}/{doc['_key']}",
                             '_to': f"alternative_titles/{at_key}"
@@ -370,7 +306,7 @@ class MovieImporter:
                             idoc['_key'] = img_key
                             idoc['type'] = img_type
                             idoc['parent_key'] = doc['_key']
-                            image_docs.append(idoc)
+                            batch_docs['images'].append(idoc)
                             image_edges.append({
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"images/{img_key}"
@@ -383,7 +319,7 @@ class MovieImporter:
                             vdoc['_key'] = vid_key
                             vdoc['type'] = vid_type
                             vdoc['parent_key'] = doc['_key']
-                            video_docs.append(vdoc)
+                            batch_docs['videos'].append(vdoc)
                             video_edges.append({
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"videos/{vid_key}"
@@ -405,7 +341,7 @@ class MovieImporter:
                                 'release_date': rd.get('release_date'),
                                 'certification': rd.get('certification'),
                             }
-                            cert_docs.append(cdoc)
+                            batch_docs['certifications'].append(cdoc)
                             cert_edges.append({
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"certifications/{ckey}"
@@ -414,17 +350,23 @@ class MovieImporter:
                 collection_doc = None
                 collection_edge = None
                 if isinstance(collection_info, dict) and collection_info.get('id'):
-                    ckey = str(collection_info['id'])
+                    tmdb_id = str(collection_info['id'])
+                    name = collection_info.get('name') or ''
+                    ckey = self.make_human_key(name, tmdb_id)
                     collection_doc = {
                         '_key': ckey,
-                        'name': collection_info.get('name'),
+                        'name': name,
+                        'tmdb_collection_id': tmdb_id,
                         'poster_path': collection_info.get('poster_path'),
                         'backdrop_path': collection_info.get('backdrop_path')
                     }
+                    batch_docs['movie_series'].append(collection_doc)
                     collection_edge = {
                         '_from': f"{id_prefix}/{doc['_key']}",
                         '_to': f"movie_series/{ckey}"
                     }
+                    edge_collections.add('belongs_to_movie_series')
+                    batch_edges.setdefault('belongs_to_movie_series', []).append(collection_edge)
                     doc.pop('collection', None)
                 origin_country_codes = parse_json_field(item.get('origin_country_codes'))
                 country_edges = []
@@ -432,8 +374,7 @@ class MovieImporter:
                     for code in origin_country_codes:
                         code = code.strip().upper()
                         if code:
-                            if not self.collections['countries'].has(code):
-                                self.collections['countries'].insert({'_key': code}, overwrite=True)
+                            batch_docs['countries'].append({'_key': code})
                             country_edges.append({
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"countries/{code}"
@@ -442,8 +383,7 @@ class MovieImporter:
                 orig_lang_edge = None
                 if orig_lang:
                     orig_lang = orig_lang.strip().lower()
-                    if not self.collections['languages'].has(orig_lang):
-                        self.collections['languages'].insert({'_key': orig_lang}, overwrite=True)
+                    batch_docs['languages'].append({'_key': orig_lang})
                     orig_lang_edge = {
                         '_from': f"{id_prefix}/{doc['_key']}",
                         '_to': f"languages/{orig_lang}"
@@ -454,8 +394,7 @@ class MovieImporter:
                     for code in spoken_langs:
                         code = code.strip().lower()
                         if code:
-                            if not self.collections['languages'].has(code):
-                                self.collections['languages'].insert({'_key': code}, overwrite=True)
+                            batch_docs['languages'].append({'_key': code})
                             spoken_lang_edges.append({
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"languages/{code}"
@@ -465,8 +404,7 @@ class MovieImporter:
                     code = cdoc.get('iso_3166_1')
                     if code:
                         code = code.strip().upper()
-                        if not self.collections['countries'].has(code):
-                            self.collections['countries'].insert({'_key': code}, overwrite=True)
+                        batch_docs['countries'].append({'_key': code})
                         cert_country_edges.append({
                             '_from': f"certifications/{cdoc['_key']}",
                             '_to': f"countries/{code}"
@@ -476,8 +414,7 @@ class MovieImporter:
                     lang = tdoc.get('language_code')
                     if lang:
                         lang = lang.strip().lower()
-                        if not self.collections['languages'].has(lang):
-                            self.collections['languages'].insert({'_key': lang}, overwrite=True)
+                        batch_docs['languages'].append({'_key': lang})
                         translation_lang_edges.append({
                             '_from': f"translations/{tdoc['_key']}",
                             '_to': f"languages/{lang}"
@@ -487,8 +424,7 @@ class MovieImporter:
                     code = atdoc.get('iso_3166_1')
                     if code:
                         code = code.strip().upper()
-                        if not self.collections['countries'].has(code):
-                            self.collections['countries'].insert({'_key': code}, overwrite=True)
+                        batch_docs['countries'].append({'_key': code})
                         alt_title_country_edges.append({
                             '_from': f"alternative_titles/{atdoc['_key']}",
                             '_to': f"countries/{code}"
@@ -499,14 +435,13 @@ class MovieImporter:
                     for code in streaming_country_codes:
                         code = code.strip().upper()
                         if code:
-                            if not self.collections['countries'].has(code):
-                                self.collections['countries'].insert({'_key': code}, overwrite=True)
+                            batch_docs['countries'].append({'_key': code})
                             streaming_country_edges.append({
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"countries/{code}"
                             })
                     doc.pop('streaming_country_codes', None)
-                streaming_providers = parse_json_field(item.get('streaming_services'))
+                streaming_providers = parse_json_field(item.get('streaming_providers'))
                 streaming_offer_docs = []
                 streaming_offer_edges = []
                 provider_edges = []
@@ -514,23 +449,19 @@ class MovieImporter:
                 if isinstance(streaming_providers, dict):
                     for country, offers in streaming_providers.items():
                         country_code = country.strip().upper()
-                        if not self.collections['countries'].has(country_code):
-                            self.collections['countries'].insert({'_key': country_code}, overwrite=True)
+                        batch_docs['countries'].append({'_key': country_code})
                         link = offers.get('link')
                         for offer_type in ['ads', 'flatrate', 'buy', 'rent', 'free']:
                             for prov in offers.get(offer_type, []):
                                 pid = str(prov['provider_id'])
-                                # Use providername_id as key and tmdb_id as attribute
                                 provider_key = self.make_human_key(prov.get('provider_name'), pid)
-                                if not self.collections['streaming_services'].has(provider_key):
-                                    self.collections['streaming_services'].insert({
-                                        '_key': provider_key,
-                                        'tmdb_id': pid,
-                                        'provider_name': prov.get('provider_name'),
-                                        'logo_path': prov.get('logo_path'),
-                                        'display_priority': prov.get('display_priority')
-                                    }, overwrite=True)
-                                # Offer doc
+                                batch_docs['streaming_services'].append({
+                                    '_key': provider_key,
+                                    'tmdb_id': pid,
+                                    'provider_name': prov.get('provider_name'),
+                                    'logo_path': prov.get('logo_path'),
+                                    'display_priority': prov.get('display_priority')
+                                })
                                 offer_key = self.make_human_key(doc['_key'], country_code, offer_type, provider_key)
                                 offer_doc = {
                                     '_key': offer_key,
@@ -540,7 +471,7 @@ class MovieImporter:
                                     'link': link,
                                     'parent_key': doc['_key']
                                 }
-                                streaming_offer_docs.append(offer_doc)
+                                batch_docs['streaming_offers'].append(offer_doc)
                                 streaming_offer_edges.append({
                                     '_from': f"{id_prefix}/{doc['_key']}",
                                     '_to': f"streaming_offers/{offer_key}"
@@ -553,83 +484,52 @@ class MovieImporter:
                                     '_from': f"streaming_offers/{offer_key}",
                                     '_to': f"countries/{country_code}"
                                 })
-                    doc.pop('streaming_services', None)
-                if translation_docs:
-                    for tdoc in translation_docs:
-                        self.collections['translations'].insert(tdoc, overwrite=True)
-                if alt_title_docs:
-                    for atdoc in alt_title_docs:
-                        self.collections['alternative_titles'].insert(atdoc, overwrite=True)
-                if image_docs:
-                    for idoc in image_docs:
-                        self.collections['images'].insert(idoc, overwrite=True)
-                if video_docs:
-                    for vdoc in video_docs:
-                        self.collections['videos'].insert(vdoc, overwrite=True)
-                if cert_docs:
-                    for cdoc in cert_docs:
-                        self.collections['certifications'].insert(cdoc, overwrite=True)
-                if collection_doc:
-                    self.collections['movie_series'].insert(collection_doc, overwrite=True)
-                self.collections[collection_name].insert(doc, overwrite=True)
-                for edge in translation_edges:
-                    self.graph.edge_collection('has_translation').insert(edge)
-                for edge in alt_title_edges:
-                    self.graph.edge_collection('has_alternative_title').insert(edge)
-                for edge in image_edges:
-                    self.graph.edge_collection('has_image').insert(edge)
-                for edge in video_edges:
-                    self.graph.edge_collection('has_video').insert(edge)
-                for edge in cert_edges:
-                    self.graph.edge_collection('has_certification').insert(edge)
-                if collection_edge:
-                    self.graph.edge_collection('belongs_to_movie_series').insert(collection_edge)
-                for edge in country_edges:
-                    self.graph.edge_collection('originates_from_country').insert(edge)
-                if orig_lang_edge:
-                    self.graph.edge_collection('has_original_language').insert(orig_lang_edge)
-                for edge in spoken_lang_edges:
-                    self.graph.edge_collection('has_spoken_language').insert(edge)
-                for edge in cert_country_edges:
-                    self.graph.edge_collection('certification_for_country').insert(edge)
-                for edge in translation_lang_edges:
-                    self.graph.edge_collection('translation_in_language').insert(edge)
-                for edge in alt_title_country_edges:
-                    self.graph.edge_collection('alt_title_for_country').insert(edge)
-                for edge in streaming_country_edges:
-                    self.graph.edge_collection('available_in_country').insert(edge)
-                for offer_doc in streaming_offer_docs:
-                    self.collections['streaming_offers'].insert(offer_doc, overwrite=True)
-                for edge in streaming_offer_edges:
-                    self.graph.edge_collection('has_streaming_offer').insert(edge)
-                for edge in provider_edges:
-                    self.graph.edge_collection('offer_for_streaming_service').insert(edge)
-                for edge in offer_country_edges:
-                    self.graph.edge_collection('offer_in_country').insert(edge)
-                item_id = f"{id_prefix}/{doc['_key']}"
+                # persons (cast/crew)
+                inserted_persons = set()
                 genres = normalize_named_list(parse_json_field(item.get('genres')))
+                # --- FIX: Add genres to batch_docs['genres'] ---
+                for genre in genres:
+                    if genre['id']:
+                        batch_docs['genres'].append({'_key': genre['id'], 'name': genre['name']})
+                # --- Ensure has_genre edges ---
+                for genre in genres:
+                    if genre['id']:
+                        edge_collections.add('has_genre')
+                        batch_edges.setdefault('has_genre', []).append({
+                            '_from': f"{id_prefix}/{doc['_key']}",
+                            '_to': f"genres/{genre['id']}"
+                        })
                 keywords = normalize_named_list(parse_json_field(item.get('keywords')))
+                for keyword in keywords:
+                    if keyword['id']:
+                        batch_docs['keywords'].append({'_key': keyword['id'], 'name': keyword['name']})
+                # --- Ensure has_keyword edges ---
+                for keyword in keywords:
+                    if keyword['id']:
+                        edge_collections.add('has_keyword')
+                        batch_edges.setdefault('has_keyword', []).append({
+                            '_from': f"{id_prefix}/{doc['_key']}",
+                            '_to': f"keywords/{keyword['id']}"
+                        })
                 tropes_raw = parse_json_field(item.get('tropes'))
                 tropes = []
                 for t in tropes_raw:
                     if isinstance(t, dict) and 'name' in t:
                         key = safe_key(t.get('name'))
                         tropes.append({'key': key, 'name': t['name']})
+                for trope in tropes:
+                    if trope['key']:
+                        batch_docs['tropes'].append({'_key': trope['key'], 'name': trope['name']})
+                # --- Ensure has_trope edges ---
+                for trope in tropes:
+                    if trope['key']:
+                        edge_collections.add('has_trope')
+                        batch_edges.setdefault('has_trope', []).append({
+                            '_from': f"{id_prefix}/{doc['_key']}",
+                            '_to': f"tropes/{trope['key']}"
+                        })
                 cast = parse_json_field(item.get('cast'))
                 crew = parse_json_field(item.get('crew'))
-                inserted_persons = set()
-                for genre_data in genres:
-                    genre_id = f"genres/{genre_data['id']}"
-                    self.collections['genres'].insert({'_key': genre_data['id'], 'name': genre_data['name']}, overwrite=True)
-                    self.graph.edge_collection('has_genre').insert({'_from': item_id, '_to': genre_id})
-                for keyword_data in keywords:
-                    keyword_id = f"keywords/{keyword_data['id']}"
-                    self.collections['keywords'].insert({'_key': keyword_data['id'], 'name': keyword_data['name']}, overwrite=True)
-                    self.graph.edge_collection('has_keyword').insert({'_from': item_id, '_to': keyword_id})
-                for trope_data in tropes:
-                    trope_id = f"tropes/{trope_data['key']}"
-                    self.collections['tropes'].insert({'_key': trope_data['key'], 'name': trope_data['name']}, overwrite=True)
-                    self.graph.edge_collection('has_trope').insert({'_from': item_id, '_to': trope_id})
                 for cast_member in cast:
                     pname = cast_member.get('name')
                     pid = cast_member.get('id')
@@ -638,14 +538,16 @@ class MovieImporter:
                         continue
                     inserted_persons.add(person_key)
                     person_id = f"persons/{person_key}"
-                    self.collections['persons'].insert({
+                    batch_docs['persons'].append({
                         '_key': person_key,
                         'name': pname,
                         'profile_path': cast_member.get('profile_path')
-                    }, overwrite=True)
-                    self.graph.edge_collection('appeared_in').insert({
+                    })
+                    node_counts['persons'] += 1
+                    edge_collections.add('appeared_in')
+                    batch_edges.setdefault('appeared_in', []).append({
                         '_from': person_id,
-                        '_to': item_id,
+                        '_to': f"{id_prefix}/{doc['_key']}",
                         'character': cast_member.get('character'),
                         'order': cast_member.get('order')
                     })
@@ -657,14 +559,16 @@ class MovieImporter:
                         continue
                     inserted_persons.add(person_key)
                     person_id = f"persons/{person_key}"
-                    self.collections['persons'].insert({
+                    batch_docs['persons'].append({
                         '_key': person_key,
                         'name': pname,
                         'profile_path': crew_member.get('profile_path')
-                    }, overwrite=True)
-                    self.graph.edge_collection('worked_on').insert({
+                    })
+                    node_counts['persons'] += 1
+                    edge_collections.add('worked_on')
+                    batch_edges.setdefault('worked_on', []).append({
                         '_from': person_id,
-                        '_to': item_id,
+                        '_to': f"{id_prefix}/{doc['_key']}",
                         'job': crew_member.get('job'),
                         'department': crew_member.get('department')
                     })
@@ -694,7 +598,7 @@ class MovieImporter:
                             'percent': item.get(user_pct),
                             'rating_count': item.get(user_count)
                         }
-                        score_docs.append(sdoc)
+                        batch_docs['scores'].append(sdoc)
                         score_edges.append({
                             '_from': f"{id_prefix}/{doc['_key']}",
                             '_to': f"scores/{sdoc['_key']}"
@@ -711,7 +615,7 @@ class MovieImporter:
                             'percent': item.get(critics_pct),
                             'rating_count': item.get(critics_count)
                         }
-                        score_docs.append(sdoc)
+                        batch_docs['scores'].append(sdoc)
                         score_edges.append({
                             '_from': f"{id_prefix}/{doc['_key']}",
                             '_to': f"scores/{sdoc['_key']}"
@@ -727,21 +631,16 @@ class MovieImporter:
                             'percent': item.get(combined_pct),
                             'rating_count': item.get(combined_count)
                         }
-                        score_docs.append(sdoc)
+                        batch_docs['scores'].append(sdoc)
                         score_edges.append({
                             '_from': f"{id_prefix}/{doc['_key']}",
                             '_to': f"scores/{sdoc['_key']}"
                         })
-                # Insert scores
-                for sdoc in score_docs:
-                    self.collections['scores'].insert(sdoc, overwrite=True)
-                for edge in score_edges:
-                    self.graph.edge_collection('has_score').insert(edge)
                 # Normalize seasons for shows
+                season_docs = []
+                season_edges = []
                 if id_prefix == 'shows':
                     seasons = parse_json_field(item.get('seasons'))
-                    season_docs = []
-                    season_edges = []
                     if isinstance(seasons, list):
                         for s in seasons:
                             tmdb_id = str(s.get('id'))
@@ -759,20 +658,104 @@ class MovieImporter:
                                 'episode_count': s.get('episode_count'),
                                 'parent_show_key': doc['_key']
                             }
-                            season_docs.append(sdoc)
+                            batch_docs['seasons'].append(sdoc)
                             season_edges.append({
                                 '_from': f"shows/{doc['_key']}",
                                 '_to': f"seasons/{sid}"
                             })
                         doc.pop('seasons', None)
-                # Insert seasons docs and edges
-                if id_prefix == 'shows' and 'season_docs' in locals():
-                    for sdoc in season_docs:
-                        self.collections['seasons'].insert(sdoc, overwrite=True)
-                    for edge in season_edges:
-                        self.graph.edge_collection('has_season').insert(edge)
-                imported_count += 1
+                main_docs.append(doc)
+
+            # BULK INSERTS for related collections
+            if main_docs:
+                unique_main_keys = {d['_key'] for d in main_docs if '_key' in d}
+                imported_count = len(unique_main_keys)
+                try:
+                    self.collections[collection_name].import_bulk(main_docs, overwrite=True)
+                except Exception as e:
+                    print(f"[WARNING] Bulk insert for main docs failed: {e}. Falling back to per-item insert.")
+                    for d in main_docs:
+                        try:
+                            self.collections[collection_name].insert(d, overwrite=True)
+                        except Exception as ie:
+                            print(f"[ERROR] Failed to insert main doc with _key={d.get('_key')}: {ie}")
+            for cname, docs in batch_docs.items():
+                if docs:
+                    unique_keys = {d['_key'] for d in docs if '_key' in d}
+                    node_counts[cname] = len(unique_keys)
+                    try:
+                        self.collections[cname].import_bulk(docs, overwrite=True)
+                    except Exception:
+                        # fallback to per-item insert if bulk insert fails
+                        for d in docs:
+                            self.collections[cname].insert(d, overwrite=True)
+
+            # EDGE INSERTS (count all attempted, since edges are always many-to-many)
+            if alt_title_country_edges:
+                edge_collections.add('alt_title_for_country')
+                batch_edges.setdefault('alt_title_for_country', []).extend(alt_title_country_edges)
+            if streaming_country_edges:
+                edge_collections.add('available_in_country')
+                batch_edges.setdefault('available_in_country', []).extend(streaming_country_edges)
+            if cert_country_edges:
+                edge_collections.add('certification_for_country')
+                batch_edges.setdefault('certification_for_country', []).extend(cert_country_edges)
+            if alt_title_edges:
+                edge_collections.add('has_alternative_title')
+                batch_edges.setdefault('has_alternative_title', []).extend(alt_title_edges)
+            if cert_edges:
+                edge_collections.add('has_certification')
+                batch_edges.setdefault('has_certification', []).extend(cert_edges)
+            if image_edges:
+                edge_collections.add('has_image')
+                batch_edges.setdefault('has_image', []).extend(image_edges)
+            if orig_lang_edge:
+                edge_collections.add('has_original_language')
+                batch_edges.setdefault('has_original_language', []).append(orig_lang_edge)
+            if score_edges:
+                edge_collections.add('has_score')
+                batch_edges.setdefault('has_score', []).extend(score_edges)
+            if season_edges:
+                edge_collections.add('has_season')
+                batch_edges.setdefault('has_season', []).extend(season_edges)
+            if spoken_lang_edges:
+                edge_collections.add('has_spoken_language')
+                batch_edges.setdefault('has_spoken_language', []).extend(spoken_lang_edges)
+            if streaming_offer_edges:
+                edge_collections.add('has_streaming_offer')
+                batch_edges.setdefault('has_streaming_offer', []).extend(streaming_offer_edges)
+            if translation_edges:
+                edge_collections.add('has_translation')
+                batch_edges.setdefault('has_translation', []).extend(translation_edges)
+            if video_edges:
+                edge_collections.add('has_video')
+                batch_edges.setdefault('has_video', []).extend(video_edges)
+            if provider_edges:
+                edge_collections.add('offer_for_streaming_service')
+                batch_edges.setdefault('offer_for_streaming_service', []).extend(provider_edges)
+            if offer_country_edges:
+                edge_collections.add('offer_in_country')
+                batch_edges.setdefault('offer_in_country', []).extend(offer_country_edges)
+            if country_edges:
+                edge_collections.add('originates_from_country')
+                batch_edges.setdefault('originates_from_country', []).extend(country_edges)
+            if translation_lang_edges:
+                edge_collections.add('translation_in_language')
+                batch_edges.setdefault('translation_in_language', []).extend(translation_lang_edges)
+            for edge_name, edges in batch_edges.items():
+                if edges:
+                    node_counts[edge_name] = len(edges)
+                    try:
+                        self.graph.edge_collection(edge_name).import_bulk(edges)
+                    except Exception:
+                        for e in edges:
+                            self.graph.edge_collection(edge_name).insert(e)
+
             print(f"Successfully imported/updated {imported_count} {type_label} into ArangoDB.")
+            print("[RELATED NODES CREATED]:")
+            for k, v in node_counts.items():
+                if v > 0:
+                    print(f"  {k}: {v}")
         except Exception as e:
             import traceback
             print(f"\n{'='*40}\n[IMPORT ERROR] {type_label.capitalize()}\n{'='*40}")
@@ -780,6 +763,9 @@ class MovieImporter:
             tb = traceback.format_exc()
             print(f"Traceback (most recent call last):\n{tb}")
             print(f"{'='*40}\n")
+        finally:
+            elapsed = time.time() - start_time
+            print(f"[TIMER] Importing {type_label} took {elapsed:.2f} seconds.")
 
     def import_movies(self):
         query = '''
@@ -875,9 +861,7 @@ def main():
     }
     importer = MovieImporter(pg_cfg)
     importer.connect_arango()
-    vertex_colls = ['movies', 'shows', 'persons', 'genres', 'keywords', 'production_companies', 'movie_series', 'tropes', 'translations', 'images', 'videos', 'alternative_titles', 'certifications', 'countries', 'languages', 'streaming_services', 'streaming_offers', 'seasons', 'scores']
-    for coll in vertex_colls:
-        importer.ensure_collection(coll)
+    # Ensure edge_defs are in the correct format for ensure_graph (list of dicts)
     edge_defs = [
         {'edge_collection': 'has_genre', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['genres']},
         {'edge_collection': 'has_keyword', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['keywords']},
@@ -904,9 +888,12 @@ def main():
         {'edge_collection': 'offer_for_streaming_service', 'from_vertex_collections': ['streaming_offers'], 'to_vertex_collections': ['streaming_services']},
         {'edge_collection': 'offer_in_country', 'from_vertex_collections': ['streaming_offers'], 'to_vertex_collections': ['countries']},
         {'edge_collection': 'has_season', 'from_vertex_collections': ['shows'], 'to_vertex_collections': ['seasons']},
-        {'edge_collection': 'has_score', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['scores']},
+        {'edge_collection': 'has_score', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['scores']}
     ]
     importer.ensure_graph('movie_graph', edge_defs)
+    if not importer.graph:
+        raise Exception("ArangoDB graph was not initialized after ensure_graph().")
+    importer.setup_schema()
     importer.connect_postgres()
     try:
         importer.import_movies()
