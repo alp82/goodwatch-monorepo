@@ -10,6 +10,9 @@ import re
 from config import get_arango_client, get_arango_db, get_arango_sys_db, ARANGO_DB, ARANGO_USER, ARANGO_PASSWORD
 import time
 
+# Constants
+BATCH_LIMIT = 100
+
 # Pre-compile regex patterns
 _HUMAN_KEY_PATTERN = re.compile(r'[^a-z0-9_\-]')
 _SAFE_KEY_PATTERN = re.compile(r'[^a-zA-Z0-9_\-]')
@@ -796,7 +799,7 @@ class MovieImporter:
             print(f"[TIMER] Importing {type_label} took {elapsed:.2f} seconds.")
 
     def import_movies(self):
-        query = '''
+        query = f'''
             SELECT
               tmdb_id,
               created_at, updated_at,
@@ -830,12 +833,12 @@ class MovieImporter:
               tmdb_details_updated_at, tmdb_providers_updated_at, imdb_ratings_updated_at, metacritic_ratings_updated_at, rotten_tomatoes_ratings_updated_at, tvtropes_tags_updated_at, dna_updated_at
             FROM movies
             ORDER BY popularity DESC NULLS LAST
-            LIMIT 100;
+            LIMIT {BATCH_LIMIT};
         '''
         self.import_items(query=query, collection_name='movies', id_prefix='movies', type_label='movies')
 
     def import_shows(self):
-        query = '''
+        query = f'''
             SELECT
               tmdb_id,
               created_at, updated_at,
@@ -871,7 +874,7 @@ class MovieImporter:
               tmdb_details_updated_at, tmdb_providers_updated_at, imdb_ratings_updated_at, metacritic_ratings_updated_at, rotten_tomatoes_ratings_updated_at, tvtropes_tags_updated_at, dna_updated_at
             FROM tv
             ORDER BY popularity DESC NULLS LAST
-            LIMIT 100;
+            LIMIT {BATCH_LIMIT};
         '''
         self.import_items(query=query, collection_name='shows', id_prefix='shows', type_label='shows')
 
@@ -932,6 +935,8 @@ def main():
         all_colls = db.collections()
         stats = []
         for coll_info in all_colls:
+            if coll_info['name'].startswith('_'):
+              continue
             cname = coll_info['name']
             ctype = coll_info['type']
             coll = db.collection(cname)
@@ -946,9 +951,13 @@ def main():
                 'docSize': docSize,
                 'indexSize': indexSize,
             })
+        stats.sort(key=lambda x: x['docSize'], reverse=False)
+        print("\nBottom 10 collections/edges by size (MB):")
+        for i, s in enumerate(stats[:10], 1):
+            print(f"{i}. {s['name']} (type: {s['type']}) - {s['docCount']} entries, {s['docSize']/1024/1024:.2f} MB (Docs), {s['indexSize']/1024/1024:.2f} MB (Index)")
         stats.sort(key=lambda x: x['docSize'], reverse=True)
-        print("\nTop 20 collections/edges by size (MB):")
-        for i, s in enumerate(stats[:20], 1):
+        print("\nTop 10 collections/edges by size (MB):")
+        for i, s in enumerate(stats[:10], 1):
             print(f"{i}. {s['name']} (type: {s['type']}) - {s['docCount']} entries, {s['docSize']/1024/1024:.2f} MB (Docs), {s['indexSize']/1024/1024:.2f} MB (Index)")
 
         # Print totals for all collections
