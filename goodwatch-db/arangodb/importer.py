@@ -87,13 +87,14 @@ class MovieImporter:
             ('has_spoken_language', ['movies', 'shows'], ['languages']),
             ('certification_for_country', ['certifications'], ['countries']),
             ('translation_in_language', ['translations'], ['languages']),
-            ('alt_title_for_country', ['alternative_titles'], ['countries']),
+            ('alternative_title_for_country', ['alternative_titles'], ['countries']),
             ('available_in_country', ['movies', 'shows'], ['countries']),
             ('has_streaming_offer', ['movies', 'shows'], ['streaming_offers']),
             ('offer_for_streaming_service', ['streaming_offers'], ['streaming_services']),
             ('offer_in_country', ['streaming_offers'], ['countries']),
             ('has_season', ['shows'], ['seasons']),
-            ('has_score', ['movies', 'shows'], ['scores'])
+            ('has_score', ['movies', 'shows'], ['scores']),
+            ('translation_in_country', ['translations'], ['countries']),
         ]
         if not self.graph:
             raise Exception("Graph not initialized. Call connect_arango() and ensure_graph() first.")
@@ -258,6 +259,8 @@ class MovieImporter:
                 translations = parse_json_field(item.get('translations'))
                 translation_docs = []
                 translation_edges = []
+                translation_lang_edges = []
+                translation_country_edges = []
                 if translations:
                     for t in translations:
                         iso1 = t.get('iso_639_1') or 'xx'
@@ -278,9 +281,24 @@ class MovieImporter:
                             '_from': f"{id_prefix}/{doc['_key']}",
                             '_to': f"translations/{tkey}"
                         })
+                        if iso1:
+                            lang = iso1.strip().lower()
+                            batch_docs['languages'].append({'_key': lang})
+                            translation_lang_edges.append({
+                                '_from': f"translations/{tkey}",
+                                '_to': f"languages/{lang}"
+                            })
+                        if iso2:
+                            country = iso2.strip().upper()
+                            batch_docs['countries'].append({'_key': country})
+                            translation_country_edges.append({
+                                '_from': f"translations/{tkey}",
+                                '_to': f"countries/{country}"
+                            })
                 alt_titles = parse_json_field(item.get('alternative_titles'))
                 alt_title_docs = []
                 alt_title_edges = []
+                alt_title_country_edges = []
                 if isinstance(alt_titles, list):
                     for i, alt in enumerate(alt_titles):
                         at_key = self.make_human_key(doc['_key'], alt.get('title'), alt.get('iso_3166_1') or i)
@@ -292,6 +310,13 @@ class MovieImporter:
                             '_from': f"{id_prefix}/{doc['_key']}",
                             '_to': f"alternative_titles/{at_key}"
                         })
+                        if alt.get('iso_3166_1'):
+                            code = alt['iso_3166_1'].strip().upper()
+                            batch_docs['countries'].append({'_key': code})
+                            alt_title_country_edges.append({
+                                '_from': f"alternative_titles/{at_key}",
+                                '_to': f"countries/{code}"
+                            })
                 images = parse_json_field(item.get('images'))
                 videos = parse_json_field(item.get('videos'))
                 image_docs = []
@@ -327,6 +352,7 @@ class MovieImporter:
                 certs = parse_json_field(item.get('certifications'))
                 cert_docs = []
                 cert_edges = []
+                cert_country_edges = []
                 if isinstance(certs, list):
                     for cert in certs:
                         country = cert.get('iso_3166_1')
@@ -346,6 +372,13 @@ class MovieImporter:
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"certifications/{ckey}"
                             })
+                            if country:
+                                code = country.strip().upper()
+                                batch_docs['countries'].append({'_key': code})
+                                cert_country_edges.append({
+                                    '_from': f"certifications/{ckey}",
+                                    '_to': f"countries/{code}"
+                                })
                 collection_info = parse_json_field(item.get('collection'))
                 collection_doc = None
                 collection_edge = None
@@ -399,36 +432,6 @@ class MovieImporter:
                                 '_from': f"{id_prefix}/{doc['_key']}",
                                 '_to': f"languages/{code}"
                             })
-                cert_country_edges = []
-                for cdoc in cert_docs:
-                    code = cdoc.get('iso_3166_1')
-                    if code:
-                        code = code.strip().upper()
-                        batch_docs['countries'].append({'_key': code})
-                        cert_country_edges.append({
-                            '_from': f"certifications/{cdoc['_key']}",
-                            '_to': f"countries/{code}"
-                        })
-                translation_lang_edges = []
-                for tdoc in translation_docs:
-                    lang = tdoc.get('language_code')
-                    if lang:
-                        lang = lang.strip().lower()
-                        batch_docs['languages'].append({'_key': lang})
-                        translation_lang_edges.append({
-                            '_from': f"translations/{tdoc['_key']}",
-                            '_to': f"languages/{lang}"
-                        })
-                alt_title_country_edges = []
-                for atdoc in alt_title_docs:
-                    code = atdoc.get('iso_3166_1')
-                    if code:
-                        code = code.strip().upper()
-                        batch_docs['countries'].append({'_key': code})
-                        alt_title_country_edges.append({
-                            '_from': f"alternative_titles/{atdoc['_key']}",
-                            '_to': f"countries/{code}"
-                        })
                 streaming_country_codes = parse_json_field(item.get('streaming_country_codes'))
                 streaming_country_edges = []
                 if isinstance(streaming_country_codes, list):
@@ -692,8 +695,8 @@ class MovieImporter:
 
             # EDGE INSERTS (count all attempted, since edges are always many-to-many)
             if alt_title_country_edges:
-                edge_collections.add('alt_title_for_country')
-                batch_edges.setdefault('alt_title_for_country', []).extend(alt_title_country_edges)
+                edge_collections.add('alternative_title_for_country')
+                batch_edges.setdefault('alternative_title_for_country', []).extend(alt_title_country_edges)
             if streaming_country_edges:
                 edge_collections.add('available_in_country')
                 batch_edges.setdefault('available_in_country', []).extend(streaming_country_edges)
@@ -742,6 +745,9 @@ class MovieImporter:
             if translation_lang_edges:
                 edge_collections.add('translation_in_language')
                 batch_edges.setdefault('translation_in_language', []).extend(translation_lang_edges)
+            if translation_country_edges:
+                edge_collections.add('translation_in_country')
+                batch_edges.setdefault('translation_in_country', []).extend(translation_country_edges)
             for edge_name, edges in batch_edges.items():
                 if edges:
                     node_counts[edge_name] = len(edges)
@@ -882,13 +888,14 @@ def main():
         {'edge_collection': 'has_spoken_language', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['languages']},
         {'edge_collection': 'certification_for_country', 'from_vertex_collections': ['certifications'], 'to_vertex_collections': ['countries']},
         {'edge_collection': 'translation_in_language', 'from_vertex_collections': ['translations'], 'to_vertex_collections': ['languages']},
-        {'edge_collection': 'alt_title_for_country', 'from_vertex_collections': ['alternative_titles'], 'to_vertex_collections': ['countries']},
+        {'edge_collection': 'alternative_title_for_country', 'from_vertex_collections': ['alternative_titles'], 'to_vertex_collections': ['countries']},
         {'edge_collection': 'available_in_country', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['countries']},
         {'edge_collection': 'has_streaming_offer', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['streaming_offers']},
         {'edge_collection': 'offer_for_streaming_service', 'from_vertex_collections': ['streaming_offers'], 'to_vertex_collections': ['streaming_services']},
         {'edge_collection': 'offer_in_country', 'from_vertex_collections': ['streaming_offers'], 'to_vertex_collections': ['countries']},
         {'edge_collection': 'has_season', 'from_vertex_collections': ['shows'], 'to_vertex_collections': ['seasons']},
-        {'edge_collection': 'has_score', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['scores']}
+        {'edge_collection': 'has_score', 'from_vertex_collections': ['movies', 'shows'], 'to_vertex_collections': ['scores']},
+        {'edge_collection': 'translation_in_country', 'from_vertex_collections': ['translations'], 'to_vertex_collections': ['countries']},
     ]
     importer.ensure_graph('movie_graph', edge_defs)
     if not importer.graph:
