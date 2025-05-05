@@ -149,18 +149,76 @@ class BaseImporter:
         
     def print_stats(self):
         """
-        Print import statistics.
+        Print statistics about imported nodes and edges.
         """
         print("\n" + "="*50)
         print("IMPORT STATISTICS")
         print("="*50)
         
-        print("\nNODES:")
-        for coll, count in sorted(self.node_counts.items()):
-            print(f"  {coll}: {count:,}")
-            
-        print("\nEDGES:")
-        for edge, count in sorted(self.edge_counts.items()):
-            print(f"  {edge}: {count:,}")
-            
+        # Print node counts
+        if self.node_counts:
+            print("\nNODES:")
+            for cname, count in sorted(self.node_counts.items()):
+                print(f"  {cname}: {count}")
+        
+        # Print edge counts
+        if self.edge_counts:
+            print("\nEDGES:")
+            for edge_name, count in sorted(self.edge_counts.items()):
+                print(f"  {edge_name}: {count}")
+        
         print("="*50)
+        
+        # Print detailed collection size statistics
+        self.print_collection_stats()
+    
+    def print_collection_stats(self):
+        """
+        Print detailed statistics about collection sizes and counts.
+        """
+        try:
+            print("\n" + "="*50)
+            print("COLLECTION SIZE STATISTICS")
+            print("="*50)
+            
+            stats = []
+            collections = self.arango_connector.db.collections()
+            
+            for collection in collections:
+                cname = collection['name']
+                if not cname.startswith('_'):  # Skip system collections
+                    coll = self.arango_connector.db.collection(cname)
+                    docCount = coll.count()
+                    cstats = coll.statistics()
+                    docSize = cstats.get('documents_size')
+                    indexSize = cstats.get('indexes').get('size')
+                    coll_type = collection.get('type')
+                    
+                    stats.append({
+                        'name': cname,
+                        'type': coll_type,
+                        'docCount': docCount,
+                        'docSize': docSize,
+                        'indexSize': indexSize,
+                    })
+            
+            # Show largest collections first
+            stats.sort(key=lambda x: x['docSize'], reverse=True)
+            print("\nTop 10 collections/edges by size (MB):")
+            for i, s in enumerate(stats[:10], 1):
+                print(f"{i}. {s['name']} (type: {s['type']}) - {s['docCount']} entries, {s['docSize']/1024/1024:.2f} MB (Docs), {s['indexSize']/1024/1024:.2f} MB (Index)")
+            
+            # Print totals for all collections
+            total_nodes = sum(s['docCount'] for s in stats if s['type'] == 'document')
+            total_edges = sum(s['docCount'] for s in stats if s['type'] == 'edge')
+            total_doc_size = sum(s['docSize'] or 0 for s in stats)
+            total_index_size = sum(s['indexSize'] or 0 for s in stats)
+            
+            print("\n=== DATABASE TOTALS ===")
+            print(f"Total nodes: {total_nodes}")
+            print(f"Total edges: {total_edges}")
+            print(f"Total doc size: {total_doc_size/1024/1024:.2f} MB")
+            print(f"Total index size: {total_index_size/1024/1024:.2f} MB")
+        
+        except Exception as e:
+            print(f"Error getting collection stats: {e}")

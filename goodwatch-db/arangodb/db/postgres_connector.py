@@ -60,7 +60,7 @@ class PostgresConnector:
         """
         if hasattr(self, 'cursor') and self.cursor:
             self.cursor.close()
-            print("PostgreSQL cursor closed.")
+#             print("PostgreSQL cursor closed.")
         if hasattr(self, 'conn') and self.conn:
             self.conn.close()
-            print("PostgreSQL connection closed.")
+#             print("PostgreSQL connection closed.")
