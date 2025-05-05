@@ -14,7 +14,7 @@ from processors.tag_processor import TagProcessor
 from processors.recommendation_processor import RecommendationProcessor
 from processors.company_processor import CompanyProcessor
 from processors.release_events_processor import ReleaseEventsProcessor
-from utils.key_generators import make_human_key, make_title_key
+from utils.key_generators import make_human_key, make_title_key, make_dna_key
 from constants import MOVIES_QUERY
 from constants import MOVIES_COLLECTION
 
@@ -83,7 +83,7 @@ class MovieProcessor(BaseProcessor):
         self.initialize_batch_buffers([
             'movies', 'images', 'videos', 'alternative_titles', 'translations',
             'languages', 'streaming_services', 'streaming_availability', 'scores',
-            'persons', 'genres', 'keywords', 'tropes', 'movie_series', 'production_companies'
+            'persons', 'genres', 'keywords', 'tropes', 'dna', 'movie_series', 'production_companies'
         ])
 
         # Initialize batch buffers for all sub-processors
@@ -100,6 +100,8 @@ class MovieProcessor(BaseProcessor):
         self.company_processor.initialize_batch_buffers(['production_companies', 'movie_series'])
         self.release_events_processor.initialize_batch_buffers([])
         
+        self.dna_pairs = set()  # Track unique (category, label) pairs
+
     def collect_batch_data(self, processors):
         """
         Collect batch data from all sub-processors.
@@ -269,6 +271,21 @@ class MovieProcessor(BaseProcessor):
         # Process production companies and movie collection
         self.company_processor.process_production_companies(doc, id_prefix)
         self.company_processor.process_movie_collection(doc)
+        
+        # Process DNA
+        dna = item.get('dna')
+        if dna:
+            for category, labels in dna.items():
+                for label in labels:
+                    key = make_dna_key(category, label)
+                    self.dna_pairs.add((category, label))
+                    dna_doc = {
+                        '_key': key,
+                        'category': category,
+                        'label': label
+                    }
+                    self.add_to_batch('dna', dna_doc)
+                    self.add_edge('has_dna', f"movies/{doc['_key']}", f"dna/{key}")
         
         # Collect batch data from all processors
         self.collect_batch_data([

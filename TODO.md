@@ -8,10 +8,11 @@ db redesign
     * only denormalize movies and shows fields that are small enough
     * sort order of edges like appears_in matters
     * streaming availability: history + changes + upcoming
+    * import additional data from other postgres tables
+    * created_at, updated_at for all collections
+    * user has seen: possibility to track "currently watching" with optional time for movies, shows, seasons and episodes
     * seasons with separate episodes collection
     * scores: history + by season + by episode
-    * import additional data from other postgres tables
-    * user has seen: possibility to track "currently watching" with optional time for movies, shows, seasons and episodes
 
 ---    
 
@@ -64,6 +65,9 @@ onboarding
 ---    
 
 DNA redesign
+    alternative to huggingface
+    https://gemini.google.com/app/bc0eda7592525891
+    https://gemini.google.com/app/be7d58cc7d4b0380
     https://gemini.google.com/app/939d66e003582351
     https://gemini.google.com/app/38fd8b42c3385597
 
@@ -254,12 +258,20 @@ ai
     
 ---
 
-tropes
-    add discover filter
-
+tv seasons:
+    name, overview, air date, poster path
+    get episodes: overview, images, videos, translations, air date, crew, guest stars
+    get ratings for seasons and episodes: tmdb, imdb, metacritic, rt
+    show in details
+    when last season/episode was released
+    score matrix
+        https://tvcharts.co/show/arcane-tt11126994
+    recaps
+    
 ---
 
-DNA alternative to huggingface
+tropes
+    add discover filter
 
 ---    
 
@@ -340,17 +352,6 @@ order by
     popularity
     score
     most recent
-    
----
-
-tv seasons:
-    get episodes
-    get ratings
-    show in details
-    when last season/episode was released
-    score matrix
-        https://tvcharts.co/show/arcane-tt11126994
-    recaps
 
 ---
 

@@ -54,6 +54,13 @@ def make_title_key(title, id_value):
     # Combine title with ID
     return f"{title_part}_{id_value}"
 
+def make_dna_key(category, label):
+    """Generate a unique key for a DNA node."""
+    from re import sub
+    cat = sub(r'[^a-zA-Z0-9]', '_', str(category)).lower()
+    lbl = sub(r'[^a-zA-Z0-9]', '_', str(label)).lower()
+    return f"{cat}__{lbl}"
+
 def safe_key(val):
     """
     Create a safe key for database use.

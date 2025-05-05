@@ -8,17 +8,18 @@ BATCH_LIMIT = 10
 
 # Collections
 VERTEX_COLLECTIONS = [
-    'movies', 'shows', 'persons', 'genres', 'keywords', 'tropes',
+    'movies', 'shows', 'persons', 'genres', 'keywords', 'tropes', 'dna',
     'movie_series', 'production_companies',
     'translations', 'images', 'videos', 'alternative_titles',
     'release_events', 'age_classifications',
-    'countries', 'languages', 'streaming_services', 'streaming_availability', 'seasons', 'scores'
+    'countries', 'languages', 'streaming_services', 'streaming_availability', 'seasons', 'scores',
 ]
 
 EDGE_DEFINITIONS = [
     ('has_genre', ['movies', 'shows'], ['genres']),
     ('has_keyword', ['movies', 'shows'], ['keywords']),
     ('has_trope', ['movies', 'shows'], ['tropes']),
+    ('has_dna', ['movies', 'shows'], ['dna']),
     ('has_translation', ['movies', 'shows'], ['translations']),
     ('has_image', ['movies', 'shows'], ['images']),
     ('has_video', ['movies', 'shows'], ['videos']),
@@ -63,7 +64,7 @@ SCORE_SPECS = [
 
 # Fields to remove from main documents after processing
 REDUNDANT_FIELDS = set([
-    'genres', 'keywords', 'tropes', 'cast', 'crew',
+    'genres', 'keywords', 'tropes', 'dna', 'cast', 'crew',
     'translations', 'images', 'videos', 'alternative_titles', 'certifications', 'collection',
     'origin_country_codes', 'original_language_code', 'spoken_language_codes',
     'streaming_providers', 'streaming_country_codes', 'seasons',
