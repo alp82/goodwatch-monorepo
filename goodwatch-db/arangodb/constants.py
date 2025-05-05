@@ -12,7 +12,7 @@ VERTEX_COLLECTIONS = [
     'movie_series', 'production_companies',
     'translations', 'images', 'videos', 'alternative_titles',
     'release_events', 'age_classifications',
-    'countries', 'languages', 'streaming_services', 'streaming_offers', 'seasons', 'scores'
+    'countries', 'languages', 'streaming_services', 'streaming_availability', 'seasons', 'scores'
 ]
 
 EDGE_DEFINITIONS = [
@@ -39,9 +39,9 @@ EDGE_DEFINITIONS = [
     ('translation_in_language', ['translations'], ['languages']),
     ('alternative_title_for_country', ['alternative_titles'], ['countries']),
     ('available_in_country', ['movies', 'shows'], ['countries']),
-    ('has_streaming_offer', ['movies', 'shows'], ['streaming_offers']),
-    ('offer_for_streaming_service', ['streaming_offers'], ['streaming_services']),
-    ('offer_in_country', ['streaming_offers'], ['countries']),
+    ('has_streaming_availability', ['movies', 'shows'], ['streaming_availability']),
+    ('availability_on_streaming_service', ['streaming_availability'], ['streaming_services']),
+    ('availability_in_country', ['streaming_availability'], ['countries']),
     ('has_season', ['shows'], ['seasons']),
     ('has_score', ['movies', 'shows'], ['scores']),
     ('translation_in_country', ['translations'], ['countries']),

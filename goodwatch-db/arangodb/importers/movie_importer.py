@@ -82,7 +82,7 @@ class MovieProcessor(BaseProcessor):
         # Initialize batch buffers with all possible collection names
         self.initialize_batch_buffers([
             'movies', 'images', 'videos', 'alternative_titles', 'translations',
-            'languages', 'streaming_services', 'streaming_offers', 'scores',
+            'languages', 'streaming_services', 'streaming_availability', 'scores',
             'persons', 'genres', 'keywords', 'tropes', 'movie_series', 'production_companies'
         ])
 
@@ -92,7 +92,7 @@ class MovieProcessor(BaseProcessor):
         self.release_events_processor.initialize_batch_buffers(['certifications', 'countries'])
         self.translation_processor.initialize_batch_buffers(['translations', 'languages', 'countries'])
         self.location_processor.initialize_batch_buffers(['countries', 'languages'])
-        self.streaming_processor.initialize_batch_buffers(['streaming_services', 'streaming_offers', 'countries'])
+        self.streaming_processor.initialize_batch_buffers(['streaming_services', 'streaming_availability', 'countries'])
         self.score_processor.initialize_batch_buffers(['scores'])
         self.person_processor.initialize_batch_buffers(['persons'])
         self.tag_processor.initialize_batch_buffers(['genres', 'keywords', 'tropes'])
@@ -249,7 +249,7 @@ class MovieProcessor(BaseProcessor):
         self.location_processor.process_languages(doc, id_prefix)
         
         # Process streaming providers
-        self.streaming_processor.process_streaming_providers(doc, id_prefix)
+        self.streaming_processor.process_streaming_availability(doc, id_prefix)
         
         # Process scores
         self.score_processor.process_scores(doc, id_prefix)

@@ -1,5 +1,5 @@
 """
-Processor for handling streaming services and offers.
+Processor for handling streaming services and availability.
 """
 from processors.base_processor import BaseProcessor
 from utils.parsers import parse_json_field
@@ -7,7 +7,7 @@ from utils.key_generators import make_human_key
 
 class StreamingProcessor(BaseProcessor):
     """
-    Processor for handling streaming services, offers, and related data.
+    Processor for handling streaming services, availability, and related data.
     """
     
     def __init__(self, arango_connector):
@@ -19,35 +19,36 @@ class StreamingProcessor(BaseProcessor):
         """
         super().__init__(arango_connector)
         
-    def process_streaming_providers(self, doc, id_prefix):
+    def process_streaming_availability(self, doc, id_prefix):
         """
-        Process streaming providers for a document and create related edges.
+        Process streaming availability for a document and create related edges.
         
         Args:
-            doc: Main document with streaming_providers
+            doc: Main document with streaming_availability
             id_prefix: Prefix for document IDs (e.g., 'movies' or 'shows')
             
         Returns:
-            tuple: (offer_docs, offer_edges, provider_edges, country_edges)
+            tuple: (availability_docs, availability_edges, provider_edges, country_edges)
         """
-        streaming_providers = parse_json_field(doc.get('streaming_providers'))
+        streaming_availability = parse_json_field(doc.get('streaming_providers'))
         
-        offer_docs = []
-        offer_edges = []
+        availability_docs = []
+        availability_edges = []
         provider_edges = []
-        offer_country_edges = []
+        country_edges = []
         
-        if not isinstance(streaming_providers, dict):
-            return offer_docs, offer_edges, provider_edges, offer_country_edges
+        if not isinstance(streaming_availability, dict):
+            return availability_docs, availability_edges, provider_edges, country_edges
             
-        for country, offers in streaming_providers.items():
+        for country, availability in streaming_availability.items():
             country_code = country.strip().upper()
             self.add_to_batch('countries', {'_key': country_code})
             
-            link = offers.get('link')
-            
-            for offer_type in ['ads', 'flatrate', 'buy', 'rent', 'free']:
-                for prov in offers.get(offer_type, []):
+            link = availability.get('link')
+
+            # TODO : Add flatrate_and_buy and others...
+            for availability_type in ['ads', 'flatrate', 'buy', 'rent', 'free']:
+                for prov in availability.get(availability_type, []):
                     # Create streaming service document
                     pid = str(prov['provider_id'])
                     provider_key = make_human_key(prov.get('provider_name'), pid)
@@ -61,41 +62,43 @@ class StreamingProcessor(BaseProcessor):
                     }
                     self.add_to_batch('streaming_services', service_doc)
                     
-                    # Create streaming offer document
-                    offer_key = make_human_key(doc['_key'], country_code, offer_type, provider_key)
+                    # Create streaming availability document
+                    availability_key = make_human_key(doc['_key'], country_code, availability_type, provider_key)
                     
-                    offer_doc = {
-                        '_key': offer_key,
-                        'type': offer_type,
+                    availability_doc = {
+                        '_key': availability_key,
+                        'type': availability_type,
                         'country': country_code,
                         'provider_id': provider_key,
                         'link': link,
+                        'start_date': availability.get('start_date'),
+                        'end_date': availability.get('end_date'),
                         'parent_key': doc['_key']
                     }
                     
-                    offer_docs.append(offer_doc)
-                    self.add_to_batch('streaming_offers', offer_doc)
+                    availability_docs.append(availability_doc)
+                    self.add_to_batch('streaming_availability', availability_doc)
                     
                     # Create edges
-                    offer_edge = {
+                    availability_edge = {
                         '_from': f"{id_prefix}/{doc['_key']}",
-                        '_to': f"streaming_offers/{offer_key}"
+                        '_to': f"streaming_availability/{availability_key}"
                     }
-                    offer_edges.append(offer_edge)
-                    self.add_edge('has_streaming_offer', f"{id_prefix}/{doc['_key']}", f"streaming_offers/{offer_key}")
+                    availability_edges.append(availability_edge)
+                    self.add_edge('has_streaming_availability', f"{id_prefix}/{doc['_key']}", f"streaming_availability/{availability_key}")
                     
                     provider_edge = {
-                        '_from': f"streaming_offers/{offer_key}",
+                        '_from': f"streaming_availability/{availability_key}",
                         '_to': f"streaming_services/{provider_key}"
                     }
                     provider_edges.append(provider_edge)
-                    self.add_edge('offer_for_streaming_service', f"streaming_offers/{offer_key}", f"streaming_services/{provider_key}")
+                    self.add_edge('availability_for_streaming_service', f"streaming_availability/{availability_key}", f"streaming_services/{provider_key}")
                     
                     country_edge = {
-                        '_from': f"streaming_offers/{offer_key}",
+                        '_from': f"streaming_availability/{availability_key}",
                         '_to': f"countries/{country_code}"
                     }
-                    offer_country_edges.append(country_edge)
-                    self.add_edge('offer_in_country', f"streaming_offers/{offer_key}", f"countries/{country_code}")
+                    country_edges.append(country_edge)
+                    self.add_edge('availability_in_country', f"streaming_availability/{availability_key}", f"countries/{country_code}")
                     
-        return offer_docs, offer_edges, provider_edges, offer_country_edges
+        return availability_docs, availability_edges, provider_edges, country_edges
