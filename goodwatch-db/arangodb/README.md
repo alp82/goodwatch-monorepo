@@ -4,25 +4,32 @@ Fetch movies + scores with score filter
 
 ```aql
 FOR movie IN movies
-  FILTER LENGTH(
-    FOR score IN 1..1 OUTBOUND movie has_score
-      FILTER score.source == "aggregated" 
-         AND score.score_type == "combined" 
-         AND score.percent >= 80
-      LIMIT 1
-      RETURN true
-  ) > 0
-  SORT movie.popularity DESC
+  LET filter_score_array = (
+    FOR score IN 1..1 OUTBOUND movie has_score 
+      FILTER
+        score.source == "aggregated"
+        AND score.score_type == "combined"
+        AND score.percent >= 65
+      LIMIT 1 
+      RETURN score
+  )
+  
+  FILTER LENGTH(filter_score_array) > 0 
+  LET filter_score = filter_score_array[0] 
+  
+  SORT filter_score.percent DESC 
   LIMIT 10
   
-  LET scores = (
-    FOR score IN 1..1 OUTBOUND movie has_score // Traverse again from the selected movie
-      // NO FILTER applied here - we want all scores for this movie
-      RETURN score // Return the full score document
+  LET all_scores = (
+    FOR score IN 1..1 OUTBOUND movie has_score
+      RETURN { score: score.source, type: score.score_type, percent: score.percent } 
   )
   
   RETURN { 
-    movie: movie, 
-    scores: scores 
-  } 
+    movie_id: movie._id,
+    movie_title: movie.title,
+    movie_release: movie.release_year,
+    sort_score: filter_score.percent,
+    scores: all_scores 
+  }
 ```

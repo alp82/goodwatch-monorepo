@@ -13,7 +13,7 @@ from processors.person_processor import PersonProcessor
 from processors.tag_processor import TagProcessor
 from processors.recommendation_processor import RecommendationProcessor
 from processors.company_processor import CompanyProcessor
-from utils.key_generators import make_human_key
+from utils.key_generators import make_human_key, make_title_key
 from constants import MOVIES_QUERY
 from constants import MOVIES_COLLECTION
 
@@ -131,13 +131,17 @@ class MovieProcessor(BaseProcessor):
             print("Skipping item without tmdb_id")
             return None
             
+        # Create human-readable key using title and tmdb_id
+        tmdb_id = item.get('tmdb_id')
+        title = item.get('title')
+        
         # Create movie document with all fields from the SQL query
         doc = {
-            '_key': str(item.get('tmdb_id')),
-            'tmdb_id': item.get('tmdb_id'),
+            '_key': make_title_key(title, tmdb_id),
+            'tmdb_id': tmdb_id,
             'created_at': item.get('created_at'),
             'updated_at': item.get('updated_at'),
-            'title': item.get('title'),
+            'title': title,
             'original_title': item.get('original_title'),
             'tagline': item.get('tagline'),
             'synopsis': item.get('synopsis'),  
