@@ -14,6 +14,7 @@ from processors.tag_processor import TagProcessor
 from processors.season_processor import SeasonProcessor
 from processors.recommendation_processor import RecommendationProcessor
 from processors.company_processor import CompanyProcessor
+from processors.release_events_processor import ReleaseEventsProcessor
 from utils.key_generators import make_human_key, make_title_key
 from constants import SHOWS_QUERY
 from constants import SHOWS_COLLECTION
@@ -78,18 +79,20 @@ class ShowProcessor(BaseProcessor):
         self.season_processor = SeasonProcessor(arango_connector)
         self.recommendation_processor = RecommendationProcessor(arango_connector)
         self.company_processor = CompanyProcessor(arango_connector)
+        self.release_events_processor = ReleaseEventsProcessor(arango_connector)
         
         # Initialize batch buffers with all possible collection names
         self.initialize_batch_buffers([
-            'shows', 'images', 'videos', 'alternative_titles', 'certifications',
-            'countries', 'languages', 'translations', 'streaming_services',
-            'streaming_offers', 'scores', 'persons', 'genres', 'keywords',
-            'tropes', 'seasons', 'production_companies'
+            'shows', 'images', 'videos', 'alternative_titles', 'translations',
+            'languages', 'countries', 'streaming_services', 'streaming_offers',
+            'scores', 'persons', 'genres', 'keywords', 'tropes', 'seasons',
+            'production_companies'
         ])
 
         # Initialize batch buffers for all sub-processors
         self.media_processor.initialize_batch_buffers(['images', 'videos'])
-        self.metadata_processor.initialize_batch_buffers(['alternative_titles', 'certifications', 'countries'])
+        self.metadata_processor.initialize_batch_buffers(['alternative_titles', 'countries'])
+        self.release_events_processor.initialize_batch_buffers(['certifications', 'countries'])
         self.translation_processor.initialize_batch_buffers(['translations', 'languages', 'countries'])
         self.location_processor.initialize_batch_buffers(['countries', 'languages'])
         self.streaming_processor.initialize_batch_buffers(['streaming_services', 'streaming_offers', 'countries'])
@@ -99,7 +102,7 @@ class ShowProcessor(BaseProcessor):
         self.season_processor.initialize_batch_buffers(['seasons'])
         self.recommendation_processor.initialize_batch_buffers([])
         self.company_processor.initialize_batch_buffers(['production_companies'])
-        
+
     def collect_batch_data(self, processors):
         """
         Collect batch data from all sub-processors.
@@ -134,7 +137,6 @@ class ShowProcessor(BaseProcessor):
             print("Skipping item without tmdb_id")
             return None
             
-        # Create human-readable key using title and tmdb_id
         tmdb_id = item.get('tmdb_id')
         title = item.get('title')
         
@@ -243,7 +245,7 @@ class ShowProcessor(BaseProcessor):
         self.metadata_processor.process_alternative_titles(doc, id_prefix)
         
         # Process certifications
-        self.metadata_processor.process_certifications(doc, id_prefix)
+        self.release_events_processor.process_release_events(doc, id_prefix)
         
         # Process locations and languages
         self.location_processor.process_countries(doc, id_prefix)
@@ -277,6 +279,7 @@ class ShowProcessor(BaseProcessor):
         self.collect_batch_data([
             self.media_processor,
             self.metadata_processor,
+            self.release_events_processor,
             self.translation_processor,
             self.location_processor,
             self.streaming_processor,
@@ -285,7 +288,7 @@ class ShowProcessor(BaseProcessor):
             self.tag_processor,
             self.season_processor,
             self.recommendation_processor,
-            self.company_processor
+            self.company_processor,
         ])
         
         return doc

@@ -6,9 +6,11 @@
 db redesign
     * certifications: split into releases and age ratings?
     * only denormalize movies and shows fields that are small enough
+    * sort order of edges like appears_in matters
     * streaming availability: history + changes + upcoming
     * seasons with separate episodes collection
     * scores: history + by season + by episode
+    * import additional data from other postgres tables
     * user has seen: possibility to track "currently watching" with optional time for movies, shows, seasons and episodes
 
 ---    
@@ -26,7 +28,7 @@ details page redesign
     
     share button sticky
     guess country
-    age restriction by country
+    age restriction by countryi'
     streaming section favors user selected providers
     web links section
     sequels section

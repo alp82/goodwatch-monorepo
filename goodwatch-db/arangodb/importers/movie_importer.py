@@ -13,6 +13,7 @@ from processors.person_processor import PersonProcessor
 from processors.tag_processor import TagProcessor
 from processors.recommendation_processor import RecommendationProcessor
 from processors.company_processor import CompanyProcessor
+from processors.release_events_processor import ReleaseEventsProcessor
 from utils.key_generators import make_human_key, make_title_key
 from constants import MOVIES_QUERY
 from constants import MOVIES_COLLECTION
@@ -76,18 +77,19 @@ class MovieProcessor(BaseProcessor):
         self.tag_processor = TagProcessor(arango_connector)
         self.recommendation_processor = RecommendationProcessor(arango_connector)
         self.company_processor = CompanyProcessor(arango_connector)
+        self.release_events_processor = ReleaseEventsProcessor(arango_connector)
         
         # Initialize batch buffers with all possible collection names
         self.initialize_batch_buffers([
-            'movies', 'images', 'videos', 'alternative_titles', 'certifications',
-            'countries', 'languages', 'translations', 'streaming_services',
-            'streaming_offers', 'scores', 'persons', 'genres', 'keywords',
-            'tropes', 'movie_series', 'production_companies'
+            'movies', 'images', 'videos', 'alternative_titles', 'translations',
+            'languages', 'streaming_services', 'streaming_offers', 'scores',
+            'persons', 'genres', 'keywords', 'tropes', 'movie_series', 'production_companies'
         ])
 
         # Initialize batch buffers for all sub-processors
         self.media_processor.initialize_batch_buffers(['images', 'videos'])
-        self.metadata_processor.initialize_batch_buffers(['alternative_titles', 'certifications', 'countries'])
+        self.metadata_processor.initialize_batch_buffers(['alternative_titles', 'countries'])
+        self.release_events_processor.initialize_batch_buffers(['certifications', 'countries'])
         self.translation_processor.initialize_batch_buffers(['translations', 'languages', 'countries'])
         self.location_processor.initialize_batch_buffers(['countries', 'languages'])
         self.streaming_processor.initialize_batch_buffers(['streaming_services', 'streaming_offers', 'countries'])
@@ -96,6 +98,7 @@ class MovieProcessor(BaseProcessor):
         self.tag_processor.initialize_batch_buffers(['genres', 'keywords', 'tropes'])
         self.recommendation_processor.initialize_batch_buffers([])
         self.company_processor.initialize_batch_buffers(['production_companies', 'movie_series'])
+        self.release_events_processor.initialize_batch_buffers([])
         
     def collect_batch_data(self, processors):
         """
@@ -238,8 +241,8 @@ class MovieProcessor(BaseProcessor):
         self.translation_processor.process_translations(doc, id_prefix)
         self.metadata_processor.process_alternative_titles(doc, id_prefix)
         
-        # Process certifications
-        self.metadata_processor.process_certifications(doc, id_prefix)
+        # Process release events
+        self.release_events_processor.process_release_events(doc, id_prefix)
         
         # Process locations and languages
         self.location_processor.process_countries(doc, id_prefix)
@@ -271,6 +274,7 @@ class MovieProcessor(BaseProcessor):
         self.collect_batch_data([
             self.media_processor,
             self.metadata_processor,
+            self.release_events_processor,
             self.translation_processor,
             self.location_processor,
             self.streaming_processor,
@@ -278,7 +282,7 @@ class MovieProcessor(BaseProcessor):
             self.person_processor,
             self.tag_processor,
             self.recommendation_processor,
-            self.company_processor
+            self.company_processor,
         ])
         
         return doc

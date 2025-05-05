@@ -10,7 +10,8 @@ BATCH_LIMIT = 10
 VERTEX_COLLECTIONS = [
     'movies', 'shows', 'persons', 'genres', 'keywords', 'tropes',
     'movie_series', 'production_companies',
-    'translations', 'images', 'videos', 'alternative_titles', 'certifications',
+    'translations', 'images', 'videos', 'alternative_titles',
+    'release_events', 'age_classifications',
     'countries', 'languages', 'streaming_services', 'streaming_offers', 'seasons', 'scores'
 ]
 
@@ -22,7 +23,8 @@ EDGE_DEFINITIONS = [
     ('has_image', ['movies', 'shows'], ['images']),
     ('has_video', ['movies', 'shows'], ['videos']),
     ('has_alternative_title', ['movies', 'shows'], ['alternative_titles']),
-    ('has_certification', ['movies', 'shows'], ['certifications']),
+    ('has_release_event', ['movies', 'shows'], ['release_events']),
+    ('has_age_classification', ['release_events'], ['age_classifications']),
     ('belongs_to_movie_series', ['movies'], ['movie_series']),
     ('produced_by', ['movies'], ['production_companies']),
     ('appeared_in', ['persons'], ['movies', 'shows']),
@@ -32,7 +34,8 @@ EDGE_DEFINITIONS = [
     ('originates_from_country', ['movies', 'shows'], ['countries']),
     ('has_original_language', ['movies', 'shows'], ['languages']),
     ('has_spoken_language', ['movies', 'shows'], ['languages']),
-    ('certification_for_country', ['certifications'], ['countries']),
+    ('release_event_for_country', ['release_events'], ['countries']),
+    ('age_classification_for_country', ['age_classifications'], ['countries']),
     ('translation_in_language', ['translations'], ['languages']),
     ('alternative_title_for_country', ['alternative_titles'], ['countries']),
     ('available_in_country', ['movies', 'shows'], ['countries']),
