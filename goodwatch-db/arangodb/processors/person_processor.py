@@ -111,11 +111,13 @@ class PersonProcessor(BaseProcessor):
                 '_from': person_id,
                 '_to': f"{id_prefix}/{doc['_key']}",
                 'job': crew_member.get('job'),
-                'department': crew_member.get('department')
+                'department': crew_member.get('department'),
+                'order': crew_member.get('order')
             }
             work_edges.append(edge)
             self.add_edge('worked_on', person_id, f"{id_prefix}/{doc['_key']}", 
                          job=crew_member.get('job'), 
-                         department=crew_member.get('department'))
+                         department=crew_member.get('department'),
+                         order=crew_member.get('order'))
             
         return person_docs, appearance_edges, work_edges

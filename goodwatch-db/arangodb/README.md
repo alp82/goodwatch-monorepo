@@ -1,7 +1,6 @@
 # Example Queries
 
-Fetch movies + scores with score filter
-
+Fetch movies + scores with score filter:
 ```aql
 FOR movie IN movies
   LET filter_score_array = (
@@ -32,4 +31,8 @@ FOR movie IN movies
     sort_score: filter_score.percent,
     scores: all_scores 
   }
+```
+
+Shows + people sorted by order:
+```aql
 ```
