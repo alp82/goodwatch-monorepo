@@ -11,7 +11,7 @@ from config import get_arango_client, get_arango_db, get_arango_sys_db, ARANGO_D
 import time
 
 # Constants
-BATCH_LIMIT = 100
+BATCH_LIMIT = 10
 
 # Pre-compile regex patterns
 _HUMAN_KEY_PATTERN = re.compile(r'[^a-z0-9_\-]')
@@ -673,6 +673,10 @@ class MovieImporter:
                                 '_to': f"seasons/{sid}"
                             })
                         doc.pop('seasons', None)
+                    # Add season edges to batch_edges
+                    if season_edges:
+                        edge_collections.add('has_season')
+                        batch_edges.setdefault('has_season', []).extend(season_edges)
                 main_docs.append(doc)
 
             # Deduplicate simple node collections before bulk insert
@@ -744,9 +748,6 @@ class MovieImporter:
             if score_edges:
                 edge_collections.add('has_score')
                 batch_edges.setdefault('has_score', []).extend(score_edges)
-            if season_edges:
-                edge_collections.add('has_season')
-                batch_edges.setdefault('has_season', []).extend(season_edges)
             if spoken_lang_edges:
                 edge_collections.add('has_spoken_language')
                 batch_edges.setdefault('has_spoken_language', []).extend(spoken_lang_edges)

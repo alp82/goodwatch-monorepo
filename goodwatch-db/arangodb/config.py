@@ -2,7 +2,7 @@ import os
 from arango import ArangoClient
 
 ARANGO_HOST = os.environ.get('ARANGO_HOST', 'http://localhost:8529')
-ARANGO_DB = os.environ.get('ARANGO_DB', 'goodwatch')
+ARANGO_DB = os.environ.get('ARANGO_DB', 'goodwatch2')
 ARANGO_USER = os.environ.get('ARANGO_USER', 'root')
 ARANGO_PASSWORD = os.environ.get('ARANGO_PASSWORD', '')
 
