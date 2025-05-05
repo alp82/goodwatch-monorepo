@@ -15,6 +15,7 @@ from processors.season_processor import SeasonProcessor
 from processors.recommendation_processor import RecommendationProcessor
 from processors.company_processor import CompanyProcessor
 from processors.release_events_processor import ReleaseEventsProcessor
+from processors.dna_processor import DNAProcessor
 from utils.key_generators import make_human_key, make_title_key, make_dna_key
 from constants import SHOWS_QUERY
 from constants import SHOWS_COLLECTION
@@ -80,6 +81,7 @@ class ShowProcessor(BaseProcessor):
         self.recommendation_processor = RecommendationProcessor(arango_connector)
         self.company_processor = CompanyProcessor(arango_connector)
         self.release_events_processor = ReleaseEventsProcessor(arango_connector)
+        self.dna_processor = DNAProcessor(arango_connector)
         
         # Initialize batch buffers with all possible collection names
         self.initialize_batch_buffers([
@@ -103,8 +105,6 @@ class ShowProcessor(BaseProcessor):
         self.recommendation_processor.initialize_batch_buffers([])
         self.company_processor.initialize_batch_buffers(['production_companies'])
         
-        self.dna_pairs = set()  # Track unique (category, label) pairs
-
     def collect_batch_data(self, processors):
         """
         Collect batch data from all sub-processors.
@@ -278,19 +278,7 @@ class ShowProcessor(BaseProcessor):
         self.company_processor.process_production_companies(doc, id_prefix)
         
         # Process DNA
-        dna = item.get('dna')
-        if dna:
-            for category, labels in dna.items():
-                for label in labels:
-                    key = make_dna_key(category, label)
-                    self.dna_pairs.add((category, label))
-                    dna_doc = {
-                        '_key': key,
-                        'category': category,
-                        'label': label
-                    }
-                    self.add_to_batch('dna', dna_doc)
-                    self.add_edge('has_dna', f"shows/{doc['_key']}", f"dna/{key}")
+        self.dna_processor.process_dna(doc, item.get('dna'), 'shows')
         
         # Collect batch data from all processors
         self.collect_batch_data([
@@ -306,6 +294,7 @@ class ShowProcessor(BaseProcessor):
             self.season_processor,
             self.recommendation_processor,
             self.company_processor,
+            self.dna_processor
         ])
         
         # Clean redundant fields before returning

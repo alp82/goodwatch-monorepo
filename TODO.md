@@ -446,6 +446,7 @@ onboarding
 ---
 
 goodwatch tiktok channel
+    https://anotepad.com/notes/8phwbhcq
     https://clideo.com/de/account/projects
 
 ---

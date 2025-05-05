@@ -5,8 +5,11 @@ import os
 import argparse
 import time
 from dotenv import load_dotenv
+from db.arango_connector import ArangoConnector
+from db.schema_manager import SchemaManager
 from importers.movie_importer import MovieImporter
 from importers.show_importer import ShowImporter
+from post_processors.dna_post_processor import DNAPostProcessor
 
 def main():
     """
@@ -20,6 +23,8 @@ def main():
     parser.add_argument('--movies', action='store_true', help='Import movies')
     parser.add_argument('--shows', action='store_true', help='Import TV shows')
     parser.add_argument('--all', action='store_true', help='Import all content types')
+    parser.add_argument('--skip-indexes', action='store_true', help='Skip index creation')
+    parser.add_argument('--skip-dna-vectors', action='store_true', help='Skip DNA vector updates')
     args = parser.parse_args()
     
     # Determine what to import
@@ -38,6 +43,18 @@ def main():
         'host': os.getenv('POSTGRES_HOST'),
         'port': os.getenv('POSTGRES_PORT')
     }
+    
+    # Connect to ArangoDB
+    arango = ArangoConnector()
+    arango.connect()
+    
+    # Initialize schema manager and setup schema
+    schema_manager = SchemaManager(arango)
+    schema_manager.setup_schema()
+    
+    # Ensure indexes if not skipped
+    if not args.skip_indexes:
+        schema_manager.ensure_indexes()
     
     start_time = time.time()
     movie_count = 0
@@ -69,6 +86,11 @@ def main():
         show_importer.print_stats()
         show_importer.close()
     
+    # Update DNA vectors (post-import step)
+    if not args.skip_dna_vectors:
+        dna_processor = DNAPostProcessor(arango, pg_config)
+        dna_processor.update_vectors()  # Will get all pairs from ArangoDB
+    
     # Print summary
     elapsed = time.time() - start_time
     print("\n" + "="*50)
@@ -77,6 +99,7 @@ def main():
     print(f"Imported {movie_count} movies and {show_count} TV shows.")
     print(f"Total time: {elapsed:.2f} seconds ({elapsed/60:.2f} minutes)")
     print("="*50)
+
 
 if __name__ == "__main__":
     main()
