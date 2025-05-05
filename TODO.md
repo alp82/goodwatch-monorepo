@@ -3,44 +3,13 @@
 ```
 ---    
 
-❯ uv run python delete_all_arango.py && uv run python importer.py
-Database 'goodwatch2' deleted.
-Fetched 10 movies from PostgreSQL.
-Successfully imported/updated 10 movies into ArangoDB.
-[TIMER] Importing movies took 2.55 seconds.
-Fetched 10 shows from PostgreSQL.
-Successfully imported/updated 10 shows into ArangoDB.
-[TIMER] Importing shows took 1.48 seconds.
-
-Bottom 10 collections/edges by size (MB):
-1. offer_in_country (type: edge) - 0 entries, 0.00 MB (Docs), 0.00 MB (Index)
-2. available_in_country (type: edge) - 0 entries, 0.00 MB (Docs), 0.00 MB (Index)
-3. has_season (type: edge) - 237 entries, 0.00 MB (Docs), 0.03 MB (Index)
-4. videos (type: document) - 214 entries, 0.00 MB (Docs), 0.00 MB (Index)
-5. movies (type: document) - 10 entries, 0.00 MB (Docs), 0.00 MB (Index)
-6. has_streaming_offer (type: edge) - 0 entries, 0.00 MB (Docs), 0.00 MB (Index)
-7. production_companies (type: document) - 0 entries, 0.00 MB (Docs), 0.00 MB (Index)
-8. has_spoken_language (type: edge) - 4 entries, 0.00 MB (Docs), 0.00 MB (Index)
-9. tmdb_similar_to (type: edge) - 0 entries, 0.00 MB (Docs), 0.00 MB (Index)
-10. translation_in_language (type: edge) - 44 entries, 0.00 MB (Docs), 0.01 MB (Index)
-
-Top 10 collections/edges by size (MB):
-1. appeared_in (type: edge) - 5791 entries, 1.00 MB (Docs), 1.28 MB (Index)
-2. images (type: document) - 1414 entries, 0.35 MB (Docs), 0.05 MB (Index)
-3. persons (type: document) - 5944 entries, 0.35 MB (Docs), 0.10 MB (Index)
-4. worked_on (type: edge) - 583 entries, 0.17 MB (Docs), 0.05 MB (Index)
-5. has_image (type: edge) - 424 entries, 0.16 MB (Docs), 0.06 MB (Index)
-6. has_trope (type: edge) - 555 entries, 0.10 MB (Docs), 0.13 MB (Index)
-7. scores (type: document) - 99 entries, 0.07 MB (Docs), 0.01 MB (Index)
-8. certifications (type: document) - 638 entries, 0.06 MB (Docs), 0.01 MB (Index)
-9. tropes (type: document) - 505 entries, 0.05 MB (Docs), 0.05 MB (Index)
-10. seasons (type: document) - 237 entries, 0.03 MB (Docs), 0.01 MB (Index)
-
-=== DATABASE TOTALS ===
-Total nodes: 10576
-Total edges: 8145
-Total doc size: 2.46 MB
-Total index size: 2.04 MB
+db redesign
+    * certifications: split into releases and age ratings?
+    * only denormalize movies and shows fields that are small enough
+    * streaming availability: history + changes + upcoming
+    * seasons with separate episodes collection
+    * scores: history + by season + by episode
+    * user has seen: possibility to track "currently watching" with optional time for movies, shows, seasons and episodes
 
 ---    
 
@@ -128,12 +97,6 @@ SEO optimization + marketing
     https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
     https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
     
----
-
-DB optimization
-    separate vector db?
-    https://qdrant.tech/benchmarks/#filtered-results
-
 ---
 
 similar filter

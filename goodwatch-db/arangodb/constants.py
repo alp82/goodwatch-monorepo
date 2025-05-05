@@ -4,7 +4,7 @@ Constants used throughout the importer system.
 
 # Database
 BATCH_SIZE = 1000
-BATCH_LIMIT = 1
+BATCH_LIMIT = 10
 
 # Collections
 VERTEX_COLLECTIONS = [
@@ -114,7 +114,7 @@ MOVIES_QUERY = f'''
       homepage, wikidata_id, facebook_id, instagram_id, twitter_id,
       tmdb_details_updated_at, tmdb_providers_updated_at, imdb_ratings_updated_at, metacritic_ratings_updated_at, rotten_tomatoes_ratings_updated_at, tvtropes_tags_updated_at, dna_updated_at
     FROM movies
-    WHERE tmdb_id = 603
+    --WHERE tmdb_id = 603
     ORDER BY popularity DESC NULLS LAST
     LIMIT {BATCH_LIMIT};
 '''
@@ -154,7 +154,7 @@ SHOWS_QUERY = f'''
       homepage, wikidata_id, facebook_id, instagram_id, twitter_id,
       tmdb_details_updated_at, tmdb_providers_updated_at, imdb_ratings_updated_at, metacritic_ratings_updated_at, rotten_tomatoes_ratings_updated_at, tvtropes_tags_updated_at, dna_updated_at
     FROM tv
-    WHERE tmdb_id = 603
+    --WHERE tmdb_id = 603
     ORDER BY popularity DESC NULLS LAST
     LIMIT {BATCH_LIMIT};
 '''
