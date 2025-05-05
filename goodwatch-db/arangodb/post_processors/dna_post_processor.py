@@ -103,11 +103,7 @@ class DNAPostProcessor:
             vector = row[2]
             
             # Convert PostgreSQL array to Python list if needed
-            if isinstance(vector, str) and vector.startswith('{') and vector.endswith('}'):
-                # Handle PostgreSQL array format: {0.1,0.2,0.3}
-                vector = vector.strip('{}').split(',')
-                vector = [float(x) for x in vector if x]
-            
+            # This is moved to the _parse_vector helper function
             results.append((category, label, vector))
         
         cur.close()
@@ -134,7 +130,9 @@ class DNAPostProcessor:
             key = make_dna_key(cat, lbl)
             doc = dna_col.get(key)
             if doc is not None:
-                doc['vector'] = vec
+                # Convert vector to list of floats using helper function
+                parsed_vector = self._parse_vector(vec)
+                doc['vector'] = parsed_vector
                 batch.append(doc)
                 updated_count += 1
                 
@@ -146,3 +144,19 @@ class DNAPostProcessor:
             dna_col.update_many(batch)
             
         return updated_count
+        
+    def _parse_vector(self, vector):
+        """
+        Parse vector data into a list of floats, handling various formats.
+        
+        Args:
+            vector: Vector data in various possible formats
+            
+        Returns:
+            list: List of float values
+        """
+        if not isinstance(vector, str):
+          return []
+
+        vector = vector.strip('[]')
+        return [float(x.strip()) for x in vector.split(',') if x.strip()]
