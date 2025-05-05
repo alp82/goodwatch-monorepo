@@ -285,4 +285,6 @@ class MovieProcessor(BaseProcessor):
             self.company_processor,
         ])
         
+        # Clean redundant fields before returning
+        self.clean_redundant_fields(doc)
         return doc
