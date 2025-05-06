@@ -58,6 +58,36 @@ FOR movie IN movies
   }
 ```
 
+Simple DNA similarity search:
+```aql
+LET target_title_id = "movies/a_minecraft_movie_950387"
+
+LET target_dna_vector = FIRST(
+  FOR dna_doc IN 1..1 OUTBOUND target_title_id has_dna LIMIT 1 RETURN dna_doc.vector 
+)
+
+FILTER target_dna_vector != null AND IS_ARRAY(target_dna_vector)
+
+FOR other_title IN movies 
+  FILTER other_title._id != target_title_id 
+
+  LET other_dna_vector = FIRST(
+    FOR dna_doc IN 1..1 OUTBOUND other_title._id has_dna LIMIT 1 RETURN dna_doc.vector
+  )
+
+  // IMPORTANT: Only proceed for candidates that also have a valid vector
+  FILTER other_dna_vector != null AND IS_ARRAY(other_dna_vector)
+
+  LET similarity_score = COSINE_SIMILARITY(target_dna_vector, other_dna_vector)
+
+  LIMIT 5 // Look at the first 5 pairs that have valid vectors
+
+  RETURN {
+    candidate_title_id: other_title._id,
+    similarity: similarity_score,
+  }
+```
+
 Shows + people sorted by order:
 ```aql
 ```
