@@ -40,7 +40,7 @@
 		"react-range": "^1.10.0",
 		"react-toastify": "^10.0.6",
 		"remix-utils": "^7.6.0",
-		"spoiled": "^0.3.2",
+		"spoiled": "^0.4.0",
 		"swiper": "^11.2.2",
 		"use-dehydrated-state": "^0.1.0"
 	},

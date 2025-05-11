@@ -48,9 +48,9 @@ export default function DetailsDNA({ details }: DetailsDNAProps) {
 						)}
 						<div
 							className={`
-						mt-1 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-2 
-						${spoilerCategories.includes(category) && !spoilerVisible ? "cursor-pointer" : ""}
-					`}
+								mt-1 text-gray-400 sm:col-span-2 sm:mt-0 flex flex-wrap gap-2 
+								${spoilerCategories.includes(category) && !spoilerVisible ? "cursor-pointer" : ""}
+							`}
 							onClick={
 								spoilerCategories.includes(category)
 									? handleRevealSpoiler
