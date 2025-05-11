@@ -88,6 +88,60 @@ FOR other_title IN movies
   }
 ```
 
+Find movies by DNA tag:
+```aql
+// Parameters: { "dnaCategory": "Mood", "dnaLabel": "Humorous", "limit": 20 }
+
+// First, find the specified DNA node and its vector
+LET dnaNode = FIRST(
+  FOR d IN dna
+    FILTER d.category == @dnaCategory AND d.label == @dnaLabel
+    RETURN d
+)
+
+// Ensure we found a valid DNA node with a vector
+FILTER dnaNode != null AND dnaNode.vector != null
+
+// Find all movies that have DNA nodes of the same category as dnaNode
+LET moviesWithDna = (
+  FOR movie IN movies
+    LET movieDnasOfSameCategory = (
+      FOR v, e IN 1..1 OUTBOUND movie has_dna
+        // Filter DNA nodes by the category of the initial dnaNode
+        FILTER v.category == dnaNode.category // Or use @dnaCategory directly: FILTER v.category == @dnaCategory
+        FILTER v.vector != null // Also ensure this DNA node has a vector
+        RETURN v // Return the DNA node itself, or just its vector
+    )
+    
+    // Proceed only if the movie has relevant DNA nodes
+    FILTER LENGTH(movieDnasOfSameCategory) > 0
+    
+    // Calculate similarity for each relevant DNA node
+    LET similarities = (
+        FOR movieDnaNode IN movieDnasOfSameCategory
+            LET similarity = LENGTH(movieDnaNode.vector) > 0 ?
+                COSINE_SIMILARITY(dnaNode.vector, movieDnaNode.vector) : 0
+            RETURN similarity
+    )
+
+    // Calculate average similarity and count of matches for this movie
+    LET avgSimilarity = AVERAGE(similarities)
+    LET dnaMatches = LENGTH(similarities) // This now correctly counts DNA nodes of the same category
+
+    // Sort by similarity score (highest first)
+    SORT avgSimilarity DESC
+    LIMIT @limit
+    RETURN {
+      movie: movie, // movieDoc was movie, changed for clarity
+      similarity: avgSimilarity,
+      dnaMatchCount: dnaMatches
+    }
+)
+
+// Return the results
+RETURN moviesWithDna
+```
+
 Shows + people sorted by order:
 ```aql
 ```

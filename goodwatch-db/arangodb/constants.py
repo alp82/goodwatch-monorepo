@@ -3,13 +3,13 @@ Constants used throughout the importer system.
 """
 
 # Database
-BATCH_SIZE = 1000
-BATCH_LIMIT = 10
+BATCH_SIZE = 10000
+BATCH_LIMIT = 1000
 
 # Collections
 VERTEX_COLLECTIONS = [
     'movies', 'shows', 'persons', 'genres', 'keywords', 'tropes', 'dna',
-    'movie_series', 'production_companies',
+    'movie_series', 'production_companies', 'networks',
     'translations', 'images', 'videos', 'alternative_titles',
     'release_events', 'age_classifications',
     'countries', 'languages', 'streaming_services', 'streaming_availability', 'seasons', 'scores',
@@ -27,12 +27,13 @@ EDGE_DEFINITIONS = [
     ('has_release_event', ['movies', 'shows'], ['release_events']),
     ('has_age_classification', ['release_events'], ['age_classifications']),
     ('belongs_to_movie_series', ['movies'], ['movie_series']),
-    ('produced_by', ['movies'], ['production_companies']),
+    ('produced_by', ['movies', 'shows'], ['production_companies']),
+    ('network_for', ['shows'], ['networks']),
     ('appeared_in', ['persons'], ['movies', 'shows']),
     ('worked_on', ['persons'], ['movies', 'shows']),
     ('tmdb_recommends', ['movies'], ['movies']),
     ('tmdb_similar_to', ['movies'], ['movies']),
-    ('originates_from_country', ['movies', 'shows'], ['countries']),
+    ('originates_from_country', ['movies', 'shows', 'networks', 'production_companies'], ['countries']),
     ('has_original_language', ['movies', 'shows'], ['languages']),
     ('has_spoken_language', ['movies', 'shows'], ['languages']),
     ('release_event_for_country', ['release_events'], ['countries']),
@@ -67,7 +68,7 @@ REDUNDANT_FIELDS = set([
     'genres', 'keywords', 'tropes', 'dna', 'cast', 'crew',
     'translations', 'images', 'videos', 'alternative_titles', 'certifications', 'collection',
     'origin_country_codes', 'original_language_code', 'spoken_language_codes',
-    'streaming_providers', 'streaming_country_codes', 'seasons',
+    'streaming_providers', 'streaming_country_codes', 'seasons', 'network_ids', 'production_company_ids',
     # All score fields
     'tmdb_url', 'tmdb_user_score_original', 'tmdb_user_score_normalized_percent', 'tmdb_user_score_rating_count',
     'imdb_url', 'imdb_user_score_original', 'imdb_user_score_normalized_percent', 'imdb_user_score_rating_count',
@@ -83,8 +84,24 @@ REDUNDANT_FIELDS = set([
 # Collection names
 MOVIES_COLLECTION = 'movies'
 SHOWS_COLLECTION = 'shows'
+NETWORKS_COLLECTION = 'networks'
+PRODUCTION_COMPANIES_COLLECTION = 'production_companies'
 
 # SQL Queries
+NETWORKS_QUERY = '''
+    SELECT
+      id, name, logo_path, origin_country
+    FROM public.networks
+    ORDER BY id
+'''
+
+PRODUCTION_COMPANIES_QUERY = '''
+    SELECT
+      id, name, logo_path, origin_country
+    FROM public.production_companies
+    ORDER BY id
+'''
+
 MOVIES_QUERY = f'''
     SELECT
       tmdb_id,

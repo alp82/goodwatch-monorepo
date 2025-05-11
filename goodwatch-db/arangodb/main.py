@@ -7,6 +7,8 @@ import time
 from dotenv import load_dotenv
 from db.arango_connector import ArangoConnector
 from db.schema_manager import SchemaManager
+from importers.network_importer import NetworkImporter
+from importers.production_company_importer import ProductionCompanyImporter
 from importers.movie_importer import MovieImporter
 from importers.show_importer import ShowImporter
 from post_processors.dna_post_processor import DNAPostProcessor
@@ -20,6 +22,8 @@ def main():
     
     # Setup command line arguments
     parser = argparse.ArgumentParser(description='Import data from PostgreSQL to ArangoDB')
+    parser.add_argument('--networks', action='store_true', help='Import networks')
+    parser.add_argument('--production-companies', action='store_true', help='Import production companies')
     parser.add_argument('--movies', action='store_true', help='Import movies')
     parser.add_argument('--shows', action='store_true', help='Import TV shows')
     parser.add_argument('--all', action='store_true', help='Import all content types')
@@ -28,10 +32,12 @@ def main():
     args = parser.parse_args()
     
     # Determine what to import
+    import_networks = args.networks or args.all
+    import_production_companies = args.production_companies or args.all
     import_movies = args.movies or args.all
     import_shows = args.shows or args.all
     
-    if not import_movies and not import_shows:
+    if not import_networks and not import_production_companies and not import_movies and not import_shows:
         parser.print_help()
         return
     
@@ -57,8 +63,36 @@ def main():
         schema_manager.ensure_indexes()
     
     start_time = time.time()
+    network_count = 0
+    production_company_count = 0
     movie_count = 0
     show_count = 0
+    
+    # Import networks if requested
+    if import_networks:
+        print("\n" + "="*50)
+        print("IMPORTING NETWORKS")
+        print("="*50)
+        
+        network_importer = NetworkImporter(pg_config)
+        network_importer.setup()
+        
+        network_count = network_importer.import_networks()
+        network_importer.print_stats()
+        network_importer.close()
+
+    # Import production companies if requested
+    if import_production_companies:
+        print("\n" + "="*50)
+        print("IMPORTING PRODUCTION COMPANIES")
+        print("="*50)
+        
+        production_company_importer = ProductionCompanyImporter(pg_config)
+        production_company_importer.setup()
+        
+        production_company_count = production_company_importer.import_production_companies()
+        production_company_importer.print_stats()
+        production_company_importer.close()
     
     # Import movies if requested
     if import_movies:
@@ -86,20 +120,26 @@ def main():
         show_importer.print_stats()
         show_importer.close()
     
-    # Update DNA vectors (post-import step)
-    if not args.skip_dna_vectors:
+    # Update DNA vectors if not skipped
+    if not args.skip_dna_vectors and (import_movies or import_shows):
+        print("\n" + "="*50)
+        print("UPDATING DNA VECTORS")
+        print("="*50)
+        
         dna_processor = DNAPostProcessor(arango, pg_config)
-        dna_processor.update_vectors()  # Will get all pairs from ArangoDB
+        dna_processor.update_vectors()
     
     # Print summary
     elapsed = time.time() - start_time
     print("\n" + "="*50)
-    print("IMPORT COMPLETE")
+    print("IMPORT SUMMARY")
     print("="*50)
-    print(f"Imported {movie_count} movies and {show_count} TV shows.")
-    print(f"Total time: {elapsed:.2f} seconds ({elapsed/60:.2f} minutes)")
+    print(f"Imported {network_count} networks")
+    print(f"Imported {production_company_count} production companies")
+    print(f"Imported {movie_count} movies")
+    print(f"Imported {show_count} TV shows")
+    print(f"Total time: {elapsed:.2f} seconds")
     print("="*50)
-
 
 if __name__ == "__main__":
     main()

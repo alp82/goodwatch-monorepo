@@ -14,6 +14,8 @@ from processors.tag_processor import TagProcessor
 from processors.season_processor import SeasonProcessor
 from processors.recommendation_processor import RecommendationProcessor
 from processors.company_processor import CompanyProcessor
+from processors.network_processor import NetworkProcessor
+from processors.production_company_processor import ProductionCompanyProcessor
 from processors.release_events_processor import ReleaseEventsProcessor
 from processors.dna_processor import DNAProcessor
 from utils.key_generators import make_human_key, make_title_key, make_dna_key
@@ -80,15 +82,17 @@ class ShowProcessor(BaseProcessor):
         self.season_processor = SeasonProcessor(arango_connector)
         self.recommendation_processor = RecommendationProcessor(arango_connector)
         self.company_processor = CompanyProcessor(arango_connector)
+        self.network_processor = NetworkProcessor(arango_connector)
         self.release_events_processor = ReleaseEventsProcessor(arango_connector)
         self.dna_processor = DNAProcessor(arango_connector)
+        self.production_company_processor = ProductionCompanyProcessor(arango_connector)
         
         # Initialize batch buffers with all possible collection names
         self.initialize_batch_buffers([
             'shows', 'images', 'videos', 'alternative_titles', 'translations',
             'languages', 'countries', 'streaming_services', 'streaming_availability',
             'scores', 'persons', 'genres', 'keywords', 'tropes', 'dna', 'seasons',
-            'production_companies'
+            'production_companies', 'networks'
         ])
 
         # Initialize batch buffers for all sub-processors
@@ -104,6 +108,8 @@ class ShowProcessor(BaseProcessor):
         self.season_processor.initialize_batch_buffers(['seasons'])
         self.recommendation_processor.initialize_batch_buffers([])
         self.company_processor.initialize_batch_buffers(['production_companies'])
+        self.network_processor.initialize_batch_buffers(['networks'])
+        self.production_company_processor.initialize_batch_buffers(['production_companies'])
         
     def collect_batch_data(self, processors):
         """
@@ -276,6 +282,10 @@ class ShowProcessor(BaseProcessor):
         
         # Process production companies
         self.company_processor.process_production_companies(doc, id_prefix)
+        self.production_company_processor.process_production_companies(doc, id_prefix)
+        
+        # Process networks
+        self.network_processor.process_networks(doc, id_prefix)
         
         # Process DNA
         self.dna_processor.process_dna(doc, item.get('dna'), 'shows')
@@ -294,6 +304,8 @@ class ShowProcessor(BaseProcessor):
             self.season_processor,
             self.recommendation_processor,
             self.company_processor,
+            self.network_processor,
+            self.production_company_processor,
             self.dna_processor
         ])
         

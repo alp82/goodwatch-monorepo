@@ -13,6 +13,7 @@ from processors.person_processor import PersonProcessor
 from processors.tag_processor import TagProcessor
 from processors.recommendation_processor import RecommendationProcessor
 from processors.company_processor import CompanyProcessor
+from processors.production_company_processor import ProductionCompanyProcessor
 from processors.release_events_processor import ReleaseEventsProcessor
 from processors.dna_processor import DNAProcessor
 from utils.key_generators import make_human_key, make_title_key, make_dna_key
@@ -80,6 +81,7 @@ class MovieProcessor(BaseProcessor):
         self.company_processor = CompanyProcessor(arango_connector)
         self.release_events_processor = ReleaseEventsProcessor(arango_connector)
         self.dna_processor = DNAProcessor(arango_connector)
+        self.production_company_processor = ProductionCompanyProcessor(arango_connector)
         
         # Initialize batch buffers with all possible collection names
         self.initialize_batch_buffers([
@@ -101,6 +103,7 @@ class MovieProcessor(BaseProcessor):
         self.recommendation_processor.initialize_batch_buffers([])
         self.company_processor.initialize_batch_buffers(['production_companies', 'movie_series'])
         self.release_events_processor.initialize_batch_buffers([])
+        self.production_company_processor.initialize_batch_buffers(['production_companies'])
         
     def collect_batch_data(self, processors):
         """
@@ -270,6 +273,7 @@ class MovieProcessor(BaseProcessor):
         
         # Process production companies and movie collection
         self.company_processor.process_production_companies(doc, id_prefix)
+        self.production_company_processor.process_production_companies(doc, id_prefix)
         self.company_processor.process_movie_collection(doc)
         
         # Process DNA
@@ -288,6 +292,7 @@ class MovieProcessor(BaseProcessor):
             self.tag_processor,
             self.recommendation_processor,
             self.company_processor,
+            self.production_company_processor,
             self.dna_processor
         ])
         
