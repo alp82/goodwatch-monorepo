@@ -92,7 +92,7 @@ class StreamingProcessor(BaseProcessor):
                         '_to': f"streaming_services/{provider_key}"
                     }
                     provider_edges.append(provider_edge)
-                    self.add_edge('availability_for_streaming_service', f"streaming_availability/{availability_key}", f"streaming_services/{provider_key}")
+                    self.add_edge('availability_on_streaming_service', f"streaming_availability/{availability_key}", f"streaming_services/{provider_key}")
                     
                     country_edge = {
                         '_from': f"streaming_availability/{availability_key}",

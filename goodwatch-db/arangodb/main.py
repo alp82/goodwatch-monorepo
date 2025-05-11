@@ -12,6 +12,7 @@ from importers.production_company_importer import ProductionCompanyImporter
 from importers.movie_importer import MovieImporter
 from importers.show_importer import ShowImporter
 from post_processors.dna_post_processor import DNAPostProcessor
+from post_processors.streaming_links_post_processor import StreamingLinksPostProcessor
 
 def main():
     """
@@ -29,6 +30,7 @@ def main():
     parser.add_argument('--all', action='store_true', help='Import all content types')
     parser.add_argument('--skip-indexes', action='store_true', help='Skip index creation')
     parser.add_argument('--skip-dna-vectors', action='store_true', help='Skip DNA vector updates')
+    parser.add_argument('--skip-streaming-links', action='store_true', help='Skip streaming links update')
     args = parser.parse_args()
     
     # Determine what to import
@@ -128,6 +130,15 @@ def main():
         
         dna_processor = DNAPostProcessor(arango, pg_config)
         dna_processor.update_vectors()
+    
+    # Update streaming links if not skipped
+    if not args.skip_streaming_links and (import_movies or import_shows):
+        print("\n" + "="*50)
+        print("UPDATING STREAMING LINKS")
+        print("="*50)
+        
+        streaming_links_processor = StreamingLinksPostProcessor(arango, pg_config)
+        streaming_links_processor.update_streaming_links()
     
     # Print summary
     elapsed = time.time() - start_time
