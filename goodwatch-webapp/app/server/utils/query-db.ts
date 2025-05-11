@@ -393,44 +393,53 @@ const constructSimilarityQuery = ({
         ${movieIds.length ? `ARRAY[${movieIds.join(",")}]` : "ARRAY[]::int[]"} AS movie_ids,
         ${tvIds.length ? `ARRAY[${tvIds.join(",")}]` : "ARRAY[]::int[]"} AS tv_ids
     ),
-		source_tags AS (
-			-- First get the initial tags that match our movie/tv criteria
-			SELECT DISTINCT d.id, d.cluster_id
-			FROM dna d
-			CROSS JOIN input_items i
-			WHERE (
-				d.movie_tmdb_id && i.movie_ids
-				OR d.tv_tmdb_id && i.tv_ids
-			)
-			AND d.category = ANY(:::categories::text[])
-		),
-		source_dnas AS (
-		  -- For each tag, get all related tags in its cluster with weights
-		  SELECT DISTINCT
-			 d.*,
-			 CASE
-				 WHEN st.id = d.id THEN ${WEIGHT_ORIGINAL_TAG}  -- Original tag
-				 WHEN st.cluster_id IS NULL AND d.cluster_id = st.id THEN ${WEIGHT_CLUSTER_TAG_SECONDARY}  -- Other tags in cluster of a primary tag
-				 WHEN st.cluster_id IS NOT NULL THEN
-					 CASE
-						 WHEN d.id = st.cluster_id THEN ${WEIGHT_CLUSTER_TAG_PRIMARY}  -- Primary tag of a secondary tag's cluster
-						 ELSE ${WEIGHT_CLUSTER_TAG_SECONDARY}  -- Other secondary tags in the same cluster
-						 END
-				 END as weight
-		  FROM source_tags st
-			JOIN dna d ON
-			  CASE
-				  WHEN st.cluster_id IS NULL THEN
-					  d.cluster_id = st.id OR d.id = st.id
-				  ELSE
-					  d.cluster_id = st.cluster_id
-						  OR d.id = st.cluster_id
-						  OR d.id = st.id
-				  END
-		  WHERE d.count_all >= 5
-		  ORDER BY d.count_all DESC
-			LIMIT 100
-		),
+    source_tropes AS (
+      -- Get all tropes for the input movies/TV shows
+      SELECT 
+        DISTINCT unnest(trope_names) AS trope
+      FROM (
+        SELECT 
+          trope_names
+        FROM 
+          movies
+        WHERE 
+          tmdb_id = ANY((SELECT movie_ids FROM input_items LIMIT 1)::int[])
+        UNION ALL
+        SELECT 
+          trope_names
+        FROM 
+          tv
+        WHERE 
+          tmdb_id = ANY((SELECT tv_ids FROM input_items LIMIT 1)::int[])
+      ) AS source_items
+      WHERE 
+        trope_names IS NOT NULL
+		  LIMIT 1000
+    ),
+    source_subgenres AS (
+      -- Get all sub-genres from the dna field for the input movies/TV shows
+      SELECT 
+        DISTINCT jsonb_array_elements_text(dna->'Sub-Genres') AS subgenre
+      FROM (
+        SELECT 
+          dna
+        FROM 
+          movies
+        WHERE 
+          tmdb_id = ANY((SELECT movie_ids FROM input_items LIMIT 1)::int[])
+          AND dna IS NOT NULL
+          AND dna ? 'Sub-Genres'
+        UNION ALL
+        SELECT 
+          dna
+        FROM 
+          tv
+        WHERE 
+          tmdb_id = ANY((SELECT tv_ids FROM input_items LIMIT 1)::int[])
+          AND dna IS NOT NULL
+          AND dna ? 'Sub-Genres'
+      ) AS source_items
+    ),
 		popular_items AS (
 			SELECT
 				tmdb_id as item_id,
@@ -438,9 +447,22 @@ const constructSimilarityQuery = ({
 				release_year,
 				popularity,
 				aggregated_overall_score_voting_count,
-				'movie'::text as media_type
+				'movie'::text as media_type,
+        trope_names,
+        dna
 			FROM movies
-			WHERE popularity >= 2 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID}
+			WHERE popularity >= 5 
+      AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID} 
+      AND trope_names IS NOT NULL
+      AND dna IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM source_subgenres sg
+        WHERE EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements_text(dna->'Sub-Genres') AS movie_subgenre
+          WHERE movie_subgenre = sg.subgenre
+        )
+      )
 			UNION ALL
 			SELECT
 				tmdb_id as item_id,
@@ -448,50 +470,47 @@ const constructSimilarityQuery = ({
 				release_year,
 				popularity,
 				aggregated_overall_score_voting_count,
-				'tv'::text as media_type
+				'tv'::text as media_type,
+        trope_names,
+        dna
 			FROM tv
-			WHERE popularity >= 2 AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID}
+			WHERE popularity >= 5 
+      AND aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID} 
+      AND trope_names IS NOT NULL
+      AND dna IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM source_subgenres sg
+        WHERE EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements_text(dna->'Sub-Genres') AS tv_subgenre
+          WHERE tv_subgenre = sg.subgenre
+        )
+      )
 		),
     matching_items AS (
       SELECT
-        sub.item_id,
-        SUM(
-          CASE d.category 
-						WHEN 'Sub-Genres' THEN 30
-						WHEN 'Mood' THEN 20
-						WHEN 'Plot' THEN 15
-            WHEN 'Themes' THEN 15
-						WHEN 'Dialog' THEN 10
-						WHEN 'Narrative' THEN 5
-						WHEN 'Pacing' THEN 5
-						WHEN 'Cinematic Style' THEN 4
-						WHEN 'Character Types' THEN 4
-						WHEN 'Humor' THEN 3
-						WHEN 'Time' THEN 3
-						WHEN 'Place' THEN 3
-						WHEN 'Score and Sound' THEN 3
-						WHEN 'Costume and Set' THEN 3
-						WHEN 'Key Props' THEN 3
-						WHEN 'Cultural Impact' THEN 2
-						WHEN 'Target Audience' THEN 2
-						WHEN 'Flag' THEN 2
-            ELSE 1 
-          END * s.weight
-			  ) AS shared_dna_score,
-        sub.media_type
-      FROM dna d
-      CROSS JOIN LATERAL (
-        SELECT unnest(movie_tmdb_id) AS item_id, 'movie'::text AS media_type
-        UNION ALL
-        SELECT unnest(tv_tmdb_id) AS item_id, 'tv'::text AS media_type
-      ) sub
-      JOIN source_dnas s ON s.id = d.id
-      JOIN popular_items pop ON pop.item_id = sub.item_id AND pop.media_type = sub.media_type
-      AND NOT (
-        (sub.media_type='movie' AND sub.item_id = ANY((SELECT movie_ids FROM input_items LIMIT 1)::int[]))
-        OR (sub.media_type='tv' AND sub.item_id = ANY((SELECT tv_ids FROM input_items LIMIT 1)::int[]))
-      )  
-      GROUP BY sub.item_id, sub.media_type
+        p.item_id,
+        -- New trope-based scoring
+        count(st.trope) * 25 + -- Base score per matching trope
+        -- Use a subquery to avoid GROUP BY issues with array_length
+        (count(st.trope)::float / 
+          (SELECT GREATEST(array_length(pi.trope_names, 1), 1)::float 
+           FROM popular_items pi 
+           WHERE pi.item_id = p.item_id AND pi.media_type = p.media_type
+           LIMIT 1)
+        ) * 500 + -- Percentage of tropes matched
+        (count(st.trope)::float / GREATEST((SELECT count(*) FROM source_tropes), 1)::float) * 500 AS shared_dna_score,
+        p.media_type
+      FROM popular_items p
+      JOIN source_tropes st ON p.trope_names && ARRAY[st.trope]
+      WHERE 
+      NOT (
+        (p.media_type='movie' AND p.item_id = ANY((SELECT movie_ids FROM input_items LIMIT 1)::int[]))
+        OR (p.media_type='tv' AND p.item_id = ANY((SELECT tv_ids FROM input_items LIMIT 1)::int[]))
+      )
+      GROUP BY p.item_id, p.media_type
+      -- Add a minimum trope match threshold to filter out weak matches
+      HAVING count(st.trope) >= 3
     )`
 
 	const similarityJoins = `
