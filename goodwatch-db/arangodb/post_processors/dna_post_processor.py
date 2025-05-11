@@ -3,6 +3,7 @@ DNA post-processor for post-import operations.
 Handles updating DNA nodes with vector attributes.
 """
 import psycopg2
+from constants import BATCH_SIZE, BATCH_LIMIT
 from utils.key_generators import make_dna_key
 
 class DNAPostProcessor:
@@ -20,7 +21,7 @@ class DNAPostProcessor:
         self.arango = arango_connector
         self.pg_config = pg_config
     
-    def update_vectors(self, movie_dna_pairs=None, show_dna_pairs=None, batch_size=1000):
+    def update_vectors(self, movie_dna_pairs=None, show_dna_pairs=None, batch_size=BATCH_SIZE):
         """
         Update DNA nodes with vector attributes from PostgreSQL.
         
@@ -50,12 +51,8 @@ class DNAPostProcessor:
             print("No DNA nodes to update.")
             return 0
             
-        # Fetch vectors from PostgreSQL
-        vectors = self._fetch_vectors_from_postgres(all_pairs)
-        print(f"Fetched {len(vectors)} DNA vectors from PostgreSQL.")
-        
-        # Update DNA nodes in ArangoDB
-        updated_count = self._update_dna_nodes(vectors, batch_size)
+        # Fetch vectors from PostgreSQL and update ArangoDB in batches
+        updated_count = self._process_dna_batches(all_pairs, batch_size)
         print(f"Updated {updated_count} DNA nodes with vectors.")
         
         return updated_count
@@ -71,17 +68,58 @@ class DNAPostProcessor:
         cursor = db.aql.execute('FOR d IN dna RETURN {category: d.category, label: d.label}')
         return set((d['category'], d['label']) for d in cursor)
     
-    def _fetch_vectors_from_postgres(self, pairs):
+    def _process_dna_batches(self, pairs, batch_size):
+        """
+        Process DNA pairs in batches, fetching vectors and updating nodes.
+        
+        Args:
+            pairs: Set of (category, label) tuples
+            batch_size: Size of batches for operations
+            
+        Returns:
+            int: Number of updated DNA nodes
+        """
+        pairs_list = list(pairs)
+        total_pairs = len(pairs_list)
+        total_updated = 0
+        conn = psycopg2.connect(**self.pg_config)
+        
+        try:
+            # Process in batches
+            for i in range(0, total_pairs, batch_size):
+                batch_pairs = pairs_list[i:i+batch_size]
+                batch_size_actual = len(batch_pairs)
+                print(f"Processing DNA batch {i//batch_size + 1} with {batch_size_actual} pairs (total: {total_pairs})")
+                
+                # Fetch vectors for current batch
+                batch_vectors = self._fetch_vectors_from_postgres(batch_pairs, conn)
+                print(f"Fetched {len(batch_vectors)} DNA vectors in this batch")
+                
+                # Update DNA nodes with vectors
+                batch_updated = self._update_dna_nodes(batch_vectors, BATCH_LIMIT)
+                total_updated += batch_updated
+                print(f"Updated {batch_updated} DNA nodes in this batch (total: {total_updated})")
+        finally:
+            conn.close()
+            
+        return total_updated
+    
+    def _fetch_vectors_from_postgres(self, pairs, conn=None):
         """
         Fetch vectors from PostgreSQL for specified (category, label) pairs.
         
         Args:
-            pairs: Set of (category, label) tuples
+            pairs: List of (category, label) tuples
+            conn: Existing PostgreSQL connection (optional)
             
         Returns:
             list: List of (category, label, vector) tuples
         """
-        conn = psycopg2.connect(**self.pg_config)
+        close_conn = False
+        if conn is None:
+            conn = psycopg2.connect(**self.pg_config)
+            close_conn = True
+            
         cur = conn.cursor()
         
         # Prepare query with tuple list
@@ -102,12 +140,13 @@ class DNAPostProcessor:
             label = row[1]
             vector = row[2]
             
-            # Convert PostgreSQL array to Python list if needed
-            # This is moved to the _parse_vector helper function
+            # Add to results
             results.append((category, label, vector))
         
         cur.close()
-        conn.close()
+        if close_conn:
+            conn.close()
+            
         return results
     
     def _update_dna_nodes(self, vectors, batch_size):
@@ -138,7 +177,7 @@ class DNAPostProcessor:
                 
             if len(batch) >= batch_size:
                 dna_col.update_many(batch)
-                batch.clear()
+                batch = []
                 
         if batch:
             dna_col.update_many(batch)
