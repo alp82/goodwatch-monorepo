@@ -13,6 +13,7 @@ VERTEX_COLLECTIONS = [
     'translations', 'images', 'videos', 'alternative_titles',
     'release_events', 'age_classifications',
     'countries', 'languages', 'streaming_services', 'streaming_availability', 'seasons', 'scores',
+    'users', 'user_favorites', 'user_wishlist', 'user_scores',
 ]
 
 EDGE_DEFINITIONS = [
@@ -47,6 +48,9 @@ EDGE_DEFINITIONS = [
     ('has_season', ['shows'], ['seasons']),
     ('has_score', ['movies', 'shows'], ['scores']),
     ('translation_in_country', ['translations'], ['countries']),
+    ('favorited_by', ['movies', 'shows'], ['users']),
+    ('scored_by', ['movies', 'shows'], ['users']),
+    ('wishlisted_by', ['movies', 'shows'], ['users']),
 ]
 
 # RegEx Patterns
