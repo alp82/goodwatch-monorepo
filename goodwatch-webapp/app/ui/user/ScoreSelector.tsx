@@ -230,9 +230,9 @@ export default function ScoreSelector({
 			onTouchEnd={handleTouchEnd}
 		>
 			<div className="px-5 pt-4">
-				<div className="h-12 md:h-8 flex items-center justify-end sm:justify-between gap-2">
+				<div className="h-12 md:h-8 flex items-center justify-end md:justify-between gap-2">
 					{/* Desktop: Score Preview */}
-					<div className="hidden sm:flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
+					<div className="hidden md:flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
 						<div className="flex items-center gap-2">
 							<span className={`font-semibold ${getLabelColor()}`}>
 								{getLabelText()}
@@ -241,7 +241,7 @@ export default function ScoreSelector({
 					</div>
 
 					{/* User Actions */}
-					<span className="w-full flex items-center justify-between gap-4">
+					<span className="w-full md:w-auto flex items-center justify-between gap-4">
 						<button
 							type="button"
 							className="
@@ -270,7 +270,7 @@ export default function ScoreSelector({
 								</ScoreAction>
 							)}
 							<div
-								className={`sm:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
+								className={`md:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
 							>
 								<ScoreAction details={details} score={score}>
 									<span
@@ -293,7 +293,7 @@ export default function ScoreSelector({
 
 			<div>
 				{/* Mobile: Score Preview*/}
-				<div className="sm:hidden mt-6 mx-6 flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
+				<div className="md:hidden mt-6 mx-6 flex items-start xs:items-center flex-col xs:flex-row xs:gap-3">
 					<div className="flex items-center gap-2">
 						<span className={`font-semibold ${getLabelColor()}`}>
 							{getLabelText()}
@@ -303,7 +303,7 @@ export default function ScoreSelector({
 			</div>
 
 			{/* Mobile: Score Slider */}
-			<div className="sm:hidden flex flex-col items-center px-6 py-8">
+			<div className="md:hidden flex flex-col items-center px-6 py-8">
 				<div className="relative mb-6 w-full flex items-center justify-center">
 					<input
 						type="range"
@@ -344,7 +344,7 @@ export default function ScoreSelector({
 			</div>
 
 			{/* Desktop: Score Selector */}
-			<div className="hidden sm:block pb-8 px-4 transition duration-150 ease-in-out">
+			<div className="hidden md:block pb-8 px-4 transition duration-150 ease-in-out">
 				<div className="flex">
 					{Array.from({ length: 10 }, (_, i: number) => {
 						const scoreIndex = (i + 1) as Score

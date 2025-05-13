@@ -47,7 +47,7 @@ export default function ActionButton({
 				className={`
 					rounded-md w-full px-1 py-2 lg:px-3.5 lg:py-2.5
 					flex items-center justify-center gap-2
-					text-xs md:text-sm lg:text-md font-semibold text-white
+					text-xs md:text-sm lg:text-md font-semibold text-white cursor-pointer
 					${currentBg} hover:${currentBg}/70 shadow-sm
 					focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:${outline}/70
 				`}
