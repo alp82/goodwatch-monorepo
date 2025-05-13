@@ -62,7 +62,7 @@ export function DNACategory({
 	})
 
 	const discoverResults = useMemo(() => {
-		return discover.data?.pages.flat().slice(0, 8) ?? []
+		return discover.data?.pages.flat() ?? []
 	}, [discover.data, details.tmdb_id, details.media_type])
 
 	// Determine content state (loading, empty, or has results)
