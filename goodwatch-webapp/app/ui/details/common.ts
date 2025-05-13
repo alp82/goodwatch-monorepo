@@ -35,9 +35,9 @@ export const sections = {
 		id: "cast",
 		label: "Cast",
 	},
-	videos: {
-		id: "videos",
-		label: "Videos",
+	media: {
+		id: "media",
+		label: "Media",
 	},
 }
 

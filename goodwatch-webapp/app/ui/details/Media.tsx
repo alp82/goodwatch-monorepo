@@ -15,11 +15,11 @@ export const allTypes = [
 	"bloopers",
 ]
 
-export interface VideosProps {
+export interface MediaProps {
 	videos: VideosType
 }
 
-export default function Videos({ videos }: VideosProps) {
+export default function Media({ videos }: MediaProps) {
 	const types = Object.keys(videos || {})
 	const [selectedType, setSelectedType] = useState(
 		allTypes.find((type) => types.includes(type)) || allTypes[0],
@@ -66,7 +66,7 @@ export default function Videos({ videos }: VideosProps) {
 
 	return (
 		<div className="mt-8">
-			<h2 className="text-2xl font-bold">Videos</h2>
+			<h2 className="text-2xl font-bold">Media</h2>
 			{types.length ? (
 				<>
 					<div className="mt-6 mb-2">

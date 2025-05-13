@@ -3,7 +3,7 @@ import type { MovieDetails, TVDetails } from "~/server/details.server"
 import About from "~/ui/details/About"
 import Cast from "~/ui/details/Cast"
 import Crew from "~/ui/details/Crew"
-import Videos from "~/ui/details/Videos"
+import Media from "~/ui/details/Media"
 import type { SectionIds } from "~/ui/details/common"
 import Ratings from "~/ui/ratings/Ratings"
 import Streaming from "~/ui/streaming/Streaming"
@@ -67,8 +67,8 @@ export default function DetailsContent({
 				{/*  ))}*/}
 				{/*</div>}*/}
 			</div>
-			<div {...sectionProps.videos}>
-				<Videos videos={videos || []} />
+			<div {...sectionProps.media}>
+				<Media videos={videos || []} />
 			</div>
 			{/*<div>*/}
 			{/*	<Streaming*/}
