@@ -7,11 +7,11 @@ import { FilmIcon, TvIcon } from "@heroicons/react/24/solid"
 import type { DiscoverResults } from "~/server/discover.server"
 import MovieTvSwiper from "~/ui/explore/MovieTvSwiper"
 
-export interface DetailsSimilarProps {
+export interface DetailsRelatedProps {
 	details: MovieDetails | TVDetails
 }
 
-function SimilarSwiper({
+function RelatedSwiper({
 	icon: Icon,
 	heading,
 	results,
@@ -29,7 +29,7 @@ function SimilarSwiper({
 	)
 }
 
-export default function DetailsSimilar({ details }: DetailsSimilarProps) {
+export default function DetailsRelated({ details }: DetailsRelatedProps) {
 	const similarityCategories = [
 		"Sub-Genres",
 		"Mood",
@@ -80,15 +80,15 @@ export default function DetailsSimilar({ details }: DetailsSimilarProps) {
 
 	return (
 		<>
-			<SimilarSwiper
+			<RelatedSwiper
 				icon={FilmIcon}
-				heading="Similar Movies"
+				heading="Related Movies"
 				results={resultsMovies}
 			/>
 			<div className="mt-16">
-				<SimilarSwiper
+				<RelatedSwiper
 					icon={TvIcon}
-					heading="Similar TV Shows"
+					heading="Related TV Shows"
 					results={resultsShows}
 				/>
 			</div>

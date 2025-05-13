@@ -19,9 +19,9 @@ export const sections = {
 		id: "dna",
 		label: "DNA",
 	},
-	similar: {
-		id: "similar",
-		label: "Similar",
+	related: {
+		id: "related",
+		label: "Related",
 	},
 	sequels: {
 		id: "sequels",

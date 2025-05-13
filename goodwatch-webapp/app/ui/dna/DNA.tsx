@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import type { DNAItem, MovieDetails, TVDetails } from "~/server/details.server"
 import InfoBox from "~/ui/InfoBox"
-import DNACategory from "~/ui/dna/DNACategory"
+import DNACategoryOld from "~/ui/dna/DNACategoryOld"
 import { getDNAForCategory, getSortedCategories } from "~/ui/dna/dna_utils"
 import { Spinner } from "~/ui/wait/Spinner"
 
@@ -33,7 +33,7 @@ export default function DNA({ details }: DNAProps) {
 			{hasDNA ? (
 				<div className="mt-4">
 					{sortedCategories.map((category) => (
-						<DNACategory
+						<DNACategoryOld
 							without={details}
 							key={category}
 							category={category}
