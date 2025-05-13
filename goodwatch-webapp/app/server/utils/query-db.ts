@@ -531,7 +531,7 @@ const constructSimilarityQuery = ({
         p.item_id,
         -- New trope-based scoring with better performance
         (SELECT count(*) FROM unnest(p.trope_names) t(trope) 
-         WHERE trope IN (SELECT trope FROM source_tropes)) * 50 + -- Base score per matching trope
+         WHERE trope IN (SELECT trope FROM source_tropes)) * 10 + -- Base score per matching trope
         -- Calculate percentage score more efficiently
         (SELECT 
           (count(*)::float / array_length(p.trope_names, 1)::float) * 500
@@ -555,7 +555,7 @@ const constructSimilarityQuery = ({
       AND (
         SELECT count(*) FROM unnest(p.trope_names) t(trope) 
         WHERE trope IN (SELECT trope FROM source_tropes)
-      ) >= 3
+      ) >= 5
     )`
 
 	const similarityJoins = `

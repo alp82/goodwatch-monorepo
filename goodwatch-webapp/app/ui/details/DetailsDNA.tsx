@@ -30,7 +30,7 @@ export default function DetailsDNA({ details }: DetailsDNAProps) {
 			),
 		},
 		...sortedCategories.map((category) => {
-			const dnaForCategory = getDNAForCategory(dna, category).slice(0, 6)
+			const dnaForCategory = getDNAForCategory(dna, category).slice(0, 8)
 			return {
 				label: category,
 				content: (

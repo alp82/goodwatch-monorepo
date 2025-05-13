@@ -6,8 +6,6 @@ import type { DNA, MovieDetails, TVDetails } from "~/server/details.server"
 import { useDiscover } from "~/routes/api.discover"
 import { SEPARATOR_SECONDARY } from "~/utils/navigation"
 import MovieTvSwiper from "~/ui/explore/MovieTvSwiper"
-import ListSwiper from "~/ui/ListSwiper"
-import { SwiperSlide } from "swiper/react"
 
 export interface DNACategoryProps {
 	details: MovieDetails | TVDetails
