@@ -106,5 +106,9 @@ dist
 # Database data
 *.tsv
 
+# Python
+__pycache__
+*.pyc
+
 # temp folder
 tmp
