@@ -29,16 +29,40 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 		<>
 			{hasTrailers ? (
 				<>
-					<button
-						type="button"
-						className="absolute flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-0 hover:bg-opacity-50 cursor-pointer group"
+					<div
+						className="
+							w-full h-full
+							flex items-center justify-center
+							group cursor-pointer
+							border-2 border-transparent hover:border-gray-800 hover:bg-black/20
+							transition-all duration-300 ease-in-out
+						"
 						onClick={handleShowTrailer}
+						onKeyDown={() => {}}
 					>
-						<PlayCircleIcon className="relative bottom-4 w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-24 lg:h-24 xl:w-32 xl:h-32 mx-auto opacity-80 transition duration-300 ease-in-out group-hover:scale-125" />
-						<p className="absolute bottom-3 py-2 w-full bg-black bg-opacity-80 font-bold text-center text-xs xs:text-sm sm:text-base">
-							Play Trailer
-						</p>
-					</button>
+						<button
+							type="button"
+							className="
+							px-6 py-3
+							flex flex-row items-center justify-center gap-3
+							bg-black/60 rounded-full border-2 border-slate-950
+							group-hover:bg-black/90 group-hover:border-slate-900
+							focus:outline focus:outline-2 focus:outline-white
+							transition-all duration-300 ease-in-out
+						"
+						>
+							<PlayCircleIcon
+								className="
+									w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 md:w-14 md:h-14
+									opacity-90 group-hover:opacity-100
+									transition-all duration-300 ease-in-out
+								"
+							/>
+							<span className="font-bold text-white text-sm xs:text-base sm:text-lg md:text-xl select-none">
+								Trailer
+							</span>
+						</button>
+					</div>
 					<Transition show={open} as={Fragment}>
 						<Dialog as="div" className="relative z-50" onClose={setOpen}>
 							<TransitionChild
@@ -50,7 +74,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 								leaveFrom="opacity-100"
 								leaveTo="opacity-0"
 							>
-								<div className="fixed inset-0 bg-black bg-opacity-70 transition-opacity" />
+								<div className="fixed inset-0 bg-black/70 transition-opacity" />
 							</TransitionChild>
 
 							<div className="fixed inset-0 w-screen overflow-y-auto">
@@ -69,7 +93,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 												<button
 													type="button"
 													onClick={() => setOpen(false)}
-													className="absolute top-2 left-4 p-2 flex gap-2 rounded  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+													className="absolute top-2 left-4 p-2 flex gap-2 rounded-sm  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
 												>
 													<ArrowLeftIcon className="w-6 h-6" />
 													<span>Back to Details</span>
@@ -77,7 +101,7 @@ export default function TrailerOverlay({ videos }: TrailerOverlayProps) {
 												<button
 													type="button"
 													onClick={() => setOpen(false)}
-													className="absolute top-2 right-4 p-2 flex gap-2 rounded  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+													className="absolute top-2 right-4 p-2 flex gap-2 rounded-sm  text-white bg-slate-800 hover:bg-slate-700 transition-colors"
 												>
 													<XMarkIcon className="w-6 h-6" />
 												</button>

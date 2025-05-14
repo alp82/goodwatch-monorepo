@@ -7,6 +7,7 @@ Notable changes to GoodWatch will be documented in this file.
 ### Added
 
 ### Changed
+* Completely redesigned Details page: Better accessibility and usability
 
 ### Fixed
 

@@ -26,11 +26,11 @@ export default function BottomNav() {
 	}
 
 	return (
-		<div className="lg:hidden fixed bottom-0 left-0 z-50 w-full h-16 border-t bg-gray-950 border-gray-800">
+		<div className="lg:hidden fixed bottom-0 left-0 z-50 w-full h-28 pb-4 border-t bg-gray-950 border-gray-800">
 			<div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
 				{createButton("Home", HomeIcon, "/")}
 				{createButton("Movies", FilmIcon, "/movies")}
-				{createButton("TV Shows", TvIcon, "/tv-shows")}
+				{createButton("Shows", TvIcon, "/tv-shows")}
 				{createButton("Discover", CubeIcon, "/discover")}
 			</div>
 		</div>

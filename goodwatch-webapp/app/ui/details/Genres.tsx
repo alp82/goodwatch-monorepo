@@ -10,6 +10,7 @@ export interface GenresProps {
 	subgenres?: DNAItem[]
 	type?: MediaType
 	withLinks?: boolean
+	compact?: boolean
 }
 
 export default function Genres({
@@ -17,10 +18,13 @@ export default function Genres({
 	subgenres = [],
 	type,
 	withLinks = true,
+	compact = false,
 }: GenresProps) {
 	const allGenresResult = useGenres()
 	const allGenres = allGenresResult?.data || []
 	const genresToShow = allGenres.filter((genre) => genres?.includes(genre.name))
+
+	const sizeClasses = compact ? "px-2 py-0.5 text-xs" : "px-2.5 py-0.5"
 
 	return (
 		<>
@@ -32,7 +36,7 @@ export default function Genres({
 							return (
 								<Link
 									key={genre.id}
-									className="px-2.5 py-0.5 inline-flex items-center rounded-md border-2 border-slate-600 text-slate-100 bg-slate-800 hover:text-white hover:bg-slate-900"
+									className={`${sizeClasses} inline-flex items-center rounded-md border-2 border-gray-600 bg-stone-900 hover:brightness-125 text-white`}
 									to={`/discover/all?withGenres=${genre.id}`}
 									prefetch="intent"
 								>
@@ -43,7 +47,7 @@ export default function Genres({
 						return (
 							<span
 								key={genre.id}
-								className="px-2.5 py-0.5 inline-flex items-center rounded-md border-2 border-slate-600 text-slate-100 bg-slate-800 hover:text-white hover:bg-slate-900"
+								className={`${sizeClasses}  inline-flex items-center rounded-md border-2 border-gray-600 bg-stone-900 hover:brightness-125 text-white`}
 							>
 								{genre.name}
 							</span>

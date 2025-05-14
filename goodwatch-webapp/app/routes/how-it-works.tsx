@@ -52,7 +52,7 @@ export default function About() {
 									type="button"
 									ref={ref}
 									onClick={toggleModal}
-									className="text-blue-500 underline hover:text-blue-700 focus:outline-none"
+									className="text-blue-500 underline hover:text-blue-700 focus:outline-hidden"
 								>
 									18 categories
 								</button>

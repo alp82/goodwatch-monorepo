@@ -313,12 +313,12 @@ export default function SectionStreaming({
 									.map((provider) => (
 										<span
 											key={provider.key}
-											className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded"
+											className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded-sm"
 										>
 											<img
 												src={provider.icon}
 												alt={provider.label}
-												className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
+												className="h-5 w-5 md:h-8 md:w-8 shrink-0 rounded-sm"
 											/>
 											{selectedStreamingProviderItems.length < 5 && (
 												<div className="md:hidden sr-only lg:not-sr-only">
@@ -344,11 +344,11 @@ export default function SectionStreaming({
 										amount={selectedStreamingProviderItems.length}
 										mode="any"
 									>
-										<span className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded">
+										<span className="flex items-center gap-2 bg-black/40 px-2 py-2 rounded-sm">
 											<img
 												src={provider.icon}
 												alt={provider.label}
-												className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
+												className="h-5 w-5 md:h-8 md:w-8 shrink-0 rounded-sm"
 											/>
 											{selectedStreamingProviderItems.length < 5 && (
 												<div className="md:hidden sr-only lg:not-sr-only">
@@ -359,11 +359,11 @@ export default function SectionStreaming({
 									</OneOrMoreItems>
 								))}
 								<span className="mx-3">in</span>
-								<span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded">
+								<span className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-sm">
 									<img
 										src={countryIcon}
 										alt={country}
-										className="h-5 w-5 md:h-8 md:w-8 flex-shrink-0 rounded"
+										className="h-5 w-5 md:h-8 md:w-8 shrink-0 rounded-sm"
 									/>
 									<span className="sr-only lg:not-sr-only block">
 										{country}

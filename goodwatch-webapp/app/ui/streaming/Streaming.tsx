@@ -57,7 +57,7 @@ export default function Streaming({
 				<div>
 					<div className="mt-6 mb-2 text-lg font-bold flex items-center">
 						Watch now
-						<span className="ml-3 inline-flex items-center rounded bg-lime-700 px-2 h-4 text-xs font-medium text-yellow-100">
+						<span className="ml-3 inline-flex items-center rounded-sm bg-lime-700 px-2 h-4 text-xs font-medium text-yellow-100">
 							Flatrate
 						</span>
 					</div>

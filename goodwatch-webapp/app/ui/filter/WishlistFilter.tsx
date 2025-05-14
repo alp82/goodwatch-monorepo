@@ -1,21 +1,21 @@
-import { Radio, RadioGroup } from "@headlessui/react";
-import React, { useState } from "react";
-import { SelectItem } from "~/ui/form/Select";
+import { Radio, RadioGroup } from "@headlessui/react"
+import React, { useState } from "react"
+import { SelectItem } from "~/ui/form/Select"
 
 export type SortBy =
 	| "most_recently_added"
 	| "least_recently_added"
 	| "highest_score"
-	| "most_popular";
-export type FilterByStreaming = "mine" | "free" | "buy" | "all";
+	| "most_popular"
+export type FilterByStreaming = "mine" | "free" | "buy" | "all"
 
 interface FilterParams {
-	sortBy: SortBy;
-	filterByStreaming: FilterByStreaming;
+	sortBy: SortBy
+	filterByStreaming: FilterByStreaming
 }
 
 export interface WishlistFilterProps extends FilterParams {
-	onChange: (params: Partial<FilterParams>) => void;
+	onChange: (params: Partial<FilterParams>) => void
 }
 
 export default function WishlistFilter({
@@ -28,13 +28,13 @@ export default function WishlistFilter({
 		{ key: "free", name: "Free", description: "Free streaming" },
 		{ key: "buy", name: "Buy", description: "Available to buy" },
 		{ key: "all", name: "All", description: "All from Wishlist" },
-	];
+	]
 
 	const handleSelectStreaming = (selected: FilterByStreaming) => {
 		onChange({
 			filterByStreaming: selected,
-		});
-	};
+		})
+	}
 
 	return (
 		<div className="w-72 relative">
@@ -57,7 +57,7 @@ export default function WishlistFilter({
 			{/*            ${checked*/}
 			{/*          ? 'bg-indigo-600 text-white hover:bg-indigo-500'*/}
 			{/*          : 'ring-1 ring-inset ring-gray-300 bg-white text-gray-900 hover:bg-gray-50'}*/}
-			{/*            cursor-pointer focus:outline-none*/}
+			{/*            cursor-pointer focus:outline-hidden*/}
 			{/*            flex items-center justify-center rounded-md py-3 px-3 text-sm font-semibold uppercase sm:flex-1*/}
 			{/*          `}*/}
 			{/*      >*/}
@@ -67,5 +67,5 @@ export default function WishlistFilter({
 			{/*  </RadioGroup>*/}
 			{/*</fieldset>*/}
 		</div>
-	);
+	)
 }

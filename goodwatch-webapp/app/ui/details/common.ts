@@ -3,6 +3,14 @@ export const sections = {
 		id: "overview",
 		label: "Overview",
 	},
+	ratings: {
+		id: "ratings",
+		label: "Ratings",
+	},
+	streaming: {
+		id: "streaming",
+		label: "Streaming",
+	},
 	about: {
 		id: "about",
 		label: "About",
@@ -10,6 +18,14 @@ export const sections = {
 	dna: {
 		id: "dna",
 		label: "DNA",
+	},
+	related: {
+		id: "related",
+		label: "Related",
+	},
+	sequels: {
+		id: "sequels",
+		label: "Sequels",
 	},
 	crew: {
 		id: "crew",
@@ -19,17 +35,9 @@ export const sections = {
 		id: "cast",
 		label: "Cast",
 	},
-	ratings: {
-		id: "ratings",
-		label: "Ratings",
-	},
-	streaming: {
-		id: "streaming",
-		label: "Streaming",
-	},
-	videos: {
-		id: "videos",
-		label: "Videos",
+	media: {
+		id: "media",
+		label: "Media",
 	},
 }
 

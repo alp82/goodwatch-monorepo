@@ -19,13 +19,16 @@ async function increasePriority(
 	type: "movie" | "tv",
 	amount: number,
 ) {
-	const ids = tmdb_ids.map((id) => Number(id)).filter((id) => !Number.isNaN(id))
+	const potentiallyDuplicateIds = tmdb_ids
+		.map((id) => Number(id))
+		.filter((id) => !Number.isNaN(id))
+	const uniqueIds = [...new Set(potentiallyDuplicateIds)]
 
-	if (ids.length === 0) {
+	if (uniqueIds.length === 0) {
 		throw new Error("No valid TMDb IDs provided.")
 	}
 
-	const valuePlaceholders = ids
+	const valuePlaceholders = uniqueIds
 		.map((_, index) => `($${index + 1}, 1, NOW(), NOW())`)
 		.join(", ")
 
@@ -34,10 +37,10 @@ async function increasePriority(
     VALUES ${valuePlaceholders}
     ON CONFLICT (tmdb_id)
     DO UPDATE SET
-        priority = priority_queue_${type}.priority + $${ids.length + 1},
+        priority = priority_queue_${type}.priority + $${uniqueIds.length + 1},
         updated_at = NOW()
   `
 
-	const params = [...ids, amount]
+	const params = [...uniqueIds, amount]
 	await executeQuery(query, params)
 }

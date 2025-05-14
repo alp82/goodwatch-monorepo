@@ -176,7 +176,7 @@ export default function MoviesCategoryPage() {
 							<Link
 								to={`/discover/${discoverType}?${jsonToUrlString(discoverParams)}`}
 								prefetch="viewport"
-								className="px-2 py-1 rounded border-2 border-gray-700 bg-indigo-950 hover:bg-indigo-900"
+								className="px-2 py-1 rounded-sm border-2 border-gray-700 bg-indigo-950 hover:bg-indigo-900"
 							>
 								Advanced Filters
 							</Link>

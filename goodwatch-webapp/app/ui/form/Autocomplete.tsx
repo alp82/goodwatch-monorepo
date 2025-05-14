@@ -102,7 +102,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 						block w-full py-2 pl-10 pr-3
 						border border-transparent rounded-md focus:border-gray-400
 						bg-gray-800 focus:bg-gray-900
-						ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600
+						ring-1 ring-inset ring-gray-600 focus:outline-hidden focus:ring-2 focus:ring-indigo-600
 						leading-5 text-gray-300 focus:text-gray-100 placeholder-gray-500 text-sm
 					"
 					name={name}
@@ -127,7 +127,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 				)}
 				<ComboboxButton
 					id="search-toggle-dropdown"
-					className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none"
+					className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden"
 				>
 					<ChevronUpDownIcon
 						className="h-5 w-5 text-gray-400 hover:text-gray-200"
@@ -139,7 +139,7 @@ export default function Autocomplete<RenderItem extends AutocompleteItem>({
 					<ComboboxOptions
 						className="
 						absolute mt-1 max-h-96 w-full overflow-y-auto overflow-x-hidden
-						rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none
+						rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden
 						text-sm sm:text-base
 					"
 					>

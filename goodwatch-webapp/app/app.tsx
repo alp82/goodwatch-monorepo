@@ -17,7 +17,7 @@ function App() {
 	return (
 		<>
 			<Header />
-			<main className="relative flex-grow mx-auto mt-16 pb-2 w-full text-neutral-300">
+			<main className="relative grow mx-auto mt-16 pb-2 w-full text-neutral-300">
 				<AnimatePresence mode="wait">
 					{/*<motion.div*/}
 					{/*	key={location.pathname}*/}

@@ -90,13 +90,13 @@ export default function Onboarding() {
 				exit={{ y: "3%", opacity: 0 }}
 				transition={{ duration: 0.5, type: "tween" }}
 			>
-				<main className="relative flex-grow mx-auto mt-4 sm:mt-8 md:mt-16 pb-2 w-full text-neutral-300">
+				<main className="relative grow mx-auto mt-4 sm:mt-8 md:mt-16 pb-2 w-full text-neutral-300">
 					<div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-5 sm:gap-6">
 						{currentStep < 2 && (
 							<div className="flex flex-col items-center">
 								<div className="flex items-center gap-2 text-2xl">
 									<span className="hidden sm:block mr-2">Welcome to</span>
-									<div className="hidden sm:block flex-shrink-0">
+									<div className="hidden sm:block shrink-0">
 										<Link to="/" prefetch="render">
 											<img
 												className="h-10 w-auto"

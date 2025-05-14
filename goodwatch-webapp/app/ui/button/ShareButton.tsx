@@ -65,15 +65,14 @@ export default function ShareButton({ link }: ShareButtonProps) {
 	}
 
 	return (
-		<div className="absolute top-0 md:top-2 right-3 flex flex-col items-end">
-			<button
-				type="button"
-				className="flex items-center gap-2 p-2 border-2 rounded-lg border-gray-700 hover:border-indigo-700 bg-black/[.5] hover:bg-gray-800 cursor-pointer"
-				onClick={handleShare}
-			>
-				<ShareIcon className="h-3 md:h-5" />
-				<span className="text-sm md:text-base">Share</span>
-			</button>
-		</div>
+		<button
+			type="button"
+			className="p-2 border-2 rounded-full border-gray-700 bg-gray-800/50 hover:bg-gray-800 cursor-pointer"
+			aria-label="Share this page"
+			title="Share this page"
+			onClick={handleShare}
+		>
+			<ShareIcon className="h-3 md:h-4" />
+		</button>
 	)
 }

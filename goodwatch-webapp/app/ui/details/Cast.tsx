@@ -1,95 +1,60 @@
 import { Link } from "@remix-run/react"
 import React from "react"
+import { SwiperSlide } from "swiper/react"
+import "swiper/css"
+import "swiper/css/navigation"
 import type { Cast as CastType } from "~/server/details.server"
+import ListSwiper from "~/ui/ListSwiper"
 
 export interface CastProps {
 	cast: CastType[]
 }
 
 export default function Cast({ cast }: CastProps) {
-	const [showAll, setShowAll] = React.useState(false)
-	const toggleShowAll = () => setShowAll(!showAll)
-
 	const castWithPhotos = (cast || []).filter(
 		(castMember) => castMember.profile_path,
 	)
-	const castWithoutPhotos = (cast || []).filter(
-		(castMember) => !castMember.profile_path,
-	)
-
-	const castToShow = showAll ? castWithPhotos : castWithPhotos.slice(0, 10)
-	const numberOfMoreToShow =
-		castWithPhotos.length + castWithoutPhotos.length - 10
-
+	if (!castWithPhotos.length) return null
 	return (
 		<>
-			<h2 className="text-2xl font-bold">Cast</h2>
-			<div className="mt-4 flex flex-wrap gap-2">
-				{castToShow.map((castMember) => {
+			<h2 className="text-2xl font-bold mb-4">Cast</h2>
+			<ListSwiper>
+				{castWithPhotos.map((castMember) => {
 					const character =
-						castMember.character || castMember.roles?.[0].character
+						castMember.character || castMember.roles?.[0]?.character
 					return (
-						<Link
-							key={castMember.id}
-							className="w-28 h-60 border-2 border-gray-700 flex flex-col items-center group"
-							to={`/discover/all?withCast=${castMember.id}`}
-							prefetch="intent"
-						>
-							<img
-								className="w-full h-auto"
-								src={`https://www.themoviedb.org/t/p/original/${castMember.profile_path}`}
-								alt={`${castMember.name} profile`}
-							/>
-							<div className="w-full h-full px-2 bg-gray-800 group-hover:bg-slate-800">
+						<SwiperSlide key={castMember.id}>
+							<Link
+								to={`/discover/all?withCast=${castMember.id}`}
+								prefetch="intent"
+								className="flex flex-col items-center group px-2"
+							>
+								<div className="w-36 h-36 mb-2 rounded-full overflow-hidden border-2 border-stone-400 shadow-lg group-hover:border-slate-200 transition-all">
+									<img
+										className="w-full h-full object-cover"
+										src={`https://www.themoviedb.org/t/p/original/${castMember.profile_path}`}
+										alt={`${castMember.name} profile`}
+									/>
+								</div>
 								<p
-									className="text-sm text-center font-bold truncate w-full mt-3"
+									className="text-sm font-semibold text-center truncate w-36"
 									title={castMember.name}
 								>
 									{castMember.name}
 								</p>
-								<p
-									className="text-sm text-center font-italic truncate w-full mt-2"
-									title={character}
-								>
-									{character}
-								</p>
-							</div>
-						</Link>
-					)
-				})}
-			</div>
-			{showAll && castWithoutPhotos.length > 0 && (
-				<div className="mt-8 flex flex-wrap gap-4">
-					{castWithoutPhotos.map((castMember) => {
-						const character =
-							castMember.character || castMember.roles?.[0].character
-						return (
-							<Link
-								key={castMember.id}
-								className="w-64 h-16 hover:bg-slate-800"
-								to={`/discover/all?withCast=${castMember.id}`}
-								prefetch="intent"
-							>
-								<strong>{castMember.name}</strong>{" "}
 								{character && (
-									<>
-										as <em>{character}</em>
-									</>
+									<p
+										className="text-xs text-center text-gray-400 truncate w-36"
+										title={character}
+									>
+										{character}
+									</p>
 								)}
 							</Link>
-						)
-					})}
-				</div>
-			)}
-			{numberOfMoreToShow > 0 && (
-				<button
-					type="button"
-					className="mt-4 text-indigo-400"
-					onClick={toggleShowAll}
-				>
-					Show {numberOfMoreToShow} {showAll ? "Less" : "More"}
-				</button>
-			)}
+						</SwiperSlide>
+					)
+				})}
+			</ListSwiper>
 		</>
 	)
 }

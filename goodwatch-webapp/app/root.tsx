@@ -23,6 +23,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import posthog from "posthog-js"
 import React, { useEffect } from "react"
 import { ToastContainer } from "react-toastify"
+import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/Footer"
 import InfoBox from "~/ui/InfoBox"
@@ -30,13 +31,14 @@ import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
 import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 
+import "swiper/css"
+import "swiper/css/effect-coverflow"
+import cssTailwind from "~/tailwind.css?url"
 import cssToastify from "react-toastify/dist/ReactToastify.css?url"
-import { useDehydratedState } from "use-dehydrated-state"
 import App from "~/app"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
 import { useCookieConsent } from "~/routes/api.user-settings.get"
-import cssTailwind from "~/tailwind.css?url"
 import { CookieConsent } from "~/ui/CookieConsent"
 import { AuthContext, useUser } from "./utils/auth"
 
@@ -174,7 +176,7 @@ export function ErrorBoundary() {
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
 					<Header />
-					<main className="relative flex-grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
+					<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
 						<InfoBox text="Sorry, but an error occurred" />
 						<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
 							{/* Error message */}
@@ -185,7 +187,7 @@ export function ErrorBoundary() {
 							{/* Try Again button */}
 							<button
 								type="button"
-								className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded transition-colors"
+								className="self-start px-4 py-2 bg-gray-800 text-gray-100 hover:bg-gray-700 rounded-sm transition-colors"
 								onClick={() => window.location.reload()}
 							>
 								Try Again

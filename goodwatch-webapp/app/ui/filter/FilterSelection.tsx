@@ -126,7 +126,7 @@ export default function FilterSelection({
 													<div className="flex h-7 items-center">
 														<button
 															type="button"
-															className="relative text-gray-400 hover:text-gray-500 focus:outline-none"
+															className="relative text-gray-400 hover:text-gray-500 focus:outline-hidden"
 															onClick={onClose}
 														>
 															<span className="absolute -inset-2.5" />
@@ -292,7 +292,7 @@ export default function FilterSelection({
 										</div>
 
 										{/* Action buttons */}
-										<div className="flex-shrink-0 bg-slate-950 px-4 py-5 sm:px-6">
+										<div className="shrink-0 bg-slate-950 px-4 py-5 sm:px-6">
 											<div className="flex justify-end space-x-3">
 												<button
 													type="button"

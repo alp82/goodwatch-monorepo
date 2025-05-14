@@ -30,7 +30,7 @@ export default function Ratings({
 			</div>
 			<ul className="underline-offset-2 flex gap-4 flex-wrap">
 				<dl
-					className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} w-28 p-3 rounded-lg shadow overflow-hidden text-center`}
+					className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} w-28 p-3 rounded-lg shadow-sm overflow-hidden text-center`}
 				>
 					<dd
 						className={`${vibeColorIndex == null ? "text-gray-300" : "text-gray-100"} mt-1 text-5xl font-semibold tracking-tight`}
@@ -54,7 +54,7 @@ export default function Ratings({
 					rel="noreferrer"
 				>
 					<dl
-						className={`${ratings?.imdb_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"} rounded-lg border-4 border-black/[.3] w-24 p-3 bg-imdb shadow overflow-hidden text-center flex flex-col justify-center`}
+						className={`${ratings?.imdb_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"} rounded-lg border-4 border-black/[.3] w-24 p-3 bg-imdb shadow-sm overflow-hidden text-center flex flex-col justify-center`}
 					>
 						<img
 							className="h-6 object-contain"
@@ -81,7 +81,7 @@ export default function Ratings({
 					rel="noreferrer"
 				>
 					<dl
-						className={`${ratings?.metacritic_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"} rounded-lg border-4 border-white/[.2] w-56 p-3 bg-metacritic shadow overflow-hidden text-center flex flex-col justify-center`}
+						className={`${ratings?.metacritic_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"} rounded-lg border-4 border-white/[.2] w-56 p-3 bg-metacritic shadow-sm overflow-hidden text-center flex flex-col justify-center`}
 					>
 						<img
 							className="h-6 object-contain"
@@ -124,7 +124,7 @@ export default function Ratings({
 					rel="noreferrer"
 				>
 					<dl
-						className={`${ratings?.rotten_tomatoes_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"} rounded-lg border-4 border-black/[.3] w-56 p-3 bg-rotten shadow overflow-hidden text-center flex flex-col align-middle`}
+						className={`${ratings?.rotten_tomatoes_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"} rounded-lg border-4 border-black/[.3] w-56 p-3 bg-rotten shadow-sm overflow-hidden text-center flex flex-col align-middle`}
 					>
 						<img
 							className="h-6 object-contain"

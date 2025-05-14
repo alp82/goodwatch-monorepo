@@ -17,7 +17,7 @@ export const Tag = ({ color, icon: Icon, onRemove, children }: TagProps) => {
 			${color ? `text-${color}-500` : ""}
 		`}
 		>
-			{Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+			{Icon && <Icon className="h-4 w-4 shrink-0" />}
 			<span className="font-bold">{children}</span>
 			{onRemove && (
 				<XCircleIcon

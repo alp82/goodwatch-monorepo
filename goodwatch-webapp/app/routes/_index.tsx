@@ -40,8 +40,6 @@ import { prefetchUserData } from "~/server/userData.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { getLocaleFromRequest } from "~/utils/locale"
 
-import "swiper/css"
-import "swiper/css/effect-coverflow"
 import RemoteControl from "~/ui/start/RemoteControl"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
@@ -222,7 +220,7 @@ export default function Index() {
 				{/*</div>*/}
 
 				<div className="absolute bottom-0 left-0 right-0 z-30">
-					<div className="w-full bg-gradient-to-t from-black/70 to-black/40 sm:from-black/50 sm:to-transparent sm-h:from-black/70 sm-h:to-black/40 ">
+					<div className="w-full bg-linear-to-t from-black/70 to-black/40 sm:from-black/50 sm:to-transparent sm-h:from-black/70 sm-h:to-black/40 ">
 						<div className="flex flex-col items-center justify-end gap-4 px-4 pt-8 pb-12 lg-h:pb-40 md:lg-h:pb-52 text-center text-gray-200">
 							<h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl sm-h:text-6xl font-bold">
 								What's Good?

@@ -21,6 +21,7 @@ export interface SelectItem {
 export interface SelectPropsBase<RenderItem> {
 	selectItems: RenderItem[]
 	withSearch?: boolean
+	isLoading?: boolean
 }
 
 export interface SelectPropsSingle<RenderItem>
@@ -46,6 +47,7 @@ export default function Select<RenderItem extends SelectItem>({
 	selectedItems,
 	withSearch,
 	withMultiSelection,
+	isLoading = false,
 	onSelect,
 }: SelectProps<RenderItem>) {
 	const autoFocusRef = useAutoFocus<HTMLInputElement>()
@@ -114,10 +116,9 @@ export default function Select<RenderItem extends SelectItem>({
 						<div className="relative">
 							<ListboxButton
 								className="
-								relative w-full py-2 pl-3 pr-10
-								rounded-md shadow-sm cursor-pointer
-								bg-gray-700 focus:bg-gray-800
-								ring-1 ring-inset ring-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600
+								relative w-full py-1.5 pl-2 pr-10
+								rounded-md shadow-sm cursor-pointer bg-stone-700 hover:bg-stone-600
+								ring-1 ring-inset ring-stone-600 focus:outline-hidden focus:ring-2 focus:ring-stone-400
 								text-left text-gray-100 text-sm sm:text-base
 							"
 							>
@@ -130,7 +131,7 @@ export default function Select<RenderItem extends SelectItem>({
 														src={item.icon}
 														alt={item.label}
 														title={item.label}
-														className="h-5 w-5 flex-shrink-0 rounded-full"
+														className="h-5 w-5 shrink-0 rounded-full"
 													/>
 													<span className="sr-only ml-3 block truncate">
 														{item.label}
@@ -143,13 +144,15 @@ export default function Select<RenderItem extends SelectItem>({
 											<img
 												src={selectedItems.icon}
 												alt={selectedItems.label}
-												className="h-5 w-5 flex-shrink-0 rounded-full"
+												className="h-5 w-5 shrink-0 rounded-full"
 											/>
 											<span className="ml-3 block truncate">
 												{selectedItems.label}
 											</span>
 										</span>
 									)
+								) : isLoading ? (
+									<span className="text-sm animate-pulse">Loading...</span>
 								) : (
 									<span className="ml-3 block truncate">&nbsp;</span>
 								)}
@@ -167,21 +170,21 @@ export default function Select<RenderItem extends SelectItem>({
 								enter="transition ease-in-out duration-100"
 								enterFrom="opacity-0"
 								enterTo="opacity-100"
-								leave="transition ease-in-out duration-200"
+								leave="transition ease-in-out duration-100"
 								leaveFrom="opacity-100"
 								leaveTo="opacity-0"
 							>
 								<ListboxOptions
 									className={`
-									absolute z-10 mt-1 max-h-72 w-full overflow-auto
+									absolute top-10 z-50 mt-1 max-h-96 w-full overflow-auto
 									rounded-md bg-stone-800
-									shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none
+									shadow-lg ring-1 ring-black/5 focus:outline-hidden-none
 									text-sm sm:text-base
 								`}
 									ref={scrollRef}
 								>
 									{withSearch && (
-										<div className="sticky top-0 z-10 bg-stone-800">
+										<div className="sticky top-0 z-50 bg-stone-800">
 											<div className="text-gray-100 cursor-default select-none relative py-2 px-3">
 												<input
 													type="search"
@@ -207,13 +210,11 @@ export default function Select<RenderItem extends SelectItem>({
 												<ListboxOption
 													key={item.key}
 													value={item}
-													className={({ focus }) =>
-														`
+													className={({ focus }) => `
 														absolute top-0 left-0 w-full
 														cursor-default select-none py-2 pl-3 pr-9
-														${focus ? "bg-indigo-600 text-white" : "text-gray-100"}
-													`
-													}
+														${focus ? "bg-amber-500 text-black" : "text-gray-100"}
+													`}
 													style={{
 														height: `${virtualItem.size}px`,
 														transform: `translateY(${virtualItem.start}px)`,
@@ -233,7 +234,7 @@ export default function Select<RenderItem extends SelectItem>({
 																		<img
 																			src={item.icon}
 																			alt=""
-																			className="h-5 w-5 flex-shrink-0 rounded-full"
+																			className="h-5 w-5 shrink-0 rounded-full"
 																		/>
 																	)}
 																	<span
@@ -248,7 +249,7 @@ export default function Select<RenderItem extends SelectItem>({
 																		className={`
 																		absolute inset-y-0 right-0
 																		flex items-center pr-4
-																		${focus ? "text-white" : "text-indigo-300"}
+																		${focus ? "text-white" : "text-amber-300"}
 																	`}
 																	>
 																		<CheckIcon

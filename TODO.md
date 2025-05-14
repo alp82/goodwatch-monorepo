@@ -16,25 +16,21 @@ db redesign
 
 ---    
 
-details page redesign
-    DNA different sections
-    top DNA categories, hide the rest
-    swiper for discover preview
-    
-    show tropes
-    show images
-
-    box office (e.g. Google)
-    awards (grab from API)
-    
-    share button sticky
+details
+    streaming section
+        mark/reorder available countries
+        
     guess country
+    show title in current language
+    
+    about section
+        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+
     age restriction by countryi'
     streaming section favors user selected providers
     web links section
     sequels section
     
-    show title in current language
     images section
     images and videos as gallery
     https://www.figma.com/design/1sIRD12ImqTbC6lI396gWA/IMDb-Redesign-(Community)?node-id=0-1&t=DM0lDYiEkBYUsMZY-0
@@ -48,10 +44,14 @@ details page redesign
 
     fragment for scroll position (auto update)
     
-    about section
-        infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
+    json-ld movie/tv
+        image preview generated with background + ratings + streaming
+    
+    score prediction
+        92% Match
 
 movie card
+    popout design
     overlay: show movie or tv icon 
 
 remove obsolete code
@@ -64,17 +64,33 @@ onboarding
 
 ---    
 
+DB research
+    https://gemini.google.com/u/0/app/5767cc373c28c472?pli=1
+    https://arangodb.com/
+    https://www.tigergraph.com/
+    https://aerospike.com/
+
+DB optimization
+    separate vector db?
+    https://qdrant.tech/benchmarks/#filtered-results
+    
+---    
+
 DNA redesign
     alternative to huggingface
     https://gemini.google.com/app/bc0eda7592525891
     https://gemini.google.com/app/be7d58cc7d4b0380
     https://gemini.google.com/app/939d66e003582351
     https://gemini.google.com/app/38fd8b42c3385597
+    Franchise
+    Anime yes/no
 
 ---    
 
 search
     search results page
+    LLM search
+    https://typesense.org/
 
 resources
     https://github.com/quickwit-oss/tantivy
@@ -105,6 +121,16 @@ SEO optimization + marketing
     https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
     https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
     
+---
+
+details streaming
+    action button in header row to select streaming services (mobile: drawer)
+
+---
+
+better og images
+    https://gemini.google.com/app/8f9832dc2c62d13a
+
 ---
 
 similar filter
@@ -273,7 +299,12 @@ tv seasons:
 ---
 
 tropes
+    add to details
     add discover filter
+
+---    
+
+DNA alternative to huggingface
 
 ---    
 
@@ -292,6 +323,12 @@ postgres stability
     disk space monitoring
     new setup? https://autobase.tech/docs/overview/requirements
 
+---
+
+DNA + Similar subpage
+    similar movies
+        https://letterboxd.com/film/dune-part-two/themes/
+ 
 ---
 
 Sequels wrong
@@ -388,6 +425,14 @@ plan to watch
     
     remove separate wishlist page?
 
+---
+
+ details more data:
+    show tropes
+    show images
+    box office (e.g. Google)
+    awards (grab from API)
+    
 ---
 
 discover order

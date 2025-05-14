@@ -25,7 +25,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 				>
 					{label}
 				</label>
-				<div className="relative flex-grow max-w-md">
+				<div className="relative grow max-w-md">
 					{icon && (
 						<div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
 							{icon}
