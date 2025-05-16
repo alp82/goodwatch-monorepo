@@ -79,6 +79,11 @@ class PersonProcessor(BaseProcessor):
                          character=cast_member.get('character'), 
                          order=cast_member.get('order'))
             
+            # Connect person to Job (Actor)
+            job_key = make_human_key('Actor')
+            self.add_edge('performed_job', person_id, f"jobs/{job_key}", 
+                         role=cast_member.get('character'))
+            
         # Process crew members
         for crew_member in crew:
             pname = crew_member.get('name')
@@ -119,5 +124,12 @@ class PersonProcessor(BaseProcessor):
                          job=crew_member.get('job'), 
                          department=crew_member.get('department'),
                          order=crew_member.get('order'))
+            
+            # Connect person to Job based on their job type
+            job_name = crew_member.get('job')
+            if job_name:
+                job_key = make_human_key(job_name)
+                self.add_edge('performed_job', person_id, f"jobs/{job_key}", 
+                             department=crew_member.get('department'))
             
         return person_docs, appearance_edges, work_edges

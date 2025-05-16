@@ -7,6 +7,11 @@ import time
 from dotenv import load_dotenv
 from db.arango_connector import ArangoConnector
 from db.schema_manager import SchemaManager
+from importers.country_importer import CountryImporter
+from importers.language_importer import LanguageImporter
+from importers.job_importer import JobImporter
+from importers.certification_importer import CertificationImporter
+from importers.streaming_provider_importer import StreamingProviderImporter
 from importers.network_importer import NetworkImporter
 from importers.production_company_importer import ProductionCompanyImporter
 from importers.movie_importer import MovieImporter
@@ -25,6 +30,12 @@ def main():
     
     # Setup command line arguments
     parser = argparse.ArgumentParser(description='Import data from PostgreSQL to ArangoDB')
+    parser.add_argument('--static-data', action='store_true', help='Import static data (countries, languages, jobs, etc.)')
+    parser.add_argument('--countries', action='store_true', help='Import countries')
+    parser.add_argument('--languages', action='store_true', help='Import languages')
+    parser.add_argument('--jobs', action='store_true', help='Import jobs')
+    parser.add_argument('--certifications', action='store_true', help='Import certifications')
+    parser.add_argument('--streaming-providers', action='store_true', help='Import streaming providers')
     parser.add_argument('--networks', action='store_true', help='Import networks')
     parser.add_argument('--production-companies', action='store_true', help='Import production companies')
     parser.add_argument('--movies', action='store_true', help='Import movies')
@@ -38,12 +49,20 @@ def main():
     args = parser.parse_args()
     
     # Determine what to import
+    import_static_data = args.static_data or args.all
+    import_countries = args.countries or import_static_data or args.all
+    import_languages = args.languages or import_static_data or args.all
+    import_jobs = args.jobs or import_static_data or args.all
+    import_certifications = args.certifications or import_static_data or args.all
+    import_streaming_providers = args.streaming_providers or import_static_data or args.all
     import_networks = args.networks or args.all
     import_production_companies = args.production_companies or args.all
     import_movies = args.movies or args.all
     import_shows = args.shows or args.all
     
-    if not import_networks and not import_production_companies and not import_movies and not import_shows:
+    if not (import_static_data or import_countries or import_languages or import_jobs or 
+            import_certifications or import_streaming_providers or import_networks or 
+            import_production_companies or import_movies or import_shows):
         parser.print_help()
         return
     
@@ -69,10 +88,63 @@ def main():
         schema_manager.ensure_indexes()
     
     start_time = time.time()
+    country_count = 0
+    language_count = 0
+    job_count = 0
+    cert_system_count = 0
+    streaming_provider_count = 0
     network_count = 0
     production_company_count = 0
     movie_count = 0
     show_count = 0
+    
+    # Import static data first
+    if import_countries:
+        print("\n" + "="*50)
+        print("IMPORTING COUNTRIES")
+        print("="*50)
+        
+        country_importer = CountryImporter(arango)
+        country_count = country_importer.import_countries()
+        country_importer.print_stats()
+
+    if import_languages:
+        print("\n" + "="*50)
+        print("IMPORTING LANGUAGES")
+        print("="*50)
+        
+        language_importer = LanguageImporter(arango)
+        language_count = language_importer.import_languages()
+        language_importer.print_stats()
+    
+    if import_jobs:
+        print("\n" + "="*50)
+        print("IMPORTING JOBS")
+        print("="*50)
+        
+        job_importer = JobImporter(arango)
+        job_stats = job_importer.import_jobs()
+        job_importer.print_stats()
+        job_count = job_stats.get('jobs', 0)
+    
+    if import_certifications:
+        print("\n" + "="*50)
+        print("IMPORTING CERTIFICATIONS")
+        print("="*50)
+        
+        cert_importer = CertificationImporter(arango)
+        cert_stats = cert_importer.import_certifications()
+        cert_importer.print_stats()
+        cert_system_count = cert_stats.get('certification_systems', 0)
+    
+    if import_streaming_providers:
+        print("\n" + "="*50)
+        print("IMPORTING STREAMING PROVIDERS")
+        print("="*50)
+        
+        provider_importer = StreamingProviderImporter(arango)
+        streaming_provider_count = provider_importer.import_streaming_providers()
+        provider_importer.print_stats()
     
     # Import networks if requested
     if import_networks:
@@ -167,6 +239,11 @@ def main():
     print("\n" + "="*50)
     print("IMPORT SUMMARY")
     print("="*50)
+    print(f"Imported {country_count} countries")
+    print(f"Imported {language_count} languages")
+    print(f"Imported {job_count} jobs")
+    print(f"Imported {cert_system_count} certification systems")
+    print(f"Imported {streaming_provider_count} streaming providers")
     print(f"Imported {network_count} networks")
     print(f"Imported {production_company_count} production companies")
     print(f"Imported {movie_count} movies")

@@ -14,6 +14,7 @@ VERTEX_COLLECTIONS = [
     'release_events', 'age_classifications',
     'countries', 'languages', 'streaming_services', 'streaming_availability', 'seasons', 'scores',
     'users', 'user_favorites', 'user_wishlist', 'user_scores', 'user_watch_history',
+    'jobs', 'departments', 'certification_systems',
 ]
 
 EDGE_DEFINITIONS = [
@@ -32,6 +33,11 @@ EDGE_DEFINITIONS = [
     ('network_for', ['shows'], ['networks']),
     ('appeared_in', ['persons'], ['movies', 'shows']),
     ('worked_on', ['persons'], ['movies', 'shows']),
+    ('performed_job', ['persons'], ['jobs']),
+    ('belongs_to_department', ['jobs'], ['departments']),
+    ('certification_for_country', ['certification_systems'], ['countries']),
+    ('classification_from_system', ['age_classifications'], ['certification_systems']),
+    ('streaming_service_in_country', ['streaming_services'], ['countries']),
     ('tmdb_recommends', ['movies'], ['movies']),
     ('tmdb_similar_to', ['movies'], ['movies']),
     ('originates_from_country', ['movies', 'shows', 'networks', 'production_companies'], ['countries']),
