@@ -13,7 +13,7 @@ VERTEX_COLLECTIONS = [
     'translations', 'images', 'videos', 'alternative_titles',
     'release_events', 'age_classifications',
     'countries', 'languages', 'streaming_services', 'streaming_availability', 'seasons', 'scores',
-    'users', 'user_favorites', 'user_wishlist', 'user_scores',
+    'users', 'user_favorites', 'user_wishlist', 'user_scores', 'user_watch_history',
 ]
 
 EDGE_DEFINITIONS = [
@@ -51,7 +51,16 @@ EDGE_DEFINITIONS = [
     ('favorited_by', ['movies', 'shows'], ['users']),
     ('scored_by', ['movies', 'shows'], ['users']),
     ('wishlisted_by', ['movies', 'shows'], ['users']),
+    ('watched_by', ['movies', 'shows'], ['users']),
 ]
+
+# Watch status constants
+WATCH_STATUS = {
+    'COMPLETED': 'completed',
+    'WATCHING': 'watching',
+    'ON_HOLD': 'on_hold',
+    'DROPPED': 'dropped',
+}
 
 # RegEx Patterns
 HUMAN_KEY_PATTERN_STRING = r'[^a-z0-9_\-]'

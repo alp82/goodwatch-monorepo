@@ -92,7 +92,7 @@ class StreamingLinksPostProcessor:
                 if not docs:
                     break
                     
-                print(f"Processing batch {batch_num} with {len(docs)} documents (offset: {offset})")
+                #print(f"Processing batch {batch_num} with {len(docs)} documents (offset: {offset})")
                 
                 # Extract links from this batch
                 batch_links = []
@@ -103,7 +103,7 @@ class StreamingLinksPostProcessor:
                 
                 # Fetch only the provider links that match documents in this batch
                 provider_links = self._fetch_provider_links_for_batch(batch_links, cur)
-                print(f"Found {len(provider_links)} matching provider links in PostgreSQL for this batch")
+                #print(f"Found {len(provider_links)} matching provider links in PostgreSQL for this batch")
                 
                 # Process this batch
                 update_batch = []

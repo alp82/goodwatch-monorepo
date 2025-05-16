@@ -14,9 +14,52 @@ db redesign
     * seasons with separate episodes collection
     * scores: history + by season + by episode
 
+DB research
+    https://gemini.google.com/u/0/app/5767cc373c28c472?pli=1
+    https://arangodb.com/
+    https://www.tigergraph.com/
+    https://aerospike.com/
+
+DB optimization
+    separate vector db?
+    https://qdrant.tech/benchmarks/#filtered-results
+
+---    
+
+DNA redesign
+    alternative to huggingface
+    sentence for each category -> vectorize
+    Franchise
+    Anime yes/no
+    place & time: scale to determine if only one location or multiple
+    
+    https://chatgpt.com/c/68259c99-b648-8001-96c9-01462af1d857 (final)
+    https://gemini.google.com/app/e69c32fe84ae931d (examples)
+    https://gemini.google.com/app/f6eb0c336b5ed218 (v2)
+    ---
+    https://gemini.google.com/app/bc0eda7592525891 (okay)
+    https://gemini.google.com/app/be7d58cc7d4b0380 (bad)
+    https://gemini.google.com/app/939d66e003582351 (missing tags)
+    https://gemini.google.com/app/38fd8b42c3385597 (missing scales)
+    
+
+    
+---   
+
+upcoming titles: future release_date
+ 
 ---    
 
 details
+    DNA redesign
+        https://replit.com/@alp82/EntertainmentDNA
+        https://replit.com/@alp82/MediaMosaic
+
+    header with icons: [calendar] year [clock] duration [globe] countries
+    
+    content advisory: alert style box in red
+        https://bolt.new/~/sb1-pgwb5iqc
+
     streaming section
         mark/reorder available countries
         
@@ -26,7 +69,7 @@ details
     about section
         infobox: https://www.joshwcomeau.com/blog/how-i-built-my-blog-v2/#the-details-9
 
-    age restriction by countryi'
+    age restriction by country
     streaming section favors user selected providers
     web links section
     sequels section
@@ -61,29 +104,6 @@ remove obsolete code
 
 onboarding
     skip with "softcore" keyword
-
----    
-
-DB research
-    https://gemini.google.com/u/0/app/5767cc373c28c472?pli=1
-    https://arangodb.com/
-    https://www.tigergraph.com/
-    https://aerospike.com/
-
-DB optimization
-    separate vector db?
-    https://qdrant.tech/benchmarks/#filtered-results
-    
----    
-
-DNA redesign
-    alternative to huggingface
-    https://gemini.google.com/app/bc0eda7592525891
-    https://gemini.google.com/app/be7d58cc7d4b0380
-    https://gemini.google.com/app/939d66e003582351
-    https://gemini.google.com/app/38fd8b42c3385597
-    Franchise
-    Anime yes/no
 
 ---    
 

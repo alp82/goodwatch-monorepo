@@ -14,6 +14,7 @@ from importers.show_importer import ShowImporter
 from post_processors.dna_post_processor import DNAPostProcessor
 from post_processors.streaming_links_post_processor import StreamingLinksPostProcessor
 from post_processors.user_preferences_post_processor import UserPreferencesPostProcessor
+from post_processors.watch_history_post_processor import WatchHistoryPostProcessor
 
 def main():
     """
@@ -33,6 +34,7 @@ def main():
     parser.add_argument('--skip-dna-vectors', action='store_true', help='Skip DNA vector updates')
     parser.add_argument('--skip-streaming-links', action='store_true', help='Skip streaming links update')
     parser.add_argument('--skip-user-preferences', action='store_true', help='Skip user preferences import')
+    parser.add_argument('--skip-watch-history', action='store_true', help='Skip watch history import')
     args = parser.parse_args()
     
     # Determine what to import
@@ -150,6 +152,15 @@ def main():
         
         user_preferences_processor = UserPreferencesPostProcessor(arango, pg_config)
         user_preferences_processor.update_user_preferences()
+    
+    # Import watch history if not skipped
+    if not args.skip_watch_history and (import_movies or import_shows):
+        print("\n" + "="*50)
+        print("IMPORTING WATCH HISTORY")
+        print("="*50)
+        
+        watch_history_processor = WatchHistoryPostProcessor(arango, pg_config)
+        watch_history_processor.update_watch_history()
     
     # Print summary
     elapsed = time.time() - start_time
