@@ -4,7 +4,7 @@ Constants used throughout the importer system.
 
 # Database
 BATCH_SIZE = 10000
-BATCH_LIMIT = 100
+BATCH_LIMIT = 10000
 
 # Collections
 VERTEX_COLLECTIONS = [

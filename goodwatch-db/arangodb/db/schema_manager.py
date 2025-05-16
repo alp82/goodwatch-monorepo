@@ -81,15 +81,24 @@ class SchemaManager:
                 print(f"Created persistent index on {collection_name}(title)")
             except Exception as e:
                 print(f"Warning: Could not create index on {collection_name}(title): {e}")
+                
+            try:
+                collection.add_index({'type': 'persistent', 'fields': ['popularity'], 'unique': False})
+                print(f"Created persistent index on {collection_name}(popularity)")
+            except Exception as e:
+                print(f"Warning: Could not create index on {collection_name}(popularity): {e}")
         
         # Streaming availability indexes
         try:
             streaming_col = db.collection('streaming_availability')
-            streaming_col.add_index({'type': 'persistent', 'fields': ['country', 'provider_id'], 'unique': False})
-            print("Created persistent index on streaming_availability(country, provider_id)")
-            
             streaming_col.add_index({'type': 'persistent', 'fields': ['type'], 'unique': False})
             print("Created persistent index on streaming_availability(type)")
+
+            streaming_col.add_index({'type': 'persistent', 'fields': ['country'], 'unique': False})
+            print("Created persistent index on streaming_availability(country)")
+
+            streaming_col.add_index({'type': 'persistent', 'fields': ['country', 'provider_id'], 'unique': False})
+            print("Created persistent index on streaming_availability(country, provider_id)")
         except Exception as e:
             print(f"Warning: Could not create streaming availability indexes: {e}")
         

@@ -8,7 +8,8 @@ FOR movie IN movies
       FILTER
         score.source == "aggregated"
         AND score.score_type == "combined"
-        AND score.percent >= 65
+        AND score.percent >= 90
+        AND score.rating_count >= 500
       LIMIT 1 
       RETURN score
   )
@@ -21,7 +22,13 @@ FOR movie IN movies
   
   LET all_scores = (
     FOR score IN 1..1 OUTBOUND movie has_score
-      RETURN { score: score.source, type: score.score_type, percent: score.percent } 
+      RETURN {
+        source: score.source,
+        type: score.score_type,
+        percent: score.percent,
+        rating_count: score.rating_count,
+        url: score.url,
+      } 
   )
   
   RETURN { 
@@ -49,7 +56,7 @@ FOR movie IN movies
   FILTER LENGTH(availability_in_country) > 0 
 
   SORT movie.popularity DESC
-  LIMIT 100 
+  LIMIT 10
   
   RETURN { 
     movie_id: movie._id, 
