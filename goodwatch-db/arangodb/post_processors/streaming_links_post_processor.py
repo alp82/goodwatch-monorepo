@@ -4,6 +4,7 @@ Handles updating streaming availability nodes with additional data from streamin
 """
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from datetime import datetime
 from constants import BATCH_SIZE, BATCH_LIMIT
 
 class StreamingLinksPostProcessor:
@@ -123,6 +124,21 @@ class StreamingLinksPostProcessor:
                     doc['quality'] = link_data.get('quality')
                     #doc['display_priority'] = link_data.get('display_priority')
                     
+                    # Convert any date fields from link_data to timestamps if present
+                    if 'start_date' in link_data and link_data['start_date']:
+                        try:
+                            start_date = datetime.fromisoformat(link_data['start_date'].replace('Z', '+00:00'))
+                            doc['startTimestamp'] = int(start_date.timestamp() * 1000)  # Convert to milliseconds
+                        except (ValueError, TypeError, AttributeError):
+                            pass
+                            
+                    if 'end_date' in link_data and link_data['end_date']:
+                        try:
+                            end_date = datetime.fromisoformat(link_data['end_date'].replace('Z', '+00:00'))
+                            doc['endTimestamp'] = int(end_date.timestamp() * 1000)  # Convert to milliseconds
+                        except (ValueError, TypeError, AttributeError):
+                            pass
+                    
                     # Check if provider ID matches
                     if str(link_data.get('provider_id')) == str(doc.get('provider_id')):
                         doc['type'] = link_data.get('stream_type', doc.get('type'))
@@ -149,7 +165,7 @@ class StreamingLinksPostProcessor:
             conn.close()
             
         return total_updated
-    
+     
     def _fetch_provider_links_for_batch(self, links, cur):
         """
         Fetch only the provider links that match the given links.

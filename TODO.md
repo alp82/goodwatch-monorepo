@@ -42,8 +42,6 @@ DNA redesign
     https://gemini.google.com/app/939d66e003582351 (missing tags)
     https://gemini.google.com/app/38fd8b42c3385597 (missing scales)
     
-
-    
 ---   
 
 upcoming titles: future release_date
@@ -51,6 +49,9 @@ upcoming titles: future release_date
 ---    
 
 details
+    better SEO
+        https://gemini.google.com/app/14b23291fcb31f3a
+
     DNA redesign
         https://replit.com/@alp82/EntertainmentDNA
         https://replit.com/@alp82/MediaMosaic

@@ -4,6 +4,7 @@ Processor for handling streaming services and availability.
 from processors.base_processor import BaseProcessor
 from utils.parsers import parse_json_field
 from utils.key_generators import make_human_key
+from datetime import datetime
 
 class StreamingProcessor(BaseProcessor):
     """
@@ -45,6 +46,24 @@ class StreamingProcessor(BaseProcessor):
             self.add_to_batch('countries', {'_key': country_code})
             
             link = availability.get('link')
+            
+            # Convert date strings to timestamps if present
+            start_timestamp = None
+            end_timestamp = None
+            
+            if availability.get('start_date'):
+                try:
+                    start_date = datetime.fromisoformat(availability.get('start_date').replace('Z', '+00:00'))
+                    start_timestamp = int(start_date.timestamp() * 1000)  # Convert to milliseconds
+                except (ValueError, TypeError):
+                    pass
+                    
+            if availability.get('end_date'):
+                try:
+                    end_date = datetime.fromisoformat(availability.get('end_date').replace('Z', '+00:00'))
+                    end_timestamp = int(end_date.timestamp() * 1000)  # Convert to milliseconds
+                except (ValueError, TypeError):
+                    pass
 
             # TODO : Add flatrate_and_buy and others...
             for availability_type in ['ads', 'flatrate', 'buy', 'rent', 'free']:
@@ -71,8 +90,8 @@ class StreamingProcessor(BaseProcessor):
                         'country': country_code,
                         'provider_id': provider_key,
                         'link': link,
-                        'start_date': availability.get('start_date'),
-                        'end_date': availability.get('end_date'),
+                        'startTimestamp': start_timestamp,
+                        'endTimestamp': end_timestamp,
                         'parent_key': doc['_key']
                     }
                     

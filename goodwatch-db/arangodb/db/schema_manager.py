@@ -88,6 +88,15 @@ class SchemaManager:
             except Exception as e:
                 print(f"Warning: Could not create index on {collection_name}(popularity): {e}")
         
+        # Scores indexes
+        try:
+            scores_col = db.collection('scores')
+            scores_col.add_index({'type': 'persistent', 'fields': ['source', 'score_type', 'percent', 'rating_count'], 'unique': False})
+            print("Created persistent index on scores(source, score_type, percent, rating_count)")
+
+        except Exception as e:
+            print(f"Warning: Could not create streaming availability indexes: {e}")
+
         # Streaming availability indexes
         try:
             streaming_col = db.collection('streaming_availability')
@@ -99,6 +108,18 @@ class SchemaManager:
 
             streaming_col.add_index({'type': 'persistent', 'fields': ['country', 'provider_id'], 'unique': False})
             print("Created persistent index on streaming_availability(country, provider_id)")
+
+            # Timestamp indexes for efficient date range queries
+            streaming_col.add_index({'type': 'persistent', 'fields': ['startTimestamp'], 'unique': False})
+            print("Created persistent index on streaming_availability(startTimestamp)")
+
+            streaming_col.add_index({'type': 'persistent', 'fields': ['endTimestamp'], 'unique': False})
+            print("Created persistent index on streaming_availability(endTimestamp)")
+
+            # Combined indexes for common query patterns
+            streaming_col.add_index({'type': 'persistent', 'fields': ['country', 'startTimestamp', 'endTimestamp'], 'unique': False})
+            print("Created persistent index on streaming_availability(country, startTimestamp, endTimestamp)")
+
         except Exception as e:
             print(f"Warning: Could not create streaming availability indexes: {e}")
         
