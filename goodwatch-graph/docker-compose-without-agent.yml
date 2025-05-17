@@ -1,0 +1,51 @@
+services:
+  dbserver:
+    image: arangodb/arangodb:${ARANGO_VERSION}
+    container_name: arango_dbserver
+    restart: always
+    ports:
+      - "${SELF_IP}:8530:8530"
+    volumes:
+      - dbserver_data:/var/lib/arangodb3
+      - ./jwtsecret:/jwtsecret:ro
+    environment:
+      - ARANGO_NO_AUTH=false
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      arangod
+      --server.authentication=true
+      --server.endpoint=tcp://0.0.0.0:8530
+      --server.jwt-secret-keyfile=/jwtsecret
+      --cluster.agency-endpoint=tcp://${IP_AGENT_1}:8531
+      --cluster.agency-endpoint=tcp://${IP_AGENT_2}:8531
+      --cluster.agency-endpoint=tcp://${IP_AGENT_3}:8531
+      --cluster.my-address=tcp://${SELF_IP}:8530
+      --cluster.my-role=DBSERVER
+      --database.directory=/var/lib/arangodb3
+      --log.level=INFO
+
+  coordinator:
+    image: arangodb/arangodb:${ARANGO_VERSION}
+    container_name: arango_coordinator
+    restart: always
+    ports:
+      - "${SELF_IP}:8529:8529"
+    volumes:
+      - ./jwtsecret:/jwtsecret:ro
+    environment:
+      - ARANGO_NO_AUTH=false
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      arangod
+      --server.authentication=true
+      --server.endpoint=tcp://0.0.0.0:8529
+      --server.jwt-secret-keyfile=/jwtsecret
+      --cluster.agency-endpoint=tcp://${IP_AGENT_1}:8531
+      --cluster.agency-endpoint=tcp://${IP_AGENT_2}:8531
+      --cluster.agency-endpoint=tcp://${IP_AGENT_3}:8531
+      --cluster.my-address=tcp://${SELF_IP}:8529
+      --cluster.my-role=COORDINATOR
+      --log.level=INFO
+
+volumes:
+  dbserver_data:

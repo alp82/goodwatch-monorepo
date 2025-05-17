@@ -156,7 +156,7 @@ class StreamingLinksPostProcessor:
                     availability_col.update_many(update_batch)
                     
                 total_updated += updated_in_batch
-                print(f"Updated {updated_in_batch} documents in batch {batch_num} (total updated: {total_updated})")
+#                 print(f"Updated {updated_in_batch} documents in batch {batch_num} (total updated: {total_updated})")
                 
                 # Move to next batch
                 offset += cursor_batch_size
