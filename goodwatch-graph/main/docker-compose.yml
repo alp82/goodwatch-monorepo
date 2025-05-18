@@ -16,6 +16,7 @@ services:
     command: >
       arangod
       --server.authentication=true
+      --server.authentication-system-only=false
       --server.endpoint=tcp://0.0.0.0:8531
       --server.jwt-secret-keyfile=/jwtsecret
       --agency.activate=true
@@ -45,6 +46,7 @@ services:
     command: >
       arangod
       --server.authentication=true
+      --server.authentication-system-only=false
       --server.endpoint=tcp://0.0.0.0:8530
       --server.jwt-secret-keyfile=/jwtsecret
       --cluster.agency-endpoint=tcp://${IP_AGENT_1}:8531
@@ -72,6 +74,7 @@ services:
     command: >
       arangod
       --server.authentication=true
+      --server.authentication-system-only=false
       --server.endpoint=tcp://0.0.0.0:8529
       --server.jwt-secret-keyfile=/jwtsecret
       --cluster.agency-endpoint=tcp://${IP_AGENT_1}:8531
