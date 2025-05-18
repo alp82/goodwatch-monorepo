@@ -64,8 +64,8 @@ services:
     mem_limit: 4g
     memswap_limit: 4g
     ports:
-      #- "${SELF_IP}:8529:8529"
-      - "8529:8529"
+      - "${SELF_IP}:8529:8529"
+      #- "8529:8529"
     volumes:
       - ./jwtsecret:/jwtsecret:ro
     environment:
