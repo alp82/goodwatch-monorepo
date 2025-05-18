@@ -3,6 +3,8 @@ services:
     image: arangodb/arangodb:${ARANGO_VERSION}
     container_name: arango_dbserver
     restart: always
+    mem_limit: 18g
+    memswap_limit: 18g
     ports:
       - "${SELF_IP}:8530:8530"
     volumes:
@@ -28,6 +30,8 @@ services:
     image: arangodb/arangodb:${ARANGO_VERSION}
     container_name: arango_coordinator
     restart: always
+    mem_limit: 4g
+    memswap_limit: 4g
     ports:
       - "${SELF_IP}:8529:8529"
     volumes:
