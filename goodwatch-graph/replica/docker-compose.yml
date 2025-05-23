@@ -29,8 +29,8 @@ services:
       # concurrency settings
       --server.maximal-threads=256
       --tcp.reuse-address=true
-      --server.maximal-connections=2048
-      --tcp.backlog-size=256
+      --tcp.backlog-size=512
+      --server.maximal-queue-size=8192
 
   coordinator:
     image: arangodb/arangodb:${ARANGO_VERSION}
@@ -60,8 +60,8 @@ services:
       # concurrency settings
       --server.maximal-threads=128
       --tcp.reuse-address=true
-      --server.maximal-connections=1024
-      --tcp.backlog-size=128
+      --tcp.backlog-size=256
+      --server.maximal-queue-size=8192
 
 volumes:
   dbserver_data:
