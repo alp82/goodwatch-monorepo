@@ -26,7 +26,6 @@ services:
       --cluster.my-role=DBSERVER
       --database.directory=/var/lib/arangodb3
       --log.level=INFO
-      # concurrency settings
       --server.maximal-threads=256
       --tcp.reuse-address=true
       --tcp.backlog-size=512
@@ -57,7 +56,6 @@ services:
       --cluster.my-address=tcp://${SELF_IP}:8529
       --cluster.my-role=COORDINATOR
       --log.level=INFO
-      # concurrency settings
       --server.maximal-threads=128
       --tcp.reuse-address=true
       --tcp.backlog-size=256
