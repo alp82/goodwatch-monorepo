@@ -97,7 +97,7 @@ export default function DetailsInlineNav({
 						<button
 							type="button"
 							onClick={() => setDropdownOpen((o) => !o)}
-							className="w-full flex items-center justify-between bg-white/10 text-white/90 text-xs rounded-md px-2 py-1 border border-white/20 min-h-0 h-7"
+							className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 text-white/90 text-xs rounded-md px-2 py-1 border border-white/20 min-h-0 h-7 cursor-pointer"
 							aria-haspopup="listbox"
 							aria-expanded={dropdownOpen}
 						>
@@ -127,7 +127,7 @@ export default function DetailsInlineNav({
 												navigateToSection(section)
 												setDropdownOpen(false)
 											}}
-											className={`w-full text-left px-3 py-2 hover:bg-white/10 text-xs ${activeSections.includes(section.id) ? "text-amber-300" : ""}`}
+											className={`w-full text-left px-3 py-2 hover:bg-white/10 text-xs ${activeSections.includes(section.id) ? "text-amber-300" : ""} cursor-pointer`}
 										>
 											{section.label}
 										</button>
@@ -141,22 +141,19 @@ export default function DetailsInlineNav({
 				{/* Desktop: inline nav */}
 				<div className="hidden md:flex mt-2 md:text-xs lg:text-sm xl:text-md flex-row w-full">
 					{sectionList.map((section, idx, arr) => (
-						<div
+						<button
 							key={section.id}
+							type="button"
 							className={`mx-1 flex-1 min-w-0 border-b-[3px] ${
 								activeSections.includes(section.id)
 									? "border-amber-500 text-amber-300"
 									: "border-white/30 text-white/70"
-							} hover:border-amber-500/70 hover:text-amber-300/70 transition-colors duration-300`}
+							} hover:border-amber-500/70 hover:text-amber-300/70 transition-colors duration-300
+							text-center px-2 py-1 cursor-pointer`}
+							onClick={() => navigateToSection(section)}
 						>
-							<button
-								type="button"
-								onClick={() => navigateToSection(section)}
-								className="w-full text-center px-2 py-1"
-							>
-								{section.label}
-							</button>
-						</div>
+							{section.label}
+						</button>
 					))}
 				</div>
 			</div>

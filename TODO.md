@@ -171,6 +171,11 @@ YT Channel
 
 ---
 
+browser extension to embed DNA into netflix, etc.
+    tags link to goodwatch for exploration
+
+---
+
 subgenre descriptions
     https://www.studiobinder.com/blog/movie-genres-list/
 

@@ -16,18 +16,19 @@ export default function DetailsSideNav({
 			<aside className="sticky top-44 mr-4 w-32 z-20">
 				<nav className="flex flex-col p-2 bg-black/20 text-lg space-y-1">
 					{Object.values(sections).map((section) => (
-						<div
+						<button
 							key={section.id}
+							type="button"
 							className={`border-l-8 pl-4 ${
 								activeSections.includes(section.id)
 									? "border-amber-500 text-amber-300"
 									: "border-white/30 text-white/70"
-							} hover:border-amber-500/70 hover:text-amber-300/70 transition-colors duration-200`}
+							} hover:border-amber-500/70 hover:text-amber-300/70 transition-colors duration-200
+							text-left cursor-pointer`}
+							onClick={() => navigateToSection(section)}
 						>
-							<button type="button" onClick={() => navigateToSection(section)}>
-								{section.label}
-							</button>
-						</div>
+							{section.label}
+						</button>
 					))}
 				</nav>
 			</aside>
