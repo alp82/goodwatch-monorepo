@@ -12,7 +12,7 @@ export default function MovieTvSwiper({ results }: MovieTvSwiperProps) {
 	return (
 		<ListSwiper>
 			{results.map((details) => (
-				<SwiperSlide key={details.tmdb_id}>
+				<SwiperSlide key={`${details.media_type}-${details.tmdb_id}`}>
 					<MovieTvCard details={details} mediaType={details.media_type} />
 				</SwiperSlide>
 			))}

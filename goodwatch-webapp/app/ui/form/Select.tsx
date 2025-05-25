@@ -166,7 +166,6 @@ export default function Select<RenderItem extends SelectItem>({
 
 							<Transition
 								show={open}
-								as={Fragment}
 								enter="transition ease-in-out duration-100"
 								enterFrom="opacity-0"
 								enterTo="opacity-100"
