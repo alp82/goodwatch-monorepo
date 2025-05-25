@@ -48,6 +48,14 @@ upcoming titles: future release_date
  
 ---    
 
+discover:
+    show only active filters
+    add filter button
+    clear all filters
+    sort by
+
+---    
+
 details
     better SEO
         https://gemini.google.com/app/14b23291fcb31f3a

@@ -50,7 +50,9 @@ export function DNACategory({
 	spoilerVisible,
 	onRevealSpoiler,
 }: DNACategoryProps) {
-	const isSpoiler = spoilerCategories.includes(category)
+	// TODO spoiler sometimes causes errors
+	// const isSpoiler = spoilerCategories.includes(category)
+	const isSpoiler = false
 
 	const discover = useDiscover({
 		params: {
