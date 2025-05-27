@@ -13,6 +13,11 @@ services:
     environment:
       - ARANGO_NO_AUTH=false
       - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "arangosh --server.endpoint tcp://${SELF_IP}:8531 --server.authentication true --server.username root --server.password $$ARANGO_ROOT_PASSWORD --javascript.execute 'db._query(\"RETURN 1\").toArray()'" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
     command: >
       arangod
       --server.authentication=true
@@ -27,7 +32,7 @@ services:
       --agency.endpoint=tcp://${IP_AGENT_2}:8531
       --agency.endpoint=tcp://${IP_AGENT_3}:8531
       --database.directory=/var/lib/arangodb3
-      --log.level=INFO
+      --log.level=DEBUG
       --server.maximal-threads=64
       --tcp.reuse-address=true
 
@@ -71,7 +76,6 @@ services:
     memswap_limit: 4g
     ports:
       - "${SELF_IP}:8529:8529"
-      #- "8529:8529"
     volumes:
       - ./jwtsecret:/jwtsecret:ro
     environment:
