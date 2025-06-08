@@ -29,7 +29,7 @@ value:
                 attempts: 0
                 seconds: 0
               exponential:
-                attempts: 5
+                attempts: 1
                 multiplier: 1
                 random_factor: 0
                 seconds: 2

@@ -13,4 +13,5 @@ schema:
       items:
         type: string
         enum: null
+      originalType: 'string[]'
   required: []

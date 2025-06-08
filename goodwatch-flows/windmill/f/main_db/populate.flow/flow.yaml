@@ -1,0 +1,103 @@
+summary: ''
+description: ''
+value:
+  modules:
+    - id: d
+      value:
+        type: script
+        input_transforms:
+          DELETE_ALL:
+            type: static
+          graph_name:
+            type: static
+            value: goodwatch
+        is_trigger: false
+        path: f/main_db/initialize/graph_db
+    - id: a
+      summary: ''
+      value:
+        type: branchall
+        branches:
+          - summary: Countries
+            modules:
+              - id: b
+                value:
+                  type: script
+                  input_transforms: {}
+                  is_trigger: false
+                  path: f/main_db/populate/tmdb/countries
+            expr: ''
+            parallel: true
+            skip_failure: false
+          - summary: Languages
+            modules:
+              - id: c
+                value:
+                  type: script
+                  input_transforms: {}
+                  is_trigger: false
+                  path: f/main_db/populate/tmdb/languages
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+          - summary: Timezones
+            modules:
+              - id: e
+                value:
+                  type: script
+                  input_transforms: {}
+                  is_trigger: false
+                  path: f/main_db/populate/tmdb/timezones
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+          - summary: Age Certifications
+            modules:
+              - id: f
+                value:
+                  type: script
+                  input_transforms: {}
+                  is_trigger: false
+                  path: f/main_db/populate/tmdb/age_certifications
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+          - summary: Jobs & Departments
+            modules:
+              - id: g
+                value:
+                  type: script
+                  input_transforms: {}
+                  is_trigger: false
+                  path: f/main_db/populate/tmdb/jobs
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+          - summary: Genres
+            modules:
+              - id: h
+                value:
+                  type: script
+                  input_transforms: {}
+                  is_trigger: false
+                  path: f/main_db/populate/tmdb/genres
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+          - summary: Streaming Services
+            modules:
+              - id: i
+                value:
+                  type: script
+                  input_transforms: {}
+                  is_trigger: false
+                  path: f/main_db/populate/tmdb/providers
+            expr: 'false'
+            parallel: true
+            skip_failure: false
+        parallel: true
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

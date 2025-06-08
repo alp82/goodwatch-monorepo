@@ -498,6 +498,9 @@ def main(next_id: dict):
         movie_model=GenomeMovie,
         tv_model=GenomeTv,
     )
+    raise Exception(
+        f"Genome for {next_entry.original_title} will not be generated due to high inference costs"
+    )
     result = hugchat_generate_dna(next_entry)
     close_mongodb()
     return result

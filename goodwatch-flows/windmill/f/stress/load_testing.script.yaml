@@ -1,0 +1,17 @@
+summary: Load Testing
+description: ''
+lock: '!inline f/stress/load_testing.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    concurrency:
+      type: integer
+      description: ''
+      default: 5
+    duration:
+      type: integer
+      description: ''
+      default: 120
+  required: []

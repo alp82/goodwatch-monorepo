@@ -4,8 +4,8 @@
 import asyncio
 from playwright.async_api import async_playwright, BrowserContext
 
-BROWSER_TIMEOUT_MS = 30000
-PAGE_SLEEP_SEC = 1
+BROWSER_TIMEOUT_MS = 10000
+PAGE_SLEEP_SEC = 2
 
 
 async def visit_page(url: str, browser: BrowserContext):
@@ -35,5 +35,9 @@ def main():
     urls = [
         "https://goodwatch.app",
         "https://goodwatch.app/discover",
+        "https://goodwatch.app/movies",
+        "https://goodwatch.app/movies/moods",
+        "https://goodwatch.app/tv-shows",
+        "https://goodwatch.app/tv-shows/moods",
     ]
     asyncio.run(visit_pages(urls=urls))

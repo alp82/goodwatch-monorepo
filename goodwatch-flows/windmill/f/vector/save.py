@@ -12,6 +12,8 @@ MAX_INPUT_LENGTH = 8192
 LOG_BATCH_SIZE = 100
 TABLE_NAME = Union[Literal["movies"], Literal["tv"]]
 
+Version = Literal['v1', 'v2']
+
 
 def get_medias_df(
     table_name: TABLE_NAME, tmdb_ids: Optional[list[str]] = None, start_offset: int = 0, exclude_existing: bool = False,
@@ -59,10 +61,12 @@ def get_medias_df(
     return df
 
 
-def create_embeddings(text_dict: dict) -> dict:
+def create_embeddings(text_dict: dict, version: Version = 'v1') -> dict:
+    endpoint_path = 'embeddings' if version == 'v1' else 'v2/embeddings'
+
     # The embeddings server accepts a dict of key-text pairs
     response = requests.post(
-        "http://157.90.157.44:7997/embeddings",
+        f"http://157.90.157.44:7997/{endpoint_path}",
         json=text_dict,
     )
     response.raise_for_status()
@@ -288,6 +292,10 @@ def store_vectors(table_name: TABLE_NAME, df: pd.DataFrame) -> dict:
 
 
 def main(media_type: str, tmdb_ids: Optional[list[str]] = None, start_offset: int = 0, exclude_existing: bool = False):
+    # TODO remove this
+    print("TODO: remove this script")
+    return
+    
     # Validate the collection_name to prevent SQL injection
     valid_tables = ["movies", "tv"]
     if media_type not in valid_tables:

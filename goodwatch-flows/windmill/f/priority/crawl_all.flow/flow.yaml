@@ -100,7 +100,7 @@ value:
             expr: ''
             parallel: true
             skip_failure: false
-          - summary: TV Tropes & Genome
+          - summary: TV Tropes
             modules:
               - id: k
                 value:
@@ -121,23 +121,6 @@ value:
                   path: f/tvtropes_web/crawl_all_by_id
                 continue_on_error: false
                 timeout: 300
-              - id: z
-                value:
-                  type: script
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.g.tmdb_ids
-                  path: f/genome/init/update
-                  tag_override: null
-              - id: aa
-                value:
-                  type: flow
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.z
-                  path: f/genome/crawl_all_by_id
             expr: ''
             parallel: true
             skip_failure: false
@@ -163,6 +146,28 @@ value:
                 continue_on_error: false
                 timeout: 300
             expr: ''
+            parallel: true
+            skip_failure: false
+          - summary: DNA
+            modules:
+              - id: z
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g.tmdb_ids
+                  path: f/genome/init/update
+                  tag_override: null
+              - id: aa
+                value:
+                  type: flow
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.z
+                  path: f/genome/crawl_all_by_id
+            expr: 'false'
             parallel: true
             skip_failure: false
         parallel: true

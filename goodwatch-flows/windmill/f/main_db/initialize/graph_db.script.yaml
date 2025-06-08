@@ -1,0 +1,18 @@
+summary: ''
+description: ''
+lock: '!inline f/main_db/initialize/graph_db.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    DELETE_ALL:
+      type: boolean
+      description: ''
+      default: false
+    graph_name:
+      type: string
+      description: ''
+      default: goodwatch
+      originalType: string
+  required: []

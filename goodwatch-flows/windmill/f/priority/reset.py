@@ -12,22 +12,22 @@ def main(next_ids: dict):
 
     pg = init_postgres()
     pg_cursor = pg.cursor()
-    reset_priority(pg=pg, pg_cursor=pg_cursor, type="movie", tmdb_ids=ids.movie_ids)
-    reset_priority(pg=pg, pg_cursor=pg_cursor, type="tv", tmdb_ids=ids.tv_ids)
+    reset_priority(pg, pg_cursor, "movie", ids.movie_ids)
+    reset_priority(pg, pg_cursor, "tv", ids.tv_ids)
     pg.close()
 
 
-def reset_priority(
-    pg, pg_cursor, type: Union[Literal["movie"], Literal["tv"]], tmdb_ids
-):
+def reset_priority(pg, pg_cursor, type: Union[Literal["movie"], Literal["tv"]], tmdb_ids: list[int]):
     query = f"""
-    UPDATE priority_queue_{type}
-    SET priority = 0,
-        reset_at = NOW()
-    WHERE tmdb_id = ANY(%s::int[]);
+        INSERT INTO priority_queue_{type} (tmdb_id, priority, created_at, updated_at, reset_at)
+        SELECT UNNEST(%s::int[]), 0, NOW(), NOW(), NOW()
+        ON CONFLICT (tmdb_id)
+        DO UPDATE 
+            SET priority = EXCLUDED.priority,
+                updated_at = EXCLUDED.updated_at,
+                reset_at = NOW()
     """
-
     pg_cursor.execute(query, (tmdb_ids,))
     pg.commit()
 
-    print(f"Reset priority for {pg_cursor.rowcount} {type} rows")
+    print(f"Upserted priority=0 for {pg_cursor.rowcount} {type} rows")

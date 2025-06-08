@@ -448,7 +448,12 @@ def copy_tv(pg, query_selector: dict = {}):
             f"executing batch from {start} to {start + len(aggregated_data)} tv shows"
         )
         query = generate_upsert_query(table_name, columns)
-        execute_values(pg_cursor, query, aggregated_data)
+
+        unique_rows = {}
+        for row in aggregated_data:
+            tmdb_id = row[0]
+            unique_rows[tmdb_id] = row
+        execute_values(pg_cursor, query, list(unique_rows.values()))
 
         try:
             pg.commit()

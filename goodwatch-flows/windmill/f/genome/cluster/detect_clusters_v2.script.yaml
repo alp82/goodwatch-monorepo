@@ -1,0 +1,35 @@
+summary: ''
+description: ''
+lock: '!inline f/genome/cluster/detect_clusters_v2.script.lock'
+concurrency_time_window_s: 0
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    batch_size:
+      type: integer
+      description: ''
+      default: 1000
+    distance_threshold:
+      type: number
+      description: ''
+      default: 0.25
+    max_cluster_size:
+      type: integer
+      description: ''
+      default: 10000
+    max_tags:
+      type: integer
+      description: ''
+      default: 1000000
+    return_multiple:
+      type: boolean
+      description: ''
+      default: true
+    verbose:
+      type: boolean
+      description: ''
+      default: true
+  required: []
+tag: highperf

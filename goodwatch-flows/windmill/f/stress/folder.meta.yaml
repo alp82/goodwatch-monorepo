@@ -1,0 +1,6 @@
+summary: ''
+display_name: stress
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp

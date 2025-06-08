@@ -44,6 +44,11 @@ DNA redesign
     
 ---   
 
+Fingerprint
+    Genre boxes with 4 most suitable scores
+
+---   
+
 upcoming titles: future release_date
  
 ---    
@@ -65,6 +70,10 @@ details
         https://replit.com/@alp82/EntertainmentDNA
         https://replit.com/@alp82/MediaMosaic
 
+    swiper optimizations
+        for image/video gallery?
+        https://www.reactbits.dev/components/card-swap
+    
     header with icons: [calendar] year [clock] duration [globe] countries
     
     content advisory: alert style box in red
@@ -160,6 +169,16 @@ details streaming
 
 better og images
     https://gemini.google.com/app/8f9832dc2c62d13a
+
+---
+
+taste matching (logged in users only - or a teaser)
+    you both like ABC
+
+recommendation engine
+    https://gemini.google.com/app/1729ce5f88ada2ef
+    https://keras.io/
+    tiktok: https://github.com/bytedance/monolith
 
 ---
 
@@ -619,15 +638,6 @@ lead generation
 
 ---
 
-taste matching (logged in users only - or a teaser)
-    you both like ABC
-
-recommendation engine
-    https://keras.io/
-    tiktok: https://github.com/bytedance/monolith
-
----
-
 swiper
     edgeSwipeDetection?
     mousewheel
@@ -940,6 +950,11 @@ details: releases
 
 ---
 
+discord growth:
+    https://medium.com/@jeremiahnorthcutt/the-ultimate-list-of-discord-listing-websites-to-gain-members-a5a80cbb1841
+
+---
+
 user actions
     new for shows: watching / completed
 
@@ -1192,6 +1207,10 @@ launch / promo
     similarsites
     slant
     Uneed
+    Peerlist
+    https://www.tinystartups.com/
+    https://thehiveindex.com/
+    https://indexbug.com/articles/directoriesdb
     https://listd.in/
     https://docs.google.com/spreadsheets/u/0/d/1XNBDtreaotmXJRD3JOVdcAgRD9rO1GZjbjbrr1fHLMM/htmlview?pli=1 
     https://growstartup.co/directory-list/

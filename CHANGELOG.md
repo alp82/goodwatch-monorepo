@@ -2,7 +2,16 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.6.6] 2025-04-xx
+## [0.6.7] 2025-06-xx
+
+### Added
+
+### Changed
+* Completely redesigned Details page: Better accessibility and usability
+
+### Fixed
+
+## [0.6.6] 2025-05-13
 
 ### Added
 

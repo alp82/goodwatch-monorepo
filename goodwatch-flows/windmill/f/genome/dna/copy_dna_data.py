@@ -1,151 +1,228 @@
 from collections import defaultdict
-from psycopg2.extras import execute_values
+from io import StringIO
+import csv
 from f.db.postgres import init_postgres
 
-BATCH_SIZE = 20000
+def get_clusters(pg_cursor):
+    print("Fetching cluster mappings...")
+    pg_cursor.execute("""
+        SELECT dna_id, cluster_id 
+        FROM dna_clusters
+        WHERE dna_id != cluster_id
+    """)
+    clusters = {row[0]: row[1] for row in pg_cursor.fetchall()}
+    print(f"Found {len(clusters):,} cluster mappings")
+    return clusters
 
+def load_all_data(pg, media_type):
+    print(f"\nLoading all {media_type} data...")
+    dna_entries = 0
+    dna_map = defaultdict(lambda: {
+        "count_all": 0, 
+        "count_movies": 0, 
+        "count_tv": 0, 
+        "movie_ids": set(), 
+        "tv_ids": set()
+    })
 
-def reset_dna_table(pg_cursor):
-    reset_sql = """
-    UPDATE dna
-    SET count_all = 0,
-        count_movies = 0,
-        count_tv = 0,
-        movie_tmdb_id = '{}',
-        tv_tmdb_id = '{}',
-        updated_at = CURRENT_TIMESTAMP;
-    """
-    pg_cursor.execute(reset_sql)
+    with pg.cursor() as cursor:
+        table = "movies" if media_type == "movie" else "tv"
+        cursor.execute(f"""
+            SELECT tmdb_id, dna
+            FROM {table}
+            ORDER BY tmdb_id
+        """)
+        
+        data = cursor.fetchall()
+        processed = len(data)
 
+        for tmdb_id, dna_data in data:
+            for category, values in dna_data.items():
+                for value in values:
+                    dna_entries += 1
+                    entry = dna_map[(category, value)]
+                    entry["count_all"] += 1
+                    if media_type == "movie":
+                        entry["count_movies"] += 1
+                        entry["movie_ids"].add(tmdb_id)
+                    else:
+                        entry["count_tv"] += 1
+                        entry["tv_ids"].add(tmdb_id)
 
-def get_next_batch_of_dna_data(pg_cursor, media_type, last_id):
-    table_name = "movies" if media_type == "movie" else "tv"
-    fetch_dna_sql = f"""
-    SELECT tmdb_id, dna
-    FROM {table_name}
-    WHERE tmdb_id > %s
-    ORDER BY tmdb_id
-    LIMIT %s;
-    """
-    pg_cursor.execute(fetch_dna_sql, (last_id, BATCH_SIZE))
-    return pg_cursor.fetchall()
+        print(f"Processed {processed:,} {media_type}s, found {dna_entries:,} DNA entries")
 
+    return dna_map, {"processed": processed, "dna_entries": dna_entries}
 
-def prepare_dna_inserts(data, media_type):
-    dna_inserts = []
-    count_all_increment = defaultdict(int)
-    count_movies_increment = defaultdict(int)
-    count_tv_increment = defaultdict(int)
-    tmdb_id_list = defaultdict(lambda: {"movie": [], "tv": []})
+def setup_temp_table(pg):
+    print("\nCreating temporary table...")
+    with pg.cursor() as cursor:
+        cursor.execute("DROP TABLE IF EXISTS dna_temp;")
+        
+        cursor.execute("""
+        CREATE TABLE dna_temp (
+            id SERIAL PRIMARY KEY,
+            category VARCHAR(255),
+            label TEXT,
+            count_all INTEGER,
+            count_movies INTEGER,
+            count_tv INTEGER,
+            movie_tmdb_id INTEGER[],
+            tv_tmdb_id INTEGER[],
+            cluster_id INTEGER
+        );
+        """)
+    pg.commit()
 
-    for tmdb_id, dna_data in data:
-        for category, values in dna_data.items():
-            for value in values:
-                key = (category, value)
-                count_all_increment[key] += 1
-                if media_type == "movie":
-                    count_movies_increment[key] += 1
-                else:
-                    count_tv_increment[key] += 1
-                tmdb_id_list[key][media_type].append(tmdb_id)
+def write_to_temp_table(pg, combined_data, clusters):
+    print("Preparing data for bulk load...")
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    row_count = 0
 
-    for (category, value), count_all in count_all_increment.items():
-        count_movies = count_movies_increment[(category, value)]
-        count_tv = count_tv_increment[(category, value)]
-        movie_tmdb_ids = tmdb_id_list[(category, value)]["movie"]
-        tv_tmdb_ids = tmdb_id_list[(category, value)]["tv"]
-        dna_inserts.append(
-            (
-                category,
-                value,
-                count_all,
-                count_movies,
-                count_tv,
-                movie_tmdb_ids,
-                tv_tmdb_ids,
-            )
+    # First, get existing DNA IDs
+    dna_ids = {}
+    with pg.cursor() as cursor:
+        cursor.execute("SELECT category, label, id FROM dna")
+        for category, label, dna_id in cursor.fetchall():
+            dna_ids[(category, label)] = dna_id
+
+    for (category, label), data in combined_data.items():
+        # Look up the DNA ID and its potential cluster
+        dna_id = dna_ids.get((category, label))
+        cluster_id = clusters.get(dna_id) if dna_id else None
+        
+        writer.writerow([
+            category,
+            label,
+            data["count_all"],
+            data["count_movies"],
+            data["count_tv"],
+            "{" + ",".join(map(str, data["movie_ids"])) + "}",
+            "{" + ",".join(map(str, data["tv_ids"])) + "}",
+            cluster_id
+        ])
+        row_count += 1
+
+    print(f"Prepared {row_count:,} rows for bulk load")
+    
+    output.seek(0)
+    
+    print("Performing bulk load to temp table...")
+    with pg.cursor() as cursor:
+        cursor.copy_expert(
+            "COPY dna_temp (category, label, count_all, count_movies, count_tv, movie_tmdb_id, tv_tmdb_id, cluster_id) FROM STDIN WITH (FORMAT csv)",
+            output
         )
+    pg.commit()
 
-    return dna_inserts
+def merge_in_batches(pg, batch_size=1000):
+    print("\nMerging data in batches...")
+    processed = 0
+    
+    while True:
+        with pg.cursor() as cursor:
+            cursor.execute("""
+            WITH batch AS (
+                SELECT *
+                FROM dna_temp
+                WHERE id > %s
+                ORDER BY id
+                LIMIT %s
+            )
+            INSERT INTO dna (
+                category, label,
+                count_all, count_movies, count_tv,
+                movie_tmdb_id, tv_tmdb_id,
+                cluster_id, updated_at
+            )
+            SELECT 
+                category, label,
+                count_all, count_movies, count_tv,
+                movie_tmdb_id, tv_tmdb_id,
+                cluster_id, CURRENT_TIMESTAMP
+            FROM batch
+            ON CONFLICT (category, label) DO UPDATE SET
+                count_all = EXCLUDED.count_all,
+                count_movies = EXCLUDED.count_movies,
+                count_tv = EXCLUDED.count_tv,
+                movie_tmdb_id = EXCLUDED.movie_tmdb_id,
+                tv_tmdb_id = EXCLUDED.tv_tmdb_id,
+                cluster_id = EXCLUDED.cluster_id,
+                updated_at = CURRENT_TIMESTAMP
+            RETURNING 1;
+            """, (processed, batch_size))
+            
+            count = cursor.rowcount
+            if count == 0:
+                break
+                
+            processed += count
+            pg.commit()
+            print(f"Merged {processed:,} rows")
 
+def cleanup_temp_table(pg):
+    print("\nCleaning up temporary table...")
+    with pg.cursor() as cursor:
+        cursor.execute("DROP TABLE IF EXISTS dna_temp;")
+    pg.commit()
 
-def batch_upsert_dna(pg_cursor, dna_inserts):
-    upsert_sql = """
-    INSERT INTO dna (category, label, count_all, count_movies, count_tv, movie_tmdb_id, tv_tmdb_id)
-    VALUES %s
-    ON CONFLICT (category, label)
-    DO UPDATE SET
-        count_all = dna.count_all + EXCLUDED.count_all,
-        count_movies = dna.count_movies + EXCLUDED.count_movies,
-        count_tv = dna.count_tv + EXCLUDED.count_tv,
-        movie_tmdb_id = array_cat(dna.movie_tmdb_id, EXCLUDED.movie_tmdb_id),
-        tv_tmdb_id = array_cat(dna.tv_tmdb_id, EXCLUDED.tv_tmdb_id),
-        updated_at = CURRENT_TIMESTAMP;
-    """
-    execute_values(pg_cursor, upsert_sql, dna_inserts)
-
+def cleanup_zero_counts(pg):
+    print("\nRemoving entries with zero counts...")
+    with pg.cursor() as cursor:
+        cursor.execute("DELETE FROM dna WHERE count_all = 0")
+        deleted_count = cursor.rowcount
+        print(f"Removed {deleted_count:,} zero-count entries")
+    pg.commit()
 
 def copy_dna_data(pg):
-    pg_cursor = pg.cursor()
-
     try:
-        # Begin transaction
-        pg_cursor.execute("BEGIN;")
+        with pg.cursor() as cursor:
+            clusters = get_clusters(cursor)
         
-        # Step 0: Reset all counts and tmdb_id arrays at the beginning
-        print("Resetting dna table counts and tmdb_id arrays...")
-        reset_dna_table(pg_cursor)
-
-        media_types = ["movie", "tv"]
-        counts = {}
-
-        for media_type in media_types:
-            print(f"Processing {media_type}...")
-            start = 0
-            last_id = 0  # Start from the beginning
-
-            while True:
-                # Step 1: Fetch the next batch of dna data
-                dna_data = get_next_batch_of_dna_data(pg_cursor, media_type, last_id)
-                if not dna_data:
-                    print(f"No more data to process for {media_type}.")
-                    counts[media_type] = start
-                    break
-
-                end = start + len(dna_data)
-                print(f"Processing {media_type} {start} to {end} records...")
-                start = end
-
-                # Step 2: Prepare the batch of dna inserts
-                dna_inserts = prepare_dna_inserts(dna_data, media_type)
-
-                # Step 3: Execute the batch upsert
-                batch_upsert_dna(pg_cursor, dna_inserts)
-
-                # Update the last_id for the next iteration
-                last_id = dna_data[-1][0]
-
-        # Commit transaction after all data processing
-        pg_cursor.execute("COMMIT;")
+        combined_data = defaultdict(lambda: {
+            "count_all": 0, 
+            "count_movies": 0, 
+            "count_tv": 0, 
+            "movie_ids": set(), 
+            "tv_ids": set()
+        })
         
-    except Exception as e:
-        print("Error encountered, rolling back transaction:", e)
-        pg_cursor.execute("ROLLBACK;")
-        raise  # Re-raise the exception after rollback
-    
+        stats = {}
+        for media_type in ["movie", "tv"]:
+            data, media_stats = load_all_data(pg, media_type)
+            stats[media_type] = media_stats
+            
+            for key, value in data.items():
+                entry = combined_data[key]
+                entry["count_all"] += value["count_all"]
+                entry["count_movies"] += value["count_movies"]
+                entry["count_tv"] += value["count_tv"]
+                entry["movie_ids"].update(value["movie_ids"])
+                entry["tv_ids"].update(value["tv_ids"])
+        
+        setup_temp_table(pg)
+        write_to_temp_table(pg, combined_data, clusters)
+        
+        merge_in_batches(pg)
+        cleanup_zero_counts(pg)
+        
+        total_dna_entries = sum(s["dna_entries"] for s in stats.values())
+        print("\nFinal totals:")
+        print(f"Movies processed: {stats['movie']['processed']:,}")
+        print(f"TV shows processed: {stats['tv']['processed']:,}")
+        print(f"Total DNA entries processed: {total_dna_entries:,}")
+        
+        return {
+            "total_counts": {k: v["processed"] for k, v in stats.items()},
+            "total_dna_entries": total_dna_entries
+        }
     finally:
-        pg_cursor.close()
-    return {"total_counts": counts}
-
+        cleanup_temp_table(pg)
 
 def main():
-    pg = init_postgres()
-    result = copy_dna_data(pg)
-    pg.close()
-    return result
-
+    with init_postgres() as pg:
+        return copy_dna_data(pg)
 
 if __name__ == "__main__":
-    pg = init_postgres()
     main()
-    pg.close()

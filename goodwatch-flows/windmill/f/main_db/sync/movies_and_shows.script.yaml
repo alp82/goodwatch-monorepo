@@ -1,0 +1,29 @@
+summary: Copy movies and shows from MongoDB to ArangoDB
+description: ''
+lock: '!inline f/main_db/sync/movies_and_shows.script.lock'
+concurrency_time_window_s: 0
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    movie_ids:
+      type: array
+      description: ''
+      default: []
+      items:
+        type: string
+      originalType: 'string[]'
+    show_ids:
+      type: array
+      description: ''
+      default: []
+      items:
+        type: string
+      originalType: 'string[]'
+    skip_movies:
+      type: boolean
+      description: ''
+      default: false
+  required: []
+tag: highperf
