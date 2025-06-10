@@ -11,8 +11,6 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ADMIN_PASS}
       - MONGO_INITDB_DATABASE=goodwatch
-    extra_hosts:
-      - "mongo:10.0.0.17"
     ports:
       - "28017:28017"
     volumes:
@@ -38,6 +36,7 @@ services:
   mongoinit:
     container_name: mongoinit
     image: mongo:8
+    network_mode: "host"
     restart: no
     depends_on:
       mongo:
@@ -45,32 +44,37 @@ services:
     command: >
       bash -c "
         set -e
+        echo '--- Waiting for mongo to be ready...'
+        until mongosh --host localhost --port 28017 --eval 'quit(0)'; do
+          sleep 2
+        done
       
-        echo '--- Mongo is ready. Initiating single-node replica set...'
-        mongosh --host mongo --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
+        echo '--- Initiating single-node replica set...'
+        # --- THIS COMMAND IS NOW CORRECTLY AUTHENTICATED ---
+        mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
           rs.initiate({
             _id: \"rs0\",
-            members: [{ _id: 0, host: \"mongo:28017\" }]
+            members: [{ _id: 0, host: \"10.0.0.17:28017\" }]
           });
         '
       
-        echo '--- Waiting 3 seconds for replica set to stabilize...'
-        sleep 3
-      
+        echo '--- Waiting 5 seconds for replica set to stabilize...'
+        sleep 5
+
         echo '--- Waiting for node to become PRIMARY...'
-        until mongosh --host mongo --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval 'rs.isMaster().ismaster' | grep -q true; do
+        until mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval 'rs.isMaster().ismaster' | grep -q true; do
             echo 'Still waiting for PRIMARY status...'
             sleep 2
         done
       
         echo '--- PRIMARY status achieved. Adding secondary nodes to the replica set...'
-        mongosh --host mongo --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
+        mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
           rs.add(\"10.0.0.18:28017\");
           rs.add(\"10.0.0.19:28017\");
         '
       
         echo '--- Creating application user...'
-        mongosh --host mongo --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
+        mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
           db.getSiblingDB(\"goodwatch\").createUser({
             user: \"goodwatch\",
             pwd: \"${MONGO_GOODWATCH_PASS}\",
