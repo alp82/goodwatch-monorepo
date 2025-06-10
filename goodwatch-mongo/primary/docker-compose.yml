@@ -16,7 +16,8 @@ services:
       - mongodb:/data/db
       - ./mongodb-keyfile:/data/mongodb-keyfile
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --port 28017 goodwatch --quiet
+      test: |
+        mongosh --host 127.0.0.1 --port 28017 --eval 'db.runCommand("ping").ok' --quiet
       interval: 10s
       timeout: 10s
       retries: 5
@@ -33,7 +34,8 @@ services:
     image: mongo:7
     restart: no
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     command: >
       mongosh --host mongo:28017 --eval 
       '
