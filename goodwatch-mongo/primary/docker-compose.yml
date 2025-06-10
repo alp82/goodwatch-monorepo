@@ -4,7 +4,7 @@ services:
   mongo:
     container_name: mongo
     hostname: mongo
-    image: mongo:7
+    image: mongo:8
     restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
@@ -36,7 +36,7 @@ services:
 
   mongoinit:
     container_name: mongoinit
-    image: mongo:7
+    image: mongo:8
     restart: no
     depends_on:
       mongo:
