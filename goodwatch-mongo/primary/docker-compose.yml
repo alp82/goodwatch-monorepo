@@ -11,8 +11,6 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ADMIN_PASS}
       - MONGO_INITDB_DATABASE=goodwatch
-    extra_hosts:
-      - "mongo:10.0.0.17"
     ports:
       - "28017:28017"
     volumes:
@@ -38,7 +36,6 @@ services:
   mongoinit:
     container_name: mongoinit
     image: mongo:8
-    network_mode: "host"
     restart: no
     depends_on:
       mongo:

@@ -5,7 +5,6 @@ services:
     container_name: mongo
     hostname: mongo
     image: mongo:8
-    network_mode: "host"
     restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
