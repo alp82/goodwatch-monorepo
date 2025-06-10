@@ -11,6 +11,8 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ADMIN_PASS}
       - MONGO_INITDB_DATABASE=goodwatch
+    extra_hosts:
+      - "mongo:10.0.0.17"
     ports:
       - "28017:28017"
     volumes:
@@ -52,8 +54,8 @@ services:
           });
         '
       
-        echo '--- Waiting 5 seconds for replica set to stabilize...'
-        sleep 5
+        echo '--- Waiting 3 seconds for replica set to stabilize...'
+        sleep 3
       
         echo '--- Waiting for node to become PRIMARY...'
         until mongosh --host mongo --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval 'rs.isMaster().ismaster' | grep -q true; do
