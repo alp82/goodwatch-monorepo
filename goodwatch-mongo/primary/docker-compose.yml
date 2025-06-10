@@ -48,7 +48,7 @@ services:
         mongosh --host mongo --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
           rs.initiate({
             _id: \"rs0\",
-            members: [{ _id: 0, host: \"10.0.0.17:28017\" }]
+            members: [{ _id: 0, host: \"mongo:28017\" }]
           });
         '
       
