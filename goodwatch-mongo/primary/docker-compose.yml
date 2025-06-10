@@ -5,6 +5,7 @@ services:
     container_name: mongo
     hostname: mongo
     image: mongo:8
+    network_mode: "host"
     restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
@@ -37,55 +38,59 @@ services:
   mongoinit:
     container_name: mongoinit
     image: mongo:8
+    network_mode: "host"
     restart: no
     depends_on:
       mongo:
         condition: service_healthy
     command: >
-      mongosh --host mongo:28017 --eval 
+      bash -c '
+        # Step 1: Wait for the local mongod to be ready.
+        echo "Waiting for mongo to be ready at localhost:28017..."
+        until mongosh --host localhost --port 28017 --eval "db.adminCommand(\"ping\")"; do
+          sleep 2
+        done
+      
+        # Step 2: Initiate a single-node replica set so it can elect itself primary.
+        # The user & password are used here to create the initial root user for the replica set.
+        echo "Mongo is ready. Initiating a single-node replica set..."
+        mongosh --host localhost --port 28017 -u $$MONGO_ADMIN_PASS -p $$MONGO_ADMIN_PASS --authenticationDatabase admin --eval ''
+          rs.initiate({
+            _id: "rs0",
+            members: [{ _id: 0, host: "10.0.0.17:28017" }]
+          });
+        ''
+      
+        # Step 3: Wait for this node to become PRIMARY.
+        echo "Waiting for node to become PRIMARY..."
+        until mongosh --host localhost --port 28017 -u $$MONGO_ADMIN_PASS -p $$MONGO_ADMIN_PASS --authenticationDatabase admin --eval "rs.isMaster().ismaster" | grep -q "true"; do
+            echo "Still waiting..."
+            sleep 2
+        done
+      
+        # Step 4: Add the other nodes to the replica set.
+        echo "Node is PRIMARY. Adding secondary members..."
+        mongosh --host localhost --port 28017 -u $$MONGO_ADMIN_PASS -p $$MONGO_ADMIN_PASS --authenticationDatabase admin --eval ''
+          rs.add("10.0.0.18:28017");
+          rs.add("10.0.0.19:28017");
+        ''
+      
+        # Step 5: Create the goodwatch user.
+        # We do this last, when the replica set is fully configured.
+        echo "Creating application user..."
+        mongosh --host localhost --port 28017 -u $$MONGO_ADMIN_PASS -p $$MONGO_ADMIN_PASS --authenticationDatabase admin --eval ''
+          db.getSiblingDB("goodwatch").createUser({
+            user: "goodwatch",
+            pwd: process.env.MONGO_GOODWATCH_PASS,
+            roles: [
+              { role: "readWrite", db: "goodwatch" },
+              { role: "dbAdmin", db: "goodwatch" }
+            ]
+          });
+        ''
+      
+        echo "SUCCESS! Replica set is configured and user is created."
       '
-      db = (new Mongo("mongo:28017")).getDB("admin");
-      
-      db.auth("admin", "${MONGO_ADMIN_PASS}");
-      
-      config = {
-        "_id": "rs0",
-        "members": [
-          {
-            "_id": 0,
-            "host": "10.0.0.17:28017",
-            "priority": 1
-          },
-          {
-            "_id": 1,
-            "host": "10.0.0.18:28017",
-            "priority": 0.5
-          },
-          {
-            "_id": 2,
-            "host": "10.0.0.19:28017",
-            "priority": 0.5
-          }
-        ]
-      };
-      
-      rs.initiate(config);
-      
-      while (!db.isMaster().ismaster) {
-        sleep(1000);
-      }
-
-      db = db.getSiblingDB("goodwatch");
-      
-      db.createUser({
-        user: "goodwatch",
-        pwd: "${MONGO_GOODWATCH_PASS}",
-        roles: [
-          { role: "readWrite", db: "goodwatch" },
-          { role: "dbAdmin", db: "goodwatch" }
-        ]
-      });
-      '      
 
 volumes:
   mongodb:
