@@ -10,14 +10,15 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ADMIN_PASS}
       - MONGO_INITDB_DATABASE=goodwatch
+    extra_hosts:
+      - "mongo:10.0.0.17"
     ports:
       - "28017:28017"
     volumes:
       - mongodb:/data/db
       - ./mongodb-keyfile:/data/mongodb-keyfile
     healthcheck:
-      test: |
-        mongosh --host 127.0.0.1 --port 28017 --eval 'db.runCommand("ping").ok' --quiet
+      test: ["CMD-SHELL", "mongosh --port 28017 --eval 'db.runCommand(\"ping\").ok' --quiet"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -29,7 +30,6 @@ services:
         max-file: "10"
     command: >
       --replSet rs0 
-      --replSetHost 10.0.0.17:28017
       --bind_ip_all 
       --port 28017 
       --keyFile /data/mongodb-keyfile 
