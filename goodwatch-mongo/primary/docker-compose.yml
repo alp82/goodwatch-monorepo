@@ -29,6 +29,7 @@ services:
     command: --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
   mongoinit:
+    container_name: mongoinit
     image: mongo:7
     restart: no
     depends_on:
