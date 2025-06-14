@@ -67,6 +67,7 @@ services:
       --tcp.reuse-address=true
       --tcp.backlog-size=512
       --server.maximal-queue-size=8192
+      --experimental-vector-index
 
   coordinator:
     image: arangodb/arangodb:${ARANGO_VERSION}

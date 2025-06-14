@@ -2,12 +2,14 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.6.7] 2025-06-xx
+## [0.7.0] 2025-06-xx
+
+Minor Release: **New Database and DNA Overhaul**
 
 ### Added
+* completely new DNA pipeline
 
 ### Changed
-* Completely redesigned Details page: Better accessibility and usability
 
 ### Fixed
 

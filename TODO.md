@@ -24,24 +24,7 @@ DB optimization
     separate vector db?
     https://qdrant.tech/benchmarks/#filtered-results
 
----    
-
-DNA redesign
-    alternative to huggingface
-    sentence for each category -> vectorize
-    Franchise
-    Anime yes/no
-    place & time: scale to determine if only one location or multiple
-    
-    https://chatgpt.com/c/68259c99-b648-8001-96c9-01462af1d857 (final)
-    https://gemini.google.com/app/e69c32fe84ae931d (examples)
-    https://gemini.google.com/app/f6eb0c336b5ed218 (v2)
-    ---
-    https://gemini.google.com/app/bc0eda7592525891 (okay)
-    https://gemini.google.com/app/be7d58cc7d4b0380 (bad)
-    https://gemini.google.com/app/939d66e003582351 (missing tags)
-    https://gemini.google.com/app/38fd8b42c3385597 (missing scales)
-    
+   
 ---   
 
 Fingerprint
@@ -63,6 +46,9 @@ discover:
 ---    
 
 details
+    Sparkle for hover state
+        Trailer button
+
     better SEO
         https://gemini.google.com/app/14b23291fcb31f3a
 
@@ -134,6 +120,11 @@ search
 resources
     https://github.com/quickwit-oss/tantivy
     https://openpipe.ai/blog/pii-redact
+
+---
+
+additional datasets
+    https://www.kaggle.com/datasets?search=movie
 
 ---
 
@@ -591,6 +582,23 @@ analytics
     https://umami.is/
     https://clarity.microsoft.com/
 
+---    
+
+DNA addition
+    sentence for each category -> vectorize
+    Franchise
+    place & time: scale to determine if only one location or multiple
+
+    old chats:
+        https://chatgpt.com/c/68259c99-b648-8001-96c9-01462af1d857 (final)
+        https://gemini.google.com/app/e69c32fe84ae931d (examples)
+        https://gemini.google.com/app/f6eb0c336b5ed218 (v2)
+        ---
+        https://gemini.google.com/app/bc0eda7592525891 (okay)
+        https://gemini.google.com/app/be7d58cc7d4b0380 (bad)
+        https://gemini.google.com/app/939d66e003582351 (missing tags)
+        https://gemini.google.com/app/38fd8b42c3385597 (missing scales)
+        
 ---
 
 ai flow
@@ -621,6 +629,7 @@ twitter gw
 ---
 
 scraper solutions
+    https://github.com/autoscrape-labs/pydoll
     https://scrapoxy.io/
     https://github.com/scrapoxy/scrapoxy
     https://www.firecrawl.dev/
@@ -655,6 +664,13 @@ delete explore page and BE
 
 invite link
     badge
+
+---
+
+incubator/accelerator
+    ycombinator
+    Antler
+    TechStars
 
 ---
 
@@ -861,6 +877,9 @@ data flows ignore list:
     no title
 
 ---
+
+knowledge graph
+    https://github.com/getzep/graphiti
 
 graph db
     https://age.apache.org/
@@ -1194,6 +1213,37 @@ error monitoring
 launch strategy
     https://www.notion.so/ScreenSpace-2-0-Launch-Support-1831647101ea80858e7ce3ee766ba7e6
 
+reddit
+    1. r/SaaS
+    2. r/startups
+    3. r/Entrepreneur
+    4. r/startup
+    5. r/ProductMgt
+    6. r/sweatystartup
+    7. r/smallbusiness
+    8. r/RoastMyStartup
+    9. r/SideProject
+    10. r/indiebiz
+    11. r/startups_promotion
+    12. r/thesidehustle
+    13. r/growmybusiness
+    14. r/productivity
+    15. r/InternetIsBeautiful
+    16. r/Webdev
+    17. r/programming
+    18. r/Webdesign
+    19. r/EntrepreneurRideAlong
+    20. r/Plugyourproduct
+    21. r/MadeThis
+    22. r/AlphaandBetausers
+    23. r/advancedentrepreneur
+    24. r/design_critiques
+    25. r/Coupons
+    26. r/LadyBusiness
+    27. r/AskReddit
+    28. r/TodayILearned
+    29. r/WantToLearn
+
 launch / promo
     alternativeto
     BetaList
@@ -1208,6 +1258,8 @@ launch / promo
     slant
     Uneed
     Peerlist
+    https://solopush.com/
+    https://open-launch.com/
     https://www.tinystartups.com/
     https://thehiveindex.com/
     https://indexbug.com/articles/directoriesdb
