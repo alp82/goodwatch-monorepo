@@ -36,6 +36,7 @@ services:
       --tcp.backlog-size=512
       --server.maximal-queue-size=8192
       --experimental-vector-index
+      --experimental-vector-index=true
 
   coordinator:
     image: arangodb/arangodb:${ARANGO_VERSION}
@@ -66,6 +67,7 @@ services:
       --tcp.reuse-address=true
       --tcp.backlog-size=256
       --server.maximal-queue-size=8192
+      --experimental-vector-index=true
 
 volumes:
   dbserver_data:
