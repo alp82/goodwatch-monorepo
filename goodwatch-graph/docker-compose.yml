@@ -17,7 +17,7 @@ services:
       - ARANGO_LICENSE_KEY=accept
       - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
     command: >
-      arangod
+      arangodb
       --starter.data-dir=/data
       --starter.address=${SELF_IP}
       --starter.join=${STARTER_JOIN}
