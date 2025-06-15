@@ -26,7 +26,6 @@ services:
       --server.storage-engine=rocksdb
       --all.log.level=INFO
       --all.tcp.reuse-address=true
-      --monitoring.prometheus.endpoint=tcp://0.0.0.0:9101
 
       --dbservers.rocksdb.block-cache-size=11g
       --dbservers.experimental-vector-index=true
