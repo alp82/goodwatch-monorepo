@@ -21,7 +21,7 @@ services:
       --starter.data-dir=/data
       --starter.address=${SELF_IP}
       --starter.join=${STARTER_JOIN}
-      --starter.jwt-secret-keyfile=/jwtsecret
+      --auth.jwt-secret=jwtsecret
       
       --server.storage-engine=rocksdb
       --all.log.level=INFO
