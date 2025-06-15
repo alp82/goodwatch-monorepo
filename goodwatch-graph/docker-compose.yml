@@ -1,0 +1,51 @@
+services:
+  arangodb:
+    image: arangodb/arangodb:${ARANGO_VERSION}
+    container_name: arango_node
+    restart: always
+    mem_limit: 23g
+    memswap_limit: 23g
+    ports:
+      - "${SELF_IP}:8529:8529"  # UI and for your applications
+      - "${SELF_IP}:8530:8530"  # DBServer communication
+      - "${SELF_IP}:8531:8531"  # Agent communication
+      - "${SELF_IP}:9101:9101"  # Prometheus
+    volumes:
+      - arango_data:/data
+      - ./jwtsecret:/jwtsecret:ro
+    environment:
+      - ARANGO_LICENSE_KEY=accept
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      arangod
+      # --- Starter Settings ---
+      --starter.data-dir=/data
+      --starter.address=${SELF_IP}
+      --starter.join=${STARTER_JOIN}
+      --starter.jwt-secret-keyfile=/jwtsecret
+      
+      # --- Global Server Settings ---
+      --server.storage-engine=rocksdb
+      --all.log.level=INFO
+      --all.tcp.reuse-address=true
+      --monitoring.prometheus.endpoint=tcp://0.0.0.0:9101
+
+      # --- DBServer Specific Settings ---
+      #--dbservers.server.maximal-threads=256
+      #--dbservers.tcp.backlog-size=512
+      #--dbservers.server.maximal-queue-size=8192
+      --dbservers.rocksdb.block-cache-size=11g
+      --dbservers.experimental-vector-index=true
+
+      # --- Coordinator Specific Settings ---
+      #--coordinators.server.maximal-threads=128
+      #--coordinators.tcp.backlog-size=256
+      #--coordinators.server.maximal-queue-size=8192
+      --coordinators.experimental-vector-index=true
+      
+      # --- Agent Specific Settings ---
+      #--agents.server.maximal-threads=64
+      #--agents.log.level=DEBUG
+
+volumes:
+  arango_data:
