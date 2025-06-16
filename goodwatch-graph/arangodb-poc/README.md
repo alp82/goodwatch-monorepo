@@ -1,76 +1,54 @@
 # Example Queries
 
-Case insensitive full text analyzer in arangosh:
-```javascript
-db._useDatabase("goodwatch2");
-var analyzers = require("@arangodb/analyzers");
-var analyzerName = "lowercase_norm";
-analyzers.remove(analyzerName, true);
-var definition = {
-  "locale": "en.utf-8",
-  "case": "lower",
-  "accent": false
-}
-var features = []
-analyzers.save(analyzerName, "norm", definition, features);
+Get most popular movies with DNA data:
+```aql
+FOR movie IN movies
+    FILTER movie.essence_text != null
+    SORT movie.popularity DESC
+    LIMIT 10
+    RETURN movie
 ```
 
-View for full text search:
-```json
-{
-  "writebufferSizeMax": 33554432,
-  "id": "50475738",
-  "storedValues": [],
-  "name": "movie_search",
-  "type": "arangosearch",
-  "consolidationPolicy": {
-    "type": "tier",
-    "segmentsBytesFloor": 2097152,
-    "segmentsBytesMax": 5368709120,
-    "segmentsMax": 10,
-    "segmentsMin": 1,
-    "minScore": 0
-  },
-  "writebufferActive": 0,
-  "links": {
-    "movies": {
-      "fields": {
-        "title": {
-          "analyzers": ["lowercase_norm"]
-        }
-      },
-      "includeAllFields": false,
-      "storeValues": "none",
-      "trackListPositions": false
-    },
-    "alternative_titles": {
-      "fields": {
-        "title": {
-          "analyzers": ["lowercase_norm"]
-        }
-      },
-      "includeAllFields": false,
-      "storeValues": "none",
-      "trackListPositions": false
+Similar to star wars by fingerprint:
+```aql
+LET movie_key = "11"
+
+LET target_movie_vector = (
+    FOR movie IN movies
+        FILTER movie._key == movie_key
+        LIMIT 1
+        RETURN movie.vector_fingerprint
+)[0]
+
+FOR movie IN movies
+    FILTER movie.essence_text != null
+    FILTER movie._key != movie_key
+    LET similarity = COSINE_SIMILARITY(target_movie_vector, movie.vector_fingerprint)
+    SORT similarity DESC
+    LIMIT 10
+    RETURN {
+        _key: movie._key,
+        title: movie.title,
+        similarity_score: similarity
     }
-  },
-  "commitIntervalMsec": 1000,
-  "consolidationIntervalMsec": 1000,
-  "globallyUniqueId": "h1EF97D6549F7/50475738",
-  "cleanupIntervalStep": 2,
-  "primarySort": [],
-  "primarySortCompression": "lz4",
-  "writebufferIdle": 64
-}
 ```
+
+
+
+
+
+
+
+## -------------- OLD --------------
+
 
 Search for movies in all languages:
 ```aql
 LET search_input = LOWER("%loade%")
 
 LET all_search_matches = (
-    FOR result IN movie_search
-        SEARCH ANALYZER(result.title LIKE search_input, "lowercase_norm") 
+    FOR result IN global_search
+        SEARCH ANALYZER(result.title LIKE search_input, "text_en") 
         
         LET is_direct_movie_match = IS_SAME_COLLECTION("movies", result._id)
         LET movie_document = (

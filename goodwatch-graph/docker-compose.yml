@@ -15,7 +15,6 @@ services:
       - arango_data:/data
       - ./jwtsecret:/jwtsecret:ro
     environment:
-      - ARANGO_LICENSE_KEY=accept
       - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
     command: >
       arangodb
@@ -25,6 +24,7 @@ services:
       --auth.jwt-secret=/jwtsecret
       
       --server.storage-engine=rocksdb
+      --server.session-timeout=2592000
       --all.log.level=INFO
       --all.tcp.reuse-address=true
 
