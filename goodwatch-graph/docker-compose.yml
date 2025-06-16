@@ -29,8 +29,8 @@ services:
 
       --dbservers.rocksdb.block-cache-size=11g
       --dbservers.experimental-vector-index=true
+      --dbservers.server.session-timeout=2592000
       --coordinators.experimental-vector-index=true
-      --coordinators.server.session-timeout=2592000
 
 volumes:
   arango_data:
