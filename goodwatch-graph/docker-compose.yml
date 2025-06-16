@@ -3,8 +3,8 @@ services:
     image: arangodb/arangodb:${ARANGO_VERSION}
     container_name: arango_node
     restart: always
-    mem_limit: 23g
-    memswap_limit: 23g
+    mem_limit: 26g
+    memswap_limit: 26g
     ports:
       - "${SELF_IP}:8528:8528"  # Arango Starter
       - "${SELF_IP}:8529:8529"  # UI and for your applications

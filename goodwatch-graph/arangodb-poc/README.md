@@ -33,6 +33,49 @@ FOR movie IN movies
     }
 ```
 
+Similar to star wars by fingerprint (movies and shows):
+```aql
+LET movie_key = "11"
+
+LET target_vector = (
+    FOR movie IN movies
+        FILTER movie._key == movie_key
+        LIMIT 1
+        RETURN movie.vector_fingerprint
+)[0]
+
+LET similar_movies = (
+    FOR movie IN movies
+        FILTER movie.essence_text != null
+        FILTER movie._key != movie_key
+        LET similarity = COSINE_SIMILARITY(target_vector, movie.vector_fingerprint)
+        RETURN {
+            _key: movie._key,
+            title: movie.title,
+            type: "movie",
+            similarity_score: similarity
+        }
+)
+
+LET similar_shows = (
+    FOR show IN shows
+        FILTER show.essence_text != null
+        LET similarity = COSINE_SIMILARITY(target_vector, show.vector_fingerprint)
+        RETURN {
+            _key: show._key,
+            title: show.title,
+            type: "show",
+            similarity_score: similarity
+        }
+)
+
+FOR item IN UNION(similar_movies, similar_shows)
+    SORT item.similarity_score DESC
+    LIMIT 10
+    RETURN item
+
+```
+
 Similar to star wars by fingerprint (DEBUG version):
 ```aql
 LET movie_key = "11"
