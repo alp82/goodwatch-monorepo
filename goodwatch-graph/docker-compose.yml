@@ -29,6 +29,7 @@ services:
 
       --dbservers.experimental-vector-index=true
       --dbservers.server.session-timeout=2592000
+      --coordinators.server.session-timeout=2592000
       --coordinators.experimental-vector-index=true
 
 volumes:
