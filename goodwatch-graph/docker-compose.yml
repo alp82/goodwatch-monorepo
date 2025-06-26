@@ -26,11 +26,11 @@ services:
       --server.storage-engine=rocksdb
       --all.log.level=INFO
       --all.tcp.reuse-address=true
-
-      --dbservers.experimental-vector-index=true
-      --dbservers.server.session-timeout=2592000
-      --coordinators.server.session-timeout=2592000
-      --coordinators.experimental-vector-index=true
+      
+      --all.rocksdb.block-cache-size=8GiB
+      --all.rocksdb.total-write-buffer-size=8GiB
+      --all.server.session-timeout=86400
+      --all.experimental-vector-index=true
 
 volumes:
   arango_data:
