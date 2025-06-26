@@ -24,13 +24,13 @@ services:
       --auth.jwt-secret=/jwtsecret
       
       --server.storage-engine=rocksdb
-      --all.log.level=INFO
-      --all.tcp.reuse-address=true
+      --args.all.log.level=INFO
+      --args.all.tcp.reuse-address=true
       
-      --all.rocksdb.block-cache-size=8GiB
-      --all.rocksdb.total-write-buffer-size=8GiB
-      --all.server.session-timeout=86400
-      --all.experimental-vector-index=true
+      --args.all.rocksdb.block-cache-size=8GiB
+      --args.all.rocksdb.total-write-buffer-size=8GiB
+      --args.all.server.session-timeout=86400
+      --args.all.experimental-vector-index=true
 
 volumes:
   arango_data:
