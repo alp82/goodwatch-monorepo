@@ -13,18 +13,39 @@ services:
       - "${SELF_IP}:4300:4300"   # inter-node transport
 
     volumes:
-      - ./crate.yml:/crate.yml:ro              # configuration
       - crate_data:/data                       # data
       - crate_snapshots:/snapshots             # backups
 
     environment:
       - CRATE_HEAP_SIZE=${HEAP_SIZE}      # JVM heap (≈ ½ RAM)
 
-    command: ["crate"]        # all node settings live in crate.yml now
+    command: >
+      crate
+        -Ccluster.name=${CLUSTER_NAME}
+        -Cnode.name=${NODE_NAME}
+    
+        -Cnetwork.host=0.0.0.0
+        -Cnetwork.publish_host=${SELF_IP}
+        -Ctransport.publish_port=4300
+    
+        -Cdiscovery.seed_hosts=${SEED_HOSTS}
+        -Ccluster.initial_master_nodes=${MASTER_NODES}
+    
+        -Cgateway.expected_data_nodes=${EXPECTED_NODES}
+        -Cgateway.recover_after_data_nodes=${EXPECTED_NODES}
+      
+        -Cpath.data=/data
+        -Cpath.repo=/snapshots
+    
+        # host-based auth map
+        -Cauth.host_based.config.0.user=crate
+        -Cauth.host_based.config.0.address=127.0.0.1
+        -Cauth.host_based.config.0.method=trust
+        -Cauth.host_based.config.1.method=password
 
 volumes:
   crate_data:
-  crate_snapshots:               # uncomment when you wire backups
+  crate_snapshots:               # uncomment when you wire backup
 
 # TODO
 # user creation:
