@@ -1,0 +1,24 @@
+cluster.name: ${CLUSTER_NAME}
+node.name: ${NODE_NAME}
+
+network.host: 0.0.0.0
+network.publish_host: ${SELF_IP}
+transport.publish_port: 4300
+
+discovery.seed_hosts: ${SEED_HOSTS}
+cluster.initial_master_nodes: ${MASTER_NODES}
+
+gateway.expected_data_nodes: ${EXPECTED_NODES}
+gateway.recover_after_data_nodes: ${EXPECTED_NODES}
+
+path.repo: ["/snapshots"]
+
+auth:
+  host_based:
+    config:
+      0:
+        user: crate            # allow the built-in superuser only from localhost
+        address: 127.0.0.1
+        method: trust
+      1:
+        method: password       # everything else needs a real user/password

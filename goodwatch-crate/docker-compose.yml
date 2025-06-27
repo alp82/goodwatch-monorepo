@@ -1,0 +1,36 @@
+services:
+  cratedb:
+    image: crate:${CRATE_VERSION}
+    container_name: ${NODE_NAME}
+    restart: always
+
+    mem_limit: 26g
+    memswap_limit: 26g
+
+    ports:
+      - "${SELF_IP}:4200:4200"   # HTTP / Admin-UI
+      - "${SELF_IP}:5432:5432"   # Postgres wire-protocol
+      - "${SELF_IP}:4300:4300"   # inter-node transport
+
+    volumes:
+      - ./crate.yml:/crate.yml:ro              # configuration
+      - crate_data:/data                       # data
+      - crate_snapshots:/snapshots             # backups
+
+    environment:
+      - CRATE_HEAP_SIZE=${HEAP_SIZE}      # JVM heap (≈ ½ RAM)
+
+    command: ["crate"]        # all node settings live in crate.yml now
+
+volumes:
+  crate_data:
+  crate_snapshots:               # uncomment when you wire backups
+
+# TODO
+# user creation:
+# docker exec -it ${NODE_NAME} \
+#  bash -c "echo \"CREATE USER admin WITH (password = 'SuperS3cret'); \
+#            GRANT ALL PRIVILEGES TO admin;\" | bin/crash --host http://localhost:4200"
+#
+# backup schedule:
+# CREATE REPOSITORY … TYPE 'fs' LOCATION '/snapshots'
