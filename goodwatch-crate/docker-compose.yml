@@ -48,10 +48,5 @@ volumes:
   crate_snapshots:               # uncomment when you wire backup
 
 # TODO
-# user creation:
-# docker exec -it ${NODE_NAME} \
-#  bash -c "echo \"CREATE USER admin WITH (password = 'SuperS3cret'); \
-#            GRANT ALL PRIVILEGES TO admin;\" | bin/crash --host http://localhost:4200"
-#
 # backup schedule:
 # CREATE REPOSITORY … TYPE 'fs' LOCATION '/snapshots'
