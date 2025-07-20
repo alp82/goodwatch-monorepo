@@ -1,6 +1,8 @@
 import { type ReactNode, useCallback, useState } from "react"
 import { useOnceMounted } from "~/utils/hydration"
 
+const CYCLE_INTERVAL = 6000
+
 export interface CycleProps {
 	items: ReactNode[]
 }
@@ -11,7 +13,7 @@ export default function Cycle({ items }: CycleProps) {
 	const updateCycle = useCallback(() => {
 		const intervalId = setInterval(() => {
 			setCurrentIndex(Math.floor(Math.random() * items.length))
-		}, 4000)
+		}, CYCLE_INTERVAL)
 
 		return () => clearInterval(intervalId)
 	}, [])

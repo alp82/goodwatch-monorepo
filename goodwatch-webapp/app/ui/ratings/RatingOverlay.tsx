@@ -10,12 +10,12 @@ export interface RatingsOverlayProps {
 
 export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 	const hasScore =
-		typeof ratings?.aggregated_overall_score_normalized_percent === "number"
+		typeof ratings?.goodwatch_overall_score_normalized_percent === "number"
 	const score = hasScore
-		? Math.floor(ratings.aggregated_overall_score_normalized_percent)
+		? Math.floor(ratings.goodwatch_overall_score_normalized_percent)
 		: null
 	const vibeColorIndex = hasScore
-		? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10
+		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10
 		: null
 	const progressPosition = typeof score === "number" ? score : 50
 

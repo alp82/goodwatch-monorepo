@@ -4,7 +4,7 @@ import type { Country } from "~/server/countries.server"
 import Select, { type SelectItem } from "~/ui/form/Select"
 
 export interface FilterCountriesProps {
-	type: "movie" | "tv"
+	mediaType: "movie" | "show"
 	selectedCountry: string
 	availableCountryCodes?: string[]
 	onChange: (country: string) => void

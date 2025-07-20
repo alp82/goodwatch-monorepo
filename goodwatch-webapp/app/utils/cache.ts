@@ -40,84 +40,47 @@ const redisOptions: ClusterOptions = {
 }
 
 let redisCluster: Cluster | null = null
-let isConnecting = false
+const getRedisCluster = () => redisCluster
 
 const connectToRedisCluster = async () => {
-	// Don't try to connect if already connecting or connected
-	if (isConnecting || redisCluster) return null
+	if (redisCluster) return null
 
-	isConnecting = true
-	return new Promise<Cluster | null>((resolve) => {
-		try {
-			console.log("Connecting to Redis Cluster...")
-			const cluster = new Redis.Cluster(clusterNodes, redisOptions)
+	console.log("Connecting to Redis Cluster...")
+	const cluster = new Redis.Cluster(clusterNodes, redisOptions)
 
-			// Set a connection timeout to fail fast
-			const connectionTimeout = setTimeout(() => {
-				console.log("Redis connection timed out, moving on without cache")
-				isConnecting = false
-				resolve(null)
-				try {
-					cluster.disconnect(false)
-				} catch (e) {
-					// Ignore disconnect errors
-				}
-			}, 500) // 500ms timeout for connection
+	cluster.once("ready", () => {
+		console.log("Connected to Redis Cluster")
+		redisCluster = cluster
 
-			cluster.once("ready", () => {
-				console.log("Connected to Redis Cluster")
-				clearTimeout(connectionTimeout)
-				redisCluster = cluster
-				isConnecting = false
-
-				// Handle errors to prevent crashes
-				cluster.on("error", (err) => {
-					console.error("Redis Cluster Error:", err)
-					// Potentially set redisCluster to null if connection is unusable
-					if (
-						err.message &&
-						(err.message.includes("connection") ||
-							err.message.includes("timeout") ||
-							err.message.includes("closed"))
-					) {
-						console.log("Redis connection lost, will operate without cache")
-						redisCluster = null
-						connectToRedisCluster()
-					}
-				})
-
-				resolve(cluster)
-			})
-
-			// Handle connection failures
-			cluster.once("end", () => {
-				clearTimeout(connectionTimeout)
-				console.log("Redis connection ended")
+		// Handle errors to prevent crashes
+		cluster.on("error", (err) => {
+			console.error("Redis Cluster Error:", err)
+			// Potentially set redisCluster to null if connection is unusable
+			if (
+				err.message &&
+				(err.message.includes("connection") ||
+					err.message.includes("timeout") ||
+					err.message.includes("closed"))
+			) {
+				console.log("Redis connection lost, will operate without cache")
 				redisCluster = null
-				isConnecting = false
-				resolve(null)
-			})
+				connectToRedisCluster()
+			}
+		})
+	})
 
-			// Attempt connection
-			cluster.connect().catch((err) => {
-				clearTimeout(connectionTimeout)
-				console.error("Redis connect error, skipping:", err)
-				redisCluster = null
-				isConnecting = false
-				resolve(null)
-			})
-		} catch (err) {
-			console.error("Failed to initialize Redis Cluster:", err)
-			isConnecting = false
-			resolve(null)
-		}
+	cluster.once("end", () => {
+		console.log("Redis connection ended")
+		redisCluster = null
+	})
+
+	cluster.connect().catch((err) => {
+		console.error("Redis connect error, skipping:", err)
+		redisCluster = null
 	})
 }
 
-// Connect to redis optionally
-connectToRedisCluster()
-
-const getRedisCluster = () => redisCluster
+await connectToRedisCluster()
 
 interface JsonData {
 	[key: string]: unknown

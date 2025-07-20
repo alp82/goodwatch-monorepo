@@ -1,5 +1,5 @@
-import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
+import type { MovieDetails, TVDetails } from "~/server/types/details-types"
 
 export interface AllRatings {
 	tmdb_url: string
@@ -24,12 +24,12 @@ export interface AllRatings {
 	rotten_tomatoes_tomato_score_original: number
 	rotten_tomatoes_tomato_score_normalized_percent: number
 	rotten_tomatoes_tomato_score_review_count: number
-	aggregated_user_score_normalized_percent: number
-	aggregated_user_score_rating_count: number
-	aggregated_official_score_normalized_percent: number
-	aggregated_official_score_review_count: number
-	aggregated_overall_score_normalized_percent: number
-	aggregated_overall_score_voting_count: number
+	goodwatch_user_score_normalized_percent: number
+	goodwatch_user_score_rating_count: number
+	goodwatch_official_score_normalized_percent: number
+	goodwatch_official_score_review_count: number
+	goodwatch_overall_score_normalized_percent: number
+	goodwatch_overall_score_voting_count: number
 }
 
 export const getRatingKeys = () => {
@@ -56,12 +56,12 @@ export const getRatingKeys = () => {
 		"rotten_tomatoes_tomato_score_original",
 		"rotten_tomatoes_tomato_score_normalized_percent",
 		"rotten_tomatoes_tomato_score_review_count",
-		"aggregated_user_score_normalized_percent",
-		"aggregated_user_score_rating_count",
-		"aggregated_official_score_normalized_percent",
-		"aggregated_official_score_review_count",
-		"aggregated_overall_score_normalized_percent",
-		"aggregated_overall_score_voting_count",
+		"goodwatch_user_score_normalized_percent",
+		"goodwatch_user_score_rating_count",
+		"goodwatch_official_score_normalized_percent",
+		"goodwatch_official_score_review_count",
+		"goodwatch_overall_score_normalized_percent",
+		"goodwatch_overall_score_voting_count",
 	]
 	return keys
 }

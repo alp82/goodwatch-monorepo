@@ -25,8 +25,8 @@ export default function RatingBadges({
 	const { data: userData } = useUserData()
 	const userScore = userData?.[media_type]?.[tmdb_id]?.score || null
 
-	const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent
-		? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10
+	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
+		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10
 		: null
 
 	const userColorIndex = userScore ? userScore * 10 : null
@@ -35,7 +35,7 @@ export default function RatingBadges({
 		<div className="w-full flex flex-col sm:flex-row items-center sm:justify-between gap-4">
 			<div className="w-full sm:w-auto flex items-center justify-between gap-4 lg:gap-12">
 				<dl
-					className={`${ratings?.aggregated_overall_score_normalized_percent ? "" : "opacity-60"} flex items-center gap-2`}
+					className={`${ratings?.goodwatch_overall_score_normalized_percent ? "" : "opacity-60"} flex items-center gap-2`}
 				>
 					<img
 						className={`block h-10 xs:h-12 p-2 rounded-full shadow-2xl ${vibeColorIndex == null ? "bg-gray-950" : `bg-vibe-${vibeColorIndex}`}`}
@@ -43,13 +43,13 @@ export default function RatingBadges({
 						alt="GoodWatch Logo"
 					/>
 					<dd className="text-base xs:text-lg md:text-xl relative top-1">
-						{ratings?.aggregated_overall_score_normalized_percent ? (
+						{ratings?.goodwatch_overall_score_normalized_percent ? (
 							<>
 								<span
 									className={`text-[200%] font-semibold ${vibeColorIndex == null ? "text-gray-300" : `text-vibe-${vibeColorIndex}`}`}
 								>
 									{Math.floor(
-										ratings?.aggregated_overall_score_normalized_percent,
+										ratings?.goodwatch_overall_score_normalized_percent,
 									)}
 								</span>
 								<span className="text-gray-300 font-normal">/100</span>

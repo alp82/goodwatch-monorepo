@@ -1,18 +1,20 @@
 import { useFetcher } from "@remix-run/react"
 import React, { useEffect } from "react"
 import type { MoviesInCollection } from "~/server/collection.server"
-import type { Collection as CollectionType } from "~/server/details.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { titleToDashed } from "~/utils/helpers"
+import type { MovieSeriesResult } from "~/server/types/details-types"
 
-export interface CollectionProps {
-	collection: CollectionType
+export interface MovieSeriesProps {
+	movieSeries: MovieSeriesResult
 	movieId: number
 }
 
-export default function Collection({ collection, movieId }: CollectionProps) {
-	const collectionId = collection?.id.toString()
-	const movieIds = (collection?.movie_ids || [])
+export default function MovieSeries({
+	movieSeries,
+	movieId,
+}: MovieSeriesProps) {
+	const collectionId = movieSeries?.id.toString()
+	const movieIds = (movieSeries?.movie_ids || [])
 		.map((movieId) => movieId.toString())
 		.join(",")
 	const moviesFetcher = useFetcher<MoviesInCollection>()
@@ -32,7 +34,7 @@ export default function Collection({ collection, movieId }: CollectionProps) {
 	const movies = moviesFetcher.data?.movies || []
 	return (
 		<>
-			{collection && (
+			{movieSeries && (
 				<div className="mt-8 mb-4">
 					<div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
 						{movies.map((movie) => {

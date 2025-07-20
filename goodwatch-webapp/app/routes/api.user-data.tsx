@@ -25,7 +25,7 @@ export type GetUserDataResult = {
 			release_year: number
 			poster_path: string
 			backdrop_path: string
-			aggregated_overall_score_normalized_percent: number | null
+			goodwatch_overall_score_normalized_percent: number | null
 			streaming_links: StreamingLink[]
 		}
 	}

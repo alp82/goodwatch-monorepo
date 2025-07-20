@@ -5,34 +5,32 @@ import {
 	PencilSquareIcon,
 } from "@heroicons/react/24/solid"
 import React from "react"
-import type { Cast } from "~/server/details.server"
+import type { Crew as CrewType } from "~/server/types/details-types"
 
 export interface CrewProps {
-	crew: Cast[]
+	crew: CrewType[]
 }
 
 export default function Crew({ crew }: CrewProps) {
-	const filterCrew = (crew: Cast[], jobTitle: string) => {
+	const filterCrew = (crew: CrewType[], job: string, department: string) => {
 		return (crew || [])
 			.filter(
 				(crewMember) =>
-					(crewMember.job || "").includes(jobTitle) ||
-					(crewMember.jobs || []).some((job) =>
-						(job.job || "").includes(jobTitle),
-					),
+					crewMember.job === job || crewMember.department === department,
 			)
+			.sort((a, b) => (a.popularity ? b.popularity - a.popularity : 0))
 			.sort((a, b) =>
-				a.total_episode_count
-					? b.total_episode_count - a.total_episode_count
+				a.episode_count_total && b.episode_count_total
+					? b.episode_count_total - a.episode_count_total
 					: 0,
 			)
 			.slice(0, 3)
 	}
 
-	const directors = filterCrew(crew, "Director")
-	const writers = filterCrew(crew, "Writer")
-	const producers = filterCrew(crew, "Producer")
-	const composers = filterCrew(crew, "Composer")
+	const directors = filterCrew(crew, "Director", "Directing")
+	const writers = filterCrew(crew, "Writer", "Writing")
+	const producers = filterCrew(crew, "Producer", "Production")
+	const composers = filterCrew(crew, "Original Music Composer", "Sound")
 
 	const RenderInfo = ({ title, Icon, people }) => {
 		if (people.length === 0) return null

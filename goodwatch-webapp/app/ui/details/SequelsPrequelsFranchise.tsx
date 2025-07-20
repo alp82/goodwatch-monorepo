@@ -1,26 +1,30 @@
 import React from "react"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
-import Collection from "~/ui/details/Collection"
+import MovieSeries from "~/ui/details/MovieSeries"
+import type {
+	MovieResult,
+	MovieSeriesResult,
+	ShowResult,
+} from "~/server/types/details-types"
 
 export interface SequelsPrequelsFranchiseProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 }
 
 export default function SequelsPrequelsFranchise({
-	details,
+	media,
 }: SequelsPrequelsFranchiseProps) {
-	const { media_type } = details
+	const { details, mediaType } = media
 
-	let collection: MovieDetails["collection"] | undefined
-	if (media_type === "movie") {
-		collection = details.collection
+	let movie_series: MovieSeriesResult | undefined
+	if (mediaType === "movie") {
+		movie_series = media.movie_series
 	}
 
 	return (
 		<>
 			<h2 className="mt-6 text-2xl font-bold">Sequels and Prequels</h2>
-			{collection ? (
-				<Collection collection={collection} movieId={details.tmdb_id} />
+			{movie_series ? (
+				<MovieSeries movieSeries={movie_series} movieId={details.tmdb_id} />
 			) : (
 				<div className="my-4 text-gray-400 italic">
 					No sequels or prequels available

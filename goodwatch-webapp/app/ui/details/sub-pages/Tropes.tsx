@@ -1,11 +1,11 @@
 import React from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 
-export interface DetailsDNAProps {
+export interface TropesProps {
 	details: MovieDetails | TVDetails
 }
 
-export default function DetailsDNA({ details }: DetailsDNAProps) {
+export default function Tropes({ details }: TropesProps) {
 	const { tropes } = details
 
 	const [spoilerVisible, setSpoilerVisible] = React.useState(false)

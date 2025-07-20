@@ -36,11 +36,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db; git pull; df -h; exec $SHELL"
+                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db && htop; exec $SHELL"
+                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
             }
         }
     }
@@ -48,11 +48,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db; git pull; df -h; exec $SHELL"
+                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db && htop; exec $SHELL"
+                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
             }
         }
     }
@@ -60,11 +60,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db; git pull; df -h; exec $SHELL"
+                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-db && htop; exec $SHELL"
+                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
             }
         }
     }

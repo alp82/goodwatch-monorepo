@@ -78,7 +78,7 @@ export default function SelectCountry({ onSelect }: SelectCountryProps) {
 			{countrySelectionEnabled ? (
 				<>
 					<FilterCountries
-						type="movie"
+						mediaType="movie"
 						selectedCountry={userCountry || ""}
 						onChange={handleSelectCountry}
 					/>

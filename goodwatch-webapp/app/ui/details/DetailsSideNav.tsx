@@ -1,5 +1,5 @@
 import React from "react"
-import { sections } from "~/ui/details/common"
+import { sections } from "~/ui/details/sections"
 import type { Section } from "~/utils/scroll"
 
 export type DetailsSideNavProps = {

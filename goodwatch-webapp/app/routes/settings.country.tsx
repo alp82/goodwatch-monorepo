@@ -1,16 +1,16 @@
-import type { MetaFunction } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
-import React, { useEffect, useState } from "react";
-import { useUserSettings } from "~/routes/api.user-settings.get";
-import { useSetUserSettings } from "~/routes/api.user-settings.set";
-import FilterCountries from "~/ui/filter/FilterCountries";
-import { useSupabase, useUser } from "~/utils/auth";
+import type { MetaFunction } from "@remix-run/node"
+import { useFetcher } from "@remix-run/react"
+import React, { useEffect, useState } from "react"
+import { useUserSettings } from "~/routes/api.user-settings.get"
+import { useSetUserSettings } from "~/routes/api.user-settings.set"
+import FilterCountries from "~/ui/filter/FilterCountries"
+import { useSupabase, useUser } from "~/utils/auth"
 
 export function headers() {
 	return {
 		"Cache-Control":
 			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	};
+	}
 }
 
 export const meta: MetaFunction = () => {
@@ -20,11 +20,11 @@ export const meta: MetaFunction = () => {
 			description:
 				"Change your GoodWatch country settings. All movie and tv show ratings and streaming providers on the same page",
 		},
-	];
-};
+	]
+}
 
 export default function SettingsCountry() {
-	const { data: userSettings } = useUserSettings();
+	const { data: userSettings } = useUserSettings()
 
 	// pre-selection
 
@@ -32,25 +32,25 @@ export default function SettingsCountry() {
 		userSettings?.country_default ||
 		(typeof window !== "undefined"
 			? localStorage.getItem("country")
-			: undefined);
+			: undefined)
 
 	// selection
 
-	const [selectedCountry, setSelectedCountry] = useState<string | undefined>();
+	const [selectedCountry, setSelectedCountry] = useState<string | undefined>()
 	const handleSelectCountry = (country: string) => {
-		setSelectedCountry(country);
-	};
+		setSelectedCountry(country)
+	}
 
-	const setUserSettings = useSetUserSettings();
+	const setUserSettings = useSetUserSettings()
 
 	const handleSubmit = () => {
-		if (!selectedCountry) return;
+		if (!selectedCountry) return
 		setUserSettings.mutate({
 			settings: {
 				country_default: selectedCountry,
 			},
-		});
-	};
+		})
+	}
 
 	return (
 		<div className="px-2 md:px-4 lg:px-8">
@@ -60,7 +60,7 @@ export default function SettingsCountry() {
 				</h2>
 
 				<FilterCountries
-					type="movie"
+					mediaType="movie"
 					selectedCountry={selectedCountry || storedCountry || ""}
 					onChange={handleSelectCountry}
 				/>
@@ -78,5 +78,5 @@ export default function SettingsCountry() {
 				</button>
 			</div>
 		</div>
-	);
+	)
 }

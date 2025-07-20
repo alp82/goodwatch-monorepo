@@ -1,61 +1,53 @@
 import React from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import About from "~/ui/details/About"
-import Cast from "~/ui/details/Cast"
+import Actors from "~/ui/details/Actors"
 import Crew from "~/ui/details/Crew"
 import Media from "~/ui/details/Media"
-import type { SectionIds } from "~/ui/details/common"
+import type { SectionIds } from "~/ui/details/sections"
 import Ratings from "~/ui/ratings/Ratings"
 import Streaming from "~/ui/streaming/Streaming"
 import { extractRatings } from "~/utils/ratings"
-import type { SectionProps } from "~/utils/scroll"
+import type { Section, SectionProps } from "~/utils/scroll"
 import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
-import DetailsDNA from "~/ui/details/DetailsDNA"
+import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
 import DetailsRelated from "~/ui/details/DetailsRelated"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface DetailsContentProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	country: string
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
 
 export default function DetailsContent({
-	details,
+	media,
 	country,
 	sectionProps,
 	navigateToSection,
 }: DetailsContentProps) {
-	const ratings = extractRatings(details)
-
-	const {
-		cast,
-		crew,
-		media_type,
-		streaming_country_codes,
-		streaming_links,
-		videos,
-	} = details
+	const { details, actors, crew, videos } = media
 
 	return (
 		<div className="flex flex-col gap-12">
-			<div {...sectionProps.about}>
-				<About details={details} navigateToSection={navigateToSection} />
+			{/*<div {...sectionProps.about}>*/}
+			{/*	<About details={details} navigateToSection={navigateToSection} />*/}
+			{/*</div>*/}
+			<div {...sectionProps.fingerprint}>
+				<DetailsFingerprint details={details} />
 			</div>
-			<div {...sectionProps.dna}>
-				<DetailsDNA details={details} />
-			</div>
-			<div {...sectionProps.related}>
-				<DetailsRelated details={details} />
-			</div>
+			{/*<div {...sectionProps.related}>*/}
+			{/*	<DetailsRelated details={details} />*/}
+			{/*</div>*/}
 			<div {...sectionProps.sequels}>
-				<SequelsPrequelsFranchise details={details} />
+				<SequelsPrequelsFranchise media={media} />
 			</div>
 			<div {...sectionProps.crew}>
 				<Crew crew={crew} />
 			</div>
-			<div {...sectionProps.cast}>
-				<Cast cast={cast} />
+			<div {...sectionProps.actors}>
+				<Actors actors={actors} />
 			</div>
 			<div>
 				{/*{ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">*/}

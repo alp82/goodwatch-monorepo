@@ -1,20 +1,15 @@
 import { convertSimilarTitles } from "~/routes/api.discover"
-import {
-	type StreamingLink,
-	type StreamingProviders,
-	getCountrySpecificDetails,
-} from "~/server/details.server"
+import type { StreamingLink, StreamingProviders } from "~/server/details.server"
 import { genreDuplicates, getGenresAll } from "~/server/genres.server"
 import {
-	type FilterMediaType,
-	type MediaType,
 	constructFullQuery,
+	type FilterMediaType,
 	filterMediaTypes,
 } from "~/server/utils/query-db"
 import { cached } from "~/utils/cache"
 import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
 import { SEPARATOR_PRIMARY, SEPARATOR_SECONDARY } from "~/utils/navigation"
-import { executeQuery } from "~/utils/postgres"
+import { query as crateQuery } from "~/utils/crate"
 import type { AllRatings } from "~/utils/ratings"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 
@@ -73,8 +68,8 @@ export const getDiscoverResults = async (params: DiscoverParams) => {
 		name: "discover-results",
 		target: _getDiscoverResults,
 		params,
-		ttlMinutes: 60 * 20,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 20,
+		ttlMinutes: 0,
 	})
 }
 
@@ -121,7 +116,7 @@ async function _getDiscoverResults({
 		sortBy === "release_date"
 			? "release_date"
 			: sortBy === "aggregated_score"
-				? "aggregated_overall_score_normalized_percent"
+				? "goodwatch_overall_score_normalized_percent"
 				: "popularity"
 	const direction = sortDirection === "asc" ? "ASC" : "DESC"
 
@@ -206,10 +201,8 @@ async function _getDiscoverResults({
 		pageSize: DISCOVER_PAGE_SIZE,
 	})
 
-	const result = await executeQuery(query, params)
-	const results = result.rows.map((row) =>
-		getCountrySpecificDetails(row, country, language),
-	) as unknown as DiscoverResult[]
+	const result = await crateQuery(query, params)
+	const results = result as unknown as DiscoverResult[]
 
 	return results
 }

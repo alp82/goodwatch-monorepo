@@ -1,11 +1,4 @@
 import React, { useState } from "react"
-import type {
-	MovieDetails,
-	StreamingLink,
-	StreamType,
-	TVDetails,
-} from "~/server/details.server"
-import type { Section } from "~/utils/scroll"
 import {
 	duplicateProviderMapping,
 	getShorterProviderLabel,
@@ -13,24 +6,29 @@ import {
 } from "~/utils/streaming-links"
 import { useUserStreamingProviders } from "~/routes/api.user-settings.get"
 import { motion } from "framer-motion"
+import type {
+	MovieResult,
+	ShowResult,
+	StreamingLink,
+	StreamingService,
+	StreamingType,
+} from "~/server/types/details-types"
 
 export interface StreamingBadgesProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	country: string
-	media_type: "movie" | "tv"
-	links: StreamingLink[]
-	streamTypes: StreamType[]
+	streamTypes: StreamingType[]
 	maxProvidersToShow?: number
 }
 
 export default function StreamingBadges({
-	details,
+	media,
 	country,
-	media_type,
-	links,
 	streamTypes,
 	maxProvidersToShow = 5,
 }: StreamingBadgesProps) {
+	const { details, mediaType, streaming_availabilities, streaming_services } =
+		media
 	const userStreamingProviders = useUserStreamingProviders()
 	const userStreamingProviderIds = userStreamingProviders.flatMap(
 		(provider) => {
@@ -42,11 +40,11 @@ export default function StreamingBadges({
 		},
 	)
 
-	const filteredLinks = (links || [])
-		.filter((link: StreamingLink) => streamTypes.includes(link.stream_type))
+	const filteredLinks = (streaming_availabilities || [])
+		.filter((link: StreamingLink) => streamTypes.includes(link.streaming_type))
 		.sort((a: StreamingLink, b: StreamingLink) => {
-			const aOwned = userStreamingProviderIds.includes(a.provider_id)
-			const bOwned = userStreamingProviderIds.includes(b.provider_id)
+			const aOwned = userStreamingProviderIds.includes(a.streaming_service_id)
+			const bOwned = userStreamingProviderIds.includes(b.streaming_service_id)
 			if (aOwned === bOwned) return 0
 			return aOwned ? -1 : 1
 		})
@@ -67,11 +65,16 @@ export default function StreamingBadges({
 				<div className="flex flex-wrap items-center gap-2 sm:gap-4">
 					{linksToShow.length > 0 ? (
 						linksToShow.map((link) => {
-							const owned = userStreamingProviderIds.includes(link.provider_id)
+							const streamingService = streaming_services.find(
+								(service) => service.tmdb_id === link.streaming_service_id,
+							) as StreamingService
+							const owned = userStreamingProviderIds.includes(
+								link.streaming_service_id,
+							)
 							return (
 								<a
-									key={link.provider_id}
-									href={getStreamingUrl(link, details, country, media_type)}
+									key={link.streaming_service_id}
+									href={getStreamingUrl(link, details, country, mediaType)}
 									target="_blank"
 									className="flex items-center gap-2 text-sm md:text-lg rounded-lg shadow-2xl bg-gray-700/80 brightness-90 hover:brightness-125"
 									rel="noreferrer"
@@ -81,9 +84,9 @@ export default function StreamingBadges({
 										p-1 w-16 h-16 md:w-20 md:h-20
 										rounded-xl border-2 ${owned ? "bg-green-900/80 border-green-500/50" : "border-gray-500/50"}
 									`}
-										src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
-										title={link.provider_name}
-										alt={link.provider_name}
+										src={`https://www.themoviedb.org/t/p/original/${streamingService.logo}`}
+										title={streamingService.name}
+										alt={streamingService.name}
 									/>
 									{owned && (
 										<motion.div
@@ -101,7 +104,7 @@ export default function StreamingBadges({
 												Watch now on
 											</div>
 											<div className="font-semibold">
-												{getShorterProviderLabel(link.provider_name)}
+												{getShorterProviderLabel(streamingService.name)}
 											</div>
 										</motion.div>
 									)}

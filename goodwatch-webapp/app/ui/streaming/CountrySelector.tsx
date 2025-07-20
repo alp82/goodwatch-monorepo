@@ -4,14 +4,14 @@ import FilterCountries from "~/ui/filter/FilterCountries"
 import type { Section } from "~/utils/scroll"
 
 export interface StreamingBlockProps {
-	media_type: "movie" | "tv"
+	mediaType: "movie" | "show"
 	countryCodes: string[]
 	currentCountryCode: string
 	navigateToSection: (section: Section) => void
 }
 
 export default function CountrySelector({
-	media_type,
+	mediaType,
 	countryCodes = [],
 	currentCountryCode,
 	navigateToSection,
@@ -28,7 +28,7 @@ export default function CountrySelector({
 		<>
 			{editing ? (
 				<FilterCountries
-					type={media_type}
+					mediaType={mediaType}
 					selectedCountry={currentCountryCode}
 					availableCountryCodes={countryCodes}
 					onChange={handleCountryChange}

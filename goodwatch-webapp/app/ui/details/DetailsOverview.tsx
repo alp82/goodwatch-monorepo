@@ -2,21 +2,22 @@ import React from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import { Poster } from "~/ui/Poster"
 import TrailerOverlay from "~/ui/TrailerOverlay"
-import type { SectionIds } from "~/ui/details/common"
+import type { SectionIds } from "~/ui/details/sections"
 import type { SectionProps } from "~/utils/scroll"
 import PlanToWatchButton from "~/ui/user/PlanToWatchButton"
 import WatchHistoryButton from "~/ui/user/WatchHistoryButton"
-import FavoriteButton from "~/ui/user/FavoriteButton"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface DetailsOverviewProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	sectionProps: SectionProps<SectionIds>
 }
 
 export default function DetailsOverview({
-	details,
+	media,
 	sectionProps,
 }: DetailsOverviewProps) {
+	const { details } = media
 	const { backdrop_path, poster_path, title, videos } = details
 
 	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`

@@ -1,13 +1,5 @@
-import {
-	type StreamingProviders,
-	getCountrySpecificDetails,
-} from "~/server/details.server"
-import {
-	increasePriorityForMovies,
-	increasePriorityForTVs,
-} from "~/server/utils/priority"
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query as crateQuery } from "~/utils/crate"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 export interface TrendingMovie extends AllRatings {
@@ -56,27 +48,25 @@ export async function _getTrendingMovies({
 		.filter((movie) => !Number.isNaN(Number(movie.id)))
 		.map((movie) => movie.id)
 
-	const result = await executeQuery(`
+	const result = await crateQuery<TrendingMovie>(`
     SELECT
       tmdb_id,
       title,
       poster_path,
-      streaming_providers,
+			streaming_service_ids,
       ${getRatingKeys().join(", ")}
     FROM
-      movies
+      movie
     WHERE
       tmdb_id IN (${trendingIds.join(", ")})
       AND poster_path IS NOT NULL
-      AND aggregated_overall_score_normalized_percent > 0
+      AND goodwatch_overall_score_normalized_percent > 0
     ORDER BY
       popularity;
   `)
 
-	// increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
-	return result.rows.map((row) =>
-		getCountrySpecificDetails(row, country, language),
-	)
+	// increasePriorityForMovies(result.map((row) => row.tmdb_id))
+	return result
 }
 
 export const getTrendingTV = async (params: TrendingTVParams) => {
@@ -100,25 +90,23 @@ export async function _getTrendingTV({
 		.filter((tv) => !Number.isNaN(Number(tv.id)))
 		.map((tv) => tv.id)
 
-	const result = await executeQuery(`
+	const result = await crateQuery<TrendingTV>(`
     SELECT
       tmdb_id,
       title,
       poster_path,
-      streaming_providers,
+      streaming_service_ids,
       ${getRatingKeys().join(", ")}
     FROM
-      tv
+      show
     WHERE
       tmdb_id IN (${trendingIds.join(", ")})
       AND poster_path IS NOT NULL
-      AND aggregated_overall_score_normalized_percent > 0
+      AND goodwatch_overall_score_normalized_percent > 0
     ORDER BY
       popularity;
   `)
 
-	// increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
-	return result.rows.map((row) =>
-		getCountrySpecificDetails(row, country, language),
-	)
+	// increasePriorityForTVs(result.map((row) => row.tmdb_id))
+	return result
 }

@@ -80,7 +80,7 @@ interface ConstructUserQueryParams {
 interface OrderByConfig {
 	column:
 		| "popularity"
-		| "aggregated_overall_score_normalized_percent"
+		| "goodwatch_overall_score_normalized_percent"
 		| "release_date"
 		| "vector"
 	direction: "ASC" | "DESC"
@@ -116,7 +116,7 @@ export const constructFullQuery = ({
 	// Validate orderBy.column and orderBy.direction
 	const validOrderByColumns = [
 		"popularity",
-		"aggregated_overall_score_normalized_percent",
+		"goodwatch_overall_score_normalized_percent",
 		"release_date",
 		"vector",
 	]
@@ -151,14 +151,13 @@ export const constructFullQuery = ({
 
 	// Build the final query
 	const namedQuery = `
-		${unionQuery}
+		WITH media AS (
+			${unionQuery}
+		)
 		SELECT
 			m.*,
-			sl.streaming_links
+			NULL as streaming_links
 		FROM media m
-		JOIN LATERAL (
-			${getStreamingLinksJoin(streaming)}
-		) sl on TRUE
 		${similarity?.withSimilar?.length ? "WHERE similarity_score IS NOT NULL" : ""}
 		ORDER BY ${
 			similarity?.withSimilar?.length
@@ -172,9 +171,8 @@ export const constructFullQuery = ({
 	const params: Record<string, unknown> = {
 		...collectedParams,
 		similarityVector: conditions.similarityVector,
-		limit: pageSize,
+		pageSize,
 		offset,
-		subquery_limit: pageSize * page,
 	}
 
 	// Convert named parameters to positional parameters once
@@ -225,9 +223,7 @@ const constructUnionQuery = ({
 	}
 
 	const unionQuery = `
-		WITH media AS (
-			${selectQueries.map((query) => `(${query})`).join("\nUNION\n")}
-		)
+		${selectQueries.join("\nUNION\n")}
 	`
 
 	return { query: unionQuery, params: collectedParams }
@@ -294,65 +290,61 @@ const constructSelectQuery = ({
 		getStreamingLinksCondition(type, streaming)
 
 	// Build the query with placeholders
-	const query = `
-		${similarityCTE}
-		SELECT DISTINCT
-			'${type}' as media_type,
-			${similarity?.withSimilar?.length ? "m_similar.shared_dna_score as similarity_score," : ""}
-		  ${getCommonFields()
-				.map((field) => `m.${field}`)
-				.join(",\n\t")}
-		FROM ${type === "movie" ? "movies" : "tv"} m
-			${similarityJoins}
-			${dnaJoins}
-			${userJoin}
-		WHERE
-			m.title IS NOT NULL
-			AND m.release_year IS NOT NULL
-			AND m.poster_path IS NOT NULL
-			AND ${orderBy.column} IS NOT NULL
-			${streaming?.streamingPreset ? `AND ${streamingCondition}` : ""}
-			${minScore ? "AND aggregated_overall_score_normalized_percent >= :::minScore" : ""}
-			${maxScore ? "AND aggregated_overall_score_normalized_percent <= :::maxScore" : ""}
-			${minYear ? "AND release_year >= :::minYear" : ""}
-			${maxYear ? "AND release_year <= :::maxYear" : ""}
-			${
-				withCast && castIds.length
-					? `AND (${castIds
-							.map((castId) => `m.cast @> '[{"id": ${castId}}]'`)
-							.join(withCastCombinationType === "all" ? " AND " : " OR ")})`
-					: ""
-			}
-			${
-				withCrew && crewIds.length
-					? `AND (${crewIds
-							.map((crewId) => `m.crew @> '[{"id": ${crewId}}]'`)
-							.join(withCrewCombinationType === "all" ? " AND " : " OR ")})`
-					: ""
-			}
-			${withGenres?.length ? "AND m.genres && :::withGenres::varchar[]" : ""}
-			${
-				minScore ||
-				["popularity", "aggregated_overall_score_normalized_percent"].includes(
-					orderBy.column,
-				)
-					? `AND m.aggregated_overall_score_voting_count >= ${
-							orderBy.column === "aggregated_overall_score_normalized_percent"
-								? VOTE_COUNT_THRESHOLD_MID
-								: VOTE_COUNT_THRESHOLD_LOW
-						}`
-					: ""
-			}
-			${orderBy.column === "release_date" ? "AND m.release_date <= NOW()" : ""}
-			${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}
-		ORDER BY
-			${
-				similarity?.withSimilar?.length
-					? `similarity_score DESC, ${orderBy.column} ${orderBy.direction}`
-					: `${orderBy.column} ${orderBy.direction}`
-			}
-		  -- TODO: performance hack but not accurate
-			LIMIT :::subquery_limit
+	const query = `${similarityCTE}SELECT DISTINCT
+		'${type}' as media_type,
+		${similarity?.withSimilar?.length ? "m_similar.shared_dna_score as similarity_score," : ""}
+		${getCommonFields(type)
+			.map((field) => `m.${field}`)
+			.join(",\n\t\t")}
+	FROM ${type === "movie" ? "movie" : "show"} m
+		${similarityJoins}
+		${dnaJoins}
+		${userJoin}
+	WHERE
+		m.title IS NOT NULL
+		AND m.release_year IS NOT NULL
+		AND m.poster_path IS NOT NULL
+		AND ${orderBy.column} IS NOT NULL
+		${streaming?.streamingPreset ? `AND ${streamingCondition}` : ""}
+		${minScore ? "AND goodwatch_overall_score_normalized_percent >= :::minScore" : ""}
+		${maxScore ? "AND goodwatch_overall_score_normalized_percent <= :::maxScore" : ""}
+		${minYear ? "AND release_year >= :::minYear" : ""}
+		${maxYear ? "AND release_year <= :::maxYear" : ""}
+		${
+			withCast && castIds.length
+				? `AND (${castIds
+						.map(
+							(castId) =>
+								`JSON_EXTRACT(m.cast, '$[*].id') LIKE '%${castId}%'`,
+						)
+						.join(withCastCombinationType === "all" ? " AND " : " OR ")})`
+				: ""
+		}
+		${
+			withCrew && crewIds.length
+				? `AND (${crewIds
+						.map(
+							(crewId) =>
+								`JSON_EXTRACT(m.crew, '$[*].id') LIKE '%${crewId}%'`,
+						)
+						.join(withCrewCombinationType === "all" ? " AND " : " OR ")})`
+				: ""
+		}
+		${withGenres?.length ? `AND (${withGenres.map(genre => `'${genre.replace(/'/g, "''")}'` + ' = ANY(m.genres)').join(' OR ')})` : ""}
+		${
+			minScore ||
+			["popularity", "goodwatch_overall_score_normalized_percent"].includes(
+				orderBy.column,
+			)
+				? `AND m.goodwatch_overall_score_voting_count >= ${
+						orderBy.column === "goodwatch_overall_score_normalized_percent"
+							? VOTE_COUNT_THRESHOLD_MID
+							: VOTE_COUNT_THRESHOLD_LOW
+					}`
+				: ""
+		}
+		${orderBy.column === "release_date" ? (type === "movie" ? "AND m.release_date <= CURRENT_TIMESTAMP" : "AND m.first_air_date <= CURRENT_TIMESTAMP") : ""}
+		${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}
 	`
 
 	// Collect parameters
@@ -361,7 +353,6 @@ const constructSelectQuery = ({
 		maxScore,
 		minYear,
 		maxYear,
-		withGenres: withGenres || [],
 		page,
 		pageSize,
 		userId,
@@ -386,185 +377,9 @@ const constructSimilarityQuery = ({
 	similarityCTE: string
 	similarityJoins: string
 } => {
-	if (!similarity?.withSimilar?.length) {
-		return { similarityCTE: "", similarityJoins: "" }
-	}
-
-	// Separate movie and TV IDs from the similarity items
-	const movieIds = similarity.withSimilar
-		.filter((item) => item.mediaType === "movie")
-		.map((item) => item.tmdbId)
-	const tvIds = similarity.withSimilar
-		.filter((item) => item.mediaType === "tv")
-		.map((item) => item.tmdbId)
-
-	const similarityCTE = `
-    /*+ SET enable_nestloop = on */
-    /*+ SET random_page_cost = 1.1 */
-    WITH input_items AS (
-      SELECT 
-        ${movieIds.length ? `ARRAY[${movieIds.join(",")}]` : "ARRAY[]::int[]"} AS movie_ids,
-        ${tvIds.length ? `ARRAY[${tvIds.join(",")}]` : "ARRAY[]::int[]"} AS tv_ids
-    ),
-    source_items AS (
-      -- Get source data once to reuse throughout the query
-      SELECT 
-        dna, 
-        trope_names, 
-        'movie' as media_type,
-        tmdb_id
-      FROM movies
-      WHERE tmdb_id = ANY((SELECT movie_ids FROM input_items LIMIT 1)::int[])
-        AND dna IS NOT NULL
-        AND trope_names IS NOT NULL
-      UNION ALL
-      SELECT 
-        dna, 
-        trope_names, 
-        'tv' as media_type,
-        tmdb_id
-      FROM tv
-      WHERE tmdb_id = ANY((SELECT tv_ids FROM input_items LIMIT 1)::int[])
-        AND dna IS NOT NULL
-        AND trope_names IS NOT NULL
-    ),
-    all_source_tags AS (
-      -- Extract all DNA tags once and aggregate them by category
-      SELECT 
-        category,
-        array_agg(DISTINCT tag) AS tags
-      FROM (
-        SELECT 
-          t.key as category,
-          jsonb_array_elements_text(t.value) AS tag
-        FROM source_items
-        CROSS JOIN LATERAL jsonb_each(source_items.dna) AS t(key, value)
-        WHERE t.key = ANY(${categoriesArray}::text[])
-      ) AS source_dna_tags
-      GROUP BY category
-    ),
-    source_tropes AS (
-      -- Get all tropes for the input movies/TV shows
-      SELECT 
-        DISTINCT unnest(trope_names) AS trope
-      FROM source_items
-      WHERE trope_names IS NOT NULL
-      LIMIT 1000
-    ),
-    dna_tag_matches AS (
-      -- Pre-calculate the number of DNA tag matches for each item
-      SELECT
-        m.tmdb_id as item_id,
-        'movie'::text as media_type,
-        COUNT(DISTINCT ast.category || ':' || item_tag) as matching_tag_count
-      FROM 
-        movies m
-      CROSS JOIN all_source_tags ast
-      JOIN LATERAL (
-        SELECT jsonb_array_elements_text(m.dna->ast.category) AS item_tag
-      ) tags ON TRUE
-      WHERE m.popularity >= 2
-        AND m.aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID} 
-        AND m.trope_names IS NOT NULL
-        AND m.dna IS NOT NULL
-        AND tags.item_tag = ANY(ast.tags)
-      GROUP BY m.tmdb_id
-      
-      UNION ALL
-      
-      SELECT
-        t.tmdb_id as item_id,
-        'tv'::text as media_type,
-        COUNT(DISTINCT ast.category || ':' || item_tag) as matching_tag_count
-      FROM 
-        tv t
-      CROSS JOIN all_source_tags ast
-      JOIN LATERAL (
-        SELECT jsonb_array_elements_text(t.dna->ast.category) AS item_tag
-      ) tags ON TRUE
-      WHERE t.popularity >= 2
-        AND t.aggregated_overall_score_voting_count > ${VOTE_COUNT_THRESHOLD_MID} 
-        AND t.trope_names IS NOT NULL
-        AND t.dna IS NOT NULL
-        AND tags.item_tag = ANY(ast.tags)
-      GROUP BY t.tmdb_id
-    ),
-    popular_items AS (
-      -- Select the top items with the most DNA tag matches efficiently
-      SELECT
-        m.tmdb_id as item_id,
-        m.title,
-        m.release_year,
-        m.popularity,
-        m.aggregated_overall_score_voting_count,
-        'movie'::text as media_type,
-        m.trope_names,
-        m.dna,
-        dtm.matching_tag_count
-      FROM dna_tag_matches dtm
-      JOIN movies m ON 
-        m.tmdb_id = dtm.item_id AND dtm.media_type = 'movie'
-      WHERE NOT m.tmdb_id = ANY((SELECT movie_ids FROM input_items LIMIT 1)::int[])
-      
-      UNION ALL
-      
-      SELECT
-        t.tmdb_id as item_id,
-        t.title,
-        t.release_year,
-        t.popularity,
-        t.aggregated_overall_score_voting_count,
-        'tv'::text as media_type,
-        t.trope_names,
-        t.dna,
-        dtm.matching_tag_count
-      FROM dna_tag_matches dtm
-      JOIN tv t ON 
-        t.tmdb_id = dtm.item_id AND dtm.media_type = 'tv'
-      WHERE NOT t.tmdb_id = ANY((SELECT tv_ids FROM input_items LIMIT 1)::int[])
-      
-      ORDER BY matching_tag_count DESC, popularity DESC
-      LIMIT 2000
-    ),
-    matching_items AS (
-      SELECT
-        p.item_id,
-        -- New trope-based scoring with better performance
-        (SELECT count(*) FROM unnest(p.trope_names) t(trope) 
-         WHERE trope IN (SELECT trope FROM source_tropes)) * 10 + -- Base score per matching trope
-        -- Calculate percentage score more efficiently
-        (SELECT 
-          (count(*)::float / array_length(p.trope_names, 1)::float) * 500
-         FROM unnest(p.trope_names) t(trope) 
-         WHERE trope IN (SELECT trope FROM source_tropes)) +
-        -- Calculate coverage score more efficiently
-        (SELECT 
-          (count(*)::float / (SELECT count(*) FROM source_tropes)::float) * 500
-         FROM unnest(p.trope_names) t(trope) 
-         WHERE trope IN (SELECT trope FROM source_tropes)) +
-        -- Add weight for DNA tag matches
-        p.matching_tag_count * 100 AS shared_dna_score,
-        p.media_type
-      FROM popular_items p
-      WHERE EXISTS (
-        SELECT 1 FROM source_tropes st 
-        WHERE st.trope = ANY(p.trope_names)
-      )
-      -- No need for explicit exclusion as we've added WHERE clauses in popular_items
-      -- Add a minimum trope match threshold to filter out weak matches
-      AND (
-        SELECT count(*) FROM unnest(p.trope_names) t(trope) 
-        WHERE trope IN (SELECT trope FROM source_tropes)
-      ) >= 5
-    )`
-
-	const similarityJoins = `
-    JOIN matching_items m_similar 
-			ON m.tmdb_id = m_similar.item_id 
-			AND m_similar.media_type = '${type}'
-	`
-
-	return { similarityCTE, similarityJoins }
+	// Similarity functionality disabled for CrateDB migration (depends on DNA data)
+	return { similarityCTE: "", similarityJoins: "" }
+	// Rest of function disabled for CrateDB migration
 }
 
 const constructDNAQuery = ({
@@ -574,40 +389,12 @@ const constructDNAQuery = ({
 	dnaJoins: string
 	dnaParams: Record<string, unknown>
 } => {
-	const { similarDNAIds = [], similarDNACombinationType } = similarity || {}
-
+	// DNA functionality disabled for CrateDB migration
+	// const { similarDNAIds = [], similarDNACombinationType } = similarity || {}
 	const dnaParams: Record<string, unknown> = {}
 
-	const similarDNAJoins =
-		similarDNAIds.length > 0
-			? similarDNACombinationType === "all"
-				? similarDNAIds
-						.map((dnaId, index) => {
-							// Use parameter placeholders
-							dnaParams[`dnaId${index}`] = dnaId
-							// Join condition now includes both primary DNA and cluster members
-							return `JOIN dna d${index} ON m.tmdb_id = ANY(d${index}.${type}_tmdb_id)
-                    AND (
-                      d${index}.id = :::dnaId${index} OR
-                      d${index}.cluster_id = :::dnaId${index}
-                    )`
-						})
-						.join("\n")
-				: (() => {
-						const conditions = similarDNAIds
-							.map((dnaId, index) => {
-								// Use parameter placeholders
-								dnaParams[`dnaId${index}`] = dnaId
-								return `(d.id = :::dnaId${index} OR d.cluster_id = :::dnaId${index})`
-							})
-							.join(" OR ")
-						return `JOIN dna d ON m.tmdb_id = ANY(d.${type}_tmdb_id)
-                  AND (${conditions})`
-					})()
-			: ""
-
 	return {
-		dnaJoins: [similarDNAJoins].filter(Boolean).join("\n"),
+		dnaJoins: "", // DNA joins disabled
 		dnaParams,
 	}
 }
@@ -646,16 +433,16 @@ const constructUserQuery = ({
 	}
 }
 
-const getCommonFields = () => {
+const getCommonFields = (type: MediaType) => {
 	return [
 		"tmdb_id",
 		"title",
 		"release_year",
-		"release_date",
+		`${type === "movie" ? "release_date" : "first_air_date"} as release_date`,
 		"backdrop_path",
 		"poster_path",
 		"popularity",
-		"streaming_providers",
+		"streaming_service_ids",
 		...getRatingKeys(),
 	]
 }
@@ -684,10 +471,10 @@ const getStreamingLinksCondition = (
 	return {
 		condition: `EXISTS (
 			SELECT 1
-			FROM streaming_provider_links spl
-			WHERE spl.tmdb_id = m.tmdb_id
-				AND spl.media_type = '${type}'
-				AND spl.provider_id ${providerCondition}
+			FROM streaming_availability sa
+			WHERE sa.media_tmdb_id = m.tmdb_id
+				AND sa.media_type = '${type}'
+				AND sa.streaming_service_id ${providerCondition}
 				${countryCodeCondition}
 				${streamTypeCondition}
 			LIMIT 1
@@ -712,27 +499,27 @@ const getStreamingLinksJoin = ({
 
 	return `
 		SELECT json_agg(json_build_object(
-			'provider_id', spl.provider_id,
+			'provider_id', sa.streaming_service_id,
 			'provider_name', sp.name,
 			'provider_logo_path', sp.logo_path,
-			'media_type', spl.media_type,
-			'country_code', spl.country_code,
-			'stream_type', spl.stream_type,
-			'stream_url', spl.stream_url,
-			'price_dollar', spl.price_dollar,
-			'quality', spl.quality
+			'media_type', sa.media_type,
+			'country_code', sa.country_code,
+			'stream_type', sa.stream_type,
+			'stream_url', sa.stream_url,
+			'price_dollar', sa.price_dollar,
+			'quality', sa.quality
 										)) AS streaming_links
 		FROM (
-			SELECT DISTINCT ON (spl.provider_id) spl.*
-			FROM streaming_provider_links spl
-			WHERE spl.tmdb_id = m.tmdb_id
-				AND spl.media_type = m.media_type
-				AND spl.provider_id ${providerCondition}
+			SELECT DISTINCT ON (sa.streaming_service_id) sa.*
+			FROM streaming_availability sa
+			WHERE sa.media_tmdb_id = m.tmdb_id
+				AND sa.media_type = m.media_type
+				AND sa.streaming_service_id ${providerCondition}
 			${countryCodeCondition}
 			${streamTypeCondition}
-			ORDER BY spl.provider_id, spl.quality DESC, spl.price_dollar ASC
-		) spl
-		INNER JOIN streaming_providers sp ON sp.id = spl.provider_id
+			ORDER BY sa.streaming_service_id, sa.quality DESC, sa.price_dollar ASC
+		) sa
+		INNER JOIN streaming_service sp ON sp.tmdb_id = sa.streaming_service_id AND sp.media_type = sa.media_type
 	`
 }
 
@@ -742,21 +529,25 @@ const convertNamedToPositionalParams = <T extends string>(
 	query: string,
 	params: Partial<Record<T, unknown>>,
 ) => {
-	let index = 1
-	const nameToIndex: Partial<Record<T, string>> = {}
+	// For CrateDB, we'll return the query with named parameters replaced by question marks
+	// and an ordered array of parameter values
 	const orderedValues: unknown[] = []
 
-	const positionalQuery = query.replace(/:::(\w+)/g, (_, name) => {
-		if (!(name in nameToIndex)) {
+	// Find all parameter occurrences in order (including duplicates)
+	const matches = query.match(/:::(\w+)/g)
+	if (matches) {
+		matches.forEach((match) => {
+			const name = match.substring(3) // Remove ':::'
 			if (Object.prototype.hasOwnProperty.call(params, name)) {
-				nameToIndex[name as T] = `$${index++}`
 				orderedValues.push(params[name as T])
 			} else {
 				throw new Error(`Parameter '${name}' is missing in the params object`)
 			}
-		}
-		return nameToIndex[name as T] as string
-	})
+		})
+	}
+
+	// Replace all named parameters with question marks
+	const positionalQuery = query.replace(/:::(\w+)/g, "?")
 
 	return { query: positionalQuery, params: orderedValues }
 }
@@ -783,7 +574,7 @@ function prepareStreamingConditions(
 
 	let streamTypeCondition = ""
 	if (streamTypes) {
-		streamTypeCondition = `AND spl.stream_type IN (${streamTypes
+		streamTypeCondition = `AND sa.stream_type IN (${streamTypes
 			.map((streamType, idx) => {
 				params[`streamType${idx}`] = streamType
 				return `:::streamType${idx}`
@@ -794,7 +585,7 @@ function prepareStreamingConditions(
 	let countryCodeCondition = ""
 	if (streamingPreset !== "everywhere" && countryCode) {
 		params.countryCode = countryCode
-		countryCodeCondition = "AND spl.country_code = :::countryCode"
+		countryCodeCondition = "AND sa.country_code = :::countryCode"
 	}
 	return {
 		providerCondition,

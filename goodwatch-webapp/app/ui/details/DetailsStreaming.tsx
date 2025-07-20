@@ -4,7 +4,7 @@ import type {
 	StreamType,
 	TVDetails,
 } from "~/server/details.server"
-import type { SectionIds } from "~/ui/details/common"
+import type { SectionIds } from "~/ui/details/sections"
 import type { Section, SectionProps } from "~/utils/scroll"
 import StreamingBadges from "~/ui/streaming/StreamingBadges"
 import CountrySelector from "~/ui/streaming/CountrySelector"
@@ -12,21 +12,23 @@ import StreamingTypeSelector from "~/ui/streaming/StreamingTypeSelector"
 import { Cog6ToothIcon } from "@heroicons/react/24/solid"
 import Appear from "~/ui/fx/Appear"
 import tmdb_logo from "~/img/tmdb-logo.svg"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface DetailsStreamingProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	country: string
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
 
 export default function DetailsStreaming({
-	details,
+	media,
 	country,
 	sectionProps,
 	navigateToSection,
 }: DetailsStreamingProps) {
-	const { media_type, streaming_country_codes, streaming_links } = details
+	const { details, mediaType, streaming_availabilities } = media
+	const { streaming_country_codes } = details
 
 	const [showSelectors, setShowSelectors] = React.useState(false)
 	const [streamingType, setStreamingType] =
@@ -42,10 +44,8 @@ export default function DetailsStreaming({
 				<div className="rounded-xl bg-gray-700/50">
 					<div className="my-2 py-3 px-4 flex items-center justify-between gap-4">
 						<StreamingBadges
-							details={details}
+							media={media}
 							country={country}
-							media_type={media_type}
-							links={streaming_links}
 							streamTypes={[streamingType]}
 						/>
 						<button
@@ -67,7 +67,7 @@ export default function DetailsStreaming({
 									onChange={setStreamingType}
 								/>
 								<CountrySelector
-									media_type={media_type}
+									mediaType={mediaType}
 									countryCodes={streaming_country_codes}
 									currentCountryCode={country}
 									navigateToSection={navigateToSection}
@@ -77,8 +77,8 @@ export default function DetailsStreaming({
 								<small>Powered by</small>
 								<a
 									href={
-										streaming_links.length
-											? streaming_links[0].tmdb_url
+										streaming_availabilities.length
+											? streaming_availabilities[0].tmdb_link
 											: "https://www.themoviedb.org/"
 									}
 									target="_blank"

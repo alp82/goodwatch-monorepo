@@ -11,13 +11,13 @@ export const sections = {
 		id: "streaming",
 		label: "Streaming",
 	},
-	about: {
-		id: "about",
-		label: "About",
-	},
-	dna: {
-		id: "dna",
-		label: "DNA",
+	// about: {
+	// 	id: "about",
+	// 	label: "About",
+	// },
+	fingerprint: {
+		id: "fingerprint",
+		label: "Fingerprint",
 	},
 	related: {
 		id: "related",
@@ -31,9 +31,9 @@ export const sections = {
 		id: "crew",
 		label: "Crew",
 	},
-	cast: {
-		id: "cast",
-		label: "Cast",
+	actors: {
+		id: "actors",
+		label: "Actors",
 	},
 	media: {
 		id: "media",

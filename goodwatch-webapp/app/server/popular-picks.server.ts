@@ -7,7 +7,7 @@ import {
 	increasePriorityForTVs,
 } from "~/server/utils/priority"
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query as crateQuery } from "~/utils/crate"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 export interface PopularPicksMovie extends AllRatings {
@@ -51,30 +51,28 @@ export async function _getPopularPicksMovies({
 	country,
 	language,
 }: PopularPicksMovieParams): Promise<PopularPicksMovie[]> {
-	const result = await executeQuery(`
+	const result = await crateQuery<PopularPicksMovie>(`
     SELECT
       tmdb_id,
       title,
       poster_path,
-      streaming_providers,
+			streaming_service_ids,
       ${getRatingKeys().join(", ")}
     FROM
-      movies
+      movie
     WHERE
-      popularity > 30
+      popularity > 2
       AND poster_path IS NOT NULL
-      AND aggregated_overall_score_normalized_percent >= 80
-      AND aggregated_overall_score_voting_count >= 500
+      AND goodwatch_overall_score_normalized_percent >= 80
+      AND goodwatch_overall_score_voting_count >= 500
     ORDER BY
       RANDOM()
     LIMIT 50;
   `)
-	if (!result.rows.length) throw Error("no popular picks for movies found")
+	if (!result.length) throw Error("no popular picks for movies found")
 
-	// increasePriorityForMovies(result.rows.map((row) => row.tmdb_id))
-	return result.rows.map((row) =>
-		getCountrySpecificDetails(row, country, language),
-	)
+	// increasePriorityForMovies(result.map((row) => row.tmdb_id))
+	return result
 }
 
 export const getPopularPicksTV = async (params: PopularPicksTVParams) => {
@@ -91,28 +89,26 @@ export async function _getPopularPicksTV({
 	country,
 	language,
 }: PopularPicksTVParams): Promise<PopularPicksTV[]> {
-	const result = await executeQuery(`
+	const result = await crateQuery<PopularPicksTV>(`
     SELECT
       tmdb_id,
       title,
       poster_path,
-      streaming_providers,
+			streaming_service_ids,
       ${getRatingKeys().join(", ")}
     FROM
-      tv
+      show
     WHERE
-      popularity > 30
+      popularity > 2
       AND poster_path IS NOT NULL
-      AND aggregated_overall_score_normalized_percent >= 80
-      AND aggregated_overall_score_voting_count >= 500
+      AND goodwatch_overall_score_normalized_percent >= 80
+      AND goodwatch_overall_score_voting_count >= 500
     ORDER BY
       RANDOM()
     LIMIT 40;
   `)
-	if (!result.rows.length) throw Error("no popular picks for tv shows found")
+	if (!result.length) throw Error("no popular picks for tv shows found")
 
-	// increasePriorityForTVs(result.rows.map((row) => row.tmdb_id))
-	return result.rows.map((row) =>
-		getCountrySpecificDetails(row, country, language),
-	)
+	// increasePriorityForTVs(result.map((row) => row.tmdb_id))
+	return result
 }

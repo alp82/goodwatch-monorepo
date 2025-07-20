@@ -1,9 +1,7 @@
 import React from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import Description from "~/ui/details/Description"
-import DNAPreview from "~/ui/dna/DNAPreview"
 import type { Section } from "~/utils/scroll"
-import dnaIcon from "~/img/dna-icon.svg"
 import { NewspaperIcon } from "@heroicons/react/24/outline"
 
 export interface AboutProps {

@@ -45,7 +45,7 @@ export const getStreamingUrl = (
 	link: StreamingLink,
 	details: MovieDetails | TVDetails,
 	country: string,
-	media_type: "movie" | "tv",
+	mediaType: "movie" | "show",
 ) => {
 	if (link.stream_url) return link.stream_url
 

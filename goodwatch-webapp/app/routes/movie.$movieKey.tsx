@@ -1,13 +1,13 @@
-import {
-	type LoaderFunction,
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
+import type {
+	LoaderFunction,
+	LoaderFunctionArgs,
+	MetaFunction,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import { type MovieDetails, getDetailsForMovie } from "~/server/details.server"
+import { getDetailsForMovie } from "~/server/details.server"
+import type { MovieQueryResult } from "~/server/types/details-types"
 import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -24,18 +24,18 @@ export function headers() {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const pageMeta: PageMeta = {
-		title: `${data.details.title} (${data.details.release_year}) | Movie | GoodWatch`,
-		description: `Discover '${data.details.title}' (${data.details.release_year}) and find movies with similar plotlines, cast, genre, or tone. Dive deep into movie details and watch availability.`,
-		url: `https://goodwatch.app/movie/${data.details.tmdb_id}-${titleToDashed(data.details.title)}`,
-		image: `https://image.tmdb.org/t/p/w1280/${data.details.images.backdrops?.[0]?.file_path}`,
-		alt: `${data.details.title} (${data.details.release_year}) movie poster`,
+		title: `${data.media.details.title} (${data.media.details.release_year}) | Movie | GoodWatch`,
+		description: `Discover '${data.media.details.title}' (${data.media.details.release_year}) and find movies with similar plotlines, cast, genre, or tone. Dive deep into movie details and watch availability.`,
+		url: `https://goodwatch.app/movie/${data.media.details.tmdb_id}-${titleToDashed(data.media.details.title)}`,
+		image: `https://image.tmdb.org/t/p/w1280/${data.media.images.backdrops?.[0]?.file_path}`,
+		alt: `${data.media.details.title} (${data.media.details.release_year}) movie poster`,
 	}
 
-	return buildMeta({ pageMeta, item: data.details })
+	return buildMeta({ pageMeta, item: data.media.details })
 }
 
 export type LoaderData = {
-	details: Awaited<MovieDetails>
+	media: MovieQueryResult
 	params: {
 		country: string
 	}
@@ -54,15 +54,14 @@ export const loader: LoaderFunction = async ({
 	const country =
 		url.searchParams.get("country") || userSettings?.country_default || ""
 	const language = url.searchParams.get("language") || "en"
-
-	const details = await getDetailsForMovie({
+	const media = await getDetailsForMovie({
 		movieId,
 		country,
 		language,
 	})
 
 	return {
-		details,
+		media,
 		params: {
 			country,
 		},
@@ -70,13 +69,13 @@ export const loader: LoaderFunction = async ({
 }
 
 export default function DetailsMovie() {
-	const { details, params } = useLoaderData<LoaderData>()
+	const { media, params } = useLoaderData<LoaderData>()
 	const { country } = params
 	const { locale } = useLocale()
 
 	// return (
 	// 	<>
-	// 		{details.images.backdrops.map((backdrop) => (
+	// 		{media.images.backdrops.map((backdrop) => (
 	// 			<div key={backdrop.file_path}>
 	// 				<span>{backdrop.file_path}</span>
 	// 				<img src={`https://image.tmdb.org/t/p/w1280/${backdrop.file_path}`} />
@@ -101,5 +100,5 @@ export default function DetailsMovie() {
 		}
 	}, [])
 
-	return <Details details={details} country={country} />
+	return <Details media={media} country={country} />
 }

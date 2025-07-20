@@ -162,7 +162,7 @@ export default function FilterSelection({
 														/>
 														<span className="mt-2 text-sm">in</span>
 														<FilterCountries
-															type={params.type}
+															mediaType={params.type}
 															selectedCountry={params.country}
 															onChange={(newCountry) =>
 																updateParams({

@@ -1,9 +1,9 @@
 import { CubeIcon } from "@heroicons/react/24/solid"
 import type { MetaFunction } from "@remix-run/node"
 import { Link } from "@remix-run/react"
-import React, { useState } from "react"
+import React from "react"
 import disneyLogo from "~/img/disneyplus-logo.svg"
-import dnaBig from "~/img/dna-big.png"
+import fingerprintIcon from "~/img/fingerprint.webp"
 import huluLogo from "~/img/hulu-logo.png"
 import imdbLogo from "~/img/imdb-logo-250.png"
 import metacriticLogo from "~/img/metacritic-logo-250.png"
@@ -46,8 +46,9 @@ export default function About() {
 					<div className="mt-16 sm:mt-24 flex flex-col gap-16 sm:gap-24 leading-relaxed text-2xl sm:text-3xl lg:text-4xl">
 						<div className="flex items-center justify-center flex-wrap gap-8">
 							<p className="max-w-lg text-center">
-								Only on GoodWatch: The <span className="accent">DNA</span>{" "}
-								classifies movies and shows based on{" "}
+								Only on GoodWatch: The{" "}
+								<span className="accent">Fingerprint</span> classifies movies
+								and shows based on{" "}
 								<button
 									type="button"
 									ref={ref}
@@ -62,7 +63,7 @@ export default function About() {
 							<div className="w-[10em] flex items-center justify-center flex-wrap gap-10">
 								<img
 									className="h-28 sm:h-40 inline-block"
-									src={dnaBig}
+									src={fingerprintIcon}
 									alt="DNA Logo"
 									title="DNA Logo"
 								/>

@@ -17,8 +17,8 @@ export default function Ratings({
 	title = "Ratings",
 	compact = false,
 }: RatingsProps) {
-	const vibeColorIndex = ratings?.aggregated_overall_score_normalized_percent
-		? Math.floor(ratings.aggregated_overall_score_normalized_percent / 10) * 10
+	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
+		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10
 		: null
 
 	return (
@@ -35,8 +35,8 @@ export default function Ratings({
 					<dd
 						className={`${vibeColorIndex == null ? "text-gray-300" : "text-gray-100"} mt-1 text-5xl font-semibold tracking-tight`}
 					>
-						{ratings?.aggregated_overall_score_normalized_percent
-							? Math.floor(ratings?.aggregated_overall_score_normalized_percent)
+						{ratings?.goodwatch_overall_score_normalized_percent
+							? Math.floor(ratings?.goodwatch_overall_score_normalized_percent)
 							: "--"}
 					</dd>
 					<dt

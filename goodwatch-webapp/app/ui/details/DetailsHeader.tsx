@@ -1,45 +1,48 @@
 import type React from "react"
 import ShareButton from "~/ui/button/ShareButton"
-import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline"
-import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid"
-import { HandThumbUpIcon } from "@heroicons/react/24/solid"
 import DetailsInlineNav from "~/ui/details/DetailsInlineNav"
 import type { Section } from "~/utils/scroll"
 import type {
 	ContentRatingResult,
 	MovieDetails,
-	ReleaseDate,
+	Release,
 	TVDetails,
 } from "~/server/details.server"
 import AgeRating from "~/ui/details/AgeRating"
 import Runtime from "~/ui/details/Runtime"
-import { getDNAForCategory } from "~/ui/dna/dna_utils"
 import Genres from "~/ui/details/Genres"
+import Cycle from "~/ui/list/Cycle"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 interface DetailsHeaderProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
+	country: string
 	activeSections: string[]
 	navigateToSection: (section: Section) => void
 }
 
 const DetailsHeader: React.FC<DetailsHeaderProps> = ({
-	details,
+	media,
+	country,
 	activeSections,
 	navigateToSection,
 }) => {
-	const { genres, media_type, release_year, title } = details
+	const { details, mediaType } = media
+	const { genres, release_year, title, fingerprint } = details
 
-	let ageRating: ContentRatingResult | ReleaseDate | undefined
-	let number_of_episodes: number | undefined
-	let number_of_seasons: number | undefined
-	let runtime: number | undefined
-	if (media_type === "movie") {
-		ageRating = (details.certifications || []).find(
-			(release) => release.certification,
-		)
+	const ageCertifications = details.age_certifications || []
+	const ageCertification =
+		ageCertifications.find((ageCertification) =>
+			ageCertification.startsWith(`${country}_`),
+		) || ""
+	const ageRating = ageCertification.split("_")?.[1]
+
+	let number_of_episodes: number | null = null
+	let number_of_seasons: number | null = null
+	let runtime: number | null = null
+	if (mediaType === "movie") {
 		runtime = details.runtime
 	} else {
-		ageRating = (details.certifications || []).find((release) => release.rating)
 		number_of_episodes = details.number_of_episodes
 		number_of_seasons = details.number_of_seasons
 	}
@@ -61,15 +64,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 									</>
 								)}
 								<span className="font-normal">
-									{media_type === "movie" ? "Movie" : "TV Show"}
-								</span>
-								<span className="hidden xs:inline mx-2">&middot;</span>
-								<span className="hidden xs:inline">
-									<Genres
-										genres={genres.slice(0, 2)}
-										type={media_type}
-										compact={true}
-									/>
+									{mediaType === "movie" ? "Movie" : "Show"}
 								</span>
 							</div>
 							<div className="flex items-center">
@@ -96,6 +91,14 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 										<AgeRating ageRating={ageRating} />
 									</>
 								)}
+								<span className="hidden xs:inline mx-2">&middot;</span>
+								<span className="hidden xs:inline">
+									<Genres
+										genres={genres.slice(0, 2)}
+										type={mediaType === "movie" ? "movie" : "tv"}
+										compact={true}
+									/>
+								</span>
 							</div>
 						</div>
 					</div>
@@ -129,6 +132,20 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						<ShareButton />
 					</div>
 				</div>
+				{fingerprint?.tags && (
+					<div className="relative top-5 h-8 text-xs lg:text-sm">
+						<Cycle
+							items={fingerprint.tags.map((tag) => (
+								<span
+									key={tag}
+									className="relative px-2 py-0.5 rounded-sm border-2 border-amber-900 bg-amber-950 text-white"
+								>
+									{tag}
+								</span>
+							))}
+						/>
+					</div>
+				)}
 			</div>
 			<DetailsInlineNav
 				activeSections={activeSections}

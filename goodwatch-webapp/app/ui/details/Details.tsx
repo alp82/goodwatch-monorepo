@@ -1,22 +1,21 @@
 import React from "react"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
 import DetailsContent from "~/ui/details/DetailsContent"
-import DetailsInlineNav from "~/ui/details/DetailsInlineNav"
-import DetailsOverview from "~/ui/details/DetailsOverview"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
-import { sections } from "~/ui/details/common"
-import { useScrollSections } from "~/utils/scroll"
+import { sections } from "~/ui/details/sections"
 import DetailsHeader from "~/ui/details/DetailsHeader"
 import DetailsOverview from "~/ui/details/DetailsOverview"
 import DetailsRatings from "~/ui/details/DetailsRatings"
-import DetailsSreaming from "~/ui/details/DetailsStreaming"
+import DetailsStreaming from "~/ui/details/DetailsStreaming"
+import { useScrollSections } from "~/utils/scroll"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface DetailsProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	country: string
 }
 
-export default function Details({ details, country }: DetailsProps) {
+export default function Details({ media, country }: DetailsProps) {
+	const { details } = media
 	const { backdrop_path } = details
 	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
 
@@ -43,7 +42,8 @@ export default function Details({ details, country }: DetailsProps) {
 			)}
 
 			<DetailsHeader
-				details={details}
+				media={media}
+				country={country}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
@@ -53,12 +53,12 @@ export default function Details({ details, country }: DetailsProps) {
 				navigateToSection={navigateToSection}
 			/>
 
-			<DetailsOverview details={details} sectionProps={sectionProps} />
+			<DetailsOverview media={media} sectionProps={sectionProps} />
 
 			<DetailsRatings details={details} sectionProps={sectionProps} />
 
-			<DetailsSreaming
-				details={details}
+			<DetailsStreaming
+				media={media}
 				country={country}
 				sectionProps={sectionProps}
 				navigateToSection={navigateToSection}
@@ -67,7 +67,7 @@ export default function Details({ details, country }: DetailsProps) {
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 					<DetailsContent
-						details={details}
+						media={media}
 						country={country}
 						sectionProps={sectionProps}
 						navigateToSection={navigateToSection}

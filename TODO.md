@@ -2,7 +2,6 @@
 # TODO's
 
 ```
----    
 
 db redesign
     * certifications: split into releases and age ratings?
@@ -28,8 +27,62 @@ DB optimization
    
 ---   
 
+robots with sitemap link
+    https://www.instagram.com/robots.txt
+    
+gsc not indexed
+    https://x.com/junqueror/status/1910287123183251758?t=h4qDtOoliAFYi2xypdaU5Q&s=03
+    https://www.indexnow.org/
+    
+---   
+
 Fingerprint
-    Genre boxes with 4 most suitable scores
+    Small box with 6 pillars and Essence Tags
+    Highlight keys sections with related media recommendations
+    Badges?
+    (Genre boxes with 4 most suitable scores)
+
+---
+
+landing page inspiration
+    https://nvg8.io/
+    https://waku.gg/
+    https://superdevpro.com/
+    https://www.firewatchgame.com/
+    https://www.screenspace.io/
+    https://www.dize.app/
+    https://dribbble.com/shots/18008814-Osnaria-Game-Web-Landing-Page-With-Illustrations
+
+---
+
+landing page redesign
+    https://replit.com/@alp82/StreamSense
+
+    show DNA in covers
+    hibba: https://www.figma.com/design/Kv0ESmxOOFYuW8OVq6od9i/Goodwatch?node-id=0-1&p=f&t=z7iZzVGPfgqjznOf-0
+    https://www.landingly.co/
+    https://onepagelove.com/ 
+    https://handyarrows.com/
+    scroll words
+        https://x.com/jh3yy/status/1863858454751789400
+        https://codepen.io/pxel/pen/EaYVZBO
+        https://codepen.io/jh3y/pen/MYgaaem
+
+tagline
+    https://www.reddit.com/r/SaaS/comments/1hoth2s/i_analyzed_100_saas_headlines_and_realized_were/?share_id=ql5uTUQ151unOg4PvX-N8&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
+
+ai
+    https://www.freepik.com/pikaso/ai-video-generator
+    
+---   
+
+ARR suite
+    https://github.com/Ravencentric/awesome-arr
+    https://wiki.servarr.com/
+
+---   
+
+handling of outdated streaming availability
 
 ---   
 
@@ -306,35 +359,6 @@ streaming + release:
 holiday + audience:
     best christmas [type] for [audience]
 
----
-
-landing page inspiration
-    https://waku.gg/
-    https://superdevpro.com/
-    https://www.firewatchgame.com/
-    https://www.screenspace.io/
-    https://www.dize.app/
-    https://dribbble.com/shots/18008814-Osnaria-Game-Web-Landing-Page-With-Illustrations
-
----
-
-landing page redesign
-    show DNA in covers
-    hibba: https://www.figma.com/design/Kv0ESmxOOFYuW8OVq6od9i/Goodwatch?node-id=0-1&p=f&t=z7iZzVGPfgqjznOf-0
-    https://www.landingly.co/
-    https://onepagelove.com/ 
-    https://handyarrows.com/
-    scroll words
-        https://x.com/jh3yy/status/1863858454751789400
-        https://codepen.io/pxel/pen/EaYVZBO
-        https://codepen.io/jh3y/pen/MYgaaem
-
-tagline
-    https://www.reddit.com/r/SaaS/comments/1hoth2s/i_analyzed_100_saas_headlines_and_realized_were/?share_id=ql5uTUQ151unOg4PvX-N8&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
-
-ai
-    https://www.freepik.com/pikaso/ai-video-generator
-    
 ---
 
 tv seasons:
@@ -621,6 +645,12 @@ home page categories:
     top 5 ____
     ____ vs ____
     
+---
+
+caption analysis
+    open captions
+    undersand content
+
 ---
 
 twitter gw
@@ -1259,6 +1289,7 @@ launch / promo
     slant
     Uneed
     Peerlist
+    https://www.listingcat.com/app/websites/launch-platforms
     https://solopush.com/
     https://www.justgotfound.com/
     https://open-launch.com/
