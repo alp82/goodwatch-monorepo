@@ -46,6 +46,9 @@ export interface DiscoverParams {
 	similarDNA: string
 	similarDNACombinationType: CombinationType
 	similarTitles: string
+	fingerprintConditions: string
+	suitabilityFilters: string
+	contextFilters: string
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
 	page: number
@@ -104,6 +107,9 @@ async function _getDiscoverResults({
 	sortBy,
 	sortDirection,
 	page,
+	fingerprintConditions,
+	suitabilityFilters,
+	contextFilters,
 }: DiscoverParams): Promise<DiscoverResults> {
 	if (!filterMediaTypes.includes(type))
 		throw new Error(`Invalid type for Discover: ${type}`)
@@ -165,6 +171,29 @@ async function _getDiscoverResults({
 		.filter(Boolean)
 	const withSimilar = convertSimilarTitles(similarTitles)
 
+	let parsedFingerprintConditions: any[] = []
+	if (fingerprintConditions) {
+		try {
+			parsedFingerprintConditions = JSON.parse(fingerprintConditions)
+		} catch (error) {
+			console.warn("Failed to parse fingerprintConditions:", error)
+		}
+	}
+
+	const parsedSuitabilityFilters = suitabilityFilters
+		? suitabilityFilters
+				.split(",")
+				.map((f) => f.trim())
+				.filter((f) => f.length > 0)
+		: []
+
+	const parsedContextFilters = contextFilters
+		? contextFilters
+				.split(",")
+				.map((f) => f.trim())
+				.filter((f) => f.length > 0)
+		: []
+
 	const { query, params } = constructFullQuery({
 		userId,
 		filterMediaType: type,
@@ -187,6 +216,9 @@ async function _getDiscoverResults({
 			withCrewCombinationType,
 			withoutCrew,
 			withGenres: uniqueGenreNames,
+			fingerprintConditions: parsedFingerprintConditions,
+			suitabilityFilters: parsedSuitabilityFilters,
+			contextFilters: parsedContextFilters,
 		},
 		similarity: {
 			similarDNAIds,

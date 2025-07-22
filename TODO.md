@@ -3,6 +3,9 @@
 
 ```
 
+user settings
+user data
+
 db redesign
     * certifications: split into releases and age ratings?
     * only denormalize movies and shows fields that are small enough
@@ -38,6 +41,7 @@ gsc not indexed
 
 Fingerprint
     Small box with 6 pillars and Essence Tags
+        https://www.plotsense.ai/movie/180
     Highlight keys sections with related media recommendations
     Badges?
     (Genre boxes with 4 most suitable scores)
@@ -163,6 +167,8 @@ remove obsolete code
 
 onboarding
     skip with "softcore" keyword
+    https://kinu-app.com/
+    https://veboli.com/
 
 ---    
 
@@ -236,6 +242,13 @@ similar filter
 start page
     make movietvlist compatible with swiper
     pick best 10 page data categories to display
+    stats: number of movies and shows
+    https://moviewiser.com/
+
+---
+
+optimistic ui
+    tanstack db
 
 ---
 

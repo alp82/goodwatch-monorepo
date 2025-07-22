@@ -59,6 +59,9 @@ interface Conditions {
 	withoutCrew?: string
 	withGenres?: string[]
 	withoutGenres?: string[]
+	fingerprintConditions?: FingerprintCondition[]
+	suitabilityFilters?: string[]
+	contextFilters?: string[]
 }
 
 interface ConstructSimilarityQueryParams {
@@ -102,6 +105,63 @@ interface ConstructUnionQueryParams
 }
 
 interface ConstructFullQueryParams extends ConstructUnionQueryParams {}
+
+interface FingerprintCondition {
+	field?: string
+	operator?: ">" | ">=" | "<" | "<=" | "=" | "!="
+	value?: number
+	logic?: "AND" | "OR"
+	conditions?: FingerprintCondition[]
+}
+
+// Function to generate SQL from fingerprint conditions
+const generateFingerprintSQL = (conditions: FingerprintCondition[]): string => {
+	if (!conditions || conditions.length === 0) return ""
+
+	const processCondition = (condition: FingerprintCondition): string => {
+		if (
+			condition.field &&
+			condition.operator &&
+			condition.value !== undefined
+		) {
+			// Single condition: fingerprint_scores['field'] >= value
+			return `fingerprint_scores['${condition.field}'] ${condition.operator} ${condition.value}`
+		} else if (condition.conditions && condition.conditions.length > 0) {
+			// Nested conditions with logic
+			const nestedSQL = condition.conditions
+				.map(processCondition)
+				.filter((sql) => sql.length > 0)
+				.join(` ${condition.logic || "AND"} `)
+			return nestedSQL ? `(${nestedSQL})` : ""
+		}
+		return ""
+	}
+
+	const sql = conditions
+		.map(processCondition)
+		.filter((sql) => sql.length > 0)
+		.join(" AND ")
+
+	return sql ? `AND ${sql}` : ""
+}
+
+// Function to generate SQL from suitability filters
+const generateSuitabilitySQL = (filters: string[]): string => {
+	if (!filters || filters.length === 0) return ""
+
+	const conditions = filters.map((filter) => `${filter} = true`).join(" AND ")
+
+	return `AND ${conditions}`
+}
+
+// Function to generate SQL from context filters
+const generateContextSQL = (filters: string[]): string => {
+	if (!filters || filters.length === 0) return ""
+
+	const conditions = filters.map((filter) => `${filter} = true`).join(" AND ")
+
+	return `AND ${conditions}`
+}
 
 export const constructFullQuery = ({
 	userId,
@@ -175,7 +235,11 @@ export const constructFullQuery = ({
 		offset,
 	}
 
-	// Convert named parameters to positional parameters once
+	// Add categories to params if similarity is being used
+	if (similarity?.withSimilar?.length) {
+		params.categories = conditions.categories
+	}
+
 	return convertNamedToPositionalParams(namedQuery, params)
 }
 
@@ -307,15 +371,14 @@ const constructSelectQuery = ({
 		AND ${orderBy.column} IS NOT NULL
 		${streaming?.streamingPreset ? `AND ${streamingCondition}` : ""}
 		${minScore ? "AND goodwatch_overall_score_normalized_percent >= :::minScore" : ""}
-		${maxScore ? "AND goodwatch_overall_score_normalized_percent <= :::maxScore" : ""}
+ 		${maxScore ? "AND goodwatch_overall_score_normalized_percent <= :::maxScore" : ""}
 		${minYear ? "AND release_year >= :::minYear" : ""}
 		${maxYear ? "AND release_year <= :::maxYear" : ""}
 		${
 			withCast && castIds.length
-				? `AND (${castIds
+				? ` AND (${castIds
 						.map(
-							(castId) =>
-								`JSON_EXTRACT(m.cast, '$[*].id') LIKE '%${castId}%'`,
+							(castId) => `JSON_EXTRACT(m.cast, '$[*].id') LIKE '%${castId}%'`,
 						)
 						.join(withCastCombinationType === "all" ? " AND " : " OR ")})`
 				: ""
@@ -324,13 +387,12 @@ const constructSelectQuery = ({
 			withCrew && crewIds.length
 				? `AND (${crewIds
 						.map(
-							(crewId) =>
-								`JSON_EXTRACT(m.crew, '$[*].id') LIKE '%${crewId}%'`,
+							(crewId) => `JSON_EXTRACT(m.crew, '$[*].id') LIKE '%${crewId}%'`,
 						)
 						.join(withCrewCombinationType === "all" ? " AND " : " OR ")})`
 				: ""
 		}
-		${withGenres?.length ? `AND (${withGenres.map(genre => `'${genre.replace(/'/g, "''")}'` + ' = ANY(m.genres)').join(' OR ')})` : ""}
+		${withGenres?.length ? `AND (${withGenres.map((genre) => `'${genre.replace(/'/g, "''")}'` + " = ANY(m.genres)").join(" OR ")})` : ""}
 		${
 			minScore ||
 			["popularity", "goodwatch_overall_score_normalized_percent"].includes(
@@ -345,6 +407,9 @@ const constructSelectQuery = ({
 		}
 		${orderBy.column === "release_date" ? (type === "movie" ? "AND m.release_date <= CURRENT_TIMESTAMP" : "AND m.first_air_date <= CURRENT_TIMESTAMP") : ""}
 		${userId && watchedType === "didnt-watch" ? "AND uwh.user_id IS NULL" : ""}
+		${conditions.fingerprintConditions?.length ? generateFingerprintSQL(conditions.fingerprintConditions) : ""}
+		${conditions.suitabilityFilters?.length ? generateSuitabilitySQL(conditions.suitabilityFilters) : ""}
+		${conditions.contextFilters?.length ? generateContextSQL(conditions.contextFilters) : ""}
 	`
 
 	// Collect parameters

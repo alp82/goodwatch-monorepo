@@ -10,9 +10,22 @@ export const moods: Record<string, PageData> = {
 			"Heart-pounding moments that'll make you check the locks twice. From jump scares that hit like espresso shots to lingering dread that sticks around like uninvited guests.",
 		backdrop_path: "qtWjZgCmslPwjP4DFUcLBUj13GV.jpg",
 		discoverParams: {
-			similarDNA:
-				"36458446_Mood|Terrifying,36393865_Plot|Psychological+Terror,36384843_Cinematic+Style|Jump+Scares,36373732_Sub-Genres|Supernatural+Horror,36373989_Sub-Genres|Sci-Fi+Horror,36376768_Sub-Genres|Teen+Horror",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "scare", operator: ">=", value: 8 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "tension", operator: ">=", value: 7 },
+								{ field: "psychological", operator: ">=", value: 6 },
+								{ field: "uncanny", operator: ">=", value: 6 },
+							],
+						},
+					],
+				},
+			]),
 		},
 		faq: [
 			{
@@ -34,9 +47,19 @@ export const moods: Record<string, PageData> = {
 			"Stories that hug your soul. Expect underdog victories, friendship goals, and happy endings so sweet they should come with a dentist warning.",
 		backdrop_path: "i9zpVfvLYJpoenHkklveIR07Em5.jpg",
 		discoverParams: {
-			similarDNA:
-				"36380351_Mood|Feel-Good,36377413_Mood|Joyful,36373018_Mood|Heartwarming",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "hopefulness", operator: ">=", value: 7 },
+						{ field: "wholesome", operator: ">=", value: 6 },
+						{ field: "bleakness", operator: "<=", value: 3 },
+						{ field: "catharsis", operator: ">=", value: 5 },
+					],
+				},
+			]),
+			suitabilityFilters: "suitability_family,suitability_teens",
+			contextFilters: "context_is_pure_escapism,context_is_comfort_watch",
 		},
 		faq: [
 			{
@@ -58,9 +81,21 @@ export const moods: Record<string, PageData> = {
 			"Clock's ticking, traps are set, and every shadow could change everything. These stories grab you by the collar and don't let go.",
 		backdrop_path: "kZGaVeXSkkvrpMYvD97sxHj291k.jpg",
 		discoverParams: {
-			similarDNA:
-				"36373373_Pacing|Building+Suspense,36374361_Pacing|Increasing+Suspense,36377765_Sub-Genres|Suspense",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "tension", operator: ">=", value: 7 },
+								{ field: "intrigue", operator: ">=", value: 7 },
+							],
+						},
+						{ field: "scare", operator: "<=", value: 7 },
+					],
+				},
+			]),
 		},
 		faq: [
 			{
@@ -82,9 +117,22 @@ export const moods: Record<string, PageData> = {
 			"Against-all-odds victories, personal bests smashed, and heroes who redefine 'possible'. Warning: May inspire sudden life changes.",
 		backdrop_path: "8OGGM7clS3CN4n2pTEZs6tRll4n.jpg",
 		discoverParams: {
-			similarDNA:
-				"36381420_Dialog|Motivational+Speeches,36697700_Dialog|Motivational+Instructions,40141891_Dialog|Motivational+Rhetoric,40083275_Cultural+Impact|Motivational+Story",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "catharsis", operator: ">=", value: 7 },
+						{ field: "hopefulness", operator: ">=", value: 6 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "character_depth", operator: ">=", value: 7 },
+								{ field: "pathos", operator: ">=", value: 6 },
+							],
+						},
+					],
+				},
+			]),
 		},
 		faq: [
 			{
@@ -106,9 +154,24 @@ export const moods: Record<string, PageData> = {
 			"From dad joke disasters to sarcastic comebacks that deserve applause. These aren't just jokes - they're survival skills for life's awkwardest moments.",
 		backdrop_path: "8tZ90NxuoXjkHXELFOcnZDRr63G.jpg",
 		discoverParams: {
-			similarDNA:
-				"36373052_Mood|Funny,36373061_Humor|Situational+Comedy,36373062_Humor|Slapstick,36373520_Sub-Genres|Buddy+Comedy,36377772_Sub-Genres|Teen+Comedy",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "situational_comedy", operator: ">=", value: 6 },
+								{ field: "physical_comedy", operator: ">=", value: 6 },
+								{ field: "cringe_humor", operator: ">=", value: 6 },
+								{ field: "absurdist_humor", operator: ">=", value: 6 },
+								{ field: "dark_humor", operator: ">=", value: 6 },
+							],
+						},
+						{ field: "bleakness", operator: "<=", value: 5 },
+					],
+				},
+			]),
 		},
 		faq: [
 			{
@@ -130,9 +193,24 @@ export const moods: Record<string, PageData> = {
 			"Reality-bending narratives, unreliable narrators, and twists that'll leave you questioning everything. Consider this a workout for your brain.",
 		backdrop_path: "p1PLSI5Nw2krGxD7X4ulul1tDAk.jpg",
 		discoverParams: {
-			similarDNA:
-				"36373403_Sub-Genres|Psychological+Thriller,36374366_Plot|Psychological+Manipulation,36378034_Plot|Mind+Games,36373072_Pacing|Twisting,36399617_Character+Types|Psychopath",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "psychological", operator: ">=", value: 7 },
+						{ field: "complexity", operator: ">=", value: 6 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "ambiguity", operator: ">=", value: 6 },
+								{ field: "philosophical", operator: ">=", value: 6 },
+								{ field: "narrative_structure", operator: ">=", value: 7 },
+							],
+						},
+					],
+				},
+			]),
+			contextFilters: "context_is_thought_provoking",
 		},
 		faq: [
 			{
@@ -154,11 +232,23 @@ export const moods: Record<string, PageData> = {
 			"Films that transport you back with warm memories and a reflective vibe.",
 		backdrop_path: "rhy8pbeNdfUGX5DkR0Zv1zswP2d.jpg",
 		discoverParams: {
-			minYear: "1900",
-			maxYear: "2000",
-			similarDNA:
-				"36373019_Mood|Nostalgic,36383303_Themes|Nostalgia,36386515_Themes|The+Power+Of+Nostalgia,36408837_Plot|Hometown+Nostalgia,36471681_Place|Nostalgic+Locations",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "nostalgia", operator: ">=", value: 7 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "historical", operator: ">=", value: 5 },
+								{ field: "coming_of_age", operator: ">=", value: 5 },
+								{ field: "family_dynamics", operator: ">=", value: 6 },
+								{ field: "scare", operator: "<=", value: 6 },
+							],
+						},
+					],
+				},
+			]),
 		},
 		faq: [
 			{
@@ -176,8 +266,23 @@ export const moods: Record<string, PageData> = {
 			"Films that stir deep emotions with a mix of beauty and sorrow.",
 		backdrop_path: "fAuXblS0qUiQ2SWJzpvFMH1su6i.jpg",
 		discoverParams: {
-			similarDNA: "36372984_Mood|Melancholic",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "melancholy", operator: ">=", value: 7 },
+						{ field: "pathos", operator: ">=", value: 6 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "philosophical", operator: ">=", value: 5 },
+								{ field: "character_depth", operator: ">=", value: 6 },
+								{ field: "slow_burn", operator: ">=", value: 5 },
+							],
+						},
+					],
+				},
+			]),
 		},
 		faq: [
 			{
@@ -195,9 +300,25 @@ export const moods: Record<string, PageData> = {
 			"Stories where happy moments mix with the sting of loss, echoing real life.",
 		backdrop_path: "zZRXGoHo5TeUD0L1LqYIJjlPvJC.jpg",
 		discoverParams: {
-			similarDNA:
-				"36416556_Plot|Bittersweet+Memories,36373460_Mood|Bittersweet",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "catharsis", operator: ">=", value: 5 },
+						{ field: "melancholy", operator: ">=", value: 5 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "romance", operator: ">=", value: 5 },
+								{ field: "family_dynamics", operator: ">=", value: 6 },
+								{ field: "coming_of_age", operator: ">=", value: 5 },
+							],
+						},
+						{ field: "hopefulness", operator: ">=", value: 4 },
+						{ field: "hopefulness", operator: "<=", value: 7 },
+					],
+				},
+			]),
 		},
 		faq: [
 			{
@@ -215,8 +336,25 @@ export const moods: Record<string, PageData> = {
 			"Lighthearted films that embrace the quirky and imaginative side of life.",
 		backdrop_path: "dfQtPf0lw9C1MWYFMJseM5RZI6P.jpg",
 		discoverParams: {
-			similarDNA: "36373054_Mood|Whimsical,36388861_Mood|Dreamy",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "eccentricity", operator: ">=", value: 6 },
+								{ field: "novelty", operator: ">=", value: 6 },
+								{ field: "fantasy", operator: ">=", value: 5 },
+								{ field: "wonder", operator: ">=", value: 6 },
+							],
+						},
+						{ field: "wholesome", operator: ">=", value: 5 },
+						{ field: "bleakness", operator: "<=", value: 4 },
+					],
+				},
+			]),
+			suitabilityFilters: "suitability_family",
 		},
 		faq: [
 			{
@@ -234,13 +372,319 @@ export const moods: Record<string, PageData> = {
 			"Films that offer a quiet, soothing escape for reflection and relaxation.",
 		backdrop_path: "syfmYmITnWPJU3hhaP0ckny5hMN.jpg",
 		discoverParams: {
-			similarDNA: "36383932_Mood|Quiet,36442062_Mood|Calm",
-			similarDNACombinationType: "any",
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "slow_burn", operator: ">=", value: 6 },
+						{ field: "philosophical", operator: ">=", value: 5 },
+						{ field: "tension", operator: "<=", value: 4 },
+						{ field: "adrenaline", operator: "<=", value: 3 },
+						{ field: "violence", operator: "<=", value: 2 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "wholesome", operator: ">=", value: 5 },
+								{ field: "world_immersion", operator: ">=", value: 6 },
+								{ field: "contemporary_realism", operator: ">=", value: 5 },
+							],
+						},
+					],
+				},
+			]),
+			contextFilters: "context_is_comfort_watch,context_is_background_friendly",
 		},
 		faq: [
 			{
 				q: "What defines a peaceful film?",
 				a: "A calming atmosphere that helps you unwind and find balance.",
+			},
+		],
+	},
+	adrenaline: {
+		type: "all",
+		label: "Adrenaline 🔥",
+		path: "adrenaline",
+		subtitle: "High-Octane Action",
+		description:
+			"Pure adrenaline rush with non-stop action, explosive sequences, and heart-pounding intensity. These stories deliver immediate thrills without psychological complexity.",
+		backdrop_path: "placeholder-adrenaline.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "adrenaline", operator: ">=", value: 8 },
+						{ field: "tension", operator: "<=", value: 6 },
+						{ field: "psychological", operator: "<=", value: 5 },
+						{ field: "scare", operator: "<=", value: 5 },
+					],
+				},
+			]),
+		},
+		faq: [
+			{
+				q: "What defines an adrenaline-fueled story?",
+				a: "High-energy action with immediate payoffs rather than slow-building tension. Think car chases, fight sequences, and explosive set pieces.",
+			},
+		],
+	},
+	epic: {
+		type: "all",
+		label: "Epic ⚔️",
+		path: "epic",
+		subtitle: "Grand Scale Heroism",
+		description:
+			"Sweeping tales of heroism, grand adventures, and larger-than-life conflicts. These stories operate on a massive scale with high stakes and triumphant moments.",
+		backdrop_path: "placeholder-epic.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "cinematography", operator: ">=", value: 8 },
+						{ field: "catharsis", operator: ">=", value: 7 },
+						{ field: "world_immersion", operator: ">=", value: 6 },
+						{ field: "music_centrality", operator: ">=", value: 6 },
+						{ field: "sound_centrality", operator: ">=", value: 6 },
+						{ field: "spectacle", operator: ">=", value: 5 },
+						{ field: "adrenaline", operator: ">=", value: 4 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "fantasy", operator: ">=", value: 5 },
+								{ field: "futuristic", operator: ">=", value: 5 },
+								{ field: "historical", operator: ">=", value: 5 },
+							],
+						},
+					],
+				},
+			]),
+		},
+		faq: [
+			{
+				q: "What makes a story epic?",
+				a: "Grand scope, heroic characters facing overwhelming odds, and conflicts that affect entire worlds or civilizations.",
+			},
+		],
+	},
+	romantic: {
+		type: "all",
+		label: "Romantic 💕",
+		path: "romantic",
+		subtitle: "Matters of the Heart",
+		description:
+			"Pure romantic chemistry and emotional connection. These stories focus on love, relationships, and the complexities of human attraction.",
+		backdrop_path: "placeholder-romantic.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "romance", operator: ">=", value: 8 },
+						{ field: "character_depth", operator: ">=", value: 6 },
+						{ field: "violence", operator: "<=", value: 4 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "dialogue_quality", operator: ">=", value: 6 },
+								{ field: "dialogue_centrality", operator: ">=", value: 6 },
+							],
+						},
+					],
+				},
+			]),
+			suitabilityFilters: "suitability_date_night",
+		},
+		faq: [
+			{
+				q: "How is this different from bittersweet romance?",
+				a: "These focus on the joy and chemistry of romance itself, rather than complex mixed emotions or tragic elements.",
+			},
+		],
+	},
+	gritty: {
+		type: "all",
+		label: "Gritty 🌆",
+		path: "gritty",
+		subtitle: "Raw Urban Reality",
+		description:
+			"Unflinching looks at harsh realities, social issues, and the darker side of human nature. These stories don't shy away from difficult truths.",
+		backdrop_path: "placeholder-gritty.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "bleakness", operator: ">=", value: 6 },
+						{ field: "contemporary_realism", operator: ">=", value: 7 },
+						{ field: "social_commentary", operator: ">=", value: 6 },
+						{ field: "melancholy", operator: "<=", value: 5 },
+						{ field: "wholesome", operator: "<=", value: 3 },
+					],
+				},
+			]),
+			contextFilters: "context_is_thought_provoking",
+		},
+		faq: [
+			{
+				q: "What defines gritty storytelling?",
+				a: "Realistic portrayals of difficult subjects without romanticizing or softening the harsh realities.",
+			},
+		],
+	},
+	"mind-bending": {
+		type: "all",
+		label: "Mind-Bending 🌀",
+		path: "mind-bending",
+		subtitle: "Reality-Defying Narratives",
+		description:
+			"Complex narratives that challenge perception, featuring unreliable narrators, twisted timelines, and reality-bending concepts that keep you guessing.",
+		backdrop_path: "placeholder-mind-bending.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "narrative_structure", operator: ">=", value: 8 },
+						{ field: "ambiguity", operator: ">=", value: 7 },
+						{ field: "complexity", operator: ">=", value: 7 },
+						{ field: "philosophical", operator: ">=", value: 6 },
+					],
+				},
+			]),
+			contextFilters: "context_is_thought_provoking",
+		},
+		faq: [
+			{
+				q: "How is this different from psychological stories?",
+				a: "Mind-bending focuses on narrative puzzles and reality manipulation, while psychological explores character mental states.",
+			},
+		],
+	},
+	"morally-complex": {
+		type: "all",
+		label: "Morally Complex ⚖️",
+		path: "morally-complex",
+		subtitle: "Ethical Dilemmas",
+		description:
+			"Stories that explore moral ambiguity, ethical dilemmas, and the gray areas between right and wrong. No easy answers, just complex human choices.",
+		backdrop_path: "placeholder-morally-complex.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "ambiguity", operator: ">=", value: 7 },
+						{ field: "complexity", operator: ">=", value: 7 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "philosophical", operator: ">=", value: 5 },
+								{ field: "social_commentary", operator: ">=", value: 5 },
+							],
+						},
+					],
+				},
+			]),
+			contextFilters: "context_is_thought_provoking",
+		},
+		faq: [
+			{
+				q: "What makes a story morally complex?",
+				a: "Characters face difficult choices where there's no clear right answer, forcing viewers to question their own moral assumptions.",
+			},
+		],
+	},
+	atmospheric: {
+		type: "all",
+		label: "Atmospheric 🌫️",
+		path: "atmospheric",
+		subtitle: "Immersive Ambiance",
+		description:
+			"Stories that create rich, immersive atmospheres through mood, setting, and ambiance. These films transport you into their world through pure atmosphere.",
+		backdrop_path: "placeholder-atmospheric.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "world_immersion", operator: ">=", value: 7 },
+						{ field: "cinematography", operator: ">=", value: 6 },
+						{ field: "adrenaline", operator: "<=", value: 4 },
+						{
+							logic: "OR",
+							conditions: [{ field: "slow_burn", operator: ">=", value: 5 }],
+						},
+					],
+				},
+			]),
+		},
+		faq: [
+			{
+				q: "What creates good atmosphere in storytelling?",
+				a: "A combination of visual design, sound, pacing, and mood that creates an immersive world you can feel.",
+			},
+		],
+	},
+	"visually-stunning": {
+		type: "all",
+		label: "Visually Stunning 🎨",
+		path: "visually-stunning",
+		subtitle: "Visual Spectacle",
+		description:
+			"Breathtaking visual experiences that showcase the art of cinema. These stories are feasts for the eyes with stunning cinematography and visual design.",
+		backdrop_path: "placeholder-visually-stunning.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "spectacle", operator: ">=", value: 8 },
+						{ field: "cinematography", operator: ">=", value: 7 },
+						{ field: "visual_stylization", operator: ">=", value: 7 },
+					],
+				},
+			]),
+		},
+		faq: [
+			{
+				q: "What makes visuals truly stunning?",
+				a: "Exceptional cinematography, production design, and visual effects that create memorable and beautiful imagery.",
+			},
+		],
+	},
+	educational: {
+		type: "all",
+		label: "Educational 📚",
+		path: "educational",
+		subtitle: "Learn Something New",
+		description:
+			"Stories that inform and educate while entertaining. These films teach you about history, science, culture, or important social issues.",
+		backdrop_path: "placeholder-educational.jpg",
+		discoverParams: {
+			fingerprintConditions: JSON.stringify([
+				{
+					logic: "AND",
+					conditions: [
+						{ field: "educational", operator: ">=", value: 7 },
+						{
+							logic: "OR",
+							conditions: [
+								{ field: "historical", operator: ">=", value: 6 },
+								{ field: "contemporary_realism", operator: ">=", value: 6 },
+								{ field: "social_commentary", operator: ">=", value: 5 },
+							],
+						},
+						{ field: "fantasy", operator: "<=", value: 4 },
+					],
+				},
+			]),
+		},
+		faq: [
+			{
+				q: "Can educational content still be entertaining?",
+				a: "Absolutely! The best educational stories make learning engaging through compelling narratives and characters.",
 			},
 		],
 	},

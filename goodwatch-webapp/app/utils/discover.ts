@@ -52,6 +52,9 @@ export const buildDiscoverParams = async (request: Request) => {
 	const similarDNACombinationType =
 		url.searchParams.get("similarDNACombinationType") || ""
 	const similarTitles = url.searchParams.get("similarTitles") || ""
+	const fingerprintConditions = url.searchParams.get("fingerprintConditions") || ""
+	const suitabilityFilters = url.searchParams.get("suitabilityFilters") || ""
+	const contextFilters = url.searchParams.get("contextFilters") || ""
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"popularity") as DiscoverSortBy
 	const sortDirection = (url.searchParams.get("sortDirection") || "desc") as
@@ -90,6 +93,9 @@ export const buildDiscoverParams = async (request: Request) => {
 		similarDNA,
 		similarDNACombinationType,
 		similarTitles,
+		fingerprintConditions,
+		suitabilityFilters,
+		contextFilters,
 		sortBy,
 		sortDirection,
 		page,

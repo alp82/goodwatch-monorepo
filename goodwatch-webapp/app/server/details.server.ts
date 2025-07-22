@@ -35,7 +35,7 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 		name: "details-movie",
 		target: _getDetailsForMovie,
 		params,
-		ttlMinutes: 20,
+		ttlMinutes: 30,
 		// ttlMinutes: 0,
 	})
 }
@@ -45,7 +45,7 @@ export const getDetailsForTV = async (params: DetailsTVParams) => {
 		name: "details-tv",
 		target: _getDetailsForTV,
 		params,
-		ttlMinutes: 20,
+		ttlMinutes: 30,
 		// ttlMinutes: 0,
 	})
 }
