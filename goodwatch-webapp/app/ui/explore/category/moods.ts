@@ -408,7 +408,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "High-Octane Action",
 		description:
 			"Pure adrenaline rush with non-stop action, explosive sequences, and heart-pounding intensity. These stories deliver immediate thrills without psychological complexity.",
-		backdrop_path: "placeholder-adrenaline.jpg",
+		backdrop_path: "jii7rIJEwksGDA8x77VRW6YCqhC.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -436,7 +436,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Grand Scale Heroism",
 		description:
 			"Sweeping tales of heroism, grand adventures, and larger-than-life conflicts. These stories operate on a massive scale with high stakes and triumphant moments.",
-		backdrop_path: "placeholder-epic.jpg",
+		backdrop_path: "xrBtWELclopNgWjBzUT8l9eYGxZ.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -475,7 +475,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Matters of the Heart",
 		description:
 			"Pure romantic chemistry and emotional connection. These stories focus on love, relationships, and the complexities of human attraction.",
-		backdrop_path: "placeholder-romantic.jpg",
+		backdrop_path: "2zXeZgsS7Giim88TgM20qVz6qxF.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -510,7 +510,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Raw Urban Reality",
 		description:
 			"Unflinching looks at harsh realities, social issues, and the darker side of human nature. These stories don't shy away from difficult truths.",
-		backdrop_path: "placeholder-gritty.jpg",
+		backdrop_path: "hnP7J6e1SGUxrInNpXItZd9DqXg.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -540,7 +540,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Reality-Defying Narratives",
 		description:
 			"Complex narratives that challenge perception, featuring unreliable narrators, twisted timelines, and reality-bending concepts that keep you guessing.",
-		backdrop_path: "placeholder-mind-bending.jpg",
+		backdrop_path: "7x4J86NsOMb6o2IZ4fcW6sO4iV5.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -569,7 +569,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Ethical Dilemmas",
 		description:
 			"Stories that explore moral ambiguity, ethical dilemmas, and the gray areas between right and wrong. No easy answers, just complex human choices.",
-		backdrop_path: "placeholder-morally-complex.jpg",
+		backdrop_path: "keblhZFIZYiWflmURWNHEuS2jqL.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -603,7 +603,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Immersive Ambiance",
 		description:
 			"Stories that create rich, immersive atmospheres through mood, setting, and ambiance. These films transport you into their world through pure atmosphere.",
-		backdrop_path: "placeholder-atmospheric.jpg",
+		backdrop_path: "c5LgP6wKlyT2ld4tun0C6z3uWyV.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -634,7 +634,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Visual Spectacle",
 		description:
 			"Breathtaking visual experiences that showcase the art of cinema. These stories are feasts for the eyes with stunning cinematography and visual design.",
-		backdrop_path: "placeholder-visually-stunning.jpg",
+		backdrop_path: "o869RihWTdTyBcEZBjz0izvEsVf.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
@@ -661,7 +661,7 @@ export const moods: Record<string, PageData> = {
 		subtitle: "Learn Something New",
 		description:
 			"Stories that inform and educate while entertaining. These films teach you about history, science, culture, or important social issues.",
-		backdrop_path: "placeholder-educational.jpg",
+		backdrop_path: "p9G7YwAzCbeFjYe8PB1hFXUSTOn.jpg",
 		discoverParams: {
 			fingerprintConditions: JSON.stringify([
 				{
