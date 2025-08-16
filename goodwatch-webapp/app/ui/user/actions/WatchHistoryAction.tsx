@@ -5,24 +5,25 @@ import type {
 	UpdateWatchHistoryResult,
 } from "~/server/watchHistory.server"
 import UserAction from "~/ui/auth/UserAction"
-import type { UserActionDetails } from "~/ui/user/actions/types"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { useAPIAction } from "~/utils/api-action"
 
 export interface WatchHistoryActionProps {
 	children: React.ReactElement
-	details: UserActionDetails
+	media: MovieResult | ShowResult
 	actionOverwrite?: "add" | "remove"
 }
 
 export default function WatchHistoryAction({
 	children,
-	details,
+	media,
 	actionOverwrite,
 }: WatchHistoryActionProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
-	const toggleAction = userData?.[media_type]?.[tmdb_id]?.onWatchHistory
+	const toggleAction = userData?.[mediaType]?.[tmdb_id]?.onWatchHistory
 		? "remove"
 		: "add"
 	const action = actionOverwrite ? actionOverwrite : toggleAction
@@ -36,7 +37,7 @@ export default function WatchHistoryAction({
 				url: "/api/update-watch-history",
 				params: {
 					tmdb_id,
-					media_type,
+					media_type: mediaType === "show" ? "tv" : "movie",
 					action,
 				},
 			},

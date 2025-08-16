@@ -1,5 +1,5 @@
 import { resetUserDataCache } from "~/server/userData.server";
-import { executeQuery } from "~/utils/postgres";
+import { execute, upsert } from "~/utils/crate";
 
 interface UpdateWatchHistoryParams {
 	user_id?: string;
@@ -30,24 +30,44 @@ export const updateWatchHistory = async ({
 		};
 	}
 
-	const query =
-		action === "add"
-			? `
-    INSERT INTO user_watch_history (user_id, tmdb_id, media_type, updated_at)
-    VALUES ($1, $2, $3, NOW())
-    ON CONFLICT (user_id, tmdb_id, media_type)
-    DO UPDATE SET
-      updated_at = EXCLUDED.updated_at;
-  `
-			: `
-    DELETE FROM user_watch_history
-    WHERE user_id = $1 AND tmdb_id = $2 AND media_type = $3;
-  `;
-	const params = [user_id, tmdb_id, media_type];
-	const result = await executeQuery(query, params);
+	let result: { rowcount?: number };
+
+	if (action === "add") {
+		// Use upsert for adding watch history items
+		// Initialize with basic data - enhanced fields can be updated later
+		const now = new Date();
+		result = await upsert({
+			table: "user_watch_history",
+			data: [{
+				user_id,
+				tmdb_id,
+				media_type: media_type === "tv" ? "show" : media_type,
+				watched_at_list: [now],
+				progress_percent: null,
+				progress_seconds: null,
+				season_number: null,
+				episode_number: null,
+				ingest_source: "webapp",
+				first_watched_at: now,
+				last_watched_at: now,
+				watch_count: 1,
+			}],
+			conflictColumns: ["user_id", "tmdb_id", "media_type"],
+			ignoreUpdate: false, // Update timestamps and count on conflict
+		});
+	} else {
+		// Use execute for deleting watch history items
+		const sql = `
+			DELETE FROM user_watch_history
+			WHERE user_id = ? AND tmdb_id = ? AND media_type = ?
+		`;
+		const params = [user_id, tmdb_id, media_type === "tv" ? "show" : media_type];
+		result = await execute(sql, params);
+	}
+
 	await resetUserDataCache({ user_id });
 
 	return {
-		status: result.rowCount === 1 ? "success" : "failed",
+		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
 	};
 };

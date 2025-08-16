@@ -6,9 +6,10 @@ import type {
 	UserActionProps,
 } from "~/ui/user/actions/types"
 import type { BgColor, OutlineColor, TextColor } from "~/utils/color"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface ActionButtonProps {
-	details: UserActionDetails
+	media: MovieResult | ShowResult
 	isActive: boolean
 	actionElement: React.ComponentType<UserActionProps>
 	iconElement: ComponentType<HTMLAttributes<SVGElement>>
@@ -21,7 +22,7 @@ export interface ActionButtonProps {
 }
 
 export default function ActionButton({
-	details,
+	media,
 	isActive,
 	actionElement,
 	iconElement,
@@ -41,7 +42,7 @@ export default function ActionButton({
 	const currentColor = isActive || isHovered ? color : "text-gray-300"
 
 	return (
-		<ActionElement details={details} onChange={onChange}>
+		<ActionElement media={media} onChange={onChange}>
 			<button
 				type="button"
 				className={`

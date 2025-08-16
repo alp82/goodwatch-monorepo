@@ -7,7 +7,7 @@ import {
 import type { SetUserSettingsOptions } from "~/routes/api.user-settings.set";
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch";
 import { cached, resetCache } from "~/utils/cache";
-import { executeQuery } from "~/utils/postgres";
+import { query, upsert } from "~/utils/crate";
 
 interface UserSettingRow {
 	key: keyof UserSettingsMap;
@@ -37,22 +37,22 @@ async function _getUserSettings({
 		return {};
 	}
 
-	const query = `
+	const sql = `
 		SELECT 
 			key, 
 			value
-		FROM user_settings
-		WHERE user_id = $1;
+		FROM user_setting
+		WHERE user_id = ?
   `;
 
 	const params = [userId];
-	const result = await executeQuery<UserSettingRow>(query, params);
+	const result = await query<UserSettingRow>(sql, params);
 
 	const settings: GetUserSettingsResult = {};
-	for (const row of result.rows) {
+	for (const row of result) {
 		const convertedSettingValue = _convertSettingValue(row.key, row.value);
 		if (convertedSettingValue !== null) {
-			settings[row.key] = convertedSettingValue;
+			(settings as any)[row.key] = convertedSettingValue;
 		}
 	}
 	return settings;
@@ -94,37 +94,26 @@ export async function setUserSettings({
 
 	// Validate each setting against allowed settings
 	for (const [key, value] of Object.entries(settings)) {
-		if (!isValidSetting(key as keyof UserSettingsMap, value)) {
+		if (!isValidSetting(key as keyof UserSettingsMap, value as any)) {
 			console.error(`setSettings error: invalid "${key}" for value ${value}`);
 			return null;
 		}
 	}
 
-	// Build the query, conditionally adding ON CONFLICT if ignoreUpdate is falsy
-	const query = `
-		INSERT INTO user_settings (user_id, key, value, created_at, updated_at)
-		VALUES 
-		${Object.keys(settings)
-			.map(
-				(_, index) =>
-					`($1, $${index * 2 + 2}, $${index * 2 + 3}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-			)
-			.join(",")}
-		${
-			options.ignoreUpdate
-				? ""
-				: `
-					ON CONFLICT (user_id, key)
-					DO UPDATE SET
-						value = EXCLUDED.value,
-						updated_at = CURRENT_TIMESTAMP`
-		}
-		RETURNING *;
-	`;
+	// Prepare data for upsert
+	const data = Object.entries(settings).map(([key, value]) => ({
+		user_id,
+		key,
+		value: String(value),
+	}));
 
-	const params = [user_id, ...Object.entries(settings).flat()];
+	const result = await upsert({
+		table: "user_setting",
+		data,
+		conflictColumns: ["user_id", "key"],
+		ignoreUpdate: options.ignoreUpdate,
+	});
 
-	const result = await executeQuery(query, params);
 	await resetUserSettingsCache({ user_id });
 	return result;
 }

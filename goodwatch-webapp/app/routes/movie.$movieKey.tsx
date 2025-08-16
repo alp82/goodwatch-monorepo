@@ -73,16 +73,16 @@ export default function DetailsMovie() {
 	const { country } = params
 	const { locale } = useLocale()
 
-	return (
-		<>
-			{media.images.backdrops.map((backdrop) => (
-				<div key={backdrop.file_path}>
-					<span>{backdrop.file_path}</span>
-					<img src={`https://image.tmdb.org/t/p/w1280/${backdrop.file_path}`} />
-				</div>
-			))}
-		</>
-	)
+	// return (
+	// 	<>
+	// 		{media.images.backdrops.map((backdrop) => (
+	// 			<div key={backdrop.file_path}>
+	// 				<span>{backdrop.file_path}</span>
+	// 				<img src={`https://image.tmdb.org/t/p/w1280/${backdrop.file_path}`} />
+	// 			</div>
+	// 		))}
+	// 	</>
+	// )
 
 	const { currentParams, updateParams } = useUpdateUrlParams({
 		params,

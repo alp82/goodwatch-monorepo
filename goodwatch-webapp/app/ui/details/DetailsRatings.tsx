@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import RatingBadges from "~/ui/ratings/RatingBadges"
 import { extractRatings } from "~/utils/ratings"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { SectionProps } from "~/utils/scroll"
 import type { SectionIds } from "~/ui/details/sections"
 import ScoreSelector from "~/ui/user/ScoreSelector"
@@ -10,14 +10,15 @@ import { StarIcon } from "@heroicons/react/20/solid"
 import Drawer from "~/ui/modal/Drawer"
 
 interface DetailsRatingsProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	sectionProps: SectionProps<SectionIds>
 }
 
 export default function DetailsRatings({
-	details,
+	media,
 	sectionProps,
 }: DetailsRatingsProps) {
+	const { details } = media
 	const ratings = extractRatings(details)
 
 	const [ratingVisible, setRatingVisible] = useState(false)
@@ -52,7 +53,7 @@ export default function DetailsRatings({
 					<div className="flex flex-col">
 						<div className="py-3 px-4 flex-1 flex flex-col items-center md:items-start">
 							<RatingBadges
-								details={details}
+								media={media}
 								ratings={ratings}
 								onToggleRate={handleToggleRate}
 							/>
@@ -62,7 +63,7 @@ export default function DetailsRatings({
 						<div className="hidden md:block">
 							<Appear isVisible={ratingVisible}>
 								<div className="py-2 px-4 bg-gray-900/50 border-t-[1px] border-gray-700">
-									<ScoreSelector details={details} />
+									<ScoreSelector media={media} />
 								</div>
 							</Appear>
 						</div>
@@ -71,7 +72,7 @@ export default function DetailsRatings({
 						<div className="md:hidden">
 							<Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
 								<ScoreSelector
-									details={details}
+									media={media}
 									onCancel={() => setDrawerOpen(false)}
 								/>
 							</Drawer>

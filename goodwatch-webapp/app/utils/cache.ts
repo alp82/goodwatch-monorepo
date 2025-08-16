@@ -108,6 +108,7 @@ async function cacheSet<CacheData extends JsonData>(
 ): Promise<void> {
 	const redis = getRedisCluster()
 	if (!redis) return
+	redis.info()
 
 	const namespaceKey = `${namespace}:${key}`
 	const timestamp = Date.now()
@@ -117,12 +118,7 @@ async function cacheSet<CacheData extends JsonData>(
 	})
 
 	try {
-		await Promise.race([
-			redis.setex(namespaceKey, ttl || 1, jsonData),
-			new Promise<void>((_, reject) =>
-				setTimeout(() => reject(new Error("Cache set timeout")), 300),
-			),
-		])
+		await redis.setex(namespaceKey, ttl || 1, jsonData)
 	} catch (e) {
 		console.log("Error while setting cache value:", e)
 	}
@@ -138,12 +134,7 @@ async function cacheGet<CacheData extends JsonData>(
 	const namespaceKey = `${namespace}:${key}`
 
 	try {
-		const result = await Promise.race([
-			redis.get(namespaceKey),
-			new Promise<string | null>((_, reject) =>
-				setTimeout(() => reject(new Error("Cache get timeout")), 300),
-			),
-		])
+		const result = await redis.get(namespaceKey)
 		return result ? JSON.parse(result) : null
 	} catch (e) {
 		console.log("Error while getting cache value:", e)
@@ -157,12 +148,7 @@ async function cacheDelete(namespace: string, key: string): Promise<number> {
 
 	const namespaceKey = `${namespace}:${key}`
 	try {
-		const result = await Promise.race([
-			redis.del(namespaceKey),
-			new Promise<number>((_, reject) =>
-				setTimeout(() => reject(new Error("Cache delete timeout")), 300),
-			),
-		])
+		const result = await redis.del(namespaceKey)
 		return result
 	} catch (e) {
 		console.log("Error while deleting cache value:", e)

@@ -340,6 +340,8 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
+						{ field: "wholesome", operator: ">=", value: 5 },
+						{ field: "bleakness", operator: "<=", value: 4 },
 						{
 							logic: "OR",
 							conditions: [
@@ -349,8 +351,6 @@ export const moods: Record<string, PageData> = {
 								{ field: "wonder", operator: ">=", value: 6 },
 							],
 						},
-						{ field: "wholesome", operator: ">=", value: 5 },
-						{ field: "bleakness", operator: "<=", value: 4 },
 					],
 				},
 			]),
@@ -376,17 +376,16 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "slow_burn", operator: ">=", value: 6 },
-						{ field: "philosophical", operator: ">=", value: 5 },
-						{ field: "tension", operator: "<=", value: 4 },
-						{ field: "adrenaline", operator: "<=", value: 3 },
-						{ field: "violence", operator: "<=", value: 2 },
+						{ field: "slow_burn", operator: ">=", value: 5 },
+						{ field: "tension", operator: "<=", value: 5 },
+						{ field: "adrenaline", operator: "<=", value: 5 },
+						{ field: "violence", operator: "<=", value: 5 },
 						{
 							logic: "OR",
 							conditions: [
+								{ field: "philosophical", operator: ">=", value: 5 },
 								{ field: "wholesome", operator: ">=", value: 5 },
-								{ field: "world_immersion", operator: ">=", value: 6 },
-								{ field: "contemporary_realism", operator: ">=", value: 5 },
+								{ field: "world_immersion", operator: ">=", value: 5 },
 							],
 						},
 					],

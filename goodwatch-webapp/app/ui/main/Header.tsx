@@ -33,7 +33,7 @@ const mainNav = [
 		path: "/movies",
 	},
 	{
-		label: "TV Shows",
+		label: "Shows",
 		path: "/tv-shows",
 	},
 	{

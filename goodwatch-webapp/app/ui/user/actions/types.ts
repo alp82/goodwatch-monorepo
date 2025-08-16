@@ -1,12 +1,8 @@
 import type React from "react"
-
-export interface UserActionDetails {
-	tmdb_id: number
-	media_type: "movie" | "tv"
-}
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface UserActionProps {
 	children: React.ReactElement
-	details: UserActionDetails
+	media: MovieResult | ShowResult
 	onChange?: () => void
 }

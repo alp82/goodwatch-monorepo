@@ -17,8 +17,8 @@ export default function DetailsOverview({
 	media,
 	sectionProps,
 }: DetailsOverviewProps) {
-	const { details } = media
-	const { backdrop_path, poster_path, title, videos } = details
+	const { details, videos } = media
+	const { backdrop_path, poster_path, title } = details
 
 	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
 
@@ -47,10 +47,10 @@ export default function DetailsOverview({
 				{/* User Actions */}
 				<div className="overflow-hidden pt-2">
 					<div className="flex items-center justify-evenly gap-2">
-						<PlanToWatchButton details={details} />
-						<WatchHistoryButton details={details} />
+						<PlanToWatchButton media={media} />
+						<WatchHistoryButton media={media} />
 						{/*<span className="hidden md:inline">*/}
-						{/*	<FavoriteButton details={details} />*/}
+						{/*	<FavoriteButton media={media} />*/}
 						{/*</span>*/}
 					</div>
 				</div>

@@ -8,7 +8,6 @@ import type {
 import type { UpdateWatchHistoryPayload } from "~/server/watchHistory.server"
 import UserAction from "~/ui/auth/UserAction"
 import {
-	UserActionDetails,
 	type UserActionProps,
 } from "~/ui/user/actions/types"
 import { useAPIAction } from "~/utils/api-action"
@@ -19,14 +18,15 @@ export interface ScoreActionProps extends UserActionProps {
 
 export default function ScoreAction({
 	children,
-	details,
+	media,
 	score,
 	onChange,
 }: ScoreActionProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
-	const userScore = userData?.[media_type]?.[tmdb_id]?.score || null
+	const userScore = userData?.[mediaType]?.[tmdb_id]?.score || null
 	const watchHistoryAction = score === null ? "remove" : "add"
 
 	const { submitProps } = useAPIAction<
@@ -38,7 +38,7 @@ export default function ScoreAction({
 				url: "/api/update-scores",
 				params: {
 					tmdb_id,
-					media_type,
+					media_type: mediaType === "show" ? "tv" : "movie",
 					score,
 				},
 			},
@@ -46,7 +46,7 @@ export default function ScoreAction({
 				url: "/api/update-watch-history",
 				params: {
 					tmdb_id,
-					media_type,
+					media_type: mediaType === "show" ? "tv" : "movie",
 					action: watchHistoryAction,
 				},
 			},

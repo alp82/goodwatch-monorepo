@@ -2,29 +2,30 @@ import { HeartIcon } from "@heroicons/react/24/solid"
 import React from "react"
 import { useUserData } from "~/routes/api.user-data"
 import FavoriteAction from "~/ui/user/actions/FavoriteAction"
-import type { UserActionDetails } from "~/ui/user/actions/types"
 import ActionButton from "~/ui/button/ActionButton"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface FavoriteButtonProps {
-	details: UserActionDetails
+	media: MovieResult | ShowResult
 	onChange?: () => void
 }
 
 export default function FavoriteButton({
-	details,
+	media,
 	onChange,
 }: FavoriteButtonProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
-	const userDataItem = userData?.[media_type]?.[tmdb_id]
+	const userDataItem = userData?.[mediaType]?.[tmdb_id]
 	const isFavorite = Boolean(userDataItem?.onFavorites)
 	const labelText = isFavorite ? "Favorite" : "Favorite"
 	const labelAction = isFavorite ? "Favorite" : "Favorite"
 
 	return (
 		<ActionButton
-			details={details}
+			media={media}
 			isActive={isFavorite}
 			actionElement={FavoriteAction}
 			iconElement={HeartIcon}

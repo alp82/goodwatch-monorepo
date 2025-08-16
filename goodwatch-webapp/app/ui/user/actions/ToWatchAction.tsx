@@ -6,7 +6,6 @@ import type {
 } from "~/server/wishList.server"
 import UserAction from "~/ui/auth/UserAction"
 import {
-	UserActionDetails,
 	type UserActionProps,
 } from "~/ui/user/actions/types"
 import { useAPIAction } from "~/utils/api-action"
@@ -15,13 +14,14 @@ export interface WishListActionProps extends UserActionProps {}
 
 export default function ToWatchAction({
 	children,
-	details,
+	media,
 	onChange,
 }: WishListActionProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
-	const action = userData?.[media_type]?.[tmdb_id]?.onWishList
+	const action = userData?.[mediaType]?.[tmdb_id]?.onWishList
 		? "remove"
 		: "add"
 
@@ -34,7 +34,7 @@ export default function ToWatchAction({
 				url: "/api/update-wish-list",
 				params: {
 					tmdb_id,
-					media_type,
+					media_type: mediaType === "show" ? "tv" : "movie",
 					action,
 				},
 			},

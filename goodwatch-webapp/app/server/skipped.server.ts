@@ -1,5 +1,5 @@
 import { resetUserDataCache } from "~/server/userData.server"
-import { executeQuery } from "~/utils/postgres"
+import { execute, upsert } from "~/utils/crate"
 
 interface UpdateSkippedParams {
 	user_id?: string
@@ -32,24 +32,33 @@ export const updateSkipped = async ({
 
 	// TODO return if media is already scored, wishlisted or favorited
 
-	const query =
-		action === "add"
-			? `
-    INSERT INTO user_skipped (user_id, tmdb_id, media_type, updated_at)
-    VALUES ($1, $2, $3, NOW())
-    ON CONFLICT (user_id, tmdb_id, media_type)
-    DO UPDATE SET
-      updated_at = EXCLUDED.updated_at;
-  `
-			: `
-    DELETE FROM user_skipped
-    WHERE user_id = $1 AND tmdb_id = $2 AND media_type = $3;
-  `
-	const params = [user_id, tmdb_id, media_type]
-	const result = await executeQuery(query, params)
+	let result: { rowcount?: number }
+
+	if (action === "add") {
+		// Use upsert for adding skipped items
+		result = await upsert({
+			table: "user_skipped",
+			data: [{
+				user_id,
+				tmdb_id,
+				media_type: media_type === "tv" ? "show" : media_type,
+			}],
+			conflictColumns: ["user_id", "tmdb_id", "media_type"],
+			ignoreUpdate: true, // Just ignore if already exists
+		})
+	} else {
+		// Use execute for deleting skipped items
+		const sql = `
+			DELETE FROM user_skipped
+			WHERE user_id = ? AND tmdb_id = ? AND media_type = ?
+		`
+		const params = [user_id, tmdb_id, media_type === "tv" ? "show" : media_type]
+		result = await execute(sql, params)
+	}
+
 	await resetUserDataCache({ user_id })
 
 	return {
-		status: result.rowCount === 1 ? "success" : "failed",
+		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
 	}
 }

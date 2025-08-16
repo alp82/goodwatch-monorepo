@@ -55,7 +55,7 @@ export default function Details({ media, country }: DetailsProps) {
 
 			<DetailsOverview media={media} sectionProps={sectionProps} />
 
-			<DetailsRatings details={details} sectionProps={sectionProps} />
+			<DetailsRatings media={media} sectionProps={sectionProps} />
 
 			<DetailsStreaming
 				media={media}

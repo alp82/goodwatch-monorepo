@@ -1,7 +1,7 @@
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { useUserData } from "~/routes/api.user-data"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { Score } from "~/server/scores.server"
 import ScoreAction from "~/ui/user/actions/ScoreAction"
 import { scoreLabels } from "~/utils/ratings"
@@ -9,21 +9,22 @@ import { CheckIcon } from "@heroicons/react/20/solid"
 import { XMarkIcon } from "@heroicons/react/24/outline"
 
 interface ScoreSelectorProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	onChange?: (score: Score | null) => void
 	onCancel?: () => void
 }
 
 export default function ScoreSelector({
-	details,
+	media,
 	onChange,
 	onCancel,
 }: ScoreSelectorProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
 
-	const userScore = userData?.[media_type]?.[tmdb_id]?.score || null
+	const userScore = userData?.[mediaType]?.[tmdb_id]?.score || null
 	const [score, setScore] = useState<Score | null>(userScore)
 	const [hoveredScore, setHoveredScore] = useState<Score | null>(null)
 	const [clearedScore, setClearedScore] = useState<Score | null>(null)
@@ -48,7 +49,7 @@ export default function ScoreSelector({
 		// }
 
 		// Dimmed background for inactive bars or the base unrated state
-		return `bg-vibe-${index * 10}${withDimming ? "/35" : ""}`
+		return `bg-vibe-${(index || 0) * 10}${withDimming ? "/35" : ""}`
 	}
 
 	const getLabelColor = (targetScore?: Score | null) => {
@@ -257,7 +258,7 @@ export default function ScoreSelector({
 						</button>
 						<span className="flex items-center gap-2">
 							{score && (!hoveredScore || hoveredScore === score) && (
-								<ScoreAction details={details} score={null}>
+								<ScoreAction media={media} score={null}>
 									<span
 										className="
 											px-2 py-1
@@ -272,7 +273,7 @@ export default function ScoreSelector({
 							<div
 								className={`md:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
 							>
-								<ScoreAction details={details} score={score}>
+								<ScoreAction media={media} score={score}>
 									<span
 										className={`
 											flex items-center gap-2 px-2 py-1.5
@@ -351,7 +352,7 @@ export default function ScoreSelector({
 						return (
 							<ScoreAction
 								key={i + 1}
-								details={details}
+								media={media}
 								score={scoreIndex === score ? null : scoreIndex}
 							>
 								<div

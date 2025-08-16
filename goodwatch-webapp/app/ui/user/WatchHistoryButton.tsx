@@ -2,29 +2,30 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid"
 import React, { useState } from "react"
 import { useUserData } from "~/routes/api.user-data"
 import WatchHistoryAction from "~/ui/user/actions/WatchHistoryAction"
-import type { UserActionDetails } from "~/ui/user/actions/types"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import ActionButton from "~/ui/button/ActionButton"
 
 export interface WatchHistoryButtonProps {
-	details: UserActionDetails
+	media: MovieResult | ShowResult
 	onChange?: () => void
 }
 
 export default function WatchHistoryButton({
-	details,
+	media,
 	onChange,
 }: WatchHistoryButtonProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
-	const userDataItem = userData?.[media_type]?.[tmdb_id]
+	const userDataItem = userData?.[mediaType]?.[tmdb_id]
 	const isInWatchHistory = Boolean(userDataItem?.onWatchHistory)
 	const labelText = isInWatchHistory ? "Seen this" : "Mark as Seen"
 	const labelAction = isInWatchHistory ? "Remove as Seen" : "Mark as Seen"
 
 	return (
 		<ActionButton
-			details={details}
+			media={media}
 			isActive={isInWatchHistory}
 			actionElement={WatchHistoryAction}
 			iconElement={EyeIcon}

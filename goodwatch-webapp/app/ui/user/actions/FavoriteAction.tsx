@@ -6,7 +6,6 @@ import type {
 } from "~/server/favorites.server"
 import UserAction from "~/ui/auth/UserAction"
 import {
-	UserActionDetails,
 	type UserActionProps,
 } from "~/ui/user/actions/types"
 import { useAPIAction } from "~/utils/api-action"
@@ -15,13 +14,14 @@ export interface FavoriteActionProps extends UserActionProps {}
 
 export default function FavoriteAction({
 	children,
-	details,
+	media,
 	onChange,
 }: FavoriteActionProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
-	const action = userData?.[media_type]?.[tmdb_id]?.onFavorites
+	const action = userData?.[mediaType]?.[tmdb_id]?.onFavorites
 		? "remove"
 		: "add"
 
@@ -34,7 +34,7 @@ export default function FavoriteAction({
 				url: "/api/update-favorites",
 				params: {
 					tmdb_id,
-					media_type,
+					media_type: mediaType === "show" ? "tv" : "movie",
 					action,
 				},
 			},

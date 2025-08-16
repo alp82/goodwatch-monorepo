@@ -1,3 +1,6 @@
+env {
+    TERM "xterm"
+}
 layout {
     default_tab_template {
         pane size=1 borderless=true {
@@ -12,11 +15,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@coinmatica.net" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.10" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@coinmatica.net" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq && htop; exec $SHELL"
+                args "-t" "root@10.0.0.10" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-hq && htop; exec $SHELL"
             }
         }
     }
@@ -24,11 +27,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@abusive" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.21" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@abusive" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && htop; exec $SHELL"
+                args "-t" "root@10.0.0.21" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && htop; exec $SHELL"
             }
         }
     }
@@ -36,11 +39,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.11" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
+                args "-t" "root@10.0.0.11" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
             }
         }
     }
@@ -48,11 +51,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.12" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
+                args "-t" "root@10.0.0.12" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
             }
         }
     }
@@ -60,11 +63,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.13" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-db3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
+                args "-t" "root@10.0.0.13" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate && htop; exec $SHELL"
             }
         }
     }
@@ -72,11 +75,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-cache1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.14" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-cache1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
+                args "-t" "root@10.0.0.14" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
             }
         }
     }
@@ -84,11 +87,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-cache2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.15" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-cache2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
+                args "-t" "root@10.0.0.15" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
             }
         }
     }
@@ -96,11 +99,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-cache3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.16" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-cache3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
+                args "-t" "root@10.0.0.16" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache && htop; exec $SHELL"
             }
         }
     }
@@ -108,11 +111,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-mongo1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.17" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-mongo1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
+                args "-t" "root@10.0.0.17" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
             }
         }
     }
@@ -120,11 +123,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-mongo2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.18" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-mongo2" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
+                args "-t" "root@10.0.0.18" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
             }
         }
     }
@@ -132,11 +135,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-mongo3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.19" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-mongo3" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
+                args "-t" "root@10.0.0.19" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-mongo && htop; exec $SHELL"
             }
         }
     }
@@ -144,11 +147,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@gw-vector1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.20" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@gw-vector1" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector && htop; exec $SHELL"
+                args "-t" "root@10.0.0.20" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector && htop; exec $SHELL"
             }
         }
     }

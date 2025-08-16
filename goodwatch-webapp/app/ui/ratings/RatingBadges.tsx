@@ -7,23 +7,25 @@ import rottenLogo from "~/img/rotten-logo-250.png"
 import rottenLogoIcon from "~/img/rotten-logo-icon-250.png"
 import { type AllRatings, scoreLabels } from "~/utils/ratings"
 import { useUserData } from "~/routes/api.user-data"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface RatingBadgesProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	ratings: AllRatings
 	onToggleRate: () => void
 }
 
 export default function RatingBadges({
-	details,
+	media,
 	ratings,
 	onToggleRate,
 }: RatingBadgesProps) {
-	const { tmdb_id, media_type } = details
+	const { details, mediaType } = media
+	const { tmdb_id } = details
 
 	const { data: userData } = useUserData()
-	const userScore = userData?.[media_type]?.[tmdb_id]?.score || null
+	const userScore = userData?.[mediaType]?.[tmdb_id]?.score || null
+	console.log(mediaType, userData)
 
 	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
 		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10

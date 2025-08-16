@@ -30,6 +30,23 @@ DB optimization
    
 ---   
 
+gw score mismatch:
+    http://localhost:3003/movie/803796-kpop-demon-hunters
+    77/100
+    - 7.7 (LINK BROKEN)
+    - 76 | 8.2
+    - 97 | 91
+
+---   
+
+subtiles
+    capcut
+    davinci resolve
+    descript
+    riverside
+
+---   
+
 robots with sitemap link
     https://www.instagram.com/robots.txt
     
@@ -1314,6 +1331,13 @@ launch / promo
     https://growstartup.co/directory-list/
     https://www.effortlessbacklinks.com/
     https://www.getmorebacklinks.org/
+
+---
+
+cold emails
+   https://www.mailead.io/
+   https://www.plusvibe.ai/
+   https://www.smartlead.ai/
 
 ---
 
