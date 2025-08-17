@@ -58,10 +58,10 @@ export default function SectionCrew({
 		.split(",")
 		.filter((crewId) => Boolean(crewId));
 	const selectedCrew = (crew || [])
-		.filter((crew) => crewIds.includes(crew.id.toString()))
-		.map((crew) => crew.name);
-	const crewToInclude = crew.filter((crew) =>
-		crewIds.includes(crew.id.toString()),
+		.filter((crewMember) => crewIds.includes(crewMember.tmdb_id.toString()))
+		.map((crewMember) => crewMember.name);
+	const crewToInclude = crew.filter((crewMember) =>
+		crewIds.includes(crewMember.tmdb_id.toString()),
 	);
 
 	const [combinationType, setCombinationType] = React.useState<CombinationType>(
@@ -82,12 +82,12 @@ export default function SectionCrew({
 
 	// autocomplete data
 
-	const autocompleteItems = crew.map((crew: CrewMember) => {
+	const autocompleteItems = crew.map((crewMember: CrewMember) => {
 		return {
-			key: crew.id.toString(),
-			label: crew.name,
-			img: crew.profile_path,
-			department: crew.known_for_department,
+			key: crewMember.tmdb_id.toString(),
+			label: crewMember.name,
+			img: crewMember.profile_path,
+			department: crewMember.known_for_department,
 		};
 	});
 	const autocompleteRenderItem = ({
@@ -142,8 +142,8 @@ export default function SectionCrew({
 		crewToExclude: CrewMember[],
 	) => {
 		updateQueryParams({
-			withCrew: crewToInclude.map((crew) => crew.id).join(","),
-			// withoutCrew: crewToExclude.map((crew) => crew.id).join(","),
+			withCrew: crewToInclude.map((crew) => crew.tmdb_id).join(","),
+			// withoutCrew: crewToExclude.map((crew) => crew.tmd_id).join(","),
 			withCrewCombinationType: combinationType,
 		});
 	};
@@ -153,7 +153,7 @@ export default function SectionCrew({
 			selectedItem.key,
 		)
 			? crewToInclude.filter(
-					(crew) => crew.id !== Number.parseInt(selectedItem.key),
+					(crew) => crew.tmdb_id !== Number.parseInt(selectedItem.key),
 				)
 			: [
 					...crewToInclude,
@@ -167,7 +167,7 @@ export default function SectionCrew({
 
 	const handleDelete = (crewToDelete: CrewMember) => {
 		const updatedCrewToInclude: CrewMember[] = crewToInclude.filter(
-			(crew) => crew.id !== crewToDelete.id,
+			(crew) => crew.tmdb_id !== crewToDelete.tmdb_id,
 		);
 		updateCrew(updatedCrewToInclude, []);
 	};
@@ -222,7 +222,7 @@ export default function SectionCrew({
 						{crewToInclude.length > 0 ? (
 							crewToInclude.map((crew, index) => (
 								<OneOrMoreItems
-									key={crew.id}
+									key={crew.tmdb_id}
 									index={index}
 									amount={selectedCrew.length}
 									mode={combinationType}

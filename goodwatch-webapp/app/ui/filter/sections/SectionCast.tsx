@@ -74,17 +74,17 @@ export default function SectionCast({
 		.split(",")
 		.filter((castId) => Boolean(castId));
 	const selectedCast = (cast || [])
-		.filter((cast) => castIds.includes(cast.id.toString()))
+		.filter((cast) => castIds.includes(cast.tmdb_id.toString()))
 		.map((cast) => cast.name);
 	const castToInclude = cast.filter((cast) =>
-		castIds.includes(cast.id.toString()),
+		castIds.includes(cast.tmdb_id.toString()),
 	);
 
 	// autocomplete data
 
 	const autocompleteItems = cast.map((cast: CastMember) => {
 		return {
-			key: cast.id.toString(),
+			key: cast.tmdb_id.toString(),
 			label: cast.name,
 			img: cast.profile_path,
 		};

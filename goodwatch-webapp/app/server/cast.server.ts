@@ -4,10 +4,11 @@ import { query } from "~/utils/crate"
 const LIMIT = 100
 
 export interface CastMember {
-	id: number
+	tmdb_id: number
 	name: string
 	profile_path: string
 	known_for_department: string
+	popularity: number
 }
 
 export interface CastResults {
@@ -25,8 +26,8 @@ export const getCast = async (params: CastParams) => {
 		name: "cast",
 		target: _getCast,
 		params,
-		ttlMinutes: 60 * 24,
-		// ttlMinutes: 0,
+		//ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	})
 }
 
@@ -43,38 +44,39 @@ export async function _getCast({
 		const withCastArray = withCast.split(",").map(id => parseInt(id.trim()))
 		if (withCastArray.length > 0) {
 			const withCastQuery = `
-				SELECT id, name, profile_path, known_for_department, popularity
-				FROM "cast"
-				WHERE id IN (${withCastArray.map(() => '?').join(', ')})
-				ORDER BY name
+				SELECT tmdb_id, name, profile_path, known_for_department, popularity
+				FROM person
+				WHERE tmdb_id IN (${withCastArray.map(() => '?').join(', ')})
+				ORDER BY popularity DESC
 			`
 			const withCastResult = await query<CastMember>(withCastQuery, withCastArray)
 			castMembers.push(...withCastResult)
 		}
 	}
 	
-	// Then get search results, excluding withCast if specified
+	// Then get search results using hybrid search (MATCH + ILIKE), excluding withCast if specified
 	if (text) {
 		const withCastArray = withCast ? withCast.split(",").map(id => parseInt(id.trim())) : []
+		
 		const searchQuery = withCastArray.length > 0 
 			? `
-				SELECT id, name, profile_path, known_for_department, popularity
-				FROM "cast"
-				WHERE name ILIKE ? AND id NOT IN (${withCastArray.map(() => '?').join(', ')})
+				SELECT tmdb_id, name, profile_path, known_for_department, popularity
+				FROM person
+				WHERE MATCH(name, ?) using phrase_prefix AND tmdb_id NOT IN (${withCastArray.map(() => '?').join(', ')})
 				ORDER BY popularity DESC
 				LIMIT ?
 			`
 			: `
-				SELECT id, name, profile_path, known_for_department, popularity
-				FROM "cast"
-				WHERE name ILIKE ?
+				SELECT tmdb_id, name, profile_path, known_for_department, popularity
+				FROM person
+				WHERE MATCH(name, ?) using phrase_prefix
 				ORDER BY popularity DESC
 				LIMIT ?
 			`
 		
 		const searchParams = withCastArray.length > 0 
-			? [`%${text}%`, ...withCastArray, LIMIT - castMembers.length]
-			: [`%${text}%`, LIMIT - castMembers.length]
+			? [text, ...withCastArray, LIMIT - castMembers.length]
+			: [text, LIMIT - castMembers.length]
 		
 		const searchResult = await query<CastMember>(searchQuery, searchParams)
 		castMembers.push(...searchResult)
