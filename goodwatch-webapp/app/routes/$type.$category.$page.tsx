@@ -83,7 +83,7 @@ export const loader: LoaderFunction = async ({
 	// discover call
 	const pageData = mainHierarchy?.[category]?.[page]
 	const requestParams = await buildDiscoverParams(request)
-	const discoverType = type === "tv-shows" ? "tv" : type
+	const discoverType = type === "tv-shows" ? "show" : type
 	const discoverParamsFull: DiscoverParams = {
 		...requestParams,
 		...defaultDiscoverParams,
@@ -114,7 +114,7 @@ export default function MoviesCategoryPage() {
 	const { type, category, page, path, pageData, discoverParams, results } =
 		useLoaderData<LoaderData>()
 
-	const discoverType = type === "movies" ? "movies" : "tv"
+	const discoverType = type === "movies" ? "movies" : "shows"
 
 	const { currentParams, updateQueryParams } =
 		useNav<

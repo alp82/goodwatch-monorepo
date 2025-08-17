@@ -37,7 +37,7 @@ export default function WatchHistoryAction({
 				url: "/api/update-watch-history",
 				params: {
 					tmdb_id,
-					media_type: mediaType === "show" ? "tv" : "movie",
+					media_type: mediaType,
 					action,
 				},
 			},

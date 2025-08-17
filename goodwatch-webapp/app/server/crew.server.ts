@@ -1,5 +1,5 @@
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 
 const LIMIT = 100
 
@@ -12,6 +12,7 @@ export interface CrewMember {
 
 export interface CrewResults {
 	crewMembers: CrewMember[]
+	[key: string]: any
 }
 
 export interface CrewParams {
@@ -35,33 +36,49 @@ export async function _getCrew({
 	withCrew,
 	withoutCrew,
 }: CrewParams): Promise<CrewResults> {
-	const withCrewArray = withCrew ? withCrew.split(",") : []
-	const query = `
-		(
-			SELECT id, name, profile_path, known_for_department, popularity, 1 as group_order
-			FROM "crew"
-			WHERE id = ANY($2) -- Always include the withCrew results
+	const withCrewArray = withCrew ? withCrew.split(",").map(id => parseInt(id.trim())) : []
+	
+	// CrateDB-compatible approach: separate queries and merge results
+	let crewMembers: CrewMember[] = []
+	
+	// First: get the withCrew results (priority crew members)
+	if (withCrewArray.length > 0) {
+		const withCrewQuery = `
+			SELECT id, name, profile_path, known_for_department, popularity
+			FROM crew
+			WHERE id IN (${withCrewArray.map(() => '?').join(', ')})
 			ORDER BY name
-		)
-		UNION
-		(
-			SELECT id, name, profile_path, known_for_department, popularity, 2 as group_order
-			FROM "crew"
-			WHERE
-				name ILIKE $1
-				AND known_for_department != 'Acting'
-				${withCrew ? "AND id != ALL($2)" : ""}
-			ORDER BY popularity DESC
-			LIMIT ${LIMIT - withCrewArray.length}
-		)
-		ORDER BY group_order ASC, popularity DESC
-		LIMIT ${LIMIT};
-	`
-	const result = await executeQuery<CrewMember>(query, [
-		`%${text}%`,
-		withCrewArray,
-	])
+		`
+		const withCrewResult = await query<CrewMember>(withCrewQuery, withCrewArray)
+		crewMembers.push(...withCrewResult)
+	}
+	
+	// Second: get search results (excluding already included crew)
+	if (text && crewMembers.length < LIMIT) {
+		const remainingLimit = LIMIT - crewMembers.length
+		let searchQuery = `
+			SELECT id, name, profile_path, known_for_department, popularity
+			FROM crew
+			WHERE name LIKE ?
+			AND known_for_department != 'Acting'
+		`
+		
+		const params: any[] = [`%${text}%`]
+		
+		// Exclude already included crew members
+		if (withCrewArray.length > 0) {
+			searchQuery += ` AND id NOT IN (${withCrewArray.map(() => '?').join(', ')})`
+			params.push(...withCrewArray)
+		}
+		
+		searchQuery += ` ORDER BY popularity DESC LIMIT ?`
+		params.push(remainingLimit)
+		
+		const searchResult = await query<CrewMember>(searchQuery, params)
+		crewMembers.push(...searchResult)
+	}
+	
 	return {
-		crewMembers: result.rows,
+		crewMembers,
 	}
 }

@@ -1,13 +1,13 @@
 import type { WithSimilar } from "~/routes/api.similar-media";
 import { cached } from "~/utils/cache";
-import { executeQuery } from "~/utils/postgres";
+import { query } from "~/utils/crate";
 import { type AllRatings, getRatingKeys } from "~/utils/ratings";
 
 const LIMIT_PER_SEARCH = 30;
 
 export interface SimilarMedia extends AllRatings {
 	tmdb_id: number;
-	media_type: "movie" | "tv";
+	media_type: "movie" | "show";
 	title: string;
 	release_year: string;
 	popularity: number;
@@ -23,7 +23,7 @@ export type SimilarResult = SimilarMovie | SimilarTV;
 
 export type SimilarMediaResult = {
 	movies: SimilarMovie[];
-	tv: SimilarTV[];
+	shows: SimilarTV[];
 };
 
 export interface SimilarMediaParams {
@@ -52,20 +52,20 @@ async function _getSimilarMedia({
 		searchTerm,
 		withSimilar,
 	});
-	const tv = await _getSearchResults({
-		tableName: "tv",
+	const shows = await _getSearchResults({
+		tableName: "show",
 		searchTerm,
 		withSimilar,
 	});
 
 	return {
 		movies,
-		tv,
+		shows,
 	};
 }
 
 interface CombinedResultProps {
-	tableName: "movies" | "tv";
+	tableName: "movies" | "show";
 	searchTerm: string;
 	withSimilar: WithSimilar[];
 }
@@ -75,7 +75,7 @@ const _getSearchResults = async <T extends SimilarResult>({
 	searchTerm,
 	withSimilar,
 }: CombinedResultProps) => {
-	const mediaType = tableName === "movies" ? "movie" : "tv";
+	const mediaType = tableName === "movies" ? "movie" : "show";
 
 	const exactMatchCondition = searchTerm
 		? `(
@@ -180,7 +180,7 @@ const _getSearchResults = async <T extends SimilarResult>({
 			FROM ranked_media
 			ORDER BY
 				relevance DESC NULLS LAST,
-				aggregated_overall_score_voting_count DESC
+				goodwatch_overall_score_voting_count DESC
 			LIMIT ${LIMIT_PER_SEARCH - selectedSimilarForMediaType.length}
 		)
 		LIMIT ${LIMIT_PER_SEARCH};
@@ -192,8 +192,7 @@ const _getSearchResults = async <T extends SimilarResult>({
 		...(searchTerm ? [searchTerm, `%${searchTerm}%`] : []),
 		...words.map((word) => `%${word}%`),
 	];
-	const searchResult = await executeQuery<T>(searchQuery, searchParams);
-	const searchRows: T[] = searchResult.rows;
+	const searchRows = await query<T>(searchQuery, searchParams);
 
 	return searchRows;
 };

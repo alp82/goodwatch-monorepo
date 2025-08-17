@@ -15,7 +15,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 
 export type GetSimilarMediaResult = {
 	movies: SimilarMovie[]
-	tv: SimilarTV[]
+	shows: SimilarTV[]
 }
 
 export const loader: LoaderFunction = async ({
@@ -29,11 +29,11 @@ export const loader: LoaderFunction = async ({
 		searchTerm,
 		withSimilarJson,
 	}
-	const { movies, tv } = await getSimilarMedia(params)
+	const { movies, shows } = await getSimilarMedia(params)
 
 	return json<GetSimilarMediaResult>({
 		movies,
-		tv,
+		shows,
 	})
 }
 

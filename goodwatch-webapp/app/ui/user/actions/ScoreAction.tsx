@@ -38,7 +38,7 @@ export default function ScoreAction({
 				url: "/api/update-scores",
 				params: {
 					tmdb_id,
-					media_type: mediaType === "show" ? "tv" : "movie",
+					media_type: mediaType,
 					score,
 				},
 			},
@@ -46,7 +46,7 @@ export default function ScoreAction({
 				url: "/api/update-watch-history",
 				params: {
 					tmdb_id,
-					media_type: mediaType === "show" ? "tv" : "movie",
+					media_type: mediaType,
 					action: watchHistoryAction,
 				},
 			},

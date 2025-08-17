@@ -1,7 +1,7 @@
 import { queryKeyOnboardingMedia } from "~/routes/api.onboarding.media"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
 const LIMIT_PER_MEDIA_TYPE = 1
@@ -9,7 +9,7 @@ const LIMIT_PER_SEARCH = 6
 
 export interface OnboardingMedia extends AllRatings {
 	tmdb_id: number
-	media_type: "movie" | "tv"
+	media_type: "movie" | "show"
 	title: string
 	release_year: string
 	popularity: number
@@ -27,7 +27,7 @@ export type OnboardingResult = OnboardingMovie | OnboardingTV
 
 export type OnboardingMediaResult = {
 	movies: OnboardingMovie[]
-	tv: OnboardingTV[]
+	shows: OnboardingTV[]
 }
 
 export interface OnboardingMediaParams {
@@ -55,7 +55,7 @@ async function _getOnboardingMedia({
 		userId,
 	})
 	const [tvSearchResult, tvGroupResult] = await _getCombinedResults({
-		tableName: "tv",
+		tableName: "show",
 		searchTerm,
 		userId,
 	})
@@ -65,15 +65,15 @@ async function _getOnboardingMedia({
 
 	const limit = searchTerm ? LIMIT_PER_SEARCH : LIMIT_PER_MEDIA_TYPE
 	const movies = [...movieSearchResult, ...uniqueMovies].slice(0, limit)
-	const tv = [...tvSearchResult, ...uniqueTv].slice(0, limit)
+	const shows = [...tvSearchResult, ...uniqueTv].slice(0, limit)
 	return {
 		movies,
-		tv,
+		shows,
 	}
 }
 
 interface CombinedResultProps {
-	tableName: "movies" | "tv"
+	tableName: "movies" | "show"
 	searchTerm: string
 	userId: string
 }
@@ -83,7 +83,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 	searchTerm,
 	userId,
 }: CombinedResultProps) => {
-	const mediaType = tableName === "movies" ? "movie" : "tv"
+	const mediaType = tableName === "movies" ? "movie" : "show"
 
 	const commonQuery = `
 		WITH ranked_movies AS (
@@ -125,7 +125,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 		FROM ranked_movies
     ORDER BY
 			%ORDER_BY% 
-      aggregated_overall_score_voting_count DESC
+      goodwatch_overall_score_voting_count DESC
     LIMIT %LIMIT%;
   `
 
@@ -172,14 +172,13 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 			`%${searchTerm}%`,
 			...words.map((word) => `%${word}%`),
 		]
-		const searchResult = await executeQuery<T>(searchQuery, searchParams)
-		searchRows = searchResult.rows
+		searchRows = await query<T>(searchQuery, searchParams)
 	}
 
 	// grouped query
 	const groupWhereConditions = `
 		m.release_year >= 1980
-		AND m.aggregated_overall_score_normalized_percent >= 60
+		AND m.goodwatch_overall_score_normalized_percent >= 60
 		AND m.popularity >= 50
 	`
 	const groupQuery = commonQuery
@@ -187,9 +186,9 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 		.replace("%WHERE_CONDITIONS%", groupWhereConditions)
 		.replace("%ORDER_BY%", "")
 		.replace("%LIMIT%", "10")
-	const groupedResult = await executeQuery<T>(groupQuery)
+	const groupedRows = await query<T>(groupQuery)
 
-	return [searchRows, groupedResult.rows]
+	return [searchRows, groupedRows]
 }
 
 const _getUniqueByDecade = <T extends OnboardingResult>(result: T[]): T[] => {

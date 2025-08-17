@@ -12,7 +12,7 @@ import { getStreamingUrl } from "~/utils/streaming-links"
 
 export interface StreamingProps {
 	details: MovieDetails | TVDetails
-	media_type: "movie" | "tv"
+	media_type: "movie" | "show"
 	links: StreamingLink[]
 	currentCountryCode: string
 	countryCodes: string[]

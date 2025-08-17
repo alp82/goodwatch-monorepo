@@ -14,7 +14,7 @@ export type UserDataItem = {
 	onScoresSince: Date | null
 	title: string
 	poster_path: string
-	aggregated_overall_score_normalized_percent: number | null
+	goodwatch_overall_score_normalized_percent: number | null
 	streaming_links?: StreamingLink[]
 }
 

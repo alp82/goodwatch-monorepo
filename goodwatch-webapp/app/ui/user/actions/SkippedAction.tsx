@@ -32,7 +32,7 @@ export default function SkippedAction({
 				url: "/api/update-skipped",
 				params: {
 					tmdb_id,
-					media_type: mediaType === "show" ? "tv" : "movie",
+					media_type: mediaType,
 					action,
 				},
 			},

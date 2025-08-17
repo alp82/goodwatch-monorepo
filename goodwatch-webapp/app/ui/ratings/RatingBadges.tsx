@@ -25,7 +25,6 @@ export default function RatingBadges({
 
 	const { data: userData } = useUserData()
 	const userScore = userData?.[mediaType]?.[tmdb_id]?.score || null
-	console.log(mediaType, userData)
 
 	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
 		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10

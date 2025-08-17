@@ -1,9 +1,9 @@
 import { cached } from "~/utils/cache"
 
 // TODO move to query-db
-export type MediaType = "movie" | "tv"
-export type FilterMediaType = "all" | "movies" | "tv"
-export const AVAILABLE_TYPES = ["all", "movies", "tv"]
+export type MediaType = "movie" | "show"
+export type FilterMediaType = "all" | "movies" | "show"
+export const AVAILABLE_TYPES = ["all", "movies", "show"]
 
 export interface KnownFor {
 	adult: boolean
@@ -49,7 +49,9 @@ export interface SearchResult {
 	origin_country: string[]
 }
 
-export type SearchResults = SearchResult[]
+export interface SearchResults extends Array<SearchResult> {
+	[key: string]: any
+}
 
 export interface SearchParams {
 	language: string
@@ -61,7 +63,8 @@ export const getSearchResults = async (params: SearchParams) => {
 		name: "search",
 		target: _getSearchResults,
 		params,
-		ttlMinutes: 60 * 2,
+		//ttlMinutes: 60 * 2,
+		ttlMinutes: 0,
 	})
 }
 
@@ -73,7 +76,14 @@ async function _getSearchResults({
 		`https://api.themoviedb.org/3/search/multi?api_key=${process.env.TMDB_API_KEY}&language=${language}&query=${query}`,
 	).then((res) => res.json())
 
-	return (response.results || []).filter((result: SearchResult) =>
-		["movie", "tv"].includes(result.media_type),
+	return (response.results || [])
+	.map((result: SearchResult) => {
+		return {
+			...result,
+			media_type: result.media_type === "tv" ? "show" : result.media_type,
+		}
+	})
+	.filter((result: SearchResult) =>
+		["movie", "show"].includes(result.media_type),
 	)
 }

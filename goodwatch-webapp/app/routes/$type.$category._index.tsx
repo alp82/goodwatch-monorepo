@@ -30,8 +30,8 @@ export const meta: MetaFunction = ({ data, params }) => {
 	const type = params.type || ""
 	const category = params.category || ""
 
-	const typeLabel = navLabel?.[type]
-	const mainData = mainNavigation?.[category]
+	const typeLabel = navLabel?.[type as NavType]
+	const mainData = mainNavigation?.[category as keyof typeof mainNavigation]
 
 	const pageMeta: PageMeta = {
 		title: `${convertHyphensToWords(category)} | Best ${typeLabel} to Watch Online | GoodWatch`,
@@ -81,12 +81,12 @@ export const loader: LoaderFunction = async ({
 	const category = params.category || ""
 	const path = `/${type}/${category}`
 
-	if (!validUrlParams.type.includes(type)) return redirect("/")
+	if (!validUrlParams.type.includes(type as NavType)) return redirect("/")
 	if (!validUrlParams.category.includes(category)) return redirect(`/${type}`)
 
 	// discover call
 	const requestParams = await buildDiscoverParams(request)
-	const discoverType = type === "tv-shows" ? "tv" : type
+	const discoverType = type === "shows" ? "show" : type
 
 	const pageItems = Object.values<PageData>(mainHierarchy[category]).filter(
 		(pageData) => {
@@ -99,7 +99,7 @@ export const loader: LoaderFunction = async ({
 			const discoverParams: DiscoverParams = {
 				...requestParams,
 				...defaultDiscoverParams,
-				type: discoverType,
+				type: discoverType as "movie" | "show" | "movies" | "all",
 				...pageData.discoverParams,
 			}
 			const results = await getDiscoverResults(discoverParams)
@@ -117,13 +117,13 @@ export const loader: LoaderFunction = async ({
 
 export default function MoviesCategory_index() {
 	const { type, category, path, pageResults } = useLoaderData<LoaderData>()
-	const discoverType = type === "tv-shows" ? "tv" : type
+	const discoverType = type === "shows" ? "show" : type
 
-	// const pageItems = Object.values(mainHierarchy[category]).filter(
-	// 	(pageData) => {
-	// 		return ["all", type].includes(pageData.type)
-	// 	},
-	// )
+	const pageItems = Object.values<PageData>(mainHierarchy[category as keyof typeof mainHierarchy]).filter(
+		(pageData) => {
+			return ["all", type].includes(pageData.type)
+		},
+	)
 
 	return (
 		<>

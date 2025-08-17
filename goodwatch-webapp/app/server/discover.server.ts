@@ -1,26 +1,16 @@
-import { convertSimilarTitles } from "~/routes/api.discover"
-import type { StreamingLink, StreamingProviders } from "~/server/details.server"
-import { genreDuplicates, getGenresAll } from "~/server/genres.server"
-import {
-	constructFullQuery,
-	type FilterMediaType,
-	filterMediaTypes,
-} from "~/server/utils/query-db"
-import { cached } from "~/utils/cache"
+import { query } from "~/utils/crate"
 import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
-import { SEPARATOR_PRIMARY, SEPARATOR_SECONDARY } from "~/utils/navigation"
-import { query as crateQuery } from "~/utils/crate"
 import type { AllRatings } from "~/utils/ratings"
-import { duplicateProviderMapping } from "~/utils/streaming-links"
 
 export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
 export type StreamingPreset = "everywhere" | "mine" | "custom"
 export type CombinationType = "all" | "any"
 export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
 
+// Legacy interface for backward compatibility
 export interface DiscoverParams {
 	userId?: string
-	type: FilterMediaType
+	type: "all" | "movies" | "movie" | "show" | "shows"
 	country: string
 	language: string
 	watchedType: WatchedType
@@ -56,185 +46,232 @@ export interface DiscoverParams {
 
 export interface DiscoverResult extends AllRatings {
 	tmdb_id: number
-	poster_path: string
+	media_type: "movie" | "show"
 	title: string
-	// TODO remove streaming_providers
-	streaming_providers: StreamingProviders
-	streaming_links: StreamingLink[]
-	media_type: "movie" | "tv"
+	release_year: string
+	release_date: string
+	backdrop_path: string
+	poster_path: string
+	popularity: number
+	streaming_service_ids: number[]
+}
+
+export interface SimpleDiscoverParams {
+	userId?: string
+	type: "all" | "movies" | "movie" | "show" | "shows"
+	country: string
+	language: string
+	watchedType?: "didnt-watch" | "plan-to-watch" | "watched"
+	minScore?: string
+	maxScore?: string
+	minYear?: string
+	maxYear?: string
+	page: number
 }
 
 export type DiscoverResults = DiscoverResult[]
 
-export const getDiscoverResults = async (params: DiscoverParams) => {
-	return await cached<DiscoverParams, DiscoverResults>({
-		name: "discover-results",
-		target: _getDiscoverResults,
-		params,
-		// ttlMinutes: 60 * 20,
-		ttlMinutes: 0,
-	})
+export const getDiscoverResults = async (params: DiscoverParams): Promise<DiscoverResults> => {
+	// Convert legacy DiscoverParams to SimpleDiscoverParams
+	const simpleParams: SimpleDiscoverParams = {
+		userId: params.userId,
+		type: params.type,
+		country: params.country,
+		language: params.language,
+		watchedType: params.watchedType,
+		minScore: params.minScore,
+		maxScore: params.maxScore,
+		minYear: params.minYear,
+		maxYear: params.maxYear,
+		page: params.page,
+	}
+	
+	return await _getSimpleDiscoverResults(simpleParams)
 }
 
-async function _getDiscoverResults({
+async function _getSimpleDiscoverResults({
 	userId,
 	type,
 	country,
 	language,
-	minAgeRating,
-	maxAgeRating,
-	minYear,
-	maxYear,
+	watchedType,
 	minScore,
 	maxScore,
-	watchedType,
-	withCast,
-	withCastCombinationType,
-	withoutCast,
-	withCrew,
-	withCrewCombinationType,
-	withoutCrew,
-	withGenres,
-	withoutGenres,
-	withKeywords,
-	withoutKeywords,
-	withStreamingProviders,
-	withStreamingTypes,
-	streamingPreset,
-	similarDNA,
-	similarDNACombinationType,
-	similarTitles,
-	sortBy,
-	sortDirection,
+	minYear,
+	maxYear,
 	page,
-	fingerprintConditions,
-	suitabilityFilters,
-	contextFilters,
-}: DiscoverParams): Promise<DiscoverResults> {
-	if (!filterMediaTypes.includes(type))
-		throw new Error(`Invalid type for Discover: ${type}`)
-	if (country && country.length !== 2)
-		throw new Error(`Invalid value for Country: ${country}`)
-	if (language.length !== 2)
-		throw new Error(`Invalid value for Language: ${language}`)
-
-	const column =
-		sortBy === "release_date"
-			? "release_date"
-			: sortBy === "aggregated_score"
-				? "goodwatch_overall_score_normalized_percent"
-				: "popularity"
-	const direction = sortDirection === "asc" ? "ASC" : "DESC"
-
-	const genres = await getGenresAll()
-	const genreNames = genres
-		.filter((genre) => {
-			// Check if genre ID or its string representation is in withGenres
-			const isDirectlyIncluded = withGenres.includes(genre.id.toString())
-
-			// Check if any genre from genreDuplicates has the key present based on name mapping
-			const isDuplicateIncluded = Object.keys(genreDuplicates).some((key) => {
-				// Check if the key (genre name) corresponds to any genre ID in withGenres
-				const keyGenre = genres.find((g) => g.name === key)
-				return (
-					keyGenre &&
-					withGenres.includes(keyGenre.id.toString()) &&
-					genreDuplicates[key].includes(genre.name)
-				)
-			})
-
-			return isDirectlyIncluded || isDuplicateIncluded
-		})
-		.map((genre) => genre.name)
-
-	const uniqueGenreNames =
-		genreNames?.length > 0 ? [...new Set(genreNames)] : undefined
-
-	const providerIds = withStreamingProviders
-		? withStreamingProviders
-				.split(",")
-				.map((id) => Number(id))
-				.reduce<number[]>((acc, id) => {
-					acc.push(id)
-					const duplicateIds = duplicateProviderMapping[id]
-					if (duplicateIds) {
-						acc.push(...duplicateIds)
-					}
-					return acc
-				}, [])
-		: undefined
-	const streamTypes = withStreamingTypes ? withStreamingTypes.split(",") : []
-
-	const similarDNAIds = similarDNA
-		.split(SEPARATOR_PRIMARY)
-		.map((idAndLabel) => idAndLabel.split(SEPARATOR_SECONDARY, 2)[0])
-		.filter(Boolean)
-	const withSimilar = convertSimilarTitles(similarTitles)
-
-	let parsedFingerprintConditions: any[] = []
-	if (fingerprintConditions) {
-		try {
-			parsedFingerprintConditions = JSON.parse(fingerprintConditions)
-		} catch (error) {
-			console.warn("Failed to parse fingerprintConditions:", error)
-		}
-	}
-
-	const parsedSuitabilityFilters = suitabilityFilters
-		? suitabilityFilters
-				.split(",")
-				.map((f) => f.trim())
-				.filter((f) => f.length > 0)
-		: []
-
-	const parsedContextFilters = contextFilters
-		? contextFilters
-				.split(",")
-				.map((f) => f.trim())
-				.filter((f) => f.length > 0)
-		: []
-
-	const { query, params } = constructFullQuery({
-		userId,
-		filterMediaType: type,
-		streaming: {
-			streamingPreset,
-			countryCode: country,
-			streamTypes,
-			providerIds,
-		},
-		conditions: {
+}: SimpleDiscoverParams): Promise<DiscoverResult[]> {
+	const offset = (page - 1) * DISCOVER_PAGE_SIZE
+	
+	// Determine which media types to include
+	const includeMovies = ["all", "movies", "movie"].includes(type)
+	const includeShows = ["all", "show", "shows"].includes(type)
+	
+	const results: DiscoverResult[] = []
+	
+	// Get movies if needed
+	if (includeMovies) {
+		const movieResults = await getMediaResults({
+			mediaType: "movie",
+			tableName: "movie",
+			userId,
+			watchedType,
 			minScore,
 			maxScore,
 			minYear,
 			maxYear,
+			limit: includeShows ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
+			offset: includeShows ? Math.floor(offset / 2) : offset,
+		})
+		results.push(...movieResults)
+	}
+	
+	// Get shows if needed
+	if (includeShows) {
+		const showResults = await getMediaResults({
+			mediaType: "show",
+			tableName: "show",
+			userId,
 			watchedType,
-			withCast,
-			withCastCombinationType,
-			withoutCast,
-			withCrew,
-			withCrewCombinationType,
-			withoutCrew,
-			withGenres: uniqueGenreNames,
-			fingerprintConditions: parsedFingerprintConditions,
-			suitabilityFilters: parsedSuitabilityFilters,
-			contextFilters: parsedContextFilters,
-		},
-		similarity: {
-			similarDNAIds,
-			similarDNACombinationType,
-			withSimilar,
-		},
-		orderBy: {
-			column,
-			direction,
-		},
-		page,
-		pageSize: DISCOVER_PAGE_SIZE,
-	})
+			minScore,
+			maxScore,
+			minYear,
+			maxYear,
+			limit: includeMovies ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
+			offset: includeMovies ? Math.floor(offset / 2) : offset,
+		})
+		results.push(...showResults)
+	}
+	
+	// Sort by popularity and return requested page
+	const sortedResults = results.sort((a, b) => b.popularity - a.popularity)
+	return sortedResults.slice(0, DISCOVER_PAGE_SIZE)
+}
 
-	const result = await crateQuery(query, params)
-	const results = result as unknown as DiscoverResult[]
+interface MediaQueryParams {
+	mediaType: "movie" | "show"
+	tableName: "movie" | "show"
+	userId?: string
+	watchedType?: "didnt-watch" | "plan-to-watch" | "watched"
+	minScore?: string
+	maxScore?: string
+	minYear?: string
+	maxYear?: string
+	limit: number
+	offset: number
+}
 
+async function getMediaResults({
+	mediaType,
+	tableName,
+	userId,
+	watchedType,
+	minScore,
+	maxScore,
+	minYear,
+	maxYear,
+	limit,
+	offset,
+}: MediaQueryParams): Promise<DiscoverResult[]> {
+	const params: any[] = []
+	const conditions: string[] = [
+		"m.title IS NOT NULL",
+		"m.release_year IS NOT NULL",
+		"m.poster_path IS NOT NULL",
+		"m.popularity IS NOT NULL",
+		"m.goodwatch_overall_score_voting_count >= 1000"
+	]
+	
+	// Add score filters
+	if (minScore) {
+		conditions.push("m.goodwatch_overall_score_normalized_percent >= ?")
+		params.push(Number(minScore))
+	}
+	if (maxScore) {
+		conditions.push("m.goodwatch_overall_score_normalized_percent <= ?")
+		params.push(Number(maxScore))
+	}
+	
+	// Add year filters
+	if (minYear) {
+		conditions.push("m.release_year >= ?")
+		params.push(Number(minYear))
+	}
+	if (maxYear) {
+		conditions.push("m.release_year <= ?")
+		params.push(Number(maxYear))
+	}
+	
+	// Build user join and condition
+	let userJoin = ""
+	if (userId && watchedType) {
+		if (watchedType === "watched") {
+			userJoin = `
+				INNER JOIN user_watch_history uwh ON
+					uwh.user_id = ? AND
+					uwh.tmdb_id = m.tmdb_id AND
+					uwh.media_type = ?
+			`
+			params.push(userId, mediaType)
+		} else if (watchedType === "didnt-watch") {
+			userJoin = `
+				LEFT JOIN user_watch_history uwh ON
+					uwh.user_id = ? AND
+					uwh.tmdb_id = m.tmdb_id AND
+					uwh.media_type = ?
+			`
+			conditions.push("uwh.user_id IS NULL")
+			params.push(userId, mediaType)
+		}
+	}
+	
+	// Build the query
+	const releaseField = mediaType === "movie" ? "m.release_date" : "m.first_air_date"
+	
+	const sql = `
+		SELECT DISTINCT
+			m.tmdb_id,
+			'${mediaType}' as media_type,
+			m.title,
+			m.release_year,
+			${releaseField} as release_date,
+			m.backdrop_path,
+			m.poster_path,
+			m.popularity,
+			m.streaming_service_ids,
+			m.tmdb_user_score_original,
+			m.tmdb_user_score_normalized_percent,
+			m.tmdb_user_score_rating_count,
+			m.imdb_user_score_original,
+			m.imdb_user_score_normalized_percent,
+			m.imdb_user_score_rating_count,
+			m.metacritic_user_score_original,
+			m.metacritic_user_score_normalized_percent,
+			m.metacritic_user_score_rating_count,
+			m.metacritic_meta_score_original,
+			m.metacritic_meta_score_normalized_percent,
+			m.metacritic_meta_score_review_count,
+			m.rotten_tomatoes_audience_score_original,
+			m.rotten_tomatoes_audience_score_normalized_percent,
+			m.rotten_tomatoes_audience_score_rating_count,
+			m.rotten_tomatoes_tomato_score_original,
+			m.rotten_tomatoes_tomato_score_normalized_percent,
+			m.rotten_tomatoes_tomato_score_review_count,
+			m.goodwatch_user_score_normalized_percent,
+			m.goodwatch_user_score_rating_count,
+			m.goodwatch_official_score_normalized_percent,
+			m.goodwatch_official_score_review_count,
+			m.goodwatch_overall_score_normalized_percent,
+			m.goodwatch_overall_score_voting_count
+		FROM ${tableName} m
+		${userJoin}
+		WHERE ${conditions.join(" AND ")}
+		ORDER BY m.popularity DESC
+		LIMIT ? OFFSET ?
+	`
+	
+	params.push(limit, offset)
+	
+	const results = await query<DiscoverResult>(sql, params)
 	return results
 }

@@ -1,4 +1,4 @@
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 
 export async function increasePriorityForMovies(
 	tmdb_ids: number[] | string[],
@@ -11,12 +11,12 @@ export async function increasePriorityForTVs(
 	tmdb_ids: number[] | string[],
 	amount = 1,
 ) {
-	await increasePriority(tmdb_ids, "tv", amount)
+	await increasePriority(tmdb_ids, "show", amount)
 }
 
 async function increasePriority(
 	tmdb_ids: number[] | string[],
-	type: "movie" | "tv",
+	type: "movie" | "show",
 	amount: number,
 ) {
 	const potentiallyDuplicateIds = tmdb_ids
@@ -29,18 +29,18 @@ async function increasePriority(
 	}
 
 	const valuePlaceholders = uniqueIds
-		.map((_, index) => `($${index + 1}, 1, NOW(), NOW())`)
+		.map(() => `(?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`)
 		.join(", ")
 
-	const query = `
+	const crateQuery = `
     INSERT INTO priority_queue_${type} (tmdb_id, priority, created_at, updated_at)
     VALUES ${valuePlaceholders}
     ON CONFLICT (tmdb_id)
     DO UPDATE SET
-        priority = priority_queue_${type}.priority + $${uniqueIds.length + 1},
-        updated_at = NOW()
+        priority = priority_queue_${type}.priority + ?,
+        updated_at = CURRENT_TIMESTAMP
   `
 
 	const params = [...uniqueIds, amount]
-	await executeQuery(query, params)
+	await query(crateQuery, params)
 }

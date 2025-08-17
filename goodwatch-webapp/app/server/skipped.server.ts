@@ -4,13 +4,13 @@ import { execute, upsert } from "~/utils/crate"
 interface UpdateSkippedParams {
 	user_id?: string
 	tmdb_id: number | null
-	media_type: "movie" | "tv"
+	media_type: "movie" | "show"
 	action: "add" | "remove"
 }
 
 export interface UpdateSkippedPayload {
 	tmdb_id: number
-	media_type: "movie" | "tv"
+	media_type: "movie" | "show"
 	action: "add" | "remove"
 }
 
@@ -41,7 +41,7 @@ export const updateSkipped = async ({
 			data: [{
 				user_id,
 				tmdb_id,
-				media_type: media_type === "tv" ? "show" : media_type,
+				media_type: media_type,
 			}],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true, // Just ignore if already exists
@@ -52,7 +52,7 @@ export const updateSkipped = async ({
 			DELETE FROM user_skipped
 			WHERE user_id = ? AND tmdb_id = ? AND media_type = ?
 		`
-		const params = [user_id, tmdb_id, media_type === "tv" ? "show" : media_type]
+		const params = [user_id, tmdb_id, media_type]
 		result = await execute(sql, params)
 	}
 

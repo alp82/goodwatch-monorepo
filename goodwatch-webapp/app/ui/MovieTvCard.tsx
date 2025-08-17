@@ -17,7 +17,7 @@ interface MovieTvCardProps {
 		| DiscoverResult
 		| ExploreResult
 		| OnboardingResult
-	mediaType: "movie" | "tv"
+	mediaType: "movie" | "show"
 	prefetch?: boolean
 }
 

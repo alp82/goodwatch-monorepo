@@ -1,11 +1,11 @@
 import type { DiscoverParams } from "~/server/discover.server"
 import { mainHierarchy } from "~/ui/explore/main-nav"
 
-export type NavType = "movies" | "tv-shows"
+export type NavType = "movies" | "shows"
 
 export const navLabel = {
 	movies: "Movies",
-	"tv-shows": "TV Shows",
+	"shows": "TV Shows",
 }
 
 export interface PageFAQItem {
@@ -16,7 +16,7 @@ export interface PageFAQItem {
 export type PageFAQ = PageFAQItem[]
 
 export interface PageData {
-	type: "all" | "movies" | "tv-shows"
+	type: "all" | "movies" | "shows"
 	path: string
 	label: string
 	subtitle: string
@@ -36,7 +36,7 @@ export interface MainData {
 }
 
 export const validUrlParams = {
-	type: ["movies", "tv-shows"],
+	type: ["movies", "shows"],
 	category: Object.keys(mainHierarchy),
 }
 

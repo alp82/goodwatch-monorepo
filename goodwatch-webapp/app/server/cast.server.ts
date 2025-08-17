@@ -1,5 +1,5 @@
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 
 const LIMIT = 100
 
@@ -35,32 +35,52 @@ export async function _getCast({
 	withCast,
 	withoutCast,
 }: CastParams): Promise<CastResults> {
-	const withCastArray = withCast ? withCast.split(",") : []
-	const query = `
-		(
-			SELECT id, name, profile_path, known_for_department, popularity, 1 as group_order
-			FROM "cast"
-			WHERE id = ANY($2) -- Always include the withCast results
-			ORDER BY name
-		)
-		UNION
-		(
-			SELECT id, name, profile_path, known_for_department, popularity, 2 as group_order
-			FROM "cast"
-			WHERE
-				name ILIKE $1
-				${withCast ? "AND id != ALL($2)" : ""}
-			ORDER BY popularity DESC
-			LIMIT ${LIMIT - withCastArray.length}
-		)
-		ORDER BY group_order ASC, popularity DESC
-		LIMIT ${LIMIT};
-	`
-	const result = await executeQuery<CastMember>(query, [
-		`%${text}%`,
-		withCastArray,
-	])
+	// CrateDB-compatible approach: separate queries and merge results
+	let castMembers: CastMember[] = []
+	
+	// First get withCast results if specified
+	if (withCast) {
+		const withCastArray = withCast.split(",").map(id => parseInt(id.trim()))
+		if (withCastArray.length > 0) {
+			const withCastQuery = `
+				SELECT id, name, profile_path, known_for_department, popularity
+				FROM "cast"
+				WHERE id IN (${withCastArray.map(() => '?').join(', ')})
+				ORDER BY name
+			`
+			const withCastResult = await query<CastMember>(withCastQuery, withCastArray)
+			castMembers.push(...withCastResult)
+		}
+	}
+	
+	// Then get search results, excluding withCast if specified
+	if (text) {
+		const withCastArray = withCast ? withCast.split(",").map(id => parseInt(id.trim())) : []
+		const searchQuery = withCastArray.length > 0 
+			? `
+				SELECT id, name, profile_path, known_for_department, popularity
+				FROM "cast"
+				WHERE name ILIKE ? AND id NOT IN (${withCastArray.map(() => '?').join(', ')})
+				ORDER BY popularity DESC
+				LIMIT ?
+			`
+			: `
+				SELECT id, name, profile_path, known_for_department, popularity
+				FROM "cast"
+				WHERE name ILIKE ?
+				ORDER BY popularity DESC
+				LIMIT ?
+			`
+		
+		const searchParams = withCastArray.length > 0 
+			? [`%${text}%`, ...withCastArray, LIMIT - castMembers.length]
+			: [`%${text}%`, LIMIT - castMembers.length]
+		
+		const searchResult = await query<CastMember>(searchQuery, searchParams)
+		castMembers.push(...searchResult)
+	}
+	
 	return {
-		castMembers: result.rows,
+		castMembers: castMembers.slice(0, LIMIT),
 	}
 }

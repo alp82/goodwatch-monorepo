@@ -27,10 +27,10 @@ export default function MediaTypeTabs({
 			current: selected === "movies",
 		},
 		{
-			key: "tv",
+			key: "show",
 			label: "TV Shows",
 			icon: TvIcon,
-			current: selected === "tv",
+			current: selected === "show",
 		},
 	]
 	return <Tabs tabs={discoverTypeTabs} pills={false} onSelect={onSelect} />

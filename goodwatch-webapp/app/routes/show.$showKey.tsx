@@ -8,8 +8,7 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import {
-	type TVDetails,
-	getDetailsForTV,
+	getDetailsForShow,
 	getDetailsForMovie,
 } from "~/server/details.server"
 import { getUserSettings } from "~/server/user-settings.server"
@@ -31,7 +30,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const pageMeta: PageMeta = {
 		title: `${data.media.details.title} (${data.media.details.release_year}) | TV Show | GoodWatch`,
 		description: `Discover '${data.media.details.title}' (${data.media.details.release_year}) and find TV shows with similar plotlines, cast, genre, or tone. Dive deep into movie details and watch availability.`,
-		url: `https://goodwatch.app/tv/${data.media.details.tmdb_id}-${titleToDashed(data.media.details.title)}`,
+		url: `https://goodwatch.app/show/${data.media.details.tmdb_id}-${titleToDashed(data.media.details.title)}`,
 		image: `https://image.tmdb.org/t/p/w1280/${data.media.images.backdrops?.[0]?.file_path}`,
 		alt: `${data.media.details.title} (${data.media.details.release_year}) TV show poster`,
 	}
@@ -50,7 +49,7 @@ export const loader: LoaderFunction = async ({
 	params,
 	request,
 }: LoaderFunctionArgs) => {
-	const tvId = (params.tvKey || "").split("-")[0]
+	const showId = (params.showKey || "").split("-")[0]
 
 	const userId = await getUserIdFromRequest({ request })
 	const userSettings = await getUserSettings({ userId })
@@ -59,8 +58,8 @@ export const loader: LoaderFunction = async ({
 	const country =
 		url.searchParams.get("country") || userSettings?.country_default || ""
 	const language = url.searchParams.get("language") || "en"
-	const media = await getDetailsForTV({
-		tvId,
+	const media = await getDetailsForShow({
+		showId,
 		country,
 		language,
 	})

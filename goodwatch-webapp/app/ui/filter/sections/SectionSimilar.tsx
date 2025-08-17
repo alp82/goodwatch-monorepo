@@ -90,9 +90,10 @@ export default function SectionSimilar({
 		searchTerm: debouncedSearchText,
 		withSimilar,
 	});
-	const searchResults = search?.data?.movies?.concat(search?.data?.tv) || [];
+	const searchResults = (search?.data?.movies?.concat(search?.data?.shows) || []).filter(Boolean);
 
 	const selectedSimilar = searchResults.filter((searchResult) => {
+		if (!searchResult || !searchResult.tmdb_id) return false;
 		return withSimilar.some((similar) => {
 			return (
 				similar.tmdbId === searchResult.tmdb_id.toString() &&
@@ -103,11 +104,13 @@ export default function SectionSimilar({
 
 	// autocomplete data
 
-	const autocompleteItems = searchResults.map((searchResult) => {
-		return {
-			key: `${searchResult.tmdb_id.toString()}${SEPARATOR_SECONDARY}${searchResult.media_type}`,
-			label: `${searchResult.title} (${searchResult.release_year})`,
-			img: searchResult.poster_path,
+	const autocompleteItems = searchResults
+		.filter((searchResult) => searchResult && searchResult.tmdb_id)
+		.map((searchResult) => {
+			return {
+				key: `${searchResult.tmdb_id.toString()}${SEPARATOR_SECONDARY}${searchResult.media_type}`,
+				label: `${searchResult.title} (${searchResult.release_year})`,
+				img: searchResult.poster_path,
 		};
 	});
 	const autocompleteRenderItem = ({

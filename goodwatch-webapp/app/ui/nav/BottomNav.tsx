@@ -30,7 +30,7 @@ export default function BottomNav() {
 			<div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
 				{createButton("Home", HomeIcon, "/")}
 				{createButton("Movies", FilmIcon, "/movies")}
-				{createButton("Shows", TvIcon, "/tv-shows")}
+				{createButton("Shows", TvIcon, "/shows")}
 				{createButton("Discover", CubeIcon, "/discover")}
 			</div>
 		</div>

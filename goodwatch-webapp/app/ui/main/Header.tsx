@@ -34,7 +34,7 @@ const mainNav = [
 	},
 	{
 		label: "Shows",
-		path: "/tv-shows",
+		path: "/shows",
 	},
 	{
 		label: "Discover",

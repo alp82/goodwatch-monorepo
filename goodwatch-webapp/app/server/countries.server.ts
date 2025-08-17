@@ -1,6 +1,6 @@
 import { getCountryName } from "~/server/resources/country-names"
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 
 interface CountryRow {
 	country: string
@@ -26,7 +26,7 @@ export const getCountries = async (params: CountriesParams) => {
 }
 
 export async function _getCountries(): Promise<CountriesResults> {
-	const query = `
+	const countriesQuery = `
       SELECT DISTINCT
         country
       FROM
@@ -34,8 +34,8 @@ export async function _getCountries(): Promise<CountriesResults> {
       ORDER BY
         country;
   `
-	const result = await executeQuery<CountryRow>(query)
-	const countries = result.rows.map((row) => ({
+	const result = await query<CountryRow>(countriesQuery)
+	const countries = result.map((row) => ({
 		code: row.country,
 		name: getCountryName(row.country),
 	}))

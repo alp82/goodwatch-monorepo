@@ -6,14 +6,14 @@ export type Score = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 interface UpdateScoresParams {
 	user_id?: string
 	tmdb_id: number | null
-	media_type: "movie" | "tv"
+	media_type: "movie" | "show"
 	score?: Score
 	review?: string
 }
 
 export interface UpdateScoresPayload {
 	tmdb_id: number
-	media_type: "movie" | "tv"
+	media_type: "movie" | "show"
 	score: Score | null
 	review?: string
 }
@@ -44,7 +44,7 @@ export const updateScores = async ({
 			data: [{
 				user_id,
 				tmdb_id,
-				media_type: media_type === "tv" ? "show" : media_type,
+				media_type: media_type,
 				score,
 				review: review || null,
 			}],
@@ -57,7 +57,7 @@ export const updateScores = async ({
 			DELETE FROM user_score
 			WHERE user_id = ? AND tmdb_id = ? AND media_type = ?
 		`
-		const params = [user_id, tmdb_id, media_type === "tv" ? "show" : media_type]
+		const params = [user_id, tmdb_id, media_type]
 		result = await execute(sql, params)
 	}
 

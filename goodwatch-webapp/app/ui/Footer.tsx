@@ -8,7 +8,7 @@ import tmdbLogo from "~/img/tmdb-logo.svg"
 const navigation = {
 	main: [
 		{ name: "Movies", href: "/movies" },
-		{ name: "Shows", href: "/tv-shows" },
+		{ name: "Shows", href: "/shows" },
 		{ name: "Discover", href: "/discover" },
 	],
 	social: [

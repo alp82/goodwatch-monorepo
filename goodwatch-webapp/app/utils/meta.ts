@@ -73,7 +73,7 @@ const buildJsonLdDetail = (
 	details: MovieDetails | TVDetails,
 ) => {
 	const isMovie = details.media_type === "movie"
-	const isShow = details.media_type === "tv"
+	const isShow = details.media_type === "show"
 
 	const jsonLd: Record<string, unknown> = {
 		"@context": "https://schema.org",
@@ -188,13 +188,13 @@ const buildJsonLdDetail = (
 	// ],
 
 	// Ratings – assuming these properties exist on AllRatings
-	if (details.aggregated_overall_score_normalized_percent) {
+	if (details.goodwatch_overall_score_normalized_percent) {
 		jsonLd.aggregateRating = {
 			"@type": "AggregateRating",
 			name: "GoodWatch Score",
 			ratingValue:
-				details.aggregated_overall_score_normalized_percent.toString(),
-			ratingCount: details.aggregated_overall_score_voting_count?.toString(),
+				details.goodwatch_overall_score_normalized_percent.toString(),
+			ratingCount: details.goodwatch_overall_score_voting_count?.toString(),
 			worstRating: "1",
 			bestRating: "100",
 		}

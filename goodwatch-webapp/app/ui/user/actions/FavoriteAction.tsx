@@ -34,7 +34,7 @@ export default function FavoriteAction({
 				url: "/api/update-favorites",
 				params: {
 					tmdb_id,
-					media_type: mediaType === "show" ? "tv" : "movie",
+					media_type: mediaType,
 					action,
 				},
 			},

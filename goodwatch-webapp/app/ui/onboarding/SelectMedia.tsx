@@ -37,7 +37,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		searchTerm: debouncedSearchTerm,
 	})
 	const movies = onboardingMedia.data?.movies || []
-	const tv = onboardingMedia.data?.tv || []
+	const shows = onboardingMedia.data?.shows || []
 
 	const { data: userData } = useUserData()
 
@@ -59,7 +59,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	}
 	const tmdb_ids = [
 		...movies.map((m) => m.tmdb_id),
-		...tv.map((m) => m.tmdb_id),
+		...shows.map((m) => m.tmdb_id),
 	].join(",")
 	useEffect(() => {
 		if (!previousMediaToDisplay) return
@@ -69,7 +69,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	const allMedia = [
 		...(previousMediaToDisplay ? [previousMediaToDisplay] : []),
 		...movies,
-		...tv,
+		...shows,
 	]
 
 	const sortedMedia = getSortedUserData(userData as GetUserDataResult, [
@@ -254,7 +254,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 							<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
 								TV Shows
 							</div>
-							{getMedia(tv)}
+							{getMedia(shows)}
 						</div>
 					</div>
 				</div>

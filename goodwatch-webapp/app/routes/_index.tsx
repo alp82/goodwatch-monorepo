@@ -113,14 +113,14 @@ export default function Index() {
 	const { trendingMovies, trendingTV, popularPicksMovies, popularPicksTV } =
 		useLoaderData<LoaderData>()
 
-	const [popularPicksType, setPopularPicksType] = useState<"movies" | "tv">(
+	const [popularPicksType, setPopularPicksType] = useState<"movies" | "show">(
 		"movies",
 	)
 	const selectPopularMovies = () => {
 		setPopularPicksType("movies")
 	}
 	const selectPopularTV = () => {
-		setPopularPicksType("tv")
+		setPopularPicksType("show")
 	}
 	const popularPicks =
 		popularPicksType === "movies" ? popularPicksMovies : popularPicksTV
@@ -144,7 +144,7 @@ export default function Index() {
 						</button>
 						<button
 							type="button"
-							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicksType === "tv" ? "bg-indigo-900/70" : "bg-slate-900/60"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
+							className={`mt-8 px-8 py-2 inline-block border-2 rounded-md border-gray-900 ${popularPicksType === "show" ? "bg-indigo-900/70" : "bg-slate-900/60"} hover:bg-indigo-800 shadow-[0_0_10px_0_rgba(0,0,0,0.5)]`}
 							onClick={selectPopularTV}
 						>
 							Good Shows
@@ -198,7 +198,7 @@ export default function Index() {
 									<div className="w-56 xs:w-64 sm:w-72 md:w-80 lg:w-88 xl:w-96 transition-transform ease-in-out duration-200 hover:rotate-3">
 										<MovieTvCard
 											details={details}
-											mediaType={popularPicksType === "movies" ? "movie" : "tv"}
+											mediaType={popularPicksType === "movies" ? "movie" : "show"}
 											prefetch={true}
 										/>
 									</div>
@@ -301,12 +301,12 @@ export default function Index() {
 					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
 						{trendingTV.slice(0, numberOfItemsToShow).map((tv: TrendingTV) => (
 							<div key={tv.tmdb_id}>
-								<MovieTvCard details={tv} mediaType="tv" prefetch={true} />
+								<MovieTvCard details={tv} mediaType="show" prefetch={true} />
 							</div>
 						))}
 						<Link
 							className="flex flex-col text-center justify-center items-center border-dashed border-2 border-indigo-600 hover:bg-indigo-900 hover:border-indigo-900"
-							to="/discover/tv"
+							to="/discover/show"
 							prefetch="viewport"
 						>
 							<TvIcon className="w-16 h-16" />

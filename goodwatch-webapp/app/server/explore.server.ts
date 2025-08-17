@@ -1,9 +1,10 @@
-import type { StreamingLink, StreamingProviders } from "~/server/details.server"
+// TODO: Fix StreamingLink and StreamingProviders imports after details.server.ts migration
+// import type { StreamingLink, StreamingProviders } from "~/server/details.server"
 import type { FilterMediaType } from "~/server/search.server"
 import { constructFullQuery, filterMediaTypes } from "~/server/utils/query-db"
 import { generateVectorResults } from "~/server/vector.server"
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 import type { AllRatings } from "~/utils/ratings"
 
 const RESULT_LIMIT = 120
@@ -41,12 +42,13 @@ export interface ExploreResult extends AllRatings {
 	poster_path: string
 	title: string
 	// TODO remove streaming_providers
-	streaming_providers: StreamingProviders
-	streaming_links: StreamingLink[]
-	media_type: "movie" | "tv"
+	streaming_providers: any // StreamingProviders - TODO: Fix after details.server.ts migration
+	streaming_links: any[] // StreamingLink[] - TODO: Fix after details.server.ts migration
+	media_type: "movie" | "show"
 }
 
 export interface ExploreResults {
+	[key: string]: any
 	results: ExploreResult[]
 }
 
@@ -115,19 +117,8 @@ async function _getExploreResults({
 	//     FROM vectors_media v
 	//     WHERE v.${category}_vector IS NOT NULL
 	//     	${type === "movies" ? "AND v.media_type = 'movie'" : ""}
-	//     	${type === "tv" ? "AND v.media_type = 'tv'" : ""}
+	//     	${type === "show" ? "AND v.media_type = 'show'" : ""}
 	//     ORDER BY v.${category}_vector <=> $2 ASC
 	//     LIMIT ${RESULT_LIMIT}
 	//   ) v
-	//
-	// 	${["all", "movies"].includes(type) ? `LEFT JOIN movies m ON m.tmdb_id = v.tmdb_id AND v.media_type = 'movie'` : ""}
-	// 	${["all", "tv"].includes(type) ? `LEFT JOIN tv t ON t.tmdb_id = v.tmdb_id AND v.media_type = 'tv'` : ""}
-	// `
-	//
-	// const queryParams = [country, queryVectorParam]
-	// const results = await executeQuery(pg_query, queryParams)
-	//
-	// return {
-	// 	results: results.rows as unknown as ExploreResult[],
-	// }
 }

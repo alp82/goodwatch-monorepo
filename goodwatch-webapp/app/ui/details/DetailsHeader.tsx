@@ -95,7 +95,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 								<span className="hidden xs:inline">
 									<Genres
 										genres={genres.slice(0, 2)}
-										type={mediaType === "movie" ? "movie" : "tv"}
+										type={mediaType === "movie" ? "movie" : "show"}
 										compact={true}
 									/>
 								</span>

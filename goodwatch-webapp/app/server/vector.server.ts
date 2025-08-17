@@ -1,6 +1,6 @@
 import axios from "axios"
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 
 const MAX_RETRIES = 2
 
@@ -33,18 +33,17 @@ async function _generateVectorResults(
 	const checkQuery = `
       SELECT query_vector 
       FROM vectors_query 
-      WHERE query_text = $1
-      FOR UPDATE
+      WHERE query_text = ?
     `
-	const checkResults = await executeQuery<{ query_vector: string }>(
+	const checkResults = await query<{ query_vector: string }>(
 		checkQuery,
 		[normalizedQuery],
 	)
 
-	if (checkResults.rows.length > 0) {
+	if (checkResults.length > 0) {
 		// Embedding exists
 		console.log(`[Cache Hit] Vector query for: "${normalizedQuery}"`)
-		const queryVectorParam = checkResults.rows[0].query_vector
+		const queryVectorParam = checkResults[0].query_vector
 		return { normalizedQuery, queryVectorParam }
 	}
 
@@ -56,11 +55,10 @@ async function _generateVectorResults(
 
 	const insertQuery = `
       INSERT INTO vectors_query (query_text, query_vector) 
-      VALUES ($1, $2)
-      RETURNING query_vector
+      VALUES (?, ?)
     `
 	try {
-		await executeQuery<{ query_vector: string }>(insertQuery, [
+		await query<{ query_vector: string }>(insertQuery, [
 			normalizedQuery,
 			queryVectorParam,
 		])

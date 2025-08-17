@@ -16,10 +16,10 @@ import {
 import { getRatingKeys } from "~/utils/ratings"
 import { duplicateProviders } from "~/utils/streaming-links"
 
-export const mediaTypes = ["movie", "tv"] as const
+export const mediaTypes = ["movie", "show"] as const
 export type MediaType = (typeof mediaTypes)[number]
 
-export const filterMediaTypes = ["all", "movies", "movie", "tv"] as const
+export const filterMediaTypes = ["all", "movies", "movie", "show", "shows"] as const
 export type FilterMediaType = (typeof filterMediaTypes)[number]
 
 type StreamType = "flatrate" | "free" | "ads" | "buy" | "rent"
@@ -268,13 +268,19 @@ const constructUnionQuery = ({
 			pageSize,
 		})
 		selectQueries.push(selectMovies)
-		collectedParams = { ...collectedParams, ...paramsMovies }
+		// Ensure movie parameters don't conflict with show parameters
+		Object.keys(paramsMovies).forEach(key => {
+			if (collectedParams[key] !== undefined) {
+				console.warn(`Parameter collision detected for key: ${key}`)
+			}
+			collectedParams[key] = paramsMovies[key]
+		})
 	}
 
-	if (["all", "tv"].includes(filterMediaType)) {
+	if (["all", "show", "shows"].includes(filterMediaType)) {
 		const { query: selectTv, params: paramsTv } = constructSelectQuery({
 			userId,
-			type: "tv",
+			type: "show",
 			streaming,
 			similarity,
 			conditions,
@@ -283,7 +289,13 @@ const constructUnionQuery = ({
 			pageSize,
 		})
 		selectQueries.push(selectTv)
-		collectedParams = { ...collectedParams, ...paramsTv }
+		// Ensure show parameters don't conflict with movie parameters
+		Object.keys(paramsTv).forEach(key => {
+			if (collectedParams[key] !== undefined) {
+				console.warn(`Parameter collision detected for key: ${key}`)
+			}
+			collectedParams[key] = paramsTv[key]
+		})
 	}
 
 	const unionQuery = `
@@ -317,7 +329,7 @@ const constructSelectQuery = ({
 	} = conditions
 
 	// Validate type
-	if (!["movie", "tv"].includes(type)) {
+	if (!["movie", "show"].includes(type)) {
 		throw new Error("Invalid media type")
 	}
 
@@ -354,9 +366,10 @@ const constructSelectQuery = ({
 		getStreamingLinksCondition(type, streaming)
 
 	// Build the query with placeholders
+	// Note: Similarity functionality is disabled for CrateDB migration
 	const query = `${similarityCTE}SELECT DISTINCT
-		'${type}' as media_type,
-		${similarity?.withSimilar?.length ? "m_similar.shared_dna_score as similarity_score," : ""}
+		'${type === "movie" ? "movie" : "show"}' as media_type,
+		${similarity?.withSimilar?.length && similarityJoins ? "m_similar.shared_dna_score as similarity_score," : ""}
 		${getCommonFields(type)
 			.map((field) => `m.${field}`)
 			.join(",\n\t\t")}
@@ -531,6 +544,7 @@ const getStreamingLinksCondition = (
 		providerIds,
 		streamTypes,
 		countryCode,
+		`${type}_`, // Use media type as prefix to avoid parameter collision
 	)
 
 	return {
@@ -569,11 +583,11 @@ const getStreamingLinksJoin = ({
 			'provider_logo_path', sp.logo_path,
 			'media_type', sa.media_type,
 			'country_code', sa.country_code,
-			'stream_type', sa.stream_type,
+			'stream_type', sa.streaming_type,
 			'stream_url', sa.stream_url,
 			'price_dollar', sa.price_dollar,
 			'quality', sa.quality
-										)) AS streaming_links
+																						)) AS streaming_links
 		FROM (
 			SELECT DISTINCT ON (sa.streaming_service_id) sa.*
 			FROM streaming_availability sa
@@ -599,20 +613,22 @@ const convertNamedToPositionalParams = <T extends string>(
 	const orderedValues: unknown[] = []
 
 	// Find all parameter occurrences in order (including duplicates)
-	const matches = query.match(/:::(\w+)/g)
+	const matches = query.match(/:::([\w_]+)/g)
 	if (matches) {
 		matches.forEach((match) => {
 			const name = match.substring(3) // Remove ':::'
 			if (Object.prototype.hasOwnProperty.call(params, name)) {
 				orderedValues.push(params[name as T])
 			} else {
+				// Log missing parameter for debugging UNION query parameter collisions
+				console.error(`Parameter '${name}' is missing in the params object. Available params:`, Object.keys(params))
 				throw new Error(`Parameter '${name}' is missing in the params object`)
 			}
 		})
 	}
 
 	// Replace all named parameters with question marks
-	const positionalQuery = query.replace(/:::(\w+)/g, "?")
+	const positionalQuery = query.replace(/:::([\w_]+)/g, "?")
 
 	return { query: positionalQuery, params: orderedValues }
 }
@@ -622,16 +638,17 @@ function prepareStreamingConditions(
 	providerIds: number[] | undefined,
 	streamTypes: StreamType[] | undefined,
 	countryCode: string | undefined,
+	paramPrefix: string = "",
 ) {
 	const params: Record<string, unknown> = {}
 	let providerCondition = ""
 	if (streamingPreset !== "everywhere" && providerIds) {
 		const validProviderIds = providerIds.filter((id) => !Number.isNaN(id))
 		validProviderIds.forEach((id, idx) => {
-			params[`providerId${idx}`] = id
+			params[`${paramPrefix}providerId${idx}`] = id
 		})
 		providerCondition = `IN (${validProviderIds
-			.map((_, idx) => `:::providerId${idx}`)
+			.map((_, idx) => `:::${paramPrefix}providerId${idx}`)
 			.join(",")})`
 	} else {
 		providerCondition = `NOT IN (${duplicateProviders.join(",")})`
@@ -639,18 +656,18 @@ function prepareStreamingConditions(
 
 	let streamTypeCondition = ""
 	if (streamTypes) {
-		streamTypeCondition = `AND sa.stream_type IN (${streamTypes
+		streamTypeCondition = `AND sa.streaming_type IN (${streamTypes
 			.map((streamType, idx) => {
-				params[`streamType${idx}`] = streamType
-				return `:::streamType${idx}`
+				params[`${paramPrefix}streamType${idx}`] = streamType
+				return `:::${paramPrefix}streamType${idx}`
 			})
 			.join(",")})`
 	}
 
 	let countryCodeCondition = ""
 	if (streamingPreset !== "everywhere" && countryCode) {
-		params.countryCode = countryCode
-		countryCodeCondition = "AND sa.country_code = :::countryCode"
+		params[`${paramPrefix}countryCode`] = countryCode
+		countryCodeCondition = `AND sa.country_code = :::${paramPrefix}countryCode`
 	}
 	return {
 		providerCondition,

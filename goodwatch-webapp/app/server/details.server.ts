@@ -1,9 +1,8 @@
 import {
 	increasePriorityForMovies,
-	increasePriorityForTVs,
+	// increasePriorityForTVs, // TODO: Update to use 'show' instead of 'tv'
 } from "~/server/utils/priority"
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
 import { getRatingKeys } from "~/utils/ratings"
 import {
 	duplicateProviderMapping,
@@ -17,9 +16,9 @@ import {
 } from "~/server/utils/fingerprint"
 import {
 	type MovieDetails,
-	type TVDetails,
+	type ShowDetails,
 	type DetailsMovieParams,
-	type DetailsTVParams,
+	type DetailsShowParams,
 	getFieldsByMediaType,
 	generateMediaFieldAssignments,
 	type QueryResult,
@@ -40,10 +39,10 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 	})
 }
 
-export const getDetailsForTV = async (params: DetailsTVParams) => {
-	return await cached<DetailsTVParams, ShowResult>({
-		name: "details-tv",
-		target: _getDetailsForTV,
+export const getDetailsForShow = async (params: DetailsShowParams) => {
+	return await cached<DetailsShowParams, ShowResult>({
+		name: "details-show",
+		target: _getDetailsForShow,
 		params,
 		ttlMinutes: 30,
 		// ttlMinutes: 0,
@@ -72,15 +71,15 @@ const _getDetailsForMovie = async ({
 	}
 }
 
-const _getDetailsForTV = async ({
-	tvId,
+const _getDetailsForShow = async ({
+	showId,
 	country,
 	language,
-}: DetailsTVParams): Promise<ShowResult> => {
+}: DetailsShowParams): Promise<ShowResult> => {
 	const mediaType = "show"
 	const result = (await _fetchFromDB(
 		mediaType,
-		tvId,
+		showId,
 		country,
 		language,
 	)) as ShowQueryResult

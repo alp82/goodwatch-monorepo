@@ -34,7 +34,7 @@ export default function ToWatchAction({
 				url: "/api/update-wish-list",
 				params: {
 					tmdb_id,
-					media_type: mediaType === "show" ? "tv" : "movie",
+					media_type: mediaType,
 					action,
 				},
 			},

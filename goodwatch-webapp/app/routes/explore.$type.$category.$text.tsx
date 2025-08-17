@@ -184,7 +184,7 @@ export default function Explore() {
 						navigation.state === "idle" &&
 						results.map((result, index) => {
 							const isSmall =
-								result.aggregated_overall_score_normalized_percent < 75
+								result.goodwatch_overall_score_normalized_percent < 75
 							const cardClass = isSmall
 								? "row-span-2 col-span-2 xs:row-span-1 xs:col-span-1"
 								: "row-span-2 col-span-2"

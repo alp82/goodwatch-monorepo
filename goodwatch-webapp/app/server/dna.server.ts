@@ -1,5 +1,5 @@
 import { cached } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 
 const LIMIT = 100
 
@@ -39,13 +39,13 @@ export async function _getDNA({ text = "" }: DNAParams): Promise<DNAResults> {
 		: [`%${text}%`]
 
 	const conditions = words.map(
-		(_, i) => `(category ILIKE $${i + 1} OR label ILIKE $${i + 1})`,
+		(_, i) => `(category ILIKE ? OR label ILIKE ?)`,
 	)
-	const labelConditions = words.map((_, i) => `label ILIKE $${i + 1}`)
+	const labelConditions = words.map((_, i) => `label ILIKE ?`)
 	const conditionsAll = conditions.join(" AND ")
 	const labelConditionsAll = labelConditions.join(" AND ")
 
-	const query = `
+	const dnaQuery = `
     WITH matching_primaries AS (
       SELECT DISTINCT ON (d.id)
         d.id,
@@ -88,9 +88,10 @@ export async function _getDNA({ text = "" }: DNAParams): Promise<DNAResults> {
     LIMIT ${LIMIT};
   `
 
-	const params = [...words]
-	const result = await executeQuery<DNAResult>(query, params)
+	// CrateDB requires flattened parameters for ILIKE conditions
+	const params = words.flatMap(word => [word, word, word]) // For each word: category ILIKE, label ILIKE, label ILIKE
+	const result = await query<DNAResult>(dnaQuery, params)
 	return {
-		result: result.rows,
+		result: result,
 	}
 }

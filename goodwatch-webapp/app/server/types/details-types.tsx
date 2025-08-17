@@ -226,7 +226,7 @@ export interface MovieDetails extends BaseDetails {
 	runtime: number | null
 }
 
-export interface TVDetails extends BaseDetails {
+export interface ShowDetails extends BaseDetails {
 	media_type: "show"
 	// TODO add created_by
 	in_production: boolean
@@ -261,8 +261,8 @@ export interface DetailsMovieParams {
 	language: string
 }
 
-export interface DetailsTVParams {
-	tvId: string
+export interface DetailsShowParams {
+	showId: string
 	country: string
 	language: string
 }
@@ -472,7 +472,7 @@ export interface MovieResult extends MovieQueryResult {
 }
 
 export interface ShowResult extends ShowQueryResult {
-	details: TVDetails
+	details: ShowDetails
 	mediaType: "show"
 	fingerprint: FingerprintResult
 }

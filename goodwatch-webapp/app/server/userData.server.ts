@@ -7,7 +7,7 @@ import type { Score } from "~/server/scores.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
 import { cached, resetCache } from "~/utils/cache"
-import { executeQuery } from "~/utils/postgres"
+import { query } from "~/utils/crate"
 
 interface UserDataRow {
 	media_type: string
@@ -27,7 +27,7 @@ interface UserDataRow {
 	release_year: number
 	poster_path: string
 	backdrop_path: string
-	aggregated_overall_score_normalized_percent: number | null
+	goodwatch_overall_score_normalized_percent: number | null
 	streaming_links: StreamingLink[]
 }
 
@@ -42,8 +42,8 @@ export const getUserData = async (params: GetUserDataParams) => {
 		name: "user-data",
 		target: _getUserData,
 		params,
-		ttlMinutes: 10,
-		// ttlMinutes: 0,
+		//ttlMinutes: 10,
+		ttlMinutes: 0,
 	})
 }
 
@@ -56,145 +56,114 @@ async function _getUserData({
 
 	const userSettings = await getUserSettings({ userId: user_id })
 
-	const query = `
-WITH combined AS (
-    SELECT 
-        media_type,
-        tmdb_id,
-        score,
-        review,
-        FALSE AS on_wishlist,
-        FALSE AS on_watch_history,
-        FALSE AS on_favorites,
-        FALSE AS on_skipped,
-        updated_at AS updated_at_scores,
-        NULL::timestamp with time zone AS updated_at_wishlist,
-        NULL::timestamp with time zone AS updated_at_watch_history,
-        NULL::timestamp with time zone AS updated_at_favorites,
-        NULL::timestamp with time zone AS updated_at_skipped
-    FROM user_scores
-    WHERE user_id = $1
-    
-    UNION ALL
-    
-    SELECT 
-        media_type,
-        tmdb_id,
-        NULL AS score,
-        NULL AS review,
-        TRUE AS on_wishlist,
-        FALSE AS on_watch_history,
-        FALSE AS on_favorites,
-        FALSE AS on_skipped,
-        NULL::timestamp with time zone AS updated_at_scores,
-        updated_at AS updated_at_wishlist,
-        NULL::timestamp with time zone AS updated_at_watch_history,
-        NULL::timestamp with time zone AS updated_at_favorites,
-        NULL::timestamp with time zone AS updated_at_skipped
-    FROM user_wishlist
-    WHERE user_id = $1
-    
-    UNION ALL
-    
-    SELECT 
-        media_type,
-        tmdb_id,
-        NULL AS score,
-        NULL AS review,
-        FALSE AS on_wishlist,
-        TRUE AS on_watch_history,
-        FALSE AS on_favorites,
-        FALSE AS on_skipped,
-        NULL::timestamp with time zone AS updated_at_scores,
-        NULL::timestamp with time zone AS updated_at_wishlist,
-        updated_at AS updated_at_watch_history,
-        NULL::timestamp with time zone AS updated_at_favorites,
-        NULL::timestamp with time zone AS updated_at_skipped
-    FROM user_watch_history
-    WHERE user_id = $1
-    
-    UNION ALL
-    
-    SELECT 
-        media_type,
-        tmdb_id,
-        NULL AS score,
-        NULL AS review,
-        FALSE AS on_wishlist,
-        FALSE AS on_watch_history,
-        TRUE AS on_favorites,
-        FALSE AS on_skipped,
-        NULL::timestamp with time zone AS updated_at_scores,
-        NULL::timestamp with time zone AS updated_at_wishlist,
-        NULL::timestamp with time zone AS updated_at_watch_history,
-        updated_at AS updated_at_favorites,
-        NULL::timestamp with time zone AS updated_at_skipped
-    FROM user_favorites
-    WHERE user_id = $1
-    
-    UNION ALL
-    
-    SELECT 
-        media_type,
-        tmdb_id,
-        NULL AS score,
-        NULL AS review,
-        FALSE AS on_wishlist,
-        FALSE AS on_watch_history,
-        FALSE AS on_favorites,
-        TRUE AS on_skipped,
-        NULL::timestamp with time zone AS updated_at_scores,
-        NULL::timestamp with time zone AS updated_at_wishlist,
-        NULL::timestamp with time zone AS updated_at_watch_history,
-        NULL::timestamp with time zone AS updated_at_favorites,
-        updated_at AS updated_at_skipped
-    FROM user_skipped
-    WHERE user_id = $1
-)
-SELECT 
-    combined.media_type,
-    combined.tmdb_id,
-    MAX(combined.score) AS score,
-    MAX(combined.review) AS review,
-    MAX(combined.on_wishlist::int)::boolean AS on_wishlist,
-    MAX(combined.on_watch_history::int)::boolean AS on_watch_history,
-    MAX(combined.on_favorites::int)::boolean AS on_favorites,
-    MAX(combined.on_skipped::int)::boolean AS on_skipped,
-    MAX(combined.updated_at_scores) AS updated_at_scores,
-    MAX(combined.updated_at_wishlist) AS updated_at_wishlist,
-    MAX(combined.updated_at_watch_history) AS updated_at_watch_history,
-    MAX(combined.updated_at_favorites) AS updated_at_favorites,
-    MAX(combined.updated_at_skipped) AS updated_at_skipped,
-    COALESCE(movies.title, tv.title, '') AS title,
-    COALESCE(movies.release_year, tv.release_year, 0) AS release_year,
-    COALESCE(movies.poster_path, tv.poster_path, '') AS poster_path,
-    COALESCE(movies.backdrop_path, tv.backdrop_path, '') AS backdrop_path,
-    COALESCE(movies.aggregated_overall_score_normalized_percent, tv.aggregated_overall_score_normalized_percent, NULL) AS aggregated_overall_score_normalized_percent,
-    COALESCE(
-        json_agg(
-          json_build_object(
-            'provider_id', spl.provider_id,
-            'provider_name', sp.name,
-            'provider_logo_path', sp.logo_path,
-            'stream_type', spl.stream_type
-          ) 
-        ) FILTER (WHERE spl.provider_id IS NOT NULL), '[]'
-    ) AS streaming_links
-FROM combined
-LEFT JOIN movies ON combined.media_type = 'movie' AND combined.tmdb_id = movies.tmdb_id
-LEFT JOIN tv ON combined.media_type = 'tv' AND combined.tmdb_id = tv.tmdb_id
-LEFT JOIN streaming_provider_links spl ON spl.tmdb_id = combined.tmdb_id AND spl.media_type = combined.media_type AND spl.stream_type = 'flatrate' AND spl.country_code = $2
-LEFT JOIN streaming_providers sp ON spl.provider_id = sp.id
-GROUP BY combined.media_type, combined.tmdb_id, movies.title, tv.title, movies.release_year, tv.release_year, movies.poster_path, tv.poster_path, movies.backdrop_path, tv.backdrop_path, movies.aggregated_overall_score_normalized_percent, tv.aggregated_overall_score_normalized_percent
-ORDER BY combined.tmdb_id DESC;
-  `
+	// Simple approach: query each table separately and combine in code
+	const [scores, wishlist, watchHistory, favorites, skipped] = await Promise.all([
+		// User scores
+		query<{tmdb_id: number, media_type: string, score: number, review: string, updated_at: Date}>(
+			`SELECT tmdb_id, media_type, score, review, updated_at 
+			 FROM user_score WHERE user_id = ?`, [user_id]
+		),
+		// User wishlist
+		query<{tmdb_id: number, media_type: string, updated_at: Date}>(
+			`SELECT tmdb_id, media_type, updated_at 
+			 FROM user_wishlist WHERE user_id = ?`, [user_id]
+		),
+		// User watch history
+		query<{tmdb_id: number, media_type: string, first_watched_at: Date}>(
+			`SELECT tmdb_id, media_type, first_watched_at 
+			 FROM user_watch_history WHERE user_id = ?`, [user_id]
+		),
+		// User favorites
+		query<{tmdb_id: number, media_type: string, updated_at: Date}>(
+			`SELECT tmdb_id, media_type, updated_at 
+			 FROM user_favorite WHERE user_id = ?`, [user_id]
+		),
+		// User skipped
+		query<{tmdb_id: number, media_type: string, updated_at: Date}>(
+			`SELECT tmdb_id, media_type, updated_at 
+			 FROM user_skipped WHERE user_id = ?`, [user_id]
+		),
+	])
 
-	const params = [user_id, userSettings?.country_default || "US"]
-	const result = await executeQuery<UserDataRow>(query, params)
+	// Create maps for fast lookup
+	const scoresMap = new Map<string, {score: number, review: string, updated_at: Date}>()
+	const wishlistMap = new Map<string, Date>()
+	const watchHistoryMap = new Map<string, Date>()
+	const favoritesMap = new Map<string, Date>()
+	const skippedMap = new Map<string, Date>()
+
+	// Populate maps
+	scores.forEach(item => {
+		const key = `${item.media_type}-${item.tmdb_id}`
+		scoresMap.set(key, {score: item.score, review: item.review, updated_at: item.updated_at})
+	})
+	wishlist.forEach(item => {
+		const key = `${item.media_type}-${item.tmdb_id}`
+		wishlistMap.set(key, item.updated_at)
+	})
+	watchHistory.forEach(item => {
+		const key = `${item.media_type}-${item.tmdb_id}`
+		watchHistoryMap.set(key, item.first_watched_at)
+	})
+	favorites.forEach(item => {
+		const key = `${item.media_type}-${item.tmdb_id}`
+		favoritesMap.set(key, item.updated_at)
+	})
+	skipped.forEach(item => {
+		const key = `${item.media_type}-${item.tmdb_id}`
+		skippedMap.set(key, item.updated_at)
+	})
+
+	// Get all unique media items
+	const allMediaKeys = new Set([
+		...scoresMap.keys(),
+		...wishlistMap.keys(),
+		...watchHistoryMap.keys(),
+		...favoritesMap.keys(),
+		...skippedMap.keys(),
+	])
+
+	// Convert to result format
+	const result: UserDataRow[] = []
+	for (const key of allMediaKeys) {
+		const [media_type, tmdb_id_str] = key.split('-')
+		const tmdb_id = parseInt(tmdb_id_str)
+		
+		const scoreData = scoresMap.get(key)
+		
+		// Get timestamp values safely
+		const wishlistTimestamp = wishlistMap.get(key)
+		const watchHistoryTimestamp = watchHistoryMap.get(key)
+		const favoritesTimestamp = favoritesMap.get(key)
+		const skippedTimestamp = skippedMap.get(key)
+		
+		result.push({
+			media_type,
+			tmdb_id,
+			on_wishlist: wishlistTimestamp != null,
+			on_watch_history: watchHistoryTimestamp != null,
+			on_favorites: favoritesTimestamp != null,
+			on_skipped: skippedTimestamp != null,
+			score: scoreData?.score as Score || null,
+			review: scoreData?.review || null,
+			updated_at_wishlist: wishlistTimestamp || null,
+			updated_at_watch_history: watchHistoryTimestamp || null,
+			updated_at_favorites: favoritesTimestamp || null,
+			updated_at_scores: scoreData?.updated_at || null,
+			updated_at_skipped: skippedTimestamp || null,
+			// These will be populated later if needed
+			title: '',
+			release_year: 0,
+			poster_path: '',
+			backdrop_path: '',
+			goodwatch_overall_score_normalized_percent: null,
+			streaming_links: [],
+		})
+	}
 
 	const userData = {} as GetUserDataResult
 
-	for (const row of result.rows) {
+	for (const row of result) {
 		const {
 			media_type,
 			tmdb_id,
@@ -216,12 +185,12 @@ ORDER BY combined.tmdb_id DESC;
 		}
 
 		const providerTypeKeys = row.streaming_links.map(
-			(link) => `${link.provider_id}-${link.streaming_type}`,
+			(link: any) => `${link.provider_id}-${link.stream_type}`,
 		)
 		const streaming_links = row.streaming_links.filter(
-			(link, index) =>
+			(link: any, index: number) =>
 				index ===
-				providerTypeKeys.indexOf(`${link.provider_id}-${link.streaming_type}`),
+				providerTypeKeys.indexOf(`${link.provider_id}-${link.stream_type}`),
 		)
 
 		userData[media_type][tmdb_id] = {
@@ -246,8 +215,8 @@ ORDER BY combined.tmdb_id DESC;
 			release_year: row.release_year,
 			poster_path: row.poster_path,
 			backdrop_path: row.backdrop_path,
-			aggregated_overall_score_normalized_percent:
-				row.aggregated_overall_score_normalized_percent,
+			goodwatch_overall_score_normalized_percent:
+				row.goodwatch_overall_score_normalized_percent,
 			streaming_links,
 		}
 	}

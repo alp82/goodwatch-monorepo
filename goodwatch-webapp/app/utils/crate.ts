@@ -5,11 +5,29 @@ class CrateClient {
 		crate.connect(hosts.join(" "))
 	}
 
+	async execute(
+		query: string,
+		params?: (string | number | Date)[],
+	) {
+		try {
+			return await crate.execute(query, params)
+		} catch (error) {
+			console.error('====================')
+			console.error('CrateDB Query Error:')
+			console.error('Query:', query)
+			console.error('Params:', params)
+			console.error('Error:', error)
+			console.error('Stack trace:')
+			console.trace()
+			throw error
+		}
+	}
+
 	async select<T extends {}>(
 		query: string,
 		params?: (string | number | Date)[],
 	) {
-		const { json, duration, rowcount, rows, cols } = await crate.execute(
+		const { json, duration, rowcount, rows, cols } = await this.execute(
 			query,
 			params,
 		)
@@ -21,13 +39,6 @@ class CrateClient {
 			rows,
 			cols,
 		}
-	}
-
-	async execute(
-		query: string,
-		params?: (string | number | Date)[],
-	) {
-		return await crate.execute(query, params)
 	}
 }
 
@@ -77,9 +88,19 @@ export const upsert = async ({
 }: UpsertOptions) => {
 	if (!data.length) return { rowcount: 0 }
 
-	// Get all unique columns from the data
+	// Add timestamps to all data rows
+	const now = new Date()
+	const dataWithTimestamps = data.map(row => ({
+		...row,
+		// Add created_at if not present (will be used for inserts)
+		created_at: row.created_at ?? now,
+		// Always set updated_at to now
+		updated_at: now,
+	}))
+
+	// Get all unique columns from the data (including timestamps)
 	const allColumns = Array.from(
-		new Set(data.flatMap(row => Object.keys(row)))
+		new Set(dataWithTimestamps.flatMap(row => Object.keys(row)))
 	)
 
 	// Build column list and placeholders
@@ -89,8 +110,10 @@ export const upsert = async ({
 	// Build conflict clause
 	const conflictList = conflictColumns.map(col => `"${col}"`).join(", ")
 	
-	// Build update clause (exclude conflict columns)
-	const updateColumns = allColumns.filter(col => !conflictColumns.includes(col))
+	// Build update clause (exclude conflict columns and created_at)
+	const updateColumns = allColumns.filter(col => 
+		!conflictColumns.includes(col) && col !== "created_at"
+	)
 	const updateClause = ignoreUpdate 
 		? "NOTHING"
 		: updateColumns.length > 0
@@ -106,8 +129,8 @@ export const upsert = async ({
 	`
 
 	// Prepare data rows (ensure all rows have all columns)
-	const rows = data.map(row => 
-		allColumns.map(col => row[col] ?? null)
+	const rows = dataWithTimestamps.map(row => 
+		allColumns.map(col => (row as any)[col] ?? null)
 	)
 
 	// Execute the query

@@ -6,7 +6,7 @@ import type { PageData } from "~/ui/explore/config"
 
 export const genres: Record<string, PageData> = {
 	"action-and-adventure": {
-		type: "tv-shows",
+		type: "shows",
 		label: "Action & Adventure",
 		path: "action-and-adventure",
 		subtitle: "Explosions, Chases, and Zero Chill",
@@ -246,7 +246,7 @@ export const genres: Record<string, PageData> = {
 		],
 	},
 	kids: {
-		type: "tv-shows",
+		type: "shows",
 		label: "Kids",
 		path: "kids",
 		subtitle: "Adventures Start Here",
@@ -306,7 +306,7 @@ export const genres: Record<string, PageData> = {
 		],
 	},
 	news: {
-		type: "tv-shows",
+		type: "shows",
 		label: "News",
 		path: "news",
 		subtitle: "The World Unfiltered",
@@ -326,7 +326,7 @@ export const genres: Record<string, PageData> = {
 		],
 	},
 	reality: {
-		type: "tv-shows",
+		type: "shows",
 		label: "Reality",
 		path: "reality",
 		subtitle: "Drama Without a Script",
@@ -366,7 +366,7 @@ export const genres: Record<string, PageData> = {
 		],
 	},
 	"scifi-and-fantasy": {
-		type: "tv-shows",
+		type: "shows",
 		label: "Sci-Fi & Fantasy",
 		path: "scifi-and-fantasy",
 		subtitle: "Beyond Possible",
@@ -406,7 +406,7 @@ export const genres: Record<string, PageData> = {
 		],
 	},
 	soap: {
-		type: "tv-shows",
+		type: "shows",
 		label: "Soap",
 		path: "soap",
 		subtitle: "Drama on Tap",
@@ -426,7 +426,7 @@ export const genres: Record<string, PageData> = {
 		],
 	},
 	talk: {
-		type: "tv-shows",
+		type: "shows",
 		label: "Talk Shows",
 		path: "talk",
 		subtitle: "Conversations That Pop",
@@ -486,7 +486,7 @@ export const genres: Record<string, PageData> = {
 		],
 	},
 	"war-and-politics": {
-		type: "tv-shows",
+		type: "shows",
 		label: "War & Politics",
 		path: "war-and-politics",
 		subtitle: "Power Plays and Battlefields",
