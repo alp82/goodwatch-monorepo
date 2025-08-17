@@ -3,31 +3,9 @@
 
 ```
 
-user settings
-user data
+full text query
+    for cast/crew: "brad pitt"
 
-db redesign
-    * certifications: split into releases and age ratings?
-    * only denormalize movies and shows fields that are small enough
-    * sort order of edges like appears_in matters
-    * streaming availability: history + changes + upcoming
-    * import additional data from other postgres tables
-    * created_at, updated_at for all collections
-    * user has seen: possibility to track "currently watching" with optional time for movies, shows, seasons and episodes
-    * seasons with separate episodes collection
-    * scores: history + by season + by episode
-
-DB research
-    https://gemini.google.com/u/0/app/5767cc373c28c472?pli=1
-    https://arangodb.com/
-    https://www.tigergraph.com/
-    https://aerospike.com/
-
-DB optimization
-    separate vector db?
-    https://qdrant.tech/benchmarks/#filtered-results
-
-   
 ---   
 
 gw score mismatch:
@@ -36,23 +14,6 @@ gw score mismatch:
     - 7.7 (LINK BROKEN)
     - 76 | 8.2
     - 97 | 91
-
----   
-
-subtiles
-    capcut
-    davinci resolve
-    descript
-    riverside
-
----   
-
-robots with sitemap link
-    https://www.instagram.com/robots.txt
-    
-gsc not indexed
-    https://x.com/junqueror/status/1910287123183251758?t=h4qDtOoliAFYi2xypdaU5Q&s=03
-    https://www.indexnow.org/
     
 ---   
 
@@ -62,6 +23,16 @@ Fingerprint
     Highlight keys sections with related media recommendations
     Badges?
     (Genre boxes with 4 most suitable scores)
+    
+    
+---   
+
+robots with sitemap link
+    https://www.instagram.com/robots.txt
+    
+gsc not indexed
+    https://x.com/junqueror/status/1910287123183251758?t=h4qDtOoliAFYi2xypdaU5Q&s=03
+    https://www.indexnow.org/
 
 ---
 
@@ -95,6 +66,14 @@ tagline
 ai
     https://www.freepik.com/pikaso/ai-video-generator
     
+---   
+
+subtiles
+    capcut
+    davinci resolve
+    descript
+    riverside
+
 ---   
 
 ARR suite
@@ -1041,6 +1020,22 @@ user actions
 ---
 
 letterboxd ratings
+
+---
+
+db redesign
+    * streaming availability: history + changes + upcoming
+    * scores: history + by season + by episode
+
+DB research
+    https://gemini.google.com/u/0/app/5767cc373c28c472?pli=1
+    https://arangodb.com/
+    https://www.tigergraph.com/
+    https://aerospike.com/
+
+DB optimization
+    separate vector db?
+    https://qdrant.tech/benchmarks/#filtered-results
 
 ---
 
