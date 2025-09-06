@@ -77,6 +77,8 @@ export default function DetailsTV() {
 	const { country } = params
 	const { locale } = useLocale()
 
+	// console.log(media)
+
 	// return (
 	// 	<>
 	// 		{media.images.backdrops.map((backdrop) => (

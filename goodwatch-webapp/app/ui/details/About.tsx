@@ -1,17 +1,21 @@
 import React from "react"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import Description from "~/ui/details/Description"
+import Badges from "~/ui/fingerprint/Badges"
 import type { Section } from "~/utils/scroll"
 import { NewspaperIcon } from "@heroicons/react/24/outline"
 
 export interface AboutProps {
-	details: MovieDetails | TVDetails
+	media: MovieResult | ShowResult
 	navigateToSection: (section: Section) => void
 }
 
-export default function About({ details, navigateToSection }: AboutProps) {
-	const { dna, synopsis, tagline } = details
+export default function About({ media, navigateToSection }: AboutProps) {
+	const { details, fingerprint } = media
+	const { synopsis, tagline } = details
+	const { essenceTags } = fingerprint
 
+	const badges = essenceTags.map(tag => ({ label: tag }))
 	return (
 		<>
 			<h2 className="mt-6 flex items-center gap-2 text-2xl font-bold">
@@ -28,6 +32,7 @@ export default function About({ details, navigateToSection }: AboutProps) {
 				</div>
 			)}
 			<Description description={synopsis} />
+			<Badges badges={badges} />
 			{/*<div className="pt-4">*/}
 			{/*	<DNAPreview dna={dna} navigateToSection={navigateToSection} />*/}
 			{/*</div>*/}

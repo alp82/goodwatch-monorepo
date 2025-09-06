@@ -3,6 +3,7 @@ import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/sections"
 import DetailsHeader from "~/ui/details/DetailsHeader"
+import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
 import DetailsOverview from "~/ui/details/DetailsOverview"
 import DetailsRatings from "~/ui/details/DetailsRatings"
 import DetailsStreaming from "~/ui/details/DetailsStreaming"
@@ -55,14 +56,25 @@ export default function Details({ media, country }: DetailsProps) {
 
 			<DetailsOverview media={media} sectionProps={sectionProps} />
 
-			<DetailsRatings media={media} sectionProps={sectionProps} />
+			<div className="isolate flex flex-col items-center">
+				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
+					<div className="flex flex-col lg:flex-row gap-8">
+						<div {...sectionProps.fingerprint}>
+							<DetailsFingerprint media={media} />
+						</div>
+						<div className="w-full">
+							<DetailsRatings media={media} sectionProps={sectionProps} />
 
-			<DetailsStreaming
-				media={media}
-				country={country}
-				sectionProps={sectionProps}
-				navigateToSection={navigateToSection}
-			/>
+							<DetailsStreaming
+								media={media}
+								country={country}
+								sectionProps={sectionProps}
+							navigateToSection={navigateToSection}
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
 
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">

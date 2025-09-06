@@ -1,15 +1,17 @@
-import type {
-	CoreScores,
-	MediaDNA,
-	GenreBlend,
-	Highlight,
-	DoubleFeature,
-} from "./mediaDNA"
-import {
-	GENRE_BLEND_LIBRARY,
-	HIGHLIGHT_LIBRARY,
-	DOUBLE_FEATURE_LIBRARY,
-} from "./mediaDNALibraries"
+// --- FINGERPRINT SCORES ---
+
+export type CoreScores = {
+	// --- Core Emotional Palette ---
+	adrenaline: number; tension: number; scare: number; violence: number; romance: number; eroticism: number; wholesome: number; wonder: number; pathos: number; melancholy: number; uncanny: number; catharsis: number; nostalgia: number;
+	// --- Humor Palette ---
+	situational_comedy: number; wit_wordplay: number; physical_comedy: number; cringe_humor: number; absurdist_humor: number; satire_parody: number; dark_humor: number;
+	// --- Thematic & World-Building ---
+	fantasy: number; futuristic: number; historical: number; contemporary_realism: number; crime: number; mystery: number; warfare: number; political: number; sports: number; biographical: number; coming_of_age: number; family_dynamics: number; psychological: number; showbiz: number; gaming: number; pop_culture: number; social_commentary: number; class_and_capitalism: number; technology_and_humanity: number; spiritual: number;
+	// --- Cognitive & Structural ---
+	narrative_structure: number; dialogue_quality: number; character_depth: number; slow_burn: number; fast_pace: number; intrigue: number; complexity: number; rewatchability: number; hopefulness: number; bleakness: number; ambiguity: number; novelty: number; homage_and_reference: number; non_linear_narrative: number; meta_narrative: number; surrealism: number; eccentricity: number; philosophical: number; educational: number;
+	// --- Aesthetic & Production ---
+	direction: number; acting: number; cinematography: number; editing: number; music_composition: number; world_immersion: number; spectacle: number; visual_stylization: number; pastiche: number; psychedelic: number; grotesque: number; camp_and_irony: number; dialogue_centrality: number; music_centrality: number; sound_centrality: number;
+}
 
 // --- VIEWING GUIDE DEFINITIONS ---
 
@@ -95,17 +97,6 @@ const VIEWING_CONTEXT_REGISTRY: Record<
 	},
 }
 
-// --- HELPER FUNCTIONS ---
-
-function calculateAverageScore(
-	scores: CoreScores,
-	keys: (keyof CoreScores)[],
-): number {
-	if (keys.length === 0) return 0
-	const total = keys.reduce((acc, key) => acc + scores[key], 0)
-	return total / keys.length
-}
-
 // --- VIEWING GUIDE BUILDERS ---
 
 function getSocialSuitability(dnaAnalysis: DNAAnalysis): SocialSuitability[] {
@@ -144,55 +135,75 @@ function getViewingContext(dnaAnalysis: DNAAnalysis): ViewingContext[] {
 	return matched
 }
 
-// --- MAIN FINGERPRINT BUILDER ---
+// --- PILLARS ---
 
-function buildMediaDNA(scores: CoreScores): MediaDNA {
-	const matchedGenreBlends: GenreBlend[] = GENRE_BLEND_LIBRARY.filter((rule) =>
-		rule.condition(scores),
-	)
-		.map((rule) => ({
-			id: rule.id,
-			name: rule.name,
-			description: rule.description,
-			score: calculateAverageScore(scores, rule.matchedScoreKeys),
-		}))
-		.sort((a, b) => b.score - a.score)
+type Tier = 0 | 1 | 2 | 3 | 4;
 
-	const matchedHighlights: Highlight[] = HIGHLIGHT_LIBRARY.filter((rule) => {
-		const hasRequiredBlend =
-			!rule.requiredGenreBlends ||
-			rule.requiredGenreBlends.some((blendId) =>
-				matchedGenreBlends.some((b) => b.id === blendId),
-			)
-		return hasRequiredBlend && rule.condition(scores)
-	})
-		.map((rule) => ({
-			id: rule.id,
-			name: rule.name,
-			icon: rule.icon,
-			description: rule.description,
-			score: calculateAverageScore(scores, rule.matchedScoreKeys),
-		}))
-		.sort((a, b) => b.score - a.score)
+const ENERGY_KEYS = ['adrenaline','tension','scare','fast_pace','spectacle','violence'] as const;
+const HEART_KEYS  = ['romance','wholesome','pathos','melancholy','hopefulness','catharsis','nostalgia','coming_of_age','family_dynamics','wonder'] as const;
+const HUMOR_KEYS  = ['situational_comedy','wit_wordplay','physical_comedy','cringe_humor','absurdist_humor','satire_parody','dark_humor'] as const;
+const WORLD_KEYS  = ['world_immersion','dialogue_centrality','rewatchability','ambiguity','novelty'] as const;
+const CRAFT_KEYS  = ['direction','acting','narrative_structure','dialogue_quality','character_depth','intrigue','complexity','non_linear_narrative','meta_narrative'] as const;
+const STYLE_KEYS  = ['cinematography','editing','music_composition','visual_stylization','music_centrality','sound_centrality'] as const;
 
-	const matchedDoubleFeatures: DoubleFeature[] = DOUBLE_FEATURE_LIBRARY.filter(
-		(rule) => rule.condition(matchedGenreBlends, matchedHighlights),
-	)
-		.map((rule) => ({
-			id: rule.id,
-			name: rule.name,
-			description: rule.description,
-			icon: rule.icon,
-			score: rule.getScore(matchedGenreBlends, matchedHighlights),
-		}))
-		.sort((a, b) => b.score - a.score)
-
-	return {
-		genreBlends: matchedGenreBlends.slice(0, 4),
-		highlights: matchedHighlights.slice(0, 8),
-		doubleFeatures: matchedDoubleFeatures.slice(0, 2),
-	}
+export interface PillarScores {
+	Energy: number
+	Heart: number
+	Humor: number
+	World: number
+	Craft: number
+	Style: number
 }
+
+export interface PillarTiers {
+	Energy: Tier
+	Heart: Tier
+	Humor: Tier
+	World: Tier
+	Craft: Tier
+	Style: Tier
+}
+
+const mean   = (a: number[]) => a.reduce((s,v)=>s+v,0) / a.length;
+const rms    = (a: number[]) => Math.sqrt(a.reduce((s,v)=>s+v*v,0) / a.length);
+const median = (a: number[]) => { const b=[...a].sort((x,y)=>x-y); return b[Math.floor(b.length/2)]; };
+const top2   = (a: number[]) => { const b=[...a].sort((x,y)=>y-x); return (b[0]+(b[1] ?? 0))/2; };
+
+const get = <K extends keyof CoreScores>(fp: CoreScores, keys: readonly K[]) =>
+  keys.map(k => fp[k]);
+
+const AGG = {
+  Energy: (xs: number[]) => top2(xs),
+  Heart:  (xs: number[]) => median(xs),
+  Humor:  (xs: number[]) => top2(xs),
+  World:  (xs: number[]) => rms(xs),
+  Craft:  (xs: number[]) => median(xs),
+  Style:  (xs: number[]) => median(xs),
+} as const;
+
+export const toTier = (s: number): Tier =>
+  s >= 9 ? 4 : s >= 7 ? 3 : s >= 5 ? 2 : s >= 3 ? 1 : 0;
+
+export function computePillarScores(fp: CoreScores): PillarTiers {
+  const scores: PillarScores = {
+    Energy: AGG.Energy(get(fp, ENERGY_KEYS)),
+    Heart:  AGG.Heart (get(fp, HEART_KEYS)),
+    Humor:  AGG.Humor (get(fp, HUMOR_KEYS)),
+    World:  AGG.World (get(fp, WORLD_KEYS)),
+    Craft:  AGG.Craft (get(fp, CRAFT_KEYS)),
+    Style:  AGG.Style (get(fp, STYLE_KEYS)),
+  };
+  const tiers: PillarTiers = {
+    Energy: toTier(scores.Energy),
+    Heart:  toTier(scores.Heart),
+    Humor:  toTier(scores.Humor),
+    World:  toTier(scores.World),
+    Craft:  toTier(scores.Craft),
+    Style:  toTier(scores.Style),
+  };
+  return tiers;
+}
+
 
 // --- FINGERPRINT RESULT BUILDER ---
 
@@ -221,60 +232,27 @@ export interface DNAAnalysis {
 	suitability_teens: boolean
 }
 
-export interface Overview {
-	title: string
-	body: string
-}
-
-export interface Tag {
-	name: string
-	score: number
-}
-
 export interface FingerprintResult {
 	scores: CoreScores
-	mediaDNA: MediaDNA
-	overview: Overview
-	tags: Tag[]
+	essenceText: string
+	essenceTags: string[]
 	socialSuitability: SocialSuitability[]
 	viewingContext: ViewingContext[]
-}
-
-function getOverview(mediaDNA: MediaDNA, essenceText?: string): Overview {
-	const topBlend = mediaDNA.genreBlends[0]
-	const topHighlight = mediaDNA.highlights[0]
-
-	if (!topBlend || !topHighlight) {
-		return {
-			title: "A Unique Cinematic Experience",
-			body:
-				essenceText ||
-				"This title has a distinctive mix of qualities that make it stand out.",
-		}
-	}
-
-	const title = `A ${topBlend.name} with a Focus on ${topHighlight.name}`
-	const body =
-		essenceText ||
-		`This title masterfully blends the elements of a ${topBlend.name.toLowerCase()} with a strong emphasis on ${topHighlight.name.toLowerCase()}. ${topHighlight.description}`
-
-	return { title, body }
+	pillars: PillarTiers
 }
 
 export function buildFingerprint(dnaAnalysis: DNAAnalysis): FingerprintResult {
 	const { scores, essenceText, essenceTags } = dnaAnalysis
-	const mediaDNA = buildMediaDNA(scores)
-	const overview = getOverview(mediaDNA, essenceText)
-	const tags = essenceTags
 	const socialSuitability = getSocialSuitability(dnaAnalysis)
 	const viewingContext = getViewingContext(dnaAnalysis)
+	const pillars = computePillarScores(scores)
 
 	return {
 		scores,
-		mediaDNA,
-		overview,
-		tags,
+		essenceText,
+		essenceTags,
 		socialSuitability,
 		viewingContext,
+		pillars,
 	}
 }

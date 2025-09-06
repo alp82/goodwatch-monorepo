@@ -8,7 +8,7 @@ export default function Description({ description }: DescriptionProps) {
 	return (
 		<>
 			{description && (
-				<div className="my-4 prose-md sm:prose-lg lg:prose-xl prose-invert">
+				<div className="my-8 sm:text-lg lg:text-xl prose-invert">
 					{description}
 				</div>
 			)}

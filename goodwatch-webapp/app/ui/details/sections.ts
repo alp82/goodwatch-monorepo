@@ -3,21 +3,29 @@ export const sections = {
 		id: "overview",
 		label: "Overview",
 	},
-	ratings: {
-		id: "ratings",
-		label: "Ratings",
-	},
-	streaming: {
-		id: "streaming",
-		label: "Streaming",
-	},
-	// about: {
-	// 	id: "about",
-	// 	label: "About",
+	// ratings: {
+	// 	id: "ratings",
+	// 	label: "Ratings",
+	// },
+	// streaming: {
+	// 	id: "streaming",
+	// 	label: "Streaming",
 	// },
 	fingerprint: {
 		id: "fingerprint",
 		label: "Fingerprint",
+	},
+	about: {
+		id: "about",
+		label: "About",
+	},
+	actors: {
+		id: "actors",
+		label: "Actors",
+	},
+	crew: {
+		id: "crew",
+		label: "Crew",
 	},
 	related: {
 		id: "related",
@@ -26,14 +34,6 @@ export const sections = {
 	sequels: {
 		id: "sequels",
 		label: "Sequels",
-	},
-	crew: {
-		id: "crew",
-		label: "Crew",
-	},
-	actors: {
-		id: "actors",
-		label: "Actors",
 	},
 	media: {
 		id: "media",

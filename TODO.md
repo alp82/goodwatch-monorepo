@@ -1,7 +1,10 @@
-
 # TODO's
 
 ```
+
+Mongo Cluster broken
+
+IMDB URL = None
 
 full text query
     for cast/crew: "brad pitt"
@@ -43,6 +46,7 @@ landing page inspiration
     https://www.firewatchgame.com/
     https://www.screenspace.io/
     https://www.dize.app/
+    https://www.lumia.security
     https://dribbble.com/shots/18008814-Osnaria-Game-Web-Landing-Page-With-Illustrations
 
 ---
@@ -483,6 +487,10 @@ og images
 
 ---
 
+https://www.tvmaze.com/api
+
+---
+
 user profile
     show all scores
     grouped by tier
@@ -682,6 +690,8 @@ strategy / promotion
     https://x.com/dswharshit/status/1849690811442614706
     
 lead generation
+    https://x.com/N3sOnline/status/1957549107440214262
+    https://docs.google.com/document/d/16xfExVbm8fJFej-yEmrRjl95mOe0u6D-oX_qkCIoPXU/edit?tab=t.0#heading=h.v6oi4o3qitsc
     https://www.redditscout.com/
     https://www.subredditsignals.com/
 
@@ -1329,6 +1339,11 @@ launch / promo
 
 ---
 
+sales/outreach
+    https://stripe.com/en-de/guides/atlas/starting-sales
+
+---
+
 cold emails
    https://www.mailead.io/
    https://www.plusvibe.ai/
@@ -1375,6 +1390,7 @@ anime
     https://www.anime-planet.com/
     
 other sites / inspiration
+    https://thefilmaholic.com/film/dune-part-two-2024
     https://www.taste.io/
     https://www.matched-app.com/
     https://simkl.com/

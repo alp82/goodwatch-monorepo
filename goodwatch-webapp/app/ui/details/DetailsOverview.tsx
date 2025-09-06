@@ -7,6 +7,8 @@ import type { SectionProps } from "~/utils/scroll"
 import PlanToWatchButton from "~/ui/user/PlanToWatchButton"
 import WatchHistoryButton from "~/ui/user/WatchHistoryButton"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { extractRatings } from "~/utils/ratings"
+import RatingOverlay from "../ratings/RatingOverlay"
 
 export interface DetailsOverviewProps {
 	media: MovieResult | ShowResult
@@ -21,6 +23,7 @@ export default function DetailsOverview({
 	const { backdrop_path, poster_path, title } = details
 
 	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
+	const ratings = extractRatings(details)
 
 	return (
 		<div className="relative max-w-7xl mx-2 xl:mx-auto mt-4 mb-8 py-4 px-4 rounded-xl bg-gray-700/0">
@@ -29,6 +32,7 @@ export default function DetailsOverview({
 				<div className="flex justify-center gap-2">
 					<div className="relative w-[calc(21.8%-0.125rem)] min-w-[3.8rem] shrink-0">
 						<Poster path={poster_path} title={title} />
+						<RatingOverlay ratings={ratings} />
 					</div>
 					<div className="relative grow min-w-[220px] flex items-center justify-center">
 						<div className="w-full max-h-full relative rounded-md overflow-hidden">

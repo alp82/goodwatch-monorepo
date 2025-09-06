@@ -34,8 +34,8 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 		name: "details-movie",
 		target: _getDetailsForMovie,
 		params,
-		ttlMinutes: 30,
-		// ttlMinutes: 0,
+		//ttlMinutes: 30,
+		ttlMinutes: 0,
 	})
 }
 
@@ -44,8 +44,8 @@ export const getDetailsForShow = async (params: DetailsShowParams) => {
 		name: "details-show",
 		target: _getDetailsForShow,
 		params,
-		ttlMinutes: 30,
-		// ttlMinutes: 0,
+		//ttlMinutes: 30,
+		ttlMinutes: 0,
 	})
 }
 

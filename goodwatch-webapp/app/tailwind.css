@@ -3,6 +3,7 @@
 /* Safelist */
 @source inline("bg-vibe-{{0..100..10}}{/35,}"); /* /35 for desktop score selector*/
 @source inline("text-vibe-{{0..100..10}}");
+@source inline("{bg,border-t}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-{600,900}"); /* Fingerprint */
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/50"); /* DNA tags */
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-950/70"); /* Sign in */
 @source inline("from-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-700/{80,50}"); /* Discover filters */
@@ -61,6 +62,35 @@
 @custom-variant xl-h {
 	@media (min-height: 1301px) {
 		@slot;
+	}
+}
+
+/* animiations */
+
+@keyframes shimmer {
+	0% {
+		background-position: -200px 0;
+	}
+	100% {
+		background-position: 200px 0;
+	}
+}
+@layer utilities {
+	.animate-shimmer {
+		background: linear-gradient(
+			90deg,
+			rgba(255, 177, 15, 0) 0%,
+			rgba(255, 177, 15, 0.2) 25%,
+			rgba(255, 177, 15, 0.2) 50%,
+			rgba(255, 177, 15, 0) 100%
+		);
+		background-size: 200px 100%;
+		animation: shimmer 2s infinite;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.animate-shimmer {
+		animation: none;
 	}
 }
 

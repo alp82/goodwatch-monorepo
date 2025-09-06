@@ -147,10 +147,10 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 					</div>
 				)}
 			</div>
-			<DetailsInlineNav
+			{/*<DetailsInlineNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
-			/>
+			/>*/}
 		</div>
 	)
 }
