@@ -43,7 +43,7 @@ async function _getUserSettings({
 			value
 		FROM user_setting
 		WHERE user_id = ?
-  `;
+  	`;
 
 	const params = [userId];
 	const result = await query<UserSettingRow>(sql, params);

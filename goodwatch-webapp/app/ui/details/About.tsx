@@ -18,8 +18,8 @@ export default function About({ media, navigateToSection }: AboutProps) {
 	const badges = essenceTags.map(tag => ({ label: tag }))
 	return (
 		<>
-			<h2 className="mt-6 flex items-center gap-2 text-2xl font-bold">
-				<NewspaperIcon className="h-7 p-0.5 w-auto" />
+			<h2 className="mt-12 flex items-center gap-2 text-2xl font-bold">
+				{/* <NewspaperIcon className="h-7 p-0.5 w-auto" /> */}
 				About
 			</h2>
 			{tagline && (

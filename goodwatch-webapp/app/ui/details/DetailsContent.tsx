@@ -49,9 +49,6 @@ export default function DetailsContent({
 			{/*		countryCodes={streaming_country_codes}*/}
 			{/*	/>*/}
 			{/*</div>*/}
-			{/*<div {...sectionProps.related}>*/}
-			{/*	<DetailsRelated details={details} />*/}
-			{/*</div>*/}
 			<div {...sectionProps.about}>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
@@ -60,6 +57,9 @@ export default function DetailsContent({
 			</div>
 			<div {...sectionProps.crew}>
 				<Crew crew={crew} />
+			</div>
+			<div {...sectionProps.related}>
+				<DetailsRelated media={media} />
 			</div>
 			<div {...sectionProps.sequels}>
 				<SequelsPrequelsFranchise media={media} />

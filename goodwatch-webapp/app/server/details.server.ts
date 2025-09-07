@@ -549,10 +549,11 @@ function _processFingerprint(result: QueryResult): FingerprintResult | null {
 	}
 
 	const dnaAnalysis: DNAAnalysis = {
+		scores: fingerprint_scores,
+		highlightKeys: fingerprint_highlight_keys,
 		genres: rawMedia.genres,
 		essenceTags: essence_tags,
 		essenceText: essence_text,
-		scores: fingerprint_scores,
 		content_advisories,
 		context_is_background_friendly,
 		context_is_binge_friendly,

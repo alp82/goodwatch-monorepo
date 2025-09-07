@@ -16,9 +16,10 @@ export default function DetailsFingerprint({
 }: DetailsFingerprintProps) {
 	const { details, fingerprint } = media
 	const { genres, media_type, tropes } = details
-	const { scores, pillars, essenceTags } = fingerprint
+	const { scores, highlightKeys, pillars, essenceTags } = fingerprint
 
-	const badges = essenceTags.map(tag => ({ label: tag }))
+	const highlightScores = highlightKeys.map(key => ({key, score: scores[key]}))
+	console.log({highlightScores})
 	
 	// const [spoilerVisible, setSpoilerVisible] = React.useState(false)
 	// const handleRevealSpoiler = () => {

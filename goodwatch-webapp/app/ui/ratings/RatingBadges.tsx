@@ -33,27 +33,27 @@ export default function RatingBadges({
 	const userColorIndex = userScore ? userScore * 10 : null
 
 	return (
-		<div className="w-full flex flex-col sm:flex-row items-center sm:justify-between gap-4">
-			<div className="w-full sm:w-auto flex items-center justify-between gap-4 lg:gap-12">
+		<div className="w-full flex flex-col sm:flex-row items-center sm:justify-between gap-3">
+			<div className="w-full sm:w-auto flex items-center justify-between gap-4 lg:gap-8">
 				<dl
 					className={`${ratings?.goodwatch_overall_score_normalized_percent ? "" : "opacity-60"} flex items-center gap-2`}
 				>
 					<img
-						className={`block h-10 xs:h-12 p-2 rounded-full shadow-2xl ${vibeColorIndex == null ? "bg-gray-950" : `bg-vibe-${vibeColorIndex}`}`}
+						className={`block h-9 p-1.5 rounded-full shadow-xl ${vibeColorIndex == null ? "bg-gray-950" : `bg-vibe-${vibeColorIndex}`}`}
 						src={gwLogo}
 						alt="GoodWatch Logo"
 					/>
-					<dd className="text-base xs:text-lg md:text-xl relative top-1">
+					<dd className="text-base">
 						{ratings?.goodwatch_overall_score_normalized_percent ? (
 							<>
 								<span
-									className={`text-[200%] font-semibold ${vibeColorIndex == null ? "text-gray-300" : `text-vibe-${vibeColorIndex}`}`}
+									className={`text-xl font-semibold ${vibeColorIndex == null ? "text-gray-300" : `text-vibe-${vibeColorIndex}`}`}
 								>
 									{Math.floor(
 										ratings?.goodwatch_overall_score_normalized_percent,
 									)}
 								</span>
-								<span className="text-gray-300 font-normal">/100</span>
+								<span className="text-gray-300 font-normal text-sm">/100</span>
 							</>
 						) : (
 							"-"
@@ -63,9 +63,9 @@ export default function RatingBadges({
 
 				<div
 					className="
-						flex items-center gap-2 p-2.5 md:p-3
+						flex items-center gap-2 p-2
 						bg-gray-700/70 hover:bg-gray-700
-						rounded-lg border-2 border-transparent hover:border-gray-600/50
+						rounded-lg border border-transparent hover:border-gray-600/50
 						cursor-pointer
 					"
 					onClick={onToggleRate}
@@ -75,16 +75,16 @@ export default function RatingBadges({
 						<div
 							className={`
 										flex items-center justify-center
-										p-0.5 w-10 h-10 md:w-12 md:h-12
+										w-8 h-8
 										rounded-full ${userColorIndex == null ? "bg-gray-950" : `bg-vibe-${userColorIndex}`} 
-										text-xl md:text-2xl font-semibold text-center text-white
+										text-base font-semibold text-center text-white
 									`}
 						>
 							<span className="w-full">{userScore}</span>
 						</div>
 					)}
-					<div className="flex flex-col text-sm md:text-lg">
-						<span className="text-gray-300 font-light text-[70%]">
+					<div className="flex flex-col text-sm">
+						<span className="text-gray-300 font-light text-xs">
 							My Score
 						</span>
 						<span
@@ -99,9 +99,9 @@ export default function RatingBadges({
 				</div>
 			</div>
 
-			<div className="w-full sm:w-auto flex items-center justify-between gap-3 sm:gap-1.5 md:gap-4 lg:gap-6">
+			<div className="w-full sm:w-auto flex items-center justify-between gap-2 sm:gap-3">
 				<a
-					className="w-full max-w-36"
+					className="flex-1 min-w-0"
 					href={ratings?.imdb_url}
 					target="_blank"
 					rel="noreferrer"
@@ -109,18 +109,18 @@ export default function RatingBadges({
 					<dl
 						className={`
 							${ratings?.imdb_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"}
-							h-full py-0.5 sm:py-2 px-2
+							h-full py-1.5 px-2
 							flex flex-col items-center gap-1
-							bg-imdb shadow-2xl overflow-hidden rounded-lg
+							bg-imdb shadow-xl overflow-hidden rounded-md
 							text-center brightness-[.8] hover:brightness-100
 						`}
 					>
 						<img
-							className="block h-6 object-contain"
+							className="block h-5 object-contain"
 							src={imdbLogo}
 							alt="IMDb Logo"
 						/>
-						<dd className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
+						<dd className="text-base font-semibold tracking-tight text-gray-900">
 							{ratings?.imdb_user_score_original
 								? ratings?.imdb_user_score_original.toFixed(1)
 								: "–"}
@@ -129,7 +129,7 @@ export default function RatingBadges({
 				</a>
 
 				<a
-					className="w-full max-w-36"
+					className="flex-1 min-w-0"
 					href={ratings?.metacritic_url}
 					target="_blank"
 					rel="noreferrer"
@@ -137,24 +137,24 @@ export default function RatingBadges({
 					<dl
 						className={`
 							${ratings?.metacritic_url ? "hover:border-black/[.45] active:border-black/[.45]" : "opacity-60"}
-							h-full py-1 sm:py-2 px-1 xs:px-3
-							flex flex-col items-center gap-0.5 sm:gap-2
-							bg-metacritic shadow-2xl overflow-hidden rounded-lg
+							h-full py-1.5 px-2
+							flex flex-col items-center gap-1
+							bg-metacritic shadow-xl overflow-hidden rounded-md
 							text-center brightness-[.8] hover:brightness-100
 						`}
 					>
 						<img
-							className="block h-6 object-contain"
+							className="block h-5 object-contain"
 							src={metacriticLogo}
 							alt="Metacritic Logo"
 						/>
-						<dd className="flex gap-1 xs:gap-2 text-xl md:text-2xl font-semibold tracking-tight text-gray-100">
+						<dd className="flex gap-1 text-base font-semibold tracking-tight text-gray-100">
 							<span>
 								{ratings?.metacritic_meta_score_original
 									? Math.floor(ratings?.metacritic_meta_score_original)
 									: "–"}
 							</span>
-							<span className="text-[80%] font-light">|</span>
+							<span className="text-sm font-light">|</span>
 							<span>
 								{ratings?.metacritic_user_score_original
 									? ratings?.metacritic_user_score_original.toFixed(1)
@@ -165,7 +165,7 @@ export default function RatingBadges({
 				</a>
 
 				<a
-					className="w-full max-w-36"
+					className="flex-1 min-w-0"
 					href={ratings?.rotten_tomatoes_url}
 					target="_blank"
 					rel="noreferrer"
@@ -173,24 +173,24 @@ export default function RatingBadges({
 					<dl
 						className={`
 							${ratings?.rotten_tomatoes_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"}
-							h-full py-1 sm:py-2 px-1 xs:px-3
-							flex flex-col items-center gap-0.5 sm:gap-2
-							bg-rotten shadow-2xl overflow-hidden rounded-lg
+							h-full py-1.5 px-2
+							flex flex-col items-center gap-1
+							bg-rotten shadow-xl overflow-hidden rounded-md
 							text-center brightness-[0.8] hover:brightness-100
 						`}
 					>
 						<img
-							className="block h-6 object-contain"
+							className="block h-5 object-contain"
 							src={rottenLogo}
 							alt="Rotten Tomatoes Logo"
 						/>
-						<dd className="flex gap-1 xs:gap-2 text-xl md:text-2xl font-semibold tracking-tight text-gray-50">
+						<dd className="flex gap-1 text-base font-semibold tracking-tight text-gray-50">
 							<span>
 								{ratings?.rotten_tomatoes_tomato_score_original
 									? Math.floor(ratings?.rotten_tomatoes_tomato_score_original)
 									: "–"}
 							</span>
-							<span className="text-[80%] font-light">|</span>
+							<span className="text-sm font-light">|</span>
 							<span>
 								{ratings?.rotten_tomatoes_audience_score_original
 									? Math.floor(ratings?.rotten_tomatoes_audience_score_original)

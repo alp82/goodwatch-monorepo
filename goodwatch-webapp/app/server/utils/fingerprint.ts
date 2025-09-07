@@ -13,6 +13,24 @@ export type CoreScores = {
 	direction: number; acting: number; cinematography: number; editing: number; music_composition: number; world_immersion: number; spectacle: number; visual_stylization: number; pastiche: number; psychedelic: number; grotesque: number; camp_and_irony: number; dialogue_centrality: number; music_centrality: number; sound_centrality: number;
 }
 
+// Valid fingerprint keys for runtime validation
+export const VALID_FINGERPRINT_KEYS: readonly (keyof CoreScores)[] = [
+	// Core Emotional Palette
+	"adrenaline", "tension", "scare", "violence", "romance", "eroticism", "wholesome", "wonder", "pathos", "melancholy", "uncanny", "catharsis", "nostalgia",
+	// Humor Palette
+	"situational_comedy", "wit_wordplay", "physical_comedy", "cringe_humor", "absurdist_humor", "satire_parody", "dark_humor",
+	// Thematic & World-Building
+	"fantasy", "futuristic", "historical", "contemporary_realism", "crime", "mystery", "warfare", "political", "sports", "biographical", "coming_of_age", "family_dynamics", "psychological", "showbiz", "gaming", "pop_culture", "social_commentary", "class_and_capitalism", "technology_and_humanity", "spiritual",
+	// Cognitive & Structural
+	"narrative_structure", "dialogue_quality", "character_depth", "slow_burn", "fast_pace", "intrigue", "complexity", "rewatchability", "hopefulness", "bleakness", "ambiguity", "novelty", "homage_and_reference", "non_linear_narrative", "meta_narrative", "surrealism", "eccentricity", "philosophical", "educational",
+	// Aesthetic & Production
+	"direction", "acting", "cinematography", "editing", "music_composition", "world_immersion", "spectacle", "visual_stylization", "pastiche", "psychedelic", "grotesque", "camp_and_irony", "dialogue_centrality", "music_centrality", "sound_centrality"
+] as const
+
+export function isValidFingerprintKey(key: string): key is keyof CoreScores {
+	return VALID_FINGERPRINT_KEYS.includes(key as keyof CoreScores)
+}
+
 // --- VIEWING GUIDE DEFINITIONS ---
 
 export interface SocialSuitability {
@@ -164,7 +182,6 @@ export interface PillarTiers {
 	Style: Tier
 }
 
-const mean   = (a: number[]) => a.reduce((s,v)=>s+v,0) / a.length;
 const rms    = (a: number[]) => Math.sqrt(a.reduce((s,v)=>s+v*v,0) / a.length);
 const median = (a: number[]) => { const b=[...a].sort((x,y)=>x-y); return b[Math.floor(b.length/2)]; };
 const top2   = (a: number[]) => { const b=[...a].sort((x,y)=>y-x); return (b[0]+(b[1] ?? 0))/2; };
@@ -209,6 +226,7 @@ export function computePillarScores(fp: CoreScores): PillarTiers {
 
 export interface DNAAnalysis {
 	scores: CoreScores
+	highlightKeys: string[]
 	genres: string[]
 	essenceTags: string[]
 	essenceText: string
@@ -234,6 +252,7 @@ export interface DNAAnalysis {
 
 export interface FingerprintResult {
 	scores: CoreScores
+	highlightKeys: string[]
 	essenceText: string
 	essenceTags: string[]
 	socialSuitability: SocialSuitability[]
@@ -242,13 +261,14 @@ export interface FingerprintResult {
 }
 
 export function buildFingerprint(dnaAnalysis: DNAAnalysis): FingerprintResult {
-	const { scores, essenceText, essenceTags } = dnaAnalysis
+	const { scores, highlightKeys, essenceText, essenceTags } = dnaAnalysis
 	const socialSuitability = getSocialSuitability(dnaAnalysis)
 	const viewingContext = getViewingContext(dnaAnalysis)
 	const pillars = computePillarScores(scores)
 
 	return {
 		scores,
+		highlightKeys,
 		essenceText,
 		essenceTags,
 		socialSuitability,

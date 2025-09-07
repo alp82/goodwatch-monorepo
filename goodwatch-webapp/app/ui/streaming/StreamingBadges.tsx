@@ -62,7 +62,7 @@ export default function StreamingBadges({
 	return (
 		<>
 			<div>
-				<div className="flex flex-wrap items-center gap-2 sm:gap-4">
+				<div className="flex flex-wrap items-center gap-2 sm:gap-3">
 					{linksToShow.length > 0 ? (
 						linksToShow.map((link) => {
 							const streamingService = streaming_services.find(
@@ -76,13 +76,13 @@ export default function StreamingBadges({
 									key={link.streaming_service_id}
 									href={getStreamingUrl(link, details, country, mediaType)}
 									target="_blank"
-									className="flex items-center gap-2 text-sm md:text-lg rounded-lg shadow-2xl bg-gray-700/80 brightness-90 hover:brightness-125"
+									className="flex items-center gap-1.5 text-sm rounded-md shadow-xl bg-gray-700/80 brightness-90 hover:brightness-125"
 									rel="noreferrer"
 								>
 									<img
 										className={`
-										p-1 w-16 h-16 md:w-20 md:h-20
-										rounded-xl border-2 ${owned ? "bg-green-900/80 border-green-500/50" : "border-gray-500/50"}
+										p-0.5 w-12 h-12 md:w-14 md:h-14
+										rounded-lg border-2 ${owned ? "bg-green-900/80 border-green-500/50" : "border-gray-500/50"}
 									`}
 										src={`https://www.themoviedb.org/t/p/original/${streamingService.logo}`}
 										title={streamingService.name}
@@ -98,12 +98,12 @@ export default function StreamingBadges({
 												stiffness: 300,
 												damping: 30,
 											}}
-											className="hidden sm:block relative -top-1 py-1 pl-1 pr-2 max-w-24 xs:max-w-28 sm:max-w-32 md:max-w-36"
+											className="hidden sm:block relative py-0.5 pl-0.5 pr-1.5 max-w-20 xs:max-w-24 sm:max-w-28"
 										>
-											<div className="text-gray-400 text-[75%]">
+											<div className="text-gray-400 text-xs">
 												Watch now on
 											</div>
-											<div className="font-semibold">
+											<div className="font-medium text-sm">
 												{getShorterProviderLabel(streamingService.name)}
 											</div>
 										</motion.div>
@@ -112,7 +112,7 @@ export default function StreamingBadges({
 							)
 						})
 					) : (
-						<div className="flex items-center gap-2 text-xs md:text-sm">
+						<div className="flex items-center gap-2 text-xs">
 							Not available to stream in <strong>{country}</strong> (
 							{streamTypes.join(", ")})
 						</div>

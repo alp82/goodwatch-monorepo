@@ -62,7 +62,7 @@ export default function Details({ media, country }: DetailsProps) {
 						<div {...sectionProps.fingerprint}>
 							<DetailsFingerprint media={media} />
 						</div>
-						<div className="w-full">
+						<div className="w-full flex flex-col justify-between">
 							<DetailsRatings media={media} sectionProps={sectionProps} />
 
 							<DetailsStreaming
