@@ -3,26 +3,14 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { useRelatedMovies, useRelatedShows } from "~/routes/api.related"
 import MovieTvSwiper from "~/ui/explore/MovieTvSwiper"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
+import ListSwiperSkeleton from "~/ui/ListSwiperSkeleton"
 
 export interface RelatedTitlesProps {
     media: MovieResult | ShowResult
 	fingerprintKey: string
 }
 
-// Fixed height skeleton for loading state to avoid layout shifts
-function RelatedSkeleton() {
-	return (
-		<div className="h-[135px]">
-			<div className="flex gap-4 overflow-hidden">
-				{Array.from({ length: 8 }).map((_, i) => (
-					<div key={i} className="flex-shrink-0">
-						<div className="rounded-md bg-gray-800 animate-pulse w-[85px] h-[127px]" />
-					</div>
-				))}
-			</div>
-		</div>
-	)
-}
+// Skeleton now mirrors ListSwiper dimensions
 
 // Empty state with consistent height
 function EmptyRelatedState() {
@@ -51,7 +39,7 @@ function RelatedSwiper({
                 {title}
             </h3>
             <div>
-                {isLoading && <RelatedSkeleton />}
+                {isLoading && <ListSwiperSkeleton />}
                 {isEmpty && <EmptyRelatedState />}
                 {hasResults && <MovieTvSwiper results={results} />}
             </div>

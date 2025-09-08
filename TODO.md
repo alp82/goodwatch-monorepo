@@ -2,14 +2,7 @@
 
 ```
 
-Mongo Cluster broken
-
 IMDB URL = None
-
-full text query
-    for cast/crew: "brad pitt"
-
----   
 
 gw score mismatch:
     http://localhost:3003/movie/803796-kpop-demon-hunters
@@ -17,16 +10,22 @@ gw score mismatch:
     - 7.7 (LINK BROKEN)
     - 76 | 8.2
     - 97 | 91
+
+double streaming links:
+    http://localhost:3003/show/43020-continuum
+
+full text query
+    for cast/crew: "brad pitt"
+
+discover issues
+
+fix onboarding
     
 ---   
 
-Fingerprint
-    Small box with 6 pillars and Essence Tags
-        https://www.plotsense.ai/movie/180
-    Highlight keys sections with related media recommendations
-    Badges?
-    (Genre boxes with 4 most suitable scores)
-    
+Fingerprint improvements
+    https://www.plotsense.ai/movie/180
+    Genre boxes with 4 most suitable scores
     
 ---   
 

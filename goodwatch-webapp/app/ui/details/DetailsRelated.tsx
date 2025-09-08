@@ -81,9 +81,21 @@ export default function DetailsRelated({ media }: DetailsRelatedProps) {
                 </Swiper>
             </div>
 
-            {selectedKey && (
-                <RelatedTitles media={media} fingerprintKey={selectedKey} />
-            )}
+            <div className="relative">
+                {keys.map((key) => (
+                    <div
+                        key={key}
+                        aria-hidden={selectedKey !== key}
+                        className={
+                            selectedKey === key
+                                ? "relative"
+                                : "absolute inset-0 opacity-0 pointer-events-none -z-10"
+                        }
+                    >
+                        <RelatedTitles media={media} fingerprintKey={key} />
+                    </div>
+                ))}
+            </div>
         </section>
     )
 }

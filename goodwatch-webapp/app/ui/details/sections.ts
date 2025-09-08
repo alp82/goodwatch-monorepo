@@ -21,7 +21,7 @@ export const sections = {
 	},
 	actors_and_crew: {
 		id: "actors_and_crew",
-		label: "Actors and Crew",
+		label: "Cast",
 	},
 	// crew: {
 	// 	id: "crew",
