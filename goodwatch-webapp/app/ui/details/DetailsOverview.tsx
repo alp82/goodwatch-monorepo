@@ -32,7 +32,7 @@ export default function DetailsOverview({
 				<div className="flex justify-center gap-2">
 					<div className="relative w-[calc(21.8%-0.125rem)] min-w-[3.8rem] shrink-0">
 						<Poster path={poster_path} title={title} />
-						<RatingOverlay ratings={ratings} />
+						{/* <RatingOverlay ratings={ratings} /> */}
 					</div>
 					<div className="relative grow min-w-[220px] flex items-center justify-center">
 						<div className="w-full max-h-full relative rounded-md overflow-hidden">

@@ -59,7 +59,7 @@ export default function Details({ media, country }: DetailsProps) {
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 					<div className="flex flex-col lg:flex-row gap-8">
-						<div {...sectionProps.fingerprint}>
+						<div>
 							<DetailsFingerprint media={media} />
 						</div>
 						<div className="w-full flex flex-col justify-between">

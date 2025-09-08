@@ -55,7 +55,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						<h1 className="text-xl sm:text-2xl lg:text-3xl font-medium whitespace-nowrap overflow-hidden text-ellipsis">
 							{title}
 						</h1>
-						<div className="text-xs md:text-sm lg:text-base text-gray-400 flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-0">
+						<div className="text-xs md:text-sm lg:text-base text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
 							<div className="flex items-center">
 								{release_year && (
 									<>
@@ -70,13 +70,13 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 							<div className="flex items-center">
 								{runtime ? (
 									<>
-										<span className="hidden xs:inline mx-2">&middot;</span>
+										<span className="hidden sm:inline mx-2">&middot;</span>
 										<Runtime minutes={runtime} />
 									</>
 								) : null}
 								{number_of_episodes && number_of_seasons ? (
 									<>
-										<span className="hidden xs:inline mx-2">&middot;</span>
+										<span className="hidden sm:inline mx-2">&middot;</span>
 										<span className="flex gap-1">
 											<strong>{number_of_episodes}</strong>
 											Episode{number_of_episodes === 1 ? "" : "s"} in
@@ -91,8 +91,8 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 										<AgeRating ageRating={ageRating} />
 									</>
 								)}
-								<span className="hidden xs:inline mx-2">&middot;</span>
-								<span className="hidden xs:inline">
+								<span className="hidden sm:inline mx-2">&middot;</span>
+								<span className="hidden sm:inline">
 									<Genres
 										genres={genres.slice(0, 2)}
 										type={mediaType === "movie" ? "movie" : "show"}
@@ -147,10 +147,10 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 					</div>
 				)}
 			</div>
-			{/*<DetailsInlineNav
+			<DetailsInlineNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
-			/>*/}
+			/>
 		</div>
 	)
 }

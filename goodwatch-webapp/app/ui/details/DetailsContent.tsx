@@ -52,16 +52,16 @@ export default function DetailsContent({
 			<div {...sectionProps.about}>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
-			<div {...sectionProps.actors}>
+			<div {...sectionProps.actors_and_crew}>
 				<Actors actors={actors} />
 			</div>
-			<div {...sectionProps.crew}>
+			<div>
 				<Crew crew={crew} />
 			</div>
 			<div {...sectionProps.related}>
 				<DetailsRelated media={media} />
 			</div>
-			<div {...sectionProps.sequels}>
+			<div>
 				<SequelsPrequelsFranchise media={media} />
 			</div>
 			<div {...sectionProps.media}>

@@ -11,30 +11,30 @@ export const sections = {
 	// 	id: "streaming",
 	// 	label: "Streaming",
 	// },
-	fingerprint: {
-		id: "fingerprint",
-		label: "Fingerprint",
-	},
+	// fingerprint: {
+	// 	id: "fingerprint",
+	// 	label: "Fingerprint",
+	// },
 	about: {
 		id: "about",
 		label: "About",
 	},
-	actors: {
-		id: "actors",
-		label: "Actors",
+	actors_and_crew: {
+		id: "actors_and_crew",
+		label: "Actors and Crew",
 	},
-	crew: {
-		id: "crew",
-		label: "Crew",
-	},
+	// crew: {
+	// 	id: "crew",
+	// 	label: "Crew",
+	// },
 	related: {
 		id: "related",
 		label: "Related",
 	},
-	sequels: {
-		id: "sequels",
-		label: "Sequels",
-	},
+	// sequels: {
+	// 	id: "sequels",
+	// 	label: "Sequels",
+	// },
 	media: {
 		id: "media",
 		label: "Media",
