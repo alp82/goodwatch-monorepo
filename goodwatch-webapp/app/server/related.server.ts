@@ -39,8 +39,8 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 		name: "related-movie",
 		target: _getRelatedMovies as any,
 		params,
-		ttlMinutes: 60 * 24,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	}) as unknown as RelatedMovie[]
 }
 
@@ -49,8 +49,8 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 		name: "related-show",
 		target: _getRelatedShows as any,
 		params,
-		ttlMinutes: 60 * 24,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	}) as unknown as RelatedShow[]
 }
 
@@ -76,15 +76,16 @@ async function _getRelatedMovies({
 			)) / 2.5281, 2.3691)))) AS score,
 			${getRatingKeys().join(", ")}
 		FROM movie
-		WHERE tmdb_id <> $1
-			AND goodwatch_overall_score_voting_count >= 5000
-			AND goodwatch_overall_score_normalized_percent >= 50
-			AND poster_path IS NOT NULL
+		WHERE poster_path IS NOT NULL
+			AND vector_fingerprint IS NOT NULL
 			AND KNN_MATCH(
 				vector_fingerprint,
 				(SELECT vector_fingerprint FROM ${sourceTable} WHERE tmdb_id = $1),
 				10000
 			)
+			AND goodwatch_overall_score_voting_count >= 5000
+			AND goodwatch_overall_score_normalized_percent >= 50
+			${sourceTable === "movie" ? "AND tmdb_id <> $1" : ""}
 		ORDER BY score DESC
 		LIMIT 50
 	`, [tmdb_id])
@@ -114,15 +115,16 @@ async function _getRelatedShows({
 			)) / 2.5281, 2.3691)))) AS score,
 			${getRatingKeys().join(", ")}
 		FROM show
-		WHERE tmdb_id <> $1
-			AND goodwatch_overall_score_voting_count >= 5000
-			AND goodwatch_overall_score_normalized_percent >= 50
-			AND poster_path IS NOT NULL
+		WHERE poster_path IS NOT NULL
+			AND vector_fingerprint IS NOT NULL
 			AND KNN_MATCH(
 				vector_fingerprint,
 				(SELECT vector_fingerprint FROM ${sourceTable} WHERE tmdb_id = $1),
 				10000
 			)
+			AND goodwatch_overall_score_voting_count >= 5000
+			AND goodwatch_overall_score_normalized_percent >= 50
+			${sourceTable === "show" ? "AND tmdb_id <> $1" : ""}
 		ORDER BY score DESC
 		LIMIT 50
 	`, [tmdb_id])

@@ -19,7 +19,6 @@ export default function DetailsFingerprint({
 	const { scores, highlightKeys, pillars, essenceTags } = fingerprint
 
 	const highlightScores = highlightKeys.map(key => ({key, score: scores[key]}))
-	console.log({highlightScores})
 	
 	// const [spoilerVisible, setSpoilerVisible] = React.useState(false)
 	// const handleRevealSpoiler = () => {

@@ -17,25 +17,28 @@ export default function About({ media, navigateToSection }: AboutProps) {
 
 	const badges = essenceTags.map(tag => ({ label: tag }))
 	return (
-		<>
-			<h2 className="mt-12 flex items-center gap-2 text-2xl font-bold">
-				{/* <NewspaperIcon className="h-7 p-0.5 w-auto" /> */}
+		<section className="mt-12 rounded-xl border border-white/3 bg-white/3 p-4 sm:p-6 backdrop-blur-sm">
+			<h2 className="flex items-center gap-3 text-2xl font-bolds">
 				About
 			</h2>
+
 			{tagline && (
-				<div className="my-4">
-					<blockquote className="relative border-l-4 lg:border-l-8 border-gray-700 bg-gray-800/50 py-2 pl-4 sm:pl-6">
-						<p className="text-white italic text-sm xs:text-md sm:text-base md:text-lg">
+				<div className="mt-4">
+					<blockquote className="relative rounded-lg border border-l-8 border-white/10 bg-white/5 p-4 sm:p-5">
+						<p className="text-white/90 italic text-base sm:text-lg leading-relaxed">
 							{tagline}
 						</p>
 					</blockquote>
 				</div>
 			)}
-			<Description description={synopsis} />
-			<Badges badges={badges} />
-			{/*<div className="pt-4">*/}
-			{/*	<DNAPreview dna={dna} navigateToSection={navigateToSection} />*/}
-			{/*</div>*/}
-		</>
+
+			<div className="mt-4 text-gray-100">
+				<Description description={synopsis} />
+			</div>
+
+			<div className="mt-6">
+				<Badges badges={badges} />
+			</div>
+		</section>
 	)
 }

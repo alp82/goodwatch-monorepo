@@ -2,7 +2,7 @@ import React, { useMemo } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { useRelatedMovies, useRelatedShows } from "~/routes/api.related"
 import MovieTvSwiper from "~/ui/explore/MovieTvSwiper"
-import { FilmIcon, TvIcon } from "@heroicons/react/24/solid"
+import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 
 export interface RelatedTitlesProps {
     media: MovieResult | ShowResult
@@ -34,47 +34,44 @@ function EmptyRelatedState() {
 }
 
 function RelatedSwiper({
-	icon: Icon,
-	heading,
-	results,
-	isLoading,
+    title,
+    results,
+    isLoading,
 }: {
-	icon: React.ElementType
-	heading: string
-	results: any[]
-	isLoading: boolean
+    title: string
+    results: any[]
+    isLoading: boolean
 }) {
-	const hasResults = !isLoading && results.length > 0
-	const isEmpty = !isLoading && results.length === 0
+    const hasResults = !isLoading && results.length > 0
+    const isEmpty = !isLoading && results.length === 0
 
-	return (
-		<>
-			<h2 className="my-6 flex items-center gap-2 text-2xl font-bold">
-				<Icon className="h-7 p-0.5 w-auto" />
-				{heading}
-			</h2>
-			<div className="mt-4">
-				{isLoading && <RelatedSkeleton />}
-				{isEmpty && <EmptyRelatedState />}
-				{hasResults && <MovieTvSwiper results={results} />}
-			</div>
-		</>
-	)
+    return (
+        <div className="mt-6">
+            <h3 className="flex items-center gap-2 text-xl font-bold">
+                {title}
+            </h3>
+            <div>
+                {isLoading && <RelatedSkeleton />}
+                {isEmpty && <EmptyRelatedState />}
+                {hasResults && <MovieTvSwiper results={results} />}
+            </div>
+        </div>
+    )
 }
 
 export default function RelatedTitles({ media, fingerprintKey }: RelatedTitlesProps) {
-	const { details } = media
+	const { mediaType, details } = media
     
     const relatedMovies = useRelatedMovies({
 		tmdbId: details.tmdb_id,
 		fingerprintKey,
-		sourceMediaType: details.media_type,
+		sourceMediaType: mediaType,
 	})
 
 	const relatedShows = useRelatedShows({
 		tmdbId: details.tmdb_id,
 		fingerprintKey,
-		sourceMediaType: details.media_type,
+		sourceMediaType: mediaType,
 	})
 
 	// Transform related results to match MovieTvSwiper expected format
@@ -92,26 +89,30 @@ export default function RelatedTitles({ media, fingerprintKey }: RelatedTitlesPr
 		})) ?? []
 	}, [relatedShows.data])
 
-	// Format fingerprint key for display (capitalize and replace underscores)
-	const displayKey = fingerprintKey
-		.split('_')
-		.map(word => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(' ')
+    // Meta for fingerprint key
+    const meta = getFingerprintMeta(fingerprintKey)
 
-	return (
-		<div className="flex flex-col gap-8">
-			<RelatedSwiper
-				icon={FilmIcon}
-				heading={`Related Movies: ${displayKey}`}
-				results={movieResults}
-				isLoading={relatedMovies.isLoading || relatedMovies.isFetching}
-			/>
-			<RelatedSwiper
-				icon={TvIcon}
-				heading={`Related Shows: ${displayKey}`}
-				results={showResults}
-				isLoading={relatedShows.isLoading || relatedShows.isFetching}
-			/>
-		</div>
-	)
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="my-4">
+                <h3 className="flex items-center gap-2 text-xl font-bold">
+                    <span aria-hidden>{meta.emoji}</span>
+                    <span>{meta.label}</span>
+                </h3>
+                {meta.description && (
+                    <p className="mt-2 text-lg text-gray-300">{meta.description}</p>
+                )}
+            </div>
+            <RelatedSwiper
+                title="Movies"
+                results={movieResults}
+                isLoading={relatedMovies.isLoading || relatedMovies.isFetching}
+            />
+            <RelatedSwiper
+                title="Shows"
+                results={showResults}
+                isLoading={relatedShows.isLoading || relatedShows.isFetching}
+            />
+        </div>
+    )
 }

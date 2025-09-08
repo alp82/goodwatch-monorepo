@@ -36,22 +36,22 @@ export default function Crew({ crew }: CrewProps) {
 		if (people.length === 0) return null
 
 		return (
-			<>
-				<div className="flex gap-1">
+			<div className="flex flex-col sm:flex-row items-start gap-1 sm:gap-2">
+				<div className="flex gap-2 w-48 flex-shrink-0 text-gray-400">
 					<Icon className="w-6 h-6" />
 					{title}:{" "}
 				</div>
-				<div className="sm:col-span-3 pb-6 font-semibold">
+				<div className="font-semibold flex-1">
 					{people.map((person) => person.name).join(", ")}
 				</div>
-			</>
+			</div>
 		)
 	}
 
 	return (
 		<>
 			<h2 className="text-2xl font-bold">Crew</h2>
-			<div className="my-4 grid grid-cols-1 sm:grid-cols-4 gap-1 sm:gap-4">
+			<div className="my-4 flex flex-col gap-6">
 				<RenderInfo
 					title="Directed by"
 					Icon={MegaphoneIcon}
