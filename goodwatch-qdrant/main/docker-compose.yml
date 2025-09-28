@@ -1,0 +1,33 @@
+services:
+  qdrant:
+    image: ${QDRANT_IMAGE}
+    container_name: qdrant-main
+    restart: unless-stopped
+
+    ports:
+      - "${SELF_IP}:${HTTP_PORT}:6333"  # HTTP API
+      - "${SELF_IP}:${GRPC_PORT}:6334"  # gRPC (optional)
+      - "${SELF_IP}:${P2P_PORT}:6335"   # P2P (cluster internal) - firewall to LAN only!
+
+    environment:
+      - QDRANT__SERVICE__HOST=0.0.0.0
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__SERVICE__API_KEY=${API_KEY}
+      - QDRANT__SERVICE__READ_ONLY_API_KEY=${READ_ONLY_API_KEY}
+
+      - QDRANT__CLUSTER__ENABLED=true
+      - QDRANT__CLUSTER__P2P__PORT=6335
+
+    # FIRST node advertises its own URI (required)
+    command: ["./qdrant", "--uri", "${SELF_URI}"]
+
+    volumes:
+      - ${STORAGE_DIR}:/qdrant/storage
+      - ${SNAPSHOT_DIR}:/qdrant/snapshots
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "-", "http://127.0.0.1:6333/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
