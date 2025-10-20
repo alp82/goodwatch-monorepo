@@ -7,7 +7,7 @@ import ListSwiperSkeleton from "~/ui/ListSwiperSkeleton"
 
 export interface RelatedTitlesProps {
     media: MovieResult | ShowResult
-	fingerprintKey: string
+	fingerprintKey?: string
 }
 
 // Skeleton now mirrors ListSwiper dimensions
@@ -77,8 +77,23 @@ export default function RelatedTitles({ media, fingerprintKey }: RelatedTitlesPr
 		})) ?? []
 	}, [relatedShows.data])
 
-    // Meta for fingerprint key
-    const meta = getFingerprintMeta(fingerprintKey)
+    // Meta for fingerprint key (fallback to overall when undefined)
+    const meta = getFingerprintMeta(fingerprintKey ?? "overall")
+
+    // Reorder so that top 4 by voting_count come first, rest keep original order
+    const reorderTopByVotes = <T extends { tmdb_id: number; goodwatch_overall_score_voting_count?: number }>(items: T[]): T[] => {
+        if (!items?.length) return items
+        const sortedByVotesDesc = [...items].sort(
+            (a, b) => (b.goodwatch_overall_score_voting_count ?? 0) - (a.goodwatch_overall_score_voting_count ?? 0),
+        )
+        const top = sortedByVotesDesc.slice(0, 4)
+        const topIds = new Set(top.map((x) => x.tmdb_id))
+        const rest = items.filter((x) => !topIds.has(x.tmdb_id))
+        return [...top, ...rest]
+    }
+
+    const movieResultsReordered = useMemo(() => reorderTopByVotes(movieResults), [movieResults])
+    const showResultsReordered = useMemo(() => reorderTopByVotes(showResults), [showResults])
 
     return (
         <div className="flex flex-col gap-4">
@@ -93,12 +108,12 @@ export default function RelatedTitles({ media, fingerprintKey }: RelatedTitlesPr
             </div>
             <RelatedSwiper
                 title="Movies"
-                results={movieResults}
+                results={movieResultsReordered}
                 isLoading={relatedMovies.isLoading || relatedMovies.isFetching}
             />
             <RelatedSwiper
                 title="Shows"
-                results={showResults}
+                results={showResultsReordered}
                 isLoading={relatedShows.isLoading || relatedShows.isFetching}
             />
         </div>

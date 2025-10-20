@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@headlessui/react": "^2.2.0",
 		"@heroicons/react": "^2.1.5",
+		"@qdrant/js-client-rest": "^1.12.0",
 		"@remix-run/node": "^2.9.2",
 		"@remix-run/react": "^2.9.2",
 		"@remix-run/serve": "^2.9.2",

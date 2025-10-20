@@ -17,16 +17,24 @@ double streaming links:
 full text query
     for cast/crew: "brad pitt"
 
-discover issues
+explore fixes
+
+discover fixes
 
 fix onboarding
     
 ---   
 
 Fingerprint improvements
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
     https://www.plotsense.ai/movie/180
     Genre boxes with 4 most suitable scores
     
+
+---   
+
+long actor names overlap on mobile
+
 ---   
 
 robots with sitemap link

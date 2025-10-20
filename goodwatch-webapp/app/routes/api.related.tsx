@@ -25,17 +25,17 @@ export const loader: LoaderFunction = async ({
 	const mediaType = url.searchParams.get("mediaType") as MediaType
 	const sourceMediaType = url.searchParams.get("sourceMediaType") as MediaType
 
-	if (!tmdbId || !fingerprintKey || !mediaType || !sourceMediaType) {
+	if (!tmdbId || !mediaType || !sourceMediaType) {
 		throw new Response("Missing required parameters", { status: 400 })
 	}
 
-	if (!isValidFingerprintKey(fingerprintKey)) {
+	if (fingerprintKey && !isValidFingerprintKey(fingerprintKey)) {
 		throw new Response("Invalid fingerprint key", { status: 400 })
 	}
 
 	const params = {
 		tmdb_id: parseInt(tmdbId),
-		fingerprint_key: fingerprintKey,
+		fingerprint_key: fingerprintKey || undefined,
 		source_media_type: sourceMediaType,
 	}
 
@@ -57,13 +57,13 @@ export const queryKeyRelatedShows = ["related-shows"]
 
 export interface UseRelatedMoviesParams {
 	tmdbId: number
-	fingerprintKey: string
+	fingerprintKey?: string
 	sourceMediaType: MediaType
 }
 
 export interface UseRelatedShowsParams {
 	tmdbId: number
-	fingerprintKey: string
+	fingerprintKey?: string
 	sourceMediaType: MediaType
 }
 
@@ -74,12 +74,12 @@ export const useRelatedMovies = ({
 }: UseRelatedMoviesParams) => {
 	const url = new URL("/api/related", "https://goodwatch.app")
 	url.searchParams.append("tmdbId", tmdbId.toString())
-	url.searchParams.append("fingerprintKey", fingerprintKey)
+	if (fingerprintKey) url.searchParams.append("fingerprintKey", fingerprintKey)
 	url.searchParams.append("mediaType", "movie")
 	url.searchParams.append("sourceMediaType", sourceMediaType)
 
 	return useQuery<GetRelatedMoviesResult>({
-		queryKey: queryKeyRelatedMovies.concat([tmdbId.toString(), fingerprintKey, sourceMediaType]),
+		queryKey: queryKeyRelatedMovies.concat([tmdbId.toString(), fingerprintKey ?? "overall", sourceMediaType]),
 		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),
 		placeholderData: (previousData) => previousData,
 	})
@@ -92,12 +92,12 @@ export const useRelatedShows = ({
 }: UseRelatedShowsParams) => {
 	const url = new URL("/api/related", "https://goodwatch.app")
 	url.searchParams.append("tmdbId", tmdbId.toString())
-	url.searchParams.append("fingerprintKey", fingerprintKey)
+	if (fingerprintKey) url.searchParams.append("fingerprintKey", fingerprintKey)
 	url.searchParams.append("mediaType", "show")
 	url.searchParams.append("sourceMediaType", sourceMediaType)
 
 	return useQuery<GetRelatedShowsResult>({
-		queryKey: queryKeyRelatedShows.concat([tmdbId.toString(), fingerprintKey, sourceMediaType]),
+		queryKey: queryKeyRelatedShows.concat([tmdbId.toString(), fingerprintKey ?? "overall", sourceMediaType]),
 		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),
 		placeholderData: (previousData) => previousData,
 	})

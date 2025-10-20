@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "dev",
+			"path": "goodwatch-webapp",
+			"problemMatcher": [],
+			"label": "npm: dev - goodwatch-webapp",
+			"detail": "GoodWatch Dev Server"
+		}
+	]
+}

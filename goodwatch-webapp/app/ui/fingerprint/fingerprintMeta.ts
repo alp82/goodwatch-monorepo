@@ -17,6 +17,14 @@ const m = (
 
 // Mapping covering all CoreScores keys
 export const FINGERPRINT_META: Record<string, FingerprintMeta> = {
+  // --- Overall similarity (no key) ---
+  overall: m(
+    "overall",
+    "Overall",
+    "Similar matches that have the same vibe.",
+    "rgba(33, 150, 243, 0.6)",
+    "🧬",
+  ),
   // --- Core Emotional Palette ---
   adrenaline: m("adrenaline", "Adrenaline", "High-energy, pulse-pounding intensity.", "rgba(255, 99, 71, 0.6)", "⚡"),
   tension: m("tension", "Tension", "Edge-of-your-seat suspense and pressure.", "rgba(255, 87, 34, 0.6)", "😬"),

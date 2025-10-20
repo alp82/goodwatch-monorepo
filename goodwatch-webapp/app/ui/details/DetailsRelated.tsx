@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import RelatedTitles from "~/ui/details/RelatedTitles"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
@@ -12,34 +12,17 @@ export interface DetailsRelatedProps {
 export default function DetailsRelated({ media }: DetailsRelatedProps) {
     const { fingerprint } = media
 
-    const keys = useMemo(() => fingerprint?.highlightKeys ?? [], [fingerprint])
-    const [selectedKey, setSelectedKey] = useState<string>(keys[0] ?? "")
+    const keys = useMemo(() => ["overall", ...(fingerprint?.highlightKeys ?? [])], [fingerprint])
+    const [selectedKey, setSelectedKey] = useState<string>("overall")
     const selectedMeta = selectedKey ? getFingerprintMeta(selectedKey) : null
+
+    useEffect(() => {
+        if (!keys.includes(selectedKey)) setSelectedKey("overall")
+    }, [keys])
 
     if (!keys.length) return null
 
-    const renderPill = (key: string) => {
-        const meta = getFingerprintMeta(key)
-        const isActive = selectedKey === key
-        return (
-            <button
-                key={key}
-                type="button"
-                onClick={() => setSelectedKey(key)}
-                aria-pressed={isActive}
-                className={
-                    `flex items-center gap-2 px-3 py-1.5 rounded-full border whitespace-nowrap ` +
-                    (isActive
-                        ? "bg-white/10 border-white/20 text-white"
-                        : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10")
-                }
-                title={meta.description}
-            >
-                <span aria-hidden>{meta.emoji}</span>
-                <span className="text-sm font-medium">{meta.label}</span>
-            </button>
-        )
-    }
+    // removed unused renderPill helper
 
     return (
         <section className="flex flex-col gap-6 rounded-xl border border-white/10 bg-white/5 p-4 sm:p-6">
@@ -92,7 +75,7 @@ export default function DetailsRelated({ media }: DetailsRelatedProps) {
                                 : "absolute inset-0 opacity-0 pointer-events-none -z-10"
                         }
                     >
-                        <RelatedTitles media={media} fingerprintKey={key} />
+                        <RelatedTitles media={media} fingerprintKey={key === "overall" ? undefined : key} />
                     </div>
                 ))}
             </div>

@@ -19,7 +19,7 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 		: null
 
 	return (
-		<div className="absolute top-0 left-0 rounded-t-full p-2">
+		<div className="absolute top-0 right-0 rounded-t-full p-2">
 			{hasScore && (
 				<div
 					className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} rounded-t-full flex flex-col items-center text-white px-3 pt-2`}
