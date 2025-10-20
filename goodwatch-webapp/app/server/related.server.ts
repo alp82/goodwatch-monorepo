@@ -143,11 +143,17 @@ const extractRatingsFromPayload = (payload: QdrantMediaPayload): Partial<AllRati
 	}
 }
 
-async function _getRelatedMovies({
+async function getRelatedTitles({
 	tmdb_id,
 	fingerprint_key,
 	source_media_type,
-}: RelatedMovieParams): Promise<RelatedMovie[]> {
+	target_media_type,
+}: {
+	tmdb_id: number
+	fingerprint_key?: string
+	source_media_type: "movie" | "show"
+	target_media_type: "movie" | "show"
+}): Promise<(RelatedMovie | RelatedShow)[]> {
 	const collectionName = "media"
 	const sourcePointId = makePointId(source_media_type, tmdb_id)
 	const withKey = Boolean(fingerprint_key && fingerprint_key.length > 0)
@@ -171,7 +177,7 @@ async function _getRelatedMovies({
 		: null
 
 	const mustNotConditions: any[] = []
-	if (source_media_type === "movie") {
+	if (source_media_type === target_media_type) {
 		mustNotConditions.push({
 			key: "tmdb_id",
 			match: { value: tmdb_id },
@@ -180,7 +186,7 @@ async function _getRelatedMovies({
 
 	const filterConditions: any = {
 		must: [
-			{ key: "media_type", match: { value: "movie" } },
+			{ key: "media_type", match: { value: target_media_type } },
 			{
 				key: "goodwatch_overall_score_voting_count",
 				range: { gte: 5000 },
@@ -192,7 +198,6 @@ async function _getRelatedMovies({
 		],
 	}
 
-	// Add fingerprint range filter if fingerprint_key is provided
 	if (withKey && sourceFingerprintScore) {
 		filterConditions.must.push({
 			key: `fingerprint_scores_v1.${fingerprint_key}`,
@@ -245,104 +250,28 @@ async function _getRelatedMovies({
 		.slice(0, 50)
 }
 
+async function _getRelatedMovies({
+	tmdb_id,
+	fingerprint_key,
+	source_media_type,
+}: RelatedMovieParams): Promise<RelatedMovie[]> {
+	return getRelatedTitles({
+		tmdb_id,
+		fingerprint_key,
+		source_media_type,
+		target_media_type: "movie",
+	}) as Promise<RelatedMovie[]>
+}
+
 async function _getRelatedShows({
 	tmdb_id,
 	fingerprint_key,
 	source_media_type,
 }: RelatedShowParams): Promise<RelatedShow[]> {
-	const collectionName = "media"
-	const sourcePointId = makePointId(source_media_type, tmdb_id)
-	const withKey = Boolean(fingerprint_key && fingerprint_key.length > 0)
-
-	const [sourcePoint] = await retrieve<QdrantMediaPayload>({
-		collectionName,
-		ids: [sourcePointId],
-		withVector: ["fingerprint_v1"],
-	})
-
-	if (!sourcePoint?.vector?.fingerprint_v1) {
-		return []
-	}
-
-	const sourceFingerprint = Array.isArray(sourcePoint.vector)
-		? sourcePoint.vector
-		: sourcePoint.vector.fingerprint_v1
-
-	const sourceFingerprintScore = fingerprint_key
-		? sourcePoint.payload?.fingerprint_scores_v1?.[fingerprint_key]
-		: null
-
-	const mustNotConditions: any[] = []
-	if (source_media_type === "show") {
-		mustNotConditions.push({
-			key: "tmdb_id",
-			match: { value: tmdb_id },
-		})
-	}
-
-	const filterConditions: any = {
-		must: [
-			{ key: "media_type", match: { value: "show" } },
-			{
-				key: "goodwatch_overall_score_voting_count",
-				range: { gte: 5000 },
-			},
-			{
-				key: "goodwatch_overall_score_normalized_percent",
-				range: { gte: 50 },
-			},
-		],
-	}
-
-	// Add fingerprint range filter if fingerprint_key is provided
-	if (withKey && sourceFingerprintScore) {
-		filterConditions.must.push({
-			key: `fingerprint_scores_v1.${fingerprint_key}`,
-			range: {
-				gte: sourceFingerprintScore - 2,
-				lte: sourceFingerprintScore + 2,
-			},
-		})
-	}
-
-	if (mustNotConditions.length > 0) {
-		filterConditions.must_not = mustNotConditions
-	}
-
-	const results = await search<QdrantMediaPayload>({
-		collectionName,
-		vector: {
-			name: "fingerprint_v1",
-			vector: sourceFingerprint,
-		},
-		filter: filterConditions,
-		limit: 500,
-		withPayload: true,
-	})
-
-	const mappedResults = results.map((result: { payload: QdrantMediaPayload; score: number }) => {
-		const payload = result.payload
-		const annScore = result.score
-
-		return {
-			tmdb_id: payload.tmdb_id,
-			title: Array.isArray(payload.title) ? payload.title[0] : payload.title ?? "",
-			release_year: String(payload.release_year ?? ""),
-			poster_path: Array.isArray(payload.poster_path)
-				? payload.poster_path[0]
-				: payload.poster_path ?? "",
-			goodwatch_overall_score_voting_count:
-				payload.goodwatch_overall_score_voting_count ?? 0,
-			goodwatch_overall_score_normalized_percent:
-				payload.goodwatch_overall_score_normalized_percent ?? 0,
-			fingerprint_score: payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0,
-			ann_score: annScore,
-			score: annScore,
-			...extractRatingsFromPayload(payload),
-		}
-	})
-
-	return mappedResults
-		.sort((a, b) => b.score - a.score)
-		.slice(0, 50)
+	return getRelatedTitles({
+		tmdb_id,
+		fingerprint_key,
+		source_media_type,
+		target_media_type: "show",
+	}) as Promise<RelatedShow[]>
 }
