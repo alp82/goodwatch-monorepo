@@ -309,49 +309,43 @@ const _fetchFromDB = async (
 				),
 
 				actors AS (
-						SELECT array_agg(obj) AS val
-						FROM (
-								SELECT
-										{
-												id = p.tmdb_id,
-												credit_id = pa.credit_id,
-												name = p.name,
-												character = pa.character,
-												popularity = p.popularity,
-												profile_path = p.profile_path,
-												order_default = pa.order_default,
-												episode_count_character = pa.episode_count_character,
-												episode_count_total = pa.episode_count_total
-										} AS obj,
-										pa.order_default
-								FROM appeared_in_data pa
-								JOIN people_data p ON pa.person_tmdb_id = p.tmdb_id
-								GROUP BY obj, pa.order_default
-								ORDER BY pa.order_default ASC
-						) as sub
-				),
+					SELECT ARRAY(
+							SELECT
+									{
+											id = p.tmdb_id,
+											credit_id = pa.credit_id,
+											name = p.name,
+											character = pa.character,
+											popularity = p.popularity,
+											profile_path = p.profile_path,
+											order_default = pa.order_default,
+											episode_count_character = pa.episode_count_character,
+											episode_count_total = pa.episode_count_total
+									} AS obj
+							FROM appeared_in_data pa
+							JOIN people_data p ON pa.person_tmdb_id = p.tmdb_id
+							ORDER BY pa.order_default ASC
+					) AS val
+			),
 						    
 				crew AS (
-						SELECT array_agg(obj) AS val
-						FROM (
-								SELECT
-										{	
-												id = p.tmdb_id,
-												credit_id = pw.credit_id,
-												name = p.name,
-												job = pw.job,
-												department = pw.department,
-												popularity = p.popularity,
-												episode_count_job = pw.episode_count_job,
-												episode_count_total = pw.episode_count_total
-										} AS obj,
-						    		p.popularity
-								FROM worked_on_data pw
-								JOIN people_data p ON pw.person_tmdb_id = p.tmdb_id
-								GROUP BY obj, p.popularity
-								ORDER BY p.popularity DESC
-						) as sub
-				),
+					SELECT ARRAY(
+							SELECT
+									{	
+											id = p.tmdb_id,
+											credit_id = pw.credit_id,
+											name = p.name,
+											job = pw.job,
+											department = pw.department,
+											popularity = p.popularity,
+											episode_count_job = pw.episode_count_job,
+											episode_count_total = pw.episode_count_total
+									} AS obj
+							FROM worked_on_data pw
+							JOIN people_data p ON pw.person_tmdb_id = p.tmdb_id
+							ORDER BY p.popularity DESC
+					) AS val
+			),
 						    
 				-- images & videos
 				logos AS (
