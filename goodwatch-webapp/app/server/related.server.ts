@@ -189,11 +189,11 @@ async function getRelatedTitles({
 			{ key: "media_type", match: { value: target_media_type } },
 			{
 				key: "goodwatch_overall_score_voting_count",
-				range: { gte: 5000 },
+				range: { gte: 10000 },
 			},
 			{
 				key: "goodwatch_overall_score_normalized_percent",
-				range: { gte: 50 },
+				range: { gte: 60 },
 			},
 		],
 	}
@@ -219,13 +219,25 @@ async function getRelatedTitles({
 			vector: sourceFingerprint,
 		},
 		filter: filterConditions,
-		limit: 500,
+		limit: 100,
 		withPayload: true,
 	})
 
 	const mappedResults = results.map((result: { payload: QdrantMediaPayload; score: number }) => {
 		const payload = result.payload
 		const annScore = result.score
+		const targetFingerprintScore = payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0
+
+		let finalScore = annScore
+		
+		if (withKey && sourceFingerprintScore !== null && sourceFingerprintScore !== undefined) {
+			const distance = Math.abs(targetFingerprintScore - sourceFingerprintScore)
+			const maxDistance = 10
+			const normalizedDistance = Math.min(distance / maxDistance, 1)
+			const fingerprintSimilarity = 1 - normalizedDistance
+			
+			finalScore = (0.3 * annScore) + (0.7 * fingerprintSimilarity)
+		}
 
 		return {
 			tmdb_id: payload.tmdb_id,
@@ -238,9 +250,9 @@ async function getRelatedTitles({
 				payload.goodwatch_overall_score_voting_count ?? 0,
 			goodwatch_overall_score_normalized_percent:
 				payload.goodwatch_overall_score_normalized_percent ?? 0,
-			fingerprint_score: payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0,
+			fingerprint_score: targetFingerprintScore,
 			ann_score: annScore,
-			score: annScore,
+			score: finalScore,
 			...extractRatingsFromPayload(payload),
 		}
 	})

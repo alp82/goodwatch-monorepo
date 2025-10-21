@@ -23,11 +23,11 @@ services:
     command: ["./qdrant", "--uri", "${SELF_URI}"]
 
     volumes:
-      - ${STORAGE_DIR}:/qdrant/storage
-      - ${SNAPSHOT_DIR}:/qdrant/snapshots
+      - qdrant_storage:/qdrant/storage
+      - qdrant_snapshots:/qdrant/snapshots
 
     healthcheck:
-      test: ["CMD", "wget", "-qO", "-", "http://127.0.0.1:6333/healthz"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:6333/healthz"]
       interval: 10s
       timeout: 3s
       retries: 10

@@ -2,26 +2,11 @@
 
 ```
 
-IMDB URL = None
-
-gw score mismatch:
-    http://localhost:3003/movie/803796-kpop-demon-hunters
-    77/100
-    - 7.7 (LINK BROKEN)
-    - 76 | 8.2
-    - 97 | 91
-
-double streaming links:
-    http://localhost:3003/show/43020-continuum
-
-full text query
-    for cast/crew: "brad pitt"
-
-explore fixes
+fix onboarding
 
 discover fixes
-
-fix onboarding
+    full text query
+        for cast/crew: "brad pitt"
     
 ---   
 
@@ -33,7 +18,17 @@ Fingerprint improvements
 
 ---   
 
+discord:
+* review feature requests
+* update channel structure
+
+---   
+
 long actor names overlap on mobile
+
+---   
+
+update windmill scripts in git
 
 ---   
 

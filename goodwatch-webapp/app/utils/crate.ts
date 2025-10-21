@@ -1,4 +1,5 @@
 import crate from "node-crate"
+import pc from "picocolors"
 
 class CrateClient {
 	constructor(hosts: string[]) {
@@ -9,11 +10,25 @@ class CrateClient {
 		query: string,
 		params?: (string | number | Date)[],
 	) {
+		const startTime = performance.now()
 		try {
-			return await crate.execute(query, params)
+			const result = await crate.execute(query, params)
+			const duration = performance.now() - startTime
+			const querySummary = this.getQuerySummary(query)
+			const formattedLog = this.formatLog(querySummary, duration)
+			console.log(formattedLog)
+			
+			if (duration >= 300) {
+				this.logSlowQueryDetails(query, params, duration, result)
+			}
+			
+			return result
 		} catch (error) {
+			const duration = performance.now() - startTime
+			const querySummary = this.getQuerySummary(query)
+			const formattedLog = this.formatLog(querySummary, duration, true)
 			console.error('====================')
-			console.error('CrateDB Query Error:')
+			console.error(formattedLog)
 			console.error('Query:', query)
 			console.error('Params:', params)
 			console.error('Error:', error)
@@ -21,6 +36,85 @@ class CrateClient {
 			console.trace()
 			throw error
 		}
+	}
+
+	private formatLog(querySummary: string, duration: number, failed = false): string {
+		const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false })
+		const coloredDuration = this.colorDuration(duration, failed)
+		const label = pc.dim(`[${pc.cyan('CrateDB')}]`)
+		const status = failed ? pc.red('FAILED') : ''
+		return `${pc.dim(timestamp)} ${label} ${querySummary} ${status} ${coloredDuration}`
+	}
+
+	private logSlowQueryDetails(query: string, params: (string | number | Date)[] | undefined, duration: number, result: any): void {
+		console.warn(pc.yellow('  ⚠ Slow query details:'))
+		console.warn(pc.dim('  Query:'), query.trim().replace(/\s+/g, ' ').substring(0, 200) + (query.length > 200 ? '...' : ''))
+		
+		if (params && params.length > 0) {
+			console.warn(pc.dim('  Params:'), params.length > 5 ? `${params.slice(0, 5).join(', ')}... (${params.length} total)` : params.join(', '))
+		}
+		
+		if (result.rowcount !== undefined) {
+			console.warn(pc.dim('  Rows affected:'), result.rowcount)
+		}
+		
+		if (result.duration !== undefined) {
+			console.warn(pc.dim('  Server duration:'), `${result.duration}ms`)
+		}
+	}
+
+	private colorDuration(duration: number, failed = false): string {
+		const formatted = `${duration.toFixed(2)}ms`
+		
+		if (failed) {
+			return pc.red(formatted)
+		}
+		
+		if (duration < 50) {
+			return pc.green(pc.bold(formatted))
+		}
+		if (duration < 100) {
+			return pc.green(formatted)
+		}
+		if (duration < 300) {
+			return pc.yellow(formatted)
+		}
+		if (duration < 1000) {
+			return pc.red(formatted)
+		}
+		return pc.red(pc.bold(formatted))
+	}
+
+	private getQuerySummary(query: string): string {
+		const normalized = query.trim().replace(/\s+/g, ' ')
+		const firstLine = normalized.split('\n')[0]
+		const operation = firstLine.match(/^\s*(SELECT|INSERT|UPDATE|DELETE|UPSERT|CREATE|DROP|ALTER|WITH)/i)?.[1]?.toUpperCase() || 'UNKNOWN'
+		
+		if (operation === 'SELECT') {
+			const fromMatch = normalized.match(/FROM\s+([^\s,;(]+)/i)
+			const table = fromMatch?.[1] || 'unknown'
+			return `SELECT from ${table}`
+		}
+		
+		if (operation === 'INSERT') {
+			const intoMatch = normalized.match(/INTO\s+([^\s(]+)/i)
+			const table = intoMatch?.[1] || 'unknown'
+			return `INSERT into ${table}`
+		}
+		
+		if (operation === 'UPDATE') {
+			const tableMatch = normalized.match(/UPDATE\s+([^\s]+)/i)
+			const table = tableMatch?.[1] || 'unknown'
+			return `UPDATE ${table}`
+		}
+		
+		if (operation === 'DELETE') {
+			const fromMatch = normalized.match(/FROM\s+([^\s,;(]+)/i)
+			const table = fromMatch?.[1] || 'unknown'
+			return `DELETE from ${table}`
+		}
+		
+		return operation
 	}
 
 	async select<T extends {}>(

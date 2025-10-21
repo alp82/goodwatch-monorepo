@@ -47,7 +47,7 @@ export default function DetailsRelated({ media }: DetailsRelatedProps) {
                                     onClick={() => setSelectedKey(key)}
                                     aria-pressed={isActive}
                                     className={
-                                        "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full border text-sm font-semibold transition-colors shadow-sm " +
+                                        "px-3 sm:px-4 py-2 rounded-lg border text-sm font-semibold transition-colors shadow-sm " +
                                         (isActive
                                             ? "text-white"
                                             : "bg-white/5 border-white/10 text-gray-200 hover:bg-white/10")
@@ -55,8 +55,10 @@ export default function DetailsRelated({ media }: DetailsRelatedProps) {
                                     style={isActive ? { backgroundColor: meta.color, borderColor: meta.color } : undefined}
                                     title={meta.description}
                                 >
-                                    <span aria-hidden>{meta.emoji}</span>
-                                    <span>{meta.label}</span>
+                                    <h3 className="flex items-center gap-2 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-bold">
+                                        <span aria-hidden>{meta.emoji}</span>
+                                        <span>{meta.label}</span>
+                                    </h3>
                                 </button>
                             </SwiperSlide>
                         )

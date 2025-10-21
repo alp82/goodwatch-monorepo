@@ -2,14 +2,18 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.7.0] 2025-06-xx
+## [0.7.0] 2025-10-xx
 
 Minor Release: **New Database and DNA Overhaul**
 
 ### Added
 * completely new DNA pipeline
+* renamed DNA to Fingerprint
+* vector embeddings backed by Qdrant instead of pgvector
 
 ### Changed
+* Details show Fingerprint summary with Energy, Heart, Humor, World, Craft & Style scores
+* Related movies and shows are now based on Fingerprint highlights
 
 ### Fixed
 

@@ -106,7 +106,7 @@ interface ConstructUnionQueryParams
 
 interface ConstructFullQueryParams extends ConstructUnionQueryParams {}
 
-interface FingerprintCondition {
+export interface FingerprintCondition {
 	field?: string
 	operator?: ">" | ">=" | "<" | "<=" | "=" | "!="
 	value?: number
@@ -115,7 +115,7 @@ interface FingerprintCondition {
 }
 
 // Function to generate SQL from fingerprint conditions
-const generateFingerprintSQL = (conditions: FingerprintCondition[]): string => {
+export const generateFingerprintSQL = (conditions: FingerprintCondition[]): string => {
 	if (!conditions || conditions.length === 0) return ""
 
 	const processCondition = (condition: FingerprintCondition): string => {

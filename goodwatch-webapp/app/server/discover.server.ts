@@ -1,6 +1,9 @@
 import { query } from "~/utils/crate"
 import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
 import type { AllRatings } from "~/utils/ratings"
+import type { FingerprintCondition } from "~/server/utils/query-db"
+import { generateFingerprintSQL as generateFingerprintSQLBase } from "~/server/utils/query-db"
+import { getGenresAll } from "~/server/genres.server"
 
 export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
 export type StreamingPreset = "everywhere" | "mine" | "custom"
@@ -66,6 +69,9 @@ export interface SimpleDiscoverParams {
 	maxScore?: string
 	minYear?: string
 	maxYear?: string
+	withStreamingProviders?: string
+	withGenres?: string
+	fingerprintConditions?: string
 	page: number
 }
 
@@ -83,6 +89,9 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 		maxScore: params.maxScore,
 		minYear: params.minYear,
 		maxYear: params.maxYear,
+		withStreamingProviders: params.withStreamingProviders,
+		withGenres: params.withGenres,
+		fingerprintConditions: params.fingerprintConditions,
 		page: params.page,
 	}
 	
@@ -99,6 +108,9 @@ async function _getSimpleDiscoverResults({
 	maxScore,
 	minYear,
 	maxYear,
+	withStreamingProviders,
+	withGenres,
+	fingerprintConditions,
 	page,
 }: SimpleDiscoverParams): Promise<DiscoverResult[]> {
 	const offset = (page - 1) * DISCOVER_PAGE_SIZE
@@ -120,6 +132,10 @@ async function _getSimpleDiscoverResults({
 			maxScore,
 			minYear,
 			maxYear,
+			country,
+			withStreamingProviders,
+			withGenres,
+			fingerprintConditions,
 			limit: includeShows ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
 			offset: includeShows ? Math.floor(offset / 2) : offset,
 		})
@@ -137,6 +153,10 @@ async function _getSimpleDiscoverResults({
 			maxScore,
 			minYear,
 			maxYear,
+			country,
+			withStreamingProviders,
+			withGenres,
+			fingerprintConditions,
 			limit: includeMovies ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
 			offset: includeMovies ? Math.floor(offset / 2) : offset,
 		})
@@ -157,6 +177,10 @@ interface MediaQueryParams {
 	maxScore?: string
 	minYear?: string
 	maxYear?: string
+	country?: string
+	withStreamingProviders?: string
+	withGenres?: string
+	fingerprintConditions?: string
 	limit: number
 	offset: number
 }
@@ -170,6 +194,10 @@ async function getMediaResults({
 	maxScore,
 	minYear,
 	maxYear,
+	country,
+	withStreamingProviders,
+	withGenres,
+	fingerprintConditions,
 	limit,
 	offset,
 }: MediaQueryParams): Promise<DiscoverResult[]> {
@@ -181,6 +209,21 @@ async function getMediaResults({
 		"m.popularity IS NOT NULL",
 		"m.goodwatch_overall_score_voting_count >= 1000"
 	]
+	
+	// Parse and add fingerprint conditions
+	if (fingerprintConditions) {
+		try {
+			const parsed: FingerprintCondition[] = JSON.parse(fingerprintConditions)
+			const fingerprintSQL = generateFingerprintSQLBase(parsed)
+			if (fingerprintSQL) {
+				// Remove "AND " prefix that query-db adds, and add "m." prefix for table alias
+				const cleanSQL = fingerprintSQL.replace(/^AND /, '').replace(/fingerprint_scores/g, 'm.fingerprint_scores')
+				conditions.push(cleanSQL)
+			}
+		} catch (error) {
+			console.error("Failed to parse fingerprintConditions:", error)
+		}
+	}
 	
 	// Add score filters
 	if (minScore) {
@@ -200,6 +243,43 @@ async function getMediaResults({
 	if (maxYear) {
 		conditions.push("m.release_year <= ?")
 		params.push(Number(maxYear))
+	}
+	
+	// Add streaming provider filter
+	if (withStreamingProviders && country) {
+		const providerIds = withStreamingProviders
+			.split(",")
+			.map((id) => Number(id))
+			.filter((id) => !Number.isNaN(id))
+		if (providerIds.length > 0) {
+			const streamingPatterns = providerIds.map((id) => `${country}_${id}`)
+			const streamingConditions = streamingPatterns.map((pattern) => {
+				params.push(pattern)
+				return "? = ANY(m.streaming_availabilities)"
+			})
+			conditions.push(`(${streamingConditions.join(" OR ")})`)
+		}
+	}
+	
+	// Add genre filter
+	if (withGenres) {
+		const genreIds = withGenres
+			.split(",")
+			.map((id) => Number(id))
+			.filter((id) => !Number.isNaN(id))
+		if (genreIds.length > 0) {
+			const allGenres = await getGenresAll()
+			const genreNames = genreIds
+				.map((id) => allGenres.find((g) => g.id === id)?.name)
+				.filter((name): name is string => Boolean(name))
+			if (genreNames.length > 0) {
+				const genreConditions = genreNames.map((genreName) => {
+					params.push(genreName)
+					return "? = ANY(m.genres)"
+				})
+				conditions.push(`(${genreConditions.join(" OR ")})`)
+			}
+		}
 	}
 	
 	// Build user join and condition

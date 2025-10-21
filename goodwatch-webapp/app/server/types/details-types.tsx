@@ -338,8 +338,6 @@ export const COMMON_FIELDS = [
 	"fingerprint_scores",
 	"fingerprint_highlight_keys",
 	"content_advisories",
-	"vector_essence_text",
-	"vector_fingerprint",
 	"suitability_solo_watch",
 	"suitability_date_night",
 	"suitability_group_party",

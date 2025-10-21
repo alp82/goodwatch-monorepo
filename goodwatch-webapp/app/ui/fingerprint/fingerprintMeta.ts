@@ -21,7 +21,7 @@ export const FINGERPRINT_META: Record<string, FingerprintMeta> = {
   overall: m(
     "overall",
     "Overall",
-    "Similar matches that have the same vibe.",
+    "Similar vibe.",
     "rgba(33, 150, 243, 0.6)",
     "🧬",
   ),

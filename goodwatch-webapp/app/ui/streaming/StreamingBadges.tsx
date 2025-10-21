@@ -3,6 +3,7 @@ import {
 	duplicateProviderMapping,
 	getShorterProviderLabel,
 	getStreamingUrl,
+	ignoredProviders,
 } from "~/utils/streaming-links"
 import { useUserStreamingProviders } from "~/routes/api.user-settings.get"
 import { motion } from "framer-motion"
@@ -41,14 +42,16 @@ export default function StreamingBadges({
 	)
 
 	const filteredLinks = (streaming_availabilities || [])
-		.filter((link: StreamingLink) => streamTypes.includes(link.streaming_type))
+		.filter((link: StreamingLink) => {
+			return streamTypes.includes(link.streaming_type) && !ignoredProviders.includes(link.streaming_service_id)
+		})
 		.sort((a: StreamingLink, b: StreamingLink) => {
 			const aOwned = userStreamingProviderIds.includes(a.streaming_service_id)
 			const bOwned = userStreamingProviderIds.includes(b.streaming_service_id)
 			if (aOwned === bOwned) return 0
-			return aOwned ? -1 : 1
+			return aOwned ? a.streaming_service_id - 10000 : b.streaming_service_id
 		})
-
+	
 	const [showAllEnabled, setShowAllEnabled] = useState(false)
 	const handleToggleShowAll = () => {
 		setShowAllEnabled((prev) => !prev)
@@ -113,7 +116,13 @@ export default function StreamingBadges({
 						})
 					) : (
 						<div className="flex items-center gap-2 text-xs">
-							Not available to stream in <strong>{country}</strong> (
+							Not available to stream in
+							<img
+								src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`}
+								alt={`Flag of ${country}`}
+								className="h-2"
+							/>
+							<strong>{country}</strong> (
 							{streamTypes.join(", ")})
 						</div>
 					)}
