@@ -4,6 +4,7 @@ import type { AllRatings } from "~/utils/ratings"
 import type { FingerprintCondition } from "~/server/utils/query-db"
 import { generateFingerprintSQL as generateFingerprintSQLBase } from "~/server/utils/query-db"
 import { getGenresAll } from "~/server/genres.server"
+import { recommend, makePointId, parsePointId } from "~/utils/qdrant"
 
 export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
 export type StreamingPreset = "everywhere" | "mine" | "custom"
@@ -36,8 +37,6 @@ export interface DiscoverParams {
 	streamingPreset: StreamingPreset
 	withStreamingProviders: string
 	withStreamingTypes: string
-	similarDNA: string
-	similarDNACombinationType: CombinationType
 	similarTitles: string
 	fingerprintConditions: string
 	suitabilityFilters: string
@@ -73,7 +72,9 @@ export interface SimpleDiscoverParams {
 	withGenres?: string
 	withCast?: string
 	withCrew?: string
-	fingerprintConditions?: string
+	withSimilarTitles?: string
+	fingerprintPillars?: string
+	fingerprintPillarMinTier?: string
 	sortBy?: DiscoverSortBy
 	sortDirection?: "asc" | "desc"
 	page: number
@@ -97,7 +98,7 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 		withGenres: params.withGenres,
 		withCast: params.withCast,
 		withCrew: params.withCrew,
-		fingerprintConditions: params.fingerprintConditions,
+		withSimilarTitles: params.similarTitles,
 		sortBy: params.sortBy,
 		sortDirection: params.sortDirection,
 		page: params.page,
@@ -120,7 +121,9 @@ async function _getSimpleDiscoverResults({
 	withGenres,
 	withCast,
 	withCrew,
-	fingerprintConditions,
+	withSimilarTitles,
+	fingerprintPillars,
+	fingerprintPillarMinTier,
 	sortBy = "popularity",
 	sortDirection = "desc",
 	page,
@@ -130,6 +133,22 @@ async function _getSimpleDiscoverResults({
 	// Determine which media types to include
 	const includeMovies = ["all", "movies", "movie"].includes(type)
 	const includeShows = ["all", "show", "shows"].includes(type)
+	
+	// Get candidate IDs from Qdrant if similarity or fingerprint filters are active
+	let candidateIds: Set<number> | null = null
+	if (withSimilarTitles || fingerprintPillars) {
+		candidateIds = await getQdrantCandidates({
+			withSimilarTitles,
+			fingerprintPillars,
+			fingerprintPillarMinTier,
+			includeMovies,
+			includeShows,
+			minScore,
+			maxScore,
+			minYear,
+			maxYear,
+		})
+	}
 	
 	const results: DiscoverResult[] = []
 	
@@ -149,7 +168,7 @@ async function _getSimpleDiscoverResults({
 			withGenres,
 			withCast,
 			withCrew,
-			fingerprintConditions,
+			candidateIds,
 			sortBy,
 			sortDirection,
 			limit: includeShows ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
@@ -174,7 +193,7 @@ async function _getSimpleDiscoverResults({
 			withGenres,
 			withCast,
 			withCrew,
-			fingerprintConditions,
+			candidateIds,
 			sortBy,
 			sortDirection,
 			limit: includeMovies ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
@@ -202,6 +221,119 @@ async function _getSimpleDiscoverResults({
 	return sortedResults.slice(0, DISCOVER_PAGE_SIZE)
 }
 
+interface QdrantCandidatesParams {
+	withSimilarTitles?: string
+	fingerprintPillars?: string
+	fingerprintPillarMinTier?: string
+	includeMovies: boolean
+	includeShows: boolean
+	minScore?: string
+	maxScore?: string
+	minYear?: string
+	maxYear?: string
+}
+
+async function getQdrantCandidates({
+	withSimilarTitles,
+	fingerprintPillars,
+	fingerprintPillarMinTier,
+	includeMovies,
+	includeShows,
+	minScore,
+	maxScore,
+	minYear,
+	maxYear,
+}: QdrantCandidatesParams): Promise<Set<number>> {
+	const candidateIds = new Set<number>()
+	
+	// Build base filter conditions for Qdrant
+	const mustConditions: any[] = [
+		{
+			key: "goodwatch_overall_score_voting_count",
+			range: { gte: 1000 },
+		},
+	]
+	
+	// Add media type filter
+	const mediaTypes: string[] = []
+	if (includeMovies) mediaTypes.push("movie")
+	if (includeShows) mediaTypes.push("show")
+	
+	if (mediaTypes.length === 1) {
+		mustConditions.push({
+			key: "media_type",
+			match: { value: mediaTypes[0] },
+		})
+	}
+	
+	// Add score filter
+	if (minScore || maxScore) {
+		const scoreRange: any = {}
+		if (minScore) scoreRange.gte = Number(minScore)
+		if (maxScore) scoreRange.lte = Number(maxScore)
+		mustConditions.push({
+			key: "goodwatch_overall_score_normalized_percent",
+			range: scoreRange,
+		})
+	}
+	
+	// Add year filter
+	if (minYear || maxYear) {
+		const yearRange: any = {}
+		if (minYear) yearRange.gte = Number(minYear)
+		if (maxYear) yearRange.lte = Number(maxYear)
+		mustConditions.push({
+			key: "release_year",
+			range: yearRange,
+		})
+	}
+	
+	const mustNotConditions: any[] = [
+		{ key: "poster_path", match: { value: null } },
+	]
+	
+	// Handle similarity filter
+	if (withSimilarTitles) {
+		const similarTitles = withSimilarTitles.split(",").filter(Boolean)
+		const positiveIds: number[] = []
+		
+		for (const titleStr of similarTitles) {
+			const [tmdbIdStr, mediaType] = titleStr.split(":")
+			const tmdbId = Number(tmdbIdStr)
+			if (!Number.isNaN(tmdbId) && (mediaType === "movie" || mediaType === "show")) {
+				positiveIds.push(makePointId(mediaType, tmdbId))
+			}
+		}
+		
+		if (positiveIds.length > 0) {
+			const results = await recommend({
+				collectionName: "media",
+				positive: positiveIds,
+				using: "fingerprint_v1",
+				filter: {
+					must: mustConditions,
+					must_not: mustNotConditions,
+				},
+				limit: 500,
+				withPayload: ["tmdb_id"],
+				hnswEf: 128,
+				exact: false,
+			})
+			
+			for (const result of results) {
+				if (result.payload?.tmdb_id) {
+					candidateIds.add(result.payload.tmdb_id)
+				}
+			}
+		}
+	}
+	
+	// TODO: Handle fingerprint pillar filter
+	// Will be implemented in Phase 2
+	
+	return candidateIds
+}
+
 interface MediaQueryParams {
 	mediaType: "movie" | "show"
 	tableName: "movie" | "show"
@@ -216,7 +348,7 @@ interface MediaQueryParams {
 	withGenres?: string
 	withCast?: string
 	withCrew?: string
-	fingerprintConditions?: string
+	candidateIds?: Set<number> | null
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
 	limit: number
@@ -237,7 +369,7 @@ async function getMediaResults({
 	withGenres,
 	withCast,
 	withCrew,
-	fingerprintConditions,
+	candidateIds,
 	sortBy,
 	sortDirection,
 	limit,
@@ -252,19 +384,12 @@ async function getMediaResults({
 		"m.goodwatch_overall_score_voting_count >= 1000"
 	]
 	
-	// Parse and add fingerprint conditions
-	if (fingerprintConditions) {
-		try {
-			const parsed: FingerprintCondition[] = JSON.parse(fingerprintConditions)
-			const fingerprintSQL = generateFingerprintSQLBase(parsed)
-			if (fingerprintSQL) {
-				// Remove "AND " prefix that query-db adds, and add "m." prefix for table alias
-				const cleanSQL = fingerprintSQL.replace(/^AND /, '').replace(/fingerprint_scores/g, 'm.fingerprint_scores')
-				conditions.push(cleanSQL)
-			}
-		} catch (error) {
-			console.error("Failed to parse fingerprintConditions:", error)
-		}
+	// Add candidate IDs filter from Qdrant
+	if (candidateIds && candidateIds.size > 0) {
+		const ids = Array.from(candidateIds)
+		const placeholders = ids.map(() => "?").join(", ")
+		conditions.push(`m.tmdb_id IN (${placeholders})`)
+		params.push(...ids)
 	}
 	
 	// Add score filters
