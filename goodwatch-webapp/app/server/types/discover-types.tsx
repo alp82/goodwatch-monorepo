@@ -68,7 +68,7 @@ export const DISCOVER_FILTER_TYPES = [
 	"streaming",
 	"score",
 	"similar",
-	"dna",
+	"fingerprint",
 	"genre",
 	"release",
 	"cast",
@@ -122,10 +122,10 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 			color: "rose",
 			associatedParams: ["similarTitles"],
 		},
-		dna: {
-			label: "DNA",
+		fingerprint: {
+			label: "Fingerprint",
 			color: "indigo",
-			associatedParams: ["similarDNA", "similarDNACombinationType"],
+			associatedParams: ["fingerprintPillars", "fingerprintPillarMinTier"],
 		},
 		genre: {
 			label: "Genre",

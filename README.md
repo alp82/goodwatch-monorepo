@@ -27,11 +27,18 @@ npm run dev
 
 ## Adding a new Server
 
-### ssh keys
+### Install Packages
+```
+apt-get install make fzf
+```
 
-### Docker Compose
+### Install Docker
+https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
 
 ### Git Repository
+```
+git clone https://github.com/alp82/goodwatch-monorepo.git
+```
 
 ### Grafana Exporter
 

@@ -48,10 +48,9 @@ export const buildDiscoverParams = async (request: Request) => {
 		""
 	const withStreamingTypes =
 		url.searchParams.get("withStreamingTypes") || "free,flatrate"
-	const similarDNA = url.searchParams.get("similarDNA") || ""
-	const similarDNACombinationType =
-		url.searchParams.get("similarDNACombinationType") || ""
 	const similarTitles = url.searchParams.get("similarTitles") || ""
+	const fingerprintPillars = url.searchParams.get("fingerprintPillars") || ""
+	const fingerprintPillarMinTier = url.searchParams.get("fingerprintPillarMinTier") || ""
 	const fingerprintConditions =
 		url.searchParams.get("fingerprintConditions") || ""
 	const suitabilityFilters = url.searchParams.get("suitabilityFilters") || ""
@@ -91,9 +90,9 @@ export const buildDiscoverParams = async (request: Request) => {
 		withStreamingProviders,
 		withStreamingTypes,
 		streamingPreset,
-		similarDNA,
-		similarDNACombinationType,
 		similarTitles,
+		fingerprintPillars,
+		fingerprintPillarMinTier,
 		fingerprintConditions,
 		suitabilityFilters,
 		contextFilters,

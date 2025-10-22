@@ -38,6 +38,8 @@ export interface DiscoverParams {
 	withStreamingProviders: string
 	withStreamingTypes: string
 	similarTitles: string
+	fingerprintPillars: string
+	fingerprintPillarMinTier: string
 	fingerprintConditions: string
 	suitabilityFilters: string
 	contextFilters: string
@@ -99,6 +101,8 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 		withCast: params.withCast,
 		withCrew: params.withCrew,
 		withSimilarTitles: params.similarTitles,
+		fingerprintPillars: params.fingerprintPillars,
+		fingerprintPillarMinTier: params.fingerprintPillarMinTier,
 		sortBy: params.sortBy,
 		sortDirection: params.sortDirection,
 		page: params.page,
@@ -134,9 +138,10 @@ async function _getSimpleDiscoverResults({
 	const includeMovies = ["all", "movies", "movie"].includes(type)
 	const includeShows = ["all", "show", "shows"].includes(type)
 	
-	// Get candidate IDs from Qdrant if similarity or fingerprint filters are active
+	// Get candidate IDs from Qdrant only if similarity filter is active
+	// (Fingerprint-only filtering is handled in CrateDB)
 	let candidateIds: Set<number> | null = null
-	if (withSimilarTitles || fingerprintPillars) {
+	if (withSimilarTitles) {
 		candidateIds = await getQdrantCandidates({
 			withSimilarTitles,
 			fingerprintPillars,
@@ -169,6 +174,8 @@ async function _getSimpleDiscoverResults({
 			withCast,
 			withCrew,
 			candidateIds,
+			fingerprintPillars,
+			fingerprintPillarMinTier,
 			sortBy,
 			sortDirection,
 			limit: includeShows ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
@@ -194,6 +201,8 @@ async function _getSimpleDiscoverResults({
 			withCast,
 			withCrew,
 			candidateIds,
+			fingerprintPillars,
+			fingerprintPillarMinTier,
 			sortBy,
 			sortDirection,
 			limit: includeMovies ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
@@ -292,8 +301,41 @@ async function getQdrantCandidates({
 		{ key: "poster_path", match: { value: null } },
 	]
 	
-	// Handle similarity filter
-	if (withSimilarTitles) {
+	// Map pillar names to their underlying fingerprint scores
+	const PILLAR_TO_SCORES: Record<string, string[]> = {
+		Energy: ['adrenaline', 'tension', 'scare', 'fast_pace', 'spectacle', 'violence'],
+		Heart: ['romance', 'wholesome', 'pathos', 'melancholy', 'hopefulness', 'catharsis', 'nostalgia', 'coming_of_age', 'family_dynamics', 'wonder'],
+		Humor: ['situational_comedy', 'wit_wordplay', 'physical_comedy', 'cringe_humor', 'absurdist_humor', 'satire_parody', 'dark_humor'],
+		World: ['world_immersion', 'dialogue_centrality', 'rewatchability', 'ambiguity', 'novelty'],
+		Craft: ['direction', 'acting', 'narrative_structure', 'dialogue_quality', 'character_depth', 'intrigue', 'complexity', 'non_linear_narrative', 'meta_narrative'],
+		Style: ['cinematography', 'editing', 'music_composition', 'visual_stylization', 'music_centrality', 'sound_centrality'],
+	}
+	
+	// Tier to score mapping (approximate - tiers are computed from aggregated scores)
+	// Higher tier = more selective (higher score required)
+	// Tier 1 (Low) ≈ score 4+, Tier 2 (Mid) ≈ 6+, Tier 3 (High) ≈ 8+
+	const tierToMinScore = (tier: number): number => {
+		if (tier >= 3) return 8  // High: very high scores
+		if (tier >= 2) return 6  // Mid: medium-high scores
+		return 4                  // Low: medium scores
+	}
+	
+	// Note: Fingerprint pillar filtering in Qdrant is disabled because scores are stored
+	// in Firestore format (nested fields.{score}.integerValue as strings) which Qdrant
+	// cannot efficiently filter. Pillar filtering works in CrateDB standalone mode.
+	// TODO: Re-index Qdrant with flattened fingerprint scores for filtering support
+	if (fingerprintPillars && withSimilarTitles) {
+		console.log(`[Qdrant] Fingerprint pillar filter requested but not supported in similarity mode`)
+		console.log(`[Qdrant] Pillars: ${fingerprintPillars}, Tier: ${fingerprintPillarMinTier}`)
+		console.log(`[Qdrant] Filtering will be applied in CrateDB after similarity results`)
+	}
+	
+	// Handle similarity filter OR standalone pillar filter
+	const hasSimilarityFilter = !!withSimilarTitles
+	const hasPillarFilter = fingerprintPillars && fingerprintPillars.split(",").filter(Boolean).length > 0
+	
+	if (hasSimilarityFilter) {
+		// Similarity filter with optional pillar filters
 		const similarTitles = withSimilarTitles.split(",").filter(Boolean)
 		const positiveIds: number[] = []
 		
@@ -314,7 +356,7 @@ async function getQdrantCandidates({
 					must: mustConditions,
 					must_not: mustNotConditions,
 				},
-				limit: 500,
+				limit: 5000,
 				withPayload: ["tmdb_id"],
 				hnswEf: 128,
 				exact: false,
@@ -327,9 +369,7 @@ async function getQdrantCandidates({
 			}
 		}
 	}
-	
-	// TODO: Handle fingerprint pillar filter
-	// Will be implemented in Phase 2
+	// Note: Standalone pillar filter (without similarity) is handled in CrateDB
 	
 	return candidateIds
 }
@@ -349,6 +389,8 @@ interface MediaQueryParams {
 	withCast?: string
 	withCrew?: string
 	candidateIds?: Set<number> | null
+	fingerprintPillars?: string
+	fingerprintPillarMinTier?: string
 	sortBy: DiscoverSortBy
 	sortDirection: "asc" | "desc"
 	limit: number
@@ -370,6 +412,8 @@ async function getMediaResults({
 	withCast,
 	withCrew,
 	candidateIds,
+	fingerprintPillars,
+	fingerprintPillarMinTier,
 	sortBy,
 	sortDirection,
 	limit,
@@ -410,6 +454,45 @@ async function getMediaResults({
 	if (maxYear) {
 		conditions.push("m.release_year <= ?")
 		params.push(Number(maxYear))
+	}
+	
+	// Add fingerprint pillar filter
+	// Works in both standalone mode and with Qdrant candidates (filters after similarity)
+	if (fingerprintPillars) {
+		const PILLAR_TO_SCORES: Record<string, string[]> = {
+			Energy: ['adrenaline', 'tension', 'scare', 'fast_pace', 'spectacle', 'violence'],
+			Heart: ['romance', 'wholesome', 'pathos', 'melancholy', 'hopefulness', 'catharsis', 'nostalgia', 'coming_of_age', 'family_dynamics', 'wonder'],
+			Humor: ['situational_comedy', 'wit_wordplay', 'physical_comedy', 'cringe_humor', 'absurdist_humor', 'satire_parody', 'dark_humor'],
+			World: ['world_immersion', 'dialogue_centrality', 'rewatchability', 'ambiguity', 'novelty'],
+			Craft: ['direction', 'acting', 'narrative_structure', 'dialogue_quality', 'character_depth', 'intrigue', 'complexity', 'non_linear_narrative', 'meta_narrative'],
+			Style: ['cinematography', 'editing', 'music_composition', 'visual_stylization', 'music_centrality', 'sound_centrality'],
+		}
+		
+		const tierToMinScore = (tier: number): number => {
+			if (tier >= 3) return 8
+			if (tier >= 2) return 6
+			return 4
+		}
+		
+		const pillarNames = fingerprintPillars.split(",").filter(Boolean).map((name) => name.trim())
+		const minTier = fingerprintPillarMinTier ? Number(fingerprintPillarMinTier) : 1
+		const minScore = tierToMinScore(minTier)
+		
+		// For each pillar, require at least 2 scores to meet the threshold
+		// This approximates the pillar computation (especially top2 aggregation)
+		for (const pillarName of pillarNames) {
+			const scores = PILLAR_TO_SCORES[pillarName]
+			if (scores) {
+				// Count how many scores meet the threshold
+				const countExpr = scores.map((score) => {
+					params.push(minScore)
+					return `CASE WHEN COALESCE(m.fingerprint_scores['${score}'], 0) >= ? THEN 1 ELSE 0 END`
+				}).join(" + ")
+				
+				// Require at least 2 scores to meet threshold
+				conditions.push(`(${countExpr}) >= 2`)
+			}
+		}
 	}
 	
 	// Add streaming provider filter

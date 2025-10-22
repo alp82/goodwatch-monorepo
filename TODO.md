@@ -40,6 +40,11 @@ update windmill scripts in git
 
 ---   
 
+strategy + lead generation
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68f93e39-5e48-832f-9273-38f38514426a
+
+---
+
 robots with sitemap link
     https://www.instagram.com/robots.txt
     

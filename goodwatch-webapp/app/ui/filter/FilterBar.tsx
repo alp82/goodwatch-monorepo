@@ -6,7 +6,7 @@ import FilterBarSection from "~/ui/filter/FilterBarSection";
 import OneOrMoreItems from "~/ui/filter/OneOrMoreItems";
 import SectionCast from "~/ui/filter/sections/SectionCast";
 import SectionCrew from "~/ui/filter/sections/SectionCrew";
-import SectionDNA from "~/ui/filter/sections/SectionDNA";
+import SectionFingerprint from "~/ui/filter/sections/SectionFingerprint";
 import SectionGenre from "~/ui/filter/sections/SectionGenre";
 import SectionRelease from "~/ui/filter/sections/SectionRelease";
 import SectionScore from "~/ui/filter/sections/SectionScore";
@@ -64,10 +64,10 @@ export default function FilterBar({
 					onClose={handleClose}
 				/>
 
-				<SectionDNA
+				<SectionFingerprint
 					params={params}
-					editing={filterToEdit === "dna"}
-					onEdit={() => onEditToggle("dna")}
+					editing={filterToEdit === "fingerprint"}
+					onEdit={() => onEditToggle("fingerprint")}
 					onClose={handleClose}
 				/>
 
