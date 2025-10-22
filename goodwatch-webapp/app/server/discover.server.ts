@@ -71,7 +71,11 @@ export interface SimpleDiscoverParams {
 	maxYear?: string
 	withStreamingProviders?: string
 	withGenres?: string
+	withCast?: string
+	withCrew?: string
 	fingerprintConditions?: string
+	sortBy?: DiscoverSortBy
+	sortDirection?: "asc" | "desc"
 	page: number
 }
 
@@ -91,7 +95,11 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 		maxYear: params.maxYear,
 		withStreamingProviders: params.withStreamingProviders,
 		withGenres: params.withGenres,
+		withCast: params.withCast,
+		withCrew: params.withCrew,
 		fingerprintConditions: params.fingerprintConditions,
+		sortBy: params.sortBy,
+		sortDirection: params.sortDirection,
 		page: params.page,
 	}
 	
@@ -110,7 +118,11 @@ async function _getSimpleDiscoverResults({
 	maxYear,
 	withStreamingProviders,
 	withGenres,
+	withCast,
+	withCrew,
 	fingerprintConditions,
+	sortBy = "popularity",
+	sortDirection = "desc",
 	page,
 }: SimpleDiscoverParams): Promise<DiscoverResult[]> {
 	const offset = (page - 1) * DISCOVER_PAGE_SIZE
@@ -135,7 +147,11 @@ async function _getSimpleDiscoverResults({
 			country,
 			withStreamingProviders,
 			withGenres,
+			withCast,
+			withCrew,
 			fingerprintConditions,
+			sortBy,
+			sortDirection,
 			limit: includeShows ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
 			offset: includeShows ? Math.floor(offset / 2) : offset,
 		})
@@ -156,15 +172,33 @@ async function _getSimpleDiscoverResults({
 			country,
 			withStreamingProviders,
 			withGenres,
+			withCast,
+			withCrew,
 			fingerprintConditions,
+			sortBy,
+			sortDirection,
 			limit: includeMovies ? Math.ceil(DISCOVER_PAGE_SIZE / 2) : DISCOVER_PAGE_SIZE,
 			offset: includeMovies ? Math.floor(offset / 2) : offset,
 		})
 		results.push(...showResults)
 	}
 	
-	// Sort by popularity and return requested page
-	const sortedResults = results.sort((a, b) => b.popularity - a.popularity)
+	// Sort results based on sortBy parameter
+	const sortedResults = results.sort((a, b) => {
+		let comparison = 0
+		if (sortBy === "aggregated_score") {
+			const aScore = a.goodwatch_overall_score_normalized_percent ?? 0
+			const bScore = b.goodwatch_overall_score_normalized_percent ?? 0
+			comparison = bScore - aScore
+		} else if (sortBy === "release_date") {
+			const aDate = a.release_date ? new Date(a.release_date).getTime() : 0
+			const bDate = b.release_date ? new Date(b.release_date).getTime() : 0
+			comparison = bDate - aDate
+		} else {
+			comparison = (b.popularity ?? 0) - (a.popularity ?? 0)
+		}
+		return sortDirection === "asc" ? -comparison : comparison
+	})
 	return sortedResults.slice(0, DISCOVER_PAGE_SIZE)
 }
 
@@ -180,7 +214,11 @@ interface MediaQueryParams {
 	country?: string
 	withStreamingProviders?: string
 	withGenres?: string
+	withCast?: string
+	withCrew?: string
 	fingerprintConditions?: string
+	sortBy: DiscoverSortBy
+	sortDirection: "asc" | "desc"
 	limit: number
 	offset: number
 }
@@ -197,7 +235,11 @@ async function getMediaResults({
 	country,
 	withStreamingProviders,
 	withGenres,
+	withCast,
+	withCrew,
 	fingerprintConditions,
+	sortBy,
+	sortDirection,
 	limit,
 	offset,
 }: MediaQueryParams): Promise<DiscoverResult[]> {
@@ -282,6 +324,42 @@ async function getMediaResults({
 		}
 	}
 	
+	// Add cast filter
+	if (withCast) {
+		const castIds = withCast
+			.split(",")
+			.map((id) => Number(id))
+			.filter((id) => !Number.isNaN(id))
+		if (castIds.length > 0) {
+			const castPlaceholders = castIds.map(() => "?").join(", ")
+			conditions.push(`m.tmdb_id IN (
+				SELECT DISTINCT media_tmdb_id 
+				FROM person_appeared_in 
+				WHERE media_type = ? 
+				AND person_tmdb_id IN (${castPlaceholders})
+			)`)
+			params.push(mediaType, ...castIds)
+		}
+	}
+	
+	// Add crew filter
+	if (withCrew) {
+		const crewIds = withCrew
+			.split(",")
+			.map((id) => Number(id))
+			.filter((id) => !Number.isNaN(id))
+		if (crewIds.length > 0) {
+			const crewPlaceholders = crewIds.map(() => "?").join(", ")
+			conditions.push(`m.tmdb_id IN (
+				SELECT DISTINCT media_tmdb_id 
+				FROM person_worked_on 
+				WHERE media_type = ? 
+				AND person_tmdb_id IN (${crewPlaceholders})
+			)`)
+			params.push(mediaType, ...crewIds)
+		}
+	}
+	
 	// Build user join and condition
 	let userJoin = ""
 	if (userId && watchedType) {
@@ -302,11 +380,32 @@ async function getMediaResults({
 			`
 			conditions.push("uwh.user_id IS NULL")
 			params.push(userId, mediaType)
+		} else if (watchedType === "plan-to-watch") {
+			userJoin = `
+				INNER JOIN user_wishlist uwl ON
+					uwl.user_id = ? AND
+					uwl.tmdb_id = m.tmdb_id AND
+					uwl.media_type = ?
+			`
+			params.push(userId, mediaType)
 		}
 	}
 	
 	// Build the query
 	const releaseField = mediaType === "movie" ? "m.release_date" : "m.first_air_date"
+	
+	// Determine ORDER BY clause
+	let orderByClause = "m.popularity DESC"
+	if (sortBy === "aggregated_score") {
+		orderByClause = `m.goodwatch_overall_score_normalized_percent ${sortDirection === "asc" ? "ASC" : "DESC"}`
+		// Add minimum vote count requirement for score sorting
+		conditions.push("m.goodwatch_overall_score_normalized_percent IS NOT NULL")
+	} else if (sortBy === "release_date") {
+		orderByClause = `${releaseField} ${sortDirection === "asc" ? "ASC" : "DESC"}`
+		conditions.push(`${releaseField} IS NOT NULL`)
+	} else {
+		orderByClause = `m.popularity ${sortDirection === "asc" ? "ASC" : "DESC"}`
+	}
 	
 	const sql = `
 		SELECT DISTINCT
@@ -346,7 +445,7 @@ async function getMediaResults({
 		FROM ${tableName} m
 		${userJoin}
 		WHERE ${conditions.join(" AND ")}
-		ORDER BY m.popularity DESC
+		ORDER BY ${orderByClause}
 		LIMIT ? OFFSET ?
 	`
 	

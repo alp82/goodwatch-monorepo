@@ -21,6 +21,7 @@ export interface SimilarTV extends SimilarMedia {}
 
 export type SimilarResult = SimilarMovie | SimilarTV;
 
+
 export type SimilarMediaResult = {
 	movies: SimilarMovie[];
 	shows: SimilarTV[];
@@ -48,7 +49,7 @@ async function _getSimilarMedia({
 	const withSimilar = JSON.parse(withSimilarJson);
 
 	const movies = await _getSearchResults({
-		tableName: "movies",
+		tableName: "movie",
 		searchTerm,
 		withSimilar,
 	});
@@ -65,7 +66,7 @@ async function _getSimilarMedia({
 }
 
 interface CombinedResultProps {
-	tableName: "movies" | "show";
+	tableName: "movie" | "show";
 	searchTerm: string;
 	withSimilar: WithSimilar[];
 }
@@ -75,22 +76,20 @@ const _getSearchResults = async <T extends SimilarResult>({
 	searchTerm,
 	withSimilar,
 }: CombinedResultProps) => {
-	const mediaType = tableName === "movies" ? "movie" : "show";
+	const mediaType = tableName === "movie" ? "movie" : "show";
 
 	const exactMatchCondition = searchTerm
 		? `(
-			m.title ILIKE $2
-			OR m.original_title ILIKE $2
-			OR m.alternative_titles_text ILIKE $2
+			m.title ILIKE ?
+			OR m.original_title ILIKE ?
 		)`
 		: "";
 	const words = searchTerm.split(" ").filter(Boolean);
 	const wordConditions = words
 		.map(
-			(_, index) => `(
-				m.title ILIKE $${index + 3}
-				OR m.original_title ILIKE $${index + 3}
-				OR m.alternative_titles_text ILIKE $${index + 3}
+			() => `(
+				m.title ILIKE ?
+				OR m.original_title ILIKE ?
 			)`,
 		)
 		.join(" AND ");
@@ -111,86 +110,40 @@ const _getSearchResults = async <T extends SimilarResult>({
 		OR (${wordConditions || "TRUE"})
 	`;
 
+	// CrateDB doesn't support UNION with CTEs in subqueries, so we'll use a simpler approach
 	const searchQuery = `
-		(
-			SELECT
-				m.tmdb_id,
-				'${mediaType}' as media_type,
-				m.title,
-				m.original_title,
-				m.alternative_titles_text,
-				m.release_year,
-				m.popularity,
-				m.poster_path,
-				m.backdrop_path,
-				${getRatingKeys()
-					.map((key) => `m.${key}`)
-					.join(", ")},
-				1000 AS relevance
-			FROM
-				${tableName} as m
-			WHERE
-				${selectedSimilarCondition || "FALSE"}
-		)
-		UNION
-		(
-			WITH ranked_media AS (
-				SELECT
-					m.tmdb_id,
-					'${mediaType}' as media_type,
-					m.title,
-					m.original_title,
-					m.alternative_titles_text,
-					m.release_year,
-					m.popularity,
-					m.poster_path,
-					m.backdrop_path,
-					${getRatingKeys()
-						.map((key) => `m.${key}`)
-						.join(", ")},
-					${
-						searchTerm
-							? `
-								ts_rank_cd(
-									setweight(to_tsvector(m.title), 'A') ||
-									setweight(to_tsvector(m.original_title), 'B') ||
-									setweight(to_tsvector(m.alternative_titles_text), 'C'),
-									phraseto_tsquery($1)
-								) * 10
-								+
-								ts_rank_cd(
-									setweight(to_tsvector(m.title), 'A') ||
-									setweight(to_tsvector(m.original_title), 'B') ||
-									setweight(to_tsvector(m.alternative_titles_text), 'C'),
-									plainto_tsquery($1)
-								)
-							`
-							: "m.popularity"
-					}
-					AS relevance
-				FROM
-					${tableName} as m
-				JOIN
-					vectors_media as vm ON vm.tmdb_id = m.tmdb_id AND vm.media_type = '${mediaType}' 
-				WHERE
-					(${searchWhereConditions})
-					${selectedSimilarCondition ? `AND m.tmdb_id NOT IN (${selectedSimilarForMediaType.map((similar) => similar.tmdbId).join(", ")})` : ""}
-			)
-			SELECT *
-			FROM ranked_media
-			ORDER BY
-				relevance DESC NULLS LAST,
-				goodwatch_overall_score_voting_count DESC
-			LIMIT ${LIMIT_PER_SEARCH - selectedSimilarForMediaType.length}
-		)
-		LIMIT ${LIMIT_PER_SEARCH};
+		SELECT
+			m.tmdb_id,
+			'${mediaType}' as media_type,
+			m.title,
+			m.original_title,
+			m.release_year,
+			m.popularity,
+			m.poster_path,
+			m.backdrop_path,
+			${getRatingKeys()
+				.map((key) => `m.${key}`)
+				.join(", ")},
+			CASE
+				WHEN ${selectedSimilarCondition || "FALSE"} THEN 1000
+				ELSE m.popularity
+			END AS relevance
+		FROM
+			${tableName} as m
+		WHERE
+			${selectedSimilarCondition ? `(${selectedSimilarCondition})` : "TRUE"}
+			${searchTerm ? `OR (${searchWhereConditions})` : ""}
+		ORDER BY
+			relevance DESC,
+			m.goodwatch_overall_score_voting_count DESC
+		LIMIT ${LIMIT_PER_SEARCH}
   `;
 
 	// search query - only if search term was provided
 
 	const searchParams = [
-		...(searchTerm ? [searchTerm, `%${searchTerm}%`] : []),
-		...words.map((word) => `%${word}%`),
+		...(searchTerm ? [`%${searchTerm}%`, `%${searchTerm}%`] : []),
+		...words.flatMap((word) => [`%${word}%`, `%${word}%`]),
 	];
 	const searchRows = await query<T>(searchQuery, searchParams);
 

@@ -50,7 +50,7 @@ async function _getOnboardingMedia({
 	searchTerm,
 }: OnboardingMediaParams): Promise<OnboardingMediaResult> {
 	const [movieSearchResult, movieGroupResult] = await _getCombinedResults({
-		tableName: "movies",
+		tableName: "movie",
 		searchTerm,
 		userId,
 	})
@@ -73,7 +73,7 @@ async function _getOnboardingMedia({
 }
 
 interface CombinedResultProps {
-	tableName: "movies" | "show"
+	tableName: "movie" | "show"
 	searchTerm: string
 	userId: string
 }
@@ -83,7 +83,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 	searchTerm,
 	userId,
 }: CombinedResultProps) => {
-	const mediaType = tableName === "movies" ? "movie" : "show"
+	const mediaType = tableName === "movie" ? "movie" : "show"
 
 	const commonQuery = `
 		WITH ranked_movies AS (

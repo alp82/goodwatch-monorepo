@@ -2,9 +2,12 @@
 
 ```
 
+setup new VPS
+
 discover fixes
-    full text query
-        for cast/crew: "brad pitt"
+    similarity / fingerprint
+    full text query (for cast/crew: "brad pitt")
+    "try" presets
 
 fix onboarding
 

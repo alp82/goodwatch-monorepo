@@ -25,11 +25,38 @@ npm install
 npm run dev
 ```
 
-## Database Cluster
+## Adding a new Server
+
+### ssh keys
+
+### Docker Compose
+
+### Git Repository
+
+### Grafana Exporter
+
+### Windmill Worker
+
+
+## Troubleshooting Servers
+
+### Not enough disc space
+```
+docker image prune -a
+docker builder prune
+```
+
+### Relocate docker root directory
+https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-docker-root-directory
+
+
+## Appendix
+
+### Database Cluster
 
 https://github.com/vitabaks/postgresql_cluster
 
-### pgvector extension
+#### pgvector extension
 
 https://github.com/pgvector/pgvector
 
@@ -70,7 +97,7 @@ cargo pgrx install --release
 CREATE EXTENSION IF NOT EXISTS vectorscale CASCADE;
 ```
 
-## Cache Cluster
+### Cache Cluster
 
 https://github.com/bitnami/containers/blob/main/bitnami/redis/README.md
 
@@ -78,7 +105,7 @@ https://github.com/bitnami/containers/blob/main/bitnami/redis/README.md
 redis-cli --cluster create 78.46.209.172:6379 168.119.242.21:6379 91.107.208.205:6379 --cluster-replicas 0 -a <REDIS_PASSWORD>
 ```
 
-## Data Pipeline DB Cluster
+### Data Pipeline DB Cluster
 
 https://medium.com/workleap/the-only-local-mongodb-replica-set-with-docker-compose-guide-youll-ever-need-2f0b74dd8384
 
@@ -95,7 +122,7 @@ ansible-galaxy install csuka.mongodb_ubuntu
 ansible-playbook -i inventory.ini playbook.yml
 ```
 
-## Windmill Server & Workers
+### Windmill Server & Workers
 
 TODO
 
@@ -108,14 +135,3 @@ Every time you want to deploy run:
 ```shell
 vercel deploy --prod
 ```
-
-## Troubleshooting Server
-
-### Not enough disc space
-```
-docker image prune -a
-docker builder prune
-```
-
-### Relocate docker root directory
-https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-docker-root-directory

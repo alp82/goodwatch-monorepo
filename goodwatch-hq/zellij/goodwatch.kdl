@@ -155,4 +155,40 @@ layout {
             }
         }
     }
+    tab name="worker1" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@10.0.0.30" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote; git pull; df -h; exec $SHELL"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@10.0.0.30" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && htop; exec $SHELL"
+            }
+        }
+    }
+    tab name="worker2" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@10.0.0.31" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote; git pull; df -h; exec $SHELL"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@10.0.0.31" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && htop; exec $SHELL"
+            }
+        }
+    }
+    tab name="worker3" {
+        pane split_direction="vertical" size="60%" {
+            pane size="60%" {
+                command "ssh"
+                args "-t" "root@10.0.0.32" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote; git pull; df -h; exec $SHELL"
+            }
+            pane {
+                command "ssh"
+                args "-t" "root@10.0.0.32" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-remote && htop; exec $SHELL"
+            }
+        }
+    }
 }
