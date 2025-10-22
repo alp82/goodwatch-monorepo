@@ -1,5 +1,5 @@
 import { cached } from "~/utils/cache"
-import { makePointId, retrieve, search } from "~/utils/qdrant"
+import { makePointId, recommend } from "~/utils/qdrant"
 import { type AllRatings } from "~/utils/ratings"
 
 interface QdrantMediaPayload {
@@ -81,12 +81,14 @@ export interface RelatedShow extends AllRatings {
 export interface RelatedMovieParams {
 	tmdb_id: number
 	fingerprint_key?: string
+	source_fingerprint_score?: number
 	source_media_type: "movie" | "show"
 }
 
 export interface RelatedShowParams {
 	tmdb_id: number
 	fingerprint_key?: string
+	source_fingerprint_score?: number
 	source_media_type: "movie" | "show"
 }
 
@@ -95,7 +97,7 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 		name: "related-movie",
 		target: _getRelatedMovies as any,
 		params,
-		// ttlMinutes: 60 * 24,
+		//ttlMinutes: 60 * 24,
 		ttlMinutes: 0,
 	}) as unknown as RelatedMovie[]
 }
@@ -146,11 +148,13 @@ const extractRatingsFromPayload = (payload: QdrantMediaPayload): Partial<AllRati
 async function getRelatedTitles({
 	tmdb_id,
 	fingerprint_key,
+	source_fingerprint_score,
 	source_media_type,
 	target_media_type,
 }: {
 	tmdb_id: number
 	fingerprint_key?: string
+	source_fingerprint_score?: number
 	source_media_type: "movie" | "show"
 	target_media_type: "movie" | "show"
 }): Promise<(RelatedMovie | RelatedShow)[]> {
@@ -158,31 +162,7 @@ async function getRelatedTitles({
 	const sourcePointId = makePointId(source_media_type, tmdb_id)
 	const withKey = Boolean(fingerprint_key && fingerprint_key.length > 0)
 
-	const [sourcePoint] = await retrieve<QdrantMediaPayload>({
-		collectionName,
-		ids: [sourcePointId],
-		withVector: ["fingerprint_v1"],
-	})
-
-	if (!sourcePoint?.vector?.fingerprint_v1) {
-		return []
-	}
-
-	const sourceFingerprint = Array.isArray(sourcePoint.vector)
-		? sourcePoint.vector
-		: sourcePoint.vector.fingerprint_v1
-
-	const sourceFingerprintScore = fingerprint_key
-		? sourcePoint.payload?.fingerprint_scores_v1?.[fingerprint_key]
-		: null
-
-	const mustNotConditions: any[] = []
-	if (source_media_type === target_media_type) {
-		mustNotConditions.push({
-			key: "tmdb_id",
-			match: { value: tmdb_id },
-		})
-	}
+	const sourceFingerprintScore = source_fingerprint_score ?? null
 
 	const filterConditions: any = {
 		must: [
@@ -196,80 +176,129 @@ async function getRelatedTitles({
 				range: { gte: 60 },
 			},
 		],
+		must_not: [
+			{
+				key: "poster_path",
+				match: { value: null },
+			},
+			{
+				key: "backdrop_path",
+				match: { value: null },
+			},
+		],
 	}
 
-	if (withKey && sourceFingerprintScore) {
+	if (source_media_type === target_media_type) {
+		filterConditions.must_not.push({
+			key: "tmdb_id",
+			match: { value: tmdb_id },
+		})
+	}
+
+
+	if (withKey && sourceFingerprintScore !== null) {
 		filterConditions.must.push({
 			key: `fingerprint_scores_v1.${fingerprint_key}`,
 			range: {
-				gte: sourceFingerprintScore - 2,
-				lte: sourceFingerprintScore + 2,
+				gte: sourceFingerprintScore - 1,
+				lte: sourceFingerprintScore + 1,
 			},
 		})
 	}
 
-	if (mustNotConditions.length > 0) {
-		filterConditions.must_not = mustNotConditions
+	const payloadFields = [
+		"tmdb_id",
+		"title",
+		"release_year",
+		"poster_path",
+		"goodwatch_overall_score_voting_count",
+		"goodwatch_overall_score_normalized_percent",
+		"tmdb_user_score_normalized_percent",
+		"tmdb_user_score_rating_count",
+		"imdb_user_score_normalized_percent",
+		"imdb_user_score_rating_count",
+		"metacritic_user_score_normalized_percent",
+		"metacritic_user_score_rating_count",
+		"metacritic_meta_score_normalized_percent",
+		"metacritic_meta_score_review_count",
+		"rotten_tomatoes_audience_score_normalized_percent",
+		"rotten_tomatoes_audience_score_rating_count",
+		"rotten_tomatoes_tomato_score_normalized_percent",
+		"rotten_tomatoes_tomato_score_review_count",
+		"goodwatch_user_score_normalized_percent",
+		"goodwatch_user_score_rating_count",
+		"goodwatch_official_score_normalized_percent",
+		"goodwatch_official_score_review_count",
+	]
+
+	if (withKey && fingerprint_key) {
+		payloadFields.push(`fingerprint_scores_v1.${fingerprint_key}`)
 	}
 
-	const results = await search<QdrantMediaPayload>({
+	const results = await recommend<QdrantMediaPayload>({
 		collectionName,
-		vector: {
-			name: "fingerprint_v1",
-			vector: sourceFingerprint,
-		},
+		positive: [sourcePointId],
+		using: "fingerprint_v1",
 		filter: filterConditions,
 		limit: 100,
-		withPayload: true,
+		withPayload: { include: payloadFields },
+		hnswEf: 64,
+		exact: false,
 	})
 
-	const mappedResults = results.map((result: { payload: QdrantMediaPayload; score: number }) => {
-		const payload = result.payload
-		const annScore = result.score
-		const targetFingerprintScore = payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0
-
-		let finalScore = annScore
-		
-		if (withKey && sourceFingerprintScore !== null && sourceFingerprintScore !== undefined) {
-			const distance = Math.abs(targetFingerprintScore - sourceFingerprintScore)
-			const maxDistance = 10
-			const normalizedDistance = Math.min(distance / maxDistance, 1)
-			const fingerprintSimilarity = 1 - normalizedDistance
+	
+	const mappedResults = results
+		.filter(result => result.payload.poster_path)
+		.map((result) => {
+			const payload = result.payload
+			const annScore = result.score
+			const targetFingerprintScore = payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0
 			
-			finalScore = (0.3 * annScore) + (0.7 * fingerprintSimilarity)
-		}
+			if(!result.payload.poster_path) {
+				console.log(result.payload.tmdb_id, result.payload.title, result.payload.poster_path)
+			}
+			let finalScore = annScore
+			
+			if (withKey && sourceFingerprintScore !== null) {
+				const distance = Math.abs(targetFingerprintScore - sourceFingerprintScore)
+				const maxDistance = 10
+				const normalizedDistance = Math.min(distance / maxDistance, 1)
+				const fingerprintSimilarity = 1 - normalizedDistance
+				
+				finalScore = (0.2 * annScore) + (0.8 * fingerprintSimilarity)
+			}
 
-		return {
-			tmdb_id: payload.tmdb_id,
-			title: Array.isArray(payload.title) ? payload.title[0] : payload.title ?? "",
-			release_year: String(payload.release_year ?? ""),
-			poster_path: Array.isArray(payload.poster_path)
-				? payload.poster_path[0]
-				: payload.poster_path ?? "",
-			goodwatch_overall_score_voting_count:
-				payload.goodwatch_overall_score_voting_count ?? 0,
-			goodwatch_overall_score_normalized_percent:
-				payload.goodwatch_overall_score_normalized_percent ?? 0,
-			fingerprint_score: targetFingerprintScore,
-			ann_score: annScore,
-			score: finalScore,
-			...extractRatingsFromPayload(payload),
-		}
-	})
+			return {
+				tmdb_id: payload.tmdb_id,
+				title: payload.title ?? "",
+				release_year: String(payload.release_year ?? ""),
+				poster_path: payload.poster_path ?? "",
+				goodwatch_overall_score_voting_count:
+					payload.goodwatch_overall_score_voting_count ?? 0,
+				goodwatch_overall_score_normalized_percent:
+					payload.goodwatch_overall_score_normalized_percent ?? 0,
+				fingerprint_score: targetFingerprintScore,
+				ann_score: annScore,
+				score: finalScore,
+				...extractRatingsFromPayload(payload),
+			}
+		})
 
 	return mappedResults
 		.sort((a, b) => b.score - a.score)
-		.slice(0, 50)
+		.slice(0, 32)
 }
 
 async function _getRelatedMovies({
 	tmdb_id,
 	fingerprint_key,
+	source_fingerprint_score,
 	source_media_type,
 }: RelatedMovieParams): Promise<RelatedMovie[]> {
 	return getRelatedTitles({
 		tmdb_id,
 		fingerprint_key,
+		source_fingerprint_score,
 		source_media_type,
 		target_media_type: "movie",
 	}) as Promise<RelatedMovie[]>
@@ -278,11 +307,13 @@ async function _getRelatedMovies({
 async function _getRelatedShows({
 	tmdb_id,
 	fingerprint_key,
+	source_fingerprint_score,
 	source_media_type,
 }: RelatedShowParams): Promise<RelatedShow[]> {
 	return getRelatedTitles({
 		tmdb_id,
 		fingerprint_key,
+		source_fingerprint_score,
 		source_media_type,
 		target_media_type: "show",
 	}) as Promise<RelatedShow[]>

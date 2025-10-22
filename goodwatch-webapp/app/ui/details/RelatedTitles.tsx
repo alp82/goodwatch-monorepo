@@ -15,7 +15,7 @@ export interface RelatedTitlesProps {
 // Empty state with consistent height
 function EmptyRelatedState() {
 	return (
-		<div className="h-[135px] flex items-center justify-center">
+		<div className="h-[170px] flex items-center justify-center">
 			{/* Empty state - could add message if needed */}
 		</div>
 	)
@@ -48,17 +48,21 @@ function RelatedSwiper({
 }
 
 export default function RelatedTitles({ media, fingerprintKey }: RelatedTitlesProps) {
-	const { mediaType, details } = media
+	const { mediaType, details, fingerprint } = media
     
+	const sourceFingerprintScore = fingerprintKey ? fingerprint.scores[fingerprintKey as keyof typeof fingerprint.scores] : undefined
+
     const relatedMovies = useRelatedMovies({
 		tmdbId: details.tmdb_id,
 		fingerprintKey,
+		sourceFingerprintScore,
 		sourceMediaType: mediaType,
 	})
 
 	const relatedShows = useRelatedShows({
 		tmdbId: details.tmdb_id,
 		fingerprintKey,
+		sourceFingerprintScore,
 		sourceMediaType: mediaType,
 	})
 
@@ -86,7 +90,7 @@ export default function RelatedTitles({ media, fingerprintKey }: RelatedTitlesPr
         const sortedByVotesDesc = [...items].sort(
             (a, b) => (b.goodwatch_overall_score_voting_count ?? 0) - (a.goodwatch_overall_score_voting_count ?? 0),
         )
-        const top = sortedByVotesDesc.slice(0, 4)
+        const top = sortedByVotesDesc.slice(0, 2)
         const topIds = new Set(top.map((x) => x.tmdb_id))
         const rest = items.filter((x) => !topIds.has(x.tmdb_id))
         return [...top, ...rest]

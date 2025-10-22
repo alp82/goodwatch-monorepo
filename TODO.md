@@ -2,11 +2,16 @@
 
 ```
 
-fix onboarding
-
 discover fixes
     full text query
         for cast/crew: "brad pitt"
+
+fix onboarding
+
+ADD BACK TTL
+
+UPDATE POSTGRES USER DATA
+    https://windmill.goodwatch.app/run/019a01d7-c4ff-e58f-a53c-cf427d170cb9?workspace=goodwatch
     
 ---   
 

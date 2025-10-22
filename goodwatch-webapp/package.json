@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@headlessui/react": "^2.2.0",
 		"@heroicons/react": "^2.1.5",
+		"@qdrant/js-client-grpc": "^1.15.1",
 		"@qdrant/js-client-rest": "^1.12.0",
 		"@remix-run/node": "^2.9.2",
 		"@remix-run/react": "^2.9.2",
@@ -25,6 +26,7 @@
 		"@tanstack/react-query-devtools": "^5.59.20",
 		"@tanstack/react-virtual": "^3.10.9",
 		"@types/accept-language-parser": "^1.5.6",
+		"@zilliz/milvus2-sdk-node": "^2.6.1",
 		"accept-language-parser": "^1.5.0",
 		"axios": "^1.8.4",
 		"framer-motion": "^11.11.11",

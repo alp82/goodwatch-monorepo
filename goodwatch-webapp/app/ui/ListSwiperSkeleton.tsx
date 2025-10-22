@@ -31,18 +31,9 @@ export default function ListSwiperSkeleton({ count = 8 }: ListSwiperSkeletonProp
       {items.map((_, idx) => (
         <SwiperSlide key={idx}>
           <div
-            className="@container flex flex-col w-full bg-gray-900 border-4 rounded-lg border-gray-800 pointer-events-none"
+            className="bg-gray-900 border-4 border-gray-800 rounded-lg pointer-events-none"
           >
-            <div className="relative">
-              {/* Poster skeleton with 2:3 aspect ratio */}
-              <div className="w-full rounded-md bg-gray-800 animate-pulse">
-                <div className="relative w-full pt-[150%] rounded-md" />
-              </div>
-              {/* Optional title strip placeholder visible on larger tiles */}
-              <div className="hidden @6xs:flex items-end absolute bottom-0 w-full min-h-40 px-2 py-2 bg-gradient-to-t from-black/70 to-transparent overflow-hidden">
-                <div className="h-3 w-2/3 rounded bg-white/20" />
-              </div>
-            </div>
+            <div className="aspect-[2/3] bg-gray-800 animate-pulse" />
           </div>
         </SwiperSlide>
       ))}

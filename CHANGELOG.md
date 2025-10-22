@@ -16,6 +16,7 @@ Minor Release: **New Database and DNA Overhaul**
 * Related movies and shows are now based on Fingerprint highlights
 
 ### Fixed
+* Improved Data Pipeline by increasing Mongo Cluster stability
 
 ## [0.6.6] 2025-05-13
 

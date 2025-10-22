@@ -288,7 +288,7 @@ export default function SectionStreaming({
 									</div>
 								</>
 							)}
-							<Checkbox
+							{/* <Checkbox
 								option={{
 									name: "includeBuyRent",
 									label: "Include titles to buy or rent",
@@ -298,7 +298,7 @@ export default function SectionStreaming({
 									withStreamingTypes.includes("rent")
 								}
 								onChange={handleIncludeBuyRentChange}
-							/>
+							/> */}
 						</div>
 					) : null}
 					<div className="flex flex-wrap items-center gap-2">
