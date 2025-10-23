@@ -51,7 +51,14 @@ export const useAPIAction = <Params extends {}, Result extends {}>({
 		})
 		await queryClient.invalidateQueries({
 			queryKey: queryKeyOnboardingMedia,
-			refetchType: 'active',
+		})
+		await queryClient.refetchQueries({
+			queryKey: queryKeyUserData,
+			type: "active",
+		})
+		await queryClient.refetchQueries({
+			queryKey: queryKeyOnboardingMedia,
+			type: "active",
 		})
 	}
 

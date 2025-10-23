@@ -2,8 +2,6 @@
 
 ```
 
-fix onboarding
-
 streaming_provider_ranking fix
 
 ADD BACK TTL

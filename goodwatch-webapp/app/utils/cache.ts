@@ -174,6 +174,9 @@ export const cached = async <
 	name,
 	ttlMinutes,
 }: CachedParams<Params, Return>): Promise<Return> => {
+	if (ttlMinutes <= 0) {
+		return await target(params)
+	}
 	const cacheName = `cached-${name}`
 	const cacheKey = generateCacheKey(params)
 

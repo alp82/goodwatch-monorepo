@@ -38,6 +38,9 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 	})
 	const movies = onboardingMedia.data?.movies || []
 	const shows = onboardingMedia.data?.shows || []
+	const hasOnboardingData = Boolean(onboardingMedia.data)
+	const isInitialLoading = onboardingMedia.isLoading && !hasOnboardingData
+	const isRefetching = onboardingMedia.isFetching && hasOnboardingData
 
 	const { data: userData } = useUserData()
 
@@ -245,23 +248,30 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 					ref={autoFocusRef}
 				/>
 			</div>
-			{onboardingMedia.isFetching ? (
+			{isInitialLoading ? (
 				<Spinner size="large" />
 			) : (
-				<div className="w-full flex flex-col gap-4">
-					{previousMediaToDisplay ? renderMedia([previousMediaToDisplay]) : null}
-					<div className="w-full flex flex-col 2xl:flex-row gap-4">
-						<div className="w-full">
-							<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
-								Movies
-							</div>
-							{renderMedia(movies)}
+				<div className="relative w-full">
+					{isRefetching ? (
+						<div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/60">
+							<Spinner size="large" />
 						</div>
-						<div className="w-full">
-							<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
-								TV Shows
+					) : null}
+					<div className="w-full flex flex-col gap-4">
+						{previousMediaToDisplay ? renderMedia([previousMediaToDisplay]) : null}
+						<div className="w-full flex flex-col 2xl:flex-row gap-4">
+							<div className="w-full">
+								<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
+									Movies
+								</div>
+								{renderMedia(movies)}
 							</div>
-							{renderMedia(shows)}
+							<div className="w-full">
+								<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
+									TV Shows
+								</div>
+								{renderMedia(shows)}
+							</div>
 						</div>
 					</div>
 				</div>
