@@ -123,7 +123,7 @@ export default function AddFilterBar({
 	return (
 		<div className="m-auto max-w-7xl w-full px-4 flex flex-col flex-wrap gap-1 text-sm border-gray-900 rounded-lg">
 			<Appear isVisible={Boolean(isVisible) && unusedFilters.length > 0}>
-				<Appear
+				{/* <Appear
 					isVisible={
 						unusedFilters.length === Object.keys(discoverFilters).length
 					}
@@ -141,7 +141,7 @@ export default function AddFilterBar({
 							</Link>
 						))}
 					</div>
-				</Appear>
+				</Appear> */}
 				<div className="flex items-center flex-wrap gap-2 text-sm sm:text-base md:text-lg">
 					{/*<FilterBarSection isCompact={true} color="stone" isActive={false}>*/}
 					{/*	<PlusIcon className="h-8" title="Add filter" />*/}

@@ -1,6 +1,6 @@
 import { queryKeyOnboardingMedia } from "~/routes/api.onboarding.media"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
-import { cached } from "~/utils/cache"
+import { cached, resetCache } from "~/utils/cache"
 import { query } from "~/utils/crate"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
 
@@ -21,13 +21,13 @@ export interface OnboardingMedia extends AllRatings {
 
 export interface OnboardingMovie extends OnboardingMedia {}
 
-export interface OnboardingTV extends OnboardingMedia {}
+export interface OnboardingShow extends OnboardingMedia {}
 
-export type OnboardingResult = OnboardingMovie | OnboardingTV
+export type OnboardingResult = OnboardingMovie | OnboardingShow
 
 export type OnboardingMediaResult = {
 	movies: OnboardingMovie[]
-	shows: OnboardingTV[]
+	shows: OnboardingShow[]
 }
 
 export interface OnboardingMediaParams {
@@ -103,10 +103,10 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 				%SELECTED_FIELDS%
 			FROM
 				${tableName} as m
-			LEFT JOIN user_scores
-				ON m.tmdb_id = user_scores.tmdb_id
-				AND user_scores.media_type = '${mediaType}'
-				AND user_scores.user_id = '${userId}'
+			LEFT JOIN user_score
+				ON m.tmdb_id = user_score.tmdb_id
+				AND user_score.media_type = '${mediaType}'
+				AND user_score.user_id = '${userId}'
 			LEFT JOIN user_skipped
 				ON m.tmdb_id = user_skipped.tmdb_id
 				AND user_skipped.media_type = '${mediaType}'
@@ -117,7 +117,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 				AND user_wishlist.user_id = '${userId}'
 			WHERE
 				(%WHERE_CONDITIONS%)
-				AND user_scores.tmdb_id IS NULL
+				AND user_score.tmdb_id IS NULL
 				AND user_skipped.tmdb_id IS NULL
 				AND user_wishlist.tmdb_id IS NULL
 		)
@@ -132,46 +132,15 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 	// search query - only if search term was provided
 	let searchRows: T[] = []
 	if (searchTerm) {
-		const exactMatchCondition = `
-			m.title ILIKE $1
-			OR m.original_title ILIKE $1
-			OR m.alternative_titles_text ILIKE $1
-		`
-
-		const words = searchTerm.split(" ").filter(Boolean)
-		const wordConditions = words
-			.map(
-				(_, index) => `
-					m.title ILIKE $${index + 2}
-					OR m.original_title ILIKE $${index + 2}
-					OR m.alternative_titles_text ILIKE $${index + 2}
-				`,
-			)
-			.join(" OR ")
-
 		const searchWhereConditions = `
-			(${exactMatchCondition})
-			OR (${wordConditions})
+			MATCH((m.title 3.0, m.original_title 2.0), ?) using phrase_prefix
 		`
 		const searchQuery = commonQuery
-			.replace(
-				"%SELECTED_FIELDS%",
-				`
-				,ts_rank_cd(
-					setweight(to_tsvector(m.title), 'A') ||
-					setweight(to_tsvector(m.original_title), 'B') ||
-					setweight(to_tsvector(m.alternative_titles_text), 'C'),
-					plainto_tsquery($1)
-				) AS relevance
-			`,
-			)
+			.replace("%SELECTED_FIELDS%", ", m._score AS relevance")
 			.replace("%WHERE_CONDITIONS%", searchWhereConditions)
-			.replace("%ORDER_BY%", "relevance DESC NULLS LAST,")
+			.replace("%ORDER_BY%", "relevance DESC,")
 			.replace("%LIMIT%", LIMIT_PER_SEARCH.toString())
-		const searchParams = [
-			`%${searchTerm}%`,
-			...words.map((word) => `%${word}%`),
-		]
+		const searchParams = [searchTerm]
 		searchRows = await query<T>(searchQuery, searchParams)
 	}
 
@@ -205,6 +174,23 @@ const _getUniqueByDecade = <T extends OnboardingResult>(result: T[]): T[] => {
 	}
 
 	return Object.values(uniqueMedia)
+}
+
+// cache reset
+
+type ResetOnboardingMediaCacheParams = {
+	userId: string
+	searchTerm?: string
+}
+
+export const resetOnboardingMediaCache = async ({
+	userId,
+	searchTerm = "",
+}: ResetOnboardingMediaCacheParams) => {
+	return await resetCache({
+		name: "onboarding-media",
+		params: { userId, searchTerm },
+	})
 }
 
 // loader prefetch

@@ -123,6 +123,64 @@ async function _getUserData({
 		...skippedMap.keys(),
 	])
 
+	// Group media by type for efficient bulk queries
+	const movieIds: number[] = []
+	const showIds: number[] = []
+	
+	for (const key of allMediaKeys) {
+		const [media_type, tmdb_id_str] = key.split('-')
+		const tmdb_id = parseInt(tmdb_id_str)
+		
+		if (media_type === 'movie') {
+			movieIds.push(tmdb_id)
+		} else if (media_type === 'show') {
+			showIds.push(tmdb_id)
+		}
+	}
+
+	// Fetch media details in bulk
+	const mediaDetailsMap = new Map<string, {title: string, release_year: number, poster_path: string, backdrop_path: string, goodwatch_overall_score_normalized_percent: number | null, streaming_links: StreamingLink[]}>()
+	
+	if (movieIds.length > 0) {
+		const moviePlaceholders = movieIds.map(() => '?').join(', ')
+		const movieDetails = await query<{tmdb_id: number, title: string, release_year: number, poster_path: string, backdrop_path: string, goodwatch_overall_score_normalized_percent: number | null}>(
+			`SELECT tmdb_id, title, release_year, poster_path, backdrop_path, goodwatch_overall_score_normalized_percent
+			 FROM movie WHERE tmdb_id IN (${moviePlaceholders})`,
+			movieIds
+		)
+		movieDetails.forEach(item => {
+			const key = `movie-${item.tmdb_id}`
+			mediaDetailsMap.set(key, {
+				title: item.title,
+				release_year: item.release_year,
+				poster_path: item.poster_path,
+				backdrop_path: item.backdrop_path,
+				goodwatch_overall_score_normalized_percent: item.goodwatch_overall_score_normalized_percent,
+				streaming_links: [],
+			})
+		})
+	}
+	
+	if (showIds.length > 0) {
+		const showPlaceholders = showIds.map(() => '?').join(', ')
+		const showDetails = await query<{tmdb_id: number, title: string, release_year: number, poster_path: string, backdrop_path: string, goodwatch_overall_score_normalized_percent: number | null}>(
+			`SELECT tmdb_id, title, release_year, poster_path, backdrop_path, goodwatch_overall_score_normalized_percent
+			 FROM show WHERE tmdb_id IN (${showPlaceholders})`,
+			showIds
+		)
+		showDetails.forEach(item => {
+			const key = `show-${item.tmdb_id}`
+			mediaDetailsMap.set(key, {
+				title: item.title,
+				release_year: item.release_year,
+				poster_path: item.poster_path,
+				backdrop_path: item.backdrop_path,
+				goodwatch_overall_score_normalized_percent: item.goodwatch_overall_score_normalized_percent,
+				streaming_links: [],
+			})
+		})
+	}
+
 	// Convert to result format
 	const result: UserDataRow[] = []
 	for (const key of allMediaKeys) {
@@ -130,6 +188,10 @@ async function _getUserData({
 		const tmdb_id = parseInt(tmdb_id_str)
 		
 		const scoreData = scoresMap.get(key)
+		const mediaDetails = mediaDetailsMap.get(key)
+		
+		// Skip if media details not found
+		if (!mediaDetails) continue
 		
 		// Get timestamp values safely
 		const wishlistTimestamp = wishlistMap.get(key)
@@ -151,13 +213,12 @@ async function _getUserData({
 			updated_at_favorites: favoritesTimestamp || null,
 			updated_at_scores: scoreData?.updated_at || null,
 			updated_at_skipped: skippedTimestamp || null,
-			// These will be populated later if needed
-			title: '',
-			release_year: 0,
-			poster_path: '',
-			backdrop_path: '',
-			goodwatch_overall_score_normalized_percent: null,
-			streaming_links: [],
+			title: mediaDetails.title,
+			release_year: mediaDetails.release_year,
+			poster_path: mediaDetails.poster_path,
+			backdrop_path: mediaDetails.backdrop_path,
+			goodwatch_overall_score_normalized_percent: mediaDetails.goodwatch_overall_score_normalized_percent,
+			streaming_links: mediaDetails.streaming_links,
 		})
 	}
 

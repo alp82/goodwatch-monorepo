@@ -46,11 +46,12 @@ export const useAPIAction = <Params extends {}, Result extends {}>({
 		setResults(results)
 
 		// invalidate queries
-		queryClient.invalidateQueries({
+		await queryClient.invalidateQueries({
 			queryKey: queryKeyUserData,
 		})
-		queryClient.invalidateQueries({
+		await queryClient.invalidateQueries({
 			queryKey: queryKeyOnboardingMedia,
+			refetchType: 'active',
 		})
 	}
 

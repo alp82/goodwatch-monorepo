@@ -3,7 +3,7 @@ import { cached } from "~/utils/cache";
 import { query } from "~/utils/crate";
 import { type AllRatings, getRatingKeys } from "~/utils/ratings";
 
-const LIMIT_PER_SEARCH = 30;
+const LIMIT_PER_SEARCH = 100;
 
 export interface SimilarMedia extends AllRatings {
 	tmdb_id: number;
@@ -78,37 +78,39 @@ const _getSearchResults = async <T extends SimilarResult>({
 }: CombinedResultProps) => {
 	const mediaType = tableName === "movie" ? "movie" : "show";
 
-	const exactMatchCondition = searchTerm
-		? `(
-			m.title ILIKE ?
-			OR m.original_title ILIKE ?
-		)`
-		: "";
-	const words = searchTerm.split(" ").filter(Boolean);
-	const wordConditions = words
-		.map(
-			() => `(
-				m.title ILIKE ?
-				OR m.original_title ILIKE ?
-			)`,
-		)
-		.join(" AND ");
-
 	const selectedSimilarForMediaType = withSimilar.filter(
 		(similar) => similar.mediaType === mediaType,
 	);
 	const selectedSimilarCondition = selectedSimilarForMediaType
 		.map((similar) => {
-			return `
-			m.tmdb_id = ${similar.tmdbId}
-		`;
+			return `m.tmdb_id = ${similar.tmdbId}`;
 		})
 		.join(" OR ");
 
-	const searchWhereConditions = `
-		${searchTerm ? `(${exactMatchCondition})` : "TRUE"}
-		OR (${wordConditions || "TRUE"})
-	`;
+	let searchWhereConditions = "";
+	const searchParams: string[] = [];
+
+	if (searchTerm) {
+		const words = searchTerm.split(" ").filter(Boolean);
+		
+		// Build search conditions for each word
+		const wordConditions = words
+			.map(() => {
+				searchParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+				return `(m.title ILIKE ? OR m.original_title ILIKE ?)`;
+			})
+			.join(" OR ");
+
+		// Also add individual word matching for better partial matches
+		const individualWordConditions = words
+			.map((word) => {
+				searchParams.push(`%${word}%`, `%${word}%`);
+				return `(m.title ILIKE ? OR m.original_title ILIKE ?)`;
+			})
+			.join(" AND ");
+
+		searchWhereConditions = `(${wordConditions}) OR (${individualWordConditions})`;
+	}
 
 	// CrateDB doesn't support UNION with CTEs in subqueries, so we'll use a simpler approach
 	const searchQuery = `
@@ -125,26 +127,29 @@ const _getSearchResults = async <T extends SimilarResult>({
 				.map((key) => `m.${key}`)
 				.join(", ")},
 			CASE
-				WHEN ${selectedSimilarCondition || "FALSE"} THEN 1000
+				WHEN ${selectedSimilarCondition || "FALSE"} THEN 10000.0
+				WHEN ${searchTerm ? `(m.title ILIKE ? OR m.original_title ILIKE ?)` : "FALSE"} THEN 5000.0 + m.popularity
 				ELSE m.popularity
 			END AS relevance
 		FROM
 			${tableName} as m
 		WHERE
-			${selectedSimilarCondition ? `(${selectedSimilarCondition})` : "TRUE"}
-			${searchTerm ? `OR (${searchWhereConditions})` : ""}
+			m.title IS NOT NULL
+			AND m.poster_path IS NOT NULL
+			AND (
+				${selectedSimilarCondition ? `(${selectedSimilarCondition})` : "FALSE"}
+				${searchTerm ? `OR (${searchWhereConditions})` : ""}
+			)
 		ORDER BY
 			relevance DESC,
 			m.goodwatch_overall_score_voting_count DESC
 		LIMIT ${LIMIT_PER_SEARCH}
   `;
 
-	// search query - only if search term was provided
-
-	const searchParams = [
-		...(searchTerm ? [`%${searchTerm}%`, `%${searchTerm}%`] : []),
-		...words.flatMap((word) => [`%${word}%`, `%${word}%`]),
-	];
+	// Add params for the relevance scoring (starts with search term)
+	if (searchTerm) {
+		searchParams.push(`${searchTerm}%`, `${searchTerm}%`);
+	}
 	const searchRows = await query<T>(searchQuery, searchParams);
 
 	return searchRows;

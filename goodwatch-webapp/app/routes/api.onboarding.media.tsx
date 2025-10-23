@@ -6,14 +6,14 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import {
 	type OnboardingMovie,
-	type OnboardingTV,
+	type OnboardingShow,
 	getOnboardingMedia,
 } from "~/server/onboarding-media.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 export type GetOnboardingMediaResult = {
 	movies: OnboardingMovie[]
-	tv: OnboardingTV[]
+	shows: OnboardingShow[]
 }
 
 export const loader: LoaderFunction = async ({
@@ -29,11 +29,11 @@ export const loader: LoaderFunction = async ({
 		userId,
 		searchTerm,
 	}
-	const { movies, tv } = await getOnboardingMedia(params)
+	const { movies, shows } = await getOnboardingMedia(params)
 
 	return json<GetOnboardingMediaResult>({
 		movies,
-		tv,
+		shows,
 	})
 }
 

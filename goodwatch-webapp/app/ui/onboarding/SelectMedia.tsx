@@ -76,7 +76,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		"onScoresSince",
 		"onSkippedSince",
 		"onWishListSince",
-	]).slice(0, 7)
+	]).slice(0, 8)
 	const scoredMediaAmount = getSortedUserData(userData as GetUserDataResult, [
 		"onScoresSince",
 	]).length
@@ -127,17 +127,23 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 		onBack()
 	}
 
-	const getMedia = (media: OnboardingResult[]) => {
+	const renderMedia = (results: OnboardingResult[]) => {
 		return (
 			<div className="w-full flex flex-wrap gap-8">
-				{media.length > 0 && (
+				{results.length > 0 && (
 					<div className="w-full flex flex-col gap-4">
-						{media.map((details) => (
-							<div
-								key={details.tmdb_id}
-								className="relative w-full flex flex-col bg-gray-700 border-slate-800 border-2 shadow-2xl bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]"
-								style={{
-									backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${details.backdrop_path}')`,
+						{results.map((details) => {
+							const media = {
+								details,
+								mediaType: details.media_type,
+							}
+							console.log({media})
+							return (
+								<div
+									key={details.tmdb_id}
+									className="relative w-full flex flex-col bg-gray-700 border-slate-800 border-2 shadow-2xl bg-cover bg-center bg-no-repeat before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-black/[.78]"
+									style={{
+										backgroundImage: `url('https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${details.backdrop_path}')`,
 								}}
 							>
 								<div className="relative">
@@ -173,17 +179,17 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 											{/*<Genres genres={details.genres} withLinks={false} />*/}
 											<div>
 												<ScoreSelector
-													details={details}
+													media={media}
 													onChange={() => handleUserChange(details)}
 												/>
 											</div>
 											<div className="flex flex-wrap md:flex-nowrap justify-between gap-6 p-2 sm:p-4">
 												<SkipButton
-													details={details}
+													media={media}
 													onChange={() => handleUserChange(details)}
 												/>
 												<PlanToWatchButton
-													details={details}
+													media={media}
 													onChange={() => handleUserChange(details)}
 												/>
 											</div>
@@ -191,7 +197,8 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 									</div>
 								</div>
 							</div>
-						))}
+							)
+						})}
 					</div>
 				)}
 			</div>
@@ -242,19 +249,19 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 				<Spinner size="large" />
 			) : (
 				<div className="w-full flex flex-col gap-4">
-					{previousMediaToDisplay ? getMedia([previousMediaToDisplay]) : null}
+					{previousMediaToDisplay ? renderMedia([previousMediaToDisplay]) : null}
 					<div className="w-full flex flex-col 2xl:flex-row gap-4">
 						<div className="w-full">
 							<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
 								Movies
 							</div>
-							{getMedia(movies)}
+							{renderMedia(movies)}
 						</div>
 						<div className="w-full">
 							<div className="mb-4 p-2 w-full bg-slate-800 text-lg text-center">
 								TV Shows
 							</div>
-							{getMedia(shows)}
+							{renderMedia(shows)}
 						</div>
 					</div>
 				</div>
@@ -272,8 +279,7 @@ export const SelectMedia = ({ onSelect, onBack }: SelectMediaProps) => {
 				)}
 				{sortedMedia
 					.slice(0, 8)
-					.reverse()
-					.map((details, index) => (
+					.map((details) => (
 						<div
 							key={details.tmdb_id}
 							className={`relative cursor-pointer transition-all hover:scale-105 hover:rotate-2 border-8 rounded-2xl ${previousMediaToDisplay?.tmdb_id === details.tmdb_id ? "border-emerald-600" : "border-slate-700"}`}

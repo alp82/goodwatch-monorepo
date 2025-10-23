@@ -106,7 +106,7 @@ export default function SectionFingerprint({
 												onClick={() => handleTogglePillar(pillar.name)}
 												className={`
 													px-3 py-2 rounded text-sm font-medium transition-all
-													flex items-center gap-2 text-left
+													flex items-center gap-2 text-left cursor-pointer
 													${isSelected 
 														? "bg-indigo-600 text-white ring-2 ring-indigo-400" 
 														: "bg-gray-700 text-gray-300 hover:bg-gray-600"

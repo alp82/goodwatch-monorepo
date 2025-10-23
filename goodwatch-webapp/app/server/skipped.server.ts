@@ -1,3 +1,4 @@
+import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { execute, upsert } from "~/utils/crate"
 
@@ -57,6 +58,7 @@ export const updateSkipped = async ({
 	}
 
 	await resetUserDataCache({ user_id })
+	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 
 	return {
 		status: (result.rowcount || 0) >= 1 ? "success" : "failed",

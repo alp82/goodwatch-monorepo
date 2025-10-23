@@ -2,20 +2,16 @@
 
 ```
 
-setup new VPS
-
-discover fixes
-    similarity / fingerprint
-    full text query (for cast/crew: "brad pitt")
-    "try" presets
-
 fix onboarding
+
+streaming_provider_ranking fix
 
 ADD BACK TTL
 
 UPDATE POSTGRES USER DATA
     https://windmill.goodwatch.app/run/019a01d7-c4ff-e58f-a53c-cf427d170cb9?workspace=goodwatch
-    
+
+   
 ---   
 
 Fingerprint improvements
@@ -42,6 +38,10 @@ update windmill scripts in git
 
 strategy + lead generation
     https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68f93e39-5e48-832f-9273-38f38514426a
+
+---
+
+remove postgres db
 
 ---
 
@@ -85,6 +85,10 @@ tagline
 ai
     https://www.freepik.com/pikaso/ai-video-generator
     
+---   
+
+elasticsearch for full text search
+
 ---   
 
 subtiles
