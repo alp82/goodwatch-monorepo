@@ -2,18 +2,18 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://goodwatch.app/sitemaps/sitemap_static.xml</loc>
-    <lastmod>2025-03-01</lastmod>
+    <lastmod>2025-10-24</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://goodwatch.app/sitemaps/sitemap_categories.xml</loc>
-    <lastmod>2025-03-01</lastmod>
+    <lastmod>2025-10-24</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://goodwatch.app/sitemaps/sitemap_index_movies_detail.xml</loc>
-    <lastmod>2025-03-01</lastmod>
+    <loc>https://goodwatch.app/sitemaps/sitemap_index_movie_detail.xml</loc>
+    <lastmod>2025-10-24</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://goodwatch.app/sitemaps/sitemap_index_tv_detail.xml</loc>
-    <lastmod>2025-03-01</lastmod>
+    <loc>https://goodwatch.app/sitemaps/sitemap_index_show_detail.xml</loc>
+    <lastmod>2025-10-24</lastmod>
   </sitemap>
 </sitemapindex>

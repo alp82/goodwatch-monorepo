@@ -20,9 +20,7 @@ export default function DetailsRelated({ media }: DetailsRelatedProps) {
         if (!keys.includes(selectedKey)) setSelectedKey("overall")
     }, [keys])
 
-    if (!keys.length) return null
-
-    // removed unused renderPill helper
+    if (!keys.length || !fingerprint) return null
 
     return (
         <section className="flex flex-col gap-6 rounded-xl border border-white/10 bg-white/5 p-4 sm:p-6">

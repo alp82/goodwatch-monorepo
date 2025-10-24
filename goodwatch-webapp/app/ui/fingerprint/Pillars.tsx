@@ -2,7 +2,7 @@ import React from 'react'
 import type { PillarTiers } from '~/server/utils/fingerprint'
 
 type Props = { 
-	pillars: PillarTiers
+	pillars?: PillarTiers
 	className?: string 
 }
 
@@ -16,12 +16,16 @@ const PILLAR_CONFIG = {
 } as const
 
 export default function Pillars({ pillars, className = '' }: Props): JSX.Element {
-	const renderMeter = (tier: number, colors: readonly string[]) => {
+	const renderMeter = (tier: number | undefined, colors: readonly string[]) => {
+		if (tier === undefined) {
+			const emptyBars = '░'.repeat(4)
+			return <span className="font-mono text-lg text-gray-600">{emptyBars}</span>
+		}
+		
 		const isPerfect = tier === 4
 		const filled = '█'.repeat(tier)
 		const empty = '░'.repeat(4 - tier)
 		
-		// Create colored blocks with decreasing saturation
 		const coloredBlocks = Array.from({ length: tier }, (_, i) => (
 			<span key={i} className={`${colors[i]} brightness-125`}>{filled[i]}</span>
 		))
@@ -40,7 +44,7 @@ export default function Pillars({ pillars, className = '' }: Props): JSX.Element
 	return (
 		<div className={`min-w-md lg:min-w-64 grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-1 justify-between gap-4 ${className}`}>
 			{Object.entries(PILLAR_CONFIG).map(([pillarName, config]) => {
-				const tier = pillars[pillarName as keyof PillarTiers]
+				const tier = pillars?.[pillarName as keyof PillarTiers]
 				return (
 					<div 
 						key={pillarName} 

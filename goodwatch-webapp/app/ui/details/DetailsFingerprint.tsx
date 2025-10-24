@@ -14,44 +14,7 @@ export interface DetailsFingerprintProps {
 export default function DetailsFingerprint({
 	media,
 }: DetailsFingerprintProps) {
-	const { details, fingerprint } = media
-	const { genres, media_type, tropes } = details
-	const { scores, highlightKeys, pillars, essenceTags } = fingerprint
-
-	const highlightScores = highlightKeys.map(key => ({key, score: scores[key]}))
-	
-	// const [spoilerVisible, setSpoilerVisible] = React.useState(false)
-	// const handleRevealSpoiler = () => {
-	// 	setSpoilerVisible(true)
-	// }
-
-	// const items = [
-	// 	{
-	// 		label: "Genres",
-	// 		content: (
-	// 			<Genres
-	// 				genres={genres}
-	// 				subgenres={getDNAForCategory(dna, "Sub-Genres").slice(0, 4)}
-	// 				type={media_type}
-	// 			/>
-	// 		),
-	// 	},
-	// 	...sortedCategories.map((category) => {
-	// 		const dnaForCategory = getDNAForCategory(dna, category).slice(0, 8)
-	// 		return {
-	// 			label: category,
-	// 			content: (
-	// 				<DNACategory
-	// 					details={details}
-	// 					category={category}
-	// 					dnaItems={dnaForCategory}
-	// 					spoilerVisible={spoilerVisible}
-	// 					onRevealSpoiler={handleRevealSpoiler}
-	// 				/>
-	// 			),
-	// 		}
-	// 	}),
-	// ]
+	const { fingerprint } = media
 
 	return (
 		<div className="md:mt-8 lg:max-w-lg space-y-6">
@@ -64,7 +27,14 @@ export default function DetailsFingerprint({
 				Fingerprint
 			</h2>
 			
-			<Pillars pillars={pillars} />
+			<div className="space-y-4">
+				<Pillars pillars={fingerprint?.pillars} className={!fingerprint ? 'opacity-50' : ''} />
+				{!fingerprint && (
+					<p className="text-sm text-gray-500 italic">
+						Fingerprint not yet available
+					</p>
+				)}
+			</div>
 		</div>
 	)
 }

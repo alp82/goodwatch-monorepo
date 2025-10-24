@@ -13,7 +13,7 @@ export interface AboutProps {
 export default function About({ media, navigateToSection }: AboutProps) {
 	const { details, fingerprint } = media
 	const { synopsis, tagline } = details
-	const { essenceTags } = fingerprint
+	const { essenceTags = [] } = fingerprint || {}
 
 	const badges = essenceTags.map(tag => ({ label: tag }))
 	return (

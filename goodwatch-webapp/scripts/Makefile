@@ -1,2 +1,2 @@
 sitemaps:
-	poetry run python create_sitemaps.py
+	uv run create_sitemaps.py

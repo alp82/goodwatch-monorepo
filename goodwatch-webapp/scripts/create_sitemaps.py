@@ -4,21 +4,24 @@ import os
 import json
 import subprocess
 import re
+from crate import client
+from dotenv import load_dotenv
 
-from connect_db import init_postgres
 from utils import slugify
+
+load_dotenv()
 
 BATCH_SIZE = 1000
 SITEMAP_DIR = "../public/sitemaps/"
 BASE_URL = {
     "movies": "https://goodwatch.app/movies/",
-    "tv": "https://goodwatch.app/tv-shows/",
+    "shows": "https://goodwatch.app/shows/",
     "movie_detail": "https://goodwatch.app/movie/",
-    "tv_detail": "https://goodwatch.app/tv/",
+    "show_detail": "https://goodwatch.app/show/",
     "sitemaps": "https://goodwatch.app/sitemaps/",
 }
-FILTER_CONDITION = ("aggregated_overall_score_voting_count > 10000 "
-                    "AND aggregated_overall_score_normalized_percent > 30 "
+FILTER_CONDITION = ("goodwatch_overall_score_voting_count > 5000 "
+                    "AND goodwatch_overall_score_normalized_percent > 30 "
                     "AND release_year IS NOT NULL "
                     "AND poster_path IS NOT NULL")
 
@@ -26,14 +29,6 @@ FILTER_CONDITION = ("aggregated_overall_score_voting_count > 10000 "
 MAIN_CATEGORIES = [
     "moods",
     "streaming",
-    "action-combat",
-    "crime-investigation",
-    "romance-relationships",
-    "sports-competition",
-    "supernatural-monsters",
-    "science-fiction-future",
-    "cultural-regional",
-    "historical-period",
     "genres"
 ]
 
@@ -43,8 +38,8 @@ def extract_subcategories_from_typescript(media_type: str, category: str) -> Lis
     Extract subcategory paths from TypeScript files using regex.
 
     Args:
-       category: The category name (e.g., "moods", "action-combat")
-       media_type: Either "movies" or "tv-shows"
+       category: The category name (e.g., "moods", "streaming")
+       media_type: Either "movies" or "shows"
 
     Returns:
        List of subcategory paths that match the media type
@@ -88,7 +83,7 @@ def extract_subcategories_from_typescript(media_type: str, category: str) -> Lis
                         path_value = path_match.group(1)
 
                         # Only include if type is "all" or matches the media_type
-                        media_type_normalized = "movies" if media_type == "movies" else "tv-shows"
+                        media_type_normalized = "movies" if media_type == "movies" else "shows"
                         if type_value == "all" or type_value == media_type_normalized:
                             paths.append(path_value)
 
@@ -113,7 +108,7 @@ def create_category_sitemaps():
         url_count = 0
 
         # Add main category pages
-        for media_type in ["movies", "tv-shows"]:
+        for media_type in ["movies", "shows"]:
             for category in MAIN_CATEGORIES:
                 sitemap_file.write("  <url>\n")
                 sitemap_file.write(f"    <loc>https://goodwatch.app/{media_type}/{category}</loc>\n")
@@ -140,31 +135,31 @@ def create_category_sitemaps():
     }
 
 
-def create_detail_sitemaps(pg, table_name: Union[Literal["movies"], Literal["tv"]]):
-    """Create sitemaps for movie and TV show detail pages."""
-    pg_cursor = pg.cursor()
+def create_detail_sitemaps(crate_cursor, table_name: Union[Literal["movie"], Literal["show"]]):
+    """Create sitemaps for movie and show detail pages."""
     sitemaps = []
     batch_data = []
     now = datetime.now(timezone.utc).date()
 
     # Map table_name to the appropriate detail URL base
-    detail_url_key = "movie_detail" if table_name == "movies" else "tv_detail"
+    detail_url_key = "movie_detail" if table_name == "movie" else "show_detail"
 
     # Count with filter
-    pg_cursor.execute(
+    crate_cursor.execute(
         f"SELECT COUNT(*) FROM {table_name} WHERE {FILTER_CONDITION}"
     )
-    total_count = pg_cursor.fetchone()[0]
+    result = crate_cursor.fetchone()
+    total_count = result[0] if result else 0
 
     for offset in range(0, total_count, BATCH_SIZE):
         print(f"Fetching batch starting from {offset}")
-        pg_cursor.execute(
+        crate_cursor.execute(
             f"SELECT tmdb_id, title FROM {table_name} "
             f"WHERE {FILTER_CONDITION} "
             f"ORDER BY popularity ASC "
             f"LIMIT {BATCH_SIZE} OFFSET {offset}"
         )
-        batch = pg_cursor.fetchall()
+        batch = crate_cursor.fetchall()
         batch_data.extend(batch)
         print(f"Selected {len(batch)} {table_name}")
 
@@ -185,8 +180,6 @@ def create_detail_sitemaps(pg, table_name: Union[Literal["movies"], Literal["tv"
 
         sitemaps.append(sitemap_filename)
         print(f"Processed batch {offset//BATCH_SIZE + 1}")
-
-    pg_cursor.close()
 
     # Create sitemap index for this table
     sitemap_index_filename = f"sitemap_index_{table_name}_detail.xml"
@@ -211,7 +204,7 @@ def create_landing_sitemaps():
     """Create sitemaps for main landing pages."""
     now = datetime.now(timezone.utc).date()
     static_routes = [
-        "/", "/movies", "/tv-shows", "/discover",
+        "/", "/movies", "/shows", "/discover",
         "/sign-in", "/how-it-works", "/about", "/disclaimer", "/privacy"
     ]
     sitemap_filename = "sitemap_static.xml"
@@ -242,8 +235,8 @@ def create_master_sitemap_index():
     sitemap_files.append("sitemap_categories.xml")
 
     # Add detail page indexes
-    sitemap_files.append("sitemap_index_movies_detail.xml")
-    sitemap_files.append("sitemap_index_tv_detail.xml")
+    sitemap_files.append("sitemap_index_movie_detail.xml")
+    sitemap_files.append("sitemap_index_show_detail.xml")
 
     # Create master index
     master_index_filename = "sitemap.xml"
@@ -265,19 +258,37 @@ def create_master_sitemap_index():
     }
 
 
+def init_crate():
+    """Initialize CrateDB connection."""
+    print("Initializing CrateDB...")
+    hosts = os.getenv("CRATE_HOSTS", "").split(",")
+    port = os.getenv("CRATE_PORT", "4200")
+    user = os.getenv("CRATE_USER", "")
+    password = os.getenv("CRATE_PASS", "")
+    
+    if not hosts or not hosts[0]:
+        raise ValueError("CRATE_HOSTS environment variable is not set")
+    
+    connection_string = f"http://{user}:{password}@{hosts[0]}:{port}"
+    connection = client.connect(connection_string)
+    print("Successfully initialized CrateDB")
+    return connection
+
+
 if __name__ == "__main__":
-    pg = init_postgres()
+    crate_connection = init_crate()
+    crate_cursor = crate_connection.cursor()
 
     # Ensure the sitemap directory exists
     os.makedirs(SITEMAP_DIR, exist_ok=True)
 
     # Generate sitemaps for movie detail pages
-    movies_result = create_detail_sitemaps(pg, table_name="movies")
+    movies_result = create_detail_sitemaps(crate_cursor, table_name="movie")
     print(f"Movies Detail Sitemap Result: {movies_result}")
 
-    # Generate sitemaps for TV detail pages
-    tv_result = create_detail_sitemaps(pg, table_name="tv")
-    print(f"TV Detail Sitemap Result: {tv_result}")
+    # Generate sitemaps for show detail pages
+    show_result = create_detail_sitemaps(crate_cursor, table_name="show")
+    print(f"Show Detail Sitemap Result: {show_result}")
 
     # Generate sitemap for categories and subcategories
     category_result = create_category_sitemaps()
@@ -291,4 +302,5 @@ if __name__ == "__main__":
     master_result = create_master_sitemap_index()
     print(f"Master Sitemap Index Result: {master_result}")
 
-    pg.close()
+    crate_cursor.close()
+    crate_connection.close()
