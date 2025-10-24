@@ -17,7 +17,7 @@ export default function About({ media, navigateToSection }: AboutProps) {
 
 	const badges = essenceTags.map(tag => ({ label: tag }))
 	return (
-		<section className="mt-12 rounded-xl border border-white/3 bg-white/3 p-4 sm:p-6 backdrop-blur-sm">
+		<section className="mt-12 rounded-xl border border-white/3 bg-white/3 p-4 sm:p-6">
 			<h2 className="flex items-center gap-3 text-2xl font-bolds">
 				About
 			</h2>

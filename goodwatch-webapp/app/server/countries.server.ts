@@ -3,7 +3,7 @@ import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
 interface CountryRow {
-	country: string
+	country_code: string
 }
 
 export interface Country {
@@ -21,23 +21,23 @@ export const getCountries = async (params: CountriesParams) => {
 		target: _getCountries,
 		params,
 		ttlMinutes: 60 * 24,
-		// ttlMinutes: 0,
+		//ttlMinutes: 0,
 	})
 }
 
 export async function _getCountries(): Promise<CountriesResults> {
 	const countriesQuery = `
-      SELECT DISTINCT
-        country
+      SELECT
+        country_code
       FROM
-        streaming_provider_rank
+        country
       ORDER BY
-        country;
+        country_code;
   `
 	const result = await query<CountryRow>(countriesQuery)
 	const countries = result.map((row) => ({
-		code: row.country,
-		name: getCountryName(row.country),
+		code: row.country_code,
+		name: getCountryName(row.country_code),
 	}))
 
 	return countries.sort((a, b) => {

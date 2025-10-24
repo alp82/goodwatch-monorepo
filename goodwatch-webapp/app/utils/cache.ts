@@ -82,9 +82,13 @@ const connectToRedisCluster = async () => {
 
 connectToRedisCluster()
 
-interface JsonData {
+interface JsonObject {
 	[key: string]: unknown
 }
+
+type JsonArray = JsonObject[]
+
+type JsonData = JsonObject | JsonArray
 
 function serializeJson(obj: JsonData): string {
 	const sortedKeys = Object.keys(obj).sort()

@@ -4,6 +4,7 @@ import type { AllRatings } from "~/utils/ratings"
 import type { FingerprintCondition } from "~/server/utils/query-db"
 import { generateFingerprintSQL } from "~/server/utils/query-db"
 import { getGenresAll } from "~/server/genres.server"
+import { cached } from "~/utils/cache"
 import { recommend, makePointId, parsePointId } from "~/utils/qdrant"
 
 export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
@@ -109,8 +110,14 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 		sortDirection: params.sortDirection,
 		page: params.page,
 	}
-	
-	return await _getSimpleDiscoverResults(simpleParams)
+
+	return await cached<DiscoverParams, DiscoverResults>({
+		name: "discover",
+		target: _getSimpleDiscoverResults,
+		params,
+		ttlMinutes: 30,
+		// ttlMinutes: 0,
+	})
 }
 
 async function _getSimpleDiscoverResults({
@@ -134,7 +141,7 @@ async function _getSimpleDiscoverResults({
 	sortBy = "popularity",
 	sortDirection = "desc",
 	page,
-}: SimpleDiscoverParams): Promise<DiscoverResult[]> {
+}: SimpleDiscoverParams): Promise<DiscoverResults> {
 	const offset = (page - 1) * DISCOVER_PAGE_SIZE
 	
 	// Determine which media types to include
@@ -435,6 +442,37 @@ async function getMediaResults({
 		"m.goodwatch_overall_score_voting_count >= 1000"
 	]
 	
+	// Build user join first (parameters must be added before WHERE conditions)
+	let userJoin = ""
+	if (userId && watchedType) {
+		if (watchedType === "watched") {
+			userJoin = `
+				INNER JOIN user_watch_history uwh ON
+					uwh.user_id = ? AND
+					uwh.tmdb_id = m.tmdb_id AND
+					uwh.media_type = ?
+			`
+			params.push(userId, mediaType)
+		} else if (watchedType === "didnt-watch") {
+			userJoin = `
+				LEFT JOIN user_watch_history uwh ON
+					uwh.user_id = ? AND
+					uwh.tmdb_id = m.tmdb_id AND
+					uwh.media_type = ?
+			`
+			conditions.push("uwh.user_id IS NULL")
+			params.push(userId, mediaType)
+		} else if (watchedType === "plan-to-watch") {
+			userJoin = `
+				INNER JOIN user_wishlist uwl ON
+					uwl.user_id = ? AND
+					uwl.tmdb_id = m.tmdb_id AND
+					uwl.media_type = ?
+			`
+			params.push(userId, mediaType)
+		}
+	}
+	
 	// Add candidate IDs filter from Qdrant
 	if (candidateIds && candidateIds.size > 0) {
 		const ids = Array.from(candidateIds)
@@ -521,22 +559,6 @@ async function getMediaResults({
 		}
 	}
 	
-	// Add streaming provider filter
-	if (withStreamingProviders && country) {
-		const providerIds = withStreamingProviders
-			.split(",")
-			.map((id) => Number(id))
-			.filter((id) => !Number.isNaN(id))
-		if (providerIds.length > 0) {
-			const streamingPatterns = providerIds.map((id) => `${country}_${id}`)
-			const streamingConditions = streamingPatterns.map((pattern) => {
-				params.push(pattern)
-				return "? = ANY(m.streaming_availabilities)"
-			})
-			conditions.push(`(${streamingConditions.join(" OR ")})`)
-		}
-	}
-	
 	// Add genre filter
 	if (withGenres) {
 		const genreIds = withGenres
@@ -593,35 +615,20 @@ async function getMediaResults({
 			params.push(mediaType, ...crewIds)
 		}
 	}
-	
-	// Build user join and condition
-	let userJoin = ""
-	if (userId && watchedType) {
-		if (watchedType === "watched") {
-			userJoin = `
-				INNER JOIN user_watch_history uwh ON
-					uwh.user_id = ? AND
-					uwh.tmdb_id = m.tmdb_id AND
-					uwh.media_type = ?
-			`
-			params.push(userId, mediaType)
-		} else if (watchedType === "didnt-watch") {
-			userJoin = `
-				LEFT JOIN user_watch_history uwh ON
-					uwh.user_id = ? AND
-					uwh.tmdb_id = m.tmdb_id AND
-					uwh.media_type = ?
-			`
-			conditions.push("uwh.user_id IS NULL")
-			params.push(userId, mediaType)
-		} else if (watchedType === "plan-to-watch") {
-			userJoin = `
-				INNER JOIN user_wishlist uwl ON
-					uwl.user_id = ? AND
-					uwl.tmdb_id = m.tmdb_id AND
-					uwl.media_type = ?
-			`
-			params.push(userId, mediaType)
+
+	// Add streaming provider filter
+	if (withStreamingProviders && country) {
+		const providerIds = withStreamingProviders
+			.split(",")
+			.map((id) => Number(id))
+			.filter((id) => !Number.isNaN(id))
+		if (providerIds.length > 0) {
+			const streamingPatterns = providerIds.map((id) => `${country}_${id}`)
+			const streamingConditions = streamingPatterns.map((pattern) => {
+				params.push(pattern)
+				return "? = ANY(m.streaming_availabilities)"
+			})
+			conditions.push(`(${streamingConditions.join(" OR ")})`)
 		}
 	}
 	

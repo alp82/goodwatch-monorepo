@@ -2,6 +2,11 @@
 
 ```
 
+discover:
+    what i plan to watch
+
+---
+
 Fingerprint improvements
     https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
     https://www.plotsense.ai/movie/180
@@ -729,6 +734,7 @@ invite link
 ---
 
 incubator/accelerator
+    https://docs.google.com/spreadsheets/d/1G6UGICGe4AZSUvyBgB06gQhylOIWaojPVlzVjs5X1F0/edit?gid=0#gid=0
     ycombinator
     Antler
     TechStars
