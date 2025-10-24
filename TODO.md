@@ -2,19 +2,15 @@
 
 ```
 
-ADD BACK TTL
-
-UPDATE POSTGRES USER DATA
-    https://windmill.goodwatch.app/run/019a01d7-c4ff-e58f-a53c-cf427d170cb9?workspace=goodwatch
-
-   
----   
-
 Fingerprint improvements
     https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
     https://www.plotsense.ai/movie/180
     Genre boxes with 4 most suitable scores
     
+
+---   
+
+remove milvus
 
 ---   
 

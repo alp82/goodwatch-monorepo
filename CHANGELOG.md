@@ -2,9 +2,11 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.7.0] 2025-10-xx
+## [0.7.0] 2025-10-24
 
-Minor Release: **New Database and DNA Overhaul**
+Minor Release: **New Databases and DNA Overhaul**
+
+This release took a lot of time because the database overhaul was not as simple as expected. After a long evalution phase, PostgresDB has been replaced with CrateDB and Qdrant.
 
 ### Added
 * completely new DNA pipeline

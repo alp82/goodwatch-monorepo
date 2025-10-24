@@ -80,7 +80,7 @@ const connectToRedisCluster = async () => {
 	})
 }
 
-await connectToRedisCluster()
+connectToRedisCluster()
 
 interface JsonData {
 	[key: string]: unknown
