@@ -6,7 +6,8 @@ Notable changes to GoodWatch will be documented in this file.
 
 Minor Release: **New Databases and DNA Overhaul**
 
-This release took a lot of time because the database overhaul was not as simple as expected. After a long evalution phase, PostgresDB has been replaced with CrateDB and Qdrant.
+This release took a lot of time because the performance issues were not easy to solve.
+After a long evalution phase, PostgresDB has been replaced with CrateDB and Qdrant.
 
 ### Added
 * completely new DNA pipeline

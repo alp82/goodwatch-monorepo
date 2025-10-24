@@ -27,8 +27,8 @@ export const getCrew = async (params: CrewParams) => {
 		name: "crew",
 		target: _getCrew,
 		params,
-		//ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	})
 }
 
