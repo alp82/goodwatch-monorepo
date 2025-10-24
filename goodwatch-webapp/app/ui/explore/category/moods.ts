@@ -51,10 +51,10 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "hopefulness", operator: ">=", value: 7 },
-						{ field: "wholesome", operator: ">=", value: 6 },
-						{ field: "bleakness", operator: "<=", value: 3 },
+						{ field: "hopefulness", operator: ">=", value: 8 },
+						{ field: "wholesome", operator: ">=", value: 7 },
 						{ field: "catharsis", operator: ">=", value: 5 },
+						{ field: "bleakness", operator: "<=", value: 4 },
 					],
 				},
 			]),
@@ -88,8 +88,8 @@ export const moods: Record<string, PageData> = {
 						{
 							logic: "OR",
 							conditions: [
-								{ field: "tension", operator: ">=", value: 7 },
-								{ field: "intrigue", operator: ">=", value: 7 },
+								{ field: "tension", operator: ">=", value: 8 },
+								{ field: "intrigue", operator: ">=", value: 8 },
 							],
 						},
 						{ field: "scare", operator: "<=", value: 7 },
@@ -121,13 +121,15 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "catharsis", operator: ">=", value: 7 },
-						{ field: "hopefulness", operator: ">=", value: 6 },
+						{ field: "catharsis", operator: ">=", value: 8 },
+						{ field: "hopefulness", operator: ">=", value: 7 },
+						{ field: "biographical", operator: ">=", value: 5 },
 						{
 							logic: "OR",
 							conditions: [
-								{ field: "character_depth", operator: ">=", value: 7 },
-								{ field: "pathos", operator: ">=", value: 6 },
+								{ field: "character_depth", operator: ">=", value: 5 },
+								{ field: "pathos", operator: ">=", value: 5 },
+								{ field: "sports", operator: ">=", value: 5 },
 							],
 						},
 					],
@@ -161,14 +163,15 @@ export const moods: Record<string, PageData> = {
 						{
 							logic: "OR",
 							conditions: [
-								{ field: "situational_comedy", operator: ">=", value: 6 },
-								{ field: "physical_comedy", operator: ">=", value: 6 },
-								{ field: "cringe_humor", operator: ">=", value: 6 },
-								{ field: "absurdist_humor", operator: ">=", value: 6 },
-								{ field: "dark_humor", operator: ">=", value: 6 },
+								{ field: "situational_comedy", operator: ">=", value: 7 },
+								{ field: "physical_comedy", operator: ">=", value: 7 },
+								{ field: "cringe_humor", operator: ">=", value: 7 },
+								{ field: "absurdist_humor", operator: ">=", value: 7 },
+								{ field: "dark_humor", operator: ">=", value: 7 },
 							],
 						},
 						{ field: "bleakness", operator: "<=", value: 5 },
+						{ field: "violence", operator: "<=", value: 5 },
 					],
 				},
 			]),
@@ -197,8 +200,8 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "psychological", operator: ">=", value: 7 },
-						{ field: "complexity", operator: ">=", value: 6 },
+						{ field: "psychological", operator: ">=", value: 8 },
+						{ field: "complexity", operator: ">=", value: 7 },
 						{
 							logic: "OR",
 							conditions: [
@@ -236,12 +239,13 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "nostalgia", operator: ">=", value: 7 },
+						{ field: "nostalgia", operator: ">=", value: 8 },
+						{ field: "rewatchability", operator: ">=", value: 7 },
 						{
 							logic: "OR",
 							conditions: [
-								{ field: "historical", operator: ">=", value: 5 },
-								{ field: "coming_of_age", operator: ">=", value: 5 },
+								{ field: "historical", operator: ">=", value: 6 },
+								{ field: "coming_of_age", operator: ">=", value: 6 },
 								{ field: "family_dynamics", operator: ">=", value: 6 },
 								{ field: "scare", operator: "<=", value: 6 },
 							],
@@ -249,6 +253,7 @@ export const moods: Record<string, PageData> = {
 					],
 				},
 			]),
+			maxYear: "2015",
 		},
 		faq: [
 			{
@@ -270,13 +275,13 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "melancholy", operator: ">=", value: 7 },
-						{ field: "pathos", operator: ">=", value: 6 },
+						{ field: "melancholy", operator: ">=", value: 8 },
+						{ field: "pathos", operator: ">=", value: 7 },
 						{
 							logic: "OR",
 							conditions: [
 								{ field: "philosophical", operator: ">=", value: 5 },
-								{ field: "character_depth", operator: ">=", value: 6 },
+								{ field: "character_depth", operator: ">=", value: 5 },
 								{ field: "slow_burn", operator: ">=", value: 5 },
 							],
 						},
@@ -305,7 +310,7 @@ export const moods: Record<string, PageData> = {
 					logic: "AND",
 					conditions: [
 						{ field: "catharsis", operator: ">=", value: 5 },
-						{ field: "melancholy", operator: ">=", value: 5 },
+						{ field: "melancholy", operator: ">=", value: 6 },
 						{
 							logic: "OR",
 							conditions: [
@@ -340,15 +345,14 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "wholesome", operator: ">=", value: 5 },
-						{ field: "bleakness", operator: "<=", value: 4 },
+						{ field: "wonder", operator: ">=", value: 8 },
+						{ field: "wholesome", operator: ">=", value: 6 },
+						{ field: "bleakness", operator: "<=", value: 3 },
 						{
 							logic: "OR",
 							conditions: [
-								{ field: "eccentricity", operator: ">=", value: 6 },
-								{ field: "novelty", operator: ">=", value: 6 },
-								{ field: "fantasy", operator: ">=", value: 5 },
-								{ field: "wonder", operator: ">=", value: 6 },
+								{ field: "eccentricity", operator: ">=", value: 7 },
+								{ field: "novelty", operator: ">=", value: 7 },
 							],
 						},
 					],
@@ -377,9 +381,9 @@ export const moods: Record<string, PageData> = {
 					logic: "AND",
 					conditions: [
 						{ field: "slow_burn", operator: ">=", value: 5 },
-						{ field: "tension", operator: "<=", value: 5 },
-						{ field: "adrenaline", operator: "<=", value: 5 },
-						{ field: "violence", operator: "<=", value: 5 },
+						{ field: "tension", operator: "<=", value: 4 },
+						{ field: "adrenaline", operator: "<=", value: 4 },
+						{ field: "violence", operator: "<=", value: 4 },
 						{
 							logic: "OR",
 							conditions: [
@@ -413,10 +417,10 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
+						{ field: "fast_pace", operator: ">=", value: 9 },
 						{ field: "adrenaline", operator: ">=", value: 8 },
-						{ field: "tension", operator: "<=", value: 6 },
-						{ field: "psychological", operator: "<=", value: 5 },
-						{ field: "scare", operator: "<=", value: 5 },
+						{ field: "psychological", operator: "<=", value: 6 },
+						{ field: "scare", operator: "<=", value: 6 },
 					],
 				},
 			]),
@@ -441,19 +445,18 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "cinematography", operator: ">=", value: 8 },
+						{ field: "cinematography", operator: ">=", value: 9 },
+						{ field: "spectacle", operator: ">=", value: 8 },
 						{ field: "catharsis", operator: ">=", value: 7 },
-						{ field: "world_immersion", operator: ">=", value: 6 },
-						{ field: "music_centrality", operator: ">=", value: 6 },
-						{ field: "sound_centrality", operator: ">=", value: 6 },
-						{ field: "spectacle", operator: ">=", value: 5 },
-						{ field: "adrenaline", operator: ">=", value: 4 },
+						{ field: "world_immersion", operator: ">=", value: 7 },
+						{ field: "music_centrality", operator: ">=", value: 7 },
+						{ field: "sound_centrality", operator: ">=", value: 7 },
 						{
 							logic: "OR",
 							conditions: [
-								{ field: "fantasy", operator: ">=", value: 5 },
-								{ field: "futuristic", operator: ">=", value: 5 },
-								{ field: "historical", operator: ">=", value: 5 },
+								{ field: "fantasy", operator: ">=", value: 6 },
+								{ field: "futuristic", operator: ">=", value: 6 },
+								{ field: "historical", operator: ">=", value: 6 },
 							],
 						},
 					],
@@ -515,9 +518,10 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "bleakness", operator: ">=", value: 6 },
 						{ field: "contemporary_realism", operator: ">=", value: 7 },
+						{ field: "bleakness", operator: ">=", value: 6 },
 						{ field: "social_commentary", operator: ">=", value: 6 },
+						{ field: "crime", operator: ">=", value: 5 },
 						{ field: "melancholy", operator: "<=", value: 5 },
 						{ field: "wholesome", operator: "<=", value: 3 },
 					],
@@ -545,10 +549,9 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "narrative_structure", operator: ">=", value: 8 },
-						{ field: "ambiguity", operator: ">=", value: 7 },
-						{ field: "complexity", operator: ">=", value: 7 },
-						{ field: "philosophical", operator: ">=", value: 6 },
+						{ field: "narrative_structure", operator: ">=", value: 9 },
+						{ field: "rewatchability", operator: ">=", value: 8 },
+						{ field: "philosophical", operator: ">=", value: 7 },
 					],
 				},
 			]),
@@ -574,8 +577,8 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "ambiguity", operator: ">=", value: 7 },
-						{ field: "complexity", operator: ">=", value: 7 },
+						{ field: "complexity", operator: ">=", value: 9 },
+						{ field: "ambiguity", operator: ">=", value: 8 },
 						{
 							logic: "OR",
 							conditions: [
@@ -608,7 +611,7 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "world_immersion", operator: ">=", value: 7 },
+						{ field: "world_immersion", operator: ">=", value: 8 },
 						{ field: "cinematography", operator: ">=", value: 6 },
 						{ field: "adrenaline", operator: "<=", value: 4 },
 						{
@@ -639,9 +642,9 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
+						{ field: "visual_stylization", operator: ">=", value: 9 },
 						{ field: "spectacle", operator: ">=", value: 8 },
 						{ field: "cinematography", operator: ">=", value: 7 },
-						{ field: "visual_stylization", operator: ">=", value: 7 },
 					],
 				},
 			]),
@@ -666,7 +669,7 @@ export const moods: Record<string, PageData> = {
 				{
 					logic: "AND",
 					conditions: [
-						{ field: "educational", operator: ">=", value: 7 },
+						{ field: "educational", operator: ">=", value: 8 },
 						{
 							logic: "OR",
 							conditions: [

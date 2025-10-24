@@ -2,7 +2,7 @@ import { query } from "~/utils/crate"
 import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
 import type { AllRatings } from "~/utils/ratings"
 import type { FingerprintCondition } from "~/server/utils/query-db"
-import { generateFingerprintSQL as generateFingerprintSQLBase } from "~/server/utils/query-db"
+import { generateFingerprintSQL } from "~/server/utils/query-db"
 import { getGenresAll } from "~/server/genres.server"
 import { recommend, makePointId, parsePointId } from "~/utils/qdrant"
 
@@ -75,6 +75,7 @@ export interface SimpleDiscoverParams {
 	withCast?: string
 	withCrew?: string
 	withSimilarTitles?: string
+	fingerprintConditions?: string
 	fingerprintPillars?: string
 	fingerprintPillarMinTier?: string
 	sortBy?: DiscoverSortBy
@@ -101,6 +102,7 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 		withCast: params.withCast,
 		withCrew: params.withCrew,
 		withSimilarTitles: params.similarTitles,
+		fingerprintConditions: params.fingerprintConditions,
 		fingerprintPillars: params.fingerprintPillars,
 		fingerprintPillarMinTier: params.fingerprintPillarMinTier,
 		sortBy: params.sortBy,
@@ -126,6 +128,7 @@ async function _getSimpleDiscoverResults({
 	withCast,
 	withCrew,
 	withSimilarTitles,
+	fingerprintConditions,
 	fingerprintPillars,
 	fingerprintPillarMinTier,
 	sortBy = "popularity",
@@ -174,6 +177,7 @@ async function _getSimpleDiscoverResults({
 			withCast,
 			withCrew,
 			candidateIds,
+			fingerprintConditions,
 			fingerprintPillars,
 			fingerprintPillarMinTier,
 			sortBy,
@@ -201,6 +205,7 @@ async function _getSimpleDiscoverResults({
 			withCast,
 			withCrew,
 			candidateIds,
+			fingerprintConditions,
 			fingerprintPillars,
 			fingerprintPillarMinTier,
 			sortBy,
@@ -389,6 +394,7 @@ interface MediaQueryParams {
 	withCast?: string
 	withCrew?: string
 	candidateIds?: Set<number> | null
+	fingerprintConditions?: string
 	fingerprintPillars?: string
 	fingerprintPillarMinTier?: string
 	sortBy: DiscoverSortBy
@@ -412,6 +418,7 @@ async function getMediaResults({
 	withCast,
 	withCrew,
 	candidateIds,
+	fingerprintConditions,
 	fingerprintPillars,
 	fingerprintPillarMinTier,
 	sortBy,
@@ -434,6 +441,25 @@ async function getMediaResults({
 		const placeholders = ids.map(() => "?").join(", ")
 		conditions.push(`m.tmdb_id IN (${placeholders})`)
 		params.push(...ids)
+	}
+
+	if (fingerprintConditions) {
+		try {
+			const parsedConditions = JSON.parse(fingerprintConditions) as FingerprintCondition[]
+			if (Array.isArray(parsedConditions) && parsedConditions.length > 0) {
+				const fingerprintSQL = generateFingerprintSQL(parsedConditions)
+				if (fingerprintSQL) {
+					const cleanedSQL = fingerprintSQL
+						.replace(/^AND\s+/i, "")
+						.replace(/fingerprint_scores/g, "m.fingerprint_scores")
+					if (cleanedSQL) {
+						conditions.push(cleanedSQL)
+					}
+				}
+			}
+		} catch (error) {
+			console.error("Failed to parse fingerprintConditions:", error)
+		}
 	}
 	
 	// Add score filters
