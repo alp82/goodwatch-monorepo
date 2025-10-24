@@ -14,6 +14,7 @@ Minor Release: **New Database and DNA Overhaul**
 ### Changed
 * Details show Fingerprint summary with Energy, Heart, Humor, World, Craft & Style scores
 * Related movies and shows are now based on Fingerprint highlights
+* Order of Streaming Services is now based on selected country
 
 ### Fixed
 * Improved Data Pipeline by increasing Mongo Cluster stability

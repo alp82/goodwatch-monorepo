@@ -63,8 +63,8 @@ export const getSearchResults = async (params: SearchParams) => {
 		name: "search",
 		target: _getSearchResults,
 		params,
-		//ttlMinutes: 60 * 2,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 2,
+		//ttlMinutes: 0,
 	})
 }
 

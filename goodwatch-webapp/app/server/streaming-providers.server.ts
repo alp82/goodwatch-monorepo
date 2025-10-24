@@ -17,10 +17,10 @@ export const getStreamingProviders = async (
 		name: "streaming-providers",
 		target: _getStreamingProviders,
 		params,
-		//ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
-	});
-};
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
+	})
+}
 
 export async function _getStreamingProviders(
 	params: StreamingProviderParams,
@@ -34,7 +34,7 @@ export async function _getStreamingProviders(
       	tmdb_id NOT IN (${ignoredProviders.join(",")})
       ORDER BY
         order_by_country['${params.country}'] ASC
-  `;
-	const result = await query<StreamingProvider>(sql);
-	return result;
+  `
+	const result = await query<StreamingProvider>(sql)
+	return result
 }

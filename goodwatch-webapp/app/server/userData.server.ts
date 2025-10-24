@@ -42,8 +42,8 @@ export const getUserData = async (params: GetUserDataParams) => {
 		name: "user-data",
 		target: _getUserData,
 		params,
-		//ttlMinutes: 10,
-		ttlMinutes: 0,
+		ttlMinutes: 10,
+		//ttlMinutes: 0,
 	})
 }
 

@@ -6,6 +6,7 @@ import {
 } from "~/routes/api.user-settings.get"
 import { setUserSettings } from "~/server/user-settings.server"
 import { getUserIdFromRequest, useUser } from "~/utils/auth"
+import { queryKeyStreamingProviders } from "./api.streaming-providers"
 
 // type definitions
 
@@ -58,6 +59,9 @@ export const useSetUserSettings = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: queryKeyUserSettings,
+			})
+			queryClient.invalidateQueries({
+				queryKey: queryKeyStreamingProviders,
 			})
 		},
 	})

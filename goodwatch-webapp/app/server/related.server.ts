@@ -97,8 +97,8 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 		name: "related-movie",
 		target: _getRelatedMovies as any,
 		params,
-		//ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	}) as unknown as RelatedMovie[]
 }
 
@@ -107,8 +107,8 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 		name: "related-show",
 		target: _getRelatedShows as any,
 		params,
-		// ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	}) as unknown as RelatedShow[]
 }
 

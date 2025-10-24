@@ -42,7 +42,7 @@ export default function SettingsCountry() {
 	}
 
 	const setUserSettings = useSetUserSettings()
-
+	
 	const handleSubmit = () => {
 		if (!selectedCountry) return
 		setUserSettings.mutate({
@@ -71,6 +71,7 @@ export default function SettingsCountry() {
 							flex items-center gap-2 px-4 py-2 w-72
 							border border-indigo-700 rounded-md bg-indigo-700 hover:bg-indigo-800
 							text-center text-base font-medium text-gray-200 hover:text-white
+							cursor-pointer
 						"
 					onClick={handleSubmit}
 				>
