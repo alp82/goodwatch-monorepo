@@ -6,7 +6,9 @@ import { cached } from "~/utils/cache";
 import { query } from "~/utils/crate";
 import { ignoredProviders } from "~/utils/streaming-links";
 
-export type StreamingProviderParams = {};
+export type StreamingProviderParams = {
+	country: string
+};
 
 export const getStreamingProviders = async (
 	params: StreamingProviderParams,
@@ -15,22 +17,23 @@ export const getStreamingProviders = async (
 		name: "streaming-providers",
 		target: _getStreamingProviders,
 		params,
-		ttlMinutes: 60 * 24,
+		//ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	});
 };
 
 export async function _getStreamingProviders(
-	_: StreamingProviderParams,
+	params: StreamingProviderParams,
 ): Promise<StreamingProviderResults> {
 	const sql = `
-      SELECT
-        id, name, logo_path
+      SELECT DISTINCT
+        tmdb_id as id, name, logo_path, order_by_country
       FROM
-        streaming_provider_ranking
+        streaming_service
       WHERE
-      	id NOT IN (${ignoredProviders.join(",")})
+      	tmdb_id NOT IN (${ignoredProviders.join(",")})
       ORDER BY
-        link_count DESC
+        order_by_country['${params.country}'] ASC
   `;
 	const result = await query<StreamingProvider>(sql);
 	return result;

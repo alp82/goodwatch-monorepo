@@ -2,8 +2,6 @@
 
 ```
 
-streaming_provider_ranking fix
-
 ADD BACK TTL
 
 UPDATE POSTGRES USER DATA
