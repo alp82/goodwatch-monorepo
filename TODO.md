@@ -4,11 +4,6 @@
 
 ---
 
-see own scores on movie cards (Pyra #main-chat)
-    optimize user data fetching
-
----
-
 start page
     make movietvlist compatible with swiper
     pick best 10 page data categories to display
@@ -53,8 +48,21 @@ plan to watch
 
 For You
     Landing page with examples
-    Personal Recommendations by DNA category
+    Personal Recommendations by main Fingerprint categories
     bg color changes with scroll: https://fable.co/
+
+---
+
+discover
+    sort by similarity
+    sort by own score
+    sort by last watched
+    sort by last wishlisted
+
+---   
+
+where to watch VPN
+    show available in other countries
 
 ---   
 

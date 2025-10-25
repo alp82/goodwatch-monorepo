@@ -2,6 +2,24 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
+## [0.7.2] 2025-10-xx
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.7.1] 2025-10-25
+
+### Added
+* show user's own score and "plan to watch" bookmark icon on movie cards
+
+### Changed
+
+### Fixed
+* server errors with a few Discover filters
+
 ## [0.7.0] 2025-10-24
 
 Minor Release: **New Databases and DNA Overhaul**
