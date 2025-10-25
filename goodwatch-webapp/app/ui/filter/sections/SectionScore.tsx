@@ -61,8 +61,7 @@ export default function SectionScore({
 
 	// update handlers
 
-	const { updateQueryParams } =
-		useNav<Pick<DiscoverParams, "minScore" | "maxScore">>();
+	const { updateQueryParams } = useNav<Pick<DiscoverParams, "minScore" | "maxScore">>();
 	useEffect(() => {
 		const defaultPreset = presets[0];
 		if (
@@ -76,7 +75,7 @@ export default function SectionScore({
 					: defaultPreset.minScore,
 				params.maxScore
 					? Number.parseInt(params.maxScore)
-					: defaultPreset.minScore,
+					: defaultPreset.maxScore,
 			]);
 			return;
 		}
