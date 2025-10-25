@@ -1,5 +1,6 @@
 import { Link } from "@remix-run/react"
 import type React from "react"
+import { useUserData } from "~/routes/api.user-data"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { ExploreResult } from "~/server/explore.server"
@@ -7,6 +8,7 @@ import type { OnboardingResult } from "~/server/onboarding-media.server"
 import { Poster } from "~/ui/Poster"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import StreamingOverlay from "~/ui/streaming/StreamingOverlay"
+import UserDataOverlay from "~/ui/user/UserDataOverlay"
 import { titleToDashed } from "~/utils/helpers"
 import { extractRatings } from "~/utils/ratings"
 
@@ -27,6 +29,11 @@ export function MovieTvCard({
 	prefetch = false,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
+	const { data: userData } = useUserData()
+
+	const userMediaData = userData?.[mediaType]?.[details.tmdb_id]
+	const userScore = userMediaData?.score ?? null
+	const onWishList = userMediaData?.onWishList ?? false
 
 	return (
 		<Link
@@ -43,6 +50,7 @@ export function MovieTvCard({
 			draggable="false"
 		>
 			<div className="relative">
+				<UserDataOverlay score={userScore} onWishList={onWishList} />
 				<RatingOverlay ratings={ratings} />
 				{details.streaming_links && (
 					<StreamingOverlay links={details.streaming_links} />

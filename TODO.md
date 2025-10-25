@@ -2,16 +2,59 @@
 
 ```
 
-discover:
-    what i plan to watch
+---
+
+see own scores on movie cards (Pyra #main-chat)
+    optimize user data fetching
 
 ---
 
-Fingerprint improvements
-    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
-    https://www.plotsense.ai/movie/180
-    Genre boxes with 4 most suitable scores
+start page
+    make movietvlist compatible with swiper
+    pick best 10 page data categories to display
+    stats: number of movies and shows
+    https://moviewiser.com/
     
+---
+
+https://discord.com/channels/1183008154573881384/1321048456608878593/1428810901720662037
+    fingerprint/discover/onboarding with crew
+
+---
+
+user profile
+    show all scores
+    grouped by tier
+    shareable link
+        https://discord.com/channels/1183008154573881384/1183008156696182847/1326508243056590848
+    links to other profiles: MAL, ...
+    
+watched/ratings page:
+    rating stats (1-10 distribution)
+    search & filter
+    easy rating more
+        personalized?
+
+favorites page
+    search & filter
+    easy adding more
+
+plan to watch
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
+    search & filter
+    easy adding more
+    
+    remove separate wishlist page?
+
+---
+
+For You
+    Landing page with examples
+    Personal Recommendations by DNA category
+    bg color changes with scroll: https://fable.co/
 
 ---   
 
@@ -19,9 +62,14 @@ remove milvus
 
 ---   
 
-discord:
-* review feature requests
-* update channel structure
+Fingerprint improvements
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
+    Genre boxes with 4 most suitable scores
+
+---
+
+optimistic ui
+    tanstack db
 
 ---   
 
@@ -255,19 +303,6 @@ similar filter
 
 ---
 
-start page
-    make movietvlist compatible with swiper
-    pick best 10 page data categories to display
-    stats: number of movies and shows
-    https://moviewiser.com/
-
----
-
-optimistic ui
-    tanstack db
-
----
-
 YT Channel
     https://gemini.google.com/app/a89965a683889ed8
 
@@ -440,13 +475,6 @@ Sequels wrong
 
 ---
 
-For You
-    Landing page with examples
-    Personal Recommendations by DNA category
-    bg color changes with scroll: https://fable.co/
-
----
-
 Cast / Crew pages
     DNA overview (e.g. most common DNA tags for "Henry Cavill")
 
@@ -504,34 +532,6 @@ og images
 ---
 
 https://www.tvmaze.com/api
-
----
-
-user profile
-    show all scores
-    grouped by tier
-    shareable link
-    links to other profiles: MAL, ...
-    
-watched/ratings page:
-    rating stats (1-10 distribution)
-    search & filter
-    easy rating more
-        personalized?
-
-favorites page
-    search & filter
-    easy adding more
-
-plan to watch
-    not logged in handling
-    split into two sections:
-        watch now
-        rest
-    search & filter
-    easy adding more
-    
-    remove separate wishlist page?
 
 ---
 
