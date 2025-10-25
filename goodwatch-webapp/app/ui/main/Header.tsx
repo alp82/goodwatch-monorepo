@@ -229,7 +229,7 @@ export default function Header() {
 							<div className="flex items-center">
 								{loading ? null : user ? (
 									<Menu as="div" className="relative ml-2 shrink-0">
-										<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+										<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 cursor-pointer">
 											<span className="sr-only">Open user menu</span>
 											{user?.user_metadata?.avatar_url ? (
 												<img

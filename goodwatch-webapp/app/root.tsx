@@ -264,7 +264,7 @@ function Root() {
 		<html
 			lang="en"
 			className="scroll-smooth"
-			// style={{ scrollbarGutter: "stable" }}
+			style={{ scrollbarGutter: "stable" }}
 		>
 			<head>
 				<meta charSet="utf-8" />
