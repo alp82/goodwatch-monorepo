@@ -89,5 +89,5 @@ export const scoreLabels = [
 	"Good",
 	"Great",
 	"Excellent",
-	"Must Watch",
+	"Masterpiece",
 ]
