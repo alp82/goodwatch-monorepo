@@ -2,6 +2,51 @@
 
 ```
 
+mobile rating easier
+    * use swipescorer for details as well
+    * easier to find rating button
+    * modal needs to close automatically after saving
+
+start page
+    show lists below quiz landing
+
+movie details
+    * check if too much data (cast, crew)
+
+user data in local storage
+    tanstack db?
+
+The Wolf of Wall Street
+    * description does not make any sense
+
+---    
+
+onboarding as CTA banner
+    e.g. https://www.producthunt.com/
+    
+onboarding
+    skip with "softcore" keyword
+    https://kinu-app.com/
+    https://veboli.com/
+    
+onboarding
+    better instructions for step 2
+    card titles above poster (better for long titles)
+    Search slow and bad at long ones like "orange is the new black"
+    
+    remove gladiator 1992 as first movie
+    switch order based on last rating
+    user settings cache + invalidation
+    
+    better mobile support
+        Drag rating not working
+        Smaller text above
+        Button sticky
+        search not focused (only on mobile?) 
+        Double skip button at the bottom
+    
+    Success notification for milestones
+    
 ---
 
 start page
@@ -10,6 +55,28 @@ start page
     stats: number of movies and shows
     https://moviewiser.com/
     
+---
+
+sirat wrong rating links:
+    https://goodwatch.app/movie/1151272-sirt?country=DE
+
+---
+
+fix windmill errors
+    https://windmill.goodwatch.app/run/019a2695-277a-7a6e-9992-2b879a6b5b70?workspace=goodwatch
+
+---
+
+mobile design
+    blank border on right side (Salavis feedback)
+
+---
+
+Fingerprint improvements
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
+    fingerprint by genre
+    Genre boxes with 4 most suitable scores
+
 ---
 
 https://discord.com/channels/1183008154573881384/1321048456608878593/1428810901720662037
@@ -34,7 +101,7 @@ favorites page
     search & filter
     easy adding more
 
-plan to watch
+want to watch
     not logged in handling
     split into two sections:
         watch now
@@ -67,12 +134,6 @@ where to watch VPN
 ---   
 
 remove milvus
-
----   
-
-Fingerprint improvements
-    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
-    Genre boxes with 4 most suitable scores
 
 ---
 
@@ -237,13 +298,6 @@ remove obsolete code
 
 ---    
 
-onboarding
-    skip with "softcore" keyword
-    https://kinu-app.com/
-    https://veboli.com/
-
----    
-
 search
     search results page
     LLM search
@@ -302,6 +356,22 @@ recommendation engine
     https://gemini.google.com/app/1729ce5f88ada2ef
     https://keras.io/
     tiktok: https://github.com/bytedance/monolith
+
+---
+
+email marketing
+    inspiration: Josh Comeau
+    https://x.com/StewartSwayze/status/1876116900364861613
+        kit: https://kit.com/pricing
+        ghost
+        substack
+    https://react.email/
+    nodemailer (vs https://resend.com/)
+    
+---
+
+payment
+    https://polar.sh
 
 ---
 
@@ -506,6 +576,11 @@ documentation
 
 ---
 
+caching improvements
+    https://x.com/harshsinghsv/status/1981692830545236078
+
+---
+
 dna cleanup:
     "Fantastical world with diverse environments (e.g."
 
@@ -566,7 +641,7 @@ explore: internal links
 
 cards with user actions
     user score
-    plan to watch
+    want to watch
     favorite
 
 Show User Data In Movie Cards
@@ -585,29 +660,6 @@ mobile navigation
 
 ---
 
-onboarding as CTA banner
-    e.g. https://www.producthunt.com/
-    
-onboarding
-    better instructions for step 2
-    card titles above poster (better for long titles)
-    Search slow and bad at long ones like "orange is the new black"
-    
-    remove gladiator 1992 as first movie
-    switch order based on last rating
-    user settings cache + invalidation
-    
-    better mobile support
-        Drag rating not working
-        Smaller text above
-        Button sticky
-        search not focused (only on mobile?) 
-        Double skip button at the bottom
-    
-    Success notification for milestones
-    
----
-
 goodwatch tiktok channel
     https://anotepad.com/notes/8phwbhcq
     https://clideo.com/de/account/projects
@@ -620,7 +672,7 @@ discover
     preview count for selections in edited sections (100+)
     bottom note after results
         streaming: Some of the content is hidden based on your location and streaming preferences
-        for plan to watch: show note that some are hidden due to filters
+        for want to watch: show note that some are hidden due to filters
 
 
 ---    
@@ -855,11 +907,6 @@ clips
     tiktok
     youtube shorts
     reels
-
----
-
-Terminology
-    TV, TV Shows -> Shows
 
 ---
 
@@ -1265,16 +1312,6 @@ json-ld
 
 ---
 
-email marketing
-    https://x.com/StewartSwayze/status/1876116900364861613
-        kit: https://kit.com/pricing
-        ghost
-        substack
-    https://react.email/
-    nodemailer (vs https://resend.com/)
-
----
-
 domain provider check
     cloudflare
 
@@ -1304,36 +1341,76 @@ error monitoring
 launch strategy
     https://www.notion.so/ScreenSpace-2-0-Launch-Support-1831647101ea80858e7ce3ee766ba7e6
 
+---
+
 reddit
-    1. r/SaaS
-    2. r/startups
-    3. r/Entrepreneur
-    4. r/startup
-    5. r/ProductMgt
-    6. r/sweatystartup
-    7. r/smallbusiness
-    8. r/RoastMyStartup
-    9. r/SideProject
-    10. r/indiebiz
-    11. r/startups_promotion
-    12. r/thesidehustle
-    13. r/growmybusiness
-    14. r/productivity
-    15. r/InternetIsBeautiful
-    16. r/Webdev
-    17. r/programming
-    18. r/Webdesign
-    19. r/EntrepreneurRideAlong
-    20. r/Plugyourproduct
-    21. r/MadeThis
-    22. r/AlphaandBetausers
-    23. r/advancedentrepreneur
-    24. r/design_critiques
-    25. r/Coupons
-    26. r/LadyBusiness
-    27. r/AskReddit
-    28. r/TodayILearned
-    29. r/WantToLearn
+
+**Startup & Entrepreneurship**
+
+* r/startup
+* r/Entrepreneur
+* r/advancedentrepreneur
+* r/EntrepreneurRideAlong
+* r/sweatystartup
+* r/SmallBusiness
+* r/IndieBiz
+* r/SideProject
+* r/SaaS
+
+**Growth, Marketing & Analytics**
+
+* r/GrowthHacking
+* r/AskMarketing
+* r/Content_marketing
+* r/SocialMediaMarketing
+* r/SEO
+* r/Linkbuilding
+* r/Advertising
+* r/PPC
+* r/Analytics
+
+**Promotion, Feedback & Launch**
+
+* r/RoastMyStartup
+* r/AlphaandBetausers
+* r/PlugYourProduct
+* r/startups_promotion
+* r/Freepromote
+* r/PromoteReddit
+* r/IMadeThis
+* r/InternetIsBeautiful
+
+**Product, Design & PM**
+
+* r/ProductMgt
+* r/design_critiques
+* r/Webdesign
+
+**Dev & Web**
+
+* r/programming
+* r/WebDev
+
+**Productivity & Lifestyle**
+
+* r/productivity
+* r/LifeProTips
+* r/lifehacks
+* r/DigitalNomad
+* r/LadyBusiness
+* r/WantToLearn
+
+**General Interest & Reach**
+
+* r/ExplainLikeImFive
+* r/TodayILearned
+* r/AskReddit
+
+**Deals**
+
+* r/Coupons
+
+---
 
 launch / promo
     alternativeto
@@ -1442,7 +1519,7 @@ redistribute weight for gw score
 more lightweight user data
 
 batch user actions
-    add all to plan to watch
+    add all to want to watch
     add all to watched
     add all to favorites
     

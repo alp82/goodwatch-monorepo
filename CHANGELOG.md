@@ -5,15 +5,19 @@ Notable changes to GoodWatch will be documented in this file.
 ## [0.7.2] 2025-10-xx
 
 ### Added
+* New: Swipe Scoring on mobile
+* New: Guests can now start scoring to see how recommendations work
 
 ### Changed
+* Completely revamped onboarding
 
 ### Fixed
+* Server errors for movies and shows with missing titles and genres
 
 ## [0.7.1] 2025-10-25
 
 ### Added
-* show user's own score and "plan to watch" bookmark icon on movie cards
+* show user's own score and "want to watch" bookmark icon on movie cards across all pages
 
 ### Changed
 
