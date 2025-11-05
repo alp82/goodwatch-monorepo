@@ -507,7 +507,14 @@ const _fetchFromDB = async (
 		FROM media_data m;
 	`)) as { media: QueryResult }[]
 
-	return result[0].media
+	const { media } = result[0]
+	if (!media.details.title) {
+		media.details.title = media.details.original_title
+	}
+	if (!media.details.genres) {
+		media.details.genres = []
+	}
+	return media
 }
 
 // Internal function to process fingerprint data
