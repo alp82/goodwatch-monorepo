@@ -28,7 +28,7 @@ export default function MediaTypeTabs({
 		},
 		{
 			key: "show",
-			label: "TV Shows",
+			label: "Shows",
 			icon: TvIcon,
 			current: selected === "show",
 		},
