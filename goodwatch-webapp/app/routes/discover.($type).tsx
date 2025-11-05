@@ -69,7 +69,7 @@ export const loader = async ({
 
 	// Ensure the type parameter is one of the valid values
 	const routeType = routeParams.type as string
-	const mediaType = ["all", "movies", "tv"].includes(routeType)
+	const mediaType = ["all", "movies", "show"].includes(routeType)
 		? routeType
 		: "all"
 
@@ -202,7 +202,7 @@ export default function Discover() {
 					{/*	key="discover-type"*/}
 					{/*	page={constructUrl({*/}
 					{/*		...currentParams,*/}
-					{/*		type: params.type === "movie" ? "tv" : "movie",*/}
+					{/*		type: params.type === "movie" ? "show" : "movie",*/}
 					{/*	})}*/}
 					{/*/>*/}
 				</div>
