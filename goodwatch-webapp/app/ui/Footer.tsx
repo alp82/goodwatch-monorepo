@@ -4,6 +4,7 @@ import React from "react"
 import discordColor from "~/img/discord-mark-blue.svg"
 import redditColor from "~/img/reddit-color.svg"
 import tmdbLogo from "~/img/tmdb-logo.svg"
+import shieldazeBanner from "~/img/secured-by-shieldaze-transparent.webp"
 
 const navigation = {
 	main: [
@@ -65,7 +66,7 @@ const navigation = {
 			href: "https://discord.gg/TVAcrfQzcA",
 			icon: (props: Record<string, string>) => (
 				<img
-					className={`opacity-50 hover:opacity-75 ${props.className}`}
+					className={`opacity-75 hover:opacity-100 ${props.className}`}
 					src={discordColor}
 					alt="Join Discord Server"
 				/>
@@ -102,124 +103,160 @@ export type FooterProps = {}
 
 export default function Footer({}: FooterProps) {
 	return (
-		<footer className="mt-8 bg-gray-950">
-			<div className="max-w-7xl mx-auto overflow-hidden py-12 px-6 sm:py-16 lg:px-8 flex flex-col gap-8">
-				{/*<div className="flex justify-center">/!*TODO DISCORD BLOCK*!/</div>*/}
-
-				<div className="flex flex-col items-center">
-					<span className="text-xl text-gray-200 mb-2">
-						Join the Community:
-					</span>
-					<div className="flex justify-center space-x-10">
-						{navigation.social.map((item) => (
-							<a
-								key={item.name}
-								href={item.href}
-								className="text-gray-400 hover:text-gray-200"
-								target="_blank"
-								rel="noreferrer"
-							>
-								<span className="sr-only">{item.name}</span>
-								<item.icon className="h-16 w-16" aria-hidden="true" />
-							</a>
-						))}
+		<footer className="mt-8">
+			{/* <div className="bg-blue-950/40">
+				<a
+					href="https://discord.gg/TVAcrfQzcA"
+					className="text-gray-400 hover:text-gray-200 opacity-75 hover:opacity-100 cursor-pointer"
+					target="_blank"
+					rel="noreferrer"
+				>									
+					<div className="max-w-7xl mx-auto overflow-hidden py-12 px-6 sm:py-16 lg:px-8 flex flex-col gap-8">
+						<div className="flex justify-center text-white text-lg font-semibold">
+							Join the GoodWatch Discord Community
+							<img
+								className="h-16 w-16"
+								src={discordColor}
+								alt="Join Discord Server"
+							/>
+						</div>
 					</div>
-				</div>
+				</a>
+			</div> */}
+			<div className="bg-gray-950">
+				<div className="max-w-7xl mx-auto overflow-hidden py-12 px-6 sm:py-16 lg:px-8 flex flex-col gap-8">
+					{/*<div className="flex justify-center">/!*TODO DISCORD BLOCK*!/</div>*/}
 
-				<nav
-					className="columns-2 flex justify-center space-x-12"
-					aria-label="Footer"
-				>
-					<div>
-						{navigation.main.map((item) => (
-							<div key={item.name} className="mt-2">
+					<div className="flex flex-col items-center">
+						<span className="text-xl text-gray-200 mb-2">
+							Join the Community:
+						</span>
+						<div className="flex justify-center space-x-10">
+							{navigation.social.map((item) => (
+								<a
+									key={item.name}
+									href={item.href}
+									className="text-gray-400 hover:text-gray-200"
+									target="_blank"
+									rel="noreferrer"
+								>
+									<span className="sr-only">{item.name}</span>
+									<item.icon className="h-16 w-16" aria-hidden="true" />
+								</a>
+							))}
+						</div>
+					</div>
+
+					<nav
+						className="columns-2 flex justify-center space-x-12"
+						aria-label="Footer"
+					>
+						<div>
+							{navigation.main.map((item) => (
+								<div key={item.name} className="mt-2">
+									<Link
+										className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+										to={item.href}
+										prefetch="viewport"
+									>
+										{item.name}
+									</Link>
+								</div>
+							))}
+							<div className="mt-6">
+								<a
+									href="https://status.goodwatch.app/status/services"
+									className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100"
+									target="_blank"
+									rel="noreferrer"
+								>
+									Status Page
+									<ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4" />
+								</a>
+							</div>
+						</div>
+						<div>
+							<div className="mt-2">
 								<Link
 									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
-									to={item.href}
+									to="/about"
 									prefetch="viewport"
 								>
-									{item.name}
+									About
 								</Link>
 							</div>
-						))}
-						<div className="mt-6">
-							<a
-								href="https://status.goodwatch.app/status/services"
-								className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100"
-								target="_blank"
-								rel="noreferrer"
-							>
-								Status Page
-								<ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4" />
-							</a>
+							<div className="mt-2">
+								<Link
+									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+									to="/how-it-works"
+									prefetch="viewport"
+								>
+									How it works
+								</Link>
+							</div>
+							<div className="mt-2">
+								<Link
+									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
+									to="/disclaimer"
+									prefetch="viewport"
+								>
+									Disclaimer
+								</Link>
+							</div>
+							<div className="mt-6">
+								<a
+									href="https://dev.to/t/goodwatch"
+									className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100"
+									target="_blank"
+									rel="noreferrer"
+								>
+									Blog
+									<ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4" />
+								</a>
+							</div>
 						</div>
-					</div>
-					<div>
-						<div className="mt-2">
-							<Link
-								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
-								to="/about"
-								prefetch="viewport"
-							>
-								About
-							</Link>
-						</div>
-						<div className="mt-2">
-							<Link
-								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
-								to="/how-it-works"
-								prefetch="viewport"
-							>
-								How it works
-							</Link>
-						</div>
-						<div className="mt-2">
-							<Link
-								className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
-								to="/disclaimer"
-								prefetch="viewport"
-							>
-								Disclaimer
-							</Link>
-						</div>
-						<div className="mt-6">
-							<a
-								href="https://dev.to/t/goodwatch"
-								className="flex items-center text-sm leading-6 text-gray-400 hover:text-gray-100"
-								target="_blank"
-								rel="noreferrer"
-							>
-								Blog
-								<ArrowTopRightOnSquareIcon className="ml-1 h-4 w-4" />
-							</a>
-						</div>
-					</div>
-				</nav>
+					</nav>
 
-				<div className="mt-8 mb-16 h-3 flex gap-2 items-center justify-center leading-5 text-gray-400">
-					<small>powered by</small>
-					<a
-						href="https://www.themoviedb.org"
-						target="_blank"
-						className=""
-						rel="noreferrer"
-					>
-						<img alt="TMDB" className="h-3 w-auto" src={tmdbLogo} />
-					</a>
-					<small>and</small>
-					<a
-						href="https://justwatch.com"
-						target="_blank"
-						className="scale-125 ml-2"
-						data-original="https://www.justwatch.com"
-						rel="noreferrer"
-					>
-						<img
-							alt="JustWatch"
-							className="h-3 w-16"
-							src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg"
-						/>
-					</a>
+					<div className="mt-8 flex gap-2 items-center justify-center leading-5 text-gray-400">
+						<small>powered by</small>
+						<a
+							href="https://www.themoviedb.org"
+							target="_blank"
+							className=""
+							rel="noreferrer"
+						>
+							<img alt="TMDB" className="h-3 w-auto" src={tmdbLogo} />
+						</a>
+						<small>and</small>
+						<a
+							href="https://justwatch.com"
+							target="_blank"
+							className="scale-125 ml-2"
+							data-original="https://www.justwatch.com"
+							rel="noreferrer"
+						>
+							<img
+								alt="JustWatch"
+								className="h-3 w-16"
+								src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg"
+							/>
+						</a>
+					</div>
+
+					<div className="mt-4 mb-16 flex justify-center">
+						<a
+							href="https://shieldaze.com"
+							target="_blank"
+							className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+							rel="noreferrer"
+						>
+							<img
+								alt="Shieldaze"
+								className="h-10 w-auto"
+								src={shieldazeBanner}
+							/>
+						</a>
+					</div>
 				</div>
 			</div>
 		</footer>
