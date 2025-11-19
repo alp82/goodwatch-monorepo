@@ -8,7 +8,6 @@
 
 import requests
 import shutil
-import os
 import datetime
 from pathlib import Path
 

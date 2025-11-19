@@ -21,13 +21,13 @@
         hour: "*"
         job: "/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1"
 
+- name: Configure Backup Cron Job for Qdrant
   hosts: vector1
   become: yes
-  hosts: vector1
   tasks:
-    - name: "Cron: Qdrant Backup (Daily at 0:15)"
+    - name: "Cron: Qdrant Backup (Hourly at :15)"
       cron:
         name: "Qdrant Backup"
         minute: "15"
-        hour: "0"
+        hour: "*"
         job: "/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-qdrant/backup.py >> /var/log/backup_qdrant.log 2>&1"
