@@ -11,7 +11,7 @@ import datetime
 import time
 
 # --- CONFIGURATION ---
-CRATE_HOST = "http://127.0.0.1:4200"
+CRATE_HOST = "http://10.0.0.11:4200"
 REPO_NAME = "goodwatch-db-backup"
 RETENTION_DAYS = 90
 # ---------------------

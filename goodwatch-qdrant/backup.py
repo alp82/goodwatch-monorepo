@@ -13,7 +13,7 @@ import datetime
 from pathlib import Path
 
 # --- CONFIGURATION ---
-QDRANT_HOST = "http://127.0.0.1:6333"
+QDRANT_HOST = "http://10.0.0.20:6333"
 BACKUP_ROOT = Path("/mnt/backup-qdrant/snapshots")
 # ---------------------
 
@@ -106,11 +106,14 @@ def cleanup_files(directory, prefix, hours=0, days=0):
     now_epoch = datetime.datetime.now().timestamp()
 
     for f in directory.glob(f"{prefix}*"):
-        if f.is_file():
-            file_age = now_epoch - f.stat().st_mtime
-            if file_age > limit_seconds:
+        path_age = now_epoch - f.stat().st_mtime
+        if path_age > limit_seconds:
+            if f.is_file():
                 print(f"Cleaning up old backup: {f.name}")
                 f.unlink()
+            else:
+                print(f"Cleaning up old backup directory: {f.name}")
+                shutil.rmtree(f)
 
 if __name__ == "__main__":
     collections = get_collections()
