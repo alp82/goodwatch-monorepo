@@ -1,3 +1,11 @@
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "requests",
+# ]
+# ///
+
 import requests
 import shutil
 import os
@@ -57,23 +65,35 @@ def rotate_and_clean(collection_name, raw_filename):
     
     # 2. Always create Hourly
     dest_hourly = col_backup_dir / hourly_name
-    shutil.copy2(source_file, dest_hourly)
+    if source_file.is_dir():
+        shutil.copytree(source_file, dest_hourly)
+    else:
+        shutil.copy2(source_file, dest_hourly)
     print(f"[{collection_name}] Created {hourly_name}")
 
     # 3. Create Daily (At 00:00)
     if now.hour == 0:
         dest_daily = col_backup_dir / daily_name
-        shutil.copy2(source_file, dest_daily)
+        if source_file.is_dir():
+            shutil.copytree(source_file, dest_daily)
+        else:
+            shutil.copy2(source_file, dest_daily)
         print(f"[{collection_name}] Created {daily_name}")
 
         # 4. Create Weekly (Sunday at 00:00)
         if now.weekday() == 6: # Sunday is 6
             dest_weekly = col_backup_dir / weekly_name
-            shutil.copy2(source_file, dest_weekly)
+            if source_file.is_dir():
+                shutil.copytree(source_file, dest_weekly)
+            else:
+                shutil.copy2(source_file, dest_weekly)
             print(f"[{collection_name}] Created {weekly_name}")
 
     # 5. Delete the raw file from Qdrant (we have our copies now)
-    source_file.unlink()
+    if source_file.is_dir():
+        shutil.rmtree(source_file)
+    else:
+        source_file.unlink()
 
     # 6. Cleanup / Retention
     cleanup_files(col_backup_dir, "hourly_", hours=3)
