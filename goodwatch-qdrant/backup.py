@@ -51,9 +51,24 @@ def create_snapshot(collection_name):
         print(f"[{collection_name}] Snapshot failed: {e}")
         return None
 
+def secure_copy(src, dest):
+    """Helper to copy file or directory safely"""
+    if src.is_dir():
+        shutil.copytree(src, dest)
+    else:
+        shutil.copy2(src, dest)
+
+def secure_delete(target):
+    """Helper to delete file or directory safely"""
+    if target.is_dir():
+        shutil.rmtree(target)
+    else:
+        target.unlink()
+
 def rotate_and_clean(collection_name, raw_filename):
     """
-    Moves the raw snapshot to our organized folder and applies retention logic:
+    Moves the raw snapshot AND its checksum to our organized folder.
+    Applies retention logic:
     - Always save as HOURLY
     - If midnight -> Save copy as DAILY
     - If Sunday midnight -> Save copy as WEEKLY
@@ -64,6 +79,7 @@ def rotate_and_clean(collection_name, raw_filename):
     col_backup_dir.mkdir(parents=True, exist_ok=True)
     
     source_file = col_backup_dir / raw_filename
+    source_checksum = col_backup_dir / (raw_filename + ".checksum")
     
     if not source_file.exists():
         print(f"[{collection_name}] Error: Source file {source_file} not found!")
@@ -73,43 +89,39 @@ def rotate_and_clean(collection_name, raw_filename):
     timestamp = now.strftime("%Y%m%d_%H%M%S")
     
     # 1. Define Destinations
+    # We append .checksum for the checksum files
     hourly_name = f"hourly_{timestamp}.snapshot"
     daily_name = f"daily_{timestamp}.snapshot"
     weekly_name = f"weekly_{timestamp}.snapshot"
     
     # 2. Always create Hourly
-    dest_hourly = col_backup_dir / hourly_name
-    if source_file.is_dir():
-        shutil.copytree(source_file, dest_hourly)
-    else:
-        shutil.copy2(source_file, dest_hourly)
+    secure_copy(source_file, col_backup_dir / hourly_name)
+    if source_checksum.exists():
+        secure_copy(source_checksum, col_backup_dir / (hourly_name + ".checksum"))
+    
     print(f"[{collection_name}] Created {hourly_name}")
 
     # 3. Create Daily (At 00:00)
     if now.hour == 0:
-        dest_daily = col_backup_dir / daily_name
-        if source_file.is_dir():
-            shutil.copytree(source_file, dest_daily)
-        else:
-            shutil.copy2(source_file, dest_daily)
+        secure_copy(source_file, col_backup_dir / daily_name)
+        if source_checksum.exists():
+            secure_copy(source_checksum, col_backup_dir / (daily_name + ".checksum"))
         print(f"[{collection_name}] Created {daily_name}")
 
         # 4. Create Weekly (Sunday at 00:00)
         if now.weekday() == 6: # Sunday is 6
-            dest_weekly = col_backup_dir / weekly_name
-            if source_file.is_dir():
-                shutil.copytree(source_file, dest_weekly)
-            else:
-                shutil.copy2(source_file, dest_weekly)
+            secure_copy(source_file, col_backup_dir / weekly_name)
+            if source_checksum.exists():
+                secure_copy(source_checksum, col_backup_dir / (weekly_name + ".checksum"))
             print(f"[{collection_name}] Created {weekly_name}")
 
-    # 5. Delete the raw file from Qdrant (we have our copies now)
-    if source_file.is_dir():
-        shutil.rmtree(source_file)
-    else:
-        source_file.unlink()
+    # 5. Delete the raw files from Qdrant (we have our copies now)
+    secure_delete(source_file)
+    if source_checksum.exists():
+        secure_delete(source_checksum)
 
     # 6. Cleanup / Retention
+    # This glob will catch both .snapshot and .snapshot.checksum files automatically
     cleanup_files(col_backup_dir, "hourly_", hours=3)
     cleanup_files(col_backup_dir, "daily_", days=3)
     cleanup_files(col_backup_dir, "weekly_", days=21)
