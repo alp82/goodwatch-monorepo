@@ -46,7 +46,7 @@ def clean_old_snapshots():
     print("Checking for expired snapshots...")
     
     # CrateDB stores 'created' as a timestamp in milliseconds
-    stmt = f"SELECT name, created FROM sys.snapshots WHERE repository = '{REPO_NAME}'"
+    stmt = f"SELECT name, finished FROM sys.snapshots WHERE repository = '{REPO_NAME}'"
     data = run_sql(stmt)
     
     if not data or 'rows' not in data:
