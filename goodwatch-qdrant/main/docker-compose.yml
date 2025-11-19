@@ -31,3 +31,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
+
+volumes:
+  qdrant_storage:
+  qdrant_snapshots:
