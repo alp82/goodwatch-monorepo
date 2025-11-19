@@ -13,8 +13,8 @@ services:
       - "${SELF_IP}:4300:4300"   # inter-node transport
 
     volumes:
-      - crate_data:/data                       # data
-      - crate_snapshots:/snapshots             # backups
+      - crate_data:/data                          # data
+      - /mnt/backup-cratedb/snapshots:/snapshots  # backups
 
     environment:
       - CRATE_HEAP_SIZE=${HEAP_SIZE}      # JVM heap (≈ ½ RAM)
@@ -45,8 +45,3 @@ services:
 
 volumes:
   crate_data:
-  crate_snapshots:               # uncomment when you wire backup
-
-# TODO
-# backup schedule:
-# CREATE REPOSITORY … TYPE 'fs' LOCATION '/snapshots'
