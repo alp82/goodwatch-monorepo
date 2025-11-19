@@ -1,22 +1,31 @@
 ---
-- name: Set up cron job to periodically kill chromium zombie processes
+- name: Configure cleanup Cron Job for Windmill
   hosts: all
   become: yes
-
   tasks:
-    - name: Set up cron job
+    - name: "Cron: Kill chromium zombie processes (Daily at 21:31)"
       cron:
         name: "Kill windmill process every 24 hours"
         minute: "31"
         hour: "21"
         job: "/usr/bin/killall -9 windmill"
 
-- name: Set up cron job to periodically backup the postgres database
-  hosts: postgres1
+- name: Configure Backup Cron Job for CrateDB
+  hosts: db1
   tasks:
-    - name: Set up cron job
+    - name: "Cron: CrateDB Backup (Hourly at :05)"
       cron:
-        name: "PostgreSQL Backup"
-        minute: "31"
+        name: "CrateDB Backup"
+        minute: "5"
+        hour: "*"
+        job: "/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1"
+
+- name: Configure Backup Cron Job for Qdrant
+  hosts: vector1
+  tasks:
+    - name: "Cron: Qdrant Backup (Daily at 0:15)"
+      cron:
+        name: "Qdrant Backup"
+        minute: "15"
         hour: "0"
-        job: "/root/goodwatch/goodwatch-monorepo/goodwatch-db/scripts/pg-backup.sh"
+        job: "/root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-qdrant/backup.py >> /var/log/backup_qdrant.log 2>&1"
