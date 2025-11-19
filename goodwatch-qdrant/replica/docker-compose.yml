@@ -24,7 +24,7 @@ services:
 
     volumes:
       - qdrant_storage:/qdrant/storage
-      - qdrant_snapshots:/qdrant/snapshots
+      - /mnt/backup-qdrant/snapshots:/qdrant/snapshots
 
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:6333/healthz"]
@@ -34,4 +34,3 @@ services:
 
 volumes:
   qdrant_storage:
-  qdrant_snapshots:
