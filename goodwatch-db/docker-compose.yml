@@ -10,7 +10,7 @@ services:
     volumes:
       - pgadmin:/var/lib/pgadmin
     ports:
-      - "${PGADMIN_PORT:-6080}:80"
+      - "${SELF_IP}:6080:80"
     restart: unless-stopped
     logging:
       driver: "json-file"
