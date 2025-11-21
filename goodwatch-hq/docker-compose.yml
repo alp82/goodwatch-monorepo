@@ -127,7 +127,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
     ports:
       # To change the exposed port, simply change 80:80 to <desired_port>:80. No other changes needed
-      - 9000:80
+      - "${SELF_IP}:9000:80"
       #- 443:443 # Uncomment to enable HTTPS handling by Caddy
     environment:
       - BASE_URL=":80"

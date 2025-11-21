@@ -1,9 +1,6 @@
 status.goodwatch.app {
   reverse_proxy http://coinmatica.net:4801
 }
-windmill.goodwatch.app {
-  reverse_proxy http://coinmatica.net:9000
-}
 a.goodwatch.app {
   header {
     Access-Control-Allow-Origin https://goodwatch.app
