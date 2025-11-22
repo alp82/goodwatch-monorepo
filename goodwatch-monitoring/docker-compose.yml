@@ -5,8 +5,6 @@ services:
       - uptime-kuma-data:/app/data
     ports:
       - 4801:3001
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: always
     logging:
       driver: "json-file"
