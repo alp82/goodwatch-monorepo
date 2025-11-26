@@ -1,22 +1,51 @@
-# GoodWatch
+## GoodWatch Online
 
-See it running here: https://goodwatch.app/
+GoodWatch is alive and running. Check it out: https://goodwatch.app/
+
+## GoodWatch Community
+
+Join our Discord to learn about the project: https://discord.gg/TVAcrfQzcA
+
 
 ## What's unique about GoodWatch?
 
-1. DNA: Classify movies and TV shows by 18 meaningful categories like Mood, Plot or Cinematic Style
-2. See availability of streaming services for each title (Netflix, Hulu, Amazon Prime, ...)
-3. See all ratings at one place (IMDb, Metacritic, Rotten Tomatoes)
+1. Personalized Recommendations based on your ratings and watched movies & shows
+2. Fingerprint: Classify movies and TV shows by hundreds of meaningful categories (e.g. Emotions, Plot, Subgenres, Visual Style, Cultural Context, etc.)
+3. See availability of streaming services for each title (Netflix, Hulu, Amazon Prime, ...)
+4. See all ratings at one place (IMDb, Metacritic, Rotten Tomatoes)
 
-## Documentation Status: The following guide is outdated. If you want to contribute to the project, please join the Discord Community
+## Repository Structure
 
-# https://discord.gg/TVAcrfQzcA
+| Directory | Description |
+|-----------|-------------|
+| `goodwatch-webapp/` | Remix web application (frontend + API) |
+| `goodwatch-hq/` | Admin tools and internal services |
+| `goodwatch-remote/` | Ansible deployment scripts and Windmill Workers |
+| `goodwatch-flows/` | Windmill data pipelines and ETL workflows |
+| `goodwatch-qdrant/` | Qdrant vector database for similarity search and recommendations |
+| `goodwatch-crate/` | CrateDB for webapp access |
+| `goodwatch-mongo/` | MongoDB for data pipeline storage |
+| `goodwatch-cache/` | Redis cache cluster configuration |
+| `goodwatch-metrics/` | Prometheus metrics collection |
+| `goodwatch-monitoring/` | Grafana dashboards and alerting |
+| `goodwatch-proxy/` | Caddy reverse proxy configuration |
 
-## Getting started
+## Contributing
 
-1. Checkout this repository
-2. Register for [TMDB API Key](https://developers.themoviedb.org/3/getting-started/introduction)
-3. Copy `.env.example` to `.env` from `/goodwatch-webapp` and fill out the required secrets.
+We welcome contributions! Please feel free to submit a Pull Request.
+
+## Run Locally
+
+### Documentation Status
+The following guide is outdated. If you want to contribute to the project, please join the [Discord Community](https://discord.gg/TVAcrfQzcA).
+
+### Getting started
+
+Running the web app:
+
+1. Clone this repository
+2. Register for a [TMDB API Key](https://developers.themoviedb.org/3/getting-started/introduction)
+3. Copy `.env.example` to `.env` from `/goodwatch-webapp` and fill out the required secrets
 
 You are now ready to run it locally:
 ```shell
@@ -25,84 +54,9 @@ npm install
 npm run dev
 ```
 
-## Adding a new Server
+## Server Guide
 
-### Install Packages
-```
-apt-get install make fzf
-```
-
-### Install Docker
-https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
-
-### Git Repository
-```
-git clone https://github.com/alp82/goodwatch-monorepo.git
-```
-
-### Grafana Exporter
-
-### Windmill Worker
-
-
-## Troubleshooting Servers
-
-### Not enough disc space
-```
-docker image prune -a
-docker builder prune
-```
-
-### Relocate docker root directory
-https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-docker-root-directory
-
-
-## Appendix
-
-### Database Cluster
-
-https://github.com/vitabaks/postgresql_cluster
-
-#### pgvector extension
-
-https://github.com/pgvector/pgvector
-
-```
-cd /tmp
-git clone --branch v0.7.4 https://github.com/pgvector/pgvector.git
-cd pgvector
-make
-make install
-```
-
-### pgvectorscale extension
-
-https://github.com/timescale/pgvectorscale?tab=readme-ov-file#installation
-
-TODO: install cargo version 1.75.0
-
-```
-# install prerequisites
-## rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source $HOME/.cargo/env
-rustup install 1.75.0
-rustup default 1.75.0
-## pgrx
-cargo install cargo-pgrx --version 0.11.4 --locked
-cargo pgrx init --pg16 pg_config
-
-#download, build and install pgvectorscale
-cd /tmp
-git clone --branch 0.3.0 https://github.com/timescale/pgvectorscale
-cd pgvectorscale/pgvectorscale
-export RUSTFLAGS="-C target-feature=+avx2,+fma"
-cargo pgrx install --release
-```
-
-```
-CREATE EXTENSION IF NOT EXISTS vectorscale CASCADE;
-```
+Running the whole infrastructure to run GoodWatch is more complex. The guide below is far from complete at the moment.
 
 ### Cache Cluster
 
@@ -133,12 +87,49 @@ ansible-playbook -i inventory.ini playbook.yml
 
 TODO
 
-## Deployment
+### Adding a new Server
 
-1. Create [Vercel project](https://vercel.com/dashboard)
-2. Install the [Vercel CLI](https://vercel.com/docs/cli)
-
-Every time you want to deploy run:
-```shell
-vercel deploy --prod
+#### Install Packages
 ```
+apt-get install make fzf
+```
+
+#### Install Docker
+https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+
+#### Git Repository
+```
+git clone https://github.com/alp82/goodwatch-monorepo.git
+```
+
+#### Grafana Exporter
+
+#### Windmill Worker
+
+#### Backup
+sshfs
+```
+apt-get update && apt-get install sshfs
+```
+
+fstab
+```
+u123456-subX@u123456-subX.your-storagebox.de:/home /mnt/backup-xxx fuse.sshfs _netdev,port=23,IdentityFile=/root/.ssh/id_rsa,allow_other,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 0 0
+```
+
+uv
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Troubleshooting
+
+#### Not enough disc space
+```
+docker image prune -a
+docker builder prune
+```
+
+#### Relocate docker root directory
+https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-docker-root-directory
+
