@@ -1,6 +1,7 @@
 import { cached } from "~/utils/cache"
 import { makePointId, recommend } from "~/utils/qdrant"
 import { type AllRatings } from "~/utils/ratings"
+import type { CoreScores } from "~/server/utils/fingerprint"
 
 interface QdrantMediaPayload {
 	tmdb_id: number
@@ -317,4 +318,87 @@ async function _getRelatedShows({
 		source_media_type,
 		target_media_type: "show",
 	}) as Promise<RelatedShow[]>
+}
+
+// --- Related by Category ---
+
+export interface RelatedTitle {
+	title: string
+	link: string
+	poster_path: string
+	goodwatch_score: number
+}
+
+export interface CategoryRelated {
+	movies: RelatedTitle[]
+	shows: RelatedTitle[]
+}
+
+export type RelatedByCategory = Record<string, CategoryRelated>
+
+export interface RelatedByCategoryParams {
+	tmdb_id: number
+	media_type: "movie" | "show"
+	highlight_keys: string[]
+	fingerprint_scores: CoreScores
+}
+
+export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
+	return await cached({
+		name: "related-by-category",
+		target: _getRelatedByCategory as any,
+		params,
+		ttlMinutes: 60 * 24,
+	}) as unknown as RelatedByCategory
+}
+
+async function _getRelatedByCategory({
+	tmdb_id,
+	media_type,
+	highlight_keys,
+	fingerprint_scores,
+}: RelatedByCategoryParams): Promise<RelatedByCategory> {
+	const categories = ["overall", ...highlight_keys]
+	const result: RelatedByCategory = {}
+
+	await Promise.all(
+		categories.map(async (category) => {
+			const fingerprintKey = category === "overall" ? undefined : category
+			const sourceFingerprintScore = fingerprintKey
+				? fingerprint_scores[fingerprintKey as keyof CoreScores]
+				: undefined
+
+			const [movies, shows] = await Promise.all([
+				getRelatedMovies({
+					tmdb_id,
+					fingerprint_key: fingerprintKey,
+					source_fingerprint_score: sourceFingerprintScore,
+					source_media_type: media_type,
+				}),
+				getRelatedShows({
+					tmdb_id,
+					fingerprint_key: fingerprintKey,
+					source_fingerprint_score: sourceFingerprintScore,
+					source_media_type: media_type,
+				}),
+			])
+
+			result[category] = {
+				movies: movies.slice(0, 10).map((m) => ({
+					title: Array.isArray(m.title) ? m.title[0] : m.title,
+					link: `/movie/${m.tmdb_id}`,
+					poster_path: m.poster_path,
+					goodwatch_score: m.goodwatch_overall_score_normalized_percent,
+				})),
+				shows: shows.slice(0, 10).map((s) => ({
+					title: Array.isArray(s.title) ? s.title[0] : s.title,
+					link: `/show/${s.tmdb_id}`,
+					poster_path: s.poster_path,
+					goodwatch_score: s.goodwatch_overall_score_normalized_percent,
+				})),
+			}
+		}),
+	)
+
+	return result
 }
