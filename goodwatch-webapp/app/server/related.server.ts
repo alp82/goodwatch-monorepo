@@ -2,6 +2,8 @@ import { cached } from "~/utils/cache"
 import { makePointId, recommend } from "~/utils/qdrant"
 import { type AllRatings } from "~/utils/ratings"
 import type { CoreScores } from "~/server/utils/fingerprint"
+import { getStreamingProviders } from "~/server/streaming-providers.server"
+import type { StreamingProvider } from "~/routes/api.streaming-providers"
 
 interface QdrantMediaPayload {
 	tmdb_id: number
@@ -53,6 +55,7 @@ interface QdrantMediaPayload {
 	context_is_drop_in_friendly?: boolean
 	streaming_pairs?: [string, string][]
 	streaming_pair_codes?: string[]
+	streaming_availability?: string[]
 }
 
 export interface RelatedMovie extends AllRatings {
@@ -65,6 +68,7 @@ export interface RelatedMovie extends AllRatings {
 	fingerprint_score: number
 	ann_score: number
 	score: number
+	streaming_availability?: string[]
 }
 
 export interface RelatedShow extends AllRatings {
@@ -77,6 +81,7 @@ export interface RelatedShow extends AllRatings {
 	fingerprint_score: number
 	ann_score: number
 	score: number
+	streaming_availability?: string[]
 }
 
 export interface RelatedMovieParams {
@@ -98,8 +103,8 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 		name: "related-movie",
 		target: _getRelatedMovies as any,
 		params,
-		ttlMinutes: 60 * 24,
-		//ttlMinutes: 0,
+		//ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	}) as unknown as RelatedMovie[]
 }
 
@@ -108,8 +113,8 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 		name: "related-show",
 		target: _getRelatedShows as any,
 		params,
-		ttlMinutes: 60 * 24,
-		//ttlMinutes: 0,
+		//ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	}) as unknown as RelatedShow[]
 }
 
@@ -230,6 +235,7 @@ async function getRelatedTitles({
 		"goodwatch_user_score_rating_count",
 		"goodwatch_official_score_normalized_percent",
 		"goodwatch_official_score_review_count",
+		"streaming_availability",
 	]
 
 	if (withKey && fingerprint_key) {
@@ -247,7 +253,6 @@ async function getRelatedTitles({
 		exact: false,
 	})
 
-	
 	const mappedResults = results
 		.filter(result => result.payload.poster_path)
 		.map((result) => {
@@ -281,6 +286,7 @@ async function getRelatedTitles({
 				fingerprint_score: targetFingerprintScore,
 				ann_score: annScore,
 				score: finalScore,
+				streaming_availability: payload.streaming_availability,
 				...extractRatingsFromPayload(payload),
 			}
 		})
@@ -322,11 +328,20 @@ async function _getRelatedShows({
 
 // --- Related by Category ---
 
+export interface StreamingAvailability {
+	id: number
+	name: string
+	logo: string
+	countries: string[]
+}
+
 export interface RelatedTitle {
 	title: string
+	release_year: string
 	link: string
 	poster_path: string
 	goodwatch_score: number
+	streaming_availability: StreamingAvailability[]
 }
 
 export interface CategoryRelated {
@@ -348,7 +363,8 @@ export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
 		name: "related-by-category",
 		target: _getRelatedByCategory as any,
 		params,
-		ttlMinutes: 60 * 24,
+		//ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	}) as unknown as RelatedByCategory
 }
 
@@ -360,6 +376,70 @@ async function _getRelatedByCategory({
 }: RelatedByCategoryParams): Promise<RelatedByCategory> {
 	const categories = ["overall", ...highlight_keys]
 	const result: RelatedByCategory = {}
+
+	// Fetch streaming providers once and create lookup map
+	const streamingProviders = await getStreamingProviders({ country: "US" })
+	const providerMap = new Map<number, StreamingProvider>(
+		streamingProviders.map(provider => [provider.id, provider])
+	)
+
+	// Helper function to parse streaming availability
+	const parseStreamingAvailability = (
+		streamingAvailability: string[] | undefined
+	): StreamingAvailability[] => {
+		if (!streamingAvailability?.length) return []
+
+		// Group countries by provider ID
+		const providerCountries = new Map<number, Set<string>>()
+
+		streamingAvailability.forEach(code => {
+			// Handle malformed codes gracefully
+			if (typeof code !== 'string' || !code.includes('_')) return
+			
+			const [providerIdStr, country] = code.split('_', 2)
+			if (!providerIdStr || !country) return
+			
+			const providerId = parseInt(providerIdStr)
+			if (isNaN(providerId) || providerId <= 0) return
+			
+			// Validate country code (2-3 letters)
+			if (!/^[A-Z]{2,3}$/.test(country)) return
+
+			if (!providerCountries.has(providerId)) {
+				providerCountries.set(providerId, new Set())
+			}
+			providerCountries.get(providerId)!.add(country)
+		})
+
+		// Convert to streaming availability objects
+		return Array.from(providerCountries.entries())
+			.map(([providerId, countries]) => {
+				const provider = providerMap.get(providerId)
+				if (!provider) return null
+
+				return {
+					id: providerId,
+					name: provider.name,
+					logo: `https://image.tmdb.org/t/p/original${provider.logo_path}`,
+					countries: Array.from(countries).sort(),
+				}
+			})
+			.filter((availability): availability is StreamingAvailability => 
+				availability !== null
+			)
+			.sort((a, b) => a.name.localeCompare(b.name))
+	}
+
+	// Helper function to create title slug
+	const createSlug = (title: string): string => {
+		return title
+			.toLowerCase()
+			.replace(/[^a-z0-9\s-]/g, '')
+			.replace(/\s+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+			.trim()
+	}
 
 	await Promise.all(
 		categories.map(async (category) => {
@@ -383,19 +463,32 @@ async function _getRelatedByCategory({
 				}),
 			])
 
-			result[category] = {
-				movies: movies.slice(0, 10).map((m) => ({
-					title: Array.isArray(m.title) ? m.title[0] : m.title,
-					link: `/movie/${m.tmdb_id}`,
-					poster_path: m.poster_path,
-					goodwatch_score: m.goodwatch_overall_score_normalized_percent,
-				})),
-				shows: shows.slice(0, 10).map((s) => ({
-					title: Array.isArray(s.title) ? s.title[0] : s.title,
-					link: `/show/${s.tmdb_id}`,
-					poster_path: s.poster_path,
-					goodwatch_score: s.goodwatch_overall_score_normalized_percent,
-				})),
+		console.log(movies[0]?.streaming_availability)
+		result[category] = {
+				movies: movies.slice(0, 10).map((m) => {
+					const title = Array.isArray(m.title) ? m.title[0] : m.title
+					const slug = createSlug(title)
+					return {
+						title,
+						release_year: m.release_year,
+						link: `https://goodwatch.app/movie/${m.tmdb_id}-${slug}`,
+						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${m.poster_path}`,
+						goodwatch_score: Math.ceil(m.goodwatch_overall_score_normalized_percent),
+						streaming_availability: parseStreamingAvailability(m.streaming_availability),
+					}
+				}),
+				shows: shows.slice(0, 10).map((s) => {
+					const title = Array.isArray(s.title) ? s.title[0] : s.title
+					const slug = createSlug(title)
+					return {
+						title,
+						release_year: s.release_year,
+						link: `https://goodwatch.app/show/${s.tmdb_id}-${slug}`,
+						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${s.poster_path}`,
+						goodwatch_score: Math.ceil(s.goodwatch_overall_score_normalized_percent),
+						streaming_availability: parseStreamingAvailability(s.streaming_availability),
+					}
+				}),
 			}
 		}),
 	)
