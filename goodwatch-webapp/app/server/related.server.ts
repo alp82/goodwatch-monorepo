@@ -5,6 +5,14 @@ import type { CoreScores } from "~/server/utils/fingerprint"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
 
+const STREAMING_PROVIDERS_WHITELIST: number[] = [
+	2,   // Apple TV
+	8,   // Netflix
+	9,   // Amazon Prime
+	283, // Crunchyroll
+	337, // Disney+
+] as const
+
 interface QdrantMediaPayload {
 	tmdb_id: number
 	media_type: "movie" | "show"
@@ -260,17 +268,12 @@ async function getRelatedTitles({
 			const annScore = result.score
 			const targetFingerprintScore = payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0
 			
-			if(!result.payload.poster_path) {
-				console.log(result.payload.tmdb_id, result.payload.title, result.payload.poster_path)
-			}
 			let finalScore = annScore
-			
 			if (withKey && sourceFingerprintScore !== null) {
 				const distance = Math.abs(targetFingerprintScore - sourceFingerprintScore)
 				const maxDistance = 10
 				const normalizedDistance = Math.min(distance / maxDistance, 1)
 				const fingerprintSimilarity = 1 - normalizedDistance
-				
 				finalScore = (0.2 * annScore) + (0.8 * fingerprintSimilarity)
 			}
 
@@ -417,6 +420,8 @@ async function _getRelatedByCategory({
 				const provider = providerMap.get(providerId)
 				if (!provider) return null
 
+				if(!STREAMING_PROVIDERS_WHITELIST.includes(providerId)) return null
+
 				return {
 					id: providerId,
 					name: provider.name,
@@ -463,7 +468,6 @@ async function _getRelatedByCategory({
 				}),
 			])
 
-		console.log(movies[0]?.streaming_availability)
 		result[category] = {
 				movies: movies.slice(0, 10).map((m) => {
 					const title = Array.isArray(m.title) ? m.title[0] : m.title
