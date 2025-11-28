@@ -6,11 +6,16 @@ import { getStreamingProviders } from "~/server/streaming-providers.server"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
 
 const STREAMING_PROVIDERS_WHITELIST: number[] = [
-	2,   // Apple TV
-	8,   // Netflix
-	9,   // Amazon Prime
-	283, // Crunchyroll
-	337, // Disney+
+	2,    // Apple TV
+	8,    // Netflix
+	9,    // Amazon Prime
+	15,   // Hulu
+	192,  // YouTube
+	283,  // Crunchyroll
+	337,  // Disney+
+	386,  // Peacock Premium
+	531,  // Paramount+
+	1899, // HBO Max
 ] as const
 
 interface QdrantMediaPayload {
@@ -97,6 +102,7 @@ export interface RelatedMovieParams {
 	fingerprint_key?: string
 	source_fingerprint_score?: number
 	source_media_type: "movie" | "show"
+	streaming_combinations?: string[]
 }
 
 export interface RelatedShowParams {
@@ -104,6 +110,7 @@ export interface RelatedShowParams {
 	fingerprint_key?: string
 	source_fingerprint_score?: number
 	source_media_type: "movie" | "show"
+	streaming_combinations?: string[]
 }
 
 export const getRelatedMovies = async (params: RelatedMovieParams) => {
@@ -165,12 +172,14 @@ async function getRelatedTitles({
 	source_fingerprint_score,
 	source_media_type,
 	target_media_type,
+	streaming_combinations,
 }: {
 	tmdb_id: number
 	fingerprint_key?: string
 	source_fingerprint_score?: number
 	source_media_type: "movie" | "show"
 	target_media_type: "movie" | "show"
+	streaming_combinations?: string[]
 }): Promise<(RelatedMovie | RelatedShow)[]> {
 	const collectionName = "media"
 	const sourcePointId = makePointId(source_media_type, tmdb_id)
@@ -217,6 +226,20 @@ async function getRelatedTitles({
 				gte: sourceFingerprintScore - 1,
 				lte: sourceFingerprintScore + 1,
 			},
+		})
+	}
+
+	// Add streaming combinations filter if provided
+	if (streaming_combinations && streaming_combinations.length > 0) {
+		// Create should clause with multiple match conditions for each combination
+		const streamingShouldConditions = streaming_combinations.map(combination => ({
+			key: "streaming_availability",
+			match: { value: combination }
+		}))
+		
+		filterConditions.must.push({
+			should: streamingShouldConditions,
+			minimum_should: 1 // At least one streaming combination must match
 		})
 	}
 
@@ -304,6 +327,7 @@ async function _getRelatedMovies({
 	fingerprint_key,
 	source_fingerprint_score,
 	source_media_type,
+	streaming_combinations,
 }: RelatedMovieParams): Promise<RelatedMovie[]> {
 	return getRelatedTitles({
 		tmdb_id,
@@ -311,6 +335,7 @@ async function _getRelatedMovies({
 		source_fingerprint_score,
 		source_media_type,
 		target_media_type: "movie",
+		streaming_combinations,
 	}) as Promise<RelatedMovie[]>
 }
 
@@ -319,6 +344,7 @@ async function _getRelatedShows({
 	fingerprint_key,
 	source_fingerprint_score,
 	source_media_type,
+	streaming_combinations,
 }: RelatedShowParams): Promise<RelatedShow[]> {
 	return getRelatedTitles({
 		tmdb_id,
@@ -326,6 +352,7 @@ async function _getRelatedShows({
 		source_fingerprint_score,
 		source_media_type,
 		target_media_type: "show",
+		streaming_combinations,
 	}) as Promise<RelatedShow[]>
 }
 
@@ -335,7 +362,6 @@ export interface StreamingAvailability {
 	id: number
 	name: string
 	logo: string
-	countries: string[]
 }
 
 export interface RelatedTitle {
@@ -344,7 +370,7 @@ export interface RelatedTitle {
 	link: string
 	poster_path: string
 	goodwatch_score: number
-	streaming_availability: StreamingAvailability[]
+	streaming_availability: Record<string, StreamingAvailability[]>
 }
 
 export interface CategoryRelated {
@@ -359,11 +385,16 @@ export interface RelatedByCategoryParams {
 	media_type: "movie" | "show"
 	highlight_keys: string[]
 	fingerprint_scores: CoreScores
+	countries: string[]
+	streaming_ids?: number[]
 }
 
 export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
+	// Create a cache key that includes countries and streaming_ids for proper invalidation
+	const cacheKey = `related-by-category-${params.countries.join(',')}-${params.streaming_ids?.join(',') || 'all'}`
+	
 	return await cached({
-		name: "related-by-category",
+		name: cacheKey,
 		target: _getRelatedByCategory as any,
 		params,
 		//ttlMinutes: 60 * 24,
@@ -376,24 +407,75 @@ async function _getRelatedByCategory({
 	media_type,
 	highlight_keys,
 	fingerprint_scores,
+	countries,
+	streaming_ids,
 }: RelatedByCategoryParams): Promise<RelatedByCategory> {
 	const categories = ["overall", ...highlight_keys]
 	const result: RelatedByCategory = {}
 
-	// Fetch streaming providers once and create lookup map
+	// Fetch streaming providers once
 	const streamingProviders = await getStreamingProviders({ country: "US" })
 	const providerMap = new Map<number, StreamingProvider>(
 		streamingProviders.map(provider => [provider.id, provider])
 	)
 
-	// Helper function to parse streaming availability
-	const parseStreamingAvailability = (
-		streamingAvailability: string[] | undefined
-	): StreamingAvailability[] => {
-		if (!streamingAvailability?.length) return []
+	// Determine streaming IDs to use
+	let targetStreamingIds: number[]
+	if (streaming_ids && streaming_ids.length > 0) {
+		targetStreamingIds = streaming_ids
+	} else {
+		// Get top 10 providers for each country based on order_by_country
+		const countryProviderScores = new Map<number, number>()
+		
+		streamingProviders.forEach(provider => {
+			let totalScore = 0
+			let hasValidCountry = false
+			
+			countries.forEach(country => {
+				const countryOrder = provider.order_by_country?.[country] ?? provider.order_default
+				if (countryOrder !== undefined && countryOrder < 50) { // Reasonable limit
+					totalScore += countryOrder
+					hasValidCountry = true
+				}
+			})
+			
+			if (hasValidCountry) {
+				countryProviderScores.set(provider.id, totalScore)
+			}
+		})
 
-		// Group countries by provider ID
-		const providerCountries = new Map<number, Set<string>>()
+		// Sort by total score (lower is better) and take top 10
+		targetStreamingIds = Array.from(countryProviderScores.entries())
+			.sort(([, scoreA], [, scoreB]) => scoreA - scoreB)
+			.slice(0, 10)
+			.map(([providerId]) => providerId)
+
+		// Edge case: if no providers found for requested countries, throw error
+		if (targetStreamingIds.length === 0) {
+			throw new Error(`No streaming providers found for countries: ${countries.join(', ')}`)
+		}
+	}
+
+	// Build exact streaming combinations for filtering
+	const targetCombinations = new Set<string>()
+	targetStreamingIds.forEach(providerId => {
+		countries.forEach(country => {
+			targetCombinations.add(`${providerId}_${country}`)
+		})
+	})
+
+	// Helper function to parse streaming availability by country
+	const parseStreamingAvailabilityByCountry = (
+		streamingAvailability: string[] | undefined
+	): Record<string, StreamingAvailability[]> => {
+		if (!streamingAvailability?.length) return {}
+
+		const result: Record<string, StreamingAvailability[]> = {}
+		
+		// Initialize empty arrays for all requested countries
+		countries.forEach(country => {
+			result[country] = []
+		})
 
 		streamingAvailability.forEach(code => {
 			// Handle malformed codes gracefully
@@ -405,34 +487,33 @@ async function _getRelatedByCategory({
 			const providerId = parseInt(providerIdStr)
 			if (isNaN(providerId) || providerId <= 0) return
 			
-			// Validate country code (2-3 letters)
-			if (!/^[A-Z]{2,3}$/.test(country)) return
+			// Only process if this is one of our target countries and streaming IDs
+			if (!countries.includes(country) || !targetStreamingIds.includes(providerId)) return
 
-			if (!providerCountries.has(providerId)) {
-				providerCountries.set(providerId, new Set())
+			const provider = providerMap.get(providerId)
+			if (!provider) return
+
+			if (!result[country]) {
+				result[country] = []
 			}
-			providerCountries.get(providerId)!.add(country)
-		})
 
-		// Convert to streaming availability objects
-		return Array.from(providerCountries.entries())
-			.map(([providerId, countries]) => {
-				const provider = providerMap.get(providerId)
-				if (!provider) return null
-
-				if(!STREAMING_PROVIDERS_WHITELIST.includes(providerId)) return null
-
-				return {
+			// Check if provider already added to this country
+			const alreadyAdded = result[country].some(p => p.id === providerId)
+			if (!alreadyAdded) {
+				result[country].push({
 					id: providerId,
 					name: provider.name,
 					logo: `https://image.tmdb.org/t/p/original${provider.logo_path}`,
-					countries: Array.from(countries).sort(),
-				}
-			})
-			.filter((availability): availability is StreamingAvailability => 
-				availability !== null
-			)
-			.sort((a, b) => a.name.localeCompare(b.name))
+				})
+			}
+		})
+
+		// Sort providers by name within each country
+		countries.forEach(country => {
+			result[country].sort((a, b) => a.name.localeCompare(b.name))
+		})
+
+		return result
 	}
 
 	// Helper function to create title slug
@@ -459,16 +540,18 @@ async function _getRelatedByCategory({
 					fingerprint_key: fingerprintKey,
 					source_fingerprint_score: sourceFingerprintScore,
 					source_media_type: media_type,
+					streaming_combinations: Array.from(targetCombinations),
 				}),
 				getRelatedShows({
 					tmdb_id,
 					fingerprint_key: fingerprintKey,
 					source_fingerprint_score: sourceFingerprintScore,
 					source_media_type: media_type,
+					streaming_combinations: Array.from(targetCombinations),
 				}),
 			])
 
-		result[category] = {
+			result[category] = {
 				movies: movies.slice(0, 10).map((m) => {
 					const title = Array.isArray(m.title) ? m.title[0] : m.title
 					const slug = createSlug(title)
@@ -478,7 +561,7 @@ async function _getRelatedByCategory({
 						link: `https://goodwatch.app/movie/${m.tmdb_id}-${slug}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${m.poster_path}`,
 						goodwatch_score: Math.ceil(m.goodwatch_overall_score_normalized_percent),
-						streaming_availability: parseStreamingAvailability(m.streaming_availability),
+						streaming_availability: parseStreamingAvailabilityByCountry(m.streaming_availability),
 					}
 				}),
 				shows: shows.slice(0, 10).map((s) => {
@@ -490,7 +573,7 @@ async function _getRelatedByCategory({
 						link: `https://goodwatch.app/show/${s.tmdb_id}-${slug}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${s.poster_path}`,
 						goodwatch_score: Math.ceil(s.goodwatch_overall_score_normalized_percent),
-						streaming_availability: parseStreamingAvailability(s.streaming_availability),
+						streaming_availability: parseStreamingAvailabilityByCountry(s.streaming_availability),
 					}
 				}),
 			}

@@ -19,11 +19,12 @@ export const loader: LoaderFunction = async ({
 	const url = new URL(request.url)
 	const mediaType = url.searchParams.get("mediaType") as MediaType
 	const id = url.searchParams.get("id")
-	const country = url.searchParams.get("country") ?? "US"
+	const countries = url.searchParams.get("countries")
+	const streamingIds = url.searchParams.get("streaming_ids")
 	const language = url.searchParams.get("language") ?? "en"
 
-	if (!mediaType || !id) {
-		throw new Response("Missing required parameters: mediaType and id", {
+	if (!mediaType || !id || !countries) {
+		throw new Response("Missing required parameters: mediaType, id, and countries", {
 			status: 400,
 		})
 	}
@@ -34,10 +35,16 @@ export const loader: LoaderFunction = async ({
 		})
 	}
 
+	// Parse countries and streaming_ids
+	const countryList = countries.split(",").map(c => c.trim().toUpperCase())
+	const streamingIdList = streamingIds 
+		? streamingIds.split(",").map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+		: undefined
+
 	const details =
 		mediaType === "movie"
-			? await getDetailsForMovie({ movieId: id, country, language })
-			: await getDetailsForShow({ showId: id, country, language })
+			? await getDetailsForMovie({ movieId: id, country: countryList[0], language })
+			: await getDetailsForShow({ showId: id, country: countryList[0], language })
 
 	if (!details?.fingerprint) {
 		throw new Response("No fingerprint data available for this title", {
@@ -52,6 +59,8 @@ export const loader: LoaderFunction = async ({
 		media_type: mediaType,
 		highlight_keys: highlightKeys,
 		fingerprint_scores: scores,
+		countries: countryList,
+		streaming_ids: streamingIdList,
 	})
 
 	return json<GetRelatedByCategoryResult>(relatedByCategory)
@@ -62,27 +71,33 @@ export const queryKeyRelatedByCategory = ["related-by-category"]
 export interface UseRelatedByCategoryParams {
 	mediaType: MediaType
 	id: number
-	country?: string
+	countries: string
+	streaming_ids?: string
 	language?: string
 }
 
 export const useRelatedByCategory = ({
 	mediaType,
 	id,
-	country = "US",
+	countries,
+	streaming_ids,
 	language = "en",
 }: UseRelatedByCategoryParams) => {
 	const url = new URL("/api/related-by-category", "https://goodwatch.app")
 	url.searchParams.append("mediaType", mediaType)
 	url.searchParams.append("id", id.toString())
-	url.searchParams.append("country", country)
+	url.searchParams.append("countries", countries)
+	if (streaming_ids) {
+		url.searchParams.append("streaming_ids", streaming_ids)
+	}
 	url.searchParams.append("language", language)
 
 	return useQuery<GetRelatedByCategoryResult>({
 		queryKey: queryKeyRelatedByCategory.concat([
 			mediaType,
 			id.toString(),
-			country,
+			countries,
+			streaming_ids ?? '',
 			language,
 		]),
 		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),

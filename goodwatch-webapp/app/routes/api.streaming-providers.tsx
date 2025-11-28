@@ -8,6 +8,8 @@ export interface StreamingProvider {
 	id: number
 	name: string
 	logo_path: string
+	order_by_country?: Record<string, number>
+	order_default?: number
 }
 
 export type StreamingProviderResults = StreamingProvider[]
