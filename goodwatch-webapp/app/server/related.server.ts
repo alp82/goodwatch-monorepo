@@ -76,6 +76,7 @@ export interface RelatedMovie extends AllRatings {
 	title: string
 	release_year: string
 	poster_path: string
+	backdrop_path: string
 	goodwatch_overall_score_voting_count: number
 	goodwatch_overall_score_normalized_percent: number
 	fingerprint_score: number
@@ -89,6 +90,7 @@ export interface RelatedShow extends AllRatings {
 	title: string
 	release_year: string
 	poster_path: string
+	backdrop_path: string
 	goodwatch_overall_score_voting_count: number
 	goodwatch_overall_score_normalized_percent: number
 	fingerprint_score: number
@@ -114,8 +116,11 @@ export interface RelatedShowParams {
 }
 
 export const getRelatedMovies = async (params: RelatedMovieParams) => {
+	// Create cache key that includes streaming combinations to prevent stale data
+	const cacheKey = `related-movie-${params.tmdb_id}-${params.fingerprint_key || 'all'}-${params.source_media_type}-${params.streaming_combinations?.join(',') || 'none'}`
+	
 	return await cached({
-		name: "related-movie",
+		name: cacheKey,
 		target: _getRelatedMovies as any,
 		params,
 		//ttlMinutes: 60 * 24,
@@ -124,8 +129,11 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 }
 
 export const getRelatedShows = async (params: RelatedShowParams) => {
+	// Create cache key that includes streaming combinations to prevent stale data
+	const cacheKey = `related-show-${params.tmdb_id}-${params.fingerprint_key || 'all'}-${params.source_media_type}-${params.streaming_combinations?.join(',') || 'none'}`
+	
 	return await cached({
-		name: "related-show",
+		name: cacheKey,
 		target: _getRelatedShows as any,
 		params,
 		//ttlMinutes: 60 * 24,
@@ -133,7 +141,7 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 	}) as unknown as RelatedShow[]
 }
 
-const extractRatingsFromPayload = (payload: QdrantMediaPayload): Partial<AllRatings> => {
+const extractRatingsFromPayload = (payload: QdrantMediaPayload): AllRatings => {
 	return {
 		tmdb_url: "",
 		tmdb_user_score_original: 0,
@@ -248,6 +256,7 @@ async function getRelatedTitles({
 		"title",
 		"release_year",
 		"poster_path",
+		"backdrop_path",
 		"goodwatch_overall_score_voting_count",
 		"goodwatch_overall_score_normalized_percent",
 		"tmdb_user_score_normalized_percent",
@@ -302,13 +311,10 @@ async function getRelatedTitles({
 
 			return {
 				tmdb_id: payload.tmdb_id,
-				title: payload.title ?? "",
+				title: Array.isArray(payload.title) ? payload.title[0] : (payload.title ?? ""),
 				release_year: String(payload.release_year ?? ""),
-				poster_path: payload.poster_path ?? "",
-				goodwatch_overall_score_voting_count:
-					payload.goodwatch_overall_score_voting_count ?? 0,
-				goodwatch_overall_score_normalized_percent:
-					payload.goodwatch_overall_score_normalized_percent ?? 0,
+				poster_path: Array.isArray(payload.poster_path) ? payload.poster_path[0] : (payload.poster_path ?? ""),
+				backdrop_path: Array.isArray(payload.backdrop_path) ? payload.backdrop_path[0] : (payload.backdrop_path ?? ""),
 				fingerprint_score: targetFingerprintScore,
 				ann_score: annScore,
 				score: finalScore,
@@ -369,6 +375,7 @@ export interface RelatedTitle {
 	release_year: string
 	link: string
 	poster_path: string
+	backdrop_path: string
 	goodwatch_score: number
 	streaming_availability: Record<string, StreamingAvailability[]>
 }
@@ -450,10 +457,11 @@ async function _getRelatedByCategory({
 			.slice(0, 10)
 			.map(([providerId]) => providerId)
 
-		// Edge case: if no providers found for requested countries, throw error
-		if (targetStreamingIds.length === 0) {
-			throw new Error(`No streaming providers found for countries: ${countries.join(', ')}`)
-		}
+    // Edge case: if no providers found for requested countries, fallback to using all providers
+    if (targetStreamingIds.length === 0) {
+        // Use all provider IDs as fallback to ensure availability
+        targetStreamingIds = streamingProviders.map(p => p.id);
+    }
 	}
 
 	// Build exact streaming combinations for filtering
@@ -560,6 +568,7 @@ async function _getRelatedByCategory({
 						release_year: m.release_year,
 						link: `https://goodwatch.app/movie/${m.tmdb_id}-${slug}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${m.poster_path}`,
+						backdrop_path: m.backdrop_path ? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${m.backdrop_path}` : "",
 						goodwatch_score: Math.ceil(m.goodwatch_overall_score_normalized_percent),
 						streaming_availability: parseStreamingAvailabilityByCountry(m.streaming_availability),
 					}
@@ -572,6 +581,7 @@ async function _getRelatedByCategory({
 						release_year: s.release_year,
 						link: `https://goodwatch.app/show/${s.tmdb_id}-${slug}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${s.poster_path}`,
+						backdrop_path: s.backdrop_path ? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${s.backdrop_path}` : "",
 						goodwatch_score: Math.ceil(s.goodwatch_overall_score_normalized_percent),
 						streaming_availability: parseStreamingAvailabilityByCountry(s.streaming_availability),
 					}
