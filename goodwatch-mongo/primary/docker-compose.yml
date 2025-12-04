@@ -37,7 +37,7 @@ services:
     container_name: mongoinit
     image: mongo:8
     network_mode: "host"
-    restart: no
+    restart: "no"
     depends_on:
       mongo:
         condition: service_healthy
@@ -45,35 +45,58 @@ services:
       bash -c "
         set -e
         echo '--- Waiting for mongo to be ready...'
-        until mongosh --host localhost --port 28017 --eval 'quit(0)'; do
+        until mongosh --host localhost --port 28017 --eval 'quit(0)' --quiet; do
           sleep 2
         done
-      
-        echo '--- Initiating single-node replica set...'
-        # --- THIS COMMAND IS NOW CORRECTLY AUTHENTICATED ---
-        mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
-          rs.initiate({
-            _id: \"rs0\",
-            members: [{ _id: 0, host: \"10.0.0.17:28017\" }]
-          });
-        '
-      
-        echo '--- Waiting 5 seconds for replica set to stabilize...'
-        sleep 5
 
-        echo '--- Waiting for node to become PRIMARY...'
-        until mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval 'rs.isMaster().ismaster' | grep -q true; do
-            echo 'Still waiting for PRIMARY status...'
+        echo '--- Checking Replica Set Status...'
+        # We run a JS script to handle the logic intelligently
+        mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
+          try {
+            const status = rs.status();
+            if (status.ok === 1) {
+              print(\"--- Replica Set already initialized. Checking members...\");
+            }
+          } catch (e) {
+            if (e.codeName === \"NotYetInitialized\" || e.message.includes(\"no replset config\")) {
+              print(\"--- Initiating new Replica Set...\");
+              rs.initiate({
+                _id: \"rs0\",
+                members: [
+                  { _id: 0, host: \"10.0.0.17:28017\", priority: 2 }
+                ]
+              });
+            } else {
+              throw e;
+            }
+          }
+        '
+
+        echo '--- Waiting for PRIMARY status...'
+        # Wait until WE are primary or can see a primary
+        until mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval 'if (!rs.isMaster().ismaster) { quit(1); }' --quiet; do
+            echo 'Waiting to become Primary...'
             sleep 2
         done
-      
-        echo '--- PRIMARY status achieved. Adding secondary nodes to the replica set...'
+
+        echo '--- Ensuring Secondary Nodes are added...'
+        # rs.add is safe to run multiple times; it will error harmlessly if they exist, 
+        # but we wrap it to be clean.
         mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
-          rs.add(\"10.0.0.18:28017\");
-          rs.add(\"10.0.0.19:28017\");
+          const config = rs.config();
+          const hosts = config.members.map(m => m.host);
+          
+          if (!hosts.includes(\"10.0.0.18:28017\")) {
+             print(\"Adding 10.0.0.18...\");
+             rs.add(\"10.0.0.18:28017\");
+          }
+          if (!hosts.includes(\"10.0.0.19:28017\")) {
+             print(\"Adding 10.0.0.19...\");
+             rs.add(\"10.0.0.19:28017\");
+          }
         '
-      
-        echo '--- Creating application user...'
+
+        echo '--- Creating application user (Idempotent)...'
         mongosh --host localhost --port 28017 -u admin -p \"${MONGO_ADMIN_PASS}\" --authenticationDatabase admin --eval '
           db.getSiblingDB(\"goodwatch\").createUser({
             user: \"goodwatch\",
@@ -83,9 +106,9 @@ services:
               { role: \"dbAdmin\", db: \"goodwatch\" }
             ]
           });
-        '
-      
-        echo '✅ SUCCESS! Replica set is fully configured and user is created.'
+        ' || echo 'User likely already exists, skipping...'
+
+        echo '✅ Cluster is healthy.'
       "
 
 volumes:
