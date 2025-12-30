@@ -15,6 +15,7 @@ import WishlistFilter, {
 	type FilterByStreaming,
 	type SortBy,
 } from "~/ui/filter/WishlistFilter"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export function headers() {
 	return {
@@ -23,14 +24,17 @@ export function headers() {
 	}
 }
 
-export const meta: MetaFunction<typeof loader> = () => {
-	return [
-		{ title: "Wishlist | GoodWatch" },
-		{
-			description:
-				"All movie and tv show ratings and streaming providers on the same page",
-		},
-	]
+export const meta: MetaFunction = () => {
+	const pageMeta: PageMeta = {
+		title: "Wishlist | GoodWatch",
+		description:
+			"Your personal watchlist of movies and TV shows to watch next",
+		url: "https://goodwatch.app/wishlist",
+		image: "https://goodwatch.app/images/heroes/hero-movies.png",
+		alt: "Your GoodWatch Wishlist",
+	}
+
+	return buildMeta({ pageMeta, items: [] })
 }
 
 export type LoaderData = {

@@ -20,7 +20,7 @@ import AddFilterBar from "~/ui/filter/AddFilterBar"
 import FilterBar from "~/ui/filter/FilterBar"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
-import { type PageMeta, buildMeta } from "~/utils/meta"
+import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
 import { buildDiscoverParams } from "~/utils/discover"
 
@@ -31,17 +31,18 @@ export function headers() {
 	}
 }
 
-export const meta: MetaFunction = () => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+	const mediaType = data?.mediaType || "all"
+	const typePath = mediaType === "all" ? "" : `/${mediaType}`
 	const pageMeta: PageMeta = {
 		title: "Discover | GoodWatch",
 		description:
 			"Discover the best movies and tv shows to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find movies and TV shows by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.",
-		url: "https://goodwatch.app/discover",
+		url: `https://goodwatch.app/discover${typePath}`,
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
 	}
 
-	// TODO
 	const items: PageItem[] = []
 
 	return buildMeta({ pageMeta, items })

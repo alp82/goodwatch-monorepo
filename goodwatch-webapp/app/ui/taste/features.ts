@@ -65,7 +65,7 @@ export const FEATURES: Feature[] = [
 		fullDescription:
 			"Discover which genres you love most. See patterns like 'You love Action & Horror movies'.",
 		unlockAt: 30,
-		requirements: ["Rate 40 total items"],
+		requirements: ["Rate 30 total items"],
 	},
 	{
 		id: "decade_detection",
@@ -77,7 +77,7 @@ export const FEATURES: Feature[] = [
 		fullDescription:
 			"Find out which decades resonate with you. See insights like 'You prefer movies from the 2000s and 2010s'.",
 		unlockAt: 50,
-		requirements: ["Rate 60 total items"],
+		requirements: ["Rate 50 total items"],
 	},
 	{
 		id: "creator_detection",
@@ -89,7 +89,7 @@ export const FEATURES: Feature[] = [
 		fullDescription:
 			"Discover your favorite directors and actors. See stats like 'You've watched 4/5 Christopher Nolan movies'.",
 		unlockAt: 75,
-		requirements: ["Rate 80 total items"],
+		requirements: ["Rate 75 total items"],
 	},
 	{
 		id: "fingerprint_detection",

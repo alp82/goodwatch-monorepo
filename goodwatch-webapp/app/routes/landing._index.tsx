@@ -51,19 +51,9 @@ export const headers: HeadersFunction = () => {
 }
 
 export const meta: MetaFunction<typeof loader> = () => {
-	const pageMeta: PageMeta = {
-		title: "GoodWatch - Find the best movies and tv shows to watch",
-		description:
-			"Discover the best movies and tv shows to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find titles by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.",
-		url: "https://goodwatch.app",
-		image: "https://goodwatch.app/images/heroes/hero-movies.png",
-		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
-	}
-
-	// TODO
-	const items: PageItem[] = []
-
-	return buildMeta({ pageMeta, items })
+	return [
+		{ name: "robots", content: "noindex, nofollow" },
+	]
 }
 
 type LoaderData = {

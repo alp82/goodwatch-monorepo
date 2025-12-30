@@ -10,8 +10,8 @@ import metacriticLogo from "~/img/metacritic-logo-250.png"
 import netflixLogo from "~/img/netflix-logo.svg"
 import primeLogo from "~/img/primevideo-logo.svg"
 import rottenLogo from "~/img/rotten-logo-250.png"
-import type { loader } from "~/routes/discover"
 import { useInfoModal } from "~/ui/modal/infoModal"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export function headers() {
 	return {
@@ -20,14 +20,17 @@ export function headers() {
 	}
 }
 
-export const meta: MetaFunction<typeof loader> = () => {
-	return [
-		{ title: "How It Works | GoodWatch" },
-		{
-			description:
-				"Privacy at GoodWatch. All movie and tv show ratings and streaming providers on the same page",
-		},
-	]
+export const meta: MetaFunction = () => {
+	const pageMeta: PageMeta = {
+		title: "How It Works | GoodWatch",
+		description:
+			"Learn how GoodWatch helps you find the best movies and TV shows to watch",
+		url: "https://goodwatch.app/how-it-works",
+		image: "https://goodwatch.app/images/heroes/hero-movies.png",
+		alt: "How GoodWatch Works",
+	}
+
+	return buildMeta({ pageMeta, items: [] })
 }
 
 export default function About() {

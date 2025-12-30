@@ -5,6 +5,7 @@ import React from "react";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import { Spinner } from "~/ui/wait/Spinner";
 import { useUser } from "~/utils/auth";
+import { type PageMeta, buildMeta } from "~/utils/meta";
 
 export function headers() {
 	return {
@@ -14,13 +15,16 @@ export function headers() {
 }
 
 export const meta: MetaFunction = () => {
-	return [
-		{ title: "Settings | GoodWatch" },
-		{
-			description:
-				"User Settings at GoodWatch. All movie and tv show ratings and streaming providers on the same page",
-		},
-	];
+	const pageMeta: PageMeta = {
+		title: "Settings | GoodWatch",
+		description:
+			"User Settings at GoodWatch. All movie and tv show ratings and streaming providers on the same page",
+		url: "https://goodwatch.app/settings",
+		image: "https://goodwatch.app/images/heroes/hero-movies.png",
+		alt: "GoodWatch Settings",
+	};
+
+	return buildMeta({ pageMeta, items: [] });
 };
 
 const navigation = [

@@ -1,5 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
-import type { loader } from "~/routes/discover";
+import { type PageMeta, buildMeta } from "~/utils/meta";
 
 export function headers() {
 	return {
@@ -8,14 +8,17 @@ export function headers() {
 	};
 }
 
-export const meta: MetaFunction<typeof loader> = () => {
-	return [
-		{ title: "Disclaimer | GoodWatch" },
-		{
-			description:
-				"All movie and tv show ratings and streaming providers on the same page",
-		},
-	];
+export const meta: MetaFunction = () => {
+	const pageMeta: PageMeta = {
+		title: "Disclaimer | GoodWatch",
+		description:
+			"Legal disclaimer and impressum for GoodWatch",
+		url: "https://goodwatch.app/disclaimer",
+		image: "https://goodwatch.app/images/heroes/hero-movies.png",
+		alt: "GoodWatch Disclaimer",
+	};
+
+	return buildMeta({ pageMeta, items: [] });
 };
 
 export default function Disclaimer() {

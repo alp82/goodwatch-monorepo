@@ -12,6 +12,7 @@ import { useSupabase, useUser } from "~/utils/auth";
 import loading = toast.loading;
 import { Spinner } from "~/ui/wait/Spinner";
 import type { ColorName } from "~/utils/color";
+import { type PageMeta, buildMeta } from "~/utils/meta";
 
 export function headers() {
 	return {
@@ -21,13 +22,16 @@ export function headers() {
 }
 
 export const meta: MetaFunction = () => {
-	return [
-		{ title: "Sign In | GoodWatch" },
-		{
-			description:
-				"Sign in to GoodWatch. All movie and tv show ratings and streaming providers on the same page",
-		},
-	];
+	const pageMeta: PageMeta = {
+		title: "Sign In | GoodWatch",
+		description:
+			"Sign in to GoodWatch. All movie and tv show ratings and streaming providers on the same page",
+		url: "https://goodwatch.app/sign-in",
+		image: "https://goodwatch.app/images/heroes/hero-movies.png",
+		alt: "Sign in to GoodWatch",
+	};
+
+	return buildMeta({ pageMeta, items: [] });
 };
 
 export type LoaderData = {
