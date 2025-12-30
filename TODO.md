@@ -2,30 +2,70 @@
 
 ```
 
-mobile rating easier
-    * use swipescorer for details as well
-    * easier to find rating button
-    * modal needs to close automatically after saving
+---
+
+seo:
+    fix canonicals
+    fix page size
+    fix page request count
+    fix page speed
+    https://website.grader.com/tests/goodwatch.app
+
+seo checklist:
+    Is the content actually unique, or does it overlap with other page?
+    Would you bookmark it if you found it via search?
+    Any thin, empty, or templated pages that should just be merged or noindexed?
+    Does it answer a real search intent, or is just there because it could be?
+    No rogue noindex or canonical tags pointing somewhere weird?
+    Rendering fine when you test it live in GSC (no JS hiccups hiding content)?
+    Any 4xx/5xx errors?
+    Canonicals all pointing where they should?
+    Are these pages linked from other meaningful pages - or are they buried 5 clicks deep?
+    Is your sitemap fresh and submitted?
+    Are the most valuable pages getting enough internal “votes”?
+    Any backlinks at all to these pages (internal or external)?
+    Are they getting actual clicks or impressions?
+    Titles, meta, and headings - do they clearly tell Google what this page is for?
+    Any structured data helping Google understand the content type?
+
+---
+
+better sign up screen
+    fullscreen half half
+    video playing on one side
+    showing benefits
+
+---
+
+onboarding cleanup
+
+-- 1. CLEANUP QUERY - Remove old onboarding_status keys
+-- =====================================================
+-- !! RUN THIS ONLY AFTER VERIFYING THE MIGRATION WORKED CORRECTLY !!
+-- This removes the deprecated onboarding_status keys
+-- Uncomment the following when ready to clean up:
+-- DELETE FROM user_setting WHERE key = 'onboarding_status';
+-- Verify cleanup
+-- SELECT COUNT(*) as remaining_old_keys FROM user_setting WHERE key = 'onboarding_status';
+
+---
 
 start page
-    show lists below quiz landing
+    what's the vibe needs to exclude user titles
 
-movie details
-    * check if too much data (cast, crew)
+mobile rating easier
+    use swipescorer for details as well
+    easier to find rating button
+    modal needs to close automatically after saving
 
-user data in local storage
-    tanstack db?
-
-The Wolf of Wall Street
-    * description does not make any sense
+jonathan feedback
+    movie details as drawer
+    reveal page a bit confusing - not clear that they are saved
+    swiping with 10 scoring options too difficult
 
 ---    
 
-onboarding as CTA banner
-    e.g. https://www.producthunt.com/
-    
 onboarding
-    skip with "softcore" keyword
     https://kinu-app.com/
     https://veboli.com/
     
@@ -46,6 +86,114 @@ onboarding
         Double skip button at the bottom
     
     Success notification for milestones
+
+
+---
+
+button design
+    https://x.com/jh3yy/status/2000730558674903415
+    https://x.com/jh3yy/status/1992003440579662211
+
+---
+
+feedback form on website
+    discord link
+
+---
+
+wrong rating links:
+    crawler reads release year and checks if it is correct
+    https://goodwatch.app/movie/1151272-sirt?country=DE
+    https://goodwatch.app/movie/616027-the-circus
+    how to identify all wrong rating links?
+
+score inconsistencies:
+    lists show different goodwatch score than details
+
+---
+
+Fingerprint improvements
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
+    fingerprint by genre
+    Genre boxes with 4 most suitable scores
+    https://codepen.io/Ideepak_29aug/pen/OJdWWaW
+
+fingerprint v2
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/6915e2c6-ec54-8325-aa6d-047ba31f9431
+    mainstream vs niche
+        arthouse
+        hollywood
+        blockbuster
+        dull / predictable experience
+        franchise fatigue
+        ...
+    seasons
+        decline over time
+        repetitive
+        lost interest
+        always something new
+    pirates
+    time travel
+        distant future
+        distant past
+        looping
+    more subgenres
+        musical
+        multiverse
+    more music genres
+        metal
+    ambigious ending + clear resolution ending
+        ending_closure: number;   // 0 = very open, 1 = very closed
+        ending_twistiness: number; // 0 = straightforward, 1 = multiple twists/reframes
+        export type EndingType =
+            | 'closed_happy'
+            | 'closed_tragic'
+            | 'bittersweet'
+            | 'open_to_interpretation'
+            | 'cliffhanger'
+            | 'cyclical';
+    https://claude.ai/chat/0fc0178c-3693-4853-91a8-b2922afc7fc3
+    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/691ad2b7-b6f0-8331-92d1-bf5a57ad040d
+
+---
+
+priority queue
+    priority.ts
+    postgres -> crate
+    windmill script updates
+
+---
+
+movie details
+    * show number of votes
+    * check if too much data (cast, crew)
+
+movies that aren't movies
+    https://goodwatch.app/movie/1412450-stranger-things
+    https://goodwatch.app/movie/1412549-wednesday
+
+---
+
+taste engine settings
+    simple scale vs 1-10
+    genre preselection?
+
+---
+
+The Wolf of Wall Street
+    * description does not make any sense
+
+---
+
+your match
+    score prediction
+    or 3-color coded badge
+
+---
+
+windmill
+    mongo connect retry strategy
+    https://windmill.goodwatch.app/run/019a5379-1ec2-eb48-b49c-9bd345438183?workspace=goodwatch
     
 ---
 
@@ -54,16 +202,68 @@ start page
     pick best 10 page data categories to display
     stats: number of movies and shows
     https://moviewiser.com/
+    https://www.reactbits.dev/components/card-swap
+    https://www.reactbits.dev/backgrounds/light-rays
     
 ---
 
-sirat wrong rating links:
-    https://goodwatch.app/movie/1151272-sirt?country=DE
+number effects
+    https://animate-ui.com/docs/primitives/texts/counting-number
+    https://www.reactbits.dev/text-animations/count-up
+    https://www.reactbits.dev/components/counter
+
+text effects
+    https://ui.paceui.com/docs/components/reveal-text
+    https://magicui.design/docs/components/morphing-text
+
+highlight effets
+    https://www.reactbits.dev/animations/electric-border
+    https://www.reactbits.dev/animations/target-cursor
+    https://magicui.design/docs/components/border-beam
+    https://magicui.design/docs/components/shine-border
+    https://magicui.design/docs/components/flickering-grid
+    https://magicui.design/docs/components/light-rays
+    https://www.reactbits.dev/animations/glare-hover
+    https://www.reactbits.dev/backgrounds/orb
+
+reveal effects
+    https://ui.aceternity.com/components/link-preview
+    https://ui.aceternity.com/components/animated-tooltip
+    https://ui.aceternity.com/components/text-reveal-card
+    https://ui.aceternity.com/components/compare
+    https://www.reactbits.dev/animations/gradual-blur
+
+loading effects
+    https://kokonutui.com/docs/components/loader
+
+grid effects
+    https://skiper-ui.com/v1/skiper73
+    https://ui.aceternity.com/components/3d-marquee
+    https://www.reactbits.dev/components/card-swap
+
+connect effects
+    https://magicui.design/docs/components/animated-beam
+
+genre effects
+    sci-fi: https://magicui.design/docs/components/particles
+    sci-fi: https://www.reactbits.dev/backgrounds/particles
+    sci-fi: https://www.reactbits.dev/backgrounds/galaxy
+    magic: https://ui.aceternity.com/components/vortex
+    hacker: https://www.reactbits.dev/text-animations/glitch-text
+    hacker: https://www.reactbits.dev/backgrounds/letter-glitch
+    simulation: https://www.reactbits.dev/backgrounds/ripple-grid
+    nostalgic: https://www.reactbits.dev/animations/noise
+    mystery: https://www.reactbits.dev/backgrounds/light-pillar
+    scary: https://www.reactbits.dev/backgrounds/beams
+    violence: https://www.reactbits.dev/backgrounds/dither
+    colorful: https://www.reactbits.dev/backgrounds/prismatic-burst
+    colorful: https://www.reactbits.dev/backgrounds/iridescence
 
 ---
 
-fix windmill errors
-    https://windmill.goodwatch.app/run/019a2695-277a-7a6e-9992-2b879a6b5b70?workspace=goodwatch
+category pages v2
+    with slider that changes background poster
+    very light-hearted ------> extremely dark
 
 ---
 
@@ -72,10 +272,15 @@ mobile design
 
 ---
 
-Fingerprint improvements
-    https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/68717e7e-d1bc-8001-87d9-c55fdc42078d
-    fingerprint by genre
-    Genre boxes with 4 most suitable scores
+details
+    https://gemini.google.com/app/56774c86a7137a25
+    if useQuery calls are cached, include them in server response
+    eliminate async loading and layout shift if related titles can be fetched quickly
+
+---
+
+batch recommendations
+    https://qdrant.tech/documentation/concepts/explore/#batch-recommendation-api
 
 ---
 
@@ -144,7 +349,7 @@ optimistic ui
 
 long actor names overlap on mobile
 
----   
+---   https://cal.com/will-ness/30min
 
 update windmill scripts in git
 
@@ -159,6 +364,14 @@ remove postgres db
 
 ---
 
+discord bot
+    title details (personalized)
+    my taste profile
+    search
+    recommend
+
+---
+
 robots with sitemap link
     https://www.instagram.com/robots.txt
     
@@ -168,23 +381,31 @@ gsc not indexed
 
 ---
 
-landing page inspiration
-    https://nvg8.io/
-    https://waku.gg/
-    https://superdevpro.com/
-    https://www.firewatchgame.com/
-    https://www.screenspace.io/
-    https://www.dize.app/
-    https://www.lumia.security
-    https://dribbble.com/shots/18008814-Osnaria-Game-Web-Landing-Page-With-Illustrations
+streaming backend
+    https://v2.remix.run/docs/guides/streaming
 
 ---
 
-landing page redesign
-    https://replit.com/@alp82/StreamSense
+scraper solutions
+    https://scrapoxy.io/
+    https://dataimpulse.com/
+    https://github.com/autoscrape-labs/pydoll
+    https://github.com/scrapoxy/scrapoxy
+    https://www.firecrawl.dev/
 
-    show DNA in covers
+---
+
+landing page inspiration
+    https://www.greptile.com
+    https://oxide.computer
+    https://waku.gg/
+    https://www.firewatchgame.com/
+    https://www.screenspace.io/
+
+landing page redesign
+    https://x.com/boringmarketer/status/1994415536088723471?t=o25e4HC9faZml8jZyKaKfA&s=03
     hibba: https://www.figma.com/design/Kv0ESmxOOFYuW8OVq6od9i/Goodwatch?node-id=0-1&p=f&t=z7iZzVGPfgqjznOf-0
+    https://replit.com/@alp82/StreamSense
     https://www.landingly.co/
     https://onepagelove.com/ 
     https://handyarrows.com/
@@ -223,7 +444,9 @@ handling of outdated streaming availability
 
 ---   
 
-upcoming titles: future release_date
+upcoming titles
+    future release_date
+    https://developer.themoviedb.org/reference/tv-series-latest-id
  
 ---    
 
@@ -521,7 +744,8 @@ tropes
 
 ---    
 
-DNA alternative to huggingface
+RAG refinement
+    https://www.reddit.com/r/SaaS/comments/1oc01qb/everyones_trying_to_get_rich_with_tiny_saas/
 
 ---    
 
@@ -752,14 +976,6 @@ twitter gw
 
 ---
 
-scraper solutions
-    https://github.com/autoscrape-labs/pydoll
-    https://scrapoxy.io/
-    https://github.com/scrapoxy/scrapoxy
-    https://www.firecrawl.dev/
-
----
-
 strategy / promotion
     https://www.reddit.com/r/SaaS/comments/1hfe8k9/i_grew_my_startup_to_67_users_in_10_days_without/
     https://x.com/natiakourdadze/status/1866538738198655002
@@ -820,6 +1036,7 @@ new sorting:
 ---
 
 user feedback
+    https://www.msgmorph.com
     https://userjot.com/
     https://astuto.io/
     https://github.com/clearflask/clearflask#self-hosting
@@ -1042,7 +1259,7 @@ Thanks page
 
 ---
 
-DNA infobox with Discord link
+Fingerprint infobox with Discord link
 
 ---
 
@@ -1055,6 +1272,7 @@ use connection pooling properly
 redesigned footer
     community blocks
     https://flowbite.com/blocks/marketing/footer/
+    https://www.screenspace.io/
 
 ---
 
@@ -1080,6 +1298,7 @@ wide cards
 ---
 
 age ratings
+    example with icons: https://www.igdb.com/games/hollow-knight-silksong
     https://en.wikipedia.org/wiki/Motion_picture_content_rating_system
     https://www.movielabs.com/md/ratings/
     https://www.movielabs.com/md/ratings/v2.4.9/html/Summary.html
@@ -1426,6 +1645,7 @@ launch / promo
     slant
     Uneed
     Peerlist
+    https://before1k.com
     https://www.listingcat.com/app/websites/launch-platforms
     https://solopush.com/
     https://www.justgotfound.com/
@@ -1438,6 +1658,7 @@ launch / promo
     https://growstartup.co/directory-list/
     https://www.effortlessbacklinks.com/
     https://www.getmorebacklinks.org/
+    https://x.com/dams9ix/status/1985677073294229530?t=8FXIJdsv8YsuE0vZDulaTQ&s=03
 
 ---
 
@@ -1549,6 +1770,7 @@ trending load more
 
 show titles on map (production countries + places in film)
     where to show space and fantasy places?
+    https://x.com/dams9ix/status/1985677073294229530?t=8FXIJdsv8YsuE0vZDulaTQ&s=03
 
 populate trending score 1-500
 save trending scores per day
@@ -1603,8 +1825,6 @@ do not refetch stale data
 live rating events
     chatbox
     countdown
-
-discord bot
 
 telegram bot
     

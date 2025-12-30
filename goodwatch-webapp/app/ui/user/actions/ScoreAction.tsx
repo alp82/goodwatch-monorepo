@@ -1,19 +1,13 @@
 import React from "react"
-import { useUserData } from "~/routes/api.user-data"
-import type {
-	Score,
-	UpdateScoresPayload,
-	UpdateScoresResult,
-} from "~/server/scores.server"
-import type { UpdateWatchHistoryPayload } from "~/server/watchHistory.server"
+import { useUserScore } from "~/hooks/useUserDataAccessors"
+import { useScoreMutation, useWatchedMutation } from "~/hooks/useUserDataMutations"
+import type { Score } from "~/server/scores.server"
 import UserAction from "~/ui/auth/UserAction"
-import {
-	type UserActionProps,
-} from "~/ui/user/actions/types"
-import { useAPIAction } from "~/utils/api-action"
+import type { UserActionProps } from "~/ui/user/actions/types"
 
 export interface ScoreActionProps extends UserActionProps {
 	score: Score | null
+	isGuest?: boolean
 }
 
 export default function ScoreAction({
@@ -21,47 +15,46 @@ export default function ScoreAction({
 	media,
 	score,
 	onChange,
+	isGuest = false,
 }: ScoreActionProps) {
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
-	const { data: userData } = useUserData()
-	const userScore = userData?.[mediaType]?.[tmdb_id]?.score || null
-	const watchHistoryAction = score === null ? "remove" : "add"
+	const { mutate: updateScore, isPending: isScorePending } = useScoreMutation()
+	const { mutate: updateWatched, isPending: isWatchedPending } = useWatchedMutation()
 
-	const { submitProps } = useAPIAction<
-		UpdateScoresPayload | UpdateWatchHistoryPayload,
-		UpdateScoresResult
-	>({
-		endpoints: [
-			{
-				url: "/api/update-scores",
-				params: {
-					tmdb_id,
-					media_type: mediaType,
-					score,
-				},
-			},
-			{
-				url: "/api/update-watch-history",
-				params: {
-					tmdb_id,
-					media_type: mediaType,
-					action: watchHistoryAction,
-				},
-			},
-		],
-		onClick: children.props.onClick,
-	})
+	const handleClick = () => {
+		updateScore({
+			mediaType,
+			tmdbId: tmdb_id,
+			score,
+		})
+
+		const watchHistoryAction = score === null ? "remove" : "add"
+		updateWatched({
+			mediaType,
+			tmdbId: tmdb_id,
+			action: watchHistoryAction,
+		})
+
+		onChange?.()
+	}
+
+	const isPending = isScorePending || isWatchedPending
 
 	return (
 		<UserAction
 			instructions={
-				<>Rate movies and tv shows to get better recommendations.</>
+				<>Rate movies and shows to get better recommendations.</>
 			}
 			onChange={onChange}
+			requiresLogin={!isGuest}
 		>
-			{React.cloneElement(children, { ...submitProps })}
+			{React.cloneElement(children, {
+				onClick: handleClick,
+				disabled: isPending,
+				style: isPending ? { pointerEvents: "none", opacity: 0.7 } : {},
+			})}
 		</UserAction>
 	)
 }

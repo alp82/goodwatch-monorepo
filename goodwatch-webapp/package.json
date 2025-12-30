@@ -22,6 +22,10 @@
 		"@sentry/vite-plugin": "^4.6.0",
 		"@supabase/auth-ui-react": "^0.4.7",
 		"@supabase/ssr": "^0.5.1",
+		"@tanstack/db": "^0.4.20",
+		"@tanstack/query-core": "^5.90.7",
+		"@tanstack/query-db-collection": "^0.3.0",
+		"@tanstack/react-db": "^0.1.43",
 		"@tanstack/react-query": "^5.59.20",
 		"@tanstack/react-query-devtools": "^5.59.20",
 		"@tanstack/react-virtual": "^3.10.9",
@@ -34,7 +38,7 @@
 		"isbot": "^5.1.17",
 		"node-crate": "^3.0.0",
 		"pg": "^8.13.1",
-		"posthog-js": "^1.285.1",
+		"posthog-js": "^1.295.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"react-highlight-words": "^0.20.0",
@@ -45,7 +49,8 @@
 		"remix-utils": "^7.6.0",
 		"spoiled": "^0.4.0",
 		"swiper": "^11.2.2",
-		"use-dehydrated-state": "^0.1.0"
+		"use-dehydrated-state": "^0.1.0",
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",

@@ -1,5 +1,6 @@
 import type { DiscoverResult } from "~/server/discover.server"
 import type { MovieDetails, TVDetails } from "~/server/types/details-types"
+import type { Score } from "~/server/scores.server"
 
 export interface AllRatings {
 	tmdb_url: string
@@ -79,7 +80,7 @@ export const extractRatings = (
 }
 
 export const scoreLabels = [
-	"Not Rated",
+	"What's your score?",
 	"Unwatchable",
 	"Terrible",
 	"Bad",
@@ -91,3 +92,51 @@ export const scoreLabels = [
 	"Excellent",
 	"Masterpiece",
 ]
+
+const vibeColors: Record<number, string> = {
+	0: "#7f1d1d",
+	10: "#991b1b",
+	20: "#b91c1c",
+	30: "#c2410c",
+	40: "#d97706",
+	50: "#ca8a04",
+	60: "#a3a323",
+	70: "#50a33d",
+	80: "#25a73d",
+	90: "#16b34a",
+	100: "#05b724",
+}
+
+export const getVibeColorValue = (score: Score): string => {
+	return vibeColors[score * 10] ?? vibeColors[50]
+}
+
+interface ScoreBgClassOptions {
+	isActive?: boolean
+	withDimming?: boolean
+}
+
+export const getScoreBgClass = (
+	score: Score | null,
+	targetScore: Score | null = null,
+	options: ScoreBgClassOptions = {}
+): string => {
+	const { isActive = true, withDimming = false } = options
+	const vibeIndex = (targetScore ?? score ?? 0) * 10
+	
+	if (isActive) {
+		return `bg-vibe-${vibeIndex}`
+	}
+	
+	return `bg-vibe-${(score ?? 0) * 10}${withDimming ? "/35" : ""}`
+}
+
+export const getScoreTextClass = (score: Score | null): string => {
+	if (!score) return "text-gray-500"
+	return `text-vibe-${score * 10}`
+}
+
+export const getScoreLabelText = (score: Score | null): string => {
+	if (!score) return scoreLabels[0]
+	return `${scoreLabels[score]} (${score})`
+}

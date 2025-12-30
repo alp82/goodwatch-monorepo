@@ -38,8 +38,6 @@ import cssToastify from "react-toastify/dist/ReactToastify.css?url"
 import App from "~/app"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
-import { useCookieConsent } from "~/routes/api.user-settings.get"
-import { CookieConsent } from "~/ui/CookieConsent"
 import { AuthContext, useUser } from "./utils/auth"
 
 export const links: LinksFunction = () => [
@@ -127,7 +125,8 @@ const PostHogInit = () => {
 		setPosthogInitialized(true)
 	}, [user])
 
-	const { consentGiven } = useCookieConsent()
+	// const { consentGiven } = useCookieConsent()
+	const consentGiven = "yes"
 	useEffect(() => {
 		const isLocalhost =
 			window.location.hostname === "localhost" ||
@@ -206,7 +205,7 @@ export function ErrorBoundary() {
 					<Footer />
 					<BottomNav />
 					<ToastContainer />
-					<CookieConsent />
+					{/* <CookieConsent /> */}
 					<PostHogInit />
 					<ScrollRestoration />
 					<Scripts />
@@ -292,7 +291,7 @@ gtag('config', 'G-5NK4EX51SM');
 						<AuthContext.Provider value={{ supabase }}>
 							<HydrationBoundary state={dehydratedState}>
 								<App />
-								<CookieConsent />
+								{/* <CookieConsent /> */}
 								<ToastContainer />
 								<PostHogInit />
 								{shouldUseScrollRestoration && <ScrollRestoration />}

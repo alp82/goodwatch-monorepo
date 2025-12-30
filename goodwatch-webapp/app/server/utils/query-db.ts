@@ -501,7 +501,7 @@ const constructUserQuery = ({
 				AND uwh.media_type = '${type}' 
 		`
 	}
-	if (watchedType === "plan-to-watch") {
+	if (watchedType === "want-to-watch") {
 		return `
 			INNER JOIN user_wishlist uwl ON
 				uwl.user_id = :::userId

@@ -7,8 +7,7 @@ import {
 import { useLoaderData, useNavigation } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import React from "react"
-import { type GetUserDataResult, useUserData } from "~/routes/api.user-data"
-import type { StreamingLink } from "~/server/details.server"
+import { useUserData } from "~/routes/api.user-data"
 import type { DiscoverResult } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TvCard } from "~/ui/TvCard"
@@ -16,7 +15,6 @@ import WishlistFilter, {
 	type FilterByStreaming,
 	type SortBy,
 } from "~/ui/filter/WishlistFilter"
-import { type UserDataItem, getSortedUserData } from "~/utils/user-data"
 
 export function headers() {
 	return {
@@ -64,13 +62,17 @@ export default function Wishlist() {
 	const { data: userData, isLoading } = useUserData()
 	const { sortBy, filterByStreaming } = currentParams
 
-	const handleFilterChange = (filters) => {
+	const handleFilterChange = (filters: any) => {
 		console.log({ filters })
 	}
 
-	const sortedWishlist = getSortedUserData(userData as GetUserDataResult, [
-		"onWishListSince",
-	])
+	// Convert normalized wishlist data to array format for display
+	const sortedWishlist = userData
+		? Object.entries(userData.wishlist).map(([key, value]) => ({
+				tmdb_id: parseInt(key.split("-")[1]),
+				onWishListSince: value.updatedAt,
+		  }))
+		: []
 
 	for (const result of sortedWishlist) {
 		const streamingLinks = result.streaming_links || []

@@ -7,7 +7,7 @@ import { getGenresAll } from "~/server/genres.server"
 import { cached } from "~/utils/cache"
 import { recommend, makePointId, parsePointId } from "~/utils/qdrant"
 
-export type WatchedType = "didnt-watch" | "plan-to-watch" | "watched"
+export type WatchedType = "didnt-watch" | "want-to-watch" | "watched"
 export type StreamingPreset = "everywhere" | "mine" | "custom"
 export type CombinationType = "all" | "any"
 export type DiscoverSortBy = "popularity" | "aggregated_score" | "release_date"
@@ -66,7 +66,7 @@ export interface SimpleDiscoverParams {
 	type: "all" | "movies" | "movie" | "show" | "shows"
 	country: string
 	language: string
-	watchedType?: "didnt-watch" | "plan-to-watch" | "watched"
+	watchedType?: "didnt-watch" | "want-to-watch" | "watched"
 	minScore?: string
 	maxScore?: string
 	minYear?: string
@@ -390,7 +390,7 @@ interface MediaQueryParams {
 	mediaType: "movie" | "show"
 	tableName: "movie" | "show"
 	userId?: string
-	watchedType?: "didnt-watch" | "plan-to-watch" | "watched"
+	watchedType?: "didnt-watch" | "want-to-watch" | "watched"
 	minScore?: string
 	maxScore?: string
 	minYear?: string
@@ -462,7 +462,7 @@ async function getMediaResults({
 			`
 			conditions.push("uwh.user_id IS NULL")
 			params.push(userId, mediaType)
-		} else if (watchedType === "plan-to-watch") {
+		} else if (watchedType === "want-to-watch") {
 			userJoin = `
 				INNER JOIN user_wishlist uwl ON
 					uwl.user_id = ? AND

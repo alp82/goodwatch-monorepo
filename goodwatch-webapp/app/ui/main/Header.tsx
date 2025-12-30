@@ -29,6 +29,10 @@ import { useUser } from "~/utils/auth"
 
 const mainNav = [
 	{
+		label: "Taste",
+		path: "/taste",
+	},
+	{
 		label: "Movies",
 		path: "/movies",
 	},
@@ -50,7 +54,7 @@ export default function Header() {
 	const { user, loading } = useUser()
 
 	return (
-		<div className="fixed top-0 z-50 w-full bg-gray-900">
+		<div className="fixed top-0 z-[1000] w-full bg-gray-900">
 			<GlobalLoading />
 			<nav className="bg-gray-950/35">
 				<div className="mx-auto max-w-7xl px-4">
@@ -255,7 +259,7 @@ export default function Header() {
 												<MenuItem>
 													{({ focus }) => (
 														<Link
-															to="/discover?type=all&watchedType=plan-to-watch&streamingPreset=mine"
+															to="/discover?type=all&watchedType=want-to-watch&streamingPreset=mine"
 															prefetch="viewport"
 															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
 																focus
@@ -267,7 +271,7 @@ export default function Header() {
 															<span>
 																What I{" "}
 																<span className="font-extrabold">
-																	Plan to Watch
+																	Want to See
 																</span>
 															</span>
 														</Link>

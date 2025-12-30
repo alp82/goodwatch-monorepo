@@ -4,7 +4,7 @@ GoodWatch is alive and running. Check it out: https://goodwatch.app/
 
 ## GoodWatch Community
 
-Join our Discord to learn about the project: https://discord.gg/TVAcrfQzcA
+Join our Discord to be part of the wonderful community and learn more about the project: https://discord.gg/TVAcrfQzcA
 
 
 ## What's unique about GoodWatch?

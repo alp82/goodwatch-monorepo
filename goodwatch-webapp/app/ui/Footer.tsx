@@ -1,10 +1,11 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
+import { ArrowRightIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import React from "react"
 import discordColor from "~/img/discord-mark-blue.svg"
 import redditColor from "~/img/reddit-color.svg"
 import tmdbLogo from "~/img/tmdb-logo.svg"
 import shieldazeBanner from "~/img/secured-by-shieldaze-transparent.webp"
+
+const DISCORD_GOODWATCH_URL = "https://discord.gg/TVAcrfQzcA"
 
 const navigation = {
 	main: [
@@ -63,7 +64,7 @@ const navigation = {
 		// },
 		{
 			name: "Discord",
-			href: "https://discord.gg/TVAcrfQzcA",
+			href: DISCORD_GOODWATCH_URL,
 			icon: (props: Record<string, string>) => (
 				<img
 					className={`opacity-75 hover:opacity-100 ${props.className}`}
@@ -103,26 +104,58 @@ export type FooterProps = {}
 
 export default function Footer({}: FooterProps) {
 	return (
-		<footer className="mt-8">
-			{/* <div className="bg-blue-950/40">
-				<a
-					href="https://discord.gg/TVAcrfQzcA"
-					className="text-gray-400 hover:text-gray-200 opacity-75 hover:opacity-100 cursor-pointer"
-					target="_blank"
-					rel="noreferrer"
-				>									
-					<div className="max-w-7xl mx-auto overflow-hidden py-12 px-6 sm:py-16 lg:px-8 flex flex-col gap-8">
-						<div className="flex justify-center text-white text-lg font-semibold">
-							Join the GoodWatch Discord Community
-							<img
-								className="h-16 w-16"
-								src={discordColor}
-								alt="Join Discord Server"
-							/>
+		<footer className="mt-48">
+			<section className="pb-16 px-4 sm:px-6 lg:px-8">
+				<div className="max-w-7xl mx-auto">
+					<div className="relative rounded-3xl overflow-hidden bg-[#5865F2] p-1">
+						<div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
+						
+						<div className="relative bg-indigo-950/90 backdrop-blur-xl rounded-[22px] p-8 md:p-12 overflow-hidden">
+							<div className="absolute -top-24 -right-24 w-64 h-64 bg-[#5865F2] rounded-full blur-[100px] opacity-40"></div>
+							<div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary-500 rounded-full blur-[100px] opacity-20"></div>
+							
+							<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+								<div className="flex-1 text-center md:text-left">
+									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-400/20 text-indigo-300 border border-indigo-400/30 text-xs font-bold uppercase tracking-wider mb-4">
+										<span className="w-2 h-2 rounded-full bg-[#5865F2] animate-pulse" />
+										Community First
+									</div>
+									<h3 className="text-3xl md:text-4xl font-bold text-white mb-4">Join the Chat</h3>
+									<p className="text-gray-300 text-lg max-w-xl leading-relaxed">
+										Discuss the latest episodes, request new features, or just argue about whether <span className="text-white font-medium">Die Hard</span> is a Christmas movie.
+									</p>
+									
+									<div className="flex items-center justify-center md:justify-start mt-6 -space-x-3">
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" /></div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="User" /></div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mark" alt="User" /></div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" alt="User" /></div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-[#5865F2] text-white flex items-center justify-center text-xs font-bold">+100</div>
+									</div>
+								</div>
+								
+								<div>
+									<a
+										href={DISCORD_GOODWATCH_URL}
+										target="_blank"
+										rel="noreferrer"
+										className="
+											group relative inline-flex items-center gap-3 px-8 py-4
+											bg-[#5865F2] hover:bg-[#4752C4] border-2 border-[#5865F2] hover:border-[#5865F2] text-white rounded-2xl font-bold text-lg
+											transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(88,101,242,0.4)]
+										"
+									>
+										<svg className="w-8 h-8 fill-current group-hover:-translate-x-1 transition-transform" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.11,77.11,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.89,105.89,0,0,0,126.6,80.22c1.24-23.28-3.28-47.54-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.25-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"></path></svg>
+										<span>Join Discord</span>
+										<ArrowRightIcon className="h-6 group-hover:translate-x-1 transition-transform" />
+									</a>
+								</div>
+							</div>
 						</div>
 					</div>
-				</a>
-			</div> */}
+				</div>
+			</section>
+
 			<div className="bg-gray-950">
 				<div className="max-w-7xl mx-auto overflow-hidden py-12 px-6 sm:py-16 lg:px-8 flex flex-col gap-8">
 					{/*<div className="flex justify-center">/!*TODO DISCORD BLOCK*!/</div>*/}
@@ -136,9 +169,9 @@ export default function Footer({}: FooterProps) {
 								<a
 									key={item.name}
 									href={item.href}
-									className="text-gray-400 hover:text-gray-200"
 									target="_blank"
 									rel="noreferrer"
+									className="text-gray-400 hover:text-gray-200"
 								>
 									<span className="sr-only">{item.name}</span>
 									<item.icon className="h-16 w-16" aria-hidden="true" />

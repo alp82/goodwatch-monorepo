@@ -1,10 +1,10 @@
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
-import { useUserData } from "~/routes/api.user-data"
+import { useUserScore } from "~/hooks/useUserDataAccessors"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { Score } from "~/server/scores.server"
 import ScoreAction from "~/ui/user/actions/ScoreAction"
-import { scoreLabels } from "~/utils/ratings"
+import { scoreLabels, getScoreBgClass, getScoreTextClass, getScoreLabelText } from "~/utils/ratings"
 import { CheckIcon } from "@heroicons/react/20/solid"
 import { XMarkIcon } from "@heroicons/react/24/outline"
 
@@ -12,19 +12,21 @@ interface ScoreSelectorProps {
 	media: MovieResult | ShowResult
 	onChange?: (score: Score | null) => void
 	onCancel?: () => void
+	isGuest?: boolean
 }
 
 export default function ScoreSelector({
 	media,
 	onChange,
 	onCancel,
+	isGuest = false,
 }: ScoreSelectorProps) {
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
-	const { data: userData } = useUserData()
+	const userScoreData = useUserScore(mediaType, tmdb_id)
+	const userScore = userScoreData?.score || null
 
-	const userScore = userData?.[mediaType]?.[tmdb_id]?.score || null
 	const [score, setScore] = useState<Score | null>(userScore)
 	const [hoveredScore, setHoveredScore] = useState<Score | null>(null)
 	const [clearedScore, setClearedScore] = useState<Score | null>(null)
@@ -37,36 +39,27 @@ export default function ScoreSelector({
 	const getColorForIndex = (index: Score | null, withDimming: boolean) => {
 		const hovered = index && hoveredScore && index <= hoveredScore
 		const scored = index && !hoveredScore && score && index <= score
+		const targetScore = hoveredScore ?? score
+		const isActive = Boolean((hovered || scored) && !clearedScore)
 
-		if ((hovered || scored) && !clearedScore) {
-			const vibeColorIndex = (hoveredScore || score || -1) * 10
-			return `bg-vibe-${vibeColorIndex}`
-		}
-
-		// Handle the unrated state for desktop explicitly
-		// if (!score && !hoveredScore && !clearedScore && withDimming) {
-		// 	return "bg-gray-600/70 animate-pulse"
-		// }
-
-		// Dimmed background for inactive bars or the base unrated state
-		return `bg-vibe-${(index || 0) * 10}${withDimming ? "/35" : ""}`
+		return getScoreBgClass(index, isActive ? targetScore : null, { 
+			isActive, 
+			withDimming 
+		})
 	}
 
 	const getLabelColor = (targetScore?: Score | null) => {
 		const effectiveScore = targetScore ?? hoveredScore ?? score
 		if (effectiveScore && (!clearedScore || effectiveScore !== clearedScore)) {
-			const vibeColorIndex = effectiveScore * 10
-			return `text-vibe-${vibeColorIndex}`
+			return getScoreTextClass(effectiveScore)
 		}
 		return "text-gray-500"
 	}
 
 	const getLabelText = (targetScore?: Score | null) => {
 		const effectiveScore = targetScore ?? hoveredScore ?? score
-		// if (score !== clearedScore || hoveredScore !== clearedScore) {
 		if (effectiveScore && (!clearedScore || effectiveScore !== clearedScore)) {
-			return `${scoreLabels[effectiveScore]} (${effectiveScore})`
-			// return scoreLabels[effectiveScore]
+			return getScoreLabelText(effectiveScore)
 		}
 		return scoreLabels[0]
 	}
@@ -95,12 +88,13 @@ export default function ScoreSelector({
 				newScore = index
 			}
 
-			if (onChange) {
-				onChange(newScore)
-			}
 			return newScore
 		})
 	}
+
+	useEffect(() => {
+		if (onChange) onChange(score);
+	}, [score, onChange]);
 
 	// touch controls
 	const [startY, setStartY] = useState<number | null>(null)
@@ -257,8 +251,8 @@ export default function ScoreSelector({
 							<XMarkIcon className="h-4 w-4" aria-hidden="true" />
 						</button>
 						<span className="flex items-center gap-2">
-							{score && (!hoveredScore || hoveredScore === score) && (
-								<ScoreAction media={media} score={null}>
+							{!isGuest && score && (!hoveredScore || hoveredScore === score) && (
+								<ScoreAction media={media} score={null} isGuest={isGuest}>
 									<span
 										className="
 											px-2 py-1
@@ -270,23 +264,25 @@ export default function ScoreSelector({
 									</span>
 								</ScoreAction>
 							)}
-							<div
-								className={`md:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
-							>
-								<ScoreAction media={media} score={score}>
-									<span
-										className={`
-											flex items-center gap-2 px-2 py-1.5
-											bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded-sm border-amber-800 hover:border-amber-700
-											text-slate-300 hover:text-slate-100 font-semibold
-											transition duration-100 cursor-pointer
-										`}
-									>
-										<CheckIcon className="h-4 w-4" aria-hidden="true" />
-										Save
-									</span>
-								</ScoreAction>
-							</div>
+							{!isGuest && (
+								<div
+									className={`md:hidden ${userScore === score ? "opacity-50 pointer-events-none" : ""}`}
+								>
+									<ScoreAction media={media} score={score} isGuest={isGuest}>
+										<span
+											className={`
+												flex items-center gap-2 px-2 py-1.5
+												bg-amber-950/40 hover:bg-amber-950/20 border-2 rounded-sm border-amber-800 hover:border-amber-700
+												text-slate-300 hover:text-slate-100 font-semibold
+												transition duration-100 cursor-pointer
+											`}
+										>
+											<CheckIcon className="h-4 w-4" aria-hidden="true" />
+											Save
+										</span>
+									</ScoreAction>
+								</div>
+							)}
 						</span>
 					</span>
 				</div>
@@ -349,31 +345,40 @@ export default function ScoreSelector({
 				<div className="flex">
 					{Array.from({ length: 10 }, (_, i: number) => {
 						const scoreIndex = (i + 1) as Score
+						const content = (
+							<div
+								className="w-full py-4 md:py-6 transition duration-100 ease-in-out transform origin-bottom hover:scale-y-125 cursor-pointer group"
+								onTouchStart={(event) =>
+									handlePointerEnter(event, scoreIndex)
+								}
+								onMouseEnter={(event) =>
+									handlePointerEnter(event, scoreIndex)
+								}
+								onMouseLeave={handlePointerLeave}
+								onClick={() => handleClick(scoreIndex)}
+								onKeyUp={() => null}
+							>
+								<div
+									className={`h-8 w-full border-2 border-gray-800 rounded-md transition-all duration-100 group-hover:border-gray-600 ${getColorForIndex(
+										scoreIndex,
+										true,
+									)}`}
+								/>
+							</div>
+						)
+						
+						if (isGuest) {
+							return <div key={i + 1} className="flex-1">{content}</div>
+						}
+						
 						return (
 							<ScoreAction
 								key={i + 1}
 								media={media}
 								score={scoreIndex === score ? null : scoreIndex}
+								isGuest={isGuest}
 							>
-								<div
-									className="w-full py-4 md:py-6 transition duration-100 ease-in-out transform origin-bottom hover:scale-y-125 cursor-pointer group"
-									onTouchStart={(event) =>
-										handlePointerEnter(event, scoreIndex)
-									}
-									onMouseEnter={(event) =>
-										handlePointerEnter(event, scoreIndex)
-									}
-									onMouseLeave={handlePointerLeave}
-									onClick={() => handleClick(scoreIndex)}
-									onKeyUp={() => null}
-								>
-									<div
-										className={`h-8 w-full border-2 border-gray-800 rounded-md transition-all duration-100 group-hover:border-gray-600 ${getColorForIndex(
-											scoreIndex,
-											true,
-										)}`}
-									/>
-								</div>
+								{content}
 							</ScoreAction>
 						)
 					})}

@@ -1,9 +1,13 @@
 import React from 'react'
 import type { PillarTiers } from '~/server/utils/fingerprint'
 
-type Props = { 
+export type PillarName = 'Energy' | 'Heart' | 'Humor' | 'World' | 'Craft' | 'Style'
+
+interface Props { 
 	pillars?: PillarTiers
-	className?: string 
+	className?: string
+	selectedPillar?: PillarName | null
+	onSelect?: (pillar: PillarName) => void
 }
 
 const PILLAR_CONFIG = {
@@ -15,7 +19,10 @@ const PILLAR_CONFIG = {
 	Style: { emoji: '🎨', colors: ['text-sky-700', 'text-sky-600', 'text-sky-500', 'text-sky-400'] },
 } as const
 
-export default function Pillars({ pillars, className = '' }: Props): JSX.Element {
+export { PILLAR_CONFIG }
+
+export default function Pillars({ pillars, className = '', selectedPillar, onSelect }: Props): JSX.Element {
+	const isInteractive = !!onSelect
 	const renderMeter = (tier: number | undefined, colors: readonly string[]) => {
 		if (tier === undefined) {
 			const emptyBars = '░'.repeat(4)
@@ -31,9 +38,9 @@ export default function Pillars({ pillars, className = '' }: Props): JSX.Element
 		))
 		
 		return (
-			<span className={`font-mono text-lg ${isPerfect ? 'relative' : ''}`}>
+			<span className={`font-mono text-lg w-13 ${isPerfect ? 'border-2 border-slate-300/50 animate-pulse' : ''}`}>
 				{isPerfect && (
-					<span className="absolute inset-0 -mx-1 w-13 rounded border-2 border-slate-300/50 animate-pulse"></span>
+					<span className="absolute inset-0 -mx-1 w-13 rounded "></span>
 				)}
 				{coloredBlocks}
 				<span className="text-gray-600">{empty}</span>
@@ -42,20 +49,29 @@ export default function Pillars({ pillars, className = '' }: Props): JSX.Element
 	}
 
 	return (
-		<div className={`min-w-md lg:min-w-64 grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-1 justify-between gap-4 ${className}`}>
+		<div className={`grid grid-cols-1 gap-2 ${className}`}>
 			{Object.entries(PILLAR_CONFIG).map(([pillarName, config]) => {
 				const tier = pillars?.[pillarName as keyof PillarTiers]
+				const isSelected = selectedPillar === pillarName
+				
 				return (
-					<div 
-						key={pillarName} 
-						className="grid grid-cols-2 items-center xl:justify-between gap-8"
+					<button 
+						key={pillarName}
+						type="button"
+						onClick={() => onSelect?.(pillarName as PillarName)}
+						disabled={!isInteractive}
+						className={`
+							grid grid-cols-2 items-center gap-4 px-3 py-2 rounded-lg transition-all
+							${isInteractive ? 'cursor-pointer hover:bg-white/10' : ''}
+							${isSelected ? 'bg-white/15 ring-1 ring-white/30' : ''}
+						`}
 					>
-						<div className="flex items-center gap-2">
+						<div className="mr-2 flex items-center gap-2">
 							<span className="text-lg">{config.emoji}</span>
 							<span className="font-medium">{pillarName}</span>
 						</div>
 						{renderMeter(tier, config.colors)}
-					</div>
+					</button>
 				)
 			})}
 		</div>

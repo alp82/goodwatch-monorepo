@@ -2,9 +2,16 @@ import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { getClientIPAddress } from "remix-utils/get-client-ip-address"
 
 async function getCountryByIP(ip: string | null) {
-	const response = await fetch(`https://ipapi.co/${ip}/json/`)
-	const data = await response.json()
-	return data.country
+	if (ip) {
+		const response = await fetch(`https://ipapi.co/${ip}/json/`)
+		try {
+			const data = await response.json()
+			return data.country
+		} catch {
+			return null
+		}
+	}
+	return null
 }
 
 export type LoaderData = {
@@ -24,7 +31,7 @@ export const loader: LoaderFunction = async ({
 		countryFromLocale = locales[0].split("-")[1]
 	}
 
-	const country = countryFromIP || countryFromLocale
+	const country = countryFromIP || countryFromLocale || 'US'
 
 	return {
 		country,

@@ -98,14 +98,12 @@ export default function SignInRedirectTo() {
 		);
 
 	return (
-		<div
-			className={`
-        mt-16 mx-auto p-8 max-w-xl
-        text-center
-        rounded-xl shadow-black/70
-        bg-${color}-950/70 shadow-xl
-      `}
-		>
+		<div className={`
+			mt-16 mx-auto p-8 max-w-xl
+			text-center
+			rounded-xl shadow-black/70
+			bg-${color}-950/70 shadow-xl
+		`}>
 			{content}
 		</div>
 	);

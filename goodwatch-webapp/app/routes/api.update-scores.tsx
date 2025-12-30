@@ -1,15 +1,20 @@
-import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node";
-import { updateScores } from "~/server/scores.server";
-import { getUserIdFromRequest } from "~/utils/auth";
+import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node"
+import { updateScores } from "~/server/scores.server"
+import { resetUserDataCache } from "~/server/userData.server"
+import { getUserIdFromRequest } from "~/utils/auth"
 
 export const action: ActionFunction = async ({
 	request,
 }: ActionFunctionArgs) => {
-	const params = await request.json();
-	const user_id = await getUserIdFromRequest({ request });
+	const params = await request.json()
+	const user_id = await getUserIdFromRequest({ request })
 
-	return await updateScores({
+	const result = await updateScores({
 		...params,
 		user_id,
-	});
-};
+	})
+
+	await resetUserDataCache({ user_id: user_id })
+
+	return result
+}

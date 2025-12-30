@@ -29,9 +29,9 @@ export const watchOptions: WatchOption[] = [
 		color: "orange",
 	},
 	{
-		name: "plan-to-watch",
-		label: "Plan to Watch",
-		description: "Show only what I plan to watch",
+		name: "want-to-watch",
+		label: "Want to Watch",
+		description: "Show only what I want to watch",
 		icon: BookmarkIcon,
 		color: "amber",
 	},
@@ -92,7 +92,7 @@ export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 			associatedParams: ["watchedType"],
 			loginInstructions: (
 				<div className="flex flex-col gap-3">
-					<p>Filter by what you've already seen and plan to watch.</p>
+					<p>Filter by what you've already seen and want to watch.</p>
 					<div className="flex flex-col gap-1">
 						{watchOptions.map((watchOption) => (
 							<Tag

@@ -27,6 +27,12 @@ export const VALID_FINGERPRINT_KEYS: readonly (keyof CoreScores)[] = [
 	"direction", "acting", "cinematography", "editing", "music_composition", "world_immersion", "spectacle", "visual_stylization", "pastiche", "psychedelic", "grotesque", "camp_and_irony", "dialogue_centrality", "music_centrality", "sound_centrality"
 ] as const
 
+export const DISTINCT_FINGERPRINT_KEYS: readonly (keyof CoreScores)[] = [
+	"adrenaline", "tension", "scare", "violence", "romance", "eroticism", "wholesome", "wonder", "pathos", "melancholy", "uncanny", "catharsis", "nostalgia",
+	"situational_comedy", "wit_wordplay", "physical_comedy", "cringe_humor", "absurdist_humor", "satire_parody", "dark_humor",
+	"fantasy", "futuristic", "historical", "contemporary_realism", "crime", "mystery", "warfare", "political", "sports", "biographical", "coming_of_age", "family_dynamics", "psychological", "showbiz", "gaming", "pop_culture", "social_commentary", "class_and_capitalism", "technology_and_humanity", "spiritual",
+] as const
+
 export function isValidFingerprintKey(key: string): key is keyof CoreScores {
 	return VALID_FINGERPRINT_KEYS.includes(key as keyof CoreScores)
 }

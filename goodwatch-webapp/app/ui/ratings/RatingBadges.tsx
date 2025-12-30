@@ -6,7 +6,7 @@ import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png"
 import rottenLogo from "~/img/rotten-logo-250.png"
 import rottenLogoIcon from "~/img/rotten-logo-icon-250.png"
 import { type AllRatings, scoreLabels } from "~/utils/ratings"
-import { useUserData } from "~/routes/api.user-data"
+import { useUserScore } from "~/hooks/useUserDataAccessors"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 export interface RatingBadgesProps {
@@ -23,8 +23,8 @@ export default function RatingBadges({
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
-	const { data: userData } = useUserData()
-	const userScore = userData?.[mediaType]?.[tmdb_id]?.score || null
+	const userScoreData = useUserScore(mediaType, tmdb_id)
+	const userScore = userScoreData?.score || null
 
 	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
 		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10

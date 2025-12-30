@@ -6,9 +6,7 @@
 @source inline("{bg,border-t}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-{600,900}"); /* Fingerprint */
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/50"); /* DNA tags */
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-950/70"); /* Sign in */
-@source inline("from-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-700/{80,50}"); /* Discover filters */
-@source inline("via-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/{80,50}"); /* Discover filters */
-@source inline("to-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-800/{80,50}"); /* Discover filters */
+@source inline("{hover:,active:,}{after:,}{from,via,to,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-{50,100,200,300,400,500,600,700,800,900,950}{/{80,50,20,15},}"); /* Buttons, Discover filters */
 
 @theme {
 	--breakpoint-xs: 475px;
@@ -20,17 +18,49 @@
 
 	--color-gray-950: #060606;
 
-	--color-vibe-0: #d61f1f;
-	--color-vibe-10: #d61f1f;
-	--color-vibe-20: #d61f1f;
-	--color-vibe-30: #d61f1f;
-	--color-vibe-40: #d0481c;
-	--color-vibe-50: #ba7215;
-	--color-vibe-60: #a9930a;
-	--color-vibe-70: #86a61a;
-	--color-vibe-80: #3b9011;
-	--color-vibe-90: #0d8033;
-	--color-vibe-100: #0d8033;
+	/* Neumorphic primary colors (dark neutral) */
+	--color-primary-50: #525252;
+	--color-primary-100: #4a4a4a;
+	--color-primary-200: #404040;
+	--color-primary-300: #363636;
+	--color-primary-400: #2d2d2d;
+	--color-primary-500: #262626;
+	--color-primary-600: #1f1f1f;
+	--color-primary-700: #171717;
+	--color-primary-800: #0f0f0f;
+	--color-primary-900: #0a0a0a;
+
+	/* Neumorphic accent colors (amber) */
+	--color-accent-50: #fffbeb;
+	--color-accent-100: #fef3c7;
+	--color-accent-200: #fde68a;
+	--color-accent-300: #fcd34d;
+	--color-accent-400: #fbbf24;
+	--color-accent-500: #f59e0b;
+	--color-accent-600: #d97706;
+	--color-accent-700: #b45309;
+	--color-accent-800: #92400e;
+	--color-accent-900: #78350f;
+
+	/* Neumorphic shadows */
+	--drop-shadow-neu-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+	--drop-shadow-neu: 0 2px 4px rgba(0, 0, 0, 0.5);
+	--drop-shadow-neu-lg: 0 4px 6px rgba(0, 0, 0, 0.4);
+
+	/* Timing functions */
+	--ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+	--color-vibe-0: #7f1d1d;
+	--color-vibe-10: #991b1b;
+	--color-vibe-20: #b91c1c;
+	--color-vibe-30: #c2410c;
+	--color-vibe-40: #d97706;
+	--color-vibe-50: #ca8a04;
+	--color-vibe-60: #a3a323;
+	--color-vibe-70: #65a32d;
+	--color-vibe-80: #16934a;
+    --color-vibe-90: #15803d;
+	--color-vibe-100: #166534;
 
 	--color-imdb: #f6c800;
 	--color-metacritic: #010101;
@@ -97,4 +127,11 @@
 /* TODO check if still needed. Used for main search? */
 input[type="search"]::-webkit-search-cancel-button {
 	appearance: none;
+}
+
+/* Neumorphic components */
+@layer components {
+	.bg-radial-toggle {
+		background: radial-gradient(100% 100% at 50% 100%, var(--color-primary-200) 14.06%, var(--color-primary-500) 100%);
+	}
 }

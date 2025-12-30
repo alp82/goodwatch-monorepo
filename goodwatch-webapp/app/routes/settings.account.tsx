@@ -4,7 +4,6 @@ import React from "react";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import SubmitButton from "~/ui/button/SubmitButton";
 import { PasswordInput } from "~/ui/form/PasswordInput";
-import { Spinner } from "~/ui/wait/Spinner";
 import { useSupabase, useUser } from "~/utils/auth";
 import { useAutoFocus } from "~/utils/form";
 import { validatePassword } from "~/utils/password";
@@ -111,7 +110,9 @@ export default function SettingsAccount() {
 	const handleResetOnboardingFlag = () => {
 		setUserSettings.mutate({
 			settings: {
-				onboarding_status: "incomplete",
+				onboarding_country_completed: "no",
+				onboarding_streaming_completed: "no",
+				onboarding_ratings_completed: "no",
 			},
 		});
 	};

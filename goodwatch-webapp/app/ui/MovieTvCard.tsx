@@ -1,6 +1,6 @@
 import { Link } from "@remix-run/react"
 import type React from "react"
-import { useUserData } from "~/routes/api.user-data"
+import { useUserScore, useIsOnWishlist } from "~/hooks/useUserDataAccessors"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { ExploreResult } from "~/server/explore.server"
@@ -29,11 +29,9 @@ export function MovieTvCard({
 	prefetch = false,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
-	const { data: userData } = useUserData()
-
-	const userMediaData = userData?.[mediaType]?.[details.tmdb_id]
-	const userScore = userMediaData?.score ?? null
-	const onWishList = userMediaData?.onWishList ?? false
+	const userScoreData = useUserScore(mediaType, details.tmdb_id)
+	const userScore = userScoreData?.score ?? null
+	const onWishList = useIsOnWishlist(mediaType, details.tmdb_id)
 
 	return (
 		<Link

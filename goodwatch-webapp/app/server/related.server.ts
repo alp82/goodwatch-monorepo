@@ -1,6 +1,12 @@
 import { cached } from "~/utils/cache"
-import { makePointId, recommend } from "~/utils/qdrant"
-import { type AllRatings } from "~/utils/ratings"
+import { recommend, makePointId } from "~/utils/qdrant"
+import type { AllRatings } from "~/utils/ratings"
+import {
+	type QdrantMediaPayload,
+	getStringValue,
+	buildBaseFilterConditions,
+	buildPayloadFields,
+} from "~/server/utils/recommend"
 import type { CoreScores } from "~/server/utils/fingerprint"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
@@ -18,58 +24,6 @@ const STREAMING_PROVIDERS_WHITELIST: number[] = [
 	1899, // HBO Max
 ] as const
 
-interface QdrantMediaPayload {
-	tmdb_id: number
-	media_type: "movie" | "show"
-	title?: string | string[]
-	original_title?: string | string[]
-	poster_path?: string | string[]
-	backdrop_path?: string | string[]
-	genres?: string[]
-	release_year?: number
-	release_decade?: number
-	is_anime?: boolean
-	production_method?: "Live-Action" | "Animation" | "Mixed-Media"
-	tmdb_user_score_normalized_percent?: number
-	imdb_user_score_normalized_percent?: number
-	metacritic_user_score_normalized_percent?: number
-	metacritic_meta_score_normalized_percent?: number
-	rotten_tomatoes_audience_score_normalized_percent?: number
-	rotten_tomatoes_tomato_score_normalized_percent?: number
-	goodwatch_user_score_normalized_percent?: number
-	goodwatch_official_score_normalized_percent?: number
-	goodwatch_overall_score_normalized_percent?: number
-	tmdb_user_score_rating_count?: number
-	imdb_user_score_rating_count?: number
-	metacritic_user_score_rating_count?: number
-	metacritic_meta_score_review_count?: number
-	rotten_tomatoes_audience_score_rating_count?: number
-	rotten_tomatoes_tomato_score_review_count?: number
-	goodwatch_user_score_rating_count?: number
-	goodwatch_official_score_review_count?: number
-	goodwatch_overall_score_voting_count?: number
-	fingerprint_scores_v1?: Record<string, number>
-	suitability_solo_watch?: boolean
-	suitability_date_night?: boolean
-	suitability_group_party?: boolean
-	suitability_family?: boolean
-	suitability_partner?: boolean
-	suitability_friends?: boolean
-	suitability_kids?: boolean
-	suitability_teens?: boolean
-	suitability_adults?: boolean
-	suitability_intergenerational?: boolean
-	suitability_public_viewing_safe?: boolean
-	context_is_thought_provoking?: boolean
-	context_is_pure_escapism?: boolean
-	context_is_background_friendly?: boolean
-	context_is_comfort_watch?: boolean
-	context_is_binge_friendly?: boolean
-	context_is_drop_in_friendly?: boolean
-	streaming_pairs?: [string, string][]
-	streaming_pair_codes?: string[]
-	streaming_availability?: string[]
-}
 
 export interface RelatedMovie extends AllRatings {
 	tmdb_id: number
@@ -195,40 +149,26 @@ async function getRelatedTitles({
 
 	const sourceFingerprintScore = source_fingerprint_score ?? null
 
-	const filterConditions: any = {
-		must: [
-			{ key: "media_type", match: { value: target_media_type } },
-			{
-				key: "goodwatch_overall_score_voting_count",
-				range: { gte: 10000 },
-			},
-			{
-				key: "goodwatch_overall_score_normalized_percent",
-				range: { gte: 60 },
-			},
-		],
-		must_not: [
-			{
-				key: "poster_path",
-				match: { value: null },
-			},
-			{
-				key: "backdrop_path",
-				match: { value: null },
-			},
-		],
-	}
+	// Build filter conditions using shared utility
+	const additionalMust: any[] = [
+		{ key: "media_type", match: { value: target_media_type } }
+	]
+
+	const additionalMustNot: any[] = [
+		{ key: "poster_path", match: { value: null } },
+		{ key: "backdrop_path", match: { value: null } },
+	]
 
 	if (source_media_type === target_media_type) {
-		filterConditions.must_not.push({
+		additionalMustNot.push({
 			key: "tmdb_id",
 			match: { value: tmdb_id },
 		})
 	}
 
-
+	// Add fingerprint filter if needed
 	if (withKey && sourceFingerprintScore !== null) {
-		filterConditions.must.push({
+		additionalMust.push({
 			key: `fingerprint_scores_v1.${fingerprint_key}`,
 			range: {
 				gte: sourceFingerprintScore - 1,
@@ -245,42 +185,28 @@ async function getRelatedTitles({
 			match: { value: combination }
 		}))
 		
-		filterConditions.must.push({
+		additionalMust.push({
 			should: streamingShouldConditions,
 			minimum_should: 1 // At least one streaming combination must match
 		})
 	}
 
-	const payloadFields = [
-		"tmdb_id",
-		"title",
-		"release_year",
-		"poster_path",
-		"backdrop_path",
-		"goodwatch_overall_score_voting_count",
-		"goodwatch_overall_score_normalized_percent",
-		"tmdb_user_score_normalized_percent",
-		"tmdb_user_score_rating_count",
-		"imdb_user_score_normalized_percent",
-		"imdb_user_score_rating_count",
-		"metacritic_user_score_normalized_percent",
-		"metacritic_user_score_rating_count",
-		"metacritic_meta_score_normalized_percent",
-		"metacritic_meta_score_review_count",
-		"rotten_tomatoes_audience_score_normalized_percent",
-		"rotten_tomatoes_audience_score_rating_count",
-		"rotten_tomatoes_tomato_score_normalized_percent",
-		"rotten_tomatoes_tomato_score_review_count",
-		"goodwatch_user_score_normalized_percent",
-		"goodwatch_user_score_rating_count",
-		"goodwatch_official_score_normalized_percent",
-		"goodwatch_official_score_review_count",
-		"streaming_availability",
-	]
+	const { must, must_not } = buildBaseFilterConditions({
+		mediaType: target_media_type,
+		minVotingCount: 10000,
+		minScore: 60,
+		additionalMust,
+		additionalMustNot,
+	})
 
-	if (withKey && fingerprint_key) {
-		payloadFields.push(`fingerprint_scores_v1.${fingerprint_key}`)
-	}
+	const filterConditions = { must, must_not }
+
+	// Build payload fields using shared utility
+	const payloadFields = buildPayloadFields({
+		includeRatings: true,
+		includeFingerprintKey: withKey && fingerprint_key ? fingerprint_key : undefined,
+		includeStreaming: true,
+	})
 
 	const results = await recommend<QdrantMediaPayload>({
 		collectionName,
@@ -311,10 +237,10 @@ async function getRelatedTitles({
 
 			return {
 				tmdb_id: payload.tmdb_id,
-				title: Array.isArray(payload.title) ? payload.title[0] : (payload.title ?? ""),
+				title: getStringValue(payload.title),
 				release_year: String(payload.release_year ?? ""),
-				poster_path: Array.isArray(payload.poster_path) ? payload.poster_path[0] : (payload.poster_path ?? ""),
-				backdrop_path: Array.isArray(payload.backdrop_path) ? payload.backdrop_path[0] : (payload.backdrop_path ?? ""),
+				poster_path: getStringValue(payload.poster_path),
+				backdrop_path: getStringValue(payload.backdrop_path),
 				fingerprint_score: targetFingerprintScore,
 				ann_score: annScore,
 				score: finalScore,

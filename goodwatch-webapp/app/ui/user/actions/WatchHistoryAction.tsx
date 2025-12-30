@@ -1,12 +1,8 @@
 import React from "react"
-import { useUserData } from "~/routes/api.user-data"
-import type {
-	UpdateWatchHistoryPayload,
-	UpdateWatchHistoryResult,
-} from "~/server/watchHistory.server"
+import { useIsWatched } from "~/hooks/useUserDataAccessors"
+import { useWatchedMutation } from "~/hooks/useUserDataMutations"
 import UserAction from "~/ui/auth/UserAction"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import { useAPIAction } from "~/utils/api-action"
 
 export interface WatchHistoryActionProps {
 	children: React.ReactElement
@@ -22,33 +18,29 @@ export default function WatchHistoryAction({
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
-	const { data: userData } = useUserData()
-	const toggleAction = userData?.[mediaType]?.[tmdb_id]?.onWatchHistory
-		? "remove"
-		: "add"
-	const action = actionOverwrite ? actionOverwrite : toggleAction
+	const isWatched = useIsWatched(mediaType, tmdb_id)
+	const { mutate: updateWatched, isPending } = useWatchedMutation()
 
-	const { submitProps } = useAPIAction<
-		UpdateWatchHistoryPayload,
-		UpdateWatchHistoryResult
-	>({
-		endpoints: [
-			{
-				url: "/api/update-watch-history",
-				params: {
-					tmdb_id,
-					media_type: mediaType,
-					action,
-				},
-			},
-		],
-	})
+	const handleClick = () => {
+		const toggleAction = isWatched ? "remove" : "add"
+		const action = actionOverwrite ? actionOverwrite : toggleAction
+
+		updateWatched({
+			mediaType,
+			tmdbId: tmdb_id,
+			action,
+		})
+	}
 
 	return (
 		<UserAction
 			instructions={<>Your history shows every title you ever have watched.</>}
 		>
-			{React.cloneElement(children, { ...submitProps })}
+			{React.cloneElement(children, {
+				onClick: handleClick,
+				disabled: isPending,
+				style: isPending ? { pointerEvents: "none", opacity: 0.7 } : {},
+			})}
 		</UserAction>
 	)
 }

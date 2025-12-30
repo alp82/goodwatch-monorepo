@@ -1,6 +1,6 @@
 import { HeartIcon } from "@heroicons/react/24/solid"
 import React from "react"
-import { useUserData } from "~/routes/api.user-data"
+import { useIsFavorite } from "~/hooks/useUserDataAccessors"
 import FavoriteAction from "~/ui/user/actions/FavoriteAction"
 import ActionButton from "~/ui/button/ActionButton"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -17,9 +17,7 @@ export default function FavoriteButton({
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
-	const { data: userData } = useUserData()
-	const userDataItem = userData?.[mediaType]?.[tmdb_id]
-	const isFavorite = Boolean(userDataItem?.onFavorites)
+	const isFavorite = useIsFavorite(mediaType, tmdb_id)
 	const labelText = isFavorite ? "Favorite" : "Favorite"
 	const labelAction = isFavorite ? "Favorite" : "Favorite"
 

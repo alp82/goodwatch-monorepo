@@ -11,7 +11,9 @@ import { getUserIdFromRequest, useUser } from "~/utils/auth"
 export type UserSettingsMap = {
 	cookie_consent: "yes" | "no"
 	country_default: string
-	onboarding_status: "incomplete" | "finished"
+	onboarding_country_completed: "yes" | "no"
+	onboarding_streaming_completed: "yes" | "no"
+	onboarding_ratings_completed: "yes" | "no"
 	streaming_providers_default: string
 }
 
@@ -22,7 +24,9 @@ type SettingType = StringSetting | EnumSetting<string>
 export const UserSettingsSchema: Record<keyof UserSettingsMap, SettingType> = {
 	cookie_consent: { type: "enum", options: ["yes", "no"] },
 	country_default: { type: "string" },
-	onboarding_status: { type: "enum", options: ["incomplete", "finished"] },
+	onboarding_country_completed: { type: "enum", options: ["yes", "no"] },
+	onboarding_streaming_completed: { type: "enum", options: ["yes", "no"] },
+	onboarding_ratings_completed: { type: "enum", options: ["yes", "no"] },
 	streaming_providers_default: { type: "string" },
 } as const
 
@@ -78,11 +82,26 @@ export const useCookieConsent = () => {
 	return { consentGiven, setConsentGiven }
 }
 
+// Derived from individual step completion
+export const useOnboardingCompleted = () => {
+	const { data: userSettings } = useUserSettings()
+	
+	if (!userSettings) return false
+	
+	// Onboarding is complete when country and streaming are set
+	// Ratings are optional and done via /quiz
+	return (
+		userSettings.onboarding_country_completed === "yes" &&
+		userSettings.onboarding_streaming_completed === "yes"
+	)
+}
+
 export const useOnboardingRequired = () => {
 	const { user, loading: userLoading } = useUser()
 	const { data: userSettings, isLoading: userSettingsLoading } =
 		useUserSettings()
 	const loading = userLoading || userSettingsLoading
+	const onboardingCompleted = useOnboardingCompleted()
 
 	const setUserSettings = useSetUserSettings()
 	useEffect(() => {
@@ -90,20 +109,19 @@ export const useOnboardingRequired = () => {
 			!loading &&
 			user?.id &&
 			typeof userSettings === "object" &&
-			userSettings.onboarding_status === undefined
+			userSettings.onboarding_country_completed === undefined
 		) {
+			// Initialize new users with incomplete onboarding
 			setUserSettings.mutate({
 				settings: {
-					onboarding_status: "incomplete",
-				},
-				options: {
-					ignoreUpdate: true,
+					onboarding_country_completed: "no",
+					onboarding_streaming_completed: "no",
 				},
 			})
 		}
 	}, [loading, userSettings, user, setUserSettings.mutate])
 
-	return userSettings?.onboarding_status === "incomplete"
+	return !onboardingCompleted
 }
 
 export const useUserStreamingProviders = () => {

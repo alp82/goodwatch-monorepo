@@ -86,8 +86,28 @@ class QdrantClientWrapper {
 			// Handle match condition
 			if (condition.match) {
 				if (condition.match.value !== undefined) {
-					fieldCondition.match = {
-						matchValue: { case: 'keyword', value: String(condition.match.value) },
+					// Check if the value is a number to use the correct match type
+					const value = condition.match.value
+					if (typeof value === 'number') {
+						fieldCondition.match = {
+							matchValue: { case: 'integer', value: value },
+						}
+					} else {
+						fieldCondition.match = {
+							matchValue: { case: 'keyword', value: String(value) },
+						}
+					}
+				} else if (condition.match.any !== undefined && Array.isArray(condition.match.any)) {
+					// Handle "any" match - array of values to match against
+					const values = condition.match.any
+					if (values.length > 0 && typeof values[0] === 'number') {
+						fieldCondition.match = {
+							matchValue: { case: 'integers', value: { integers: values } },
+						}
+					} else {
+						fieldCondition.match = {
+							matchValue: { case: 'keywords', value: { strings: values.map(String) } },
+						}
 					}
 				}
 			}
@@ -466,6 +486,7 @@ export const recommend = async <T = Record<string, any>>(params: {
 	collectionName: string
 	positive: (number | string)[]
 	negative?: (number | string)[]
+	strategy?: 'average_vector' | 'best_score' | 'sum_scores',
 	using?: string
 	filter?: any
 	limit?: number

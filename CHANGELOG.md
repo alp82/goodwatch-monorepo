@@ -2,17 +2,31 @@
 
 Notable changes to GoodWatch will be documented in this file.
 
-## [0.7.2] 2025-10-xx
+## [0.8.0] 2025-12-31
+
+Minor Release: **Recommendation Engine**
 
 ### Added
-* New: Swipe Scoring on mobile
+* New: Recommendations based on personal taste
 * New: Guests can now start scoring to see how recommendations work
 
 ### Changed
 * Completely revamped onboarding
+* Swipe Scoring on mobile
 
 ### Fixed
 * Server errors for movies and shows with missing titles and genres
+* SEO: Add correct handling of canonicals to avoid duplicate indexing of pages with query params
+
+## [0.7.2] 2025-11-19
+
+### Added
+* Revised hourly backups for CrateDB and Qdrant
+* Monitoring for Qdrant
+
+### Changed
+
+### Fixed
 
 ## [0.7.1] 2025-10-25
 
@@ -32,12 +46,12 @@ This release took a lot of time because the performance issues were not easy to 
 After a long evalution phase, PostgresDB has been replaced with CrateDB and Qdrant.
 
 ### Added
-* completely new DNA pipeline
-* renamed DNA to Fingerprint
-* vector embeddings backed by Qdrant instead of pgvector
+* Completely new DNA pipeline
+* Renamed DNA to Fingerprint
+* Vector embeddings backed by Qdrant instead of pgvector
+* Details show Fingerprint summary with Energy, Heart, Humor, World, Craft & Style scores
 
 ### Changed
-* Details show Fingerprint summary with Energy, Heart, Humor, World, Craft & Style scores
 * Related movies and shows are now based on Fingerprint highlights
 * Order of Streaming Services is now based on selected country
 

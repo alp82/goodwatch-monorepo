@@ -1,6 +1,6 @@
 import { ForwardIcon } from "@heroicons/react/24/solid"
 import React, { useState } from "react"
-import { useUserData } from "~/routes/api.user-data"
+import { useIsSkipped } from "~/hooks/useUserDataAccessors"
 import SkippedAction from "~/ui/user/actions/SkippedAction"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
@@ -14,9 +14,7 @@ export default function SkipButton({ media, onChange }: SkipButtonProps) {
 	const { tmdb_id } = details
 	const [isActive, setIsActive] = useState(false)
 
-	const { data: userData } = useUserData()
-	const userDataItem = userData?.[mediaType]?.[tmdb_id]
-	const isSkipped = userDataItem?.onSkipped
+	const isSkipped = useIsSkipped(mediaType, tmdb_id)
 
 	const SkippedIcon = ForwardIcon
 	const skippedColor = isSkipped || isActive ? "text-pink-500" : "text-gray-400"

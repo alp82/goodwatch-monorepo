@@ -37,8 +37,8 @@ export const getSimilarMedia = async (params: SimilarMediaParams) => {
 		name: "similar-media",
 		target: _getSimilarMedia,
 		params,
-		ttlMinutes: 60 * 24,
-		// ttlMinutes: 0,
+		// ttlMinutes: 60 * 24,
+		ttlMinutes: 0,
 	});
 };
 

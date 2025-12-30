@@ -16,6 +16,9 @@ export const SignOutLink = ({ active }: SignOutLinkProps) => {
 	const handleSignOut = async () => {
 		if (!supabase) return
 
+		// Clear onboarding banner state
+		sessionStorage.removeItem("onboarding-banner-dismissed")
+
 		const { error } = await supabase.auth.signOut()
 		if (error) console.error(error)
 

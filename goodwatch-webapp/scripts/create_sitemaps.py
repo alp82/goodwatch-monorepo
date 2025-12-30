@@ -204,7 +204,7 @@ def create_landing_sitemaps():
     """Create sitemaps for main landing pages."""
     now = datetime.now(timezone.utc).date()
     static_routes = [
-        "/", "/movies", "/shows", "/discover",
+        "/", "/taste/quiz", "/movies", "/shows", "/discover",
         "/sign-in", "/how-it-works", "/about", "/disclaimer", "/privacy"
     ]
     sitemap_filename = "sitemap_static.xml"
