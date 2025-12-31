@@ -5,11 +5,27 @@ import ShowcaseCard from "~/ui/showcase/ShowcaseCard"
 import Pillars, { type PillarName } from "~/ui/fingerprint/Pillars"
 import PillarDetails from "~/ui/fingerprint/PillarDetails"
 
-export default function ShowcaseSection() {
-	const { data: examples, isLoading } = useShowcaseExamples()
+interface ShowcaseSectionProps {
+	prefetchedExamples?: any[]
+}
+
+export default function ShowcaseSection({ prefetchedExamples }: ShowcaseSectionProps) {
+	const { data: examples, isLoading } = useShowcaseExamples({
+		initialData: prefetchedExamples,
+	})
 	const [selectedPillar, setSelectedPillar] = useState<PillarName | null>("Energy")
 
 	if (isLoading || !examples?.length) {
+		// If we have prefetched examples, don't show loading state
+		if (prefetchedExamples?.length) {
+			const [fingerprintExample, streamingExample, ratingsExample] = prefetchedExamples
+			return (
+				<div className="w-full max-w-6xl mx-auto px-4 py-12 space-y-24">
+					{/* Render with prefetched data */}
+					{renderSections(fingerprintExample, streamingExample, ratingsExample, selectedPillar, setSelectedPillar)}
+				</div>
+			)
+		}
 		return (
 			<div className="w-full max-w-6xl mx-auto px-4 py-12">
 				<div className="animate-pulse space-y-8">
@@ -28,6 +44,20 @@ export default function ShowcaseSection() {
 
 	return (
 		<div className="w-full max-w-6xl mx-auto px-4 py-12 space-y-24">
+			{renderSections(fingerprintExample, streamingExample, ratingsExample, selectedPillar, setSelectedPillar)}
+		</div>
+	)
+}
+
+function renderSections(
+	fingerprintExample: any,
+	streamingExample: any, 
+	ratingsExample: any,
+	selectedPillar: PillarName | null,
+	setSelectedPillar: (pillar: PillarName | null) => void
+) {
+	return (
+		<>
 			{/* Fingerprint Section */}
 			<motion.section
 				initial={{ opacity: 0, y: 30 }}
@@ -82,7 +112,7 @@ export default function ShowcaseSection() {
 					<ShowcaseCard example={streamingExample} index={1}>
 						<div className="flex flex-col flex-wrap gap-2 mt-2">
 							{streamingExample.streaming_services.length > 0 ? (
-								streamingExample.streaming_services.map((service) => (
+								streamingExample.streaming_services.map((service: { id: number; logo_path: string; name: string }) => (
 									<div
 										key={service.id}
 										className="flex items-center gap-2 px-3 py-2 bg-gray-700/80 rounded-lg"
@@ -180,6 +210,6 @@ export default function ShowcaseSection() {
 					Rate just a few movies to see your personalized recommendations
 				</p>
 			</motion.div>
-		</div>
+		</>
 	)
 }

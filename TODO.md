@@ -1042,6 +1042,11 @@ user feedback
 
 ---
 
+windsurf global rules
+    https://gist.github.com/muratkeremozcan/2fa569c9ba5a2a6459217aa01e42bcef
+
+---
+
 add caching for user settings
     invalidate cache in setter
 

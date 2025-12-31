@@ -3,6 +3,7 @@ import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
 	MetaFunction,
+	LinksFunction,
 } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
@@ -17,6 +18,7 @@ import { prefetchUserData } from "~/server/userData.server"
 import { getTrendingMovies, getTrendingTV } from "~/server/trending.server"
 import { getUserRecommendations } from "~/server/user-recommendations.server"
 import { getWatchlistItems } from "~/server/watchlist-items.server"
+import { getShowcaseExamples } from "~/server/showcase-examples.server"
 import TasteLanding from "~/ui/taste/screens/TasteLanding"
 import ShowcaseSection from "~/ui/showcase/ShowcaseSection"
 import LoggedInHome from "~/ui/home/LoggedInHome"
@@ -30,6 +32,19 @@ export const headers: HeadersFunction = () => {
 		"Cache-Control":
 			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
 	}
+}
+
+export const links: LinksFunction = () => {
+	const links = [
+		{ rel: "preconnect", href: "https://image.tmdb.org" },
+		{
+			rel: "preload",
+			as: "image",
+			fetchpriority: "high",
+			href: "https://image.tmdb.org/t/p/w780/gqby0RhyehP3uRrzmdyUZ0CgPPe.jpg",
+		},
+	]
+	return links
 }
 
 export const meta: MetaFunction<typeof loader> = () => {
@@ -73,6 +88,7 @@ type LoaderData = {
 	recommendations: RecommendationItem[]
 	watchlistItems: WatchlistItemData[]
 	dehydratedState: DehydratedState
+	showcaseExamples: any[]
 }
 
 export const loader: LoaderFunction = async ({
@@ -89,6 +105,10 @@ export const loader: LoaderFunction = async ({
 	let trendingTV: TrendingItem[] = []
 	let recommendations: RecommendationItem[] = []
 	let watchlistItems: WatchlistItemData[] = []
+	let showcaseExamples: any[] = []
+
+	// Always fetch showcase examples for LCP optimization
+	showcaseExamples = await getShowcaseExamples({ country: locale.country })
 
 	if (isLoggedIn && userId) {
 		const apiParams = {
@@ -119,6 +139,7 @@ export const loader: LoaderFunction = async ({
 		recommendations,
 		watchlistItems,
 		dehydratedState: dehydrate(queryClient),
+		showcaseExamples,
 	})
 }
 
@@ -128,7 +149,8 @@ export default function Index() {
 		trendingMovies, 
 		trendingTV, 
 		recommendations, 
-		watchlistItems 
+		watchlistItems,
+		showcaseExamples 
 	} = useLoaderData<LoaderData>()
 
 	if (isLoggedIn) {
@@ -169,7 +191,7 @@ export default function Index() {
 			</motion.div>
 			
 			{/* Feature Showcase - only for non-logged-in users */}
-			<ShowcaseSection />
+			<ShowcaseSection prefetchedExamples={showcaseExamples} />
 		</div>
 	)
 }

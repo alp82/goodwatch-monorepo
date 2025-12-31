@@ -20,12 +20,12 @@ export default function ShowcaseCard({ example, children, index }: ShowcaseCardP
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay: 0.1 + index * 0.1, duration: 0.4 }}
+			transition={{ delay: index === 0 ? 0 : 0.1 + index * 0.1, duration: 0.4 }}
 			className="relative min-h-96 bg-gray-800/50 border border-gray-600/50"
 		>
 			{backdropUrl && (
 				<div
-					className="absolute inset-0 opacity-50"
+					className={`absolute inset-0 opacity-50`}
 					style={{
 						backgroundImage: `url(${backdropUrl})`,
 						backgroundSize: "cover",
@@ -42,7 +42,9 @@ export default function ShowcaseCard({ example, children, index }: ShowcaseCardP
 							<img
 								src={posterUrl}
 								alt={example.title}
-								className="w-20 md:w-32 lg:w-48 h-auto object-cover rounded-lg shadow-xl"
+								className="w-20 md:w-32 lg:w-48 h-auto object-cover rounded-lg shadow-xl aspect-2/3"
+								loading={index === 0 ? "eager" : "lazy"}
+								fetchPriority={index === 0 ? "high" : "auto"}
 							/>
 						</div>
 					)}

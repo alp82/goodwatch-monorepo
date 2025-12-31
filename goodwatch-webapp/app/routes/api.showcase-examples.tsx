@@ -21,11 +21,12 @@ export const loader: LoaderFunction = async ({
 
 export const queryKeyShowcaseExamples = ["showcase-examples"]
 
-export const useShowcaseExamples = () => {
+export const useShowcaseExamples = (options?: { initialData?: any[] }) => {
 	const url = "/api/showcase-examples"
 	return useQuery<ShowcaseExamplesResult>({
 		queryKey: queryKeyShowcaseExamples,
 		queryFn: async () => await (await fetch(url)).json(),
+		initialData: options?.initialData,
 	})
 }
 

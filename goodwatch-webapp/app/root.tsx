@@ -66,6 +66,16 @@ export const links: LinksFunction = () => [
 		crossOrigin: "anonymous",
 	},
 	{
+		rel: "preconnect",
+		href: "https://image.tmdb.org",
+	},
+	{
+		rel: "preload",
+		as: "image",
+		fetchpriority: "high",
+		href: "https://image.tmdb.org/t/p/w780/gqby0RhyehP3uRrzmdyUZ0CgPPe.jpg", // inception backdrop
+	},
+	{
 		rel: "stylesheet",
 		href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap",
 	},
@@ -180,7 +190,7 @@ export function ErrorBoundary() {
 						<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
 							{/* Error message */}
 							<strong className="text-xl text-white">
-								{error?.message || error?.data}
+								{(error as any)?.message || (error as any)?.data}
 							</strong>
 
 							{/* Try Again button */}
@@ -196,7 +206,8 @@ export function ErrorBoundary() {
 							{error?.stack && (
 								<div className="bg-red-900 text-white p-4 rounded-lg overflow-auto max-h-64">
 									<pre className="whitespace-pre-wrap break-words">
-										{error.stack}
+										{(error as any).message}
+										<pre>{(error as any).data}</pre>
 									</pre>
 								</div>
 							)}

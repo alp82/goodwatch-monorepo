@@ -17,6 +17,6 @@ globs: **/*.{ts,tsx}
 - Follow Remix and React Router best practices
 - Use Tanstack Query for data management
 - Use Tailwind CSS for styling
-- Keep componpents each in their separate files
+- Keep components each in their separate files
 - Keep collections of custom hooks in separate hook files
 - Always wrap useEffect with a well-named custom hook to improve readability
