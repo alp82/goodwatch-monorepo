@@ -5,7 +5,7 @@ import { type GetDiscoverResult, useDiscover } from "~/routes/api.discover"
 import type { DiscoverParams, DiscoverResult } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { Spinner } from "~/ui/wait/Spinner"
-import { seededRandom } from "~/utils/random"
+import { seededRandomSin } from "~/utils/random"
 import { useLocation } from "@remix-run/react"
 import { usePageTracking } from "~/hooks/usePageTracking"
 import {
@@ -99,7 +99,7 @@ export default function MovieTvGrid({
 				
 				<AnimatePresence>
 					{results.map((result: DiscoverResult, index) => {
-						const offset = Math.floor(seededRandom(index + 1) * 12) + 6
+						const offset = Math.floor(seededRandomSin(index + 1) * 12) + 6
 						return (
 							<div key={`${result.media_type}-${result.tmdb_id}`}>
 								<motion.div

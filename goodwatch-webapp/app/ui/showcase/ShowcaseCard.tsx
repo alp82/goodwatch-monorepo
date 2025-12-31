@@ -44,7 +44,7 @@ export default function ShowcaseCard({ example, children, index }: ShowcaseCardP
 								alt={example.title}
 								className="w-20 md:w-32 lg:w-48 h-auto object-cover rounded-lg shadow-xl aspect-2/3"
 								loading={index === 0 ? "eager" : "lazy"}
-								fetchPriority={index === 0 ? "high" : "auto"}
+								fetchpriority={index === 0 ? "high" : "auto"}
 							/>
 						</div>
 					)}

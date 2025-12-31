@@ -3,9 +3,31 @@ import React from "react"
 export const random = (min: number, max: number) =>
 	Math.floor(Math.random() * (max - min)) + min
 
-export const seededRandom = (seed: number) => {
+export const seededRandomSin = (seed: number) => {
 	const x = Math.sin(seed) * 10000
 	return x - Math.floor(x)
+}
+
+// Xorshift-based seeded random with better distribution
+export const seededRandomXorshift = (seed: number) => {
+	// Convert seed to 32-bit integer
+	let x = seed | 0
+	x ^= x << 13
+	x ^= x >> 17
+	x ^= x << 5
+	return Math.abs(x) / 2147483647
+}
+
+// String-based seeded random using hash function
+export const seededRandomFromString = (seed: string) => {
+	// Simple string hash function
+	let hash = 0
+	for (let i = 0; i < seed.length; i++) {
+		const char = seed.charCodeAt(i)
+		hash = ((hash << 5) - hash) + char
+		hash = hash & hash // Convert to 32-bit integer
+	}
+	return seededRandomXorshift(hash)
 }
 
 export const randomEdge = (min: number, max: number, percent: number) => {

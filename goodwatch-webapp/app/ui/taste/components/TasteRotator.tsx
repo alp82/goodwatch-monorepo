@@ -1,7 +1,8 @@
 import RotatingText from "~/ui/text/RotatingText"
-import { shuffleArray } from "~/utils/array"
+import { shuffleArraySeeded } from "~/utils/array"
+import { useMemo } from "react"
 
-const TASTE_PART_1 = shuffleArray([
+const TASTE_PART_1_BASE = [
 	"Christopher Nolan films",
 	"90s thrillers",
 	"Korean cinema",
@@ -26,9 +27,9 @@ const TASTE_PART_1 = shuffleArray([
 	"sports underdog stories",
 	"existential dramas",
 	"showbiz satires",
-])
+]
 
-const TASTE_PART_2 = shuffleArray([
+const TASTE_PART_2_BASE = [
 	"with stunning visuals",
 	"full of tension",
 	"that keep you guessing",
@@ -53,7 +54,12 @@ const TASTE_PART_2 = shuffleArray([
 	"with stunning cinematography",
 	"and unforgettable scores",
 	"full of absurdity",
-])
+]
+
+// Get a daily seed for consistent ordering across all users
+const getDailySeed = () => {
+	return new Date().toDateString()
+}
 
 const rotateProps = {
 	mainClassName: "inline-flex",
@@ -72,6 +78,18 @@ interface TasteRotatorProps {
 }
 
 export default function TasteRotator({}: TasteRotatorProps) {
+	const dailySeed = getDailySeed()
+	
+	const TASTE_PART_1 = useMemo(() => 
+		shuffleArraySeeded(TASTE_PART_1_BASE, dailySeed),
+		[dailySeed]
+	)
+	
+	const TASTE_PART_2 = useMemo(() => 
+		shuffleArraySeeded(TASTE_PART_2_BASE, dailySeed),
+		[dailySeed]
+	)
+	
 	return (
 		<div className="max-w-3xl mx-auto rounded-sm border-l-8 border-gray-600 bg-gray-700/50 p-4">
 			<div className="flex flex-wrap justify-center gap-x-2 text-xl md:text-2xl font-medium text-white">
