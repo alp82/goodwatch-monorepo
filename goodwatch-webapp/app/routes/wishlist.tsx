@@ -7,6 +7,7 @@ import {
 import { useLoaderData, useNavigation } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import React from "react"
+import { seededRandomSin } from "~/utils/random"
 import { useUserData } from "~/routes/api.user-data"
 import type { DiscoverResult } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
@@ -143,12 +144,12 @@ export default function Wishlist() {
 									<motion.div
 										key={currentParams.sortBy}
 										initial={{
-											y: `-${Math.floor(Math.random() * 10) + 5}%`,
+											y: `-${Math.floor(seededRandomSin(index + 1) * 10) + 5}%`,
 											opacity: 0,
 										}}
 										animate={{ y: "0", opacity: 1 }}
 										exit={{
-											y: `${Math.floor(Math.random() * 10) + 5}%`,
+											y: `${Math.floor(seededRandomSin(index + 1) * 10) + 5}%`,
 											opacity: 0,
 										}}
 										transition={{ duration: 0.5, type: "tween" }}

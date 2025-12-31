@@ -4,16 +4,12 @@
 
 ---
 
-windsurf agents
-    lighthouse mcp
-
----
-
 seo:
     fix canonicals
     fix page size
     fix page request count
     fix page speed
+    better buildMeta and JsonLD
 
 seo tester
     https://website.grader.com/tests/goodwatch.app

@@ -39,6 +39,7 @@ Deprecation:
 - Find all Qdrant models in `goodwatch-flows/windmill/f/sync/models/qdrant_models.py`
 
 # Webapp SEO
+- use `seededRandom*` methods instead of `Math.random()` to avoid hydration errors
 - verify lighthouse score for significant changes
 - use proper meta tags and Open Graph tags
 - use proper hreflang tags
