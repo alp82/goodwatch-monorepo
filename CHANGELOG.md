@@ -1,6 +1,14 @@
 # Change Log
 
-Notable changes to GoodWatch will be documented in this file.
+Notable changes to GoodWatch are documented in this file.
+
+## [0.8.1] 2026-01-xx
+
+### Added
+
+### Changed
+
+### Fixed
 
 ## [0.8.0] 2025-12-31
 

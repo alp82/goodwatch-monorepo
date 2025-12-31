@@ -4,12 +4,21 @@
 
 ---
 
+windsurf agents
+    lighthouse mcp
+
+---
+
 seo:
     fix canonicals
     fix page size
     fix page request count
     fix page speed
+
+seo tester
     https://website.grader.com/tests/goodwatch.app
+    https://seositecheckup.com/
+    https://www.seoggestion.com/
 
 seo checklist:
     Is the content actually unique, or does it overlap with other page?
@@ -27,6 +36,19 @@ seo checklist:
     Are they getting actual clicks or impressions?
     Titles, meta, and headings - do they clearly tell Google what this page is for?
     Any structured data helping Google understand the content type?
+
+SEO for Fingerprint (Wes)
+
+SEO analysis
+    http://guidetodatamining.com/ngramAnalyzer/index.php
+    
+SEO optimization + marketing
+    https://www.jacobparis.com/content/remix-og
+    https://www.reddit.com/r/SaaS/comments/1ho4hbu/best_free_seo_tools/
+    https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
+    https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
+    https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
+    https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
 
 ---
 
@@ -155,6 +177,139 @@ fingerprint v2
     https://claude.ai/chat/0fc0178c-3693-4853-91a8-b2922afc7fc3
     https://chatgpt.com/g/g-p-675ffbf7167881919f049695a263ca6c-goodwatch/c/691ad2b7-b6f0-8331-92d1-bf5a57ad040d
 
+---
+
+subgenre descriptions
+    https://www.studiobinder.com/blog/movie-genres-list/
+
+new themes:
+    magic?
+    fantastic
+    survival adventure (hunger games)
+    hacker
+    robot / ai
+    ancient rome
+    viking
+    desert
+    ocean
+    cult classics
+    dance
+    ice hockey
+    tennis
+    golf
+
+franchise:
+    best disney [type]
+    best star wars [type]
+    best studio ghibli [type]
+    best marvel [type]
+    best james bond [type]
+    best pixar [type]
+    best godzilla [type]
+    best stephen king [type]
+
+streaming:
+    [type] to stream (right now)
+    new [type] to stream
+    best [type] to stream
+    best streaming [type] (right now)
+    best [type] on netflix
+    best [type] on amazon prime
+    best [type] on hulu
+    best [type] on disney plus
+    best [type] on hbo
+    best [type] on [streamer] free
+    best new [type] on [streamer]
+    best free [type] on [streamer]
+    ...
+
+release:
+    best [type] of all time
+    best [type] (of) [year]
+    best 80s [type]
+    best 90s [type]
+    best [type] of the 2000s
+    best [type] since [year]
+    best classic [type]
+    best old [type]
+
+season/holiday:
+    best halloween [type]
+    best christmas [type]
+    best thanksgiving [type]
+    best fall [type]
+    best eve [type]
+
+audience:
+    best family [type]
+    best kids [type]
+    best teen [type]
+    best [audience] [type]
+    best [type] to watch with [audience]
+
+language:
+    best korean [type]
+    best malayalam [type]
+    best english [type]
+    best hindi [type]
+    best telugu [type]
+    best tamil [type]
+    best japanese [type]
+    best french [type]
+    best chinese [type]
+    best [lang] [type]
+
+actor:
+    best adam sandler [type]
+    best ma dong-seok [type]
+    best jackie chan [type]
+    best jason statham [type]
+    best jake gyllenhaal [type]
+    best leonardo dicaprio [type]
+    best denzel washington [type]
+
+director:
+    best quentin tarantino [type]
+    best steven spielberg [type]
+
+quality
+    best 4k [type]
+    best hd [type]
+
+genre + streaming:
+    best [genre] [type] on [streamer]
+
+genre + release:
+    best [genre] [type] of all time
+    best [genre] [type] [year]
+
+streaming + release:
+    best [type] of [streamer] [year]
+
+holiday + audience:
+    best christmas [type] for [audience]
+
+---
+
+scraper solutions
+    https://scrapoxy.io/
+    https://dataimpulse.com/
+    https://github.com/autoscrape-labs/pydoll
+    https://github.com/scrapoxy/scrapoxy
+    https://www.firecrawl.dev/
+
+---
+
+tv seasons:
+    name, overview, air date, poster path
+    get episodes: overview, images, videos, translations, air date, crew, guest stars
+    get ratings for seasons and episodes: tmdb, imdb, metacritic, rt
+    show in details
+    when last season/episode was released
+    score matrix
+        https://tvcharts.co/show/arcane-tt11126994
+    recaps
+    
 ---
 
 priority queue
@@ -340,11 +495,6 @@ where to watch VPN
 
 remove milvus
 
----
-
-optimistic ui
-    tanstack db
-
 ---   
 
 long actor names overlap on mobile
@@ -383,15 +533,6 @@ gsc not indexed
 
 streaming backend
     https://v2.remix.run/docs/guides/streaming
-
----
-
-scraper solutions
-    https://scrapoxy.io/
-    https://dataimpulse.com/
-    https://github.com/autoscrape-labs/pydoll
-    https://github.com/scrapoxy/scrapoxy
-    https://www.firecrawl.dev/
 
 ---
 
@@ -537,6 +678,11 @@ additional datasets
 
 ---
 
+browser extension to embed DNA into netflix, etc.
+    tags link to goodwatch for exploration
+
+---
+
 security audit
     https://auditvps.com/
     https://chatgpt.com/c/6771847c-c2fc-8001-83f1-8ea8cc5161b9
@@ -545,21 +691,6 @@ penetration test
     evan | scraping & automations
     jared | infracharm
 
----
-
-SEO for DNA (Wes)
-
-SEO analysis
-    http://guidetodatamining.com/ngramAnalyzer/index.php
-    
-SEO optimization + marketing
-    https://www.jacobparis.com/content/remix-og
-    https://www.reddit.com/r/SaaS/comments/1ho4hbu/best_free_seo_tools/
-    https://app.ahrefs.com/site-audit/7410991/overview?current=19-12-2024T034232
-    https://trends.google.com/trends/explore?date=today%201-m&q=movies&hl=en-GB
-    https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
-    https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
-    
 ---
 
 details streaming
@@ -593,8 +724,9 @@ email marketing
     
 ---
 
-payment
+donations / pay what you want
     https://polar.sh
+    TrustMRR listing
 
 ---
 
@@ -607,135 +739,7 @@ similar filter
 YT Channel
     https://gemini.google.com/app/a89965a683889ed8
 
----
-
-browser extension to embed DNA into netflix, etc.
-    tags link to goodwatch for exploration
-
----
-
-subgenre descriptions
-    https://www.studiobinder.com/blog/movie-genres-list/
-
-new themes:
-    magic?
-    fantastic
-    survival adventure (hunger games)
-    hacker
-    robot / ai
-    ancient rome
-    viking
-    desert
-    ocean
-    cult classics
-    dance
-    ice hockey
-    tennis
-    golf
-
-franchise:
-    best disney [type]
-    best star wars [type]
-    best studio ghibli [type]
-    best marvel [type]
-    best james bond [type]
-    best pixar [type]
-    best godzilla [type]
-    best stephen king [type]
-
-streaming:
-    [type] to stream (right now)
-    new [type] to stream
-    best [type] to stream
-    best streaming [type] (right now)
-    best [type] on netflix
-    best [type] on amazon prime
-    best [type] on hulu
-    best [type] on disney plus
-    best [type] on hbo
-    best [type] on [streamer] free
-    best new [type] on [streamer]
-    best free [type] on [streamer]
-    ...
-
-release:
-    best [type] of all time
-    best [type] (of) [year]
-    best 80s [type]
-    best 90s [type]
-    best [type] of the 2000s
-    best [type] since [year]
-    best classic [type]
-    best old [type]
-
-season/holiday:
-    best halloween [type]
-    best christmas [type]
-    best thanksgiving [type]
-    best fall [type]
-    best eve [type]
-
-audience:
-    best family [type]
-    best kids [type]
-    best teen [type]
-    best [audience] [type]
-    best [type] to watch with [audience]
-
-language:
-    best korean [type]
-    best malayalam [type]
-    best english [type]
-    best hindi [type]
-    best telugu [type]
-    best tamil [type]
-    best japanese [type]
-    best french [type]
-    best chinese [type]
-    best [lang] [type]
-
-actor:
-    best adam sandler [type]
-    best ma dong-seok [type]
-    best jackie chan [type]
-    best jason statham [type]
-    best jake gyllenhaal [type]
-    best leonardo dicaprio [type]
-    best denzel washington [type]
-
-director:
-    best quentin tarantino [type]
-    best steven spielberg [type]
-
-quality
-    best 4k [type]
-    best hd [type]
-
-genre + streaming:
-    best [genre] [type] on [streamer]
-
-genre + release:
-    best [genre] [type] of all time
-    best [genre] [type] [year]
-
-streaming + release:
-    best [type] of [streamer] [year]
-
-holiday + audience:
-    best christmas [type] for [audience]
-
----
-
-tv seasons:
-    name, overview, air date, poster path
-    get episodes: overview, images, videos, translations, air date, crew, guest stars
-    get ratings for seasons and episodes: tmdb, imdb, metacritic, rt
-    show in details
-    when last season/episode was released
-    score matrix
-        https://tvcharts.co/show/arcane-tt11126994
-    recaps
-    
+   
 ---
 
 tropes
@@ -784,12 +788,6 @@ Cast / Crew pages
 
 page speed insights
     https://pagespeed.web.dev/analysis/https-goodwatch-app/ltmtcc644r?hl=en_GB&form_factor=mobile
-    
----
-
-seo tester
-    https://seositecheckup.com/
-    https://www.seoggestion.com/
 
 ---
 
