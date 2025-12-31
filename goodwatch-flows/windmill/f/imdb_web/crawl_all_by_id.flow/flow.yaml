@@ -11,7 +11,10 @@ value:
             expr: flow_input.next_ids
         path: f/imdb_web/imdb_crawl_ratings/iterate
         tag_override: null
-      timeout: 30
+      continue_on_error: false
+      timeout:
+        type: static
+        value: 300
     - id: b
       value:
         type: forloopflow
@@ -34,7 +37,9 @@ value:
                 multiplier: 6
                 random_factor: 50
                 seconds: 2
-            timeout: 30
+            timeout:
+              type: static
+              value: 30
         iterator:
           type: javascript
           expr: results.a

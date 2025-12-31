@@ -1,0 +1,10 @@
+summary: Milvus Connector
+description: ''
+lock: '!inline f/db/milvus.script.lock'
+kind: script
+no_main_func: true
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

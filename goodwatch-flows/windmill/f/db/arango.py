@@ -3,13 +3,18 @@
 # wmill
 
 from datetime import datetime, timezone
+import time
 import re
 
 from arango import ArangoClient, DocumentInsertError
+from requests import Timeout
 import wmill
 
 
-REQUEST_TIMEOUT = 300
+REQUEST_TIMEOUT = 900
+RETRY_COUNT = 20
+RETRY_DELAY_SEC = 10
+UPSERT_ERRORS_TO_RETRY = [3, 4, 1200, 1227]
 
 
 class ArangoConnector:
@@ -151,15 +156,14 @@ class ArangoConnector:
             # Compare essential properties
             fields_match = sorted(existing_idx.get('fields', [])) == sorted(index_def['fields'])
             type_match = existing_idx.get('type') == index_def['type']
-            unique_match = existing_idx.get('unique', False) == is_unique # Ensure consistent comparison
+            unique_match = existing_idx.get('unique', False) == is_unique
             
             # If a name is provided in our definition, we can be more specific
-            name_match = True # Assume match if no name in our def
+            name_match = True
             if index_name and 'name' in existing_idx:
                 name_match = existing_idx['name'] == index_name
-            elif index_name and 'name' not in existing_idx: # Name in our def but not on existing (unlikely for user-created)
+            elif index_name and 'name' not in existing_idx:
                 name_match = False
-
 
             if fields_match and type_match and unique_match and name_match:
                 found_existing = True
@@ -174,7 +178,17 @@ class ArangoConnector:
                 }
                 if index_name:
                     create_params['name'] = index_name
+                """
+                TODO attempt to get vector indexes working
+
+                endpoint = "/_api/index"
+                params = {"collection": collection_name}
+                data = create_params
+                response = self.db.post(endpoint, params=params, data=data)
                 
+                if response.status_code >= 400:
+                    raise IndexCreateError(response)
+                """    
                 collection.add_index(create_params)
                 print(f"Created {index_type} index on {collection_name}({field_str}) "
                       f"[unique: {is_unique}{', name: ' + index_name if index_name else ''}]")
@@ -182,6 +196,21 @@ class ArangoConnector:
                 print(f"Warning: Could not create index on {collection_name}({field_str}) "
                       f"[type: {index_type}, unique: {is_unique}"
                       f"{', name: ' + index_name if index_name else ''}]: {e}")
+
+    def ensure_view(self, name, params):
+        try:
+            self.db.view(name)
+            self.db.replace_arangosearch_view(
+                name=name,
+                properties=params,
+            )
+            print(f"Replaced view {name}")
+        except Exception:
+            self.db.create_arangosearch_view(
+                name=name,
+                properties=params,
+            )
+            print(f"Created view {name}")
 
     def delete_all_collections_and_graphs(self):
         """
@@ -211,17 +240,29 @@ class ArangoConnector:
             self.client = None
             self.db = None
 
-    def upsert_many(self, collection, documents):
+    def upsert_many(self, collection, documents, retry_attempt = 0):
         current_ts = datetime.now(timezone.utc).timestamp()
 
         docs_to_upsert: list[dict] = []
         original_keys_for_batch = []
 
+        unique_documents = {}
+
         for i, document_model in enumerate(documents):
             doc_dict = document_model.model_dump(by_alias=True, exclude_none=True)
             original_key_before_sanitize = doc_dict.get("_key", f"NO_KEY_at_index_{i}")
-            original_keys_for_batch.append(str(original_key_before_sanitize))
+            
+            sanitized_key = self._sanitize_key(str(doc_dict.get("_key")), edge=False) if "_key" in doc_dict and doc_dict["_key"] is not None else None
+            
+            if sanitized_key in unique_documents:
+                # Log the skipped duplicate and continue to the next document
+                continue
+            unique_documents[sanitized_key] = (document_model, original_key_before_sanitize)
 
+        for doc_key, (document_model, original_key) in unique_documents.items():
+            original_keys_for_batch.append(str(original_key))
+
+            doc_dict = document_model.model_dump(by_alias=True, exclude_none=True)
             doc_dict.pop('created_at', None)
             doc_dict['updated_at'] = current_ts
 
@@ -239,9 +280,18 @@ class ArangoConnector:
                 docs_to_upsert,
                 on_duplicate='update',
                 details=True,
-                sync=False
+                sync=True,
             )
             return result_stats
+        except Timeout as e:
+            final_error_message = f"Timeout: {e}"
+            if e.error_code in UPSERT_ERRORS_TO_RETRY and retry_attempt < RETRY_COUNT:
+                print(final_error_message)
+                print(f"Retrying ({retry_attempt + 1}/{RETRY_COUNT})...")
+                time.sleep(RETRY_DELAY_SEC) 
+                return self.upsert_many(collection, documents, retry_attempt + 1)
+            else:
+                raise Timeout(final_error_message) from e
         except DocumentInsertError as e:
             error_messages = [
                 f"Error during bulk operation for collection '{collection.name}'.",
@@ -394,9 +444,17 @@ class ArangoConnector:
                 
             else: # Other ArangoDB errors
                 error_messages.insert(1, f"*** TYPE: Other ArangoDB error (code {e.error_code}) ***")
+                # e fields: 'add_note', 'args', 'error_code', 'error_message', 'http_code', 'http_headers', 'http_method', 'message', 'request', 'response', 'source', 'url', 'with_traceback'
 
             final_error_message = "\n".join(error_messages)
-            raise ValueError(final_error_message) from e
+            
+            if e.error_code in UPSERT_ERRORS_TO_RETRY and retry_attempt < RETRY_COUNT:
+                print(final_error_message)
+                print(f"Retrying ({retry_attempt + 1}/{RETRY_COUNT})...")
+                time.sleep(RETRY_DELAY_SEC) 
+                return self.upsert_many(collection, documents, retry_attempt + 1)
+            else:
+                raise ValueError(final_error_message) from e
 
     def _sanitize_key(self, input_string: str, edge=False):
         allowed = r"a-zA-Z0-9_.\-@()+,=;$!*'%:" + (r"/" if edge else r"")

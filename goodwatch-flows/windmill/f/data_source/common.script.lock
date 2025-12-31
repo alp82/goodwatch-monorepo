@@ -1,7 +1,9 @@
+# py: 3.11
 annotated-types==0.7.0
-dnspython==2.6.1
-mongoengine==0.28.2
-pydantic==2.8.2
-pydantic-core==2.20.1
-pymongo==4.8.0
-typing-extensions==4.12.2
+dnspython==2.8.0
+mongoengine==0.29.1
+pydantic==2.12.5
+pydantic-core==2.41.5
+pymongo==4.15.5
+typing-extensions==4.15.0
+typing-inspection==0.4.2

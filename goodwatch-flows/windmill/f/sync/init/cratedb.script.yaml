@@ -1,0 +1,9 @@
+summary: Initialize CrateDB tables and indexes
+description: ''
+lock: '!inline f/sync/init/cratedb.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

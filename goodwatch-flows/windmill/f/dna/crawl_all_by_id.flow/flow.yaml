@@ -1,0 +1,71 @@
+summary: ''
+description: Generate multiple DNA by id
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: flow_input.next_ids
+        is_trigger: false
+        path: f/dna/generate/iterate
+    - id: b
+      value:
+        type: forloopflow
+        modules:
+          - id: c
+            value:
+              type: script
+              input_transforms:
+                next_ids:
+                  type: javascript
+                  expr: flow_input.iter.value
+              is_trigger: false
+              path: f/dna/generate/fetch
+            continue_on_error: false
+            retry:
+              constant:
+                attempts: 0
+                seconds: 0
+              exponential:
+                attempts: 1
+                multiplier: 1
+                random_factor: 0
+                seconds: 15
+        iterator:
+          type: javascript
+          expr: results.a
+        parallel: true
+        parallelism: 5
+        skip_failures: true
+    - id: d
+      summary: Flatten and combine Results
+      value:
+        type: rawscript
+        content: '!inline flatten_and_combine_results.inline_script.py'
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: flow_input.next_ids
+          results:
+            type: javascript
+            expr: results.b
+        lock: '!inline flatten_and_combine_results.inline_script.lock'
+        language: python3
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order:
+    - next_ids
+  properties:
+    next_ids:
+      type: object
+      description: ''
+      default: null
+      format: ''
+      order: []
+      properties: {}
+  required:
+    - next_ids

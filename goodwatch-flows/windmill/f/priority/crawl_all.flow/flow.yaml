@@ -23,6 +23,16 @@ value:
             expr: results.g.ids
         path: f/tmdb_api/tmdb_fetch_details_from_api/fetch
         tag_override: null
+      continue_on_error: false
+      retry:
+        constant:
+          attempts: 0
+          seconds: 0
+        exponential:
+          attempts: 5
+          multiplier: 1
+          random_factor: 0
+          seconds: 2
     - id: b
       summary: ''
       value:
@@ -30,7 +40,7 @@ value:
         branches:
           - summary: IMDB
             modules:
-              - id: n
+              - id: 'n'
                 value:
                   type: script
                   input_transforms:
@@ -39,6 +49,16 @@ value:
                       expr: results.g.ids
                   path: f/imdb_web/imdb_init_ratings/update
                   tag_override: null
+                continue_on_error: false
+                retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
+                  exponential:
+                    attempts: 5
+                    multiplier: 1
+                    random_factor: 0
+                    seconds: 2
               - id: x
                 value:
                   type: flow
@@ -48,7 +68,9 @@ value:
                       expr: results.n
                   path: f/imdb_web/crawl_all_by_id
                 continue_on_error: false
-                timeout: 300
+                timeout:
+                  type: static
+                  value: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -63,6 +85,16 @@ value:
                       expr: results.g.ids
                   path: f/metacritic_web/metacritic_init_ratings/update
                   tag_override: null
+                continue_on_error: false
+                retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
+                  exponential:
+                    attempts: 5
+                    multiplier: 1
+                    random_factor: 0
+                    seconds: 2
               - id: w
                 value:
                   type: flow
@@ -72,7 +104,9 @@ value:
                       expr: results.m
                   path: f/metacritic_web/crawl_all_by_id
                 continue_on_error: false
-                timeout: 300
+                timeout:
+                  type: static
+                  value: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -87,6 +121,16 @@ value:
                       expr: results.g.ids
                   path: f/rotten_web/rotten_tomatoes_init_ratings/update
                   tag_override: null
+                continue_on_error: false
+                retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
+                  exponential:
+                    attempts: 5
+                    multiplier: 1
+                    random_factor: 0
+                    seconds: 2
               - id: t
                 value:
                   type: flow
@@ -96,7 +140,9 @@ value:
                       expr: results.l
                   path: f/rotten_web/crawl_all_by_id
                 continue_on_error: false
-                timeout: 300
+                timeout:
+                  type: static
+                  value: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -111,6 +157,16 @@ value:
                       expr: results.g.ids
                   path: f/tvtropes_web/tvtropes_init_tags/update
                   tag_override: null
+                continue_on_error: false
+                retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
+                  exponential:
+                    attempts: 5
+                    multiplier: 1
+                    random_factor: 0
+                    seconds: 2
               - id: v
                 value:
                   type: flow
@@ -120,7 +176,9 @@ value:
                       expr: results.k
                   path: f/tvtropes_web/crawl_all_by_id
                 continue_on_error: false
-                timeout: 300
+                timeout:
+                  type: static
+                  value: 300
             expr: ''
             parallel: true
             skip_failure: false
@@ -135,6 +193,16 @@ value:
                       expr: results.g.ids
                   path: f/tmdb_web/tmdb_init_providers/update
                   tag_override: null
+                continue_on_error: false
+                retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
+                  exponential:
+                    attempts: 5
+                    multiplier: 1
+                    random_factor: 0
+                    seconds: 2
               - id: u
                 value:
                   type: flow
@@ -144,32 +212,54 @@ value:
                       expr: results.j
                   path: f/tmdb_web/crawl_all_by_id
                 continue_on_error: false
-                timeout: 300
+                timeout:
+                  type: static
+                  value: 300
             expr: ''
             parallel: true
             skip_failure: false
           - summary: DNA
             modules:
-              - id: z
+              - id: ae
+                summary: Skip DNA
+                value:
+                  type: rawscript
+                  content: '!inline skip_dna.inline_script.py'
+                  input_transforms: {}
+                  lock: '!inline skip_dna.inline_script.lock'
+                  language: python3
+              - id: ab
                 value:
                   type: script
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.g.tmdb_ids
-                  path: f/genome/init/update
-                  tag_override: null
-              - id: aa
+                      expr: results.g.ids
+                  is_trigger: false
+                  path: f/dna/init/update
+              - id: ac
                 value:
                   type: flow
                   input_transforms:
                     next_ids:
                       type: javascript
-                      expr: results.z
-                  path: f/genome/crawl_all_by_id
+                      expr: results.ab
+                  path: f/dna/crawl_all_by_id
+              - id: ad
+                value:
+                  type: script
+                  input_transforms:
+                    ids:
+                      type: javascript
+                      expr: results.ab
+                    results:
+                      type: javascript
+                      expr: results.ac
+                  is_trigger: false
+                  path: f/dna/generate/vectors
             expr: 'false'
             parallel: true
-            skip_failure: false
+            skip_failure: true
         parallel: true
     - id: o
       summary: ''
@@ -218,72 +308,8 @@ value:
             expr: ''
             parallel: true
             skip_failure: false
-          - summary: Vectorize movies
-            modules:
-              - id: ab
-                value:
-                  type: script
-                  input_transforms:
-                    exclude_existing:
-                      type: static
-                    media_type:
-                      type: static
-                      value: movies
-                    start_offset:
-                      type: static
-                    tmdb_ids:
-                      type: javascript
-                      expr: results.g.tmdb_ids.movie_ids
-                  path: f/vector/save
-                  tag_override: ''
-                continue_on_error: false
-                retry:
-                  constant:
-                    attempts: 0
-                    seconds: 0
-                  exponential:
-                    attempts: 5
-                    multiplier: 1
-                    random_factor: 0
-                    seconds: 2
-                timeout: 300
-            expr: 'false'
-            parallel: true
-            skip_failure: false
-          - summary: Vectorize tv
-            modules:
-              - id: ac
-                value:
-                  type: script
-                  input_transforms:
-                    exclude_existing:
-                      type: static
-                    media_type:
-                      type: static
-                      value: tv
-                    start_offset:
-                      type: static
-                    tmdb_ids:
-                      type: javascript
-                      expr: results.g.tmdb_ids.tv_ids
-                  path: f/vector/save
-                  tag_override: ''
-                continue_on_error: false
-                retry:
-                  constant:
-                    attempts: 0
-                    seconds: 0
-                  exponential:
-                    attempts: 5
-                    multiplier: 1
-                    random_factor: 0
-                    seconds: 2
-                timeout: 300
-            expr: 'false'
-            parallel: true
-            skip_failure: false
         parallel: true
-    - id: y
+    - id: 'y'
       value:
         type: script
         input_transforms:

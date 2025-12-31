@@ -9,68 +9,65 @@ from f.db.mongodb import init_mongodb, close_mongodb
 BATCH_SIZE = 100000
 
 
+watch_providers_pipeline = [
+    {
+        "$match": {
+            "watch_providers.results": {
+                "$exists": True,
+                "$ne": {},
+                "$not": {"$type": "array"},
+            }
+        }
+    },
+    {
+        "$project": {
+            "watch_providers": "$watch_providers.results",
+            "tmdb_id": 1,
+            "original_title": 1,
+            "popularity": 1,
+        }
+    },
+    {
+        "$addFields": {
+            "watch_providers_array": {
+                "$cond": {
+                    "if": {"$eq": [{"$type": "$watch_providers"}, "object"]},
+                    "then": {"$objectToArray": "$watch_providers"},
+                    "else": "$watch_providers",
+                }
+            }
+        }
+    },
+    {"$unwind": "$watch_providers_array"},
+    {
+        "$project": {
+            "tmdb_watch_url": "$watch_providers_array.v.link",
+            "tmdb_id": 1,
+            "original_title": 1,
+            "popularity": 1,
+        }
+    },
+]
+
+
 def initialize_documents():
     print("Initializing documents for TMDB streaming data")
     mongo_db = get_db()
 
-    watch_providers_pipeline = [
-        {
-            "$match": {
-                "watch_providers.results": {
-                    "$exists": True,
-                    "$ne": {},
-                    "$not": {"$type": "array"},  # Ensure it's not an array
-                }
-            }
-        },
-        {
-            "$project": {
-                "watch_providers": "$watch_providers.results",
-                "tmdb_id": 1,
-                "original_title": 1,
-                "popularity": 1,
-            }
-        },
-        {
-            "$addFields": {
-                "watch_providers_array": {
-                    "$cond": {
-                        "if": {"$eq": [{"$type": "$watch_providers"}, "object"]},
-                        "then": {"$objectToArray": "$watch_providers"},
-                        "else": "$watch_providers",
-                    }
-                }
-            }
-        },
-        {"$unwind": "$watch_providers_array"},
-        {
-            "$project": {
-                "tmdb_watch_url": "$watch_providers_array.v.link",
-                "tmdb_id": 1,
-                "original_title": 1,
-                "popularity": 1,
-            }
-        },
-    ]
-
-    movie_count = get_aggregation_count(
-        mongo_db.tmdb_movie_details, watch_providers_pipeline
+    # ---- MOVIES ----
+    movie_cursor = mongo_db.tmdb_movie_details.aggregate(
+        watch_providers_pipeline,
+        allowDiskUse=True,
+        batchSize=5_000,
     )
-    tv_count = get_aggregation_count(mongo_db.tmdb_tv_details, watch_providers_pipeline)
-
-    print(f"Total provider urls on TMDB: {movie_count} (movies) and {tv_count} (tv)")
 
     count_new_movies = 0
-    count_new_tv = 0
-    upserted_movie_ids = []
-    upserted_tv_ids = []
+    movie_operations: list[UpdateOne] = []
+    movie_seen = 0
 
-    for offset in range(0, movie_count, BATCH_SIZE):
-        print(f"copying {offset} to {offset + BATCH_SIZE} streaming data for movies")
-        movie_cursor = mongo_db.tmdb_movie_details.aggregate(
-            watch_providers_pipeline + [{"$skip": offset}, {"$limit": BATCH_SIZE}]
-        )
-        movie_operations = [
+    for doc in movie_cursor:
+        movie_seen += 1
+        movie_operations.append(
             build_operation(
                 {
                     "tmdb_id": doc.get("tmdb_id"),
@@ -79,18 +76,36 @@ def initialize_documents():
                     "tmdb_watch_url": doc.get("tmdb_watch_url"),
                 }
             )
-            for doc in movie_cursor
-        ]
+        )
+
+        if len(movie_operations) >= BATCH_SIZE:
+            print(f"Flushing {len(movie_operations)} movie operations (seen={movie_seen})")
+            movie_upserts = store_copies(movie_operations, mongo_db.tmdb_movie_providers)
+            count_new_movies += movie_upserts["count_new_documents"]
+            movie_operations.clear()
+
+    # flush remaining
+    if movie_operations:
+        print(f"Flushing final {len(movie_operations)} movie operations (seen={movie_seen})")
         movie_upserts = store_copies(movie_operations, mongo_db.tmdb_movie_providers)
-        count_new_movies += movie_upserts.get("count_new_documents")
-        upserted_movie_ids += movie_upserts.get("upserted_ids")
+        count_new_movies += movie_upserts["count_new_documents"]
 
-    for offset in range(0, tv_count, BATCH_SIZE):
-        print(f"copying {offset} to {offset + BATCH_SIZE} streaming data for tv shows")
-        tv_cursor = mongo_db.tmdb_tv_details.aggregate(
-            watch_providers_pipeline + [{"$skip": offset}, {"$limit": BATCH_SIZE}]
-        )
-        tv_operations = [
+    print(f"Total processed movie provider docs: {movie_seen}")
+
+    # ---- TV ----
+    tv_cursor = mongo_db.tmdb_tv_details.aggregate(
+        watch_providers_pipeline,
+        allowDiskUse=True,
+        batchSize=5_000,
+    )
+
+    count_new_tv = 0
+    tv_operations: list[UpdateOne] = []
+    tv_seen = 0
+
+    for doc in tv_cursor:
+        tv_seen += 1
+        tv_operations.append(
             build_operation(
                 {
                     "tmdb_id": doc.get("tmdb_id"),
@@ -99,17 +114,24 @@ def initialize_documents():
                     "tmdb_watch_url": doc.get("tmdb_watch_url"),
                 }
             )
-            for doc in tv_cursor
-        ]
+        )
+
+        if len(tv_operations) >= BATCH_SIZE:
+            print(f"Flushing {len(tv_operations)} tv operations (seen={tv_seen})")
+            tv_upserts = store_copies(tv_operations, mongo_db.tmdb_tv_providers)
+            count_new_tv += tv_upserts["count_new_documents"]
+            tv_operations.clear()
+
+    if tv_operations:
+        print(f"Flushing final {len(tv_operations)} tv operations (seen={tv_seen})")
         tv_upserts = store_copies(tv_operations, mongo_db.tmdb_tv_providers)
-        count_new_tv += tv_upserts.get("count_new_documents")
-        upserted_tv_ids += tv_upserts.get("upserted_ids")
+        count_new_tv += tv_upserts["count_new_documents"]
+
+    print(f"Total processed tv provider docs: {tv_seen}")
 
     return {
         "count_new_movies": count_new_movies,
         "count_new_tv": count_new_tv,
-        "upserted_movie_ids": upserted_movie_ids,
-        "upserted_tv_ids": upserted_tv_ids,
     }
 
 
@@ -143,21 +165,13 @@ def store_copies(
     collection: Collection,
 ) -> dict:
     count_new_documents = 0
-    upserted_ids = []
 
     if operations:
         bulk_result = collection.bulk_write(operations)
         count_new_documents += bulk_result.upserted_count
 
-        for op in operations:
-            criteria = op._filter
-            found_docs = collection.find(criteria)
-            for doc in found_docs:
-                upserted_ids.append(doc["_id"])
-
     return {
         "count_new_documents": count_new_documents,
-        "upserted_ids": upserted_ids,
     }
 
 

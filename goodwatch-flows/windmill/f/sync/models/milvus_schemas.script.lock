@@ -1,0 +1,14 @@
+# py: 3.11
+grpcio==1.76.0
+numpy==2.3.4
+pandas==2.3.3
+protobuf==6.33.0
+pymilvus==2.6.2
+python-dateutil==2.9.0.post0
+python-dotenv==1.1.1
+pytz==2025.2
+setuptools==80.9.0
+six==1.17.0
+typing-extensions==4.15.0
+tzdata==2025.2
+ujson==5.11.0

@@ -1,0 +1,20 @@
+summary: Test Crate Centroid for Similarity
+description: ''
+lock: '!inline f/vector/test_crate_centroid.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    show_tmdb_ids:
+      type: array
+      description: ''
+      default:
+        - 1396
+        - 71715
+        - 1402
+        - 64199
+      items:
+        type: number
+      originalType: 'number[]'
+  required: []

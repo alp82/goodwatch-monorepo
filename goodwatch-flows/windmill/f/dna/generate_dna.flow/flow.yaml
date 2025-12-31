@@ -1,0 +1,35 @@
+summary: Ask AI to generate DNA data
+description: Ask AI to generate a batch of DNA data and persist it.
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms: {}
+        is_trigger: false
+        path: f/dna/generate/next
+    - id: b
+      value:
+        type: flow
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: results.a.ids
+        path: f/dna/crawl_all_by_id
+    - id: c
+      value:
+        type: script
+        input_transforms:
+          ids:
+            type: javascript
+            expr: results.a.ids
+          results:
+            type: javascript
+            expr: results.b
+        is_trigger: false
+        path: f/dna/generate/vectors
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

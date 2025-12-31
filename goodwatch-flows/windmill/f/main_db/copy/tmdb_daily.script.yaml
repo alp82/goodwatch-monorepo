@@ -1,0 +1,17 @@
+summary: Copy TMDb Daily to ArangoDB
+description: ''
+lock: '!inline f/main_db/copy/tmdb_daily.script.lock'
+concurrency_time_window_s: 0
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    movie_ids:
+      type: array
+      description: ''
+      default: []
+      items:
+        type: string
+      originalType: 'string[]'
+  required: []

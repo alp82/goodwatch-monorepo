@@ -1,0 +1,22 @@
+summary: ''
+description: ''
+lock: '!inline f/dna/generate/vectors.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    ids:
+      type: object
+      description: ''
+      default: null
+    results:
+      type: array
+      description: ''
+      default: null
+      items:
+        type: object
+      originalType: 'object[]'
+  required:
+    - ids
+    - results

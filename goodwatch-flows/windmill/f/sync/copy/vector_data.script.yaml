@@ -1,0 +1,27 @@
+summary: Copy Vector Data to Qdrant
+description: ''
+lock: '!inline f/sync/copy/vector_data.script.lock'
+concurrency_time_window_s: 0
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  order:
+    - movie_ids
+    - show_ids
+  properties:
+    movie_ids:
+      type: array
+      description: ''
+      default: null
+      items:
+        type: string
+      originalType: 'string[]'
+    show_ids:
+      type: array
+      description: ''
+      default: null
+      items:
+        type: string
+      originalType: 'string[]'
+  required: []

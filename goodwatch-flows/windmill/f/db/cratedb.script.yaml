@@ -1,0 +1,9 @@
+summary: CrateDB Connector
+description: ''
+lock: '!inline f/db/cratedb.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

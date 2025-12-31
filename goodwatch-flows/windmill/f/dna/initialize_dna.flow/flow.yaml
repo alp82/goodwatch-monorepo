@@ -1,0 +1,15 @@
+summary: Initialize all entries for DNA Generation
+description: Initialize all entries for AI DNA generation by copying TMDb entries.
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms: {}
+        is_trigger: false
+        path: f/dna/init/main
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

@@ -1,4 +1,4 @@
-summary: ''
+summary: MongoDB Connector
 description: ''
 lock: '!inline f/db/mongodb.script.lock'
 kind: script

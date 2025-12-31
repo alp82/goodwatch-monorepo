@@ -1,3 +1,6 @@
+-- https://www.windmill.dev/docs/getting_started/scripts_quickstart/sql#result-collection
+-- result_collection=legacy
+
 CREATE TABLE IF NOT EXISTS streaming_provider_links (
     tmdb_id INTEGER NOT NULL,
     tmdb_url TEXT NOT NULL,

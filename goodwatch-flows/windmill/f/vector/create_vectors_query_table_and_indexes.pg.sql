@@ -1,3 +1,6 @@
+-- https://www.windmill.dev/docs/getting_started/scripts_quickstart/sql#result-collection
+-- result_collection=legacy
+
 CREATE TABLE IF NOT EXISTS vectors_query (
     query_text TEXT PRIMARY KEY,
     query_vector vector(512),

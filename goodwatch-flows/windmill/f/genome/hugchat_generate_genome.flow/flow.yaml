@@ -27,6 +27,8 @@ value:
                 value:
                   type: script
                   input_transforms:
+                    exclude_existing:
+                      type: static
                     media_type:
                       type: static
                       value: movies
@@ -58,6 +60,8 @@ value:
                 value:
                   type: script
                   input_transforms:
+                    exclude_existing:
+                      type: static
                     media_type:
                       type: static
                       value: tv

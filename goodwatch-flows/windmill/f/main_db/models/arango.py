@@ -2,6 +2,8 @@ from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from f.dna.models import CoreScores
+
 MediaType = Union[Literal["movie"], Literal["show"]]
 
 
@@ -126,7 +128,6 @@ class Job(BaseArangoModel):
 # ===== Movies and Shows =====
 # ============================
 
-
 # media
 
 class MediaBase(BaseArangoModel):
@@ -148,6 +149,11 @@ class MediaBase(BaseArangoModel):
     release_year: Optional[int] = None
     budget: Optional[int] = None
     revenue: Optional[int] = None
+
+    # Tags
+    genres: Optional[list[str]] = None
+    keywords: Optional[list[str]] = None   
+    tropes: Optional[list[str]] = None
     
     # Social media
     homepage: Optional[str] = None
@@ -157,26 +163,16 @@ class MediaBase(BaseArangoModel):
     instagram_id: Optional[str] = None
     twitter_id: Optional[str] = None
     
-    # Metadata timestamps (Unix timestamps)
-    tmdb_details_updated_at: Optional[float] = None
-    tmdb_providers_updated_at: Optional[float] = None
-    imdb_ratings_updated_at: Optional[float] = None
-    metacritic_ratings_updated_at: Optional[float] = None
-    rotten_tomatoes_ratings_updated_at: Optional[float] = None
-    tvtropes_tags_updated_at: Optional[float] = None
-    dna_updated_at: Optional[float] = None
-    
-    original_language_code: Optional[str] = None
-    origin_country_codes: Optional[list[str]] = None
-    spoken_language_codes: Optional[list[str]] = None
-    
-    # Production info (for edge creation)
+    # Production info
     production_company_ids: Optional[list[int]] = None
     production_country_codes: Optional[list[str]] = None
-    streaming_country_codes: Optional[list[str]] = None
-    tmdb_recommendation_ids: Optional[list[int]] = None
-    tmdb_similar_ids: Optional[list[int]] = None
-    
+    origin_country_codes: Optional[list[str]] = None
+    original_language_code: Optional[str] = None
+    spoken_language_codes: Optional[list[str]] = None
+    is_anime: Optional[bool] = None
+    production_method: Optional[Literal['Live-Action', 'Animation', 'Mixed-Media']] = None
+    animation_style: Optional[Literal['2D Traditional', '3D CGI', 'Stop-Motion', 'Rotoscoping', 'Anime', 'Other']] = None
+
     # Score fields
     tmdb_url: Optional[str] = None
     tmdb_user_score_original: Optional[float] = None
@@ -204,7 +200,6 @@ class MediaBase(BaseArangoModel):
     rotten_tomatoes_tomato_score_normalized_percent: Optional[float] = None
     rotten_tomatoes_tomato_score_review_count: Optional[int] = None
     
-    # goodwatch scores
     goodwatch_user_score_normalized_percent: Optional[float] = None
     goodwatch_user_score_rating_count: Optional[int] = None
     goodwatch_official_score_normalized_percent: Optional[float] = None
@@ -212,9 +207,57 @@ class MediaBase(BaseArangoModel):
     goodwatch_overall_score_normalized_percent: Optional[float] = None
     goodwatch_overall_score_voting_count: Optional[int] = None
     
-    # System timestamps (Unix timestamps)
-    tmdb_created_at: Optional[float] = None
-    tmdb_updated_at: Optional[float] = None
+    # Streaming fields
+    streaming_country_codes: Optional[list[str]] = None
+    streaming_service_ids: Optional[list[int]] = None
+    streaming_availabilities: Optional[list[str]] = None
+    
+    # Similarity & Recommendation fields
+    tmdb_recommendation_ids: Optional[list[int]] = None
+    tmdb_similar_ids: Optional[list[int]] = None
+    
+    essence_text: Optional[str] = None
+    essence_tags: Optional[list[str]] = None
+    fingerprint_scores: Optional[CoreScores] = None
+    fingerprint_highlight_keys: Optional[list[str]] = None
+
+    vector_essence_text: Optional[list[float]] = None
+    vector_fingerprint: Optional[list[float]] = None
+
+    suitability_solo_watch: Optional[bool] = None
+    suitability_date_night: Optional[bool] = None
+    suitability_group_party: Optional[bool] = None
+    suitability_family: Optional[bool] = None
+    suitability_partner: Optional[bool] = None
+    suitability_friends: Optional[bool] = None
+    suitability_kids: Optional[bool] = None
+    suitability_teens: Optional[bool] = None
+    suitability_adults: Optional[bool] = None
+    suitability_intergenerational: Optional[bool] = None
+    suitability_public_viewing_safe: Optional[bool] = None
+
+    context_is_thought_provoking: Optional[bool] = None
+    context_is_pure_escapism: Optional[bool] = None
+    context_is_background_friendly: Optional[bool] = None
+    context_is_comfort_watch: Optional[bool] = None
+    context_is_binge_friendly: Optional[bool] = None
+    context_is_drop_in_friendly: Optional[bool] = None
+
+    # Metadata timestamps (Unix timestamps)
+    tmdb_details_created_at: Optional[float] = None
+    tmdb_details_updated_at: Optional[float] = None
+    tmdb_providers_created_at: Optional[float] = None
+    tmdb_providers_updated_at: Optional[float] = None
+    imdb_ratings_created_at: Optional[float] = None
+    imdb_ratings_updated_at: Optional[float] = None
+    metacritic_ratings_created_at: Optional[float] = None
+    metacritic_ratings_updated_at: Optional[float] = None
+    rotten_tomatoes_ratings_created_at: Optional[float] = None
+    rotten_tomatoes_ratings_updated_at: Optional[float] = None
+    tvtropes_tags_created_at: Optional[float] = None
+    tvtropes_tags_updated_at: Optional[float] = None
+    dna_created_at: Optional[float] = None
+    dna_updated_at: Optional[float] = None
 
 
 class Movie(MediaBase):
@@ -274,18 +317,17 @@ class Video(BaseArangoModel):
     published_at: Optional[float] = None # Unix timestamp
 
 
-class Keyword(BaseArangoModel):
-    tmdb_id: int
-    name: str
-
-
 class Trope(BaseArangoModel):
     name: str
     url: Optional[str] = None
 
 
-class DNALegacy(BaseArangoModel):
-    data: dict[str, list[str]]
+class EssenceTag(BaseArangoModel):
+    name: str
+
+
+class ContentAdvisory(BaseArangoModel):
+    name: str
 
 
 class AlternativeTitle(BaseArangoModel):

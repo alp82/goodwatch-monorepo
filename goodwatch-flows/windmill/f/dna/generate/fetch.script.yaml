@@ -1,0 +1,20 @@
+summary: ''
+description: ''
+lock: '!inline f/dna/generate/fetch.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    next_ids:
+      type: array
+      description: ''
+      default:
+        - id: 68471cdd1f87b65f3388b42a
+          type: movie
+          tmdb_id: 603
+      items:
+        type: object
+      originalType: 'object[]'
+      properties: {}
+  required: []

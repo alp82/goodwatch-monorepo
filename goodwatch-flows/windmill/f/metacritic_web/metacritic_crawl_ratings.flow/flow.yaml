@@ -8,7 +8,19 @@ value:
         input_transforms: {}
         path: f/metacritic_web/metacritic_crawl_ratings/next
         tag_override: null
-      timeout: 60
+      continue_on_error: false
+      retry:
+        constant:
+          attempts: 0
+          seconds: 0
+        exponential:
+          attempts: 3
+          multiplier: 1
+          random_factor: 0
+          seconds: 2
+      timeout:
+        type: static
+        value: 300
     - id: b
       value:
         type: flow
@@ -17,7 +29,19 @@ value:
             type: javascript
             expr: results.a
         path: f/metacritic_web/crawl_all_by_id
-      timeout: 300
+      continue_on_error: false
+      retry:
+        constant:
+          attempts: 0
+          seconds: 0
+        exponential:
+          attempts: 3
+          multiplier: 1
+          random_factor: 0
+          seconds: 2
+      timeout:
+        type: static
+        value: 600
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object

@@ -21,9 +21,9 @@ from f.main_db.models.arango import (
     Season,
     Image,
     Video,
-    Keyword,
     Trope,
-    DNALegacy,
+    EssenceTag,
+    ContentAdvisory,
     AlternativeTitle,
     Translation,
     ReleaseEvent,
@@ -34,8 +34,8 @@ from f.main_db.models.arango import (
     StreamingAvailability,
 )
 
-BATCH_SIZE = 10000
-SUB_BATCH_SIZE = 30000
+BATCH_SIZE = 1000
+SUB_BATCH_SIZE = 5000
 
 
 # TODO: remove or flag obsolete documents and edges
@@ -104,8 +104,8 @@ def copy_media(
     is_movie = media_type == "movie"
 
     mongo_collection = mongo_db.tmdb_movie_details if is_movie else mongo_db.tmdb_tv_details
-    MediaClass = Movie if is_movie else Show
     media_collection_name = COLLECTIONS['movies'] if is_movie else COLLECTIONS['shows']
+    MediaClass = Movie if is_movie else Show
 
     # Get or create collections
     collections = {}
@@ -166,9 +166,9 @@ def copy_media(
             tmdb_ids, 
             mongo_db.tv_tropes_movie_tags if is_movie else mongo_db.tv_tropes_tv_tags
         )
-        genomes = fetch_documents_in_batch(
+        dna_data = fetch_documents_in_batch(
             tmdb_ids, 
-            mongo_db.genome_movie if is_movie else mongo_db.genome_tv
+            mongo_db.dna_movie if is_movie else mongo_db.dna_tv
         )
         tmdb_all_providers = fetch_all_documents_in_batch(
             tmdb_ids, 
@@ -257,6 +257,25 @@ def copy_media(
                 goodwatch_official_score_review_count,
             ])
 
+            # Tags
+            genres = tmdb_details.get("genres", [])
+            keywords = tmdb_details.get("keywords", [])
+            tropes = tv_tropes_tags.get(tmdb_id, {}).get("tropes", [])
+
+            # DNA
+            dna = dna_data.get(tmdb_id, {})
+            has_dna = "dna" in dna and "vector_fingerprint" in dna and "vector_essence_text" in dna
+            essence_tags = dna["dna"].get("essence_tags", []) if has_dna else None
+            essence_text = dna["dna"]["essence_text"] if has_dna else None
+            fingerprint = dna["dna"]["fingerprint"] if has_dna else None
+            is_anime = dna["dna"]["is_anime"] if has_dna else None
+            production_info = dna["dna"]["production_info"] if has_dna else None
+            content_advisories = dna["dna"].get("content_advisories", []) if has_dna else None
+            social_suitability = dna["dna"]["social_suitability"] if has_dna else None
+            viewing_context = dna["dna"]["viewing_context"] if has_dna else None
+            vector_essence_text = dna["vector_essence_text"] if has_dna else None
+            vector_fingerprint = dna["vector_fingerprint"] if has_dna else None
+
             # Create Media document
             media = MediaClass(
                 _key=media_key, 
@@ -265,6 +284,7 @@ def copy_media(
                 original_title=original_title,
                 tagline=tmdb_details.get("tagline"),
                 synopsis=tmdb_details.get("overview"),
+
                 popularity=tmdb_details.get("popularity"),
                 status=tmdb_details.get("status"),
                 adult=tmdb_details.get("adult"),
@@ -274,6 +294,10 @@ def copy_media(
                 budget=tmdb_details.get("budget"),
                 revenue=tmdb_details.get("revenue"),
 
+                genres=[genre.get("name") for genre in genres if genre.get("name")],
+                keywords=[keyword.get("name") for keyword in keywords if keyword.get("name")],
+                tropes=[trope.get("name") for trope in tropes if trope.get("name")],
+
                 homepage=tmdb_details.get("homepage"),
                 imdb_id=imdb_id,
                 wikidata_id=tmdb_details.get("wikidata_id"),
@@ -281,23 +305,7 @@ def copy_media(
                 instagram_id=tmdb_details.get("instagram_id"),
                 twitter_id=tmdb_details.get("twitter_id"),
                 
-                # Metadata timestamps
-                tmdb_details_updated_at=to_timestamp(tmdb_details.get("updated_at")),
-                tmdb_providers_updated_at=to_timestamp(tmdb_first_provider.get("updated_at")) if tmdb_first_provider else None,
-                imdb_ratings_updated_at=to_timestamp(imdb_rating.get("updated_at")),
-                metacritic_ratings_updated_at=to_timestamp(metacritic_rating.get("updated_at")),
-                rotten_tomatoes_ratings_updated_at=to_timestamp(rotten_tomatoes_rating.get("updated_at")),
-                tvtropes_tags_updated_at=to_timestamp(tv_tropes_tags.get(tmdb_id, {}).get("updated_at")),
-                dna_updated_at=to_timestamp(genomes.get(tmdb_id, {}).get("updated_at")),
-                
-                original_language_code=tmdb_details.get("original_language"),
-                origin_country_codes=tmdb_details.get("origin_country"),
-                spoken_language_codes=[
-                    lang.get("iso_639_1") for lang in tmdb_details.get("spoken_languages", [])
-                    if lang.get("iso_639_1")
-                ],
-
-                # For edge creation
+                # Production info
                 production_company_ids=[
                     company.get("id") for company in tmdb_details.get("production_companies", [])
                     if company.get("id")
@@ -306,15 +314,15 @@ def copy_media(
                     country.get("iso_3166_1") for country in tmdb_details.get("production_countries", [])
                     if country.get("iso_3166_1")
                 ],
-                streaming_country_codes=[], 
-                tmdb_recommendation_ids=[
-                    rec.get("id") for rec in tmdb_details.get("recommendations", {}).get("results", [])
-                    if rec.get("id")
+                origin_country_codes=tmdb_details.get("origin_country"),
+                original_language_code=tmdb_details.get("original_language"),
+                spoken_language_codes=[
+                    lang.get("iso_639_1") for lang in tmdb_details.get("spoken_languages", [])
+                    if lang.get("iso_639_1")
                 ],
-                tmdb_similar_ids=[
-                    sim.get("id") for sim in tmdb_details.get("similar", {}).get("results", [])
-                    if sim.get("id")
-                ],
+                is_anime=is_anime,
+                production_method=production_info["method"] if production_info else None,
+                animation_style=production_info["animation_style"] if production_info else None,
                 
                 # Scores
                 tmdb_url=tmdb_url,
@@ -343,13 +351,62 @@ def copy_media(
                 rotten_tomatoes_tomato_score_normalized_percent=rotten_tomatoes_rating.get("tomato_score_normalized_percent"),
                 rotten_tomatoes_tomato_score_review_count=rotten_tomatoes_rating.get("tomato_score_vote_count"),
                 
-                # goodwatch scores
                 goodwatch_user_score_normalized_percent=goodwatch_user_score_normalized_percent,
                 goodwatch_user_score_rating_count=goodwatch_user_score_rating_count,
                 goodwatch_official_score_normalized_percent=goodwatch_official_score_normalized_percent,
                 goodwatch_official_score_review_count=goodwatch_official_score_review_count,
                 goodwatch_overall_score_normalized_percent=goodwatch_overall_score_normalized_percent,
                 goodwatch_overall_score_voting_count=goodwatch_overall_score_voting_count,
+                
+                # Streaming
+                # Filled out at the bottom of the loop
+
+                # Similarity & Recommendations
+                tmdb_recommendation_ids=[
+                    rec.get("id") for rec in tmdb_details.get("recommendations", {}).get("results", [])
+                    if rec.get("id")
+                ],
+                tmdb_similar_ids=[
+                    sim.get("id") for sim in tmdb_details.get("similar", {}).get("results", [])
+                    if sim.get("id")
+                ],
+
+                essence_text=essence_text,
+                essence_tags=essence_tags,
+                fingerprint_scores=fingerprint["scores"] if fingerprint else None,
+                fingerprint_highlight_keys=fingerprint["highlight_keys"] if fingerprint else None,
+                content_advisories=content_advisories,
+
+                vector_essence_text=vector_essence_text,
+                vector_fingerprint=vector_fingerprint,
+
+                suitability_solo_watch=social_suitability["solo_watch"] if social_suitability else None,
+                suitability_date_night=social_suitability["date_night"] if social_suitability else None,
+                suitability_group_party=social_suitability["group_party"] if social_suitability else None,
+                suitability_family=social_suitability["family"] if social_suitability else None,
+                suitability_partner=social_suitability["partner"] if social_suitability else None,
+                suitability_friends=social_suitability["friends"] if social_suitability else None,
+                suitability_kids=social_suitability["kids"] if social_suitability else None,
+                suitability_teens=social_suitability["teens"] if social_suitability else None,
+                suitability_adults=social_suitability["adults"] if social_suitability else None,
+                suitability_intergenerational=social_suitability["intergenerational"] if social_suitability else None,
+                suitability_public_viewing_safe=social_suitability["public_viewing_safe"] if social_suitability else None,
+
+                context_is_thought_provoking=viewing_context["is_thought_provoking"] if viewing_context else None,
+                context_is_pure_escapism=viewing_context["is_pure_escapism"] if viewing_context else None,
+                context_is_background_friendly=viewing_context["is_background_friendly"] if viewing_context else None,
+                context_is_comfort_watch=viewing_context["is_comfort_watch"] if viewing_context else None,
+                context_is_binge_friendly=viewing_context["is_binge_friendly"] if viewing_context else None,
+                context_is_drop_in_friendly=viewing_context["is_drop_in_friendly"] if viewing_context else None,
+
+                # Metadata timestamps
+                tmdb_details_updated_at=to_timestamp(tmdb_details.get("updated_at")),
+                tmdb_providers_updated_at=to_timestamp(tmdb_first_provider.get("updated_at")) if tmdb_first_provider else None,
+                imdb_ratings_updated_at=to_timestamp(imdb_rating.get("updated_at")),
+                metacritic_ratings_updated_at=to_timestamp(metacritic_rating.get("updated_at")),
+                rotten_tomatoes_ratings_updated_at=to_timestamp(rotten_tomatoes_rating.get("updated_at")),
+                tvtropes_tags_updated_at=to_timestamp(tv_tropes_tags.get(tmdb_id, {}).get("updated_at")),
+                dna_updated_at=to_timestamp(dna_data.get(tmdb_id, {}).get("updated_at")),
                 
                 tmdb_created_at=to_timestamp(tmdb_details.get("created_at")),
                 tmdb_updated_at=to_timestamp(tmdb_details.get("updated_at")),
@@ -366,23 +423,26 @@ def copy_media(
                 media.episode_runtime = tmdb_details.get("episode_run_time")
 
             # Process movie collection (movies only)
+            unique_keys = []
             if is_movie and tmdb_details.get("belongs_to_collection"):
                 collection_data = tmdb_details["belongs_to_collection"]
                 collection_id = collection_data.get("id")
                 collection_name = collection_data.get("name", "")
                 if collection_id and collection_name:
                     collection_key = str(collection_id)
-                    entity_batches['movie_series'].append(MovieSeries(
-                        _key=collection_key, 
-                        tmdb_id=collection_id,
-                        name=collection_name,
-                        poster_path=collection_data.get("poster_path"),
-                        backdrop_path=collection_data.get("backdrop_path"),
-                    ))
+                    if collection_key not in unique_keys:
+                        unique_keys.append(collection_key)
+                        entity_batches['movie_series'].append(MovieSeries(
+                            _key=collection_key, 
+                            tmdb_id=collection_id,
+                            name=collection_name,
+                            poster_path=collection_data.get("poster_path"),
+                            backdrop_path=collection_data.get("backdrop_path"),
+                        ))
                     
                     edge_batches['movie_belongs_to_series'].append({
                         '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['movie_series']}/{collection_key}"
+                        '_to': f"{COLLECTIONS['movie_series']}/{collection_key}",
                     })
             
             # Process seasons (shows only)
@@ -407,18 +467,8 @@ def copy_media(
                         
                         edge_batches['show_has_season'].append({
                             '_from': f"{media_collection_name}/{media_key}",
-                            '_to': f"{COLLECTIONS['seasons']}/{season_key}"
+                            '_to': f"{COLLECTIONS['seasons']}/{season_key}",
                         })
-            
-            # Process genres
-            for genre in tmdb_details.get("genres", []):
-                genre_id = genre.get("id")
-                if genre_id:
-                    genre_key = str(genre_id)
-                    edge_batches['genre_for'].append({
-                        '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['genres']}/{genre_key}"
-                    })
             
             # Process images
             for image_type, images in tmdb_details.get("images", {}).items():
@@ -439,7 +489,7 @@ def copy_media(
                         
                         edge_batches['image_for'].append({
                             '_from': f"{media_collection_name}/{media_key}",
-                            '_to': f"{COLLECTIONS['images']}/{image_key}"
+                            '_to': f"{COLLECTIONS['images']}/{image_key}",
                         })
             
             # Process videos
@@ -460,142 +510,170 @@ def copy_media(
                         official=video.get("official"),
                         language=video.get("iso_639_1"),
                         country=video.get("iso_3166_1"),
-                        published_at=to_timestamp(video.get("published_at"))
+                        published_at=to_timestamp(video.get("published_at")),
                     ))
                     
                     edge_batches['video_for'].append({
                         '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['videos']}/{video_key}"
+                        '_to': f"{COLLECTIONS['videos']}/{video_key}",
                     })
             
-            # Process keywords
-            for keyword in tmdb_details.get("keywords", []): # Assuming 'keywords' from TMDB is a list of keyword objects
-                keyword_id = keyword.get("id")
-                keyword_name = keyword.get("name", "")
-                if keyword_id and keyword_name:
-                    keyword_key = str(keyword_id)
-                    entity_batches['keywords'].append(Keyword(
-                        _key=keyword_key, 
-                        tmdb_id=keyword_id,
-                        name=keyword_name
-                    ))
-                    
-                    edge_batches['keyword_for'].append({
-                        '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['keywords']}/{keyword_key}"
-                    })
+            # Process genres
+            unique_keys = []
+            for genre in genres:
+                genre_id = genre.get("id")
+                if genre_id:
+                    genre_key = str(genre_id)
+                    if genre_key not in unique_keys:
+                        unique_keys.append(genre_key)
+                        edge_batches['genre_for'].append({
+                            '_from': f"{media_collection_name}/{media_key}",
+                            '_to': f"{COLLECTIONS['genres']}/{genre_key}",
+                        })
             
             # Process tropes
-            for trope in tv_tropes_tags.get(tmdb_id, {}).get("tropes", []):
+            unique_keys = []
+            for trope in tropes:
                 trope_name = trope.get("name")
                 if trope_name:
                     trope_key = trope_name
-                    entity_batches['tropes'].append(Trope(
-                        _key=trope_key, 
-                        name=trope_name,
-                        url=trope.get("url"),
-                    ))
+                    if trope_key not in unique_keys:
+                        unique_keys.append(trope_key)
+                        entity_batches['tropes'].append(Trope(
+                            _key=trope_key, 
+                            name=trope_name,
+                            url=trope.get("url"),
+                        ))
                     
                     edge_batches['trope_for'].append({
                         '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['tropes']}/{trope_key}"
+                        '_to': f"{COLLECTIONS['tropes']}/{trope_key}",
+                        'html': trope.get("html"),
                     })
 
-            # Process legacy DNA
-            dna_legacy_data = genomes.get(tmdb_id, {}).get("dna", {})
-            if dna_legacy_data:
-                dna_legacy_key = media_key
-                entity_batches['dna_legacy'].append(DNALegacy(
-                    _key=dna_legacy_key, 
-                    data=dna_legacy_data,
-                ))
-            
-                edge_batches['dna_legacy_for'].append({
-                    '_from': f"{media_collection_name}/{media_key}",
-                    '_to': f"{COLLECTIONS['dna_legacy']}/{dna_legacy_key}"
-                })
+            # Process DNA
+            if has_dna:
+                unique_keys = []
+                for essence_tag in essence_tags or []:
+                    if essence_tag not in unique_keys:
+                        unique_keys.append(essence_tag)
+                        entity_batches['essence_tags'].append(EssenceTag(
+                            _key=essence_tag, 
+                            name=essence_tag,
+                        ))
+                
+                    edge_batches['essence_tag_for'].append({
+                        '_from': f"{media_collection_name}/{media_key}",
+                        '_to': f"{COLLECTIONS['essence_tags']}/{essence_tag}",
+                    })
+                unique_keys = []
+                for content_advisory in content_advisories or []:
+                    if content_advisory not in unique_keys:
+                        unique_keys.append(content_advisory)
+                        entity_batches['content_advisories'].append(ContentAdvisory(
+                            _key=content_advisory, 
+                            name=content_advisory,
+                        ))
+                
+                    edge_batches['content_advisory_for'].append({
+                        '_from': f"{media_collection_name}/{media_key}",
+                        '_to': f"{COLLECTIONS['content_advisories']}/{content_advisory}",
+                    })
 
             # Process production companies
+            unique_keys = []
             for company in tmdb_details.get("production_companies", []):
                 company_id = company.get("id")
                 company_name = company.get("name")
                 if company_id and company_name:
                     company_key = str(company_id)
-                    entity_batches['production_companies'].append(ProductionCompany(
-                        _key=company_key, 
-                        tmdb_id=company_id,
-                        name=company_name,
-                        logo_path=company.get("logo_path"),
-                        origin_country=company.get("origin_country")
-                    ))
+                    if company_key not in unique_keys:
+                        unique_keys.append(company_key)
+                        entity_batches['production_companies'].append(ProductionCompany(
+                            _key=company_key, 
+                            tmdb_id=company_id,
+                            name=company_name,
+                            logo_path=company.get("logo_path"),
+                            origin_country=company.get("origin_country"),
+                        ))
                     
                     edge_batches['production_company_produced'].append({
                         '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['production_companies']}/{company_key}"
+                        '_to': f"{COLLECTIONS['production_companies']}/{company_key}",
                     })
             
             # Process networks (only shows)
+            unique_keys = []
             for network in tmdb_details.get("networks", []):
                 network_id = network.get("id")
                 network_name = network.get("name")
                 if network_id and network_name:
                     network_key = str(network_id)
-                    entity_batches['networks'].append(Network(
-                        _key=network_key, 
-                        tmdb_id=network_id,
-                        name=network_name,
-                        logo_path=network.get("logo_path"),
-                        origin_country=network.get("origin_country")
-                    ))
+                    if network_key not in unique_keys:
+                        unique_keys.append(network_key)
+                        entity_batches['networks'].append(Network(
+                            _key=network_key, 
+                            tmdb_id=network_id,
+                            name=network_name,
+                            logo_path=network.get("logo_path"),
+                            origin_country=network.get("origin_country"),
+                        ))
                     
                     edge_batches['network_released'].append({
                         '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['networks']}/{network_key}"
+                        '_to': f"{COLLECTIONS['networks']}/{network_key}",
                     })
 
             # Process alternative titles
+            unique_keys = []
             for alt_title in tmdb_details.get("alternative_titles", []):
                 alt_title_text = alt_title.get("title", "")
                 country_code = alt_title.get("iso_3166_1", "")
                 if alt_title_text and country_code:
                     alt_title_key = f"{media_key}_{country_code}" 
-                    entity_batches['alternative_titles'].append(AlternativeTitle(
-                        _key=alt_title_key, 
-                        title=alt_title_text,
-                        country=country_code
-                    ))
+                    if alt_title_key not in unique_keys:
+                        unique_keys.append(alt_title_key)
+                        entity_batches['alternative_titles'].append(AlternativeTitle(
+                            _key=alt_title_key, 
+                            title=alt_title_text,
+                            country=country_code,
+                        ))
                     
                     edge_batches['alternative_title_for'].append({
                         '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['alternative_titles']}/{alt_title_key}"
+                        '_to': f"{COLLECTIONS['alternative_titles']}/{alt_title_key}",
                     })
             
             # Process translations
+            unique_keys = []
             for translation in tmdb_details.get("translations", []):
                 lang = translation.get("iso_639_1", "")
                 country_code = translation.get("iso_3166_1", "")
                 data = translation.get("data")
                 if lang and country_code:
                     translation_key = f"{media_key}_{lang}_{country_code}"
-                    entity_batches['translations'].append(Translation(
-                        _key=translation_key, 
-                        language=lang,
-                        country=country_code,
-                        name=translation.get("name"),
-                        english_name=translation.get("english_name"),
-                        title=data.get("title"),
-                        overview=data.get("overview"),
-                        tagline=data.get("tagline"),
-                        homepage=data.get("homepage"),
-                        runtime=data.get("runtime"),
-                    ))
+                    if translation_key not in unique_keys:
+                        unique_keys.append(translation_key)
+                        entity_batches['translations'].append(Translation(
+                            _key=translation_key, 
+                            language=lang,
+                            country=country_code,
+                            name=translation.get("name"),
+                            english_name=translation.get("english_name"),
+                            title=data.get("title"),
+                            overview=data.get("overview"),
+                            tagline=data.get("tagline"),
+                            homepage=data.get("homepage"),
+                            runtime=data.get("runtime"),
+                        ))
                     
                     edge_batches['translation_for'].append({
                         '_from': f"{media_collection_name}/{media_key}",
-                        '_to': f"{COLLECTIONS['translations']}/{translation_key}"
+                        '_to': f"{COLLECTIONS['translations']}/{translation_key}",
                     })
             
             # Process release events and age classifications
+            unique_keys = []
             for country_data in tmdb_details.get("release_dates", {}).get("results", []):
                 country_code = country_data.get("iso_3166_1", "")
                 for release in country_data.get("release_dates", []):
@@ -603,20 +681,22 @@ def copy_media(
                     release_type = release.get("type")
                     if release_date and release_type:
                         release_key = f"{media_key}_{country_code}_{release_type}"
-                        certification = release.get("certification")
-                        entity_batches['release_events'].append(ReleaseEvent(
-                            _key=release_key, 
-                            country=country_code,
-                            release_type=release_type,
-                            release_date=to_timestamp(release_date),
-                            certification=certification,
-                            note=release.get("note"),
-                            descriptors=release.get("descriptors", []),
-                        ))
+                        if release_key not in unique_keys:
+                            unique_keys.append(release_key)
+                            certification = release.get("certification")
+                            entity_batches['release_events'].append(ReleaseEvent(
+                                _key=release_key, 
+                                country=country_code,
+                                release_type=release_type,
+                                release_date=to_timestamp(release_date),
+                                certification=certification,
+                                note=release.get("note"),
+                                descriptors=release.get("descriptors", []),
+                            ))
                     
                         edge_batches['release_event_for'].append({
                             '_from': f"{media_collection_name}/{media_key}",
-                            '_to': f"{COLLECTIONS['release_events']}/{release_key}"
+                            '_to': f"{COLLECTIONS['release_events']}/{release_key}",
                         })
                         
                         # Process age certification
@@ -625,26 +705,29 @@ def copy_media(
 
                             edge_batches['age_certification_appropriate_for'].append({
                                 '_from': f"{media_collection_name}/{media_key}",
-                                '_to': f"{COLLECTIONS['age_certifications']}/{age_certification_key}"
+                                '_to': f"{COLLECTIONS['age_certifications']}/{age_certification_key}",
                             })
             
             # Process cast (appeared_in)
+            unique_keys = []
             for cast_member in tmdb_details.get("credits", {}).get("cast", []):
                 person_id = cast_member.get("id")
                 person_name = cast_member.get("name")
                 if person_id and person_name:
                     person_key = str(person_id)
-                    entity_batches['persons'].append(Person(
-                        _key=person_key, 
-                        tmdb_id=person_id,
-                        name=person_name,
-                        original_name=cast_member.get("original_name"),
-                        profile_path=cast_member.get("profile_path"),
-                        popularity=cast_member.get("popularity"),
-                        adult=cast_member.get("adult"),
-                        gender=cast_member.get("gender"),
-                        known_for_department=cast_member.get("known_for_department"),
-                    ))
+                    if person_key not in unique_keys:
+                        unique_keys.append(person_key)
+                        entity_batches['persons'].append(Person(
+                            _key=person_key, 
+                            tmdb_id=person_id,
+                            name=person_name,
+                            original_name=cast_member.get("original_name"),
+                            profile_path=cast_member.get("profile_path"),
+                            popularity=cast_member.get("popularity"),
+                            adult=cast_member.get("adult"),
+                            gender=cast_member.get("gender"),
+                            known_for_department=cast_member.get("known_for_department"),
+                        ))
 
                     edge_batches['person_appeared_in'].append({
                         '_from': f"{COLLECTIONS['persons']}/{person_key}",
@@ -660,23 +743,25 @@ def copy_media(
                 person_name = crew_member.get("name")
                 if person_id and person_name:
                     person_key = str(person_id)
-                    entity_batches['persons'].append(Person(
-                        _key=person_key, 
-                        tmdb_id=person_id,
-                        name=person_name,
-                        original_name=cast_member.get("original_name"),
-                        profile_path=cast_member.get("profile_path"),
-                        popularity=cast_member.get("popularity"),
-                        adult=cast_member.get("adult"),
-                        gender=cast_member.get("gender"),
-                        known_for_department=cast_member.get("known_for_department"),
-                    ))
+                    if person_key not in unique_keys:
+                        unique_keys.append(person_key)
+                        entity_batches['persons'].append(Person(
+                            _key=person_key, 
+                            tmdb_id=person_id,
+                            name=person_name,
+                            original_name=cast_member.get("original_name"),
+                            profile_path=cast_member.get("profile_path"),
+                            popularity=cast_member.get("popularity"),
+                            adult=cast_member.get("adult"),
+                            gender=cast_member.get("gender"),
+                            known_for_department=cast_member.get("known_for_department"),
+                        ))
                     
                     edge_batches['person_worked_on'].append({
                         '_from': f"{COLLECTIONS['persons']}/{person_key}",
                         '_to': f"{media_collection_name}/{media_key}",
                         'job': crew_member.get("job"),
-                        'department': crew_member.get("department")
+                        'department': crew_member.get("department"),
                     })
 
             # Process scores
@@ -868,20 +953,33 @@ def copy_media(
                             streaming_availabilities_to_add[streaming_key].price_dollar = streaming_link.get("price_dollar")
                             streaming_availabilities_to_add[streaming_key].quality = streaming_link.get("quality")
 
+            streaming_availability_countries = []
+            streaming_availability_services = []
+            streaming_availability_combos = []
             for streaming_key, streaming_availability in streaming_availabilities_to_add.items():
                 entity_batches['streaming_availabilities'].append(streaming_availability)
-                edge_batches['streaming_availability_in_country'].append({
-                    '_from': f"{media_collection_name}/{media_key}",
-                    '_to': f"{COLLECTIONS['countries']}/{streaming_availability.country_code}"
-                })
-                edge_batches['streaming_service_is_available_for'].append({
-                    '_from': f"{media_collection_name}/{media_key}",
-                    '_to': f"{COLLECTIONS['streaming_services']}/{streaming_availability.streaming_service_id}"
-                })
                 edge_batches['streaming_availability_for'].append({
                     '_from': f"{media_collection_name}/{media_key}",
                     '_to': f"{COLLECTIONS['streaming_availabilities']}/{streaming_key}"
                 })
+                if streaming_availability.country_code not in streaming_availability_countries:
+                    streaming_availability_countries.append(streaming_availability.country_code)
+                    edge_batches['streaming_availability_in_country'].append({
+                        '_from': f"{media_collection_name}/{media_key}",
+                        '_to': f"{COLLECTIONS['countries']}/{streaming_availability.country_code}"
+                    })
+                if streaming_availability.streaming_service_id not in streaming_availability_services:
+                    streaming_availability_services.append(streaming_availability.streaming_service_id)
+                    edge_batches['streaming_service_is_available_for'].append({
+                        '_from': f"{media_collection_name}/{media_key}",
+                        '_to': f"{COLLECTIONS['streaming_services']}/{streaming_availability.streaming_service_id}"
+                    })
+                combo = f"{streaming_availability.country_code}_{streaming_availability.streaming_service_id}"
+                if combo not in streaming_availability_combos:
+                    streaming_availability_combos.append(combo)
+            media.streaming_country_codes = streaming_availability_countries
+            media.streaming_service_ids = streaming_availability_services
+            media.streaming_availabilities = streaming_availability_combos
 
             # add movie/show to batch and continue with next entry
             media_documents.append(media)
@@ -902,11 +1000,8 @@ def copy_media(
                 by_alias=True, 
                 exclude_none=True,
                 exclude={
-                    'production_company_ids', 
-                    'origin_country_codes', 
-                    'streaming_country_codes', 
                     'tmdb_recommendation_ids', 
-                    'tmdb_similar_ids'
+                    'tmdb_similar_ids',
                 }
             )
             cleaned_media_instance = MediaClass(**media_dict)
@@ -932,7 +1027,7 @@ def copy_media(
                 collections[name], 
                 name.replace('_', ' '), 
             )
-            # Accumulate counts
+            # Accumulate node counts
             entity_counts[name]["created"] += result["created"]
             entity_counts[name]["updated"] += result["updated"]
             entity_counts[name]["ignored"] += result["ignored"]
@@ -940,14 +1035,17 @@ def copy_media(
         # Insert edges for batch and track counts
         print(f"\n  Upserting edges for {media_type}s:")
         for edge_type, edges_list in edge_batches.items():
-            if edges_list:
-                print(f"    Upserting {len(edges_list)} {edge_type} edges")
-                edge_models = [Edge(**edge_dict) for edge_dict in edges_list]
-                result = connector.upsert_many(edge_collections[edge_type], edge_models)
-                # Accumulate edge counts
-                edge_counts[edge_type]["created"] += result["created"]
-                edge_counts[edge_type]["updated"] += result["updated"]
-                edge_counts[edge_type]["ignored"] += result["ignored"]
+            batch = [Edge(**edge_dict) for edge_dict in edges_list]
+            result = process_and_insert_entities(
+                batch,
+                connector,
+                edge_collections[edge_type],
+                edge_type.replace('_', ' ')
+            )
+            # Accumulate edge counts
+            edge_counts[edge_type]["created"] += result["created"]
+            edge_counts[edge_type]["updated"] += result["updated"]
+            edge_counts[edge_type]["ignored"] += result["ignored"]
         
         # Handle referenced media (recommendations and similar)
         if referenced_media_ids:
@@ -1048,7 +1146,7 @@ def copy_media(
         del metacritic_ratings
         del rotten_tomatoes_ratings
         del tv_tropes_tags
-        del genomes
+        del dna_data
         del tmdb_all_providers
         del media_documents
         del entity_batches

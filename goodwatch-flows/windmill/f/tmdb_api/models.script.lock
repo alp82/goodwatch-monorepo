@@ -1,3 +1,4 @@
-dnspython==2.6.1
-mongoengine==0.28.2
-pymongo==4.7.3
+# py: 3.11
+dnspython==2.8.0
+mongoengine==0.29.1
+pymongo==4.15.5

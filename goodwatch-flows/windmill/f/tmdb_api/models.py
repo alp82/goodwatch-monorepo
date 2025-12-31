@@ -110,6 +110,7 @@ class Image(EmbeddedDocument):
     aspect_ratio = FloatField()
     height = IntField()
     iso_639_1 = StringField()
+    iso_3166_1 = StringField()
     file_path = StringField()
     vote_average = FloatField()
     vote_count = IntField()
@@ -471,6 +472,7 @@ class BaseTmdbDetails(Document):
             "selected_at",
             "updated_at",
             "is_selected",
+            ("updated_at", "tmdb_id"),
         ],
     }
 

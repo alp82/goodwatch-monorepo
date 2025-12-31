@@ -11,7 +11,10 @@ value:
             expr: flow_input.next_ids
         path: f/tmdb_web/tmdb_crawl_providers/iterate
         tag_override: null
-      timeout: 30
+      continue_on_error: false
+      timeout:
+        type: static
+        value: 300
     - id: b
       value:
         type: forloopflow
@@ -35,12 +38,16 @@ value:
                 multiplier: 1
                 random_factor: 0
                 seconds: 2
-            timeout: 30
+            timeout:
+              type: static
+              value: 30
         iterator:
           type: javascript
           expr: results.a
         parallel: true
-        parallelism: 3
+        parallelism:
+          type: static
+          value: 3
         skip_failures: true
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'

@@ -1,0 +1,9 @@
+summary: Initialize Qdrant tables and indexes
+description: ''
+lock: '!inline f/sync/init/qdrant.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

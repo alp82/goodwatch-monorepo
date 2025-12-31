@@ -16,13 +16,13 @@ value:
         h: 28
         w: 6
         x: 0
-        y: 0
+        'y': 0
       '3':
         fixed: false
         h: 8
         w: 2
         x: 0
-        y: 2
+        'y': 2
       id: c
       data:
         id: c
@@ -67,13 +67,13 @@ value:
         h: 28
         w: 6
         x: 6
-        y: 0
+        'y': 0
       '3':
         fixed: false
         h: 8
         w: 2
         x: 0
-        y: 10
+        'y': 10
       id: a
       data:
         id: a
@@ -119,8 +119,3 @@ value:
     type: path
     path: f/app_themes/theme_0
   unusedInlineScripts: []
-policy:
-  execution_mode: publisher
-  triggerables:
-    'a:script/f/scripts/counts': {}
-    'c:script/f/scripts/counts': {}

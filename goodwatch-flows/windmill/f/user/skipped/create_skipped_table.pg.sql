@@ -1,3 +1,6 @@
+-- https://www.windmill.dev/docs/getting_started/scripts_quickstart/sql#result-collection
+-- result_collection=legacy
+
 CREATE TABLE IF NOT EXISTS user_skipped (
     user_id VARCHAR(255) NOT NULL,
     tmdb_id INTEGER NOT NULL,
