@@ -6,6 +6,7 @@ import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
 export const useInvalidateOnVisibility = () => {
 	const queryClient = useQueryClient()
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const mountedRef = useRef(true)
 
 	useEffect(() => {
 		let lastHiddenTime: number | null = null
@@ -23,8 +24,11 @@ export const useInvalidateOnVisibility = () => {
 					}
 					
 					timeoutRef.current = setTimeout(() => {
-						queryClient.invalidateQueries({ queryKey: queryKeyUserData })
-						queryClient.invalidateQueries({ queryKey: queryKeyUserSettings })
+						// Only invalidate queries if component is still mounted
+						if (mountedRef.current) {
+							queryClient.invalidateQueries({ queryKey: queryKeyUserData })
+							queryClient.invalidateQueries({ queryKey: queryKeyUserSettings })
+						}
 						timeoutRef.current = null
 					}, 500)
 				}
@@ -36,6 +40,7 @@ export const useInvalidateOnVisibility = () => {
 		document.addEventListener("visibilitychange", handleVisibilityChange)
 
 		return () => {
+			mountedRef.current = false
 			document.removeEventListener("visibilitychange", handleVisibilityChange)
 			// Clear any pending timeout when component unmounts
 			if (timeoutRef.current) {
