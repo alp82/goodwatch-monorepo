@@ -5,10 +5,6 @@
 ---
 
 seo:
-    fix canonicals
-    fix page size
-    fix page request count
-    fix page speed
     better buildMeta and JsonLD
 
 seo tester

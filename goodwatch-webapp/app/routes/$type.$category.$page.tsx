@@ -47,26 +47,7 @@ export const meta: MetaFunction = ({ params }) => {
 		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
 	}
 
-	const items: PageItem[] = [
-		{ name: "Home", description: "GoodWatch Home", url: "/" },
-		{
-			name: typeLabel,
-			description: `Best ${typeLabel} to Watch`,
-			url: `/${type}`,
-		},
-		{
-			name: convertHyphensToWords(category),
-			description: `Discover the best ${mainData.label} ${typeLabel} to watch`,
-			url: `/${type}/${category}`,
-		},
-		{
-			name: convertHyphensToWords(page),
-			description: pageData.description,
-			url: `/${type}/${category}/${page}`,
-		},
-	]
-
-	return buildMeta({ pageMeta, items })
+	return buildMeta({ pageMeta })
 }
 
 interface LoaderData {
