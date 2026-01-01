@@ -26,8 +26,8 @@ export const getCast = async (params: CastParams) => {
 		name: "cast",
 		target: _getCast,
 		params,
-		//ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	})
 }
 

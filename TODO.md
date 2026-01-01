@@ -4,17 +4,155 @@
 
 ---
 
-onboarding cleanup
+better sign up screen
+    fullscreen half half
+    video playing on one side
+    showing benefits
 
--- 1. CLEANUP QUERY - Remove old onboarding_status keys
--- =====================================================
--- !! RUN THIS ONLY AFTER VERIFYING THE MIGRATION WORKED CORRECTLY !!
--- This removes the deprecated onboarding_status keys
--- Uncomment the following when ready to clean up:
--- DELETE FROM user_setting WHERE key = 'onboarding_status';
--- Verify cleanup
--- SELECT COUNT(*) as remaining_old_keys FROM user_setting WHERE key = 'onboarding_status';
+---
 
+mobile rating easier
+    use swipescorer for details as well
+    easier to find rating button
+    modal needs to close automatically after saving
+
+---
+
+For You
+    Landing page with examples
+    Personal Recommendations by main Fingerprint categories
+    bg color changes with scroll: https://fable.co/
+
+---
+
+user profile
+    show all scores
+    grouped by tier
+    shareable link
+        https://discord.com/channels/1183008154573881384/1183008156696182847/1326508243056590848
+    links to other profiles: MAL, ...
+    
+watched/ratings page:
+    rating stats (1-10 distribution)
+    search & filter
+    easy rating more
+        personalized?
+
+favorites page
+    search & filter
+    easy adding more
+
+want to watch
+    not logged in handling
+    split into two sections:
+        watch now
+        rest
+    search & filter
+    easy adding more
+    
+    remove separate wishlist page?
+
+---
+
+better og images
+    dynamic with text?
+
+---
+
+priority queue
+    priority.ts
+    postgres -> crate
+    windmill script updates
+
+---
+
+tv seasons:
+    name, overview, air date, poster path
+    get episodes: overview, images, videos, translations, air date, crew, guest stars
+    get ratings for seasons and episodes: tmdb, imdb, metacritic, rt
+    show in details
+    when last season/episode was released
+    score matrix
+        https://tvcharts.co/show/arcane-tt11126994
+    recaps
+    
+---
+
+details more data:
+    show tropes
+    show images
+    box office (e.g. Google)
+    awards (grab from API)
+
+movie details
+    * show number of votes
+    * check if too much data (cast, crew)
+
+movies that aren't movies
+    https://goodwatch.app/movie/1412450-stranger-things
+    https://goodwatch.app/movie/1412549-wednesday
+
+---
+
+scraper solutions
+    https://scrapoxy.io/
+    https://evomi.com/pricing
+    https://dataimpulse.com/
+    https://www.firecrawl.dev/
+    https://docs.firecrawl.dev/features/agent
+    https://github.com/autoscrape-labs/pydoll
+
+---
+
+discover
+    sort by similarity
+    sort by own score
+    sort by last watched
+    sort by last wishlisted
+
+discover order
+    highest score
+    most controversial (critics vs. audience)
+    trending
+
+---   
+
+where to watch VPN
+    show available in other countries
+    
+---
+
+explore: internal links
+    action -> superhero
+    if you like X, check out these Y
+
+---
+
+feedback form on website
+    discord link
+
+---
+
+wrong rating links:
+    crawler reads release year and checks if it is correct
+    https://goodwatch.app/movie/1151272-sirt?country=DE
+    https://goodwatch.app/movie/616027-the-circus
+    how to identify all wrong rating links?
+
+score inconsistencies:
+    lists show different goodwatch score than details
+
+---
+
+start page
+    what's the vibe needs to exclude user titles
+    make movietvlist compatible with swiper
+    pick best 10 page data categories to display
+    stats: number of movies and shows
+    https://moviewiser.com/
+    https://www.reactbits.dev/components/card-swap
+    https://www.reactbits.dev/backgrounds/light-rays
+    
 ---
 
 seo:
@@ -54,28 +192,6 @@ SEO optimization + marketing
     https://answerthepublic.com/de/apasuq/reports/544e887a-c441-40ab-91b6-1e06c8fc68b9/edit?recently_searched=true
     https://sparktoro.com/blog/new-research-we-analyzed-332-million-queries-over-21-months-to-uncover-never-before-published-data-on-how-people-use-google/
 
----
-
-better sign up screen
-    fullscreen half half
-    video playing on one side
-    showing benefits
-
----
-
-start page
-    what's the vibe needs to exclude user titles
-
-mobile rating easier
-    use swipescorer for details as well
-    easier to find rating button
-    modal needs to close automatically after saving
-
-jonathan feedback
-    movie details as drawer
-    reveal page a bit confusing - not clear that they are saved
-    swiping with 10 scoring options too difficult
-
 ---    
 
 onboarding
@@ -106,22 +222,6 @@ onboarding
 button design
     https://x.com/jh3yy/status/2000730558674903415
     https://x.com/jh3yy/status/1992003440579662211
-
----
-
-feedback form on website
-    discord link
-
----
-
-wrong rating links:
-    crawler reads release year and checks if it is correct
-    https://goodwatch.app/movie/1151272-sirt?country=DE
-    https://goodwatch.app/movie/616027-the-circus
-    how to identify all wrong rating links?
-
-score inconsistencies:
-    lists show different goodwatch score than details
 
 ---
 
@@ -282,44 +382,6 @@ holiday + audience:
 
 ---
 
-scraper solutions
-    https://scrapoxy.io/
-    https://dataimpulse.com/
-    https://github.com/autoscrape-labs/pydoll
-    https://github.com/scrapoxy/scrapoxy
-    https://www.firecrawl.dev/
-
----
-
-tv seasons:
-    name, overview, air date, poster path
-    get episodes: overview, images, videos, translations, air date, crew, guest stars
-    get ratings for seasons and episodes: tmdb, imdb, metacritic, rt
-    show in details
-    when last season/episode was released
-    score matrix
-        https://tvcharts.co/show/arcane-tt11126994
-    recaps
-    
----
-
-priority queue
-    priority.ts
-    postgres -> crate
-    windmill script updates
-
----
-
-movie details
-    * show number of votes
-    * check if too much data (cast, crew)
-
-movies that aren't movies
-    https://goodwatch.app/movie/1412450-stranger-things
-    https://goodwatch.app/movie/1412549-wednesday
-
----
-
 taste engine settings
     simple scale vs 1-10
     genre preselection?
@@ -340,16 +402,6 @@ your match
 windmill
     mongo connect retry strategy
     https://windmill.goodwatch.app/run/019a5379-1ec2-eb48-b49c-9bd345438183?workspace=goodwatch
-    
----
-
-start page
-    make movietvlist compatible with swiper
-    pick best 10 page data categories to display
-    stats: number of movies and shows
-    https://moviewiser.com/
-    https://www.reactbits.dev/components/card-swap
-    https://www.reactbits.dev/backgrounds/light-rays
     
 ---
 
@@ -432,55 +484,6 @@ batch recommendations
 
 https://discord.com/channels/1183008154573881384/1321048456608878593/1428810901720662037
     fingerprint/discover/onboarding with crew
-
----
-
-user profile
-    show all scores
-    grouped by tier
-    shareable link
-        https://discord.com/channels/1183008154573881384/1183008156696182847/1326508243056590848
-    links to other profiles: MAL, ...
-    
-watched/ratings page:
-    rating stats (1-10 distribution)
-    search & filter
-    easy rating more
-        personalized?
-
-favorites page
-    search & filter
-    easy adding more
-
-want to watch
-    not logged in handling
-    split into two sections:
-        watch now
-        rest
-    search & filter
-    easy adding more
-    
-    remove separate wishlist page?
-
----
-
-For You
-    Landing page with examples
-    Personal Recommendations by main Fingerprint categories
-    bg color changes with scroll: https://fable.co/
-
----
-
-discover
-    sort by similarity
-    sort by own score
-    sort by last watched
-    sort by last wishlisted
-
----   
-
-where to watch VPN
-    show available in other countries
 
 ---   
 
@@ -831,39 +834,11 @@ https://www.tvmaze.com/api
 
 ---
 
- details more data:
-    show tropes
-    show images
-    box office (e.g. Google)
-    awards (grab from API)
-    
----
-
-discover order
-    highest score
-    most controversial (critics vs. audience)
-    trending
-
----
-
-explore: internal links
-    action -> superhero
-    if you like X, check out these Y
-
----
-
 cards with user actions
     user score
     want to watch
     favorite
 
-Show User Data In Movie Cards
-    Trending
-    Explore
-    Discover
-    Collections
-    etc.
-    
 ---
 
 mobile navigation

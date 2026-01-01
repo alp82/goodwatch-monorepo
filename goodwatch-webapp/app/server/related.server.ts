@@ -77,8 +77,8 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 		name: cacheKey,
 		target: _getRelatedMovies as any,
 		params,
-		//ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	}) as unknown as RelatedMovie[]
 }
 
@@ -90,8 +90,8 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 		name: cacheKey,
 		target: _getRelatedShows as any,
 		params,
-		//ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	}) as unknown as RelatedShow[]
 }
 
@@ -330,8 +330,8 @@ export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
 		name: cacheKey,
 		target: _getRelatedByCategory as any,
 		params,
-		//ttlMinutes: 60 * 24,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	}) as unknown as RelatedByCategory
 }
 

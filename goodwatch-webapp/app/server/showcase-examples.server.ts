@@ -46,8 +46,8 @@ export const getShowcaseExamples = async (
 		name: "showcase-examples",
 		target: _getShowcaseExamples as (params: ShowcaseExamplesParams) => Promise<ShowcaseExamplesResult & { [key: string]: unknown }>,
 		params,
-		//ttlMinutes: 60 * 24,
-        ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+        //ttlMinutes: 0,
 	}) as ShowcaseExamplesResult
 }
 

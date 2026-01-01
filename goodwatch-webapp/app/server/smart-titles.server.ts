@@ -55,7 +55,8 @@ export const getSmartTitlesForGuest = async (
 		name: "smart-titles-guest",
 		target: _getSmartTitlesForGuest,
 		params,
-		ttlMinutes: 0,
+		ttlMinutes: 60 * 24,
+		//ttlMinutes: 0,
 	})
 }
 
@@ -141,8 +142,8 @@ export const getSmartTitlesForUser = async (
 		name: "smart-titles-user",
 		target: _getSmartTitlesForUser,
 		params,
-		//ttlMinutes: 5,
-		ttlMinutes: 0,
+		ttlMinutes: 1,
+		//ttlMinutes: 0,
 	})
 }
 
