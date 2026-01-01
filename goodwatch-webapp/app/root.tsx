@@ -41,7 +41,6 @@ import cssMain from "~/main.css?url"
 import { AuthContext, useUser } from "./utils/auth"
 
 export const links: LinksFunction = () => [
-	// ...(process.env.NODE_ENV === "development" ? [{ rel: "stylesheet", href: cssRemixDevTools }] : []),
 	{ rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
 	{
 		rel: "icon",
@@ -58,7 +57,6 @@ export const links: LinksFunction = () => [
 	{ rel: "manifest", href: "/site.webmanifest" },
 	{ rel: "stylesheet", href: cssMain },
 	{ rel: "stylesheet", href: cssTailwind },
-	{ rel: "stylesheet", href: cssToastify },
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
 	{
 		rel: "preconnect",
@@ -73,10 +71,11 @@ export const links: LinksFunction = () => [
 		rel: "preload",
 		as: "image",
 		fetchpriority: "high",
-		href: "https://image.tmdb.org/t/p/w780/gqby0RhyehP3uRrzmdyUZ0CgPPe.jpg", // inception backdrop
+		href: "https://image.tmdb.org/t/p/w780/gqby0RhyehP3uRrzmdyUZ0CgPPe.jpg",
 	},
 	{
-		rel: "stylesheet",
+		rel: "preload",
+		as: "style",
 		href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap",
 	},
 ]
@@ -279,20 +278,6 @@ function Root() {
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<script
-					async
-					src="https://www.googletagmanager.com/gtag/js?id=G-5NK4EX51SM"
-				/>
-				<script
-					dangerouslySetInnerHTML={{
-						__html: `
-window.dataLayer = window.dataLayer || [];
-function gtag(){window.dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-5NK4EX51SM');
-				`,
-					}}
-				/>
 				<Meta />
 				<Links />
 			</head>
@@ -307,6 +292,20 @@ gtag('config', 'G-5NK4EX51SM');
 								<PostHogInit />
 								{shouldUseScrollRestoration && <ScrollRestoration />}
 								<Scripts />
+								<script
+									async
+									src="https://www.googletagmanager.com/gtag/js?id=G-5NK4EX51SM"
+								/>
+								<script
+									dangerouslySetInnerHTML={{
+										__html: `
+window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-5NK4EX51SM');
+										`,
+									}}
+								/>
 							</HydrationBoundary>
 						</AuthContext.Provider>
 					</LocaleContext.Provider>

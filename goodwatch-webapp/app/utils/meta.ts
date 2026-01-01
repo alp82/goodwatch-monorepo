@@ -24,7 +24,10 @@ export const buildMeta = (params: MetaOptions) => {
 		jsonLdContent = buildJsonLdCollection(params.pageMeta, params.items)
 	}
 
-	return [
+	const baseUrl = "https://goodwatch.app"
+	const urlPath = new URL(params.pageMeta.url).pathname
+
+	const metaTags = [
 		// Basic meta tags
 		{ title: params.pageMeta.title },
 		{ name: "description", content: params.pageMeta.description },
@@ -34,6 +37,44 @@ export const buildMeta = (params: MetaOptions) => {
 			tagName: "link",
 			rel: "canonical",
 			href: params.pageMeta.url,
+		},
+
+		// Hreflang tags for international SEO
+		{
+			tagName: "link",
+			rel: "alternate",
+			hreflang: "x-default",
+			href: `${baseUrl}${urlPath}`,
+		},
+		{
+			tagName: "link",
+			rel: "alternate",
+			hreflang: "en",
+			href: `${baseUrl}${urlPath}`,
+		},
+		{
+			tagName: "link",
+			rel: "alternate",
+			hreflang: "en-US",
+			href: `${baseUrl}${urlPath}`,
+		},
+		{
+			tagName: "link",
+			rel: "alternate",
+			hreflang: "en-GB",
+			href: `${baseUrl}${urlPath}`,
+		},
+		{
+			tagName: "link",
+			rel: "alternate",
+			hreflang: "de",
+			href: `${baseUrl}${urlPath}`,
+		},
+		{
+			tagName: "link",
+			rel: "alternate",
+			hreflang: "de-DE",
+			href: `${baseUrl}${urlPath}`,
 		},
 
 		// Additional SEO tags
@@ -66,6 +107,8 @@ export const buildMeta = (params: MetaOptions) => {
 		// JSON-LD Schema
 		{ "script:ld+json": jsonLdContent },
 	]
+
+	return metaTags
 }
 
 const buildJsonLdDetail = (

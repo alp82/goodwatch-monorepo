@@ -28,11 +28,11 @@ export function headers() {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const pageMeta: PageMeta = {
-		title: `${data.media.details.title} (${data.media.details.release_year}) | TV Show | GoodWatch`,
-		description: `Discover '${data.media.details.title}' (${data.media.details.release_year}) and find TV shows with similar plotlines, cast, genre, or tone. Dive deep into movie details and watch availability.`,
+		title: `${data.media.details.title} (${data.media.details.release_year}) | Show | GoodWatch`,
+		description: `Discover '${data.media.details.title}' (${data.media.details.release_year}) and find shows with similar plotlines, cast, genre, or tone. Dive deep into show details and watch availability.`,
 		url: `https://goodwatch.app/show/${data.media.details.tmdb_id}-${titleToDashed(data.media.details.title)}`,
 		image: `https://image.tmdb.org/t/p/w1280/${data.media.images.backdrops?.[0]?.file_path}`,
-		alt: `${data.media.details.title} (${data.media.details.release_year}) TV show poster`,
+		alt: `${data.media.details.title} (${data.media.details.release_year}) show poster`,
 	}
 
 	return buildMeta({ pageMeta, item: data.media.details })

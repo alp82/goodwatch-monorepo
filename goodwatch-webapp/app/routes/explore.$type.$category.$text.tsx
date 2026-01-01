@@ -27,6 +27,7 @@ import { MovieTvCard } from "~/ui/MovieTvCard"
 import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
 import type { Tab } from "~/ui/tabs/Tabs"
 import { getLocaleFromRequest } from "~/utils/locale"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export function headers() {
 	return {
@@ -35,14 +36,18 @@ export function headers() {
 	}
 }
 
-export const meta: MetaFunction<typeof loader> = () => {
-	return [
-		{ title: "Explore | GoodWatch" },
-		{
-			description:
-				"All movie and tv show ratings and streaming providers on the same page",
-		},
-	]
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+	const { type, category, text } = data?.params || { type: "", category: "", text: "" }
+
+	const pageMeta: PageMeta = {
+		title: `${text} | ${category} | GoodWatch`,
+		description: `Explore ${text} ${type === "movies" ? "movies" : "shows"} on GoodWatch. Find your next favorite by ${category.toLowerCase()}.`,
+		url: `https://goodwatch.app/explore/${type}/${category}/${text}`,
+		image: "https://goodwatch.app/images/heroes/hero-movies.png",
+		alt: `Explore ${text} ${type === "movies" ? "movies" : "shows"} on GoodWatch`,
+	}
+
+	return buildMeta({ pageMeta, items: [] })
 }
 
 export function ErrorBoundary() {
