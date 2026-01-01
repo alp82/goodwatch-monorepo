@@ -4,13 +4,27 @@
 
 ---
 
+onboarding cleanup
+
+-- 1. CLEANUP QUERY - Remove old onboarding_status keys
+-- =====================================================
+-- !! RUN THIS ONLY AFTER VERIFYING THE MIGRATION WORKED CORRECTLY !!
+-- This removes the deprecated onboarding_status keys
+-- Uncomment the following when ready to clean up:
+-- DELETE FROM user_setting WHERE key = 'onboarding_status';
+-- Verify cleanup
+-- SELECT COUNT(*) as remaining_old_keys FROM user_setting WHERE key = 'onboarding_status';
+
+---
+
 seo:
     better buildMeta and JsonLD
+    fingerprint pages
+    popular keyword pages
 
 seo tester
     https://website.grader.com/tests/goodwatch.app
     https://seositecheckup.com/
-    https://www.seoggestion.com/
 
 seo checklist:
     Is the content actually unique, or does it overlap with other page?
@@ -29,8 +43,6 @@ seo checklist:
     Titles, meta, and headings - do they clearly tell Google what this page is for?
     Any structured data helping Google understand the content type?
 
-SEO for Fingerprint (Wes)
-
 SEO analysis
     http://guidetodatamining.com/ngramAnalyzer/index.php
     
@@ -48,19 +60,6 @@ better sign up screen
     fullscreen half half
     video playing on one side
     showing benefits
-
----
-
-onboarding cleanup
-
--- 1. CLEANUP QUERY - Remove old onboarding_status keys
--- =====================================================
--- !! RUN THIS ONLY AFTER VERIFYING THE MIGRATION WORKED CORRECTLY !!
--- This removes the deprecated onboarding_status keys
--- Uncomment the following when ready to clean up:
--- DELETE FROM user_setting WHERE key = 'onboarding_status';
--- Verify cleanup
--- SELECT COUNT(*) as remaining_old_keys FROM user_setting WHERE key = 'onboarding_status';
 
 ---
 

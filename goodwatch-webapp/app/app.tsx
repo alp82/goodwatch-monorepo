@@ -7,10 +7,13 @@ import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
 import { SmartOnboardingBanner } from "~/ui/onboarding/SmartOnboardingBanner"
 import { useUser } from "~/utils/auth"
+import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 
 function App() {
 	const location = useLocation()
 	const { user } = useUser()
+
+	useInvalidateOnVisibility()
 
 
 	return (
