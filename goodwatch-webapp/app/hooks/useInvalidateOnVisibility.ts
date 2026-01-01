@@ -9,6 +9,7 @@ export const useInvalidateOnVisibility = () => {
 	const mountedRef = useRef(true)
 
 	useEffect(() => {
+		mountedRef.current = true
 		let lastHiddenTime: number | null = null
 
 		const handleVisibilityChange = () => {
