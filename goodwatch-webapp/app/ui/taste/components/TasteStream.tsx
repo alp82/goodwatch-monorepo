@@ -123,7 +123,7 @@ export default function TasteStream({
 						<div className="md:ml-24 flex flex-col gap-1.5">
 							{/* Save Progress Button (guests only) */}
 							{isGuest && (
-								<Link to="/sign-in?redirectTo=/taste">
+								<Link to="/sign-up?redirectTo=/taste">
 									<Button
 										disabled={lastRated.length == 0}
 										highlight="gray"

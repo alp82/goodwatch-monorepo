@@ -88,7 +88,7 @@ export default function TasteQuizRoute() {
 	const navigate = useNavigate()
 
 	const handleSignUp = () => {
-		navigate('/sign-in/?redirectTo=/taste/quiz')
+		navigate('/sign-up/?redirectTo=/taste/quiz')
 	}
 
 	return (

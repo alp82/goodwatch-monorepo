@@ -2,11 +2,20 @@
 
 Notable changes to GoodWatch are documented in this file.
 
-## [0.8.1] 2026-01-xx
+## [0.8.2] 2026-01-xx
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+## [0.8.1] 2026-01-01
+
+### Added
+
+### Changed
+* Completely revamped Sign Up screen
 
 ### Fixed
 

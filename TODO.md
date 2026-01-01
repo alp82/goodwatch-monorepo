@@ -4,13 +4,6 @@
 
 ---
 
-better sign up screen
-    fullscreen half half
-    video playing on one side
-    showing benefits
-
----
-
 mobile rating easier
     use swipescorer for details as well
     easier to find rating button

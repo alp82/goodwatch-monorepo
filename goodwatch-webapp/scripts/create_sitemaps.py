@@ -205,7 +205,7 @@ def create_landing_sitemaps():
     now = datetime.now(timezone.utc).date()
     static_routes = [
         "/", "/taste/quiz", "/movies", "/shows", "/discover",
-        "/sign-in", "/how-it-works", "/about", "/disclaimer", "/privacy"
+        "/sign-up", "/sign-in", "/forgot-password", "/how-it-works", "/about", "/disclaimer", "/privacy"
     ]
     sitemap_filename = "sitemap_static.xml"
     sitemap_path = os.path.join(SITEMAP_DIR, sitemap_filename)
