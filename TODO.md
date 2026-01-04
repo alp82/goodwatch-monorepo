@@ -49,6 +49,8 @@ want to watch
 
 better og images
     dynamic with text?
+    https://gemini.google.com/app/8f9832dc2c62d13a
+    https://tailwind-generator.com/og-image-generator/generator
 
 ---
 
@@ -685,11 +687,6 @@ details streaming
 
 ---
 
-better og images
-    https://gemini.google.com/app/8f9832dc2c62d13a
-
----
-
 taste matching (logged in users only - or a teaser)
     you both like ABC
 
@@ -818,8 +815,8 @@ order by
 
 ---
 
-og images
-    https://tailwind-generator.com/og-image-generator/generator
+animated icons
+    https://www.itshover.com/icons
 
 ---
 

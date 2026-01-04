@@ -39,41 +39,41 @@ export const buildMeta = (params: MetaOptions) => {
 			href: params.pageMeta.url,
 		},
 
-		// Hreflang tags for international SEO
+		// hrefLang tags for international SEO
 		{
 			tagName: "link",
 			rel: "alternate",
-			hreflang: "x-default",
+			hrefLang: "x-default",
 			href: `${baseUrl}${urlPath}`,
 		},
 		{
 			tagName: "link",
 			rel: "alternate",
-			hreflang: "en",
+			hrefLang: "en",
 			href: `${baseUrl}${urlPath}`,
 		},
 		{
 			tagName: "link",
 			rel: "alternate",
-			hreflang: "en-US",
+			hrefLang: "en-US",
 			href: `${baseUrl}${urlPath}`,
 		},
 		{
 			tagName: "link",
 			rel: "alternate",
-			hreflang: "en-GB",
+			hrefLang: "en-GB",
 			href: `${baseUrl}${urlPath}`,
 		},
 		{
 			tagName: "link",
 			rel: "alternate",
-			hreflang: "de",
+			hrefLang: "de",
 			href: `${baseUrl}${urlPath}`,
 		},
 		{
 			tagName: "link",
 			rel: "alternate",
-			hreflang: "de-DE",
+			hrefLang: "de-DE",
 			href: `${baseUrl}${urlPath}`,
 		},
 
