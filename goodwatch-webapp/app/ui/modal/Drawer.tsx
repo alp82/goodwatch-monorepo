@@ -28,16 +28,30 @@ const Drawer: React.FC<DrawerProps> = ({
 	const [dragging, setDragging] = useState(false)
 	const [visible, setVisible] = useState(false)
 
-	// Animate in/out
+	// Animate in/out and manage body scroll
 	useEffect(() => {
 		if (open) {
 			setVisible(true)
+			document.body.style.overflow = "hidden"
 		} else {
-			// Wait for animation before hiding
-			const timeout = setTimeout(() => setVisible(false), 300)
-			return () => clearTimeout(timeout)
+			// Wait for animation before hiding and restoring scroll
+			const timeout = setTimeout(() => {
+				setVisible(false)
+				document.body.style.overflow = ""
+			}, 300)
+			return () => {
+				clearTimeout(timeout)
+				document.body.style.overflow = ""
+			}
 		}
 	}, [open])
+
+	// Cleanup on unmount
+	useEffect(() => {
+		return () => {
+			document.body.style.overflow = ""
+		}
+	}, [])
 
 	const onDragStart = (e: React.TouchEvent | React.MouseEvent) => {
 		setDragging(true)
@@ -46,7 +60,6 @@ const Drawer: React.FC<DrawerProps> = ({
 		} else {
 			startY.current = e.clientY
 		}
-		document.body.style.overflow = "hidden"
 	}
 
 	const onDragMove = (e: React.TouchEvent | React.MouseEvent) => {
@@ -67,7 +80,6 @@ const Drawer: React.FC<DrawerProps> = ({
 	}
 
 	const onDragEnd = () => {
-		document.body.style.overflow = ""
 		setDragging(false)
 		if (lastY.current > DRAG_CLOSE_THRESHOLD) {
 			setDragY(0)
