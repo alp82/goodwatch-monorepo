@@ -19,8 +19,8 @@ a.goodwatch.app {
   }
 }
 convex.aistack.to {
-  reverse_proxy https://10.0.0.20:3210
+  reverse_proxy http://10.0.0.20:3210
 }
 convex-site.aistack.to {
-  reverse_proxy https://10.0.0.20:3211
+  reverse_proxy http://10.0.0.20:3211
 }
