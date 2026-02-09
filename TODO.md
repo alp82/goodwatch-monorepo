@@ -2,9 +2,15 @@
 
 ```
 
+onboarding does not refetch user data!
+
+onboarding recommendations should be links
+
 ---
 
 mobile rating easier
+    rate this freezes scrolling on desktop
+    https://motion.dev/examples/react-carousel-ios-exposure-slider
     use swipescorer for details as well
     easier to find rating button
     modal needs to close automatically after saving
@@ -1602,8 +1608,9 @@ launch / promo
     ProductHunt
     similarsites
     slant
-    Uneed
     Peerlist
+    https://www.orynth.dev
+    https://www.uneed.best/
     https://before1k.com
     https://www.listingcat.com/app/websites/launch-platforms
     https://solopush.com/
@@ -1618,6 +1625,7 @@ launch / promo
     https://www.effortlessbacklinks.com/
     https://www.getmorebacklinks.org/
     https://x.com/dams9ix/status/1985677073294229530?t=8FXIJdsv8YsuE0vZDulaTQ&s=03
+    https://uneed-directories.com
 
 ---
 
@@ -1859,6 +1867,7 @@ analyze subtitles
 
 other media
     games
+        https://steampeek.hu
     music
     podcasts
     books
@@ -1877,6 +1886,7 @@ mini apps
 
 # Blog
 ```
+from postgres to crate/qdrant
 seo
 from vercel to coolify
     too many open files
