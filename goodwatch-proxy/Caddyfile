@@ -24,10 +24,3 @@ convex.aistack.to {
 convex-site.aistack.to {
   reverse_proxy http://10.0.0.20:3211
 }
-spacetime.goodwatch.app {
-  tls internal
-  reverse_proxy http://10.0.0.20:4000 {
-    header_up Connection {>Connection}
-    header_up Upgrade {>Upgrade}
-  }
-}
