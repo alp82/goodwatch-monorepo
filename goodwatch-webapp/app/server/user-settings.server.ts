@@ -1,8 +1,8 @@
 import {
+	getQueryKeyUserSettings,
 	type GetUserSettingsResult,
 	type UserSettingsMap,
 	UserSettingsSchema,
-	queryKeyUserSettings,
 } from "~/routes/api.user-settings.get";
 import type { SetUserSettingsOptions } from "~/routes/api.user-settings.set";
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch";
@@ -165,7 +165,7 @@ export const prefetchUserSettings = async ({
 }: PrefetchParams) => {
 	await prefetchQuery({
 		queryClient,
-		queryKey: queryKeyUserSettings,
+		queryKey: ({ userId }) => getQueryKeyUserSettings(userId),
 		getter: async ({ userId }) => await getUserSettings({ userId: userId }),
 		request,
 	});

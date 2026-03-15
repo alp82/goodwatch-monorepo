@@ -47,14 +47,17 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 // Query hook
 
-export const queryKeyUserSettings = ["user-settings"]
+export const queryKeyUserSettings = ["user-settings"] as const
+
+export const getQueryKeyUserSettings = (userId?: string) =>
+	userId ? [...queryKeyUserSettings, userId] : queryKeyUserSettings
 
 export const useUserSettings = () => {
 	const { user, loading } = useUser()
 
 	const url = "/api/user-settings/get"
 	return useQuery<GetUserSettingsResult>({
-		queryKey: queryKeyUserSettings,
+		queryKey: getQueryKeyUserSettings(user?.id),
 		queryFn: async () => await (await fetch(url)).json(),
 		enabled: !loading && Boolean(user?.id),
 	})
@@ -98,9 +101,12 @@ export const useOnboardingCompleted = () => {
 
 export const useOnboardingRequired = () => {
 	const { user, loading: userLoading } = useUser()
-	const { data: userSettings, isLoading: userSettingsLoading } =
-		useUserSettings()
-	const loading = userLoading || userSettingsLoading
+	const {
+		data: userSettings,
+		isLoading: userSettingsLoading,
+		isFetched: userSettingsFetched,
+	} = useUserSettings()
+	const loading = userLoading || userSettingsLoading || !userSettingsFetched
 	const onboardingCompleted = useOnboardingCompleted()
 
 	const setUserSettings = useSetUserSettings()

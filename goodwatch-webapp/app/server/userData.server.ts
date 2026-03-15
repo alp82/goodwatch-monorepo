@@ -1,4 +1,4 @@
-import { queryKeyUserData } from "~/routes/api.user-data"
+import { getQueryKeyUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
 import type { UserData, MediaType } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
@@ -14,7 +14,7 @@ export const prefetchUserData = async ({
 }: PrefetchParams) => {
 	await prefetchQuery({
 		queryClient,
-		queryKey: queryKeyUserData,
+		queryKey: ({ userId }) => getQueryKeyUserData(userId),
 		getter: async ({ userId }) => await getUserData({ user_id: userId }),
 		request,
 	})

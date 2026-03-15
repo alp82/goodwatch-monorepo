@@ -56,22 +56,36 @@ export function useSupabase() {
 export const useSession = () => {
 	const [session, setSession] = useState<Session | null>(null)
 	const [loading, setLoading] = useState(true)
-	const [currentEvent, setCurrentEvent] = useState("")
 
 	const { supabase } = useSupabase()
 	useEffect(() => {
 		if (!supabase) return
 
+		let isMounted = true
+
+		supabase.auth.getSession().then(({ data, error }) => {
+			if (!isMounted) return
+			if (error) {
+				console.error(error)
+				setLoading(false)
+				return
+			}
+			setSession(data.session)
+			setLoading(false)
+		})
+
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange((event, session) => {
-			if (event === currentEvent) return
-			setCurrentEvent(event)
+			if (!isMounted) return
 			setSession(session)
 			setLoading(false)
 		})
 
-		return () => subscription.unsubscribe()
+		return () => {
+			isMounted = false
+			subscription.unsubscribe()
+		}
 	}, [supabase])
 
 	return { session, loading }

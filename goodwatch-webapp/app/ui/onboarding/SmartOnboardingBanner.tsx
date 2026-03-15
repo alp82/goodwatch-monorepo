@@ -12,7 +12,13 @@ import { useOnboardingActions } from "~/ui/onboarding/hooks/useOnboardingActions
 
 export const SmartOnboardingBanner = () => {
 	useOnboardingRequired()
-	const { currentStep, setCurrentStep, guestInteractions, guessedCountry } = useOnboardingStep()
+	const {
+		isResolved,
+		currentStep,
+		setCurrentStep,
+		guestInteractions,
+		guessedCountry,
+	} = useOnboardingStep()
 	const { importProgress, importError, importInteractions } = useGuestRatingImport()
 	const actions = useOnboardingActions(setCurrentStep, guessedCountry)
 	
@@ -51,7 +57,7 @@ export const SmartOnboardingBanner = () => {
 		actions.completeStreaming(streamingProviderIds)
 	}
 
-	if (!currentStep || actions.isDismissed) return null
+	if (!isResolved || !currentStep || actions.isDismissed) return null
 
 	// Determine colors and content - elegant dark gradient
 	const bgColor = "from-slate-900 via-slate-800 to-slate-900"

@@ -2,13 +2,14 @@
 
 Notable changes to GoodWatch are documented in this file.
 
-## [0.8.2] 2026-01-xx
+## [0.8.2] 2026-03-15
 
 ### Added
 
 ### Changed
 
 ### Fixed
+* Onboarding banner was showing even though it was already completed
 
 ## [0.8.1] 2026-01-01
 

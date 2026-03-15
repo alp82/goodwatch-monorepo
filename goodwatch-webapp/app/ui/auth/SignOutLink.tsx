@@ -9,7 +9,10 @@ interface SignOutLinkProps {
 	active: boolean
 }
 
-export const SignOutLink = ({ active }: SignOutLinkProps) => {
+export const SignOutLink = React.forwardRef<HTMLButtonElement, SignOutLinkProps>(function SignOutLink(
+	{ active }: SignOutLinkProps,
+	ref,
+) {
 	const { supabase } = useSupabase()
 	const queryClient = useQueryClient()
 
@@ -22,16 +25,17 @@ export const SignOutLink = ({ active }: SignOutLinkProps) => {
 		const { error } = await supabase.auth.signOut()
 		if (error) console.error(error)
 
-		supabase.auth.queryClient.invalidateQueries({
+		queryClient.removeQueries({
 			queryKey: queryKeyUserSettings,
 		})
-		queryClient.invalidateQueries({
+		queryClient.removeQueries({
 			queryKey: queryKeyUserData,
 		})
 	}
 
 	return (
 		<button
+			ref={ref}
 			type="button"
 			onClick={handleSignOut}
 			className={`
@@ -45,4 +49,4 @@ export const SignOutLink = ({ active }: SignOutLinkProps) => {
 			Sign out
 		</button>
 	)
-}
+})

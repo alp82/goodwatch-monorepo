@@ -2,9 +2,11 @@
 
 ```
 
-onboarding does not refetch user data!
-
 onboarding recommendations should be links
+
+https://discord.com/channels/1176974285131223091/1463986161700700272/1464143808240554035
+
+https://anime.ameo.dev/interactive-recommender?r=1535-10&r=1575-10&r=136-10&r=121-7
 
 ---
 
@@ -131,6 +133,10 @@ explore: internal links
 
 feedback form on website
     discord link
+
+---
+
+goodwatch MCP, skills, etc.
 
 ---
 

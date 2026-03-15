@@ -2,8 +2,9 @@ import { useCallback } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { UserData, MediaType, MediaKey } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
-import { queryKeyUserData } from "~/routes/api.user-data"
+import { getQueryKeyUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
+import { useUser } from "~/utils/auth"
 
 interface MutationResult {
 	status: "success" | "failed"
@@ -151,6 +152,8 @@ const updateSkippedOptimistic = (
 
 export const useScoreMutation = () => {
 	const queryClient = useQueryClient()
+	const { user } = useUser()
+	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
 	return useMutation<MutationResult, Error, UseScoreMutationParams, MutationContext>({
 		mutationFn: async ({ mediaType, tmdbId, score, review }) => {
@@ -166,13 +169,13 @@ export const useScoreMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, score, review }) => {
-			await queryClient.cancelQueries({ queryKey: queryKeyUserData })
+			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
 			const previousData = queryClient.getQueryData<UserData>(
-				queryKeyUserData,
+				userDataQueryKey,
 			)
 
-			queryClient.setQueryData<UserData>(queryKeyUserData, (old) =>
+			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateScoreOptimistic(old, mediaType, tmdbId, score, review || null),
 			)
 
@@ -180,7 +183,7 @@ export const useScoreMutation = () => {
 		},
 		onError: (_, __, context) => {
 			if (context?.previousData) {
-				queryClient.setQueryData(queryKeyUserData, context.previousData)
+				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
 		},
 	})
@@ -188,6 +191,8 @@ export const useScoreMutation = () => {
 
 export const useWishlistMutation = () => {
 	const queryClient = useQueryClient()
+	const { user } = useUser()
+	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
 	return useMutation<MutationResult, Error, UseWishlistMutationParams, MutationContext>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
@@ -202,13 +207,13 @@ export const useWishlistMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
-			await queryClient.cancelQueries({ queryKey: queryKeyUserData })
+			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
 			const previousData = queryClient.getQueryData<UserData>(
-				queryKeyUserData,
+				userDataQueryKey,
 			)
 
-			queryClient.setQueryData<UserData>(queryKeyUserData, (old) =>
+			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateWishlistOptimistic(old, mediaType, tmdbId, action),
 			)
 
@@ -216,7 +221,7 @@ export const useWishlistMutation = () => {
 		},
 		onError: (_, __, context) => {
 			if (context?.previousData) {
-				queryClient.setQueryData(queryKeyUserData, context.previousData)
+				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
 		},
 	})
@@ -224,6 +229,8 @@ export const useWishlistMutation = () => {
 
 export const useWatchedMutation = () => {
 	const queryClient = useQueryClient()
+	const { user } = useUser()
+	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
 	return useMutation<MutationResult, Error, UseWatchedMutationParams, MutationContext>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
@@ -238,13 +245,13 @@ export const useWatchedMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
-			await queryClient.cancelQueries({ queryKey: queryKeyUserData })
+			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
 			const previousData = queryClient.getQueryData<UserData>(
-				queryKeyUserData,
+				userDataQueryKey,
 			)
 
-			queryClient.setQueryData<UserData>(queryKeyUserData, (old) =>
+			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateWatchedOptimistic(old, mediaType, tmdbId, action),
 			)
 
@@ -252,7 +259,7 @@ export const useWatchedMutation = () => {
 		},
 		onError: (_, __, context) => {
 			if (context?.previousData) {
-				queryClient.setQueryData(queryKeyUserData, context.previousData)
+				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
 		},
 	})
@@ -260,6 +267,8 @@ export const useWatchedMutation = () => {
 
 export const useFavoriteMutation = () => {
 	const queryClient = useQueryClient()
+	const { user } = useUser()
+	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
 	return useMutation<MutationResult, Error, UseFavoriteMutationParams, MutationContext>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
@@ -274,13 +283,13 @@ export const useFavoriteMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
-			await queryClient.cancelQueries({ queryKey: queryKeyUserData })
+			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
 			const previousData = queryClient.getQueryData<UserData>(
-				queryKeyUserData,
+				userDataQueryKey,
 			)
 
-			queryClient.setQueryData<UserData>(queryKeyUserData, (old) =>
+			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateFavoriteOptimistic(old, mediaType, tmdbId, action),
 			)
 
@@ -288,7 +297,7 @@ export const useFavoriteMutation = () => {
 		},
 		onError: (_, __, context) => {
 			if (context?.previousData) {
-				queryClient.setQueryData(queryKeyUserData, context.previousData)
+				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
 		},
 	})
@@ -296,6 +305,8 @@ export const useFavoriteMutation = () => {
 
 export const useSkippedMutation = () => {
 	const queryClient = useQueryClient()
+	const { user } = useUser()
+	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
 	return useMutation<MutationResult, Error, UseSkippedMutationParams, MutationContext>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
@@ -310,13 +321,13 @@ export const useSkippedMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
-			await queryClient.cancelQueries({ queryKey: queryKeyUserData })
+			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
 			const previousData = queryClient.getQueryData<UserData>(
-				queryKeyUserData,
+				userDataQueryKey,
 			)
 
-			queryClient.setQueryData<UserData>(queryKeyUserData, (old) =>
+			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateSkippedOptimistic(old, mediaType, tmdbId, action),
 			)
 
@@ -324,7 +335,7 @@ export const useSkippedMutation = () => {
 		},
 		onError: (_, __, context) => {
 			if (context?.previousData) {
-				queryClient.setQueryData(queryKeyUserData, context.previousData)
+				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
 		},
 	})

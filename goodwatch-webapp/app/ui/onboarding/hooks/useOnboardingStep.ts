@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useFetcher } from "@remix-run/react"
-import { useUserSettings, useOnboardingCompleted } from "~/routes/api.user-settings.get"
+import { useUserSettings } from "~/routes/api.user-settings.get"
 import type { GuestInteraction, TasteInteraction } from "~/ui/taste/types"
 import { ONBOARDING_RATINGS_KEY } from "~/ui/taste/constants"
 
@@ -11,12 +11,18 @@ export type OnboardingStep =
 	| { type: 'complete' }
 
 export const useOnboardingStep = () => {
-	const { data: userSettings, isLoading: settingsLoading } = useUserSettings()
-	const onboardingCompleted = useOnboardingCompleted()
+	const {
+		data: userSettings,
+		isLoading: settingsLoading,
+		isFetched: settingsFetched,
+	} = useUserSettings()
 	const guessCountryFetcher = useFetcher<{ country: string }>()
 	
 	const [currentStep, setCurrentStep] = useState<OnboardingStep | null>(null)
 	const [guestInteractions, setGuestInteractions] = useState<GuestInteraction[]>([])
+	const onboardingCompleted =
+		userSettings?.onboarding_country_completed === "yes" &&
+		userSettings?.onboarding_streaming_completed === "yes"
 
 	// Fetch country guess on mount
 	useEffect(() => {
@@ -29,18 +35,22 @@ export const useOnboardingStep = () => {
 	}, [])
 
 	
-	// Determine initial step - runs once when settings are loaded
+	// Determine current step when settings change
 	useEffect(() => {
-		if (settingsLoading || onboardingCompleted) {
+		if (!settingsFetched || settingsLoading) {
 			return
 		}
 
-		// Only set initial step if we don't have one yet
-		if (currentStep !== null) {
+		if (onboardingCompleted) {
+			setCurrentStep((prev) => {
+				if (prev?.type === "complete") {
+					return prev
+				}
+				return null
+			})
 			return
 		}
 
-		// Check for guest interactions to import
 		const interactionsJson = localStorage.getItem(ONBOARDING_RATINGS_KEY)
 		if (interactionsJson) {
 			try {
@@ -55,7 +65,12 @@ export const useOnboardingStep = () => {
 				
 				if (allInteractions.length > 0) {
 					setGuestInteractions(allInteractions)
-					setCurrentStep({ type: 'import', count: allInteractions.length, isComplete: false })
+					setCurrentStep((prev) => {
+						if (prev?.type === "import") {
+							return prev
+						}
+						return { type: "import", count: allInteractions.length, isComplete: false }
+					})
 					return
 				}
 			} catch (e) {
@@ -69,15 +84,31 @@ export const useOnboardingStep = () => {
 
 		if (!countryCompleted) {
 			const countryCode = userSettings?.country_default || guessCountryFetcher.data?.country || "US"
-			setCurrentStep({ type: 'country', countryCode })
+			setCurrentStep((prev) => {
+				if (prev?.type === "country" && prev.countryCode === countryCode) {
+					return prev
+				}
+				return { type: "country", countryCode }
+			})
 		} else if (!streamingCompleted) {
-			setCurrentStep({ type: 'streaming' })
+			setCurrentStep((prev) => {
+				if (prev?.type === "streaming") {
+					return prev
+				}
+				return { type: "streaming" }
+			})
 		} else {
-			setCurrentStep({ type: 'complete' })
+			setCurrentStep((prev) => {
+				if (prev?.type === "complete") {
+					return prev
+				}
+				return { type: "complete" }
+			})
 		}
-	}, [settingsLoading, onboardingCompleted, userSettings, guessCountryFetcher.data])
+	}, [settingsFetched, settingsLoading, onboardingCompleted, userSettings, guessCountryFetcher.data])
 
 	return {
+		isResolved: settingsFetched,
 		currentStep,
 		setCurrentStep,
 		guestInteractions,
