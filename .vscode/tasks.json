@@ -2,12 +2,17 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "goodwatch dev",
 			"type": "npm",
 			"script": "dev",
 			"path": "goodwatch-webapp",
-			"problemMatcher": [],
-			"label": "npm: dev - goodwatch-webapp",
-			"detail": "GoodWatch Dev Server"
+			"isBackground": true,
+			"runOptions": { "runOn": "folderOpen" },
+			"presentation": {
+				"group": "services",
+				"panel": "dedicated"
+			},
+			"problemMatcher": []
 		}
 	]
 }

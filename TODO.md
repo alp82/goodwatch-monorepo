@@ -10,6 +10,13 @@ https://anime.ameo.dev/interactive-recommender?r=1535-10&r=1575-10&r=136-10&r=12
 
 ---
 
+roman:
+    recommendation filter: thriller + comedy
+    AI included
+    Marketing + SEO
+
+---
+
 mobile rating easier
     rate this freezes scrolling on desktop
     https://motion.dev/examples/react-carousel-ios-exposure-slider
