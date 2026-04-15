@@ -9,9 +9,7 @@
 # One-shot: drops snapshots in the CrateDB backup repo that don't match
 # the tiered-retention prefixes used by backup.py. Safe to re-run.
 
-import requests
-
-from backup import CRATE_HOST, REPO_NAME, RETENTION, run_sql
+from backup import REPO_NAME, RETENTION, run_sql
 
 KNOWN_PREFIXES = tuple(RETENTION.keys())
 

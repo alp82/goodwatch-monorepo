@@ -33,6 +33,10 @@ def run_sql(stmt):
         response = requests.post(SQL_URL, json={"stmt": stmt})
         response.raise_for_status()
         return response.json()
+    except requests.HTTPError as e:
+        body = e.response.text if e.response is not None else ""
+        print(f"Error executing SQL: {stmt}\n{e}\n{body}")
+        return None
     except Exception as e:
         print(f"Error executing SQL: {stmt}\n{e}")
         return None
