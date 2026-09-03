@@ -53,3 +53,12 @@ services:
 
 volumes:
   worker_dependency_cache: null
+
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-windmill
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24

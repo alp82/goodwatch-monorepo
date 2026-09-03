@@ -19,11 +19,14 @@ def init_postgres():
             port=db_port,
             user=db_user,
             password=db_pass,
+            connect_timeout=10,
+            application_name="windmill",
         )
         print(f"Successfully initialized postregsql")
         return connection
     except Exception as error:
         print(f"Failed postregsql initialization: ", error)
+        raise RuntimeError("Failed to initialize PostgreSQL connection") from error
 
 
 def generate_insert_query(table_name, columns):
