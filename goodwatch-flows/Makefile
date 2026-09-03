@@ -2,7 +2,7 @@
 
 WMILL := npx --yes windmill-cli@latest
 WMILL_WORKSPACE := goodwatch
-WMILL_REMOTE := https://10.0.0.10:9000
+WMILL_REMOTE := http://10.0.0.10:9000
 
 .PHONY: configure
 configure:
