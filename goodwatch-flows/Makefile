@@ -23,4 +23,4 @@ pull: activate
 .PHONY: push
 push: activate
 	@echo "Pushing data to goodwatch workspace..."
-	cd windmill && $(WMILL) sync push
+	cd windmill && $(WMILL) sync push --keep-deleted --skip-variables --skip-resources --skip-resource-types

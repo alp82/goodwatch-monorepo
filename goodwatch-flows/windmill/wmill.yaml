@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/windmill-labs/windmill/main/cli/wmill.schema.json
+
+defaultTs: bun
+includes:
+  - "f/**"
+excludes: []
+skipVariables: true
+skipResources: true
+skipResourceTypes: true
+skipSecrets: true
+nonDottedPaths: true
+syncBehavior: v1
+
+workspaces:
+  goodwatch:
+    workspaceId: goodwatch
+    baseUrl: http://10.0.0.10:9000
+    gitBranch: main
