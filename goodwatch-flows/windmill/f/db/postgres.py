@@ -6,13 +6,13 @@ import wmill
 
 
 def init_postgres():
-    print(f"Initializing postregsql...")
-    db_name = wmill.get_variable("u/Alp/POSTGRES_DB")
-    db_host = wmill.get_variable("u/Alp/POSTGRES_HOST")
-    db_port = int(wmill.get_variable("u/Alp/POSTGRES_PORT"))
-    db_user = wmill.get_variable("u/Alp/POSTGRES_USER")
-    db_pass = wmill.get_variable("u/Alp/POSTGRES_PASS")
+    print("Initializing PostgreSQL...")
     try:
+        db_name = wmill.get_variable("u/Alp/POSTGRES_DB")
+        db_host = wmill.get_variable("u/Alp/POSTGRES_HOST")
+        db_port = int(wmill.get_variable("u/Alp/POSTGRES_PORT"))
+        db_user = wmill.get_variable("u/Alp/POSTGRES_USER")
+        db_pass = wmill.get_variable("u/Alp/POSTGRES_PASS")
         connection = psycopg2.connect(
             database=db_name,
             host=db_host,
@@ -22,11 +22,15 @@ def init_postgres():
             connect_timeout=10,
             application_name="windmill",
         )
-        print(f"Successfully initialized postregsql")
+        print("Successfully initialized PostgreSQL")
         return connection
     except Exception as error:
-        print(f"Failed postregsql initialization: ", error)
-        raise RuntimeError("Failed to initialize PostgreSQL connection") from error
+        message = (
+            "Failed to initialize PostgreSQL connection "
+            f"({type(error).__name__}): {error}"
+        )
+        print(message)
+        raise RuntimeError(message) from error
 
 
 def generate_insert_query(table_name, columns):
