@@ -30,3 +30,6 @@ convex.manaschmiede.aistack.to {
 convex-site.manaschmiede.aistack.to {
   reverse_proxy http://10.0.0.20:3221
 }
+a.seen.is {
+  reverse_proxy http://10.0.0.31:3001
+}

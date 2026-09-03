@@ -2,6 +2,10 @@
 
 ```
 
+recommendations with own streaming filter
+
+---
+
 onboarding recommendations should be links
 
 https://discord.com/channels/1176974285131223091/1463986161700700272/1464143808240554035

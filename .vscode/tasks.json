@@ -3,9 +3,12 @@
 	"tasks": [
 		{
 			"label": "goodwatch dev",
-			"type": "npm",
-			"script": "dev",
-			"path": "goodwatch-webapp",
+			"type": "shell",
+			"options": {
+				"shell": { "executable": "bash", "args": ["-c"] },
+				"cwd": "${workspaceFolder}/goodwatch-webapp"
+			},
+			"command": "trap : INT; npm run dev; exec fish",
 			"isBackground": true,
 			"runOptions": { "runOn": "folderOpen" },
 			"presentation": {
