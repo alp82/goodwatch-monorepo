@@ -12,12 +12,8 @@ import wmill
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.dna.models import CoreScores, DnaMovie, DnaTv
 
-# model names: https://ai.google.dev/gemini-api/docs/embeddings#embeddings-models
-# rate limits: https://ai.google.dev/gemini-api/docs/models#text-embedding-and-embedding
-#  * 1,500 requests per minute
-#  * 2,048 tokens per input
-model = "text-embedding-004"            # supports: 768
-#model = "gemini-embedding-exp-03-07"    # supports: 3072, 1536 or 768
+# Model details: https://ai.google.dev/gemini-api/docs/embeddings#model_versions
+model = "gemini-embedding-2"
 
 dimensionality = 768
 max_inputs = 100
