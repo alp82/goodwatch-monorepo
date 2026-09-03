@@ -1,5 +1,5 @@
 # extra_requirements:
-# playwright==1.45.1
+# playwright==1.62.0
 import base64
 import asyncio
 from playwright.async_api import async_playwright

@@ -1,5 +1,5 @@
 # extra_requirements:
-# playwright==1.45.1
+# playwright==1.62.0
 
 import asyncio
 import time
@@ -28,7 +28,7 @@ async def visit_url_worker(browser, url, worker_id, end_time):
     try:
         # Create a new isolated browser context for each worker
         context = await browser.new_context(
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36' # Example
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36' # Example
             # Add other context options if needed (viewport, permissions, etc.)
         )
         page = await context.new_page()
@@ -92,4 +92,3 @@ async def run_load_test(duration: int, concurrency: int):
 
 def main(duration = 120, concurrency=5):
     asyncio.run(run_load_test(duration=duration, concurrency=concurrency))
-

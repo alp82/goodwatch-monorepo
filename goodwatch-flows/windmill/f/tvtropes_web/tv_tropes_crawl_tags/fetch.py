@@ -1,5 +1,5 @@
 # extra_requirements:
-# playwright==1.45.1
+# playwright==1.62.0
 
 import asyncio
 import re
