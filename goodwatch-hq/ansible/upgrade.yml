@@ -27,8 +27,8 @@
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
-    - name: Stop docker compose
-      ansible.builtin.shell: docker compose down
+    - name: Stop docker compose services
+      ansible.builtin.shell: docker compose stop
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-remote/
 
@@ -46,8 +46,8 @@
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
 
-    - name: Stop docker compose
-      ansible.builtin.shell: docker compose down
+    - name: Stop docker compose services
+      ansible.builtin.shell: docker compose stop
       args:
         chdir: /root/goodwatch/goodwatch-monorepo/goodwatch-hq/
 
@@ -62,7 +62,7 @@
 
     - name: Wait for windmill service to be ready
       uri:
-        url: https://windmill.goodwatch.app/api/version
+        url: http://10.0.0.10:9000/api/version
         status_code: 200
       register: health_result
       until: health_result is success
