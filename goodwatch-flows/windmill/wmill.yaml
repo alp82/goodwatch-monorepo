@@ -8,7 +8,7 @@ skipVariables: true
 skipResources: true
 skipResourceTypes: true
 skipSecrets: true
-nonDottedPaths: true
+nonDottedPaths: false
 syncBehavior: v1
 
 workspaces:
