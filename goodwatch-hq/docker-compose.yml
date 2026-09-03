@@ -8,6 +8,12 @@ services:
     image: postgres:14
     command: -c 'max_connections=3000'
     restart: unless-stopped
+    shm_size: "1gb"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
     volumes:
       - db_data:/var/lib/postgresql/data
     expose:
