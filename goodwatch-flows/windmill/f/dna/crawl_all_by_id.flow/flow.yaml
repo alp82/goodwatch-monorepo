@@ -39,7 +39,7 @@ value:
           expr: results.a
         parallel: true
         parallelism: 5
-        skip_failures: true
+        skip_failures: false
     - id: d
       summary: Flatten and combine Results
       value:

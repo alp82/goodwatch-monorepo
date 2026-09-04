@@ -9,6 +9,14 @@ from unittest.mock import patch
 VECTORS_PATH = (
     Path(__file__).parents[1] / "windmill" / "f" / "dna" / "generate" / "vectors.py"
 )
+FLATTEN_RESULTS_PATH = (
+    Path(__file__).parents[1]
+    / "windmill"
+    / "f"
+    / "dna"
+    / "crawl_all_by_id.flow"
+    / "flatten_and_combine_results.inline_script.py"
+)
 
 
 class FakeEmbedContentConfig:
@@ -69,6 +77,15 @@ def load_vectors_module():
     return module
 
 
+def load_flatten_results_module():
+    spec = importlib.util.spec_from_file_location(
+        "dna_flatten_results", FLATTEN_RESULTS_PATH
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class GenerateVectorsTest(unittest.TestCase):
     def test_uses_current_model_with_existing_vector_dimensions(self):
         vectors = load_vectors_module()
@@ -80,6 +97,40 @@ class GenerateVectorsTest(unittest.TestCase):
         self.assertEqual(call["model"], "gemini-embedding-2")
         self.assertEqual(call["config"].output_dimensionality, 768)
         self.assertEqual(call["config"].task_type, "RETRIEVAL_DOCUMENT")
+
+    def test_rejects_string_dna_with_the_result_index(self):
+        vectors = load_vectors_module()
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"results\[0\]\.dna must be an object",
+        ):
+            vectors.generate_vectors([{"id": "entry-id", "dna": "failed result"}])
+
+
+class FlattenResultsTest(unittest.TestCase):
+    def test_combines_successful_batches(self):
+        flatten_results = load_flatten_results_module()
+        dna = {"essence_text": "test"}
+
+        result = flatten_results.main(
+            next_ids={"movie_ids": ["entry-id"], "tv_ids": []},
+            results=[[dna]],
+        )
+
+        self.assertEqual(result, [{"id": "entry-id", "dna": dna}])
+
+    def test_rejects_failed_loop_iteration_instead_of_using_error_key_as_dna(self):
+        flatten_results = load_flatten_results_module()
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"results\[0\] must be a list",
+        ):
+            flatten_results.main(
+                next_ids={"movie_ids": ["entry-id"], "tv_ids": []},
+                results=[{"error": {"message": "DNA generation failed"}}],
+            )
 
 
 if __name__ == "__main__":

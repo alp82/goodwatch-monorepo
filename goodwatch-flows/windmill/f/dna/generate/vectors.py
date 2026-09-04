@@ -19,13 +19,41 @@ dimensionality = 768
 max_inputs = 100
 
 
+def get_embedding_inputs(results: list[dict]) -> list[str]:
+    if not isinstance(results, list):
+        raise ValueError(f"results must be a list; got {type(results).__name__}")
+
+    inputs = []
+    for index, result in enumerate(results):
+        if not isinstance(result, dict):
+            raise ValueError(
+                f"results[{index}] must be an object; got {type(result).__name__}"
+            )
+
+        dna = result.get("dna")
+        if not isinstance(dna, dict):
+            raise ValueError(
+                f"results[{index}].dna must be an object; got {type(dna).__name__}"
+            )
+
+        essence_text = dna.get("essence_text")
+        if not isinstance(essence_text, str):
+            raise ValueError(
+                f"results[{index}].dna.essence_text must be a string; "
+                f"got {type(essence_text).__name__}"
+            )
+        inputs.append(essence_text)
+
+    return inputs
+
+
 def generate_vectors(results: list[dict]):
+    inputs = get_embedding_inputs(results)
     api_key = wmill.get_variable("u/Alp/GEMINI_API_KEY")
     client = genai.Client(
         api_key=api_key,
     )
 
-    inputs = [result["dna"]["essence_text"] for result in results]
     response = client.models.embed_content(
         model=model,
         config=types.EmbedContentConfig(
