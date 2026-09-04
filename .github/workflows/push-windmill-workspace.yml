@@ -1,0 +1,67 @@
+name: Push Windmill workspace
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "goodwatch-flows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: push-windmill-goodwatch
+  cancel-in-progress: false
+
+env:
+  WMILL_CLI_VERSION: "1.803.0"
+  WMILL_URL: ${{ secrets.WMILL_URL }}
+  WMILL_WORKSPACE: "goodwatch"
+
+jobs:
+  push-workspace:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !startsWith(github.event.head_commit.message, '[WM]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Push workspace
+        working-directory: goodwatch-flows/windmill
+        env:
+          WMILL_TOKEN: ${{ secrets.WMILL_TOKEN }}
+        run: |
+          if [ -z "$WMILL_URL" ]; then
+            echo "WMILL_URL is not configured as a GitHub Actions secret."
+            exit 1
+          fi
+
+          if [ -z "$WMILL_TOKEN" ]; then
+            echo "WMILL_TOKEN is not configured as a GitHub Actions secret."
+            exit 1
+          fi
+
+          npx --yes "windmill-cli@${WMILL_CLI_VERSION}" sync push \
+            --yes \
+            --keep-deleted \
+            --skip-variables \
+            --skip-secrets \
+            --skip-resources \
+            --skip-resource-types \
+            --workspace "$WMILL_WORKSPACE" \
+            --token "$WMILL_TOKEN" \
+            --base-url "$WMILL_URL"

@@ -38,3 +38,15 @@ BASE_INTERNAL_URL = https://app.windmill.dev
 WM_TOKEN = ThisIsAToken
 WM_WORKSPACE= workspace_id
 ```
+
+## Automatic workspace deployment
+
+Pushes to `main` that change `goodwatch-flows/**` automatically sync this folder
+to the `goodwatch` Windmill workspace. The workflow can also be run manually from
+GitHub's Actions page.
+
+The repository must have:
+
+- a `WMILL_URL` Actions secret containing the publicly reachable Windmill URL
+- a `WMILL_TOKEN` Actions secret containing a Windmill user token with permission
+  to sync the workspace

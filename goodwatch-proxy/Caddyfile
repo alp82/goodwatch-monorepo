@@ -1,6 +1,3 @@
-status.goodwatch.app {
-  reverse_proxy http://coinmatica.net:4801
-}
 a.goodwatch.app {
   header {
     Access-Control-Allow-Origin https://goodwatch.app
@@ -17,6 +14,12 @@ a.goodwatch.app {
       header_down -Access-Control-Allow-Origin
     }
   }
+}
+status.goodwatch.app {
+  reverse_proxy http://10.0.0.10:4801
+}
+windmill.goodwatch.app {
+  reverse_proxy http://10.0.0.10:9000
 }
 convex.aistack.to {
   reverse_proxy http://10.0.0.20:3210
