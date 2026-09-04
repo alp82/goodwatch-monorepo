@@ -1,7 +1,6 @@
 summary: Combine and copy streaming provider links
-description: >-
-  Merge and combine streaming provider links from mongodb collections into
-  relational postgres schemas
+description: Merge and combine streaming provider links from mongodb collections
+  into relational postgres schemas
 value:
   modules:
     - id: a
@@ -10,19 +9,18 @@ value:
         input_transforms:
           database:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
-        path: >-
-          f/combine_data/copy_streaming_provider_links/create_streaming_provider_links_table
+            value: $res:u/Alp/resource/postgresql
+        path: f/combine_data/copy_streaming_provider_links/create_streaming_provider_links_table
         tag_override: null
     - id: d
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.deno.ts'
+        content: '!inline d.inline_script.deno.ts'
         input_transforms:
           db:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
-        lock: '!inline inline_script_0.inline_script.lock'
+            value: $res:u/Alp/resource/postgresql
+        lock: '!inline d.inline_script.lock'
         language: deno
         tag: ''
     - id: b
@@ -32,7 +30,7 @@ value:
         path: f/combine_data/copy_streaming_provider_links/main
         tag_override: null
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties: {}
   required: []

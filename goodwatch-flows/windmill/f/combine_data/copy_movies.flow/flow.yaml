@@ -1,7 +1,6 @@
 summary: Combine and copy movie data
-description: >-
-  Merge and combine movie data from mongodb collections into relational postgres
-  schemas
+description: Merge and combine movie data from mongodb collections into
+  relational postgres schemas
 value:
   modules:
     - id: c
@@ -10,18 +9,18 @@ value:
         input_transforms:
           database:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
+            value: $res:u/Alp/resource/postgresql
         path: f/combine_data/copy_movies/create_movies_table
         tag_override: null
     - id: d
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.deno.ts'
+        content: '!inline d.inline_script.deno.ts'
         input_transforms:
           db:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
-        lock: '!inline inline_script_0.inline_script.lock'
+            value: $res:u/Alp/resource/postgresql
+        lock: '!inline d.inline_script.lock'
         language: deno
         path: hub/1457/postgresql/execute_query_and_return_results
     - id: b
@@ -34,7 +33,7 @@ value:
         path: f/combine_data/copy_movies/main
         tag_override: null
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties: {}
   required: []

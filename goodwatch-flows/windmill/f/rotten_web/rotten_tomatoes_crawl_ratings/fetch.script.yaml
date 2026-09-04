@@ -1,10 +1,9 @@
 summary: ''
 description: Crawl a Rotten Tomatoes page and find ratings information
 lock: '!inline f/rotten_web/rotten_tomatoes_crawl_ratings/fetch.script.lock'
-concurrency_time_window_s: 0
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
     next_id:

@@ -1,7 +1,6 @@
 summary: Combine and copy crew data
-description: >-
-  Merge and combine crew data from mongodb collections into relational postgres
-  schemas
+description: Merge and combine crew data from mongodb collections into
+  relational postgres schemas
 value:
   modules:
     - id: a
@@ -10,18 +9,18 @@ value:
         input_transforms:
           database:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
+            value: $res:u/Alp/resource/postgresql
         path: f/combine_data/copy_crew/create_crew_table
         tag_override: null
     - id: c
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.deno.ts'
+        content: '!inline c.inline_script.deno.ts'
         input_transforms:
           db:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
-        lock: '!inline inline_script_0.inline_script.lock'
+            value: $res:u/Alp/resource/postgresql
+        lock: '!inline c.inline_script.lock'
         language: deno
     - id: b
       value:
@@ -30,7 +29,7 @@ value:
         path: f/combine_data/copy_crew/main
         tag_override: null
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties: {}
   required: []

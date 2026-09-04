@@ -1,10 +1,9 @@
 summary: ''
 description: ''
 lock: '!inline f/genome/cluster/detect_clusters_v2.script.lock'
-concurrency_time_window_s: 0
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
     batch_size:

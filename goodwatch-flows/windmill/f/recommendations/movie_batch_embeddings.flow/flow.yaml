@@ -9,7 +9,7 @@ value:
           - id: k
             value:
               type: rawscript
-              content: '!inline inline_script_0.inline_script.py'
+              content: '!inline k.inline_script.py'
               input_transforms:
                 movie:
                   type: javascript
@@ -17,7 +17,7 @@ value:
                 movie_tropes:
                   type: javascript
                   expr: flow_input.movie_tropes
-              lock: '!inline inline_script_0.inline_script.lock'
+              lock: '!inline k.inline_script.lock'
               language: python3
             cache_ttl: 5184000
         iterator:
@@ -28,7 +28,7 @@ value:
         skip_failures: true
   concurrency_time_window_s: 0
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   order:
     - movie_list

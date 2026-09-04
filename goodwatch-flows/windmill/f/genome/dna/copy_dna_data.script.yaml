@@ -1,10 +1,9 @@
 summary: Update DNA data from movie & tv tables
 description: ''
 lock: '!inline f/genome/dna/copy_dna_data.script.lock'
-concurrency_time_window_s: 0
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties: {}
   required: []

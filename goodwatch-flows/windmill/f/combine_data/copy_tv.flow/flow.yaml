@@ -1,7 +1,6 @@
 summary: Combine and copy tv data
-description: >-
-  Merge and combine tv data from mongodb collections into relational postgres
-  schemas
+description: Merge and combine tv data from mongodb collections into relational
+  postgres schemas
 value:
   modules:
     - id: a
@@ -10,17 +9,17 @@ value:
         input_transforms:
           database:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
+            value: $res:u/Alp/resource/postgresql
         path: f/combine_data/copy_tv/create_tv_table
     - id: c
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.deno.ts'
+        content: '!inline c.inline_script.deno.ts'
         input_transforms:
           db:
             type: static
-            value: '$res:u/Alp/resource/postgresql'
-        lock: '!inline inline_script_0.inline_script.lock'
+            value: $res:u/Alp/resource/postgresql
+        lock: '!inline c.inline_script.lock'
         language: deno
     - id: b
       value:
@@ -30,7 +29,7 @@ value:
             type: static
         path: f/combine_data/copy_tv/main
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties: {}
   required: []

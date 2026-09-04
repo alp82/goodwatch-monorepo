@@ -5,32 +5,32 @@ value:
     - id: d
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.py'
+        content: '!inline d.inline_script.py'
         input_transforms: {}
-        lock: '!inline inline_script_0.inline_script.lock'
+        lock: '!inline d.inline_script.lock'
         language: python3
         tag: ''
     - id: c
       value:
         type: rawscript
-        content: '!inline inline_script_1.inline_script.py'
+        content: '!inline c.inline_script.py'
         input_transforms: {}
-        lock: '!inline inline_script_1.inline_script.lock'
+        lock: '!inline c.inline_script.lock'
         language: python3
         tag: ''
     - id: a
       value:
         type: rawscript
-        content: '!inline inline_script_2.inline_script.py'
+        content: '!inline a.inline_script.py'
         input_transforms: {}
-        lock: '!inline inline_script_2.inline_script.lock'
+        lock: '!inline a.inline_script.lock'
         language: python3
         tag: ''
       cache_ttl: 600
     - id: b
       value:
         type: rawscript
-        content: '!inline inline_script_3.inline_script.py'
+        content: '!inline b.inline_script.py'
         input_transforms:
           proxy_list:
             type: javascript
@@ -38,11 +38,11 @@ value:
           url:
             type: javascript
             expr: '`${flow_input.url}`'
-        lock: '!inline inline_script_3.inline_script.lock'
+        lock: '!inline b.inline_script.lock'
         language: python3
         tag: ''
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   order:
     - url

@@ -5,29 +5,29 @@ value:
     - id: d
       value:
         type: rawscript
-        content: '!inline inline_script_0.inline_script.py'
+        content: '!inline d.inline_script.py'
         input_transforms: {}
-        lock: '!inline inline_script_0.inline_script.lock'
+        lock: '!inline d.inline_script.lock'
         language: python3
     - id: e
       value:
         type: rawscript
-        content: '!inline inline_script_1.inline_script.py'
+        content: '!inline e.inline_script.py'
         input_transforms:
           movie_tropes:
             type: javascript
             expr: results.d.movie_tropes
-        lock: '!inline inline_script_1.inline_script.lock'
+        lock: '!inline e.inline_script.lock'
         language: python3
     - id: b
       value:
         type: rawscript
-        content: '!inline inline_script_2.inline_script.py'
+        content: '!inline b.inline_script.py'
         input_transforms:
           min_popularity:
             type: javascript
             expr: flow_input.min_popularity
-        lock: '!inline inline_script_2.inline_script.lock'
+        lock: '!inline b.inline_script.lock'
         language: python3
     - id: c
       value:
@@ -36,7 +36,7 @@ value:
           - id: a
             value:
               type: rawscript
-              content: '!inline inline_script_3.inline_script.py'
+              content: '!inline a.inline_script.py'
               input_transforms:
                 batch:
                   type: javascript
@@ -47,7 +47,7 @@ value:
                 min_popularity:
                   type: javascript
                   expr: flow_input.min_popularity
-              lock: '!inline inline_script_3.inline_script.lock'
+              lock: '!inline a.inline_script.lock'
               language: python3
           - id: l
             value:
@@ -63,12 +63,12 @@ value:
           - id: m
             value:
               type: rawscript
-              content: '!inline inline_script_4.inline_script.py'
+              content: '!inline m.inline_script.py'
               input_transforms:
                 results:
                   type: javascript
                   expr: results.l
-              lock: '!inline inline_script_4.inline_script.lock'
+              lock: '!inline m.inline_script.lock'
               language: python3
         iterator:
           type: javascript
@@ -79,7 +79,7 @@ value:
     - id: n
       value:
         type: rawscript
-        content: '!inline inline_script_5.inline_script.py'
+        content: '!inline n.inline_script.py'
         input_transforms:
           output_list:
             type: javascript
@@ -88,7 +88,7 @@ value:
         language: python3
   concurrency_time_window_s: 0
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   order:
     - min_popularity
