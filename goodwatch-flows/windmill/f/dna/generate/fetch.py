@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, time, timedelta
 import traceback
 from typing import Union
+from zoneinfo import ZoneInfo
 
 from google import genai # pin: google-api-python-client
 from google.genai import types # pin: google-genai
@@ -23,20 +24,19 @@ from f.dna.models import DnaMovie, DnaTv, DNAAnalysis
 """
 
 MAX_RETRIES_PER_MODEL = 2
-RPD_THRESHOLD_MODIFIER = 20
+RPD_HEADROOM = 5
+PACIFIC_TIME = ZoneInfo("America/Los_Angeles")
 
 
 # model names: https://ai.google.dev/gemini-api/docs/models
 # rate limits: https://ai.google.dev/gemini-api/docs/rate-limits
 models = [{
-    "name": "gemini-2.5-pro",
-    "rpd": 0,
-}, {
     "name": "gemini-2.5-flash",
     "rpd": 60,
 }, {
-    "name": "gemini-2.0-flash-001",
-    "rpd": 200,
+    "name": "gemini-3.6-flash",
+    # Soft guardrail. Keep this aligned with the limit shown in AI Studio.
+    "rpd": 100,
 }]
 #"gemini-2.5-flash-lite-preview-06-17" # bad results
 
@@ -346,26 +346,81 @@ class ResultLengthMismatch(Exception):
     pass
 
 
+class LocalQuotaExhausted(Exception):
+    pass
+
+
 def get_quota_key(model_name: str) -> str:
-    today = datetime.utcnow().strftime("%Y%m%d")
+    today = datetime.now(PACIFIC_TIME).strftime("%Y%m%d")
     return f"quota:{today}:{model_name}"
 
 
-def choose_model(redis: RedisCluster) -> str:
-    for model in models:
-        model_name = model["name"]
-        model_rpd = model["rpd"]
+def get_model_blocked_key(model_name: str) -> str:
+    return f"quota:blocked:{model_name}"
 
-        used = int(redis.get(get_quota_key(model_name)) or 0)
-        quota_left = used < model_rpd - RPD_THRESHOLD_MODIFIER
-        
-        if quota_left:
-            print(f"Model {model_name} is still in free tier and has used {used}/{model_rpd} requests today")
-            return model_name
-        else:
-            print(f"Model {model_name} quota is full for today")
-    
-    raise Exception("All models have no free tier quota left for today")
+
+def seconds_until_quota_reset() -> int:
+    now = datetime.now(PACIFIC_TIME)
+    tomorrow = now.date() + timedelta(days=1)
+    reset = datetime.combine(tomorrow, time.min, tzinfo=PACIFIC_TIME)
+    return max(1, int((reset - now).total_seconds()))
+
+
+def get_model_config(model_name: str) -> dict:
+    return next(model for model in models if model["name"] == model_name)
+
+
+def get_local_request_limit(model: dict) -> int:
+    return model["rpd"] - RPD_HEADROOM
+
+
+def model_has_local_quota(redis: RedisCluster, model: dict) -> bool:
+    model_name = model["name"]
+    if redis.get(get_model_blocked_key(model_name)):
+        print(f"Model {model_name} is blocked until the daily quota reset")
+        return False
+
+    used = int(redis.get(get_quota_key(model_name)) or 0)
+    quota_left = used < get_local_request_limit(model)
+    if quota_left:
+        print(
+            f"Model {model_name} has used {used}/{model['rpd']} "
+            "locally tracked requests today"
+        )
+    else:
+        print(f"Model {model_name} reached its local daily request guardrail")
+    return quota_left
+
+
+def reserve_model_request(redis: RedisCluster, model_name: str):
+    model = get_model_config(model_name)
+    quota_key = get_quota_key(model_name)
+    used = redis.incrby(quota_key, 1)
+    if used <= get_local_request_limit(model):
+        return
+
+    redis.decrby(quota_key, 1)
+    raise LocalQuotaExhausted(
+        f"Model {model_name} reached its local daily request guardrail"
+    )
+
+
+def error_has_daily_quota_violation(error: Exception) -> bool:
+    details = getattr(error, "details", {})
+    error_details = details.get("error", details).get("details", [])
+    for detail in error_details:
+        for violation in detail.get("violations", []):
+            if "PerDay" in violation.get("quotaId", ""):
+                return True
+    return False
+
+
+def block_model_until_quota_reset(redis: RedisCluster, model_name: str):
+    redis.setex(
+        get_model_blocked_key(model_name),
+        seconds_until_quota_reset(),
+        1,
+    )
 
 
 def create_prompt(next_entries: list[Union[DnaMovie, DnaTv]]):
@@ -383,6 +438,7 @@ def create_prompt(next_entries: list[Union[DnaMovie, DnaTv]]):
 
 
 def generate_json_response(client: genai.Client, redis: RedisCluster, model_name: str, prompt: str) -> str:
+    reserve_model_request(redis=redis, model_name=model_name)
     try:
         response = client.models.generate_content(
             model=model_name,
@@ -392,7 +448,15 @@ def generate_json_response(client: genai.Client, redis: RedisCluster, model_name
             ),
             contents=prompt,
         )
-        redis.incrby(get_quota_key(model_name), 1)
+        usage = response.usage_metadata
+        if usage:
+            print(
+                f"Token usage for {model_name}: "
+                f"input={usage.prompt_token_count or 0}, "
+                f"output={usage.candidates_token_count or 0}, "
+                f"thinking={usage.thoughts_token_count or 0}, "
+                f"total={usage.total_token_count or 0}"
+            )
 
         if (
             response.candidates
@@ -406,9 +470,9 @@ def generate_json_response(client: genai.Client, redis: RedisCluster, model_name
             print(f"Full response object: {response}")
             raise ValueError(f"Invalid response structure from LLM '{model_name}'.")
 
-    except Exception as e:
+    except Exception:
         print(f"An API error occurred while calling model {model_name}.")
-        raise e
+        raise
 
 
 def validate_and_parse_json(json_string: str, requested_count: int) -> list[DNAAnalysis]:
@@ -462,9 +526,19 @@ def ask_ai(client: genai.Client, redis: RedisCluster, model_name: str, next_entr
             print(current_prompt)
 
         except Exception as e:
+            error_code = getattr(e, "code", None)
+            if (
+                isinstance(error_code, int)
+                and 500 <= error_code < 600
+                and attempt + 1 < MAX_RETRIES_PER_MODEL
+            ):
+                print(f"⚠️ Server error from {model_name}; retrying once")
+                continue
+
             print(f"❌ An unrecoverable error occurred with model {model_name}: {e}")
-            traceback.print_exc()
-            break
+            if error_code not in (404, 429):
+                traceback.print_exc()
+            raise
 
     raise Exception("No model was able to provide a valid response after all retries.")
 
@@ -483,7 +557,6 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
     rc = RedisConnector()
     redis = rc.get_redis()
 
-    model_name = choose_model(redis=redis)
     api_key = wmill.get_variable("u/Alp/GEMINI_API_KEY")
     client = genai.Client(api_key=api_key)
 
@@ -497,13 +570,44 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
             f"{next_entry.original_title} (popularity: {next_entry.popularity})"
         )
 
-    results = ask_ai(client=client, redis=redis, model_name=model_name, next_entries=next_entries)
+    last_error = None
+    for model in models:
+        model_name = model["name"]
+        if not model_has_local_quota(redis=redis, model=model):
+            continue
 
-    for index, next_entry in enumerate(next_entries):
-        result = results[index]
-        store_result(next_entry=next_entry, dna=result, model_name=model_name)
-    
-    return results
+        try:
+            results = ask_ai(
+                client=client,
+                redis=redis,
+                model_name=model_name,
+                next_entries=next_entries,
+            )
+        except LocalQuotaExhausted as error:
+            last_error = error
+            continue
+        except Exception as error:
+            last_error = error
+            error_code = getattr(error, "code", None)
+            if error_code == 429:
+                if error_has_daily_quota_violation(error):
+                    block_model_until_quota_reset(redis, model_name)
+                print(f"Quota exhausted for {model_name}; trying the next model")
+                continue
+            if error_code == 404:
+                print(f"Model {model_name} is unavailable; trying the next model")
+                continue
+
+            print(f"Model {model_name} failed; trying the next model")
+            continue
+
+        for index, next_entry in enumerate(next_entries):
+            result = results[index]
+            store_result(next_entry=next_entry, dna=result, model_name=model_name)
+
+        return results
+
+    raise Exception("No configured model was able to generate DNA") from last_error
 
 
 def main(next_ids: list[dict] = [{
