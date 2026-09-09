@@ -65,7 +65,6 @@ export async function _getTrendingMovies({
       popularity;
   `)
 
-	// increasePriorityForMovies(result.map((row) => row.tmdb_id))
 	return result
 }
 
@@ -107,6 +106,5 @@ export async function _getTrendingTV({
       popularity;
   `)
 
-	// increasePriorityForTVs(result.map((row) => row.tmdb_id))
 	return result
 }

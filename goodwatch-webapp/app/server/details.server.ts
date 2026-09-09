@@ -1,7 +1,3 @@
-import {
-	increasePriorityForMovies,
-	// increasePriorityForTVs, // TODO: Update to use 'show' instead of 'tv'
-} from "~/server/utils/priority"
 import { cached } from "~/utils/cache"
 import { getRatingKeys } from "~/utils/ratings"
 import {

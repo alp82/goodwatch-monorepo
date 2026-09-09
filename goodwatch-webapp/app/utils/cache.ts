@@ -40,7 +40,7 @@ const redisOptions: ClusterOptions = {
 }
 
 let redisCluster: Cluster | null = null
-const getRedisCluster = () => redisCluster
+export const getRedisCluster = () => redisCluster
 
 const connectToRedisCluster = async () => {
 	if (redisCluster) return null

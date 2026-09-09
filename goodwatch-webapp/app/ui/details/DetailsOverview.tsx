@@ -31,7 +31,7 @@ export default function DetailsOverview({
 				{/* Poster and Trailer */}
 				<div className="flex justify-center gap-2">
 					<div className="relative w-[calc(21.8%-0.125rem)] min-w-[3.8rem] shrink-0">
-						<Poster path={poster_path} title={title} />
+						<Poster path={poster_path} title={title} mediaType={details.media_type} tmdbId={details.tmdb_id} />
 						{/* <RatingOverlay ratings={ratings} /> */}
 					</div>
 					<div className="relative grow min-w-[220px] flex items-center justify-center">

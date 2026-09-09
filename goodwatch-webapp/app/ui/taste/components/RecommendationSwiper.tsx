@@ -1,3 +1,4 @@
+import { usePosterImpression } from "~/hooks/usePosterImpression"
 import { useEffect, useState } from "react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { FreeMode, Navigation } from "swiper/modules"
@@ -9,9 +10,11 @@ interface RecommendationSwiperProps {
 }
 
 function PosterCard({ recommendation }: { recommendation: Recommendation }) {
+	const impressionRef = usePosterImpression(recommendation.media_type, recommendation.tmdb_id)
 	return (
 		<div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-lg group">
 			<img
+				ref={impressionRef}
 				src={`https://image.tmdb.org/t/p/w342${recommendation.poster_path}`}
 				alt={recommendation.title}
 				className="w-full h-full object-cover"

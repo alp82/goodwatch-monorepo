@@ -53,7 +53,7 @@ export function MovieTvCard({
 				{details.streaming_links && (
 					<StreamingOverlay links={details.streaming_links} />
 				)}
-				<Poster path={details.poster_path} title={details.title} />
+				<Poster path={details.poster_path} title={details.title} mediaType={mediaType} tmdbId={details.tmdb_id} />
 
 				<div
 					className="

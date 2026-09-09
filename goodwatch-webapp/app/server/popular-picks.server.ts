@@ -2,10 +2,6 @@ import {
 	type StreamingProviders,
 	getCountrySpecificDetails,
 } from "~/server/details.server"
-import {
-	increasePriorityForMovies,
-	increasePriorityForTVs,
-} from "~/server/utils/priority"
 import { cached } from "~/utils/cache"
 import { query as crateQuery } from "~/utils/crate"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
@@ -71,7 +67,6 @@ export async function _getPopularPicksMovies({
   `)
 	if (!result.length) throw Error("no popular picks for movies found")
 
-	// increasePriorityForMovies(result.map((row) => row.tmdb_id))
 	return result
 }
 
@@ -109,6 +104,5 @@ export async function _getPopularPicksTV({
   `)
 	if (!result.length) throw Error("no popular picks for tv shows found")
 
-	// increasePriorityForTVs(result.map((row) => row.tmdb_id))
 	return result
 }

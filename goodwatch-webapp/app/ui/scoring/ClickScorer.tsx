@@ -1,3 +1,4 @@
+import { usePosterImpression } from "~/hooks/usePosterImpression"
 import { motion } from "framer-motion"
 import { BookmarkIcon, ForwardIcon, FilmIcon, TvIcon, InformationCircleIcon } from "@heroicons/react/24/outline"
 import type { Score } from "~/server/scores.server"
@@ -17,6 +18,7 @@ interface ClickScorerProps {
 }
 
 export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: ClickScorerProps) {
+	const impressionRef = usePosterImpression(media.media_type, media.tmdb_id)
 	const [hoveredScore, setHoveredScore] = useState<Score | null>(null)
 
 	const handleScoreClick = (score: Score) => {
@@ -75,6 +77,7 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 				<div className="flex-shrink-0 z-10 relative">
 					<div className="h-64 md:h-80 lg:h-96 aspect-[2/3] relative">
 						<img
+							ref={impressionRef}
 							src={posterUrl}
 							alt={media.title}
 							className="w-full h-full object-cover"

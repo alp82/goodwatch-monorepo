@@ -1,3 +1,4 @@
+import { usePosterImpression } from "~/hooks/usePosterImpression"
 import { useEffect, useState } from "react"
 import { motion, useMotionValue, useTransform, useAnimation } from "framer-motion"
 import { FilmIcon, TvIcon } from "@heroicons/react/24/outline"
@@ -24,6 +25,7 @@ const SCORE_THRESHOLD = 25 // Minimum horizontal drag to trigger scoring
 const DRAG_DISTANCE = 140
 
 export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanToWatch, isGuest = false, isFirstItem = false }: SwipeScorerProps) {
+	const impressionRef = usePosterImpression(media.media_type, media.tmdb_id)
 	const [isDragging, setIsDragging] = useState(false)
 	const mediaTypeLabel = media.media_type === "movie" ? "Movie" : "Show"
 	const MediaTypeIcon = media.media_type === "movie" ? FilmIcon : TvIcon
@@ -229,6 +231,7 @@ export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanT
 					{/* Movie Poster */}
 					<div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl">
 						<img
+							ref={impressionRef}
 							src={`https://image.tmdb.org/t/p/w500${media.poster_path}`}
 							alt={media.title}
 							className="w-full h-full object-cover pointer-events-none select-none"
