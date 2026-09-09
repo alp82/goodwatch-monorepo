@@ -2,6 +2,10 @@
 
 Collect and process all necessary data for movies and tv shows.
 
+Application Postgres retirement and deployment order are documented in
+[the migration runbook](../docs/postgres-retirement.md). Legacy pipelines are
+preserved under `retired/`, outside the Windmill deployment directory.
+
 ## Getting Started
 
 System requirements:

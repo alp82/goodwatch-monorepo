@@ -1,0 +1,9 @@
+summary: CrateDB priority queue lease helpers
+description: Full-primary-key optimistic claims and demand acknowledgment
+lock: '!inline f/priority/queue.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

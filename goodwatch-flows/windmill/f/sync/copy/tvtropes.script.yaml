@@ -3,7 +3,7 @@ description: ''
 lock: '!inline f/sync/copy/tvtropes.script.lock'
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
     movie_ids:
@@ -12,14 +12,14 @@ schema:
       default: []
       items:
         type: string
-      originalType: 'string[]'
+      originalType: string[]
     show_ids:
       type: array
       description: ''
       default: []
       items:
         type: string
-      originalType: 'string[]'
+      originalType: string[]
     skip_movies:
       type: boolean
       description: ''

@@ -92,7 +92,8 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
 
 
 def copy_media(
-    connector: CrateConnector, query_selector: dict = {}, media_type: str = "movie"
+    connector: CrateConnector, query_selector: dict = {}, media_type: str = "movie",
+    *, recent_only: bool = True
 ):
     is_movie = media_type == "movie"
 
@@ -115,6 +116,8 @@ def copy_media(
     updated_at_filter = {
         "updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     }
+    if not recent_only:
+        updated_at_filter = {}
     imdb_entry_count = mongo_imdb.count_documents(query_selector | updated_at_filter)
     meta_entry_count = mongo_meta.count_documents(query_selector | updated_at_filter)
     rotten_entry_count = mongo_rotten.count_documents(

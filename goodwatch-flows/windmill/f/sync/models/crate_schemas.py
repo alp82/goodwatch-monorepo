@@ -1,4 +1,18 @@
 SCHEMAS = {
+    "crawl_priority": {
+        "columns": {
+            "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "tmdb_id": "INTEGER",
+            "demand": "BIGINT DEFAULT 0",
+            "acknowledged_demand": "BIGINT DEFAULT 0",
+            "claimed_demand": "BIGINT DEFAULT 0",
+            "last_success_at": "TIMESTAMP",
+            "lease_token": "TEXT",
+            "lease_expires_at": "TIMESTAMP",
+        },
+        "primary_key": ["media_type", "tmdb_id"],
+        "shards": 3,
+    },
     # ============================
     # ===== Core Lookups =====
     # ============================

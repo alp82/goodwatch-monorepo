@@ -1,15 +1,16 @@
-summary: ''
-description: Reset fully processed priority batch
+summary: Acknowledge successfully published priority claims
+description: Retains demand received during crawling and rejects expired leases
 lock: '!inline f/priority/reset.script.lock'
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
-    next_ids:
-      type: object
-      description: ''
+    claims:
+      type: array
       default: null
-      properties: {}
+      items:
+        type: object
+      originalType: record[]
   required:
-    - next_ids
+    - claims

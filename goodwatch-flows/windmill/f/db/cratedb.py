@@ -4,6 +4,7 @@ from typing import Iterable, List
 
 from crate import client
 from pydantic import BaseModel
+from urllib3 import Timeout
 import wmill
 
 
@@ -14,11 +15,18 @@ class CrateConnector:
             db_user = wmill.get_variable("u/Alp/CRATE_USER")
             db_pass = wmill.get_variable("u/Alp/CRATE_PASS")
 
-            self.con = client.connect(db_hosts, username=db_user, password=db_pass)
+            self.con = client.connect(
+                db_hosts,
+                username=db_user,
+                password=db_pass,
+                # The client retries connections to each host repeatedly. Keep
+                # private-LAN failures short without cutting off slow queries.
+                timeout=Timeout(connect=1, read=180),
+            )
             self.cur = self.con.cursor()
-            print("Successfully connected to CrateDB.")
+            print("Successfully connected to CrateDB.", flush=True)
         except Exception as e:
-            print(f"Failed to connect to CrateDB: {e}")
+            print(f"Failed to connect to CrateDB: {e}", flush=True)
             self.con = None
             self.cur = None
             raise
@@ -27,7 +35,7 @@ class CrateConnector:
         if not self.cur:
             print("Cannot execute SQL, no active cursor.")
             return
-        print(f"Executing SQL: {sql}")
+        print(f"Executing SQL: {sql}", flush=True)
         self.cur.execute(sql, params or ())
 
     def select(self, sql: str, params: tuple = None) -> list[dict]:
@@ -156,11 +164,28 @@ class CrateConnector:
             row = [d.get(c) for c in all_cols]
             data.append(row)
 
-        self.cur.executemany(sql, data)
+        results = self.cur.executemany(sql, data)
+        # CrateDB can return a successful HTTP response with individual failed
+        # bulk operations. Callers must not acknowledge a crawl in that case.
+        if not isinstance(results, list) or len(results) != len(data):
+            raise RuntimeError(f"Incomplete bulk result while writing {table}")
+        failures = [
+            (index, result)
+            for index, result in enumerate(results)
+            if result.get("error_message")
+            or result.get("error")
+            or result.get("rowcount", -1) != 1
+        ]
+        if failures:
+            index, result = failures[0]
+            raise RuntimeError(
+                f"Failed to upsert {len(failures)} of {len(data)} rows into {table}; "
+                f"first failure at row {index}: {result}"
+            )
 
         return {
             "records_received": len(records),
-            "rows_upserted": len(records),  # CrateDB rowcount is -1 on executemany
+            "rows_upserted": sum(result["rowcount"] for result in results),
         }
 
     def table_exists(self, table_name: str) -> bool:
@@ -210,7 +235,7 @@ class CrateConnector:
             self.cur.close()
         if self.con:
             self.con.close()
-        print("Disconnected from CrateDB.")
+        print("Disconnected from CrateDB.", flush=True)
 
 
 def main():

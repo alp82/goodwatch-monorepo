@@ -97,7 +97,8 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
 def copy_media(
     connector: CrateConnector, 
     query_selector: dict = {},
-    media_type: str = "movie" 
+    media_type: str = "movie",
+    *, recent_only: bool = True,
 ):
     is_movie = media_type == "movie"
 
@@ -107,6 +108,8 @@ def copy_media(
     MediaClass = Movie if is_movie else Show
 
     updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
+    if not recent_only:
+        updated_at_filter = {}
     total_entry_count = mongo_collection.count_documents(query_selector | updated_at_filter)
     print(f"Total {media_type} entries: {total_entry_count}")
 
@@ -310,7 +313,9 @@ def copy_media(
                 for image in images:
                     url_path = image.get("file_path")
                     if url_path:
-                        language_code = image.get("iso_639_1")
+                        # Existing CrateDB image keys use an empty string for
+                        # language-neutral artwork; primary keys cannot be NULL.
+                        language_code = image.get("iso_639_1") or ""
                         image_key = (media_id, media_type, image_type, url_path, language_code)
                         if image_key not in image_keys:
                             image_keys.add(image_key)
@@ -418,7 +423,8 @@ def copy_media(
                 country_code = country_data.get("iso_3166_1")
                 if country_code:
                     for release in country_data.get("release_dates", []):
-                        certification = release.get("certification")
+                        # Unrated releases still have a non-null CrateDB key.
+                        certification = release.get("certification") or ""
                         if certification:
                             certifications.add(f"{country_code}_{certification}")
                         release_date = release.get("release_date")

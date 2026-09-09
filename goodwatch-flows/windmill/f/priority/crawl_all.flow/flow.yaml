@@ -15,6 +15,9 @@ value:
         path: f/priority/next
         tag_override: null
     - id: i
+      timeout:
+        type: static
+        value: 600
       value:
         type: script
         input_transforms:
@@ -34,6 +37,9 @@ value:
           random_factor: 0
           seconds: 2
     - id: b
+      timeout:
+        type: static
+        value: 1800
       summary: ''
       value:
         type: branchall
@@ -262,60 +268,25 @@ value:
             skip_failure: true
         parallel: true
     - id: o
-      summary: ''
-      value:
-        type: branchall
-        branches:
-          - summary: Copy movies
-            modules:
-              - id: p
-                value:
-                  type: script
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.g.ids
-                  path: f/combine_data/copy_movies/update
-                  tag_override: null
-            expr: ''
-            parallel: true
-            skip_failure: false
-          - summary: Copy tv
-            modules:
-              - id: q
-                value:
-                  type: script
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.g.ids
-                  path: f/combine_data/copy_tv/update
-                  tag_override: null
-            expr: ''
-            parallel: true
-            skip_failure: false
-          - summary: Copy streaming links
-            modules:
-              - id: r
-                value:
-                  type: script
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.g.ids
-                  path: f/combine_data/copy_streaming_provider_links/update
-                  tag_override: null
-            expr: ''
-            parallel: true
-            skip_failure: false
-        parallel: true
-    - id: 'y'
+      timeout:
+        type: static
+        value: 600
+      summary: Publish crawled titles to CrateDB
       value:
         type: script
         input_transforms:
           next_ids:
             type: javascript
             expr: results.g.tmdb_ids
+        path: f/priority/publish
+      continue_on_error: false
+    - id: 'y'
+      value:
+        type: script
+        input_transforms:
+          claims:
+            type: javascript
+            expr: results.g.claims
         path: f/priority/reset
         tag_override: null
   concurrency_time_window_s: 0

@@ -1,25 +1,26 @@
-# py: 3.11
-annotated-types==0.7.0
-anyio==4.12.0
-certifi==2025.11.12
+# workspace-dependencies-mode: extra
+# py: 3.12
+annotated-types==0.8.0
+anyio==4.15.1
+certifi==2026.7.22
 dnspython==2.8.0
-grpcio==1.76.0
+grpcio==1.83.1
 h11==0.16.0
-h2==4.3.0
-hpack==4.1.0
+h2==4.4.1
+hpack==4.2.0
 httpcore==1.0.9
 httpx==0.28.1
 hyperframe==6.1.0
-idna==3.11
-mongoengine==0.29.1
-numpy==2.3.5
+idna==3.19
+mongoengine==0.29.3
+numpy==2.5.3
 portalocker==3.2.0
-protobuf==6.33.1
-pydantic==2.12.5
-pydantic-core==2.41.5
-pymongo==4.15.5
-qdrant-client==1.16.1
-typing-extensions==4.15.0
-typing-inspection==0.4.2
-urllib3==2.5.0
-wmill==1.589.1
+protobuf==7.36.1
+pydantic==2.13.5
+pydantic-core==2.46.5
+pymongo==4.18.0
+qdrant-client==1.15.1
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+urllib3==2.7.0
+wmill==1.808.0

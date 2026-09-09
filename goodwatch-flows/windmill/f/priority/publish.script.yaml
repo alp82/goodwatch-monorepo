@@ -1,0 +1,16 @@
+summary: Publish crawled titles to CrateDB
+description: Targeted TMDB IDs only; empty batches do nothing. Failures prevent
+  queue acknowledgment.
+lock: '!inline f/priority/publish.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    next_ids:
+      type: object
+      description: TMDB IDs returned by priority selection, not Mongo ObjectIDs.
+      default: null
+      properties: {}
+  required:
+    - next_ids

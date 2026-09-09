@@ -3,17 +3,17 @@ description: Retrieve next priority batch for crawling all data
 lock: '!inline f/priority/next.script.lock'
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
     movie_tmdb_id:
       type: string
       description: ''
       default: null
+      originalType: string
     tv_tmdb_id:
       type: string
       description: ''
       default: null
-  required:
-    - movie_tmdb_id
-    - tv_tmdb_id
+      originalType: string
+  required: []

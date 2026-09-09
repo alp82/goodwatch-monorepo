@@ -1,3 +1,6 @@
+# extra_requirements:
+# qdrant-client==1.15.1
+
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
@@ -53,13 +56,14 @@ def _fetch_tmdb_ids_keyset(
     limit: int,
     *,
     overfetch_factor: int = 3,
-    use_compound_hint: bool = False,  # kept for compatibility; we'll auto-detect anyway
+    use_compound_hint: bool = False,
 ) -> Tuple[List[int], Optional[int]]:
     """
     Keyset pagination over an index to fetch distinct tmdb_id quickly.
 
-    Prefers {updated_at:1, tmdb_id:1} if it exists (best for filtering by updated_at
-    + sorting by tmdb_id). Falls back to {tmdb_id:1}. If neither exists, runs without hint.
+    Uses {updated_at:1, tmdb_id:1} only when requested for date-filtered scans.
+    Otherwise prefers {tmdb_id:1}, avoiding a full date-index scan for targeted IDs.
+    If the requested index is absent, falls back to {tmdb_id:1} or no hint.
 
     Returns (ids, next_last_tmdb_id).
     """
@@ -96,7 +100,7 @@ def _fetch_tmdb_ids_keyset(
 
     # Apply hint only if we KNOW it's present
     try:
-        if can_hint_compound:
+        if use_compound_hint and can_hint_compound:
             cursor = cursor.hint(compound_keys)
         elif can_hint_tmdb_only:
             cursor = cursor.hint(tmdb_only_keys)
@@ -357,6 +361,7 @@ def copy_to_qdrant(
     qc: QdrantConnector,
     media_type: str,  # "movie" | "show"
     query_selector: dict,
+    *, recent_only: bool = True, strict_writes: bool = False,
 ):
     """
     Combined copy into Qdrant.
@@ -391,7 +396,7 @@ def copy_to_qdrant(
     processed = 0
 
     # Prefer compound hint if we filter by updated_at
-    base_selector = {"updated_at": updated, **sel}
+    base_selector = {"updated_at": updated, **sel} if recent_only else sel
     use_compound_hint = "updated_at" in base_selector
 
     while True:
@@ -454,13 +459,28 @@ def copy_to_qdrant(
 
         if upsert_buffer:
             print(f"{media_type} start upload for {len(upsert_buffer)} points")
-            qc.upsert_points(
-                MEDIA_COLLECTION,
-                upsert_buffer,  # List[Tuple[int, payload_dict, vectors_dict]]
-                batch_size=UPSERT_BATCH_SIZE,
-                parallel=1,
-                wait=True,
-            )
+            if strict_writes:
+                # Small priority batches need a surfaced error for every write.
+                # upload_collection is optimized for bulk background synchronization.
+                for start in range(0, len(upsert_buffer), UPSERT_BATCH_SIZE):
+                    result = qc.client.upsert(
+                        collection_name=MEDIA_COLLECTION,
+                        points=[
+                            qm.PointStruct(id=int(pid), payload=payload, vector=vectors)
+                            for pid, payload, vectors in upsert_buffer[start:start + UPSERT_BATCH_SIZE]
+                        ],
+                        wait=True,
+                    )
+                    if result.status != qm.UpdateStatus.COMPLETED:
+                        raise RuntimeError(f"Qdrant publication did not complete: {result.status}")
+            else:
+                qc.upsert_points(
+                    MEDIA_COLLECTION,
+                    upsert_buffer,
+                    batch_size=UPSERT_BATCH_SIZE,
+                    parallel=1,
+                    wait=True,
+                )
             total_upserts += len(upsert_buffer)
             upsert_buffer.clear()
 

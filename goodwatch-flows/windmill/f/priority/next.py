@@ -1,91 +1,82 @@
-from typing import Optional, Union, Literal
-
 from mongoengine import get_db
 
-from f.data_source.common import IdsParameter
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.db.postgres import init_postgres
+from f.db.cratedb import CrateConnector
+from f.priority.queue import CANDIDATE_PAGE_SIZE, candidate_ids, claim, release
 
 
-BATCH_SIZE = 10
-BUFFER_SELECTED_AT_MINUTES = 30
+def mongo_id(mongo_db, media_type, tmdb_id):
+    collection = "tmdb_movie_details" if media_type == "movie" else "tmdb_tv_details"
+    document = mongo_db[collection].find_one({"tmdb_id": int(tmdb_id)}, {"_id": 1})
+    return str(document["_id"]) if document else None
 
 
-def main(movie_tmdb_id: str, tv_tmdb_id: str):
-    init_mongodb()
-    mongo_db = get_db()
-    pg = init_postgres()
-    pg_cursor = pg.cursor()
+def ranked_ids(db, media_type):
+    offset = 0
+    while True:
+        page = candidate_ids(db, media_type, offset=offset)
+        yield from page
+        if len(page) < CANDIDATE_PAGE_SIZE:
+            return
+        offset += len(page)
 
-    if movie_tmdb_id or tv_tmdb_id:
-        next_movie_ids = get_ids_from_tmdb_id(mongo_db, "movie", [movie_tmdb_id]) if movie_tmdb_id else []
-        next_tv_ids = get_ids_from_tmdb_id(mongo_db, "tv", [tv_tmdb_id]) if tv_tmdb_id else []
 
-        ids = IdsParameter(
-            movie_ids=next_movie_ids,
-            tv_ids=next_tv_ids,
-        )
-        tmdb_ids = IdsParameter(
-            movie_ids=[movie_tmdb_id] if movie_tmdb_id else [],
-            tv_ids=[tv_tmdb_id] if tv_tmdb_id else [],
-        )
-    else:
-        next_movie_ids = get_next_ids(pg_cursor, mongo_db, "movie")
-        next_tv_ids = get_next_ids(pg_cursor, mongo_db, "tv")
-
-        ids = IdsParameter(
-            movie_ids=next_movie_ids.get("ids") or [],
-            tv_ids=next_tv_ids.get("ids") or [],
-        )
-        tmdb_ids = IdsParameter(
-            movie_ids=next_movie_ids.get("tmdb_ids") or [],
-            tv_ids=next_tv_ids.get("tmdb_ids") or [],
-        )
-
-    pg.close()
-    close_mongodb()
-
+def select_batch(db, mongo_db, movie_tmdb_id=None, tv_tmdb_id=None):
     result = {
-        "ids": ids.model_dump(),
-        "tmdb_ids": tmdb_ids.model_dump(),
+        "ids": {"movie_ids": [], "tv_ids": []},
+        "tmdb_ids": {"movie_ids": [], "tv_ids": []},
+        "claims": [],
     }
-    print(result)
+    explicit = bool(movie_tmdb_id or tv_tmdb_id)
+    requested = [("movie", "movie_ids", movie_tmdb_id), ("show", "tv_ids", tv_tmdb_id)]
+    # Validate every explicit mapping before reserving any work.
+    mappings = {}
+    for media_type, _, requested_id in requested:
+        if requested_id:
+            mapped = mongo_id(mongo_db, media_type, requested_id)
+            if mapped is None:
+                raise ValueError(
+                    f"No MongoDB details record for {media_type} {requested_id}"
+                )
+            mappings[media_type] = mapped
+    try:
+        for media_type, output_key, requested_id in requested:
+            candidates = (
+                ([int(requested_id)] if requested_id else [])
+                if explicit
+                else ranked_ids(db, media_type)
+            )
+            for tmdb_id in candidates:
+                mapped = mappings.get(media_type) or mongo_id(
+                    mongo_db, media_type, tmdb_id
+                )
+                if mapped is None:
+                    continue
+                lease = claim(db, media_type, tmdb_id, explicit=explicit)
+                if lease is None:
+                    if explicit:
+                        raise RuntimeError(
+                            f"Could not claim {media_type} {tmdb_id}; another crawl may own it"
+                        )
+                    continue
+                result["ids"][output_key].append(mapped)
+                result["tmdb_ids"][output_key].append(str(tmdb_id))
+                result["claims"].append(lease)
+                break  # Preserve one movie and one show per scheduled run.
+    except Exception:
+        for lease in result["claims"]:
+            release(db, lease)
+        raise
     return result
 
 
-def get_ids_from_tmdb_id(
-    mongo_db, type: Union[Literal["movie"], Literal["tv"]], tmdb_ids: list[str]
-) -> list[str]:
-    collection_name = "tmdb_movie_details" if type == "movie" else "tmdb_tv_details"
-    query = {"tmdb_id": {"$in": [int(id) for id in tmdb_ids]}}
-    documents = mongo_db[collection_name].find(query)
-    return [str(doc["_id"]) for doc in documents]
-
-
-def get_next_ids(
-    pg_cursor, mongo_db, type: Union[Literal["movie"], Literal["tv"]]
-) -> dict[str, list[str]]:
-    query = f"""
-    SELECT tmdb_id
-    FROM priority_queue_{type}
-    WHERE priority > 0
-    AND (reset_at IS NULL OR reset_at AT TIME ZONE 'UTC' < NOW() AT TIME ZONE 'UTC' - INTERVAL '1 week')
-    ORDER BY priority DESC
-    LIMIT 1;
-    """
-    pg_cursor.execute(query)
-    rows = pg_cursor.fetchall()
-
-    tmdb_ids = [str(row[0]) for row in rows]
-    if not tmdb_ids:
-        return {}
-
-    ids = get_ids_from_tmdb_id(mongo_db, type, tmdb_ids)
-    return {
-        "ids": ids,
-        "tmdb_ids": tmdb_ids,
-    }
-
-
-if __name__ == "__main__":
-    main()
+def main(movie_tmdb_id: str = None, tv_tmdb_id: str = None):
+    init_mongodb()
+    db = None
+    try:
+        db = CrateConnector()
+        return select_batch(db, get_db(), movie_tmdb_id, tv_tmdb_id)
+    finally:
+        if db:
+            db.disconnect()
+        close_mongodb()

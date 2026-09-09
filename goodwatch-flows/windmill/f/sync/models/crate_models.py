@@ -279,7 +279,7 @@ class Image(BaseModel):
     media_type: MediaType
     image_type: str  # 'posters', 'backdrops', etc.
     url_path: str
-    language_code: Optional[str] = None
+    language_code: str = ""  # Empty for language-neutral artwork; part of the PK.
     aspect_ratio: float
     width: int
     height: int
@@ -337,7 +337,7 @@ class ReleaseEvent(BaseModel):
     country_code: str
     release_type: int
     release_date: Optional[float]  # Unix timestamp
-    certification: Optional[str]
+    certification: str = ""  # Empty for unrated releases; part of the PK.
     note: Optional[str] = None
     descriptors: list[str] = Field(default_factory=list)
 

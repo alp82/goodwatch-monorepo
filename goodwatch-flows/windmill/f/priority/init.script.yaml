@@ -1,0 +1,9 @@
+summary: Create CrateDB priority queue before cutover
+description: Creates only crawl_priority; does not copy or reset existing demand.
+lock: '!inline f/priority/init.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []
