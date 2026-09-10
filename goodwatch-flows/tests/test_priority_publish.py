@@ -3,6 +3,7 @@ import importlib.util
 import sys
 import unittest
 from collections import defaultdict
+from contextlib import ExitStack, nullcontext
 from datetime import datetime, timedelta
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -44,6 +45,15 @@ def load_publisher():
 
 
 class PublishTests(unittest.TestCase):
+    def test_vector_connector_bounds_transport_timeout(self) -> None:
+        tree = ast.parse((ROOT / "db" / "qdrant.py").read_text())
+        connector_class = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "QdrantConnector")
+        constructor = next(node for node in connector_class.body if isinstance(node, ast.FunctionDef) and node.name == "__init__")
+        namespace = {"wmill": MagicMock(), "QdrantClient": MagicMock(), "GRPC_OPTS": {}}
+        exec(compile(ast.Module(body=[constructor], type_ignores=[]), "qdrant.py", "exec"), namespace)
+        namespace["__init__"](SimpleNamespace(), timeout=180)
+        self.assertEqual(namespace["QdrantClient"].call_args.kwargs["timeout"], 180)
+
     def test_empty_batch_never_opens_database(self):
         module, crate, mongo, _ = load_publisher()
         self.assertEqual(module.main({"movie_ids": [], "tv_ids": []}), {})
@@ -66,6 +76,7 @@ class PublishTests(unittest.TestCase):
             module.QdrantConnector.return_value, "movie", {"tmdb_id": {"$in": [42]}},
             recent_only=False, strict_writes=True,
         )
+        module.QdrantConnector.assert_called_once_with(timeout=180)
         module.QdrantConnector.return_value.close.assert_called_once()
 
     def test_tv_ids_map_to_show(self):
@@ -89,6 +100,7 @@ class PublishTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "vector write failed"):
             module.main({"movie_ids": [42]})
         crate.CrateConnector.return_value.disconnect.assert_called_once()
+        module.QdrantConnector.assert_called_once_with(timeout=180)
         module.QdrantConnector.return_value.close.assert_called_once()
         mongo.close_mongodb.assert_called_once()
 
@@ -106,6 +118,16 @@ class PublishTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 module.main({"movie_ids": [value]})
             crate.CrateConnector.assert_not_called()
+
+    def test_partial_streaming_publication_still_requires_vector_write(self) -> None:
+        module, _, _, syncs = load_publisher()
+        syncs["tmdb_streaming"].copy_media.side_effect = None
+        syncs["tmdb_streaming"].copy_media.return_value = {"publication": {
+            "status": "partial_success", "titles": {"42": {
+                "deferred_countries": ["DE"], "streaming_availability": ["8_DE", "9_US"]}}}}
+        result = module.main({"movie_ids": [42]})
+        self.assertEqual(result["movie"]["streaming"]["publication"]["status"], "partial_success")
+        self.assertTrue(module.copy_to_qdrant.call_args.kwargs["strict_writes"])
 
 
 class SelectionTests(unittest.TestCase):
@@ -128,9 +150,14 @@ class SelectionTests(unittest.TestCase):
                         "CrateConnector": object, "Movie": object, "Show": object,
                         "get_db": lambda: db, "datetime": datetime, "timedelta": timedelta,
                         "HOURS_TO_FETCH": 48, "BATCH_SIZE": 100, "defaultdict": defaultdict,
-                        "tmdb_details_projection": {},
+                        "tmdb_details_projection": {}, "Any": Any,
+                        "publication_lease": lambda *args: nullcontext(lambda: None),
                     }
-                    exec(compile(ast.Module(body=[function], type_ignores=[]), str(ROOT / name), "exec"), namespace)
+                    functions = [function]
+                    if name == "tmdb_streaming":
+                        functions += [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in (
+                            "fetch_documents_in_batch", "fetch_all_documents_in_batch", "reconcile_availability", "availability_key")]
+                    exec(compile(ast.Module(body=functions, type_ignores=[]), str(ROOT / name), "exec"), namespace)
                     namespace["copy_media"](connector, {"tmdb_id": {"$in": [42]}}, recent_only=recent_only)
                     selectors = []
                     for method, args, _ in db.mock_calls:
@@ -187,16 +214,19 @@ class VectorKeysetTests(unittest.TestCase):
 
 class VectorPublicationTests(unittest.TestCase):
     def test_strict_publication_requires_completed_writes_and_uses_explicit_selector(self):
-        for status in ("completed", "acknowledged"):
+        for status in ("completed", "acknowledged", "scheduled"):
             with self.subTest(status=status):
                 tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
                 function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "copy_to_qdrant")
                 db = MagicMock()
                 qc = MagicMock()
-                qc.client.upsert.return_value.status = status
+                crate = MagicMock()
+                crate.select.return_value = [{"tmdb_id": 42, "streaming_availabilities": ["DE_8", "US_9"]}]
+                qc.client.upsert.return_value.status = "completed" if status == "scheduled" else status
                 fetch_ids = MagicMock(side_effect=[([42], 42), ([], 42)])
                 namespace = {
-                    "QdrantConnector": object, "get_db": lambda: db,
+                    "QdrantConnector": object, "CrateConnector": lambda: crate, "get_db": lambda: db,
+                    "ExitStack": ExitStack, "publication_lease": lambda *args: nullcontext(lambda: None),
                     "TmdbMovieDetails": MagicMock(), "TmdbTvDetails": MagicMock(),
                     "datetime": datetime, "timedelta": timedelta, "HOURS_TO_FETCH": 48,
                     "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
@@ -204,21 +234,145 @@ class VectorPublicationTests(unittest.TestCase):
                     "_fetch_tmdb_ids_keyset": fetch_ids,
                     "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
                     "_fetch_multimap_by_ids": lambda *args: {},
-                    "_build_payload": lambda **kw: ({"tmdb_id": 42}, {"essence_text_v1": [0.1], "fingerprint_v1": [0.2]}),
+                    "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"essence_text_v1": [0.1], "fingerprint_v1": [0.2]}),
                     "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
                     "MEDIA_COLLECTION": "media",
                     "qm": SimpleNamespace(PointStruct=lambda **kw: kw, UpdateStatus=SimpleNamespace(COMPLETED="completed")),
                 }
-                exec(compile(ast.Module(body=[function], type_ignores=[]), "vector_data.py", "exec"), namespace)
-                if status == "completed":
+                functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_published_streaming"]
+                exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), namespace)
+                if status in ("completed", "scheduled"):
                     result = namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
                     self.assertEqual(result["upserts"], 1)
+                    self.assertEqual(qc.client.upsert.call_args.kwargs["points"][0]["payload"]["streaming_availability"], ["8_DE", "9_US"])
                 else:
                     with self.assertRaisesRegex(RuntimeError, "did not complete"):
                         namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
+                if status == "scheduled":
+                    crate.select.assert_called_once_with(
+                        "SELECT tmdb_id, streaming_availabilities FROM movie WHERE tmdb_id = ANY(?)", ([42],))
+                    crate.disconnect.assert_called_once()
                 self.assertEqual(fetch_ids.call_args_list[0].kwargs["base_selector"], {"tmdb_id": {"$in": [42]}})
                 qc.upsert_points.assert_not_called()
                 self.assertTrue(qc.client.upsert.call_args.kwargs["wait"])
+
+
+class VectorSerializationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        import mongomock
+        from test_streaming_publication import load_copy
+        self.db = mongomock.MongoClient().db
+        self.crate = MagicMock()
+        self.crate.select.return_value = [{"tmdb_id": 42, "streaming_availabilities": ["US_9"]}]
+        self.qc = MagicMock()
+        self.qc.client.upsert.return_value.status = "completed"
+        tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
+        functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name in ("copy_to_qdrant", "_published_streaming")]
+        self.namespace = {
+            "QdrantConnector": object, "CrateConnector": lambda: self.crate,
+            "get_db": lambda: self.db, "TmdbMovieDetails": MagicMock(), "TmdbTvDetails": MagicMock(),
+            "datetime": datetime, "timedelta": timedelta, "HOURS_TO_FETCH": 48,
+            "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
+            "Optional": Optional, "List": List, "Tuple": Tuple, "Dict": Dict, "Any": Any,
+            "ExitStack": ExitStack,
+            "publication_lease": load_copy(self.db).__globals__["publication_lease"],
+            "_fetch_tmdb_ids_keyset": MagicMock(side_effect=[([42], 42), ([], 42)]),
+            "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
+            "_fetch_multimap_by_ids": lambda *args: {},
+            "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"essence_text_v1": [0.1], "fingerprint_v1": [0.2]}),
+            "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
+            "MEDIA_COLLECTION": "media",
+            "qm": SimpleNamespace(PointStruct=lambda **kw: kw, UpdateStatus=SimpleNamespace(COMPLETED="completed")),
+        }
+        exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), self.namespace)
+
+    def publish(self, *, targeted: bool = True) -> dict:
+        return self.namespace["copy_to_qdrant"](
+            self.qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False,
+            strict_writes=targeted,
+        )
+
+    def test_targeted_vector_uses_latest_published_snapshot_after_other_writer(self) -> None:
+        self.publish()
+        point = self.qc.client.upsert.call_args.kwargs["points"][0]
+        self.assertEqual(point["payload"]["streaming_availability"], ["9_US"])
+
+
+    def test_unknown_snapshot_preserves_vectors_but_confirmed_empty_can_clear(self) -> None:
+        for value, expected in ((None, 0), ([], 1)):
+            with self.subTest(snapshot=value):
+                self.setUp()
+                self.crate.select.return_value = [{"tmdb_id": 42, "streaming_availabilities": value}]
+                self.assertEqual(self.publish()["upserts"], expected)
+                if expected:
+                    point = self.qc.client.upsert.call_args.kwargs["points"][0]
+                    self.assertEqual(point["payload"]["streaming_availability"], [])
+                else:
+                    self.qc.client.upsert.assert_not_called()
+
+    def test_scheduled_and_targeted_writes_hold_title_lease_through_completion(self) -> None:
+        for targeted in (False, True):
+            with self.subTest(targeted=targeted):
+                self.setUp()
+                def check_competitor_blocked(*args: Any, **kwargs: Any) -> SimpleNamespace:
+                    with self.assertRaisesRegex(RuntimeError, "publication busy"):
+                        with self.namespace["publication_lease"](self.db, "movie", 42):
+                            self.fail("Concurrent publisher entered the active title lease")
+                    return SimpleNamespace(status="completed")
+                self.qc.client.upsert.side_effect = check_competitor_blocked
+                self.assertEqual(self.publish(targeted=targeted)["upserts"], 1)
+                self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
+
+    def test_busy_streaming_writer_prevents_vector_mutation(self) -> None:
+        self.db.streaming_publication_leases.insert_one({
+            "_id": "movie:42", "token": "other", "expires_at": datetime.utcnow() + timedelta(minutes=15),
+        })
+        with self.assertRaisesRegex(RuntimeError, "publication busy"):
+            self.publish(targeted=False)
+        self.qc.client.upsert.assert_not_called()
+
+    def test_lost_lease_during_write_prevents_success_and_preserves_new_owner(self) -> None:
+        def replace_owner(**kwargs: Any) -> SimpleNamespace:
+            self.db.streaming_publication_leases.update_one(
+                {"_id": "movie:42"}, {"$set": {"token": "replacement"}},
+            )
+            return SimpleNamespace(status="completed")
+        self.qc.client.upsert.side_effect = replace_owner
+        with self.assertRaisesRegex(RuntimeError, "lease lost"):
+            self.publish()
+        self.assertEqual(self.db.streaming_publication_leases.find_one({"_id": "movie:42"})["token"], "replacement")
+
+
+class AcknowledgmentTests(unittest.TestCase):
+    def test_partial_publication_acknowledges_claim_but_retains_new_impressions(self) -> None:
+        from test_priority_queue import MemoryCrate, queue
+        db = MemoryCrate()
+        db.disconnect = MagicMock()
+        lease = queue.claim(db, "show", 42)
+        db.impression()
+        tree = ast.parse((ROOT / "priority" / "reset.py").read_text())
+        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+        namespace = {"CrateConnector": lambda: db, "acknowledge": queue.acknowledge}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), "reset.py", "exec"), namespace)
+        publication = {"show": {"streaming": {"publication": {"status": "partial_success", "titles": {"42": {"deferred_countries": ["DE"]}}}}}}
+        result = namespace["main"]([lease], publication)
+        self.assertEqual(result["acknowledged"], 1)
+        self.assertEqual(result["status"], "partial_success")
+        self.assertEqual(result["publication"], publication)
+        self.assertEqual(db.row["demand"] - db.row["acknowledged_demand"], 1)
+        self.assertIsNone(db.row["lease_token"])
+        db.disconnect.assert_called_once()
+
+    def test_flow_acknowledges_only_after_required_publication_and_preserves_summary(self) -> None:
+        import yaml
+        flow = yaml.safe_load((ROOT / "priority" / "crawl_all.flow" / "flow.yaml").read_text())
+        modules = flow["value"]["modules"]
+        publish = next(index for index, module in enumerate(modules) if module["value"].get("path") == "f/priority/publish")
+        reset = next(index for index, module in enumerate(modules) if module["value"].get("path") == "f/priority/reset")
+        self.assertLess(publish, reset)
+        self.assertFalse(modules[publish]["continue_on_error"])
+        self.assertEqual(modules[reset]["value"]["input_transforms"]["publication_result"]["expr"], "results.o")
 
 
 if __name__ == "__main__":

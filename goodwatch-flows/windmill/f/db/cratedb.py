@@ -27,20 +27,20 @@ class CrateConnector:
             print("Successfully connected to CrateDB.", flush=True)
         except Exception as e:
             print(f"Failed to connect to CrateDB: {e}", flush=True)
-            self.con = None
-            self.cur = None
             raise
 
-    def run(self, sql: str, params: tuple = None):
+    def run(self, sql: str, params: tuple | None = None):
         if not self.cur:
             print("Cannot execute SQL, no active cursor.")
             return
         print(f"Executing SQL: {sql}", flush=True)
         self.cur.execute(sql, params or ())
 
-    def select(self, sql: str, params: tuple = None) -> list[dict]:
+    def select(self, sql: str, params: tuple | None = None) -> list[dict]:
         self.run(sql, params)
         results = self.cur.fetchall()
+        if self.cur.description is None:
+            raise RuntimeError("Crate SELECT returned no columns")
         columns = [column[0] for column in self.cur.description]
         return [
             {column: result[index] for index, column in enumerate(columns)}
@@ -56,6 +56,7 @@ class CrateConnector:
         *,
         auto_timestamps: bool = True,  # fill missing created_at/updated_at with now
         override_timestamps: bool = False,  # if True, overwrite any provided ts with now
+        replace_nulls: bool = False,  # verified snapshots can clear obsolete fields
     ) -> dict[str, int]:
         """
         Batch upsert Pydantic models into CrateDB.
@@ -148,7 +149,8 @@ class CrateConnector:
 
         if update_cols:
             updates = "UPDATE SET " + ", ".join(
-                f'"{c}" = COALESCE(excluded."{c}", "{c}")' for c in update_cols
+                (f'"{c}" = excluded."{c}"' if replace_nulls else
+                 f'"{c}" = COALESCE(excluded."{c}", "{c}")') for c in update_cols
             )
         else:
             updates = "NOTHING"

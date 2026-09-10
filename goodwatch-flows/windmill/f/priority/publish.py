@@ -41,7 +41,7 @@ def main(next_ids: dict):
     qdrant = None
     try:
         connector = CrateConnector()
-        qdrant = QdrantConnector()
+        qdrant = QdrantConnector(timeout=180)
         results = {}
         for media_type, ids in targets.items():
             if not ids:

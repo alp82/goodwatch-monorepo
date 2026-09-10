@@ -3,6 +3,7 @@
 annotated-types==0.8.0
 anyio==4.15.1
 certifi==2026.7.22
+crate==2.2.1
 dnspython==2.8.0
 grpcio==1.83.1
 h11==0.16.0
@@ -14,6 +15,7 @@ hyperframe==6.1.0
 idna==3.19
 mongoengine==0.29.3
 numpy==2.5.3
+orjson==3.12.0
 portalocker==3.2.0
 protobuf==7.36.1
 pydantic==2.13.5
@@ -23,4 +25,5 @@ qdrant-client==1.15.1
 typing-extensions==4.16.0
 typing-inspection==0.4.4
 urllib3==2.7.0
+verlib2==26.2
 wmill==1.808.0

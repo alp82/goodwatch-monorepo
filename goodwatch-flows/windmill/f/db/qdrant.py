@@ -41,7 +41,7 @@ GRPC_OPTS: dict[str, object] = {
 
 
 class QdrantConnector:
-    def __init__(self):
+    def __init__(self, *, timeout: int | None = None) -> None:
         host = wmill.get_variable("u/Alp/QDRANT_HOST")
         port = wmill.get_variable("u/Alp/QDRANT_PORT")
         api_key = wmill.get_variable("u/Alp/QDRANT_API_KEY")
@@ -53,7 +53,7 @@ class QdrantConnector:
             api_key=api_key,
             prefer_grpc=use_grpc,
             https=False,
-            timeout=None,
+            timeout=timeout,
             grpc_options=GRPC_OPTS,
         )
         print("Connected to Qdrant")

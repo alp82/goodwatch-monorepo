@@ -26,7 +26,6 @@ from f.sync.models.crate_models import (
     Person,
     PersonAppearedIn,
     PersonWorkedOn,
-    StreamingAvailability,
 )
 from f.sync.models.crate_schemas import SCHEMAS
 
@@ -65,13 +64,6 @@ def to_timestamp(dt_input: str) -> Optional[float]:
 
         raise Exception(f"cannot convert datetime to timestamp: {dt_input}")
         
-
-
-def fetch_all_documents_in_batch(tmdb_ids, collection):
-    results = defaultdict(list)
-    for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}}):
-        results[doc["tmdb_id"]].append(doc)
-    return dict(results)
 
 
 def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel]):
@@ -113,12 +105,6 @@ def copy_media(
     total_entry_count = mongo_collection.count_documents(query_selector | updated_at_filter)
     print(f"Total {media_type} entries: {total_entry_count}")
 
-    streaming_services = connector.select("SELECT tmdb_id, name FROM streaming_service")
-    streaming_service_id_by_name = {
-        streaming_service["name"]: streaming_service["tmdb_id"]
-        for streaming_service in streaming_services
-    }
-
     start = 0
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     entity_ids = defaultdict(set)
@@ -147,12 +133,6 @@ def copy_media(
 
         # Insert batch of media
         print(f"\nBatch from {start} to {start + len(tmdb_details_batch)} {media_type}s")
-
-        tmdb_ids = [doc["tmdb_id"] for doc in tmdb_details_batch]
-        tmdb_all_providers = fetch_all_documents_in_batch(
-            tmdb_ids, 
-            mongo_db.tmdb_movie_providers if is_movie else mongo_db.tmdb_tv_providers
-        )
 
         media_ids = []
         for index, tmdb_details in enumerate(tmdb_details_batch):
@@ -531,68 +511,9 @@ def copy_media(
                             episode_count_total=crew_member.get("total_episode_count"),
                         ))
 
-            # Process streaming availability
-            streaming_availabilities_to_add = {}
-            watch_provider_results = tmdb_details.get("watch_providers", {}).get("results", {})
-            if watch_provider_results:
-                for country_code, streaming_data in watch_provider_results.items():
-                    link = streaming_data.pop("link")
-                    if link:
-                        for streaming_type, streaming_list in streaming_data.items():
-                            for streaming in streaming_list:
-                                streaming_service_id = streaming.get("provider_id")
-                                streaming_service_key = str(streaming_service_id)
-                                streaming_key = f"{media_id}_{country_code}_{streaming_type}_{streaming_service_key}"
-                                streaming_availabilities_to_add[streaming_key] = StreamingAvailability(
-                                    media_tmdb_id=media_id,
-                                    media_type=media_type,
-                                    country_code=country_code,
-                                    streaming_type=streaming_type,
-                                    streaming_service_id=streaming_service_id,
-                                    display_priority=streaming.get("display_priority"),
-                                    tmdb_link=link,
-                                )
-        
-            tmdb_streaming_providers = tmdb_all_providers.get(tmdb_id, [])
-            for tmdb_streaming_provider in tmdb_streaming_providers:
-                country_code = tmdb_streaming_provider.get("country_code")
-                for streaming_link in tmdb_streaming_provider.get("streaming_links", []):
-                    streaming_service_id = streaming_service_id_by_name.get(streaming_link["provider_name"])
-                    if streaming_service_id:
-                        streaming_type = streaming_link["stream_type"]
-                        streaming_key = f"{media_id}_{country_code}_{streaming_type}_{streaming_service_id}"
-                        if streaming_key not in streaming_availabilities_to_add.keys():
-                            streaming_availabilities_to_add[streaming_key] = StreamingAvailability(
-                                media_tmdb_id=media_id,
-                                media_type=media_type,
-                                country_code=country_code,
-                                streaming_type=streaming_type,
-                                streaming_service_id=streaming_service_id,
-                                stream_url=streaming_link.get("stream_url"),
-                                price_dollar=streaming_link.get("price_dollar"),
-                                quality=streaming_link.get("quality"),
-                            )
-                        else:
-                            streaming_availabilities_to_add[streaming_key].stream_url = streaming_link.get("stream_url")
-                            streaming_availabilities_to_add[streaming_key].price_dollar = streaming_link.get("price_dollar")
-                            streaming_availabilities_to_add[streaming_key].quality = streaming_link.get("quality")
-
-            streaming_availability_countries = []
-            streaming_availability_services = []
-            streaming_availability_combos = []
-            for streaming_key, streaming_availability in streaming_availabilities_to_add.items():
-                entity_batches['streaming_availability'].append(streaming_availability)
-                if streaming_availability.country_code not in streaming_availability_countries:
-                    streaming_availability_countries.append(streaming_availability.country_code)
-                if streaming_availability.streaming_service_id not in streaming_availability_services:
-                    streaming_availability_services.append(streaming_availability.streaming_service_id)
-                combo = f"{streaming_availability.country_code}_{streaming_availability.streaming_service_id}"
-                if combo not in streaming_availability_combos:
-                    streaming_availability_combos.append(combo)
-            media.streaming_country_codes = streaming_availability_countries
-            media.streaming_service_ids = streaming_availability_services
-            media.streaming_availabilities = streaming_availability_combos
-            
+            # Streaming children and aggregates belong exclusively to the shared
+            # tmdb_streaming reconciler. Unset model fields remain NULL and normal
+            # upserts preserve their previously published values.
             media_documents.append(media)
             
 
