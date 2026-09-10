@@ -7,9 +7,12 @@ from contextlib import ExitStack, nullcontext
 from datetime import datetime, timedelta
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 from typing import Any, Dict, List, Optional, Tuple
 
+
+sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
+from f.sync.copy.qdrant_retry import REQUEST_TIMEOUT_SECONDS, upsert_with_retry
 
 ROOT = Path(__file__).parents[1] / "windmill" / "f"
 SYNC_NAMES = ("tmdb_details", "all_ratings", "tmdb_streaming", "tvtropes", "dna_data")
@@ -21,6 +24,9 @@ def load_publisher():
         "f.sync.copy.vector_data",
     )}
     modules["f.db.qdrant"].QdrantConnector = MagicMock()
+    retry_module = ModuleType("f.sync.copy.qdrant_retry")
+    retry_module.REQUEST_TIMEOUT_SECONDS = REQUEST_TIMEOUT_SECONDS
+    modules["f.sync.copy.qdrant_retry"] = retry_module
     modules["f.sync.copy.vector_data"].copy_to_qdrant = MagicMock(return_value={"upserts": 1})
     crate = modules["f.db.cratedb"]
     crate.CrateConnector = MagicMock()
@@ -76,7 +82,7 @@ class PublishTests(unittest.TestCase):
             module.QdrantConnector.return_value, "movie", {"tmdb_id": {"$in": [42]}},
             recent_only=False, strict_writes=True,
         )
-        module.QdrantConnector.assert_called_once_with(timeout=180)
+        module.QdrantConnector.assert_called_once_with(timeout=REQUEST_TIMEOUT_SECONDS)
         module.QdrantConnector.return_value.close.assert_called_once()
 
     def test_tv_ids_map_to_show(self):
@@ -100,7 +106,7 @@ class PublishTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "vector write failed"):
             module.main({"movie_ids": [42]})
         crate.CrateConnector.return_value.disconnect.assert_called_once()
-        module.QdrantConnector.assert_called_once_with(timeout=180)
+        module.QdrantConnector.assert_called_once_with(timeout=REQUEST_TIMEOUT_SECONDS)
         module.QdrantConnector.return_value.close.assert_called_once()
         mongo.close_mongodb.assert_called_once()
 
@@ -226,7 +232,8 @@ class VectorPublicationTests(unittest.TestCase):
                 fetch_ids = MagicMock(side_effect=[([42], 42), ([], 42)])
                 namespace = {
                     "QdrantConnector": object, "CrateConnector": lambda: crate, "get_db": lambda: db,
-                    "ExitStack": ExitStack, "publication_lease": lambda *args: nullcontext(lambda: None),
+                    "ExitStack": ExitStack,
+                    "upsert_with_retry": lambda *args, **kwargs: upsert_with_retry(*args, **kwargs, sleep=lambda seconds: None), "publication_lease": lambda *args: nullcontext(lambda: None),
                     "TmdbMovieDetails": MagicMock(), "TmdbTvDetails": MagicMock(),
                     "datetime": datetime, "timedelta": timedelta, "HOURS_TO_FETCH": 48,
                     "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
@@ -246,7 +253,7 @@ class VectorPublicationTests(unittest.TestCase):
                     self.assertEqual(result["upserts"], 1)
                     self.assertEqual(qc.client.upsert.call_args.kwargs["points"][0]["payload"]["streaming_availability"], ["8_DE", "9_US"])
                 else:
-                    with self.assertRaisesRegex(RuntimeError, "did not complete"):
+                    with self.assertRaisesRegex(RuntimeError, "incomplete status"):
                         namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
                 if status == "scheduled":
                     crate.select.assert_called_once_with(
@@ -276,6 +283,7 @@ class VectorSerializationTests(unittest.TestCase):
             "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
             "Optional": Optional, "List": List, "Tuple": Tuple, "Dict": Dict, "Any": Any,
             "ExitStack": ExitStack,
+                    "upsert_with_retry": lambda *args, **kwargs: upsert_with_retry(*args, **kwargs, sleep=lambda seconds: None),
             "publication_lease": load_copy(self.db).__globals__["publication_lease"],
             "_fetch_tmdb_ids_keyset": MagicMock(side_effect=[([42], 42), ([], 42)]),
             "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
@@ -292,6 +300,24 @@ class VectorSerializationTests(unittest.TestCase):
             self.qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False,
             strict_writes=targeted,
         )
+
+    def test_transient_vector_retry_reuses_transforms_and_retains_lease(self) -> None:
+        from test_qdrant_publication_retry import RpcFailure
+        import grpc
+        self.namespace["_build_payload"] = Mock(return_value=(
+            {"tmdb_id": 42}, {"essence_text_v1": [0.1], "fingerprint_v1": [0.2]},
+        ))
+        self.qc.client.upsert.side_effect = [
+            RpcFailure(grpc.StatusCode.UNAVAILABLE), SimpleNamespace(status="completed"),
+        ]
+        result = self.publish()
+        self.assertEqual(result["upserts"], 1)
+        self.assertEqual(result["publication"]["attempts"], 2)
+        self.assertEqual(result["publication"]["retries"], 1)
+        self.namespace["_build_payload"].assert_called_once()
+        calls = self.qc.client.upsert.call_args_list
+        self.assertIs(calls[0].kwargs["points"], calls[1].kwargs["points"])
+        self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
 
     def test_targeted_vector_uses_latest_published_snapshot_after_other_writer(self) -> None:
         self.publish()
