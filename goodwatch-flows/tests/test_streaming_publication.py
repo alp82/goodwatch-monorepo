@@ -90,6 +90,52 @@ class StreamingPublicationTests(unittest.TestCase):
     def publish(self, crate: Crate) -> dict:
         return self.copy(crate, {"tmdb_id": {"$in": [42]}}, "show", recent_only=False)
 
+    def test_details_then_pending_streaming_preserves_published_child_aggregate_and_vector(self) -> None:
+        import sys
+        from unittest.mock import patch
+        sys.path.insert(0, str(ROOT.parent))
+        from f.sync.copy import tmdb_details, tmdb_streaming
+        from test_priority_publish import VectorSerializationTests
+
+        class PublishedCrate(Crate):
+            def disconnect(self) -> None:
+                pass
+
+            def upsert_many(self, table: str, records: list[BaseModel], **kwargs: Any) -> dict[str, int]:
+                if table not in ("movie", "show"):
+                    return super().upsert_many(table, records, **kwargs)
+                for record in records:
+                    values = {key: value for key, value in record.model_dump().items() if value is not None}
+                    self.media.setdefault(values["tmdb_id"], {}).update(values)
+                return {"records_received": len(records), "rows_upserted": len(records)}
+
+            def select(self, sql: str, params: tuple | None = None) -> list[dict]:
+                if "FROM movie WHERE" in sql:
+                    return list(self.media.values())
+                return super().select(sql, params)
+
+        self.db.tmdb_movie_details.insert_one({
+            "tmdb_id": 42, "title": "Example", "updated_at": self.now,
+            "watch_providers": {"results": {}},
+        })
+        self.db.tmdb_movie_providers.insert_one({"tmdb_id": 42, "country_code": "US"})
+        child = availability(media_type="movie")
+        crate = PublishedCrate([child])
+        crate.media[42] = {"tmdb_id": 42, "streaming_country_codes": ["US"],
+                           "streaming_service_ids": [8], "streaming_availabilities": ["US_8"]}
+        with patch.object(tmdb_details, "get_db", return_value=self.db), patch.object(tmdb_streaming, "get_db", return_value=self.db):
+            tmdb_details.copy_media(crate, {"tmdb_id": {"$in": [42]}}, "movie", recent_only=False)
+            tmdb_streaming.copy_media(crate, {"tmdb_id": {"$in": [42]}}, "movie", recent_only=False)
+        vector = VectorSerializationTests()
+        vector.setUp()
+        vector.db = self.db
+        vector.crate = crate
+        vector.publish()
+        self.assertEqual(crate.rows, [child])
+        self.assertEqual(crate.media[42]["streaming_availabilities"], ["US_8"])
+        point = vector.qc.client.upsert.call_args.kwargs["points"][0]
+        self.assertEqual(point["payload"]["streaming_availability"], ["8_US"])
+
     def test_all_pending_retains_existing_availability_without_freshness(self) -> None:
         self.db.tmdb_tv_providers.insert_one({"tmdb_id": 42, "country_code": "US", "created_at": self.now})
         crate = Crate([availability()])
@@ -188,6 +234,46 @@ class StreamingPublicationTests(unittest.TestCase):
         result = self.publish(crate)
         self.assertEqual(crate.rows, [availability()])
         self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], ["US"])
+
+    def test_scheduled_catchup_publishes_api_updates_without_recent_scrapes(self) -> None:
+        self.db.tmdb_tv_details.update_one({"tmdb_id": 42}, {"$set": {
+            "updated_at": datetime.utcnow(), "watch_providers": {"results": {
+                "US": {"link": "https://tmdb", "flatrate": [{"provider_id": 9, "display_priority": 1}]},
+            }},
+        }})
+        self.db.tmdb_tv_providers.insert_one({"tmdb_id": 42, "country_code": "DE"})
+        crate = Crate([availability("DE")])
+        self.copy(crate, {}, "show")
+        self.assertEqual(crate.media[42]["streaming_availabilities"], ["DE_8", "US_9"])
+
+    def test_scheduled_pages_merge_overlapping_sources_without_skips_or_duplicates(self) -> None:
+        self.copy.__globals__["BATCH_SIZE"] = 2
+        for tmdb_id in (1, 3, 5):
+            self.db.tmdb_tv_details.insert_one({
+                "tmdb_id": tmdb_id, "updated_at": datetime.utcnow(), "watch_providers": {"results": {
+                    "US": {"link": "https://tmdb", "flatrate": [{"provider_id": 9, "display_priority": 1}]},
+                }},
+            })
+        for tmdb_id in (2, 3, 4):
+            self.db.tmdb_tv_providers.insert_one({
+                "tmdb_id": tmdb_id, "country_code": "US", "updated_at": datetime.utcnow(), "streaming_links": [],
+            })
+        crate = Crate()
+        result = self.copy(crate, {}, "show")
+        self.assertEqual(sorted(crate.media), [1, 2, 3, 4, 5])
+        self.assertEqual(result["shows"]["records_received"], 5)
+        self.assertEqual(crate.media[5]["streaming_availabilities"], ["US_9"])
+
+    def test_provider_object_id_selector_does_not_expand_to_unrelated_details(self) -> None:
+        provider_id = self.db.tmdb_tv_providers.insert_one({
+            "tmdb_id": 42, "country_code": "US", "updated_at": datetime.utcnow(), "streaming_links": [],
+        }).inserted_id
+        self.db.tmdb_tv_details.insert_one({
+            "tmdb_id": 17, "updated_at": datetime.utcnow(), "watch_providers": {"results": {"US": {}}},
+        })
+        crate = Crate([availability()])
+        self.copy(crate, {"_id": {"$in": [provider_id]}}, "show")
+        self.assertEqual(sorted(crate.media), [42])
 
     def test_scheduled_catchup_uses_same_country_retention(self) -> None:
         self.db.tmdb_tv_providers.insert_many([

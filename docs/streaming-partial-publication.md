@@ -5,6 +5,10 @@ can finish publication with countries still pending, because those country recor
 retain the independent retry state described in [country retries](streaming-country-retries.md).
 The title priority cooldown does not change country eligibility.
 
+The shared streaming copier is the sole writer of streaming fields and child
+availability; the details copier leaves them untouched. Scheduled streaming
+catch-up includes titles with recent details or country-source changes.
+
 Publication reconciles each country against its existing availability. TMDB API
 results own the TMDB link and display priority; the web scrape owns the stream URL,
 price, and quality. A confirmed result replaces only its source contribution. An

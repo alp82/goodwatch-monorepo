@@ -210,14 +210,26 @@ def copy_media(
     publication = {"status": "success", "titles": {}}
     targeted_ids = query_selector.get("tmdb_id", {}).get("$in") if not recent_only else None
     start = 0
+    last_tmdb_id: int | None = None
     while True:
         if targeted_ids is not None:
             tmdb_ids = targeted_ids[start:start + BATCH_SIZE]
         else:
-            pipeline = [{"$match": query_selector | updated_at_filter},
-                        {"$group": {"_id": "$tmdb_id"}}, {"$sort": {"_id": 1}},
-                        {"$skip": start}, {"$limit": BATCH_SIZE}]
-            tmdb_ids = [row["_id"] for row in mongo_providers.aggregate(pipeline)]
+            # Either source can change independently. Merge bounded keyset pages
+            # so API-only updates reach the same reconciler without a second writer.
+            pipeline = [{"$match": query_selector | updated_at_filter}]
+            if last_tmdb_id is not None:
+                pipeline.append({"$match": {"tmdb_id": {"$gt": last_tmdb_id}}})
+            pipeline += [{"$group": {"_id": "$tmdb_id"}}, {"$sort": {"_id": 1}},
+                         {"$limit": BATCH_SIZE}]
+            candidates = {row["_id"] for row in mongo_providers.aggregate(pipeline)}
+            # ObjectId selectors refer to provider documents in this entrypoint.
+            # Preserve that legacy interface instead of applying them to details.
+            if "_id" not in query_selector:
+                candidates.update(row["_id"] for row in mongo_details.aggregate(pipeline))
+            tmdb_ids = sorted(candidates)[:BATCH_SIZE]
+            if tmdb_ids:
+                last_tmdb_id = tmdb_ids[-1]
         if not tmdb_ids:
             break
         for tmdb_id in tmdb_ids:
