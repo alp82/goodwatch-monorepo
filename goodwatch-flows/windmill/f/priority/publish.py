@@ -6,6 +6,7 @@
 from f.db.cratedb import CrateConnector
 from f.db.mongodb import close_mongodb, init_mongodb
 from f.db.qdrant import QdrantConnector
+from f.sync.copy.qdrant_retry import REQUEST_TIMEOUT_SECONDS
 from f.sync.copy.dna_data import copy_media as copy_dna
 from f.sync.copy.vector_data import copy_to_qdrant
 from f.sync.copy.all_ratings import copy_media as copy_ratings
@@ -41,7 +42,7 @@ def main(next_ids: dict):
     qdrant = None
     try:
         connector = CrateConnector()
-        qdrant = QdrantConnector(timeout=180)
+        qdrant = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
         results = {}
         for media_type, ids in targets.items():
             if not ids:

@@ -16,6 +16,9 @@ from f.db.mongodb import (
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
 from f.sync.copy.tmdb_streaming import publication_lease
+from f.sync.copy.qdrant_retry import (
+    REQUEST_TIMEOUT_SECONDS, upsert_with_retry,
+)
 from f.sync.models.qdrant_schemas import MEDIA_COLLECTION
 from f.sync.models.qdrant_models import QdrantMediaPoint
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
@@ -388,8 +391,8 @@ def copy_to_qdrant(
     """
     Combined copy into Qdrant.
     - only upserts points **with vectors** (to create/refresh fully).
-    - qc must use a transport timeout of at most 180 seconds so writes finish
-      within the publication lease safety margin.
+    - qc must use REQUEST_TIMEOUT_SECONDS as its transport timeout. Each retained
+      write batch has a bounded retry budget within the publication lease margin.
     """
     is_movie = media_type == "movie"
     db = get_db()
@@ -415,6 +418,9 @@ def copy_to_qdrant(
 
     total_upserts = 0
     total_payload_updates = 0
+    publication_stats: dict = {
+        "batches": 0, "attempts": 0, "retries": 0, "errors": {},
+    }
 
     last_tmdb_id: Optional[int] = None
     processed = 0
@@ -502,21 +508,25 @@ def copy_to_qdrant(
                     ))
                 if not points:
                     continue
-                for check_owned in checks:
-                    check_owned()
-                # Bound each synchronous request within the lease's four-minute
-                # safety margin. Bulk uploader retries can outlive ownership.
-                result = qc.client.upsert(
-                    collection_name=MEDIA_COLLECTION, points=points,
-                    wait=True,
+                def check_publication_owned() -> None:
+                    for check_owned in checks:
+                        check_owned()
+
+                result = upsert_with_retry(
+                    qc.client, MEDIA_COLLECTION, points, check_publication_owned,
                 )
-                for check_owned in checks:
-                    check_owned()
-                if result.status != qm.UpdateStatus.COMPLETED:
-                    raise RuntimeError(f"Qdrant publication did not complete: {result.status}")
+                publication_stats["batches"] += 1
+                for field in ("attempts", "retries"):
+                    publication_stats[field] += result[field]
+                for classification, count in result["errors"].items():
+                    error_counts = publication_stats["errors"]
+                    error_counts[classification] = (
+                        error_counts.get(classification, 0) + count
+                    )
                 total_upserts += len(points)
 
-    return {"upserts": total_upserts, "payload_updates": total_payload_updates}
+    return {"upserts": total_upserts, "payload_updates": total_payload_updates,
+            "publication": publication_stats}
 
 
 # ---- Entrypoint for Windmill ----------------------------------------------
@@ -534,7 +544,7 @@ def main(
     show_ids = show_ids or []
 
     init_mongodb()
-    qc = QdrantConnector(timeout=180)
+    qc = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
 
     # disable index building entirely
     # vectors will be stored, but not indexed until enabled after the copy process

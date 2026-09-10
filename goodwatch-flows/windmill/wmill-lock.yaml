@@ -82,7 +82,7 @@ locks:
     skip_dna.inline_script.py: 18043160ad5c0503856dca6a540566c5f77fd77c58f88e90f003cba09d10f6f5
   f/priority/init: 5546d4dd824c5e52d2df73cf6ca8f79813450b10873486d885475b0d528c7e87
   f/priority/next: 006661dd956e7e159b1738e0bea13fbe33c61dbba237911b6815fb1e3c718af6
-  f/priority/publish: e12090e235aadedb63d520d8904c8b36e9ae40d70fbd1b892592a835e83aefdb
+  f/priority/publish: f701baaeae9ff66444fdf0f7bec9804d180c02f0196b1ebb456247fb92c1024a
   f/priority/queue: aec3e00c51eaee8f7a78278a09fe932a902dc2d3ff94f7ca0d13c9e3df5dee65
   f/priority/reset: 360562732de31e0ec28d089aeebbfd0e9c010c8c62e95a80d8a53378847cf817
   f/recommendations/movie_batch_embeddings.flow:
@@ -106,11 +106,12 @@ locks:
   f/stress/load_testing: 9c3d76afd2c0b13f369998da1324cdab8fa15b2b1e7a10697143e941e369589e
   f/sync/copy/all_ratings: d208051382678c5d96f48d3238d454e808da3bee83afdb930971355d322f4943
   f/sync/copy/dna_data: 4ee1f6629a18cd2ec9b38dec222224578b921aa77562c556230ad02548bf01e2
+  f/sync/copy/qdrant_retry: f4d9eb76cfe0872d068f0a0a3040315ae1c9b0a07b0fae506433052d8add6b13
   f/sync/copy/tmdb_daily: 7814f6ee77bc2e1d9aca4ad0ad7c5eb7ad13793359186a3069884c5335107aa7
   f/sync/copy/tmdb_details: 70e0a525de5a1e5bfaae8fc728bc8fdb2cbde37ad571dd3e6e93d329ec7f89e5
   f/sync/copy/tmdb_streaming: 57d9c4343d084d8ccb87314ebddc796333eb4271db01614361a49cb7de25605f
   f/sync/copy/tvtropes: 6918d36b4f895e7cd30d8cab9b051821c01b099f4a453b19403a5c7caa475201
-  f/sync/copy/vector_data: 2fff8bb6c6e8ba8db0a5496fb43eccf6b07fd245b55a30647063f91ef2516050
+  f/sync/copy/vector_data: 8d5bb4b8bbd561b0c7debf90d17e368a1cf5920707aefbf93107767836a64d29
   f/sync/init/cratedb: aabd1d0a9793c172a5d2b6f0acfd9a5662038437c4db8085229be21a30c8b59d
   f/sync/init/milvus: 5df8f35e0f5a1cd76913276651f81b69c068459960c1db48afa82d4f73dcbe56
   f/sync/init/qdrant: 9ef9848baf4354fd647038385655b9b6b85f72a85cf247212e606361bf468c4b
