@@ -61,7 +61,7 @@ bounded samples, not a claim that every legacy record has a valid identity.
 
 The focused regression suite requires the existing flow dependencies plus
 `mongomock>=4.3`. Run `python -m unittest discover -s goodwatch-flows/tests -v`.
-The complete suite passes 74 tests, with five optional Crate integration checks
+The complete suite passes 75 tests, with five optional Crate integration checks
 skipped when no disposable Crate test instance is configured. The changed
 Python scripts pass Pyright without errors against the production dependency
 pins. Windmill locks retain Python 3.11 and existing package versions; `bson`
@@ -71,3 +71,8 @@ Scheduled initialization uses batches of 500 titles: one indexed provider lookup
 per batch and unordered bulk writes with fenced updates. A real-Mongo disposable
 batch probe verified a changed title slug reuses the existing country, preserves
 its successful links, inserts one new country, and inserts nothing on repetition.
+
+Invalid country identities retain their source data and record a
+`country_identity_error` that excludes them from scheduling. After an operator
+repairs the identity, successful backfill normalization clears that exclusion.
+This prevents invalid records from occupying every batch indefinitely.

@@ -10,9 +10,16 @@ from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 from f.tmdb_web.country_state import ensure_indexes, initialize_countries
 
 
-def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]]) -> dict:
+def initialize_documents(
+    next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]],
+) -> dict:
     db = get_db()
-    result = {"movie_ids": [], "tv_ids": [], "count_new_movies": 0, "count_new_tv": 0}
+    result = {
+        "movie_ids": [],
+        "tv_ids": [],
+        "count_new_movies": 0,
+        "count_new_tv": 0,
+    }
     initialized = set()
     for entry in next_entries:
         if isinstance(entry, TmdbMovieDetails):
@@ -26,12 +33,20 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
             ensure_indexes(collection)
             initialized.add(media_type)
         data = entry.to_mongo().to_dict()
-        countries = initialize_countries(collection, data["tmdb_id"],
-            (data.get("watch_providers") or {}).get("results") or {}, media_type,
-            original_title=data.get("original_title"), popularity=data.get("popularity"))
+        countries = initialize_countries(
+            collection,
+            data["tmdb_id"],
+            (data.get("watch_providers") or {}).get("results") or {},
+            media_type,
+            original_title=data.get("original_title"),
+            popularity=data.get("popularity"),
+        )
         result[count_key] += countries["count_new_documents"]
-        result[f"{media_type}_ids"].extend(identity for identity in countries["ids"]
-            if identity not in result[f"{media_type}_ids"])
+        result[f"{media_type}_ids"].extend(
+            identity
+            for identity in countries["ids"]
+            if identity not in result[f"{media_type}_ids"]
+        )
     return result
 
 
@@ -40,10 +55,17 @@ def main(next_ids: dict) -> dict:
     try:
         # The shared legacy helper annotates model classes as Document instances.
         entries = get_documents_for_ids(
-            next_ids=next_ids, movie_model=cast(Any, TmdbMovieDetails), tv_model=cast(Any, TmdbTvDetails),
+            next_ids=next_ids,
+            movie_model=cast(Any, TmdbMovieDetails),
+            tv_model=cast(Any, TmdbTvDetails),
         )
-        if any(not isinstance(entry, (TmdbMovieDetails, TmdbTvDetails)) for entry in entries):
+        if any(
+            not isinstance(entry, (TmdbMovieDetails, TmdbTvDetails))
+            for entry in entries
+        ):
             raise ValueError("Expected movie/tv details documents")
-        return initialize_documents(cast(list[Union[TmdbMovieDetails, TmdbTvDetails]], entries))
+        return initialize_documents(
+            cast(list[Union[TmdbMovieDetails, TmdbTvDetails]], entries)
+        )
     finally:
         close_mongodb()

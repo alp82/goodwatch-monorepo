@@ -8,10 +8,20 @@ import requests
 
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_web import country_state
-from f.tmdb_web.models import TmdbStreamingCrawlResult, StreamingLink, StreamType
+from f.tmdb_web.models import (
+    TmdbStreamingCrawlResult,
+    StreamingLink,
+    StreamType,
+)
 
 HTTP_TIMEOUT_SECONDS = 15
-StreamHeaderToType: dict[str, StreamType] = {"Stream": "flatrate", "Free": "free", "Ads": "ads", "Rent": "rent", "Buy": "buy"}
+StreamHeaderToType: dict[str, StreamType] = {
+    "Stream": "flatrate",
+    "Free": "free",
+    "Ads": "ads",
+    "Rent": "rent",
+    "Buy": "buy",
+}
 
 
 def retry_deadline(value: str | None) -> datetime | None:
@@ -21,7 +31,11 @@ def retry_deadline(value: str | None) -> datetime | None:
         return datetime.utcnow() + timedelta(seconds=max(0, int(value)))
     except ValueError:
         try:
-            return parsedate_to_datetime(value).astimezone(timezone.utc).replace(tzinfo=None)
+            return (
+                parsedate_to_datetime(value)
+                .astimezone(timezone.utc)
+                .replace(tzinfo=None)
+            )
         except (ValueError, TypeError, OverflowError):
             return None
 
@@ -29,24 +43,39 @@ def retry_deadline(value: str | None) -> datetime | None:
 def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
     url = next_entry["tmdb_watch_url"]
     country_code = next_entry["country_code"]
-    response = requests.get(url, headers={
-        "Accept-Language": "en-US", "User-Agent": "Mozilla/5.0",
-    }, timeout=HTTP_TIMEOUT_SECONDS)
+    response = requests.get(
+        url,
+        headers={
+            "Accept-Language": "en-US",
+            "User-Agent": "Mozilla/5.0",
+        },
+        timeout=HTTP_TIMEOUT_SECONDS,
+    )
     soup = BeautifulSoup(response.text, "html.parser")
     title = soup.find("title")
-    limited = response.status_code in (403, 429) or (title is not None and "Request Error (403)" in title.get_text())
+    limited = response.status_code in (403, 429) or (
+        title is not None and "Request Error (403)" in title.get_text()
+    )
     if limited:
-        return TmdbStreamingCrawlResult(url=url, country_code=country_code,
-            streaming_links=None, rate_limit_reached=True,
-            retry_at=retry_deadline(response.headers.get("Retry-After")))
+        return TmdbStreamingCrawlResult(
+            url=url,
+            country_code=country_code,
+            streaming_links=None,
+            rate_limit_reached=True,
+            retry_at=retry_deadline(response.headers.get("Retry-After")),
+        )
     if response.status_code != 200:
-        raise requests.HTTPError(f"TMDB watch HTTP {response.status_code}", response=response)
+        raise requests.HTTPError(
+            f"TMDB watch HTTP {response.status_code}", response=response
+        )
     offers = soup.select_one("#ott_offers_window")
     if offers is None:
         raise ValueError("Unrecognized TMDB watch page")
     provider_blocks = offers.select(".ott_provider")
     if not provider_blocks and offers.select_one("p.no_offers") is None:
-        raise ValueError("Watch page has neither offers nor verified no-offers message")
+        raise ValueError(
+            "Watch page has neither offers nor verified no-offers message"
+        )
 
     streaming_links = []
     for provider_block in provider_blocks:
@@ -63,7 +92,9 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
                 raise ValueError("Offer is missing its link")
             stream_url = provider_link.get("href")
             stream_title = provider_link.get("title")
-            if not isinstance(stream_url, str) or not isinstance(stream_title, str):
+            if not isinstance(stream_url, str) or not isinstance(
+                stream_title, str
+            ):
                 raise ValueError("Offer link or provider title is invalid")
             provider_name = None
             if stream_title.endswith("Demand"):
@@ -115,7 +146,11 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
 
 def main(next_id: dict) -> dict:
     media_type = next_id.get("type")
-    if media_type not in ("movie", "tv") or not isinstance(next_id.get("id"), str) or not ObjectId.is_valid(next_id["id"]):
+    if (
+        media_type not in ("movie", "tv")
+        or not isinstance(next_id.get("id"), str)
+        or not ObjectId.is_valid(next_id["id"])
+    ):
         raise ValueError("Expected a movie/tv provider document ObjectId")
     init_mongodb()
     try:
@@ -125,39 +160,93 @@ def main(next_id: dict) -> dict:
         document = collection.find_one({"_id": identity})
         outcome = {"id": str(identity), "type": media_type}
         if document is None:
-            return {**outcome, "outcome": "failed", "error": "Provider document not found"}
-        outcome.update(tmdb_id=document["tmdb_id"], country_code=document.get("country_code"))
-        countries, errors = country_state.identity_map(list(collection.find({"tmdb_id": document["tmdb_id"]})), media_type)
+            return {
+                **outcome,
+                "outcome": "failed",
+                "error": "Provider document not found",
+            }
+        outcome.update(
+            tmdb_id=document["tmdb_id"],
+            country_code=document.get("country_code"),
+        )
+        countries, errors = country_state.identity_map(
+            list(collection.find({"tmdb_id": document["tmdb_id"]})), media_type
+        )
         if identity in errors:
+            country_state.record_identity_error(
+                collection, document, errors[identity]
+            )
             return {**outcome, "outcome": "failed", "error": errors[identity]}
-        country = country_state.country_from_url(document["tmdb_watch_url"], document["tmdb_id"], media_type)
+        country = country_state.country_from_url(
+            document["tmdb_watch_url"], document["tmdb_id"], media_type
+        )
         outcome["country_code"] = country
-        country_state.normalize_document(collection, document, country, datetime.utcnow())
+        country_state.normalize_document(collection, document, country)
         claimed = country_state.claim(db, collection, identity)
         if claimed is None:
             current = collection.find_one({"_id": identity})
             now = datetime.utcnow()
-            fresh = bool(current.get("updated_at") and current["updated_at"] > now - country_state.FRESHNESS
-                         and current.get("next_fetch_at") and current["next_fetch_at"] > now
-                         and not current.get("consecutive_failures"))
-            return {**outcome, "outcome": "fresh" if fresh else "deferred",
-                    "next_fetch_at": current.get("next_fetch_at"),
-                    "upstream_retry_at": country_state.upstream_deadline(db)}
+            fresh = bool(
+                current.get("updated_at")
+                and current["updated_at"] > now - country_state.FRESHNESS
+                and current.get("next_fetch_at")
+                and current["next_fetch_at"] > now
+                and not current.get("consecutive_failures")
+            )
+            return {
+                **outcome,
+                "outcome": "fresh" if fresh else "deferred",
+                "next_fetch_at": current.get("next_fetch_at"),
+                "upstream_retry_at": country_state.upstream_deadline(db),
+            }
         try:
             result = crawl_tmdb_watch_page(claimed)
         except Exception as error:
-            response = error.response if isinstance(error, requests.HTTPError) else None
-            retry_at = retry_deadline(response.headers.get("Retry-After")) if response is not None else None
-            saved = country_state.save_failure(db, collection, claimed, error, retry_at=retry_at)
-            return {**outcome, "outcome": "failed" if saved else "deferred", "error": str(error)}
+            response = (
+                error.response
+                if isinstance(error, requests.HTTPError)
+                else None
+            )
+            retry_at = (
+                retry_deadline(response.headers.get("Retry-After"))
+                if response is not None
+                else None
+            )
+            saved = country_state.save_failure(
+                db, collection, claimed, error, retry_at=retry_at
+            )
+            return {
+                **outcome,
+                "outcome": "failed" if saved else "deferred",
+                "error": str(error),
+            }
         if result.rate_limit_reached:
-            saved = country_state.save_failure(db, collection, claimed, "TMDB upstream rate limit",
-                rate_limited=True, retry_at=result.retry_at)
-            return {**outcome, "outcome": "failed" if saved else "deferred", "rate_limit_reached": True}
+            saved = country_state.save_failure(
+                db,
+                collection,
+                claimed,
+                "TMDB upstream rate limit",
+                rate_limited=True,
+                retry_at=result.retry_at,
+            )
+            return {
+                **outcome,
+                "outcome": "failed" if saved else "deferred",
+                "rate_limit_reached": True,
+            }
         if result.streaming_links is None:
-            raise ValueError("Successful crawl must supply verified streaming links")
-        saved = country_state.save_success(collection, claimed, [link.model_dump() for link in result.streaming_links])
-        return {**outcome, "outcome": "fetched" if saved else "deferred",
-                "providers": result.model_dump() if saved else None}
+            raise ValueError(
+                "Successful crawl must supply verified streaming links"
+            )
+        saved = country_state.save_success(
+            collection,
+            claimed,
+            [link.model_dump() for link in result.streaming_links],
+        )
+        return {
+            **outcome,
+            "outcome": "fetched" if saved else "deferred",
+            "providers": result.model_dump() if saved else None,
+        }
     finally:
         close_mongodb()

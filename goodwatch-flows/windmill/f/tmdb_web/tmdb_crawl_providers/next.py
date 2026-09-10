@@ -24,12 +24,24 @@ def main() -> dict:
             for selector, order in (
                 ({"next_fetch_at": {"$lte": now}}, "next_fetch_at"),
                 ({"next_fetch_at": None, "updated_at": None}, "updated_at"),
-                ({"next_fetch_at": None, "updated_at": {"$lte": now - FRESHNESS}}, "updated_at"),
+                (
+                    {
+                        "next_fetch_at": None,
+                        "updated_at": {"$lte": now - FRESHNESS},
+                    },
+                    "updated_at",
+                ),
             ):
                 remaining = BATCH_SIZE - len(ids)
                 if remaining <= 0:
                     break
-                cursor = collection.find({"$and": [selector, eligibility(now)]}, {"_id": 1}).sort(order, 1).limit(remaining)
+                cursor = (
+                    collection.find(
+                        {"$and": [selector, eligibility(now)]}, {"_id": 1}
+                    )
+                    .sort(order, 1)
+                    .limit(remaining)
+                )
                 ids.extend(str(document["_id"]) for document in cursor)
         return result
     finally:

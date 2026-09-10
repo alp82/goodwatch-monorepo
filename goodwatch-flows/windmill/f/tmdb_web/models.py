@@ -65,6 +65,7 @@ class BaseTmdbProviders(Document):
     lease_token = StringField()
     lease_expires_at = DateTimeField()
     country_identity_ready = BooleanField()
+    country_identity_error = StringField()
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
