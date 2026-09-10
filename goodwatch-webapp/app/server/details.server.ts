@@ -25,7 +25,8 @@ import {
 	type MovieResult,
 } from "~/server/types/details-types"
 
-export const getDetailsForMovie = async (params: DetailsMovieParams) => {
+export const getDetailsForMovie = async (params: DetailsMovieParams, options?: { bypassCache: boolean }) => {
+	if (options?.bypassCache) return await _getDetailsForMovie(params)
 	return await cached<DetailsMovieParams, MovieResult>({
 		name: "details-movie",
 		target: _getDetailsForMovie,
@@ -35,7 +36,8 @@ export const getDetailsForMovie = async (params: DetailsMovieParams) => {
 	})
 }
 
-export const getDetailsForShow = async (params: DetailsShowParams) => {
+export const getDetailsForShow = async (params: DetailsShowParams, options?: { bypassCache: boolean }) => {
+	if (options?.bypassCache) return await _getDetailsForShow(params)
 	return await cached<DetailsShowParams, ShowResult>({
 		name: "details-show",
 		target: _getDetailsForShow,

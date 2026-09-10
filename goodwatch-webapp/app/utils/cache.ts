@@ -104,6 +104,10 @@ function generateCacheKey(data: JsonData): string {
 	return crypto.createHash("sha256").update(serializedData).digest("hex")
 }
 
+export function cacheEntryKey(name: string, params: JsonData): string {
+	return `cached-${name}:${generateCacheKey(params)}`
+}
+
 async function cacheSet<CacheData extends JsonData>(
 	namespace: string,
 	key: string,
