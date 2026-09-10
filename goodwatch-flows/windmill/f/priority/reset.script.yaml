@@ -6,6 +6,10 @@ schema:
   $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
+    publication_result:
+      type: object
+      description: Successful publication summary, including deferred country retries
+      default: null
     claims:
       type: array
       default: null

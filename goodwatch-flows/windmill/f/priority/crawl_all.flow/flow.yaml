@@ -287,6 +287,9 @@ value:
           claims:
             type: javascript
             expr: results.g.claims
+          publication_result:
+            type: javascript
+            expr: results.o
         path: f/priority/reset
         tag_override: null
   concurrency_time_window_s: 0

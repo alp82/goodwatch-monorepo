@@ -1,6 +1,10 @@
 from collections import defaultdict
+from contextlib import contextmanager
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Callable, Iterator, Optional
+from uuid import uuid4
+
+from pymongo.errors import DuplicateKeyError
 
 from mongoengine import get_db
 from pydantic import BaseModel
@@ -54,25 +58,25 @@ def to_timestamp(dt_input: str) -> Optional[float]:
         raise Exception(f"cannot convert datetime to timestamp: {dt_input}")
         
 
-def fetch_documents_in_batch(tmdb_ids, collection):
+def fetch_documents_in_batch(tmdb_ids: list[int], collection: Any) -> dict:
     projection = {
         "tmdb_id": 1,
         "watch_providers": 1,
+        "updated_at": 1,
     }
     return {
         doc["tmdb_id"]: doc for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}}, projection)
     }
 
 
-def fetch_all_documents_in_batch(tmdb_ids, collection):
+def fetch_all_documents_in_batch(tmdb_ids: list[int], collection: Any) -> dict:
     results = defaultdict(list)
     for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}}):
-        if doc.get('created_at') and doc.get('updated_at'):
-            results[doc["tmdb_id"]].append(doc)
+        results[doc["tmdb_id"]].append(doc)
     return dict(results)
 
 
-def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel]):
+def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel]) -> dict:
     """Process and insert entities and return upsert results."""
     total_result = {"records_received": 0, "rows_upserted": 0}
     
@@ -92,180 +96,189 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
     
     return total_result
 
+@contextmanager
+def publication_lease(db: Any, media_type: str, tmdb_id: int) -> Iterator[Callable[[], None]]:
+    """Serialize scheduled/targeted streaming snapshots, independently of demand."""
+    collection = db.streaming_publication_leases
+    identity = f"{media_type}:{tmdb_id}"
+    token = str(uuid4())
+    now = datetime.utcnow()
+    try:
+        collection.update_one(
+            {"_id": identity, "expires_at": {"$lte": now}},
+            {"$set": {"token": token, "expires_at": now + timedelta(minutes=15)}},
+            upsert=True,
+        )
+    except DuplicateKeyError as error:
+        raise RuntimeError(f"Streaming publication busy for {identity}") from error
+
+    def check_owned() -> None:
+        # Leave more time than the Crate request timeout before takeover can
+        # happen. Check again after the writes; an expired worker cannot succeed.
+        if not collection.find_one({"_id": identity, "token": token,
+                                    "expires_at": {"$gt": datetime.utcnow() + timedelta(minutes=4)}}):
+            raise RuntimeError(f"Streaming publication lease lost for {identity}")
+
+    try:
+        yield check_owned
+        check_owned()
+    finally:
+        collection.delete_one({"_id": identity, "token": token})
+
+
+def availability_key(row: dict) -> tuple:
+    return tuple(row[field] for field in (
+        "media_tmdb_id", "media_type", "country_code", "streaming_service_id", "streaming_type"
+    ))
+
+
+def reconcile_availability(
+    tmdb_id: int, media_type: str, existing: list[dict], details: dict,
+    providers: list[dict], service_ids: dict,
+) -> tuple[dict, dict, dict]:
+    """Replace confirmed source scopes and retain the other source's contribution."""
+    api_results = (details.get("watch_providers") or {}).get("results")
+    api_results = api_results if details.get("updated_at") and isinstance(api_results, dict) else {}
+    verified = {row["country_code"]: row for row in providers
+                if row.get("country_code") and row.get("updated_at")
+                and not row.get("consecutive_failures") and not row.get("country_identity_error")}
+    rows = {}
+    for original in existing:
+        row = StreamingAvailability(**original).model_dump()
+        country = row["country_code"]
+        api_confirmed = country in api_results
+        scrape_confirmed = country in verified
+        if api_confirmed:
+            row.update(tmdb_link=None, display_priority=None)
+        if scrape_confirmed:
+            row.update(stream_url=None, price_dollar=None, quality=None)
+        # Legacy rows without attribution survive unless both sources confirmed
+        # the country. Otherwise a failed source could lose its old availability.
+        api_present = row.get("tmdb_link") is not None or row.get("display_priority") is not None
+        scrape_present = any(row.get(field) is not None for field in ("stream_url", "price_dollar", "quality"))
+        unknown = not any(original.get(field) is not None for field in (
+            "tmdb_link", "display_priority", "stream_url", "price_dollar", "quality"))
+        if api_present or scrape_present or (unknown and not (api_confirmed and scrape_confirmed)):
+            rows[availability_key(row)] = row
+
+    def entry(country: str, stream_type: str, service_id: int) -> dict:
+        key = (tmdb_id, media_type, country, service_id, stream_type)
+        if key not in rows:
+            rows[key] = StreamingAvailability(
+                media_tmdb_id=tmdb_id, media_type="movie" if media_type == "movie" else "show", country_code=country,
+                streaming_type=stream_type, streaming_service_id=service_id,
+            ).model_dump()
+        return rows[key]
+
+    for country, data in api_results.items():
+        for stream_type in ("flatrate", "free", "ads", "rent", "buy"):
+            for offer in data.get(stream_type, []) or []:
+                service_id = offer.get("provider_id")
+                if service_id is not None:
+                    entry(country, stream_type, service_id).update(
+                        tmdb_link=data.get("link"), display_priority=offer.get("display_priority"))
+    for country, provider in verified.items():
+        for offer in provider.get("streaming_links", []) or []:
+            service_id = service_ids.get(offer.get("provider_name"))
+            if service_id is not None:
+                entry(country, offer["stream_type"], service_id).update(
+                    stream_url=offer.get("stream_url"), price_dollar=offer.get("price_dollar"),
+                    quality=offer.get("quality"))
+    return rows, verified, api_results
+
+
 def copy_media(
-    connector: CrateConnector, 
+    connector: CrateConnector,
     query_selector: dict = {},
     media_type: str = "movie",
     *, recent_only: bool = True,
-):
+) -> dict:
     is_movie = media_type == "movie"
-
     mongo_db = get_db()
     mongo_details = mongo_db.tmdb_movie_details if is_movie else mongo_db.tmdb_tv_details
     mongo_providers = mongo_db.tmdb_movie_providers if is_movie else mongo_db.tmdb_tv_providers
-    media_table_name = 'movie' if is_movie else 'show'
+    media_table_name = "movie" if is_movie else "show"
     MediaClass = Movie if is_movie else Show
-
-    updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
-    if not recent_only:
-        updated_at_filter = {}
-    total_entry_count = mongo_providers.count_documents(query_selector | updated_at_filter)
-    print(f"Total {media_type} streaming entries: {total_entry_count}")
-
+    updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}} if recent_only else {}
     streaming_services = connector.select("SELECT tmdb_id, name FROM streaming_service")
-    streaming_service_id_by_name = {
-        streaming_service["name"]: streaming_service["tmdb_id"]
-        for streaming_service in streaming_services
-    }
-
-    start = 0
+    service_ids = {service["name"]: service["tmdb_id"] for service in streaming_services}
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
-    
+    publication = {"status": "success", "titles": {}}
+    targeted_ids = query_selector.get("tmdb_id", {}).get("$in") if not recent_only else None
+    start = 0
     while True:
-        media_documents = []
-        entity_batches = defaultdict(list)
-
-        pipeline = [{
-            "$match": query_selector | updated_at_filter
-        }, {
-            "$group": {
-                "_id": "$tmdb_id",
-            }
-        }, {
-            "$sort": {
-                "_id": 1
-            }
-        }, {
-            "$skip": start
-        }, {
-            "$limit": BATCH_SIZE
-        }]
-
-        # Execute the aggregation pipeline
-        tmdb_provider_ids_batch = list(mongo_providers.aggregate(pipeline))
-        if not tmdb_provider_ids_batch:
+        if targeted_ids is not None:
+            tmdb_ids = targeted_ids[start:start + BATCH_SIZE]
+        else:
+            pipeline = [{"$match": query_selector | updated_at_filter},
+                        {"$group": {"_id": "$tmdb_id"}}, {"$sort": {"_id": 1}},
+                        {"$skip": start}, {"$limit": BATCH_SIZE}]
+            tmdb_ids = [row["_id"] for row in mongo_providers.aggregate(pipeline)]
+        if not tmdb_ids:
             break
-
-        # Insert batch of media
-        print(f"\nBatch from {start} to {start + len(tmdb_provider_ids_batch)} {media_type} streaming entries")
-
-        tmdb_ids = [doc["_id"] for doc in tmdb_provider_ids_batch]
-        tmdb_details_by_id = fetch_documents_in_batch(
-            tmdb_ids, 
-            mongo_details,
-        )
-        tmdb_all_providers = fetch_all_documents_in_batch(
-            tmdb_ids, 
-            mongo_providers,
-        )
-
-        for tmdb_id, tmdb_details in tmdb_details_by_id.items():
-            media_id = str(tmdb_id)
-            tmdb_provider_results = tmdb_all_providers[tmdb_id]
-
-            if not tmdb_details and not tmdb_provider_results:
-                continue
-            
-            latest_created_at = max(tmdb_provider_results, key=lambda provider: provider['created_at'])['created_at']
-            latest_updated_at = max(tmdb_provider_results, key=lambda provider: provider['updated_at'])['updated_at']
-
-            # Process streaming availability
-            streaming_availabilities_to_add = {}
-            watch_provider_results = tmdb_details.get("watch_providers", {}).get("results", {})
-            if watch_provider_results:
-                for country_code, streaming_data in watch_provider_results.items():
-                    link = streaming_data.pop("link")
-                    if link:
-                        for streaming_type, streaming_list in streaming_data.items():
-                            for streaming in streaming_list:
-                                streaming_service_id = streaming.get("provider_id")
-                                streaming_service_key = str(streaming_service_id)
-                                streaming_key = f"{media_id}_{country_code}_{streaming_type}_{streaming_service_key}"
-                                streaming_availabilities_to_add[streaming_key] = StreamingAvailability(
-                                    media_tmdb_id=media_id,
-                                    media_type=media_type,
-                                    country_code=country_code,
-                                    streaming_type=streaming_type,
-                                    streaming_service_id=streaming_service_id,
-                                    display_priority=streaming.get("display_priority"),
-                                    tmdb_link=link,
-                                )
-        
-            for tmdb_streaming_provider in tmdb_provider_results:
-                country_code = tmdb_streaming_provider.get("country_code")
-                for streaming_link in tmdb_streaming_provider.get("streaming_links", []):
-                    streaming_service_id = streaming_service_id_by_name.get(streaming_link["provider_name"])
-                    if streaming_service_id:
-                        streaming_type = streaming_link["stream_type"]
-                        streaming_key = f"{media_id}_{country_code}_{streaming_type}_{streaming_service_id}"
-                        if streaming_key not in streaming_availabilities_to_add.keys():
-                            streaming_availabilities_to_add[streaming_key] = StreamingAvailability(
-                                media_tmdb_id=media_id,
-                                media_type=media_type,
-                                country_code=country_code,
-                                streaming_type=streaming_type,
-                                streaming_service_id=streaming_service_id,
-                                stream_url=streaming_link.get("stream_url"),
-                                price_dollar=streaming_link.get("price_dollar"),
-                                quality=streaming_link.get("quality"),
-                            )
-                        else:
-                            streaming_availabilities_to_add[streaming_key].stream_url = streaming_link.get("stream_url")
-                            streaming_availabilities_to_add[streaming_key].price_dollar = streaming_link.get("price_dollar")
-                            streaming_availabilities_to_add[streaming_key].quality = streaming_link.get("quality")
-
-            streaming_availability_countries = []
-            streaming_availability_services = []
-            streaming_availability_combos = []
-            for streaming_key, streaming_availability in streaming_availabilities_to_add.items():
-                entity_batches['streaming_availability'].append(streaming_availability)
-                if streaming_availability.country_code not in streaming_availability_countries:
-                    streaming_availability_countries.append(streaming_availability.country_code)
-                if streaming_availability.streaming_service_id not in streaming_availability_services:
-                    streaming_availability_services.append(streaming_availability.streaming_service_id)
-                combo = f"{streaming_availability.country_code}_{streaming_availability.streaming_service_id}"
-                if combo not in streaming_availability_combos:
-                    streaming_availability_combos.append(combo)
-
-            # Create Media document
-            media = MediaClass(
-                tmdb_id=tmdb_id,
-
-                # Streaming
-                streaming_country_codes=streaming_availability_countries,
-                streaming_service_ids=streaming_availability_services,
-                streaming_availabilities=streaming_availability_combos,
-            
-                # Metadata timestamps
-                tmdb_providers_created_at=to_timestamp(latest_created_at),
-                tmdb_providers_updated_at=to_timestamp(latest_updated_at),
-            )
-
-            media_documents.append(media)
-
-        upsert_result = upsert_in_batches(
-            connector=connector,
-            table=media_table_name,
-            records=media_documents,
-        )
-        
-        media_type_key = 'movies' if is_movie else 'shows'
-        entity_counts[media_type_key]["records_received"] += upsert_result["records_received"]
-        entity_counts[media_type_key]["rows_upserted"] += upsert_result["rows_upserted"]
-        
-        # Insert all row for batch and track counts
-        for table_name, batch in entity_batches.items():
-            entity_upsert_result = upsert_in_batches(
-                connector=connector,
-                table=table_name,
-                records=batch, 
-            )
-            entity_counts[table_name]["records_received"] += entity_upsert_result["records_received"]
-            entity_counts[table_name]["rows_upserted"] += entity_upsert_result["rows_upserted"]
-
+        for tmdb_id in tmdb_ids:
+            with publication_lease(mongo_db, media_type, tmdb_id) as check_owned:
+                # Read each source snapshot while holding the shared title lock.
+                details_by_id = fetch_documents_in_batch([tmdb_id], mongo_details)
+                providers_by_id = fetch_all_documents_in_batch([tmdb_id], mongo_providers)
+                check_owned()
+                connector.run("REFRESH TABLE streaming_availability")
+                existing_by_id = {tmdb_id: connector.select(
+                    "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?",
+                    ([tmdb_id], media_type),
+                )}
+                providers = providers_by_id.get(tmdb_id, [])
+                existing = existing_by_id[tmdb_id]
+                rows, verified, api_results = reconcile_availability(
+                    tmdb_id, media_type, existing, details_by_id.get(tmdb_id, {}), providers, service_ids)
+                deferred = sorted({row["country_code"] for row in providers
+                                   if row.get("country_code") and row["country_code"] not in verified})
+                summary = {"verified_countries": sorted(verified), "deferred_countries": deferred,
+                           "api_countries": sorted(api_results), "provider_state": "present" if providers else "absent",
+                           "streaming_availability": sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})}
+                if deferred or not providers:
+                    publication["status"] = "partial_success"
+                if targeted_ids is not None:
+                    publication["titles"][str(tmdb_id)] = summary
+                if not verified and not api_results:
+                    continue
+                old_rows = {availability_key(row): StreamingAvailability(**row).model_dump() for row in existing}
+                changed: list[BaseModel] = [StreamingAvailability(**row) for key, row in rows.items() if row != old_rows.get(key)]
+                # Exact source snapshots must clear NULL fields too. Write additions
+                # before removals so failed inserts cannot erase retained source data.
+                if changed:
+                    check_owned()
+                    result = connector.upsert_many(
+                        table="streaming_availability", records=changed,
+                        conflict_columns=SCHEMAS["streaming_availability"]["primary_key"],
+                        silent=True, replace_nulls=True,
+                    )
+                    for field in ("records_received", "rows_upserted"):
+                        entity_counts["streaming_availability"][field] += result[field]
+                for key in old_rows.keys() - rows.keys():
+                    check_owned()
+                    connector.run(
+                        "DELETE FROM streaming_availability WHERE media_tmdb_id = ? AND media_type = ? "
+                        "AND country_code = ? AND streaming_service_id = ? AND streaming_type = ?", key)
+                metadata = {}
+                for field in ("created_at", "updated_at"):
+                    timestamps = [row[field] for row in providers if row.get("updated_at") and row.get(field)]
+                    if timestamps:
+                        metadata[f"tmdb_providers_{field}"] = to_timestamp(max(timestamps))
+                media = MediaClass(
+                    tmdb_id=tmdb_id,
+                    streaming_country_codes=sorted({row["country_code"] for row in rows.values()}),
+                    streaming_service_ids=sorted({row["streaming_service_id"] for row in rows.values()}),
+                    streaming_availabilities=sorted({f"{row['country_code']}_{row['streaming_service_id']}" for row in rows.values()}),
+                    **metadata,
+                )
+                check_owned()
+                result = upsert_in_batches(connector, media_table_name, [media])
+                check_owned()
+                for field in ("records_received", "rows_upserted"):
+                    entity_counts["movies" if is_movie else "shows"][field] += result[field]
         start += BATCH_SIZE
-
-    return entity_counts
+    return dict(entity_counts) | {"publication": publication}
 
 
 def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = False):

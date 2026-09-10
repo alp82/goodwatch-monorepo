@@ -13,6 +13,7 @@ from f.db.mongodb import (
     close_mongodb,
 )
 from f.db.qdrant import QdrantConnector
+from f.db.cratedb import CrateConnector
 from f.sync.models.qdrant_schemas import MEDIA_COLLECTION
 from f.sync.models.qdrant_models import QdrantMediaPoint
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
@@ -357,11 +358,31 @@ def _build_payload(
 # ---- Main copy loop --------------------------------------------------------
 
 
+def _published_streaming(media_type: str, ids: List[int]) -> Dict[int, List[str]]:
+    """Scheduled catch-up uses the same published country snapshot as priority."""
+    connector = CrateConnector()
+    try:
+        table = "movie" if media_type == "movie" else "show"
+        connector.run(f"REFRESH TABLE {table}")
+        rows = connector.select(
+            f"SELECT tmdb_id, streaming_availabilities FROM {table} WHERE tmdb_id = ANY(?)",
+            (ids,),
+        )
+        return {
+            row["tmdb_id"]: [f"{service}_{country}" for country, service in (
+                combo.split("_", 1) for combo in row["streaming_availabilities"])]
+            for row in rows if row.get("streaming_availabilities") is not None
+        }
+    finally:
+        connector.disconnect()
+
+
 def copy_to_qdrant(
     qc: QdrantConnector,
     media_type: str,  # "movie" | "show"
     query_selector: dict,
     *, recent_only: bool = True, strict_writes: bool = False,
+    streaming_by_id: Optional[Dict[int, List[str]]] = None,
 ):
     """
     Combined copy into Qdrant.
@@ -424,12 +445,16 @@ def copy_to_qdrant(
         providers_multimap = _fetch_multimap_by_ids(c_prov, ids)
         tropes_map = _fetch_map_by_ids(c_tropes, ids)
 
+        # A missing aggregate means streaming has never been published. Wait for
+        # that required snapshot instead of overwriting an existing vector payload.
+        published_streaming = streaming_by_id if streaming_by_id is not None else _published_streaming(media_type, ids)
+
         # build points
-        upsert_buffer: List[Tuple[str, Dict[str, Any], Dict[str, List[float]]]] = []
+        upsert_buffer: List[Tuple[int, Dict[str, Any], Dict[str, List[float]]]] = []
 
         for tmdb_id in ids:
             d = details_map.get(tmdb_id)
-            if not d:
+            if not d or tmdb_id not in published_streaming:
                 # we still might have scores or providers, but no details: skip creating new points
                 continue
 
@@ -447,6 +472,8 @@ def copy_to_qdrant(
                 dna=dna_map.get(tmdb_id),
                 tropes=tropes_map.get(tmdb_id),
             )
+
+            payload["streaming_availability"] = published_streaming[tmdb_id]
 
             pid = QdrantMediaPoint.make_point_id(media_type, tmdb_id)
 
@@ -466,7 +493,7 @@ def copy_to_qdrant(
                     result = qc.client.upsert(
                         collection_name=MEDIA_COLLECTION,
                         points=[
-                            qm.PointStruct(id=int(pid), payload=payload, vector=vectors)
+                            qm.PointStruct(id=int(pid), payload=payload, vector={name: values for name, values in vectors.items()})
                             for pid, payload, vectors in upsert_buffer[start:start + UPSERT_BATCH_SIZE]
                         ],
                         wait=True,
@@ -491,8 +518,8 @@ def copy_to_qdrant(
 
 
 def main(
-    movie_ids: List[str] = None,
-    show_ids: List[str] = None,
+    movie_ids: Optional[List[str]] = None,
+    show_ids: Optional[List[str]] = None,
 ):
     """
     - If you pass IDs, we'll restrict to those (across recent window).
