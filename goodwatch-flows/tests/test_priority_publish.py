@@ -119,7 +119,7 @@ class PublishTests(unittest.TestCase):
                 module.main({"movie_ids": [value]})
             crate.CrateConnector.assert_not_called()
 
-    def test_partial_streaming_publication_still_requires_vector_write(self):
+    def test_partial_streaming_publication_still_requires_vector_write(self) -> None:
         module, _, _, syncs = load_publisher()
         syncs["tmdb_streaming"].copy_media.side_effect = None
         syncs["tmdb_streaming"].copy_media.return_value = {"publication": {
@@ -345,7 +345,7 @@ class VectorSerializationTests(unittest.TestCase):
 
 
 class AcknowledgmentTests(unittest.TestCase):
-    def test_partial_publication_acknowledges_claim_but_retains_new_impressions(self):
+    def test_partial_publication_acknowledges_claim_but_retains_new_impressions(self) -> None:
         from test_priority_queue import MemoryCrate, queue
         db = MemoryCrate()
         db.disconnect = MagicMock()
@@ -364,7 +364,7 @@ class AcknowledgmentTests(unittest.TestCase):
         self.assertIsNone(db.row["lease_token"])
         db.disconnect.assert_called_once()
 
-    def test_flow_acknowledges_only_after_required_publication_and_preserves_summary(self):
+    def test_flow_acknowledges_only_after_required_publication_and_preserves_summary(self) -> None:
         import yaml
         flow = yaml.safe_load((ROOT / "priority" / "crawl_all.flow" / "flow.yaml").read_text())
         modules = flow["value"]["modules"]
