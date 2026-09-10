@@ -1,6 +1,6 @@
 summary: ''
-description: Retrieve next batch of entries for crawling TMDB pages
-lock: '!inline f/tmdb_web/tmdb_crawl_providers/next.script.lock'
+description: ''
+lock: '!inline f/tmdb_web/country_state.script.lock'
 kind: script
 schema:
   $schema: https://json-schema.org/draft/2020-12/schema
