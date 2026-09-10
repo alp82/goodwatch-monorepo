@@ -108,7 +108,7 @@ locks:
   f/sync/copy/dna_data: 4ee1f6629a18cd2ec9b38dec222224578b921aa77562c556230ad02548bf01e2
   f/sync/copy/tmdb_daily: 7814f6ee77bc2e1d9aca4ad0ad7c5eb7ad13793359186a3069884c5335107aa7
   f/sync/copy/tmdb_details: 70e0a525de5a1e5bfaae8fc728bc8fdb2cbde37ad571dd3e6e93d329ec7f89e5
-  f/sync/copy/tmdb_streaming: af4e3c882df91100f009c5a2e75e402bb2c84992cdb2706ab1335152f5d21877
+  f/sync/copy/tmdb_streaming: 57d9c4343d084d8ccb87314ebddc796333eb4271db01614361a49cb7de25605f
   f/sync/copy/tvtropes: 6918d36b4f895e7cd30d8cab9b051821c01b099f4a453b19403a5c7caa475201
   f/sync/copy/vector_data: 2fff8bb6c6e8ba8db0a5496fb43eccf6b07fd245b55a30647063f91ef2516050
   f/sync/init/cratedb: aabd1d0a9793c172a5d2b6f0acfd9a5662038437c4db8085229be21a30c8b59d

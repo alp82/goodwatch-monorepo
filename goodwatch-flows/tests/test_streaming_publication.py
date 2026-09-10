@@ -136,6 +136,16 @@ class StreamingPublicationTests(unittest.TestCase):
         point = vector.qc.client.upsert.call_args.kwargs["points"][0]
         self.assertEqual(point["payload"]["streaming_availability"], ["8_US"])
 
+    def test_pending_provider_without_country_identity_is_explicitly_deferred(self) -> None:
+        self.db.tmdb_tv_providers.insert_one({"tmdb_id": 42, "tmdb_watch_url": "https://example/watch"})
+        crate = Crate([availability()])
+        result = self.publish(crate)
+        summary = result["publication"]["titles"]["42"]
+        self.assertEqual(result["publication"]["status"], "partial_success")
+        self.assertEqual(summary["deferred_country_count"], 1)
+        self.assertEqual(summary["unidentified_country_count"], 1)
+        self.assertEqual(crate.rows, [availability()])
+
     def test_all_pending_retains_existing_availability_without_freshness(self) -> None:
         self.db.tmdb_tv_providers.insert_one({"tmdb_id": 42, "country_code": "US", "created_at": self.now})
         crate = Crate([availability()])

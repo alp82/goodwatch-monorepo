@@ -247,13 +247,19 @@ def copy_media(
                 existing = existing_by_id[tmdb_id]
                 rows, verified, api_results = reconcile_availability(
                     tmdb_id, media_type, existing, details_by_id.get(tmdb_id, {}), providers, service_ids)
-                deferred = sorted({row["country_code"] for row in providers
-                                   if row.get("country_code") and row["country_code"] not in verified})
+                unverified = [
+                    row for row in providers
+                    if verified.get(row.get("country_code")) is not row
+                ]
+                deferred = sorted({row["country_code"] for row in unverified
+                                   if row.get("country_code")})
                 summary = {"verified_countries": sorted(verified), "deferred_countries": deferred,
                            "api_countries": sorted(api_results), "provider_state": "present" if providers else "absent",
+                           "deferred_country_count": len(unverified),
+                           "unidentified_country_count": sum(not row.get("country_code") for row in unverified),
                            "streaming_availability": (sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})
                                                       if existing or verified or api_results else None)}
-                if deferred or not providers:
+                if unverified or not providers:
                     publication["status"] = "partial_success"
                 if targeted_ids is not None:
                     publication["titles"][str(tmdb_id)] = summary
