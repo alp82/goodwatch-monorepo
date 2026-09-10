@@ -3,7 +3,7 @@ description: Crawl TMDB pages and find streaming provider information
 lock: '!inline f/tmdb_web/tmdb_crawl_providers/iterate.script.lock'
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
     next_ids:

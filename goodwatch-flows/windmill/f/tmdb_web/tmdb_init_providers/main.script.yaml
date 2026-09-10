@@ -1,11 +1,10 @@
 summary: ''
-description: >-
-  Prepare TMDB streaming crawler by copying all watch URL's from details entries
-  that have watch providers.
+description: Prepare TMDB streaming crawler by copying all watch URL's from
+  details entries that have watch providers.
 lock: '!inline f/tmdb_web/tmdb_init_providers/main.script.lock'
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties: {}
   required: []

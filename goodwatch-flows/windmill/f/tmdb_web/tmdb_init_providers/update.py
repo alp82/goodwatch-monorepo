@@ -1,70 +1,49 @@
 from typing import Union
+from typing import cast
+from typing import Any
+
 from mongoengine import get_db
 
 from f.data_source.common import get_documents_for_ids
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
-from f.tmdb_web.tmdb_init_providers.main import build_operation, store_copies
+from f.tmdb_web.country_state import ensure_indexes, initialize_countries
 
 
-def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]]):
-    print("Initializing documents for TMDB streaming data")
-    mongo_db = get_db()
-
-    count_new_movies = 0
-    count_new_tv = 0
-
-    for next_entry in next_entries:
-        print(f"copying {next_entry.title} ({next_entry.tmdb_id}) streaming data")
-        if not next_entry.watch_providers:
-            continue
-        
-        tmdb_watch_results = next_entry.watch_providers.results
-        tmdb_watch_urls = [v["link"] for v in tmdb_watch_results.values() if "link" in v]
-        for tmdb_watch_url in tmdb_watch_urls:
-            operation = build_operation(
-                {
-                    "tmdb_id": next_entry.tmdb_id,
-                    "original_title": next_entry.original_title,
-                    "popularity": next_entry.popularity,
-                    "tmdb_watch_url": tmdb_watch_url,
-                }
-            )
-            if isinstance(next_entry, TmdbMovieDetails):
-                movie_upserts = store_copies(
-                    [operation],
-                    mongo_db.tmdb_movie_providers,
-                )
-                count_new_movies += movie_upserts.get("count_new_documents")
-
-            elif isinstance(next_entry, TmdbTvDetails):
-                tv_upserts = store_copies(
-                    [operation],
-                    mongo_db.tmdb_tv_providers,
-                )
-                count_new_tv += tv_upserts.get("count_new_documents")
-
-            else:
-                raise Exception(
-                    f"next_entry has an unexpected type: {type(next_entry)}"
-                )
-
-    return {
-        "count_new_movies": count_new_movies,
-        "count_new_tv": count_new_tv,
-    }
+def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]]) -> dict:
+    db = get_db()
+    result = {"movie_ids": [], "tv_ids": [], "count_new_movies": 0, "count_new_tv": 0}
+    initialized = set()
+    for entry in next_entries:
+        if isinstance(entry, TmdbMovieDetails):
+            media_type, count_key = "movie", "count_new_movies"
+        elif isinstance(entry, TmdbTvDetails):
+            media_type, count_key = "tv", "count_new_tv"
+        else:
+            raise ValueError(f"Unexpected details type: {type(entry)}")
+        collection = db[f"tmdb_{media_type}_providers"]
+        if media_type not in initialized:
+            ensure_indexes(collection)
+            initialized.add(media_type)
+        data = entry.to_mongo().to_dict()
+        countries = initialize_countries(collection, data["tmdb_id"],
+            (data.get("watch_providers") or {}).get("results") or {}, media_type,
+            original_title=data.get("original_title"), popularity=data.get("popularity"))
+        result[count_key] += countries["count_new_documents"]
+        result[f"{media_type}_ids"].extend(identity for identity in countries["ids"]
+            if identity not in result[f"{media_type}_ids"])
+    return result
 
 
-def main(next_ids: dict):
-    print("Prepare fetching streaming data from TMDB")
-    
+def main(next_ids: dict) -> dict:
     init_mongodb()
-    next_entries = get_documents_for_ids(
-        next_ids=next_ids,
-        movie_model=TmdbMovieDetails,
-        tv_model=TmdbTvDetails,
-    )
-    docs = initialize_documents(next_entries)
-    close_mongodb()
-
-    return docs
+    try:
+        # The shared legacy helper annotates model classes as Document instances.
+        entries = get_documents_for_ids(
+            next_ids=next_ids, movie_model=cast(Any, TmdbMovieDetails), tv_model=cast(Any, TmdbTvDetails),
+        )
+        if any(not isinstance(entry, (TmdbMovieDetails, TmdbTvDetails)) for entry in entries):
+            raise ValueError("Expected movie/tv details documents")
+        return initialize_documents(cast(list[Union[TmdbMovieDetails, TmdbTvDetails]], entries))
+    finally:
+        close_mongodb()

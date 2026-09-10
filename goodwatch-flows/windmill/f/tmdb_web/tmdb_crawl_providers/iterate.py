@@ -1,35 +1,30 @@
-from f.data_source.common import get_documents_for_ids, IdParameter
+from bson import ObjectId
+from mongoengine import get_db
+
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.tmdb_web.models import (
-    TmdbMovieProviders,
-    TmdbTvProviders,
-)
 
 
-def main(next_ids: dict):
+def main(next_ids: dict) -> list[dict]:
+    # Reject the former initializer count-only handoff rather than silently doing
+    # no work. Selection happens atomically in fetch for both entry paths.
+    if not isinstance(next_ids, dict) or not all(key in next_ids for key in ("movie_ids", "tv_ids")):
+        raise ValueError("Expected movie_ids and tv_ids containing provider document IDs")
+    validated = {}
+    for media_type in ("movie", "tv"):
+        ids = next_ids[f"{media_type}_ids"]
+        if not isinstance(ids, list) or any(not isinstance(value, str) or not ObjectId.is_valid(value) for value in ids):
+            raise ValueError("Provider IDs must be lists of ObjectId strings")
+        validated[media_type] = list(dict.fromkeys(ids))
     init_mongodb()
-    next_entries = get_documents_for_ids(
-        next_ids=next_ids,
-        movie_model=TmdbMovieProviders,
-        tv_model=TmdbTvProviders,
-    )
-
-    entries_to_fetch = []
-    for next_entry in next_entries:
-        if isinstance(next_entry, TmdbMovieProviders):
-            id_type = "movie"
-        elif isinstance(next_entry, TmdbTvProviders):
-            id_type = "tv"
-        else:
-            raise Exception(f"next_entry has an unexpected type: {type(next_entry)}")
-
-        entries_to_fetch.append(
-            IdParameter(
-                id=str(next_entry.id),
-                tmdb_id=next_entry.tmdb_id,
-                type=id_type,
-            ).model_dump()
-        )
-
-    close_mongodb()
-    return entries_to_fetch
+    try:
+        db = get_db()
+        entries = []
+        for media_type, ids in validated.items():
+            for identity in ids:
+                document = db[f"tmdb_{media_type}_providers"].find_one({"_id": ObjectId(identity)}, {"tmdb_id": 1})
+                if document is None:
+                    raise ValueError(f"Missing {media_type} provider document {identity}")
+                entries.append({"id": identity, "type": media_type, "tmdb_id": document["tmdb_id"]})
+        return entries
+    finally:
+        close_mongodb()

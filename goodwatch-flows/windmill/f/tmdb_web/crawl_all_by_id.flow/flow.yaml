@@ -34,13 +34,13 @@ value:
                 attempts: 0
                 seconds: 0
               exponential:
-                attempts: 7
+                attempts: 0
                 multiplier: 1
                 random_factor: 0
                 seconds: 2
             timeout:
               type: static
-              value: 30
+              value: 60
         iterator:
           type: javascript
           expr: results.a

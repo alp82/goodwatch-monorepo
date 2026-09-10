@@ -1,0 +1,28 @@
+summary: ''
+description: ''
+lock: '!inline f/tmdb_web/tmdb_crawl_providers/backfill.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    after_id:
+      type: string
+      description: ''
+      default: ''
+      originalType: string
+    batch_size:
+      type: integer
+      description: ''
+      default: 1000
+    dry_run:
+      type: boolean
+      description: ''
+      default: true
+    media_type:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+  required:
+    - media_type

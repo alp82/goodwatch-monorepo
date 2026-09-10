@@ -1,191 +1,105 @@
+"""Initialize country identities in bounded batches without per-country roundtrips."""
+from collections import defaultdict
 from datetime import datetime
+from itertools import islice
 
 from mongoengine import get_db
 from pymongo import UpdateOne
 from pymongo.collection import Collection
+from pymongo.errors import BulkWriteError
 
 from f.db.mongodb import init_mongodb, close_mongodb
+from f.tmdb_web.country_state import (
+    country_from_url, ensure_indexes, identity_map, normalization_update,
+)
 
-BATCH_SIZE = 100000
-
-
-watch_providers_pipeline = [
-    {
-        "$match": {
-            "watch_providers.results": {
-                "$exists": True,
-                "$ne": {},
-                "$not": {"$type": "array"},
-            }
-        }
-    },
-    {
-        "$project": {
-            "watch_providers": "$watch_providers.results",
-            "tmdb_id": 1,
-            "original_title": 1,
-            "popularity": 1,
-        }
-    },
-    {
-        "$addFields": {
-            "watch_providers_array": {
-                "$cond": {
-                    "if": {"$eq": [{"$type": "$watch_providers"}, "object"]},
-                    "then": {"$objectToArray": "$watch_providers"},
-                    "else": "$watch_providers",
-                }
-            }
-        }
-    },
-    {"$unwind": "$watch_providers_array"},
-    {
-        "$project": {
-            "tmdb_watch_url": "$watch_providers_array.v.link",
-            "tmdb_id": 1,
-            "original_title": 1,
-            "popularity": 1,
-        }
-    },
-]
+TITLE_BATCH_SIZE = 500
 
 
-def initialize_documents():
-    print("Initializing documents for TMDB streaming data")
-    mongo_db = get_db()
-
-    # ---- MOVIES ----
-    movie_cursor = mongo_db.tmdb_movie_details.aggregate(
-        watch_providers_pipeline,
-        allowDiskUse=True,
-        batchSize=5_000,
-    )
-
-    count_new_movies = 0
-    movie_operations: list[UpdateOne] = []
-    movie_seen = 0
-
-    for doc in movie_cursor:
-        movie_seen += 1
-        movie_operations.append(
-            build_operation(
-                {
-                    "tmdb_id": doc.get("tmdb_id"),
-                    "original_title": doc.get("original_title"),
-                    "popularity": doc.get("popularity"),
-                    "tmdb_watch_url": doc.get("tmdb_watch_url"),
-                }
-            )
-        )
-
-        if len(movie_operations) >= BATCH_SIZE:
-            print(f"Flushing {len(movie_operations)} movie operations (seen={movie_seen})")
-            movie_upserts = store_copies(movie_operations, mongo_db.tmdb_movie_providers)
-            count_new_movies += movie_upserts["count_new_documents"]
-            movie_operations.clear()
-
-    # flush remaining
-    if movie_operations:
-        print(f"Flushing final {len(movie_operations)} movie operations (seen={movie_seen})")
-        movie_upserts = store_copies(movie_operations, mongo_db.tmdb_movie_providers)
-        count_new_movies += movie_upserts["count_new_documents"]
-
-    print(f"Total processed movie provider docs: {movie_seen}")
-
-    # ---- TV ----
-    tv_cursor = mongo_db.tmdb_tv_details.aggregate(
-        watch_providers_pipeline,
-        allowDiskUse=True,
-        batchSize=5_000,
-    )
-
-    count_new_tv = 0
-    tv_operations: list[UpdateOne] = []
-    tv_seen = 0
-
-    for doc in tv_cursor:
-        tv_seen += 1
-        tv_operations.append(
-            build_operation(
-                {
-                    "tmdb_id": doc.get("tmdb_id"),
-                    "original_title": doc.get("original_title"),
-                    "popularity": doc.get("popularity"),
-                    "tmdb_watch_url": doc.get("tmdb_watch_url"),
-                }
-            )
-        )
-
-        if len(tv_operations) >= BATCH_SIZE:
-            print(f"Flushing {len(tv_operations)} tv operations (seen={tv_seen})")
-            tv_upserts = store_copies(tv_operations, mongo_db.tmdb_tv_providers)
-            count_new_tv += tv_upserts["count_new_documents"]
-            tv_operations.clear()
-
-    if tv_operations:
-        print(f"Flushing final {len(tv_operations)} tv operations (seen={tv_seen})")
-        tv_upserts = store_copies(tv_operations, mongo_db.tmdb_tv_providers)
-        count_new_tv += tv_upserts["count_new_documents"]
-
-    print(f"Total processed tv provider docs: {tv_seen}")
-
-    return {
-        "count_new_movies": count_new_movies,
-        "count_new_tv": count_new_tv,
-    }
-
-
-def get_aggregation_count(table, pipeline):
-    count_pipeline = pipeline + [{"$count": "total"}]
-    result = list(table.aggregate(count_pipeline))
-    return result[0]["total"] if result else 0
-
-
-def build_operation(tmdb_data: dict):
-    date_now = datetime.utcnow()
-
-    update_fields = {
-        "original_title": tmdb_data.get("original_title"),
-        "popularity": tmdb_data.get("popularity"),
-    }
-
-    operation = UpdateOne(
-        {
-            "tmdb_id": tmdb_data.get("tmdb_id"),
-            "tmdb_watch_url": tmdb_data.get("tmdb_watch_url"),
-        },
-        {"$setOnInsert": {"created_at": date_now}, "$set": update_fields},
-        upsert=True,
-    )
-    return operation
-
-
-def store_copies(
-    operations: list[UpdateOne],
-    collection: Collection,
-) -> dict:
-    count_new_documents = 0
-
+def initialize_batch(collection: Collection, titles: list[dict], media_type: str) -> dict:
+    existing: dict[int, list[dict]] = defaultdict(list)
+    projection = {"tmdb_id": 1, "tmdb_watch_url": 1, "country_code": 1,
+                  "updated_at": 1, "next_fetch_at": 1, "lease_token": 1,
+                  "consecutive_failures": 1, "country_identity_ready": 1}
+    for document in collection.find({"tmdb_id": {"$in": [title["tmdb_id"] for title in titles]}}, projection):
+        existing[document["tmdb_id"]].append(document)
+    operations: list[UpdateOne] = []
+    errors: list[dict] = []
+    now = datetime.utcnow()
+    for title in titles:
+        tmdb_id = title["tmdb_id"]
+        countries, invalid = identity_map(existing[tmdb_id], media_type)
+        if invalid:
+            errors.extend({"id": str(identity), "error": message} for identity, message in invalid.items())
+            continue
+        title_operations: list[UpdateOne] = []
+        for country, matches in countries.items():
+            selector, update = normalization_update(matches[0], country)
+            update["$set"].update(original_title=title.get("original_title"), popularity=title.get("popularity"))
+            title_operations.append(UpdateOne(selector, update))
+        try:
+            for country_key, provider in title["watch_providers"]["results"].items():
+                url = provider.get("link")
+                if not url:
+                    continue
+                country = country_from_url(url, tmdb_id, media_type)
+                if country != country_key.upper():
+                    raise ValueError("Provider country conflicts with watch URL")
+                if country in countries:
+                    continue
+                selector = {"tmdb_id": tmdb_id, "country_code": country, "country_identity_ready": True}
+                title_operations.append(UpdateOne(selector, {"$setOnInsert": {
+                    "tmdb_watch_url": url, "created_at": now,
+                    "next_fetch_at": datetime(1970, 1, 1), "consecutive_failures": 0,
+                    "original_title": title.get("original_title"), "popularity": title.get("popularity"),
+                }}, upsert=True))
+        except (ValueError, TypeError, AttributeError) as error:
+            errors.append({"tmdb_id": tmdb_id, "error": str(error)})
+            continue
+        operations.extend(title_operations)
+    created = 0
     if operations:
-        bulk_result = collection.bulk_write(operations)
-        count_new_documents += bulk_result.upserted_count
+        try:
+            created = collection.bulk_write(operations, ordered=False).upserted_count
+        except BulkWriteError as error:
+            # Only a concurrent normalized insertion can race this batch. Do not
+            # hide validation, connection, write-concern or other database errors.
+            details = error.details or {}
+            if details.get("writeConcernErrors") or any(item["code"] != 11000 for item in details.get("writeErrors", [])):
+                raise
+            created = details.get("nUpserted", 0)
+            errors.extend({"error": "Concurrent country identity conflict", "operation": item["index"]}
+                          for item in details.get("writeErrors", []))
+    return {"count_new_documents": created, "errors": errors, "operations": len(operations)}
 
-    return {
-        "count_new_documents": count_new_documents,
-    }
+
+def initialize_documents() -> dict:
+    db = get_db()
+    counts: dict = {"identity_error_count": 0, "identity_errors": []}
+    for media_type, count_key in (("movie", "count_new_movies"), ("tv", "count_new_tv")):
+        providers = db[f"tmdb_{media_type}_providers"]
+        ensure_indexes(providers)
+        counts[count_key] = 0
+        cursor = db[f"tmdb_{media_type}_details"].find({
+            "watch_providers.results": {"$exists": True, "$ne": {}, "$not": {"$type": "array"}},
+        }, {"tmdb_id": 1, "watch_providers.results": 1, "original_title": 1, "popularity": 1}).batch_size(TITLE_BATCH_SIZE)
+        seen = 0
+        try:
+            while titles := list(islice(cursor, TITLE_BATCH_SIZE)):
+                result = initialize_batch(providers, titles, media_type)
+                counts[count_key] += result["count_new_documents"]
+                counts["identity_error_count"] += len(result["errors"])
+                counts["identity_errors"].extend(result["errors"][:max(0, 100 - len(counts["identity_errors"]))])
+                seen += len(titles)
+                print(f"Initialized {media_type} titles={seen} batch_operations={result['operations']} identity_errors={len(result['errors'])}", flush=True)
+        finally:
+            cursor.close()
+    return counts
 
 
-def imdb_init_details():
-    print("Prepare fetching streaming data from TMDB")
+def main() -> dict:
     init_mongodb()
-    docs = initialize_documents()
-    close_mongodb()
-    return docs
-
-
-def main():
-    return imdb_init_details()
-
-
-if __name__ == "__main__":
-    main()
+    try:
+        return initialize_documents()
+    finally:
+        close_mongodb()

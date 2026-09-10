@@ -1,23 +1,36 @@
-from f.data_source.common import retrieve_next_entry_ids
-from f.db.mongodb import init_mongodb, close_mongodb
-from f.tmdb_web.models import TmdbMovieProviders, TmdbTvProviders
+from datetime import datetime
 
+from mongoengine import get_db
+
+from f.db.mongodb import init_mongodb, close_mongodb
+from f.tmdb_web.country_state import FRESHNESS, eligibility, upstream_deadline
 
 BATCH_SIZE = 5
-BUFFER_SELECTED_AT_MINUTES = 30
 
 
-def main():
+def main() -> dict:
     init_mongodb()
-    ids = retrieve_next_entry_ids(
-        count=BATCH_SIZE,
-        buffer_minutes=BUFFER_SELECTED_AT_MINUTES,
-        movie_model=TmdbMovieProviders,
-        tv_model=TmdbTvProviders,
-    )
-    close_mongodb()
-    return ids.model_dump()
-
-
-if __name__ == "__main__":
-    main()
+    try:
+        db = get_db()
+        now = datetime.utcnow()
+        result = {"movie_ids": [], "tv_ids": []}
+        if upstream_deadline(db, now) is not None:
+            return result
+        for media_type in ("movie", "tv"):
+            collection = db[f"tmdb_{media_type}_providers"]
+            ids = result[f"{media_type}_ids"]
+            # Query indexed due dates first, then indexed legacy freshness. Avoid
+            # an unbounded popularity sort over eight million provider documents.
+            for selector, order in (
+                ({"next_fetch_at": {"$lte": now}}, "next_fetch_at"),
+                ({"next_fetch_at": None, "updated_at": None}, "updated_at"),
+                ({"next_fetch_at": None, "updated_at": {"$lte": now - FRESHNESS}}, "updated_at"),
+            ):
+                remaining = BATCH_SIZE - len(ids)
+                if remaining <= 0:
+                    break
+                cursor = collection.find({"$and": [selector, eligibility(now)]}, {"_id": 1}).sort(order, 1).limit(remaining)
+                ids.extend(str(document["_id"]) for document in cursor)
+        return result
+    finally:
+        close_mongodb()

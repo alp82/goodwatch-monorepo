@@ -1,4 +1,5 @@
 from typing import Optional, Literal
+from datetime import datetime
 from mongoengine import (
     DateTimeField,
     StringField,
@@ -37,6 +38,7 @@ class TmdbStreamingCrawlResult(BaseModel):
     country_code: Optional[str]
     streaming_links: Optional[list[StreamingLink]]
     rate_limit_reached: bool
+    retry_at: Optional[datetime] = None
 
 
 # Database Models
@@ -58,6 +60,11 @@ class BaseTmdbProviders(Document):
 
     created_at = DateTimeField()
     updated_at = DateTimeField()
+    next_fetch_at = DateTimeField()
+    consecutive_failures = IntField(default=0)
+    lease_token = StringField()
+    lease_expires_at = DateTimeField()
+    country_identity_ready = BooleanField()
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
