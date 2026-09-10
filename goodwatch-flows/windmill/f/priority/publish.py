@@ -41,7 +41,7 @@ def main(next_ids: dict):
     qdrant = None
     try:
         connector = CrateConnector()
-        qdrant = QdrantConnector()
+        qdrant = QdrantConnector(timeout=180)
         results = {}
         for media_type, ids in targets.items():
             if not ids:
@@ -75,10 +75,6 @@ def main(next_ids: dict):
             # existing vectors are skipped by the shared transformation.
             results[media_type]["vectors"] = copy_to_qdrant(
                 qdrant, media_type, selector, recent_only=False, strict_writes=True,
-                streaming_by_id={
-                    int(tmdb_id): summary["streaming_availability"]
-                    for tmdb_id, summary in results[media_type]["streaming"].get("publication", {}).get("titles", {}).items()
-                },
             )
         return results
     finally:

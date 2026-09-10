@@ -1,3 +1,4 @@
+from contextlib import ExitStack
 # extra_requirements:
 # qdrant-client==1.15.1
 
@@ -14,6 +15,7 @@ from f.db.mongodb import (
 )
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
+from f.sync.copy.tmdb_streaming import publication_lease
 from f.sync.models.qdrant_schemas import MEDIA_COLLECTION
 from f.sync.models.qdrant_models import QdrantMediaPoint
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
@@ -382,11 +384,12 @@ def copy_to_qdrant(
     media_type: str,  # "movie" | "show"
     query_selector: dict,
     *, recent_only: bool = True, strict_writes: bool = False,
-    streaming_by_id: Optional[Dict[int, List[str]]] = None,
 ):
     """
     Combined copy into Qdrant.
     - only upserts points **with vectors** (to create/refresh fully).
+    - qc must use a transport timeout of at most 180 seconds so writes finish
+      within the publication lease safety margin.
     """
     is_movie = media_type == "movie"
     db = get_db()
@@ -445,16 +448,12 @@ def copy_to_qdrant(
         providers_multimap = _fetch_multimap_by_ids(c_prov, ids)
         tropes_map = _fetch_map_by_ids(c_tropes, ids)
 
-        # A missing aggregate means streaming has never been published. Wait for
-        # that required snapshot instead of overwriting an existing vector payload.
-        published_streaming = streaming_by_id if streaming_by_id is not None else _published_streaming(media_type, ids)
-
         # build points
         upsert_buffer: List[Tuple[int, Dict[str, Any], Dict[str, List[float]]]] = []
 
         for tmdb_id in ids:
             d = details_map.get(tmdb_id)
-            if not d or tmdb_id not in published_streaming:
+            if not d:
                 # we still might have scores or providers, but no details: skip creating new points
                 continue
 
@@ -473,43 +472,49 @@ def copy_to_qdrant(
                 tropes=tropes_map.get(tmdb_id),
             )
 
-            payload["streaming_availability"] = published_streaming[tmdb_id]
-
-            pid = QdrantMediaPoint.make_point_id(media_type, tmdb_id)
-
             have_vectors = bool(vectors["essence_text_v1"]) and bool(
                 vectors["fingerprint_v1"]
             )
             if have_vectors:
-                upsert_buffer.append((pid, payload, vectors))
+                upsert_buffer.append((tmdb_id, payload, vectors))
             # else: skip this id quietly (no vectors yet)
 
-        if upsert_buffer:
-            print(f"{media_type} start upload for {len(upsert_buffer)} points")
-            if strict_writes:
-                # Small priority batches need a surfaced error for every write.
-                # upload_collection is optimized for bulk background synchronization.
-                for start in range(0, len(upsert_buffer), UPSERT_BATCH_SIZE):
-                    result = qc.client.upsert(
-                        collection_name=MEDIA_COLLECTION,
-                        points=[
-                            qm.PointStruct(id=int(pid), payload=payload, vector={name: values for name, values in vectors.items()})
-                            for pid, payload, vectors in upsert_buffer[start:start + UPSERT_BATCH_SIZE]
-                        ],
-                        wait=True,
-                    )
-                    if result.status != qm.UpdateStatus.COMPLETED:
-                        raise RuntimeError(f"Qdrant publication did not complete: {result.status}")
-            else:
-                qc.upsert_points(
-                    MEDIA_COLLECTION,
-                    upsert_buffer,
-                    batch_size=UPSERT_BATCH_SIZE,
-                    parallel=1,
+        # Every writer reads the current aggregate and finishes its vector write
+        # under the same title leases used by streaming reconciliation.
+        for start in range(0, len(upsert_buffer), UPSERT_BATCH_SIZE):
+            batch = upsert_buffer[start:start + UPSERT_BATCH_SIZE]
+            with ExitStack() as leases:
+                checks = [leases.enter_context(publication_lease(db, media_type, tmdb_id))
+                          for tmdb_id, _, _ in sorted(batch, key=lambda item: item[0])]
+                for check_owned in checks:
+                    check_owned()
+                published_streaming = _published_streaming(media_type, [item[0] for item in batch])
+                points = []
+                for tmdb_id, payload, vectors in batch:
+                    # NULL/missing aggregates are unknown; only an explicit empty
+                    # array is evidence that clearing existing availability is safe.
+                    if tmdb_id not in published_streaming:
+                        continue
+                    payload["streaming_availability"] = published_streaming[tmdb_id]
+                    points.append(qm.PointStruct(
+                        id=int(QdrantMediaPoint.make_point_id(media_type, tmdb_id)),
+                        payload=payload, vector={name: values for name, values in vectors.items()},
+                    ))
+                if not points:
+                    continue
+                for check_owned in checks:
+                    check_owned()
+                # Bound each synchronous request within the lease's four-minute
+                # safety margin. Bulk uploader retries can outlive ownership.
+                result = qc.client.upsert(
+                    collection_name=MEDIA_COLLECTION, points=points,
                     wait=True,
                 )
-            total_upserts += len(upsert_buffer)
-            upsert_buffer.clear()
+                for check_owned in checks:
+                    check_owned()
+                if result.status != qm.UpdateStatus.COMPLETED:
+                    raise RuntimeError(f"Qdrant publication did not complete: {result.status}")
+                total_upserts += len(points)
 
     return {"upserts": total_upserts, "payload_updates": total_payload_updates}
 
@@ -529,7 +534,7 @@ def main(
     show_ids = show_ids or []
 
     init_mongodb()
-    qc = QdrantConnector()
+    qc = QdrantConnector(timeout=180)
 
     # disable index building entirely
     # vectors will be stored, but not indexed until enabled after the copy process

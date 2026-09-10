@@ -180,10 +180,14 @@ def reconcile_availability(
     for country, provider in verified.items():
         for offer in provider.get("streaming_links", []) or []:
             service_id = service_ids.get(offer.get("provider_name"))
-            if service_id is not None:
-                entry(country, offer["stream_type"], service_id).update(
-                    stream_url=offer.get("stream_url"), price_dollar=offer.get("price_dollar"),
-                    quality=offer.get("quality"))
+            if service_id is None:
+                raise RuntimeError(
+                    f"Unmapped streaming provider {offer.get('provider_name')!r} "
+                    f"for {media_type}:{tmdb_id} in {country}"
+                )
+            entry(country, offer["stream_type"], service_id).update(
+                stream_url=offer.get("stream_url"), price_dollar=offer.get("price_dollar"),
+                quality=offer.get("quality"))
     return rows, verified, api_results
 
 
@@ -235,7 +239,8 @@ def copy_media(
                                    if row.get("country_code") and row["country_code"] not in verified})
                 summary = {"verified_countries": sorted(verified), "deferred_countries": deferred,
                            "api_countries": sorted(api_results), "provider_state": "present" if providers else "absent",
-                           "streaming_availability": sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})}
+                           "streaming_availability": (sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})
+                                                      if existing or verified or api_results else None)}
                 if deferred or not providers:
                     publication["status"] = "partial_success"
                 if targeted_ids is not None:

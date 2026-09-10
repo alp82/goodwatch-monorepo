@@ -13,18 +13,22 @@ do not erase their previously published contribution. Legacy rows without source
 attribution are preserved when their ownership cannot be established safely.
 
 Child availability and the title's streaming arrays are derived from the same
-reconciled result. Targeted Qdrant publication receives this exact snapshot; the
-scheduled vector publisher reads the published Crate streaming arrays. Verified replacement explicitly clears obsolete nullable fields;
+reconciled result. Both targeted and scheduled Qdrant publication read the latest
+published Crate streaming arrays under the shared publication lease. Verified replacement explicitly clears obsolete nullable fields;
 ordinary Crate upserts retain their existing null-preserving behavior. Publication
 reports deferred countries separately from its successful writes. Qdrant failure or
 any required Crate write failure prevents the normal priority acknowledgment step.
 Acknowledgment still uses the claimed lease and demand watermark, preserving newer
 impressions and rejecting stale ownership.
 
-Scheduled and targeted streaming publication share a short MongoDB lease per media
+Scheduled and targeted streaming and vector publication share a short MongoDB lease per media
 identity in `streaming_publication_leases`. Contention or loss of ownership fails
 publication without acknowledging demand. Each writer reads source and child state
-under the lease and checks ownership around writes. Crate does not provide an
+under the lease and checks ownership around writes. Vector writers read the latest
+published Crate snapshot while holding these leases and finish synchronous writes
+before releasing them. Unknown snapshots retain existing vector availability; an
+unmapped scraped provider fails publication before availability is removed.
+Crate does not provide an
 atomic transaction across child records and aggregate fields: interrupted writes
 remain recoverable by replay, and the title is acknowledged only after completion.
 
