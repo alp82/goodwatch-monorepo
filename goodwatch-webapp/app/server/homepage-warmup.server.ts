@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { cacheEntryKey, getRedisCluster } from "~/utils/cache";
+import { cacheEntryKey, getRedisCluster, serializeCacheEntry } from "~/utils/cache";
 import {
 	computeShowcaseExamples,
 	SHOWCASE_ITEMS,
+	SHOWCASE_CACHE_TTL_SECONDS,
 	type ShowcaseExamplesResult,
 } from "~/server/showcase-examples.server";
 
-const CACHE_TTL_SECONDS = 24 * 60 * 60;
 const LEASE_SECONDS = 5 * 60;
 const CACHE_KEY = cacheEntryKey("showcase-examples", { country: "DE" });
 // The existing cache key has no hash tag. This tag places the lease in its slot.
@@ -68,7 +68,7 @@ export async function warmAnonymousHomepage() {
 		);
 		verifyExamples(examples);
 		const timestamp = Date.now();
-		const serialized = JSON.stringify({ data: examples, timestamp });
+		const serialized = serializeCacheEntry(examples, timestamp);
 		const confirmed = await redis.eval(
 			`
 			if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
@@ -81,9 +81,9 @@ export async function warmAnonymousHomepage() {
 			CACHE_KEY,
 			owner,
 			serialized,
-			CACHE_TTL_SECONDS,
+			SHOWCASE_CACHE_TTL_SECONDS,
 		);
-		if (confirmed !== CACHE_TTL_SECONDS) {
+		if (confirmed !== SHOWCASE_CACHE_TTL_SECONDS) {
 			throw new HomepageWarmupFailure(
 				confirmed === 0 ? "lease_lost" : "write_unverified",
 			);
@@ -95,7 +95,7 @@ export async function warmAnonymousHomepage() {
 			item_count: examples.length,
 			identities: examples.map((item) => `${item.mediaType}/${item.tmdb_id}`),
 			computed_at: new Date(timestamp).toISOString(),
-			ttl_seconds: CACHE_TTL_SECONDS,
+			ttl_seconds: SHOWCASE_CACHE_TTL_SECONDS,
 			write_verified: true,
 		};
 	} finally {

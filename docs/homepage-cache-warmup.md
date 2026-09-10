@@ -43,5 +43,14 @@ response or HTTP/transport failure fails the job without logging credentials.
 
 Validation before deployment: webapp typechecking retains the same 292 existing
 diagnostics, with no added or removed errors after normalizing line shifts.
-The Python worker passes Pyright. Production acceptance requires the deployment
-steps above; a reviewed code change alone does not establish live cache warming.
+The Python worker passes Pyright. The production webapp build passes, and the
+Python suite passes 116 tests with five optional Crate integration tests skipped.
+Production acceptance requires the deployment steps above; a reviewed code
+change alone does not establish live cache warming.
+
+At initial rollout preparation, the existing Coolify credential could read
+application `gk4owk8` but returned HTTP 403, `Missing required permissions: write`,
+when adding its runtime secret. The Windmill secret is already provisioned.
+The original browser schedule is restored and enabled until authorized Coolify
+configuration and live verification complete. No replacement deployment or
+schedule cutover has occurred yet.

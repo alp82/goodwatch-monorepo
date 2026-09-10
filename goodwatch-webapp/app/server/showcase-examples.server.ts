@@ -32,6 +32,8 @@ export interface ShowcaseExamplesParams {
 	country: string
 }
 
+export const SHOWCASE_CACHE_TTL_SECONDS = 24 * 60 * 60
+
 export const SHOWCASE_ITEMS: Array<{ id: string; type: "movie" | "show" }> = [
 	{ id: "27205", type: "movie" },   // Inception - Sci-Fi thriller
 	{ id: "2316", type: "show" },     // The Office - Comedy
@@ -46,7 +48,7 @@ export const getShowcaseExamples = async (
 		name: "showcase-examples",
 		target: computeShowcaseExamples as (params: ShowcaseExamplesParams) => Promise<ShowcaseExamplesResult & { [key: string]: unknown }>,
 		params,
-		ttlMinutes: 60 * 24,
+		ttlMinutes: SHOWCASE_CACHE_TTL_SECONDS / 60,
         //ttlMinutes: 0,
 	}) as ShowcaseExamplesResult
 }
