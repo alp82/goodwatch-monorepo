@@ -223,7 +223,7 @@ class MonitorCheckTests(unittest.TestCase):
             return {"country": country, "publication": publication}
 
         first = poll(
-            Api(), store, NOW, notify=False, backlog_collector=collect
+            Api(), store, NOW, notify=False, backlog_collector=collect, clock=lambda: 0
         )
         second = poll(
             Api(),
@@ -231,6 +231,7 @@ class MonitorCheckTests(unittest.TestCase):
             NOW + timedelta(hours=1),
             notify=False,
             backlog_collector=collect,
+            clock=lambda: 0,
         )
         self.assertEqual(len(second["pipelines"]), 3)
         self.assertEqual(
