@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+import re
+from urllib.parse import parse_qs, urlsplit
 
 from bson import ObjectId
 from bs4 import BeautifulSoup
@@ -41,6 +43,36 @@ def retry_deadline(value: str | None) -> datetime | None:
             return None
 
 
+def validate_selected_country(soup: BeautifulSoup, country_code: str) -> None:
+    """An HTTP success may still be TMDB's default-country watch page."""
+    controls = []
+    pattern = re.compile(
+        r"""\$\(\s*(['"])#ott_country_filter\1\s*\)\s*\.\s*kendoDropDownList\(\s*\{(.{0,8192}?)\}\s*\)""",
+        re.DOTALL,
+    )
+    for script in soup.find_all("script"):
+        controls.extend(match.group(2) for match in pattern.finditer(script.get_text()))
+    if len(controls) != 1:
+        raise ValueError("Missing or ambiguous watch-page country selector")
+    selected = re.findall(r"""\bvalue\s*:\s*(['"])([A-Z]{2})\1""", controls[0])
+    fields = re.findall(r"""\bdataValueField\s*:\s*(['"])([^'"]+)\1""", controls[0])
+    if len(selected) != 1 or len(fields) != 1 or fields[0][1] != "country_code":
+        raise ValueError("Unrecognized watch-page country selector")
+    if selected[0][1] != country_code:
+        raise ValueError("Watch-page country does not match requested country")
+
+
+def validate_offer_country(url: str, country_code: str) -> None:
+    parsed = urlsplit(url)
+    if parsed.hostname != "click.justwatch.com":
+        return
+    values = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=32).get(
+        "uct_country"
+    )
+    if values is not None and (len(values) != 1 or values[0].upper() != country_code):
+        raise ValueError("Clickout country does not match requested country")
+
+
 def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
     url = next_entry["tmdb_watch_url"]
     country_code = next_entry["country_code"]
@@ -69,14 +101,13 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
         raise requests.HTTPError(
             f"TMDB watch HTTP {response.status_code}", response=response
         )
+    validate_selected_country(soup, country_code)
     offers = soup.select_one("#ott_offers_window")
     if offers is None:
         raise ValueError("Unrecognized TMDB watch page")
     provider_blocks = offers.select(".ott_provider")
     if not provider_blocks and offers.select_one("p.no_offers") is None:
-        raise ValueError(
-            "Watch page has neither offers nor verified no-offers message"
-        )
+        raise ValueError("Watch page has neither offers nor verified no-offers message")
 
     streaming_links = []
     for provider_block in provider_blocks:
@@ -93,10 +124,9 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
                 raise ValueError("Offer is missing its link")
             stream_url = provider_link.get("href")
             stream_title = provider_link.get("title")
-            if not isinstance(stream_url, str) or not isinstance(
-                stream_title, str
-            ):
+            if not isinstance(stream_url, str) or not isinstance(stream_title, str):
                 raise ValueError("Offer link or provider title is invalid")
+            validate_offer_country(stream_url, country_code)
             provider_name = None
             if stream_title.endswith("Demand"):
                 parts = stream_title.rsplit(" on ", 2)
@@ -176,9 +206,7 @@ def main(next_id: dict) -> dict:
             list(collection.find({"tmdb_id": document["tmdb_id"]})), media_type
         )
         if identity in errors:
-            country_state.record_identity_error(
-                collection, document, errors[identity]
-            )
+            country_state.record_identity_error(collection, document, errors[identity])
             return {**outcome, "outcome": "failed", "error": errors[identity]}
         country = country_state.country_from_url(
             document["tmdb_watch_url"], document["tmdb_id"], media_type
@@ -205,11 +233,7 @@ def main(next_id: dict) -> dict:
         try:
             result = crawl_tmdb_watch_page(claimed)
         except Exception as error:
-            response = (
-                error.response
-                if isinstance(error, requests.HTTPError)
-                else None
-            )
+            response = error.response if isinstance(error, requests.HTTPError) else None
             retry_at = (
                 retry_deadline(response.headers.get("Retry-After"))
                 if response is not None
@@ -240,9 +264,7 @@ def main(next_id: dict) -> dict:
                 "rate_limit_reached": True,
             }
         if result.streaming_links is None:
-            raise ValueError(
-                "Successful crawl must supply verified streaming links"
-            )
+            raise ValueError("Successful crawl must supply verified streaming links")
         saved = country_state.save_success(
             collection,
             claimed,

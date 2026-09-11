@@ -23,6 +23,10 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 from f.tmdb_web import country_state
 
 
+def country_control(code: str) -> str:
+    return '<script>$("#ott_country_filter").kendoDropDownList({value: "' + code + '", dataValueField: "country_code"});</script>'
+
+
 class CountryStateTests(unittest.TestCase):
     def setUp(self) -> None:
         self.db = mongomock.MongoClient().countries
@@ -37,6 +41,27 @@ class CountryStateTests(unittest.TestCase):
             **values,
         }
         return self.collection.insert_one(values).inserted_id
+
+    def test_effective_country_mismatch_missing_or_ambiguous_control_preserves_previous_success(self) -> None:
+        from f.tmdb_web.tmdb_crawl_providers import fetch
+        empty = '<div id="ott_offers_window"><p class="no_offers">No offers</p></div>'
+        controls = ['', '<script>$("#ott_country_filter").kendoDropDownList({value: "DE", dataValueField: "country_code"});</script>',
+                    '<script>$("#ott_country_filter").kendoDropDownList({value: "NE", dataValueField: "country_code"});$("#ott_country_filter").kendoDropDownList({value: "DE", dataValueField: "country_code"});</script>']
+        pages = [empty + control for control in controls]
+        pages.append(country_control('NE') + '<div id="ott_offers_window"><div class="ott_provider"><h3>Stream</h3><li class="ott_filter_best_price"><a href="https://click.justwatch.com/a?uct_country=de" title="Watch on Old">Watch</a></li></div></div>')
+        for page in pages:
+            self.collection.delete_many({})
+            identity = self.country(country_code='NE', tmdb_watch_url='https://www.themoviedb.org/movie/42/watch?locale=NE',
+                                    updated_at=self.now, next_fetch_at=self.now, streaming_links=[{'provider_name': 'Old', 'stream_url': 'https://old'}])
+            response = SimpleNamespace(status_code=200, text=page, headers={})
+            with patch.object(fetch, 'init_mongodb'), patch.object(fetch, 'close_mongodb'), patch.object(fetch, 'get_db', return_value=self.db), patch.object(fetch.requests, 'get', return_value=response):
+                result = fetch.main({'id': str(identity), 'type': 'movie'})
+            self.assertEqual(result['outcome'], 'failed')
+            self.assertTrue(result['retry_saved'])
+            stored = self.collection.find_one({'_id': identity})
+            self.assertEqual(stored['updated_at'], self.now)
+            self.assertEqual(stored['streaming_links'], [{'provider_name': 'Old', 'stream_url': 'https://old'}])
+            self.assertGreater(stored['consecutive_failures'], 0)
 
     def test_pending_country_is_claimed_once_and_success_is_reused_for_seven_days(
         self,
@@ -258,7 +283,7 @@ class CountryStateTests(unittest.TestCase):
         identity = self.country()
         response = SimpleNamespace(
             status_code=200,
-            text='<div id="ott_offers_window"><p class="no_offers">There are no offers.</p></div>',
+            text='<div id="ott_offers_window"><p class="no_offers">There are no offers.</p></div>' + country_control('US'),
             headers={},
         )
         with (
@@ -358,7 +383,7 @@ class CountryStateTests(unittest.TestCase):
             )
             response = SimpleNamespace(
                 status_code=200,
-                text='<div id="ott_offers_window"><p class="no_offers">No offers.</p></div>',
+                text='<div id="ott_offers_window"><p class="no_offers">No offers.</p></div>' + country_control('US'),
                 headers={},
             )
             http = stack.enter_context(
@@ -392,6 +417,7 @@ class CountryStateTests(unittest.TestCase):
             patch.object(fetch.requests, "get", return_value=response) as http,
         ):
             for identity in ids:
+                response.text = html + country_control(self.collection.find_one({"_id": identity})["country_code"])
                 self.assertEqual(
                     fetch.main({"id": str(identity), "type": "movie"})[
                         "outcome"
@@ -399,6 +425,7 @@ class CountryStateTests(unittest.TestCase):
                     "fetched",
                 )
             for identity in ids:
+                response.text = html + country_control(self.collection.find_one({"_id": identity})["country_code"])
                 self.assertEqual(
                     fetch.main({"id": str(identity), "type": "movie"})[
                         "outcome"

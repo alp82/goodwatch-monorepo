@@ -185,7 +185,7 @@ class StreamingPublicationTests(unittest.TestCase):
         from f.tmdb_web.tmdb_crawl_providers.fetch import crawl_tmdb_watch_page
         identities = [('U-NEXT', 84, 84), ('HBO Max on U-Next', 2284, 2284), ('Disney Plus', 2706, 337)]
         links = ''.join(f'<li class="ott_filter_best_price"><a title="Watch Smallville on {name}" href="{escape(clickout_url(name, vendor))}">Watch</a></li>' for name, vendor, _ in identities)
-        response = type('Response', (), {'status_code': 200, 'headers': {}, 'text': '<div id="ott_offers_window"><div class="ott_provider"><h3>Stream</h3>' + links + '</div></div>'})()
+        response = type('Response', (), {'status_code': 200, 'headers': {}, 'text': '<div id="ott_offers_window"><div class="ott_provider"><h3>Stream</h3>' + links + '</div></div><script>$("#ott_country_filter").kendoDropDownList({value: "JP", dataValueField: "country_code"});</script>'})()
         with patch('f.tmdb_web.tmdb_crawl_providers.fetch.requests.get', return_value=response):
             result = crawl_tmdb_watch_page({'tmdb_watch_url': 'https://www.themoviedb.org/tv/4604/watch', 'country_code': 'JP'})
         self.assertEqual([link.provider_name for link in result.streaming_links], [name for name, _, _ in identities])
@@ -244,6 +244,55 @@ class StreamingPublicationTests(unittest.TestCase):
                     self.publish(crate)
                 self.assertEqual(crate.rows, [availability()])
                 self.assertEqual(crate.media, {})
+
+    def test_duplicate_catalog_names_use_media_country_and_verified_api_scope(self) -> None:
+        catalog = [
+            {'name': 'Amazon Prime Video', 'tmdb_id': 9, 'media_type': 'show', 'order_by_country': {'US': 1, 'JP': 1}},
+            {'name': 'Amazon Prime Video', 'tmdb_id': 119, 'media_type': 'show', 'order_by_country': {'AR': 1}},
+            {'name': 'Amazon Prime Video', 'tmdb_id': 999, 'media_type': 'movie', 'order_by_country': {'US': 1}},
+            {'name': 'HBO Max', 'tmdb_id': 384, 'media_type': 'show', 'order_by_country': {'BE': 1, 'NL': 1}},
+            {'name': 'HBO Max', 'tmdb_id': 1899, 'media_type': 'show', 'order_by_country': {'BE': 1, 'NL': 1}},
+        ]
+        for country, name, api_ids, expected in [('US', 'Amazon Prime Video', [], 9), ('AR', 'Amazon Prime Video', [], 119), ('BE', 'HBO Max', [1899], 1899), ('BE', 'HBO Max', [384, 1899], None)]:
+            with self.subTest(country=country, api_ids=api_ids):
+                self.db.tmdb_tv_providers.delete_many({})
+                self.db.tmdb_tv_details.update_one({'tmdb_id': 42}, {'$set': {'updated_at': self.now, 'watch_providers': {'results': {country: {'flatrate': [{'provider_id': identity, 'provider_name': name} for identity in api_ids]}}}}})
+                self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': country, 'updated_at': self.now,
+                    'streaming_links': [{'provider_name': name, 'stream_type': 'flatrate', 'stream_url': 'https://old-provider.example'}]})
+                crate = Crate([availability()])
+                original_select = crate.select
+                def select(sql: str, params: tuple | None = None) -> list[dict]:
+                    if 'FROM streaming_service' in sql:
+                        return catalog
+                    return original_select(sql, params)
+                crate.select = select
+                if expected is None:
+                    with self.assertRaises(RuntimeError):
+                        self.publish(crate)
+                    self.assertEqual(crate.rows, [availability()])
+                    self.assertEqual(crate.media, {})
+                else:
+                    self.publish(crate)
+                    offers = [row for row in crate.rows if row['country_code'] == country and row.get('stream_url') == 'https://old-provider.example']
+                    self.assertEqual([row['streaming_service_id'] for row in offers], [expected])
+
+    def test_duplicate_name_ignores_api_evidence_from_other_country_type_or_unverified_details(self) -> None:
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'BE', 'updated_at': self.now,
+            'streaming_links': [{'provider_name': 'HBO Max', 'stream_type': 'flatrate', 'stream_url': 'https://old-provider.example'}]})
+        for api_country, api_type, verified in [('NL', 'flatrate', True), ('BE', 'rent', True), ('BE', 'flatrate', False)]:
+            self.db.tmdb_tv_details.update_one({'tmdb_id': 42}, {'$set': {'updated_at': self.now if verified else None,
+                'watch_providers': {'results': {api_country: {api_type: [{'provider_id': 1899, 'provider_name': 'HBO Max'}]}}}}})
+            crate = Crate([availability()])
+            original_select = crate.select
+            def select(sql: str, params: tuple | None = None) -> list[dict]:
+                if 'FROM streaming_service' in sql:
+                    return [{'name': 'HBO Max', 'tmdb_id': identity, 'media_type': 'show', 'order_by_country': {'BE': 1, 'NL': 1}} for identity in [384, 1899]]
+                return original_select(sql, params)
+            crate.select = select
+            with self.assertRaises(RuntimeError):
+                self.publish(crate)
+            self.assertEqual(crate.rows, [availability()])
+            self.assertEqual(crate.media, {})
 
     def test_unknown_verified_provider_fails_without_clearing_previous_offers(self) -> None:
         self.db.tmdb_tv_providers.insert_one({

@@ -118,7 +118,7 @@ locks:
   f/sync/copy/qdrant_retry: f4d9eb76cfe0872d068f0a0a3040315ae1c9b0a07b0fae506433052d8add6b13
   f/sync/copy/tmdb_daily: 7814f6ee77bc2e1d9aca4ad0ad7c5eb7ad13793359186a3069884c5335107aa7
   f/sync/copy/tmdb_details: 70e0a525de5a1e5bfaae8fc728bc8fdb2cbde37ad571dd3e6e93d329ec7f89e5
-  f/sync/copy/tmdb_streaming: 649164f5212a84168fc43199584d89f9e3bd884bb372868180eb6d5b1234cb2d
+  f/sync/copy/tmdb_streaming: e0cb0b6578c4f6196165d24956dfa023265786ae8a5bfc943a9459ba3d4852bc
   f/sync/copy/tvtropes: 6918d36b4f895e7cd30d8cab9b051821c01b099f4a453b19403a5c7caa475201
   f/sync/copy/vector_data: 8d5bb4b8bbd561b0c7debf90d17e368a1cf5920707aefbf93107767836a64d29
   f/sync/init/cratedb: aabd1d0a9793c172a5d2b6f0acfd9a5662038437c4db8085229be21a30c8b59d
@@ -162,7 +162,7 @@ locks:
   f/tmdb_web/tmdb_crawl_providers.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/tmdb_web/tmdb_crawl_providers/backfill: f03e8ba09fcacc7c4167c5b29e908872e65259ee0306bf24082fd60767ed0c3f
-  f/tmdb_web/tmdb_crawl_providers/fetch: 938553d8498a1b2ff6d5b55b301a3e652ccca36316e69f82902402bd52f0c1a6
+  f/tmdb_web/tmdb_crawl_providers/fetch: 204d89bc8ee96e4ae2073e5850b6a8037d13979def325088a862ebbc7d682f5f
   f/tmdb_web/tmdb_crawl_providers/iterate: a2bee9ee15d3f93cc57a47e6cfbb99d3d9da22e9f565041ce380ca0b49f34321
   f/tmdb_web/tmdb_crawl_providers/next: 706572b01f1f4c26386ae0309ea40a6585eb0568ae834a6f6919ed24dd0d256b
   f/tmdb_web/tmdb_init_providers.flow:
