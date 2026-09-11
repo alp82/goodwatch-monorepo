@@ -76,6 +76,9 @@ def descendant_ids(status: Any) -> list[str]:
         if isinstance(value, dict):
             for key, item in value.items():
                 if key == "job" and isinstance(item, str):
+                    # Windmill uses this sentinel for a skipped module without a job.
+                    if value.get("skipped") is True and item == "00000000-0000-0000-0000-000000000000":
+                        continue
                     found.append(item)
                 elif key == "flow_jobs" and isinstance(item, list):
                     found.extend(x for x in item if isinstance(x, str))

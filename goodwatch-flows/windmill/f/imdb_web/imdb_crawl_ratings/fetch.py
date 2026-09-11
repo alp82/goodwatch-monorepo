@@ -2,8 +2,11 @@ import asyncio
 from bs4 import BeautifulSoup
 from datetime import datetime
 import requests
-from ssl import SSLError
-from typing import Union
+from typing import Union, Any
+from urllib.parse import urlparse
+import math
+
+HTTP_TIMEOUT_SECONDS = 15
 
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
@@ -41,13 +44,16 @@ def crawl_imdb_page(imdb_id: str) -> ImdbCrawlResult:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537"
     }
     try:
-        response = requests.get(url, headers=headers)
-    except SSLError as error:
-        # TODO error handling
-        raise error
-
-    html = response.text
-    soup = BeautifulSoup(html, "html.parser")
+        response = requests.get(url, headers=headers, timeout=HTTP_TIMEOUT_SECONDS)
+    except requests.RequestException:
+        raise RuntimeError("IMDb request failed") from None
+    if response.status_code != 200:
+        raise RuntimeError(f"IMDb HTTP {response.status_code}")
+    soup = BeautifulSoup(response.text, "html.parser")
+    canonical = soup.select_one('link[rel="canonical"]')
+    canonical_url = urlparse(str(canonical.get("href", ""))) if canonical else None
+    if canonical_url is None or canonical_url.hostname not in {"imdb.com", "www.imdb.com"} or canonical_url.path.rstrip("/") != f"/title/{imdb_id}":
+        raise RuntimeError("IMDb page identity was not verified")
 
     # Locate the score element
     score_element = soup.select_one(
@@ -57,35 +63,29 @@ def crawl_imdb_page(imdb_id: str) -> ImdbCrawlResult:
         '[data-testid="hero-rating-bar__aggregate-rating__score"] ~ div:nth-of-type(3)'
     )
 
-    # Extract and format the score
-    if score_element:
-        score_text = score_element.string
-        try:
-            score = float(score_text)
-        except ValueError:
-            score = None
-    else:
+    try:
+        score = float(score_element.get_text(strip=True)) if score_element else None
+    except (ValueError, TypeError):
         score = None
+    if score is None or not math.isfinite(score) or not 0 <= score <= 10:
+        raise RuntimeError("IMDb page has no verified numeric rating")
 
-    # Extract and format the vote count
+    vote_count = None
     if vote_count_element:
-        vote_count_text = vote_count_element.string
+        text = vote_count_element.get_text(strip=True).replace(",", "")
+        multiplier = {"K": 1000, "M": 1000000, "B": 1000000000}.get(text[-1:], 1)
+        number = text[:-1] if multiplier != 1 else text
         try:
-            vote_count = int(
-                vote_count_text.replace(".", "")
-                .replace("K", "000")
-                .replace("M", "000000")
-                .replace("B", "000000000")
-            )
+            numeric_count = float(number) * multiplier
+            if math.isfinite(numeric_count) and numeric_count >= 0:
+                vote_count = int(numeric_count)
         except ValueError:
-            vote_count = None
-    else:
-        vote_count = None
+            pass
 
     return ImdbCrawlResult(
         url=url,
         user_score_original=score,
-        user_score_normalized_percent=score * 10 if score else None,
+        user_score_normalized_percent=score * 10,
         user_score_vote_count=vote_count,
         rate_limit_reached=False,
     )
@@ -105,6 +105,8 @@ def store_result(
     if type(result.user_score_vote_count) == int:
         next_entry.user_score_vote_count = result.user_score_vote_count
     next_entry.updated_at = datetime.utcnow()
+    next_entry.failed_at = None
+    next_entry.error_message = None
     next_entry.is_selected = False
     next_entry.save()
 
@@ -131,17 +133,27 @@ async def imdb_crawl_ratings(next_entry: Union[ImdbMovieRating, ImdbTvRating]):
         "tmdb_id": next_entry.tmdb_id,
         "original_title": next_entry.original_title,
         "popularity": next_entry.popularity,
-        "ratings": crawl_result.dict(),
+        "ratings": crawl_result.model_dump(),
     }
 
 
 def main(next_id: dict):
     init_mongodb()
-    next_entry = get_document_for_id(
-        next_id=next_id,
-        movie_model=ImdbMovieRating,
-        tv_model=ImdbTvRating,
-    )
-    result = asyncio.run(imdb_crawl_ratings(next_entry))
-    close_mongodb()
-    return result
+    next_entry: Any = None
+    try:
+        next_entry = get_document_for_id(
+            next_id=next_id,
+            movie_model=ImdbMovieRating,
+            tv_model=ImdbTvRating,
+        )
+        return asyncio.run(imdb_crawl_ratings(next_entry))
+    except Exception as error:
+        message = str(error) if isinstance(error, RuntimeError) and str(error).startswith("IMDb ") else "IMDb fetch failed"
+        if next_entry is not None:
+            next_entry.failed_at = datetime.utcnow()
+            next_entry.error_message = message
+            next_entry.is_selected = False
+            next_entry.save()
+        raise RuntimeError(message) from None
+    finally:
+        close_mongodb()

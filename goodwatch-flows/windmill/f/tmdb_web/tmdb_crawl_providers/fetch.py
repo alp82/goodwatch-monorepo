@@ -8,6 +8,7 @@ import requests
 
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_web import country_state
+from f.tmdb_web.provider_identity import provider_name_from_url
 from f.tmdb_web.models import (
     TmdbStreamingCrawlResult,
     StreamingLink,
@@ -105,6 +106,8 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
             else:
                 parts = stream_title.rsplit(" on ", 1)
                 provider_name = parts[-1] if len(parts) > 1 else stream_title
+
+            provider_name = provider_name_from_url(stream_url) or provider_name
 
             price = None
             try:

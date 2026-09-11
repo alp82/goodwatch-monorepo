@@ -21,6 +21,7 @@ from f.sync.models.crate_models import (
     StreamingAvailability,
 )
 from f.sync.models.crate_schemas import SCHEMAS
+from f.tmdb_web.provider_identity import provider_name_from_url
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
@@ -179,10 +180,11 @@ def reconcile_availability(
                         tmdb_link=data.get("link"), display_priority=offer.get("display_priority"))
     for country, provider in verified.items():
         for offer in provider.get("streaming_links", []) or []:
-            service_id = service_ids.get(offer.get("provider_name"))
+            provider_name = provider_name_from_url(offer.get("stream_url")) or offer.get("provider_name")
+            service_id = service_ids.get(provider_name)
             if service_id is None:
                 raise RuntimeError(
-                    f"Unmapped streaming provider {offer.get('provider_name')!r} "
+                    f"Unmapped streaming provider {provider_name!r} "
                     f"for {media_type}:{tmdb_id} in {country}"
                 )
             entry(country, offer["stream_type"], service_id).update(
@@ -205,7 +207,10 @@ def copy_media(
     MediaClass = Movie if is_movie else Show
     updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}} if recent_only else {}
     streaming_services = connector.select("SELECT tmdb_id, name FROM streaming_service")
-    service_ids = {service["name"]: service["tmdb_id"] for service in streaming_services}
+    catalog: dict[str, set[int]] = defaultdict(set)
+    for service in streaming_services:
+        catalog[service["name"]].add(service["tmdb_id"])
+    service_ids = {name: next(iter(ids)) for name, ids in catalog.items() if len(ids) == 1}
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     publication = {"status": "success", "titles": {}}
     targeted_ids = query_selector.get("tmdb_id", {}).get("$in") if not recent_only else None

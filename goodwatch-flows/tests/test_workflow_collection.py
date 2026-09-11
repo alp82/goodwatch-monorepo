@@ -9,6 +9,46 @@ from f.monitoring.collection import observe_execution
 
 
 class WorkflowCollectionTests(unittest.TestCase):
+    def test_overlap_skip_placeholder_is_not_a_missing_execution(self):
+        def api(path):
+            if path.endswith("get/root"):
+                return {
+                    "id": "root", "parent_job": None, "success": True,
+                    "is_skipped": True,
+                    "result": "not allowed to overlap with running-root, scheduling next iteration",
+                    "flow_status": {"step": 1, "modules": [
+                        {"id": "a", "job": "00000000-0000-0000-0000-000000000000",
+                         "type": "Success", "skipped": True},
+                        {"id": "b", "type": "WaitingForPriorSteps"},
+                    ]},
+                }
+            raise FileNotFoundError("not found")
+
+        observed = observe_execution(api, "root")
+        self.assertEqual(observed["outcome"], "overlap")
+        self.assertEqual(observed["missing_descendants"], [])
+        self.assertEqual(observed["unresolved_descendants"], [])
+
+    def test_overlap_does_not_hide_real_missing_children_or_unskipped_zero_ids(self):
+        for missing_id, skipped in [
+            ("4b56e224-336c-4a09-b88e-4898337453fd", True),
+            ("00000000-0000-0000-0000-000000000000", False),
+        ]:
+            with self.subTest(missing_id=missing_id, skipped=skipped):
+                def api(path):
+                    if path.endswith("get/root"):
+                        return {
+                            "id": "root", "parent_job": None, "success": True,
+                            "is_skipped": True,
+                            "flow_status": {"modules": [
+                                {"job": missing_id, "type": "Success", "skipped": skipped},
+                            ]},
+                        }
+                    raise FileNotFoundError("not found")
+
+                observed = observe_execution(api, "root")
+                self.assertEqual(observed["missing_descendants"], [missing_id])
+
     def test_saved_source_retry_is_explicit_and_identity_failure_is_material(self):
         for payload, tolerated in [
             ({"outcome": "failed", "rate_limit_reached": True}, 1),

@@ -9,11 +9,17 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Iterable, Iterator, Optional
 import unittest
+import sys
+from unittest.mock import patch
+from html import escape
 
 import mongomock
 from pydantic import BaseModel, ConfigDict
 
 ROOT = Path(__file__).parents[1] / "windmill" / "f"
+sys.path.insert(0, str(ROOT.parent))
+from f.tmdb_web.provider_identity import provider_name_from_url
+from test_provider_identity import clickout_url
 
 
 class Record(BaseModel):
@@ -71,7 +77,7 @@ def load_copy(db: Any) -> Callable[..., dict]:
                      BaseModel=BaseModel, CrateConnector=Crate,
                      Movie=Record, Show=Record, StreamingAvailability=Record,
                      SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability")},
-                     get_db=lambda: db)
+                     get_db=lambda: db, provider_name_from_url=provider_name_from_url)
     model_tree = ast.parse((ROOT / "sync" / "models" / "crate_models.py").read_text())
     model = next(node for node in model_tree.body if isinstance(node, ast.ClassDef) and node.name == "StreamingAvailability")
     namespace["MediaType"] = str
@@ -174,6 +180,70 @@ class StreamingPublicationTests(unittest.TestCase):
         self.assertIn(availability("DE"), crate.rows)
         self.assertEqual(set(crate.media[42]["streaming_availabilities"]), {"US_9", "DE_8"})
         self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], ["DE"])
+
+    def test_watch_page_provider_identity_survives_publication_and_vendor_namespace(self) -> None:
+        from f.tmdb_web.tmdb_crawl_providers.fetch import crawl_tmdb_watch_page
+        identities = [('U-NEXT', 84, 84), ('HBO Max on U-Next', 2284, 2284), ('Disney Plus', 2706, 337)]
+        links = ''.join(f'<li class="ott_filter_best_price"><a title="Watch Smallville on {name}" href="{escape(clickout_url(name, vendor))}">Watch</a></li>' for name, vendor, _ in identities)
+        response = type('Response', (), {'status_code': 200, 'headers': {}, 'text': '<div id="ott_offers_window"><div class="ott_provider"><h3>Stream</h3>' + links + '</div></div>'})()
+        with patch('f.tmdb_web.tmdb_crawl_providers.fetch.requests.get', return_value=response):
+            result = crawl_tmdb_watch_page({'tmdb_watch_url': 'https://www.themoviedb.org/tv/4604/watch', 'country_code': 'JP'})
+        self.assertEqual([link.provider_name for link in result.streaming_links], [name for name, _, _ in identities])
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'JP', 'updated_at': self.now,
+                                              'streaming_links': [link.model_dump() for link in result.streaming_links]})
+        crate = Crate()
+        original_select = crate.select
+        def select(sql: str, params: tuple | None = None) -> list[dict]:
+            if 'FROM streaming_service' in sql:
+                return [{'name': name, 'tmdb_id': tmdb} for name, _, tmdb in identities]
+            return original_select(sql, params)
+        crate.select = select
+        self.publish(crate)
+        self.assertEqual(set(crate.media[42]['streaming_availabilities']), {'JP_84', 'JP_2284', 'JP_337'})
+
+    def test_retained_truncated_offer_uses_full_context_name_without_rescrape(self) -> None:
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'JP', 'updated_at': self.now,
+            'streaming_links': [{'provider_name': 'U-Next', 'stream_type': 'flatrate', 'stream_url': clickout_url('HBO Max on U-Next', 2284)}]})
+        crate = Crate()
+        original_select = crate.select
+        def select(sql: str, params: tuple | None = None) -> list[dict]:
+            if 'FROM streaming_service' in sql:
+                return [{'name': 'U-NEXT', 'tmdb_id': 84}, {'name': 'HBO Max on U-Next', 'tmdb_id': 2284}]
+            return original_select(sql, params)
+        crate.select = select
+        self.publish(crate)
+        self.assertEqual(crate.media[42]['streaming_availabilities'], ['JP_2284'])
+
+    def test_invalid_context_or_unknown_full_name_fails_before_any_write(self) -> None:
+        for url in ['https://click.justwatch.com/a?cx=bad!', clickout_url('Unknown full provider', 9)]:
+            self.db.tmdb_tv_providers.delete_many({})
+            self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US', 'updated_at': self.now,
+                'streaming_links': [{'provider_name': 'Amazon', 'stream_type': 'flatrate', 'stream_url': url}]})
+            crate = Crate([availability()])
+            with self.assertRaises((ValueError, RuntimeError)):
+                self.publish(crate)
+            self.assertEqual(crate.rows, [availability()])
+            self.assertEqual(crate.media, {})
+
+    def test_exact_catalog_identity_accepts_duplicate_same_id_but_rejects_conflicts(self) -> None:
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US', 'updated_at': self.now,
+            'streaming_links': [{'provider_name': 'Amazon', 'stream_type': 'flatrate', 'stream_url': 'https://old-provider.example'}]})
+        for second_id in [9, 10]:
+            crate = Crate([availability()])
+            original_select = crate.select
+            def select(sql: str, params: tuple | None = None) -> list[dict]:
+                if 'FROM streaming_service' in sql:
+                    return [{'name': 'Amazon', 'tmdb_id': 9}, {'name': 'Amazon', 'tmdb_id': second_id}]
+                return original_select(sql, params)
+            crate.select = select
+            if second_id == 9:
+                self.publish(crate)
+                self.assertEqual(crate.media[42]['streaming_availabilities'], ['US_9'])
+            else:
+                with self.assertRaises(RuntimeError):
+                    self.publish(crate)
+                self.assertEqual(crate.rows, [availability()])
+                self.assertEqual(crate.media, {})
 
     def test_unknown_verified_provider_fails_without_clearing_previous_offers(self) -> None:
         self.db.tmdb_tv_providers.insert_one({
