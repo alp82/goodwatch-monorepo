@@ -1,0 +1,33 @@
+# Country retry and publication backlog monitoring
+
+The existing five-minute `f/monitoring/check` observes source eligibility and priority demand alongside workflow history. It reuses the Crate incident ledger and Discord delivery path; it does not claim work, scrape a title, publish data, acknowledge demand, or restart a workflow.
+
+## Country eligibility and scope
+
+The collector uses the crawler's shared `country_state.eligibility` predicate. A country must be due, free of an active lease, and free of a recorded identity error. Future `next_fetch_at`, fresh successful countries, and active global `tmdb_watch` upstream backoff are excluded. Missing next-fetch dates use the shared seven-day freshness fallback; never-fetched legacy rows are due from the source's epoch sentinel. The reported sentinel is a due-state convention, not a claim that scraping ran in 1970.
+
+An eligible country becomes overdue **30 minutes after its due time**. Counts group records by title within movie or TV scope; a successfully published title does not remove its unresolved country records. Reports include overdue country/title counts, oldest due time, the actual provider pipeline link, and a resolved job link when observed. They never include scraping payloads, provider offers, credentials, lease tokens, or raw errors.
+
+Movie and TV aggregates are assessed independently (`country_backlog_movie` and `country_backlog_tv`). Each database query has a fixed deadline, and total backlog collection receives at most 60 seconds within the checker's existing 220-second admission budget. An incomplete scope is **unknown**, its counts are marked as lower bounds, and its collection gap does not establish health or recovery. A complete TV observation can still detect a stall and recovery when movie collection is incomplete. This avoids hiding a measured scope behind an unrelated timeout.
+
+Live measurement before rollout found approximately 1.49 million overdue TV-country records; movie aggregation reached the 40-second query cap. That scope remains explicitly unknown until a complete bounded observation is available. This is a material coverage limitation, not a zero backlog. The checker does not turn up query limits or repeatedly scan without a deadline.
+
+A complete scope opens one grouped country incident after **60 minutes without observed progress**. Progress means fewer overdue countries, an advancing oldest-due item, or a newer verified scrape timestamp. New backlog growth is not progress. The first observation establishes a baseline; a collection gap restarts it. Legitimate ongoing progress does not generate one alert per country.
+
+## Publication and acknowledgment
+
+Priority aggregation reports two separate counts. Eligible overdue titles exclude the seven-day success cooldown, active leases, and updates inside a **two-hour grace period**. The sustained-acknowledgment detector also counts outstanding demand beyond cooldown while it is leased. Its durable `first_pending_at` and progress watermark survive claims, releases, and queue timestamp changes. A grouped incident opens once **two hours of observation and two hours without acknowledgment/backlog progress** have both elapsed; these windows can elapse together. A newer acknowledgment, reduced pending count, or completed demand resets progress. The reported age basis is monitoring observation, not an invented original demand creation time. Thus repeated failed claims cannot postpone the alert indefinitely.
+
+Retry exhaustion is independent of that aggregate observation window. The collector recognizes the pinned publisher's payload-free `PublicationFailure` summary and records only allowlisted classifications, attempts/retries, completion time, and validated title/claimed-demand identifiers. It reads those titles' current acknowledgment watermarks by primary key. A correlated unacknowledged exhaustion can alert immediately; another title's successful acknowledgment cannot clear it. Uncorrelated failures remain visible without claiming retained demand has been proven. Correlation reads are capped at 100 per observation. There is no separate newest-20 failure cutoff: older unresolved failures remain candidates. Unexamined targets make correlation explicitly incomplete and prevent a false recovery.
+
+Source-success evidence comes from successful fetch descendants in the same observed execution before the publication failure, rather than from unrelated global scrape activity. Reports distinguish publication after verified source success from source failure. Partial publication and deferred-country counts remain separate from acknowledgment; a parent success cannot erase country backlog evidence.
+
+Known fetch responses now explicitly mark `retry_saved` only after fenced durable failure persistence. The observer classifies these, and the legacy explicit rate-limit response, as tolerable external backoff. Missing source records, identity errors, arbitrary failed children, and unproven retries remain material or unknown. `external_deferred` is a distinct neutral workflow outcome, not useful success. Existing normalized observations are refreshed to version 2 to acquire this evidence.
+
+## Operations and validation
+
+The existing five-minute schedule and webhook secret are reused. Latest retirement reports keep workflow status counts separate from backlog status counts and infrastructure connectivity. Three grouped backlog reports appear when per-media country observations are available; plain aggregate fixtures remain supported for controlled validation. Persistent incidents carry safe counts, oldest time/age basis, pipeline links, and deduplicated Discord reminders/recovery.
+
+The controlled checker supports `f/monitoring/notification_check` with `scenario=country` or `scenario=publication` and `phase=incident|recovery`. These pass isolated synthetic stalled/recovered snapshots through the actual assessment, persistence, and Discord path. Messages retain the controlled-check label; production source records are not modified. The publication scenario includes verified source success followed by a correlated exhaustion. Run incident, repeat incident to confirm deduplication, and recovery in order.
+
+Validation includes real Crate priority aggregates and title-specific acknowledgment correlation, country eligibility/backoff/partial-title fixtures, independent media completeness, progress/no-progress transitions, bounded collection, safe error parsing, and actual notification construction. Live deployment and controlled delivery evidence are recorded in issue #10 on completion.

@@ -503,6 +503,31 @@ class WorkflowHealthTests(unittest.TestCase):
         )
         self.assertTrue(transition["state"]["active"])
 
+    def test_external_deferred_is_neutral_not_useful_and_does_not_reset_failure_streak(
+        self,
+    ) -> None:
+        deferred = job(
+            "deferred",
+            outcome="external_deferred",
+            tolerable_external_failure_count=4,
+        )
+        report = assess_pipeline(SCHEDULE, [deferred], NOW, START, THRESHOLDS)
+        self.assertEqual(report["outcomes"], {"external_deferred": 1})
+        self.assertEqual(report["status"], "healthy")
+        self.assertEqual(report["tolerable_external_failure_count"], 4)
+        failures = [
+            job(
+                str(index),
+                success=False,
+                completed_at=f"2026-09-11T06:0{index}:00Z",
+            )
+            for index in range(3)
+        ]
+        report = assess_pipeline(
+            SCHEDULE, failures + [deferred], NOW, START, THRESHOLDS
+        )
+        self.assertIn("consecutive_failures", report["causes"])
+
 
 if __name__ == "__main__":
     unittest.main()

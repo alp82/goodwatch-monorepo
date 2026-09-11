@@ -36,7 +36,10 @@ class NotificationTests(unittest.TestCase):
         self.assertEqual(result["message_id"], "998877")
         request = opener.open.call_args.args[0]
         self.assertEqual(request.full_url, WEBHOOK + "?wait=true")
-        self.assertEqual(request.get_header("User-agent"), "DiscordBot (https://github.com/alp82/goodwatch-monorepo, 1.0.0)")
+        self.assertEqual(
+            request.get_header("User-agent"),
+            "DiscordBot (https://github.com/alp82/goodwatch-monorepo, 1.0.0)",
+        )
         payload = json.loads(request.data)
         self.assertEqual(payload["allowed_mentions"], {"parse": []})
         self.assertIn("[controlled monitor check]", payload["content"])
@@ -126,6 +129,45 @@ class NotificationTests(unittest.TestCase):
             result = deliver_notification(WEBHOOK, NOTICE)
         self.assertFalse(result["delivered"])
         self.assertEqual(result["error_code"], "unconfirmed_response")
+
+    def test_grouped_backlog_notification_contains_safe_counts_age_and_source_link(
+        self,
+    ) -> None:
+        from datetime import datetime, timezone
+        from f.monitoring.health import incident_transition
+
+        report = {
+            "path": "f/monitoring/country_backlog",
+            "status": "unhealthy",
+            "causes": ["country_backlog_stalled"],
+            "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
+            "overdue_country_count": 12,
+            "overdue_title_count": 4,
+            "unacknowledged_title_count": 9,
+            "oldest_overdue_at": "2026-09-11T08:00:00+00:00",
+            "age_basis": "due_timestamp",
+            "raw_payload": "must-not-appear",
+        }
+        pending = incident_transition(
+            None, report, datetime(2026, 9, 11, 12, tzinfo=timezone.utc)
+        )["notification"]
+        opener = Mock()
+        opener.open.return_value = io.BytesIO(b'{"id":"998877"}')
+        with patch(
+            "f.monitoring.notifications.build_opener", return_value=opener
+        ):
+            result = deliver_notification(WEBHOOK, pending)
+        self.assertTrue(result["delivered"])
+        content = json.loads(opener.open.call_args.args[0].data)["content"]
+        self.assertIn("Overdue countries: 12", content)
+        self.assertIn("Overdue titles: 4", content)
+        self.assertIn("Unacknowledged titles: 9", content)
+        self.assertIn("2026-09-11T08:00:00+00:00", content)
+        self.assertIn(
+            "https://windmill.goodwatch.app/flows/get/f/tmdb_web/tmdb_crawl_providers?workspace=goodwatch",
+            content,
+        )
+        self.assertNotIn("must-not-appear", content)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from typing import Any, Callable
 from urllib.parse import urlencode
 
 from f.monitoring.collection import observe_execution
+from f.monitoring.backlog_health import assess_backlogs
 from f.monitoring.health import assess_pipeline, schedule_cadence, timestamp
 from f.monitoring.incidents import record_incident
 
@@ -70,7 +71,8 @@ def pipeline_thresholds(
 
 def needs_refresh(job: dict[str, Any]) -> bool:
     return bool(
-        not job.get("parent_resolved")
+        job.get("observation_version") != 2
+        or not job.get("parent_resolved")
         or job.get("running")
         or job.get("success") is None
         or job.get("evidence_incomplete")
@@ -89,15 +91,20 @@ def poll(
     max_resolutions: int = 800,
     budget_seconds: float = 220,
     clock: Callable[[], float] = monotonic,
+    backlog_collector: Callable[
+        [Any, list[dict[str, Any]], datetime, float], dict[str, Any]
+    ]
+    | None = None,
 ) -> dict[str, Any]:
     deadline = clock() + budget_seconds
+    collection_deadline = deadline - 70 if backlog_collector else deadline
     store.initialize()
     if not store.acquire():
         return {"status": "overlap", "reason": "checker_lease_busy"}
     infrastructure = {"windmill_api": "ok", "cratedb": "ok"}
 
     def bounded_api(path: str) -> Any:
-        if clock() >= deadline:
+        if clock() >= collection_deadline:
             raise TimeoutError("Monitoring collection budget exhausted")
         return api(path)
 
@@ -192,7 +199,7 @@ def poll(
         resolved = 0
         with ThreadPoolExecutor(max_workers=8) as executor:
             for offset in range(0, min(len(tasks), max_resolutions), 8):
-                if clock() >= deadline:
+                if clock() >= collection_deadline:
                     break
                 chunk = tasks[offset : min(offset + 8, max_resolutions)]
                 futures = [
@@ -216,6 +223,43 @@ def poll(
                         infrastructure["windmill_api"] = "degraded"
                 for path, batch in batches.items():
                     store.save_jobs(path, batch)
+        backlog_result = None
+        if backlog_collector:
+            try:
+                remaining = min(60, max(0, deadline - clock() - 10))
+                if remaining <= 0:
+                    raise TimeoutError("No backlog collection budget remains")
+                normalized = {
+                    job["id"]: job
+                    for plan in plans.values()
+                    for job in plan["jobs"].values()
+                }
+                snapshots = backlog_collector(
+                    store, list(normalized.values()), now, remaining
+                )
+                infrastructure["backlogs"] = (
+                    "ok"
+                    if all(
+                        snapshots[name].get("complete")
+                        for name in ["country", "publication"]
+                    )
+                    else "degraded"
+                )
+            except Exception:
+                snapshots = {
+                    "country": {"complete": False},
+                    "publication": {"complete": False},
+                }
+                infrastructure["backlogs"] = "degraded"
+            backlog_result = assess_backlogs(
+                snapshots["country"],
+                snapshots["publication"],
+                store.get("backlog-progress"),
+                now,
+            )
+            store.put(
+                "backlog-progress", "progress", "", backlog_result["progress"]
+            )
         reports = []
         for path, plan in plans.items():
             ledger = plan["jobs"]
@@ -256,13 +300,26 @@ def poll(
             )
             report["notification"] = delivery
             reports.append(report)
+        workflow_counts = dict(Counter(r["status"] for r in reports))
+        if backlog_result:
+            for report in backlog_result["reports"]:
+                report["notification"] = record_incident(
+                    store,
+                    report,
+                    now,
+                    webhook_url if notify and clock() < deadline else None,
+                )
+                reports.append(report)
         result = {
             "status": "completed",
             "observed_at": now.isoformat(),
             "infrastructure": infrastructure,
-            "workflow_status_counts": dict(
-                Counter(r["status"] for r in reports)
-            ),
+            "workflow_status_counts": workflow_counts,
+            "backlog_status_counts": dict(
+                Counter(r["status"] for r in backlog_result["reports"])
+            )
+            if backlog_result
+            else {},
             "pipelines": reports,
             "resolved_this_poll": resolved,
             "daily_paths_present": sorted(DAILY_PATHS & set(plans)),
@@ -283,6 +340,7 @@ def main(notify: bool = True) -> dict[str, Any]:
     import wmill
     import httpx
     from f.monitoring.store import MonitoringStore
+    from f.monitoring.backlog_collection import collect_backlogs
 
     client = wmill.Windmill(workspace="goodwatch").client
 
@@ -308,5 +366,10 @@ def main(notify: bool = True) -> dict[str, Any]:
         except Exception:
             pass
     return poll(
-        api, MonitoringStore(), datetime.now(timezone.utc), notify, webhook
+        api,
+        MonitoringStore(),
+        datetime.now(timezone.utc),
+        notify,
+        webhook,
+        backlog_collector=collect_backlogs,
     )

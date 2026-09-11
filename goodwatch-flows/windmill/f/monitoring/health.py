@@ -23,7 +23,7 @@ def classify_outcome(job: dict[str, Any]) -> str:
     if job.get("success") is False or job.get("outcome") == "failure":
         return "failure"
     if job.get("success") is True:
-        if job.get("outcome") in {"useful", "no_work"}:
+        if job.get("outcome") in {"useful", "no_work", "external_deferred"}:
             return job["outcome"]
         return "success_unknown"
     return "unknown"
@@ -161,7 +161,13 @@ def assess_pipeline(
         job
         for job in roots
         if classify_outcome(job)
-        not in {"overlap", "no_work", "running", "cancelled"}
+        not in {
+            "overlap",
+            "no_work",
+            "external_deferred",
+            "running",
+            "cancelled",
+        }
     ]
     if meaningful and meaningful[-1].get("material_child_failures"):
         causes.append("material_child_failures")
@@ -254,6 +260,9 @@ def assess_pipeline(
         "last_useful_at": last_useful.isoformat() if last_useful else None,
         "latest_job_id": str(roots[-1]["id"]) if roots else None,
         "material_child_failure_count": material_count,
+        "tolerable_external_failure_count": sum(
+            job.get("tolerable_external_failure_count", 0) for job in roots
+        ),
         "material_outcome_failure_count": sum(
             len(job.get("material_outcome_failures", [])) for job in roots
         ),
@@ -312,6 +321,17 @@ def incident_transition(
             "causes": list(state.get("causes", [])),
             "job_id": report.get("latest_job_id"),
         }
+        for field in [
+            "source_pipeline",
+            "overdue_country_count",
+            "overdue_title_count",
+            "outstanding_demand",
+            "unacknowledged_title_count",
+            "oldest_overdue_at",
+            "age_basis",
+        ]:
+            if report.get(field) is not None:
+                state["pending_notification"][field] = report[field]
     pending = state.get("pending_notification")
     attempted = timestamp(state.get("last_delivery_attempt_at"))
     notification = (

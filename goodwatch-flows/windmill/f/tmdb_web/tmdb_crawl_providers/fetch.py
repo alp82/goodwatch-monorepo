@@ -218,6 +218,7 @@ def main(next_id: dict) -> dict:
             return {
                 **outcome,
                 "outcome": "failed" if saved else "deferred",
+                "retry_saved": saved,
                 "error": str(error),
             }
         if result.rate_limit_reached:
@@ -232,6 +233,7 @@ def main(next_id: dict) -> dict:
             return {
                 **outcome,
                 "outcome": "failed" if saved else "deferred",
+                "retry_saved": saved,
                 "rate_limit_reached": True,
             }
         if result.streaming_links is None:

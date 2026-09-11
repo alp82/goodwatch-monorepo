@@ -11,6 +11,13 @@ schema:
       enum:
       - incident
       - recovery
+    scenario:
+      type: string
+      default: workflow
+      enum:
+      - workflow
+      - country
+      - publication
   required:
   - phase
 timeout: 120
