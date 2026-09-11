@@ -1,0 +1,9 @@
+summary: Resolve provider names from validated clickout context
+description: ''
+lock: '!inline f/tmdb_web/provider_identity.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

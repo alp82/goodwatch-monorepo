@@ -21,6 +21,7 @@ from f.sync.models.crate_models import (
     StreamingAvailability,
 )
 from f.sync.models.crate_schemas import SCHEMAS
+from f.tmdb_web.provider_identity import provider_name_from_url
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
@@ -132,9 +133,30 @@ def availability_key(row: dict) -> tuple:
     ))
 
 
+def scoped_provider_id(
+    name: str, country: str, stream_type: str, catalog: dict[str, list[dict]],
+    api_results: dict,
+) -> int | None:
+    """Resolve exact names using the same media, country and offer type."""
+    candidates = catalog.get(name, [])
+    identities = {row["tmdb_id"] for row in candidates}
+    if len(identities) == 1:
+        return next(iter(identities))
+    if not identities:
+        return None
+    api_ids = {offer.get("provider_id")
+               for offer in (api_results.get(country, {}).get(stream_type, []) or [])
+               if offer.get("provider_name") == name and offer.get("provider_id") in identities}
+    if api_ids:
+        return next(iter(api_ids)) if len(api_ids) == 1 else None
+    country_ids = {row["tmdb_id"] for row in candidates
+                   if country in (row.get("order_by_country") or {})}
+    return next(iter(country_ids)) if len(country_ids) == 1 else None
+
+
 def reconcile_availability(
     tmdb_id: int, media_type: str, existing: list[dict], details: dict,
-    providers: list[dict], service_ids: dict,
+    providers: list[dict], service_ids: dict[str, list[dict]],
 ) -> tuple[dict, dict, dict]:
     """Replace confirmed source scopes and retain the other source's contribution."""
     api_results = (details.get("watch_providers") or {}).get("results")
@@ -179,10 +201,11 @@ def reconcile_availability(
                         tmdb_link=data.get("link"), display_priority=offer.get("display_priority"))
     for country, provider in verified.items():
         for offer in provider.get("streaming_links", []) or []:
-            service_id = service_ids.get(offer.get("provider_name"))
+            provider_name = provider_name_from_url(offer.get("stream_url")) or offer.get("provider_name")
+            service_id = scoped_provider_id(provider_name, country, offer["stream_type"], service_ids, api_results)
             if service_id is None:
                 raise RuntimeError(
-                    f"Unmapped streaming provider {offer.get('provider_name')!r} "
+                    f"Unmapped streaming provider {provider_name!r} "
                     f"for {media_type}:{tmdb_id} in {country}"
                 )
             entry(country, offer["stream_type"], service_id).update(
@@ -197,6 +220,8 @@ def copy_media(
     media_type: str = "movie",
     *, recent_only: bool = True,
 ) -> dict:
+    if media_type not in ("movie", "show"):
+        raise ValueError("Unsupported streaming media type")
     is_movie = media_type == "movie"
     mongo_db = get_db()
     mongo_details = mongo_db.tmdb_movie_details if is_movie else mongo_db.tmdb_tv_details
@@ -204,8 +229,14 @@ def copy_media(
     media_table_name = "movie" if is_movie else "show"
     MediaClass = Movie if is_movie else Show
     updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}} if recent_only else {}
-    streaming_services = connector.select("SELECT tmdb_id, name FROM streaming_service")
-    service_ids = {service["name"]: service["tmdb_id"] for service in streaming_services}
+    streaming_services = connector.select(
+        "SELECT tmdb_id, name, media_type, order_by_country FROM streaming_service WHERE media_type = ?",
+        (media_type,),
+    )
+    service_ids: dict[str, list[dict]] = defaultdict(list)
+    for service in streaming_services:
+        if service.get("media_type", media_type) == media_type:
+            service_ids[service["name"]].append(service)
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     publication = {"status": "success", "titles": {}}
     targeted_ids = query_selector.get("tmdb_id", {}).get("$in") if not recent_only else None
