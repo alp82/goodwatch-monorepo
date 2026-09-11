@@ -1,0 +1,17 @@
+{
+  "destination": "10.0.0.11",
+  "ports": [
+    4200
+  ],
+  "networks": [
+    {
+      "name": "windmill_default",
+      "project": "windmill",
+      "compose_network": "default",
+      "subnets": [
+        "172.18.0.0/16",
+        "172.28.0.0/24"
+      ]
+    }
+  ]
+}

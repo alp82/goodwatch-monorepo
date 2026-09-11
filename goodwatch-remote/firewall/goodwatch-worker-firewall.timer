@@ -1,0 +1,10 @@
+[Unit]
+Description=Reconcile worker bridge permissions after Docker network changes
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+Unit=goodwatch-worker-firewall.service
+
+[Install]
+WantedBy=timers.target

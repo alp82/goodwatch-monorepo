@@ -1,0 +1,12 @@
+[Unit]
+Description=Reconcile scoped GoodWatch worker firewall rules
+After=docker.service ufw.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/goodwatch-worker-firewall/run.sh
+User=root
+UMask=0077
+StateDirectory=goodwatch-worker-firewall
+TimeoutStartSec=120
