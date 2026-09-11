@@ -1,0 +1,10 @@
+summary: Collect bounded read-only country and publication snapshots
+description: Aggregate monitoring evidence without source mutations or raw scraping
+  payloads.
+lock: '!inline f/monitoring/backlog_collection.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

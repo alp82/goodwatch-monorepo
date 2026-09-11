@@ -9,6 +9,81 @@ from f.monitoring.collection import observe_execution
 
 
 class WorkflowCollectionTests(unittest.TestCase):
+    def test_saved_source_retry_is_explicit_and_identity_failure_is_material(self):
+        for payload, tolerated in [
+            ({"outcome": "failed", "rate_limit_reached": True}, 1),
+            ({"outcome": "failed", "retry_saved": True, "error": "private upstream"}, 1),
+            ({"outcome": "failed", "error": "private identity failure"}, 0),
+        ]:
+            jobs = {
+                "root": {"id": "root", "parent_job": None, "success": True,
+                         "script_path": "f/tmdb_web/tmdb_crawl_providers",
+                         "result": [payload], "flow_status": {"modules": [{"job": "source"}]}},
+                "source": {"id": "source", "parent_job": "root", "success": True,
+                           "script_path": "f/tmdb_web/tmdb_crawl_providers/fetch", "result": payload},
+            }
+            result = observe_execution(lambda path: jobs[path.rsplit("/", 1)[-1]], "root")
+            self.assertEqual(result["source_failure_count"], 1)
+            self.assertEqual(result["tolerable_external_failure_count"], tolerated)
+            self.assertEqual(result["outcome"], "external_deferred" if tolerated else "failure")
+            self.assertNotIn("private", str(result))
+
+    def test_publication_exhaustion_keeps_only_safe_summary_and_correlated_claim(self):
+        import json
+        failure = {"classification": "attempts_exhausted", "attempts": 4, "retries": 3,
+                   "errors": {"grpc_unavailable": 4}, "private": "secret"}
+        jobs = {
+            "root": {"id": "root", "parent_job": None, "success": False,
+                     "flow_status": {"modules": [{"job": "source"}, {"job": "publish"}]}},
+            "source": {"id": "source", "script_path": "f/tmdb_web/tmdb_crawl_providers/fetch",
+                       "success": True, "result": {"outcome": "fetched"}},
+            "publish": {"id": "publish", "script_path": "f/priority/publish", "success": False,
+                        "started_at": "2026-09-11T06:00:00Z", "duration_ms": 120000,
+                        "args": {"next_ids": {"tv_ids": [42], "claims": [
+                            {"media_type": "show", "tmdb_id": 42, "claimed_demand": 7, "lease_token": "secret"}]}},
+                        "result": {"error": {"name": "PublicationFailure", "message":
+                            "Qdrant publication failed (attempts exhausted): " + json.dumps(failure) + ". Demand remains unacknowledged"}}},
+        }
+        result = observe_execution(lambda path: jobs[path.rsplit("/", 1)[-1]], "root")
+        self.assertEqual(result["source_success_count"], 1)
+        self.assertEqual(result["publication_failure"], {
+            "classification": "attempts_exhausted", "attempts": 4, "retries": 3,
+            "job_id": "publish", "completed_at": "2026-09-11T06:02:00+00:00",
+            "targets": [{"media_type": "show", "tmdb_id": 42, "claimed_demand": 7}]})
+        self.assertEqual(result["publication_retry_count"], 3)
+        self.assertNotIn("secret", str(result))
+        self.assertNotIn("lease_token", str(result))
+        self.assertIsNone(result["source_last_success_at"])
+        for finished, expected in [
+            ("2026-09-11T06:01:00Z", "2026-09-11T06:01:00+00:00"),
+            ("2026-09-11T06:03:00Z", None),
+        ]:
+            jobs["source"]["completed_at"] = finished
+            enriched = observe_execution(lambda path: jobs[path.rsplit("/", 1)[-1]], "root")
+            self.assertEqual(enriched["publication_failure"].get("source_success_at"), expected)
+        jobs["root"]["flow_status"] = {"modules": [{"job": "publish"}]}
+        jobs["root"]["completed_at"] = "2026-09-11T06:05:00Z"
+        unrelated = observe_execution(lambda path: jobs[path.rsplit("/", 1)[-1]], "root")
+        self.assertIsNone(unrelated["source_last_success_at"])
+        self.assertNotIn("source_success_at", unrelated["publication_failure"])
+
+
+    def test_retained_publication_counts_are_not_doubled_by_parent_results(self):
+        payload = {"acknowledged": 2, "movie": {"vectors": {"publication": {
+            "batches": 1, "attempts": 2, "retries": 1, "errors": {"grpc_unavailable": 1}}},
+            "streaming": {"publication": {"status": "partial_success", "titles": {
+                "42": {"deferred_country_count": 3}}}}}}
+        jobs = {
+            "root": {"id": "root", "parent_job": None, "success": True, "result": payload,
+                     "flow_status": {"modules": [{"job": "publish"}]}},
+            "publish": {"id": "publish", "success": True, "script_path": "f/priority/publish", "result": payload},
+        }
+        result = observe_execution(lambda path: jobs[path.rsplit("/", 1)[-1]], "root")
+        self.assertEqual(result["acknowledged_count"], 2)
+        self.assertEqual(result["partial_country_count"], 3)
+        self.assertEqual(result["publication_attempt_count"], 2)
+        self.assertEqual(result["publication_retry_count"], 1)
+
     def test_missing_parent_is_resolved_through_root_endpoint(self):
         calls = []
 

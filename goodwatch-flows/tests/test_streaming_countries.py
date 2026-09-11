@@ -415,6 +415,7 @@ class CountryStateTests(unittest.TestCase):
                 status_code=429, text="", headers={"Retry-After": "36000"}
             )
             result = fetch.main({"id": str(ids[0]), "type": "movie"})
+            self.assertTrue(result["retry_saved"])
             self.assertEqual(result["outcome"], "failed")
             saved = self.collection.find_one({"_id": ids[0]})
             self.assertEqual(saved["updated_at"], old["updated_at"])

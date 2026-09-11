@@ -199,6 +199,134 @@ class MonitorCheckTests(unittest.TestCase):
         self.assertNotIn("pipeline:" + PIPELINE, store.values)
         self.assertTrue(store.released)
 
+    def test_backlog_reports_persist_independent_progress_and_group_incidents(
+        self,
+    ) -> None:
+        from datetime import timedelta
+
+        store = MemoryStore()
+        country = {
+            "complete": True,
+            "overdue_country_count": 12,
+            "overdue_title_count": 4,
+            "oldest_due_at": "2026-09-11T08:00:00Z",
+        }
+        publication = {
+            "complete": True,
+            "overdue_title_count": 0,
+            "outstanding_demand": 0,
+        }
+
+        def collect(ledger, jobs, now, remaining_seconds):
+            self.assertIs(ledger, store)
+            self.assertLessEqual(remaining_seconds, 60)
+            return {"country": country, "publication": publication}
+
+        first = poll(
+            Api(), store, NOW, notify=False, backlog_collector=collect
+        )
+        second = poll(
+            Api(),
+            store,
+            NOW + timedelta(hours=1),
+            notify=False,
+            backlog_collector=collect,
+        )
+        self.assertEqual(len(second["pipelines"]), 3)
+        self.assertEqual(
+            second["backlog_status_counts"], {"unhealthy": 1, "healthy": 1}
+        )
+        self.assertIn("backlog-progress", store.values)
+        self.assertTrue(
+            store.values["pipeline:f/monitoring/country_backlog"]["incident"][
+                "active"
+            ]
+        )
+        self.assertIn(PIPELINE, second["daily_paths_present"])
+
+    def test_backlog_collection_failure_reports_unknown_without_false_recovery(
+        self,
+    ) -> None:
+        store = MemoryStore()
+
+        def unavailable(*args):
+            raise RuntimeError("sensitive upstream details must not escape")
+
+        result = poll(
+            Api(), store, NOW, notify=False, backlog_collector=unavailable
+        )
+        self.assertEqual(result["infrastructure"]["backlogs"], "degraded")
+        self.assertEqual(result["backlog_status_counts"], {"unknown": 2})
+        self.assertNotIn("sensitive", str(result))
+
+    def test_workflow_collection_reserves_budget_for_backlog_queries(
+        self,
+    ) -> None:
+        elapsed = [0.0]
+        base = Api(["uninspected"])
+
+        def api(path):
+            elapsed[0] += 10
+            return base(path)
+
+        admitted = []
+
+        def collect(store, jobs, now, remaining_seconds):
+            admitted.append(remaining_seconds)
+            return {
+                "country": {
+                    "complete": True,
+                    "overdue_country_count": 0,
+                    "overdue_title_count": 0,
+                },
+                "publication": {"complete": True, "overdue_title_count": 0},
+            }
+
+        result = poll(
+            api,
+            MemoryStore(),
+            NOW,
+            notify=False,
+            backlog_collector=collect,
+            budget_seconds=100,
+            clock=lambda: elapsed[0],
+        )
+        self.assertEqual(result["resolved_this_poll"], 0)
+        self.assertEqual(admitted, [60])
+        self.assertEqual(result["backlog_status_counts"], {"healthy": 2})
+
+    def test_legacy_completed_observation_is_refreshed_for_new_evidence(
+        self,
+    ) -> None:
+        store = MemoryStore()
+        store.ledger[PIPELINE] = {
+            "old": {
+                "id": "old",
+                "parent_resolved": True,
+                "parent_job": None,
+                "success": True,
+                "running": False,
+                "started_at": "2026-09-11T00:00:00Z",
+                "completed_at": "2026-09-11T00:01:00Z",
+            }
+        }
+        api = Api(
+            jobs={
+                "old": {
+                    "id": "old",
+                    "success": True,
+                    "started_at": "2026-09-11T00:00:00Z",
+                    "duration_ms": 60000,
+                    "result": {"processed": 2},
+                }
+            }
+        )
+        poll(api, store, NOW, notify=False)
+        self.assertIn("jobs_u/get/old", api.calls)
+        self.assertEqual(
+            store.ledger[PIPELINE]["old"]["observation_version"], 2
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

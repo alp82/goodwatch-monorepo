@@ -3,6 +3,7 @@
 import json
 import math
 import re
+from datetime import datetime
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -35,6 +36,10 @@ CAUSES = {
     "material_child_failures",
     "material_outcome_failures",
     "controlled_failure",
+    "country_backlog_stalled",
+    "publication_unacknowledged",
+    "publication_retry_exhausted",
+    "publication_failed",
 }
 
 
@@ -84,12 +89,58 @@ def deliver_notification(
         )
     ):
         return failure("invalid_notification", True)
+    source_pipeline = notification.get("source_pipeline")
+    if source_pipeline is not None and (
+        not isinstance(source_pipeline, str)
+        or not re.fullmatch(r"[fu]/[A-Za-z0-9_/-]{1,200}", source_pipeline)
+    ):
+        return failure("invalid_notification", True)
+    count_fields = {
+        "overdue_country_count": "Overdue countries",
+        "overdue_title_count": "Overdue titles",
+        "outstanding_demand": "Outstanding demand",
+    }
+    for field in count_fields:
+        value = notification.get(field)
+        if value is not None and (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or not 0 <= value <= 10**18
+        ):
+            return failure("invalid_notification", True)
+    oldest = notification.get("oldest_overdue_at")
+    if oldest is not None:
+        try:
+            if (
+                not isinstance(oldest, str)
+                or len(oldest) > 40
+                or datetime.fromisoformat(oldest.replace("Z", "+00:00")).tzinfo
+                is None
+            ):
+                return failure("invalid_notification", True)
+        except ValueError:
+            return failure("invalid_notification", True)
+    age_basis = notification.get("age_basis")
+    if age_basis is not None and age_basis not in {
+        "due_timestamp",
+        "monitor_observation",
+        "last_queue_update_lower_bound",
+        "unacknowledged_timestamp",
+    }:
+        return failure("invalid_notification", True)
     prefix = (
         "[controlled monitor check] "
         if pipeline == "f/monitoring/notification_check"
         else ""
     )
     content = f"{prefix}{kind}: {pipeline}\nCause: {', '.join(causes) or 'recovered'}"
+    for field, label in count_fields.items():
+        if notification.get(field) is not None:
+            content += f"\n{label}: {notification[field]}"
+    if oldest:
+        content += f"\nOldest observed timestamp: {oldest} ({age_basis or 'unspecified'})"
+    if source_pipeline:
+        content += f"\nhttps://windmill.goodwatch.app/flows/get/{source_pipeline}?workspace=goodwatch"
     if job_id:
         content += f"\nhttps://windmill.goodwatch.app/run/{job_id}?workspace=goodwatch"
     else:
