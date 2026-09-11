@@ -19,28 +19,21 @@ PUBLIC = {
 }
 
 
-def worker_config(destination: str) -> dict[str, Any]:
-    return {
-        "destination": destination,
-        "ports": [6379],
-        "networks": [
-            {
-                "name": "windmill_default",
-                "project": "windmill",
-                "compose_network": "default",
-                "subnets": ["172.18.0.0/16", "172.28.0.0/24"],
-            }
-        ],
-    }
-
-
 def could_expose_redis(rule: list[str]) -> bool:
     if not any(action in rule for action in ("allow", "limit")):
         return False
     if "proto" in rule and rule[rule.index("proto") + 1] == "udp":
         return False
-    if "port" in rule:
-        value = rule[rule.index("port") + 1]
+    if "to" in rule:
+        if rule.count("to") != 1:
+            return True
+        destination = rule[rule.index("to") + 1 :]
+        if destination.count("port") != 1:
+            return True
+        value = destination[destination.index("port") + 1]
+    elif "from" in rule:
+        # A source port restricts callers, never the destination service.
+        return True
     elif len(rule) >= 2 and rule[0] in ("allow", "limit"):
         value = rule[1]
     else:
@@ -83,7 +76,12 @@ def reconcile_policy(
         InputRule("ens10", peer, destination, "16379", "Redis cluster peer").argv()
         for peer in peers
     ]
-    workers = host.worker_plan(worker_config(destination))
+    settings = host.load_worker_config()
+    if settings.get("destination") != destination or settings.get("ports") != [6379]:
+        raise ValueError(
+            "Worker firewall configuration does not match Redis host and port"
+        )
+    workers = host.worker_plan(settings)
     desired += workers["add"]
     remove = [rule for rule in current if rule in legacy or rule in workers["remove"]]
     for rule in current:
@@ -163,9 +161,26 @@ def reconcile_policy(
 
 
 class LocalRedisHost(WorkerHost):
-    def __init__(self, destination: str, snapshot: str | None = None) -> None:
+    def __init__(
+        self,
+        destination: str,
+        snapshot: str | None = None,
+        worker_config_path: str = "/etc/goodwatch-worker-firewall.json",
+    ) -> None:
         self.destination = destination
         self.snapshot = snapshot
+        self.worker_config_path = Path(worker_config_path)
+
+    def load_worker_config(self) -> dict[str, Any]:
+        import json
+
+        path = self.worker_config_path
+        stat = path.stat()
+        if stat.st_uid != 0 or stat.st_mode & 0o022 or path.is_symlink():
+            raise ValueError(
+                "Worker configuration must be root-owned and not writable by group/other"
+            )
+        return json.loads(path.read_text())
 
     def worker_plan(self, config: dict[str, Any]) -> dict[str, Any]:
         if self.inspect("windmill_default") is None:
@@ -335,6 +350,9 @@ def main() -> None:
     parser.add_argument("--host", required=True, choices=list(PUBLIC))
     parser.add_argument("--activate", action="store_true")
     parser.add_argument("--snapshot")
+    parser.add_argument(
+        "--worker-config", default="/etc/goodwatch-worker-firewall.json"
+    )
     args = parser.parse_args()
     if os.geteuid() != 0:
         parser.error(
@@ -342,7 +360,7 @@ def main() -> None:
         )
     if args.activate and not args.snapshot:
         parser.error("--activate requires --snapshot NEW_PATH")
-    host = LocalRedisHost(args.host, args.snapshot)
+    host = LocalRedisHost(args.host, args.snapshot, args.worker_config)
     addresses = json.loads(host.run(["ip", "-json", "address", "show", "dev", "ens10"]))
     if not any(
         a.get("local") == args.host

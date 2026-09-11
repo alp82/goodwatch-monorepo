@@ -9,12 +9,19 @@ from typing import Any
 
 
 class Host:
-    def __init__(self) -> None:
+    def __init__(self, destination: str = "10.0.0.14") -> None:
         self.rules = [
             ["allow", "22/tcp"],
             ["allow", "from", "159.69.247.66", "to", "any", "port", "6379"],
             ["deny", "6379"],
         ]
+        self.worker_settings = json.loads(
+            (
+                Path(__file__).resolve().parents[2]
+                / "goodwatch-remote/firewall"
+                / ("host-" + destination.rsplit(".", 1)[1] + ".json")
+            ).read_text()
+        )
         self.commands = []
         self.evidence = {
             "cluster_state": "ok",
@@ -34,6 +41,9 @@ class Host:
         }
         self.snapshot = None
 
+    def load_worker_config(self) -> dict:
+        return self.worker_settings
+
     def persistent(self) -> list[list[str]]:
         return list(self.rules)
 
@@ -46,7 +56,7 @@ class Host:
                     "on",
                     "br-ef7f6d40b1ca",
                     "from",
-                    "172.18.0.0/16",
+                    config["networks"][0]["subnets"][0],
                     "to",
                     config["destination"],
                     "port",
@@ -84,6 +94,59 @@ class Host:
 
 
 class PolicyTest(unittest.TestCase):
+    def test_source_port_cannot_hide_public_redis_destination(self) -> None:
+        for rule in [
+            [
+                "allow",
+                "from",
+                "any",
+                "port",
+                "50000",
+                "to",
+                "any",
+                "port",
+                "6379",
+                "proto",
+                "tcp",
+            ],
+            ["allow", "from", "any", "port", "50000", "proto", "tcp"],
+            ["allow", "from", "any", "port", "50000", "to", "any", "proto", "tcp"],
+        ]:
+            host = Host()
+            host.rules.append(rule)
+            with self.assertRaises(ValueError):
+                reconcile_policy({"destination": "10.0.0.14"}, host)
+        host = Host()
+        safe = [
+            "allow",
+            "from",
+            "any",
+            "port",
+            "50000",
+            "to",
+            "any",
+            "port",
+            "443",
+            "proto",
+            "tcp",
+        ]
+        host.rules.append(safe)
+        self.assertIn(
+            safe, reconcile_policy({"destination": "10.0.0.14"}, host)["preserve"]
+        )
+
+    def test_uses_shared_worker_scope_and_rejects_host_or_port_mismatch(self) -> None:
+        host = Host()
+        host.worker_settings["networks"][0]["subnets"] = ["172.28.0.0/24"]
+        plan = reconcile_policy({"destination": "10.0.0.14"}, host)
+        self.assertEqual(plan["add"][-1][5], "172.28.0.0/24")
+        for field, value in [("destination", "10.0.0.15"), ("ports", [6333])]:
+            host = Host()
+            host.worker_settings[field] = value
+            with self.assertRaises(ValueError):
+                reconcile_policy({"destination": "10.0.0.14"}, host)
+            self.assertEqual(host.commands, [])
+
     def test_rollback_restores_original_filter_policies_without_full_ruleset_restore(
         self,
     ) -> None:
@@ -118,7 +181,7 @@ class PolicyTest(unittest.TestCase):
             ("10.0.0.15", ["10.0.0.14", "10.0.0.16"]),
             ("10.0.0.16", ["10.0.0.14", "10.0.0.15"]),
         ]:
-            plan = reconcile_policy({"destination": destination}, Host())
+            plan = reconcile_policy({"destination": destination}, Host(destination))
             self.assertEqual([rule[5] for rule in plan["add"][1:3]], peers)
             self.assertEqual({rule[7] for rule in plan["add"]}, {destination})
             self.assertEqual({rule[9] for rule in plan["add"]}, {"6379", "16379"})
