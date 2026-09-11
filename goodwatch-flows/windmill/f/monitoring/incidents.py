@@ -5,7 +5,10 @@ import hashlib
 from typing import Any, Callable
 
 from f.monitoring.health import incident_transition, timestamp
-from f.monitoring.notifications import deliver_notification
+from f.monitoring.notifications import (
+    DELIVERY_CLIENT_IDENTITY,
+    deliver_notification,
+)
 
 
 def record_incident(
@@ -14,7 +17,12 @@ def record_incident(
 ) -> dict[str, Any]:
     path = report["path"]
     previous = store.get("pipeline:" + path) or {}
-    fingerprint = hashlib.sha256(webhook_url.encode()).hexdigest() if webhook_url else None
+    fingerprint = (
+        hashlib.sha256(
+            f"{DELIVERY_CLIENT_IDENTITY}\0{webhook_url}".encode()
+        ).hexdigest()
+        if webhook_url else None
+    )
     gate = store.get("discord-delivery") or {}
     if fingerprint and gate.get("fingerprint") not in {None, fingerprint}:
         if previous.get("incident"):
