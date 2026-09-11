@@ -1,5 +1,5 @@
-summary: Visit GoodWatch and populate cache
-description: ''
+summary: Refresh anonymous DE/en homepage cache
+description: Authenticated fixed-scope refresh; requires verified complete Redis replacement.
 lock: '!inline f/utils/visit_goodwatch_and_populate_cache.script.lock'
 kind: script
 schema:
@@ -7,4 +7,4 @@ schema:
   type: object
   properties: {}
   required: []
-timeout: 300
+timeout: 360

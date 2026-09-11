@@ -32,7 +32,9 @@ export interface ShowcaseExamplesParams {
 	country: string
 }
 
-const SHOWCASE_ITEMS: Array<{ id: string; type: "movie" | "show" }> = [
+export const SHOWCASE_CACHE_TTL_SECONDS = 24 * 60 * 60
+
+export const SHOWCASE_ITEMS: Array<{ id: string; type: "movie" | "show" }> = [
 	{ id: "27205", type: "movie" },   // Inception - Sci-Fi thriller
 	{ id: "2316", type: "show" },     // The Office - Comedy
 	{ id: "129", type: "movie" },     // Spirited Away - Animation
@@ -44,15 +46,16 @@ export const getShowcaseExamples = async (
 ): Promise<ShowcaseExamplesResult> => {
 	return await cached<ShowcaseExamplesParams, ShowcaseExamplesResult & { [key: string]: unknown }>({
 		name: "showcase-examples",
-		target: _getShowcaseExamples as (params: ShowcaseExamplesParams) => Promise<ShowcaseExamplesResult & { [key: string]: unknown }>,
+		target: computeShowcaseExamples as (params: ShowcaseExamplesParams) => Promise<ShowcaseExamplesResult & { [key: string]: unknown }>,
 		params,
-		ttlMinutes: 60 * 24,
+		ttlMinutes: SHOWCASE_CACHE_TTL_SECONDS / 60,
         //ttlMinutes: 0,
 	}) as ShowcaseExamplesResult
 }
 
-async function _getShowcaseExamples(
-	params: ShowcaseExamplesParams
+export async function computeShowcaseExamples(
+	params: ShowcaseExamplesParams,
+	options?: { bypassCache: boolean },
 ): Promise<ShowcaseExamplesResult> {
 	const { country } = params
 	const language = "en"
@@ -67,13 +70,13 @@ async function _getShowcaseExamples(
 						movieId: item.id,
 						country,
 						language,
-					})
+					}, options)
 				} else {
 					media = await getDetailsForShow({
 						showId: item.id,
 						country,
 						language,
-					})
+					}, options)
 				}
 
 				return transformToShowcaseExample(media)

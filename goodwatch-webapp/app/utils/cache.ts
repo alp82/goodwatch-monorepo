@@ -104,8 +104,15 @@ function generateCacheKey(data: JsonData): string {
 	return crypto.createHash("sha256").update(serializedData).digest("hex")
 }
 
+export function cacheEntryKey(name: string, params: JsonData): string {
+	return `cached-${name}:${generateCacheKey(params)}`
+}
+
+export function serializeCacheEntry(data: JsonData, timestamp = Date.now()): string {
+	return JSON.stringify({ data, timestamp })
+}
+
 async function cacheSet<CacheData extends JsonData>(
-	namespace: string,
 	key: string,
 	data: CacheData,
 	ttl: number,
@@ -114,31 +121,23 @@ async function cacheSet<CacheData extends JsonData>(
 	if (!redis) return
 	redis.info()
 
-	const namespaceKey = `${namespace}:${key}`
-	const timestamp = Date.now()
-	const jsonData = JSON.stringify({
-		data,
-		timestamp,
-	})
+	const jsonData = serializeCacheEntry(data)
 
 	try {
-		await redis.setex(namespaceKey, ttl || 1, jsonData)
+		await redis.setex(key, ttl || 1, jsonData)
 	} catch (e) {
 		console.log("Error while setting cache value:", e)
 	}
 }
 
 async function cacheGet<CacheData extends JsonData>(
-	namespace: string,
 	key: string,
 ): Promise<{ data: CacheData; timestamp: number } | null> {
 	const redis = getRedisCluster()
 	if (!redis) return null
 
-	const namespaceKey = `${namespace}:${key}`
-
 	try {
-		const result = await redis.get(namespaceKey)
+		const result = await redis.get(key)
 		return result ? JSON.parse(result) : null
 	} catch (e) {
 		console.log("Error while getting cache value:", e)
@@ -146,13 +145,12 @@ async function cacheGet<CacheData extends JsonData>(
 	}
 }
 
-async function cacheDelete(namespace: string, key: string): Promise<number> {
+async function cacheDelete(key: string): Promise<number> {
 	const redis = getRedisCluster()
 	if (!redis) return 0
 
-	const namespaceKey = `${namespace}:${key}`
 	try {
-		const result = await redis.del(namespaceKey)
+		const result = await redis.del(key)
 		return result
 	} catch (e) {
 		console.log("Error while deleting cache value:", e)
@@ -182,11 +180,11 @@ export const cached = async <
 		return await target(params)
 	}
 	const cacheName = `cached-${name}`
-	const cacheKey = generateCacheKey(params)
+	const cacheKey = cacheEntryKey(name, params)
 
 	// check cache for existing entries within TTL
 	try {
-		const cachedResult = await cacheGet<Return>(cacheName, cacheKey)
+		const cachedResult = await cacheGet<Return>(cacheKey)
 		if (cachedResult) {
 			const { timestamp, data } = cachedResult
 			if (Date.now() - timestamp < 1000 * 60 * ttlMinutes) {
@@ -212,7 +210,7 @@ export const cached = async <
 
 	// update cache
 	try {
-		await cacheSet<Return>(cacheName, cacheKey, results, ttlMinutes * 60)
+		await cacheSet<Return>(cacheKey, results, ttlMinutes * 60)
 	} catch (error) {
 		console.error({ error })
 	}
@@ -229,7 +227,5 @@ export const resetCache = async ({
 	params,
 	name,
 }: ResetCacheParams): Promise<number> => {
-	const cacheName = `cached-${name}`
-	const cacheKey = generateCacheKey(params)
-	return await cacheDelete(cacheName, cacheKey)
+	return await cacheDelete(cacheEntryKey(name, params))
 }
