@@ -32,7 +32,7 @@ For webhook failure, inspect safe `error_code`, retry time, pending incident, an
 
 ## Validation
 
-The implementation suite covers ancestry resolution/deduplication, missing and unfinished descendants, tolerated structured failures, all cron forms and eight daily paths, delayed completion, bounded unknown backfill, API failure, neutral outcomes, durable incident/recovery planning, Discord confirmation/redaction/rate limits, and real Crate lease/state behavior. A bounded live sample of 40 jobs matched Windmill's root resolver exactly: 20 roots, 20 children, zero mismatches or unresolved parents.
+The implementation suite covers ancestry resolution/deduplication, missing and unfinished descendants, tolerated structured failures, all cron forms and eight daily paths, delayed completion, bounded unknown backfill, API failure, neutral outcomes, durable incident/recovery planning, Discord confirmation/redaction/rate limits, and real Crate lease/state behavior. A bounded live sample of 40 jobs matched Windmill's root resolver exactly: 20 roots, 20 children, zero mismatches or unresolved parents. The first successful durable dry report completed in 113 seconds, resolved 400 executions, included all eight daily schedules among 23 pipelines, and matched its Crate readback exactly. It reported 21 unknown, one healthy, and one unhealthy pipeline, with 27,378 uninspected candidates explicitly retained as incomplete backfill. This snapshot is evidence of truthful reporting, not a claim that those pipelines have recovered.
 
 Live deployment, controlled Discord delivery, and schedule activation evidence are recorded in issue #9 when completed.
 
