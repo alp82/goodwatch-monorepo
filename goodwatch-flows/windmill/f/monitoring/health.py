@@ -326,6 +326,7 @@ def incident_transition(
             "overdue_country_count",
             "overdue_title_count",
             "outstanding_demand",
+            "unacknowledged_title_count",
             "oldest_overdue_at",
             "age_basis",
         ]:

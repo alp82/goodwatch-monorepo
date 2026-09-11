@@ -143,6 +143,7 @@ class NotificationTests(unittest.TestCase):
             "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
             "overdue_country_count": 12,
             "overdue_title_count": 4,
+            "unacknowledged_title_count": 9,
             "oldest_overdue_at": "2026-09-11T08:00:00+00:00",
             "age_basis": "due_timestamp",
             "raw_payload": "must-not-appear",
@@ -160,6 +161,7 @@ class NotificationTests(unittest.TestCase):
         content = json.loads(opener.open.call_args.args[0].data)["content"]
         self.assertIn("Overdue countries: 12", content)
         self.assertIn("Overdue titles: 4", content)
+        self.assertIn("Unacknowledged titles: 9", content)
         self.assertIn("2026-09-11T08:00:00+00:00", content)
         self.assertIn(
             "https://windmill.goodwatch.app/flows/get/f/tmdb_web/tmdb_crawl_providers?workspace=goodwatch",

@@ -99,6 +99,7 @@ def deliver_notification(
         "overdue_country_count": "Overdue countries",
         "overdue_title_count": "Overdue titles",
         "outstanding_demand": "Outstanding demand",
+        "unacknowledged_title_count": "Unacknowledged titles",
     }
     for field in count_fields:
         value = notification.get(field)

@@ -34,7 +34,8 @@ def main(phase: str, scenario: str = "workflow") -> dict:
             now = datetime.now(timezone.utc)
             overdue = (now - timedelta(hours=5)).isoformat()
             previous = {kind: {"last_progress_at": overdue, "count": 2,
-                        "oldest_due_at": overdue, "observation_complete": True}
+                        "oldest_due_at": overdue, "observation_complete": True,
+                        "pending_count": 2, "first_pending_at": overdue}
                         for kind in ["country", "publication"]}
             country = {"complete": True, "overdue_country_count": 2 if phase == "incident" else 0,
                        "overdue_title_count": 1 if phase == "incident" else 0,
@@ -42,6 +43,7 @@ def main(phase: str, scenario: str = "workflow") -> dict:
             publication = {"complete": True, "overdue_title_count": 2 if phase == "incident" else 0,
                            "oldest_unacknowledged_at": overdue if phase == "incident" else None,
                            "outstanding_demand": 2 if phase == "incident" else 0,
+                           "unacknowledged_title_count": 2 if phase == "incident" else 0,
                            "age_basis": "monitor_observation"}
             if scenario == "publication" and phase == "incident":
                 publication.update(last_failure_classification="attempts_exhausted",

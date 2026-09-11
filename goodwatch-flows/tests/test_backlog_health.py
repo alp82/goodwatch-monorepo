@@ -298,6 +298,93 @@ class BacklogHealthTests(unittest.TestCase):
             1,
         )
 
+    def test_repeated_claim_updates_do_not_reset_unacknowledged_observation(
+        self,
+    ) -> None:
+        pending = {
+            **PUBLICATION,
+            "unacknowledged_title_count": 5,
+            "outstanding_demand": 20,
+            "excluded": {"leased": 5},
+            "oldest_unacknowledged_at": NOW.isoformat(),
+        }
+        initial = assess_backlogs(COUNTRY, pending, None, NOW)
+        self.assertEqual(initial["reports"][1]["status"], "healthy")
+        self.assertIsNone(initial["reports"][1]["oldest_overdue_at"])
+        claimed = {
+            **pending,
+            "oldest_unacknowledged_at": (NOW + timedelta(hours=1)).isoformat(),
+        }
+        middle = assess_backlogs(
+            COUNTRY, claimed, initial["progress"], NOW + timedelta(hours=1)
+        )
+        self.assertEqual(middle["reports"][1]["status"], "healthy")
+        claimed["oldest_unacknowledged_at"] = (
+            NOW + timedelta(hours=2)
+        ).isoformat()
+        stalled = assess_backlogs(
+            COUNTRY, claimed, middle["progress"], NOW + timedelta(hours=2)
+        )
+        self.assertIn(
+            "publication_unacknowledged", stalled["reports"][1]["causes"]
+        )
+        self.assertEqual(
+            stalled["progress"]["publication"]["first_pending_at"],
+            NOW.isoformat(),
+        )
+        self.assertEqual(
+            stalled["reports"][1]["unacknowledged_title_count"], 5
+        )
+        self.assertEqual(
+            stalled["reports"][1]["age_basis"], "monitor_observation"
+        )
+        self.assertEqual(
+            stalled["reports"][1]["oldest_overdue_at"], NOW.isoformat()
+        )
+        self.assertEqual(
+            stalled["reports"][1]["oldest_overdue_age_seconds"], 0
+        )
+        acknowledged = {
+            **claimed,
+            "last_acknowledged_at": (NOW + timedelta(hours=2)).isoformat(),
+        }
+        recovered = assess_backlogs(
+            COUNTRY,
+            acknowledged,
+            stalled["progress"],
+            NOW + timedelta(hours=2, minutes=5),
+        )
+        self.assertEqual(recovered["reports"][1]["status"], "healthy")
+
+    def test_pending_count_decrease_or_zero_resets_publication_clock(
+        self,
+    ) -> None:
+        pending = {
+            **PUBLICATION,
+            "unacknowledged_title_count": 5,
+            "outstanding_demand": 20,
+        }
+        initial = assess_backlogs(COUNTRY, pending, None, NOW)
+        stalled = assess_backlogs(
+            COUNTRY, pending, initial["progress"], NOW + timedelta(hours=2)
+        )
+        self.assertEqual(stalled["reports"][1]["status"], "unhealthy")
+        for count in [4, 0]:
+            with self.subTest(count=count):
+                recovered = assess_backlogs(
+                    COUNTRY,
+                    {**pending, "unacknowledged_title_count": count},
+                    stalled["progress"],
+                    NOW + timedelta(hours=2, minutes=5),
+                )
+                self.assertEqual(recovered["reports"][1]["status"], "healthy")
+                if count == 0:
+                    self.assertIsNone(
+                        recovered["progress"]["publication"][
+                            "first_pending_at"
+                        ]
+                    )
+
 
 if __name__ == "__main__":
     unittest.main()

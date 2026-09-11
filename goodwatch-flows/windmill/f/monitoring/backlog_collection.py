@@ -107,19 +107,31 @@ def collect_publication(db: Any, jobs: list[dict], now: datetime) -> dict:
         MIN(CAST(updated_at AS BIGINT)) AS oldest
         FROM crawl_priority WHERE {eligible}""",
         (stamp - COOLDOWN_MS, stamp, cutoff))
-    ack = db.select("SELECT MAX(CAST(last_success_at AS BIGINT)) AS latest FROM crawl_priority")
+    ack = db.select("""SELECT MAX(CAST(last_success_at AS BIGINT)) AS latest,
+        COALESCE(SUM(CASE WHEN demand > acknowledged_demand AND
+            (last_success_at IS NULL OR CAST(last_success_at AS BIGINT) < ?)
+            THEN 1 ELSE 0 END), 0) AS pending_titles,
+        COALESCE(SUM(CASE WHEN demand > acknowledged_demand AND
+            (last_success_at IS NULL OR CAST(last_success_at AS BIGINT) < ?)
+            THEN demand - acknowledged_demand ELSE 0 END), 0) AS pending_demand
+        FROM crawl_priority""", (stamp - COOLDOWN_MS, stamp - COOLDOWN_MS))
     result = {"complete": True, "overdue_title_count": rows[0]["titles"],
-              "outstanding_demand": rows[0]["outstanding"],
+              "outstanding_demand": ack[0]["pending_demand"],
+              "overdue_demand": rows[0]["outstanding"],
               "oldest_unacknowledged_at": iso(rows[0]["oldest"]),
               "last_acknowledged_at": iso(ack[0]["latest"]),
+              "unacknowledged_title_count": ack[0]["pending_titles"],
               "age_basis": "last_queue_update_lower_bound", "excluded": {},
               "failure_unacknowledged": False}
     failures = [job["publication_failure"] for job in jobs
                 if isinstance(job.get("publication_failure"), dict)]
     failures.sort(key=lambda failure: failure.get("completed_at") or "", reverse=True)
     target_reads = 0
-    for failure in failures[:20]:
+    for failure in failures:
         pending = False
+        if len(failure.get("targets", [])) >= 100:
+            result["complete"] = False
+            result["correlation_incomplete"] = True
         for target in failure.get("targets", [])[:100]:
             if target_reads >= 100:
                 result["complete"] = False
@@ -193,4 +205,6 @@ def collect_backlogs(store: Any, jobs: list[dict], now: datetime,
         sources = [job for job in recent if job.get("source_failure_count", 0) or job.get("source_success_count", 0)]
         if sources:
             country["latest_job_id"] = max(sources, key=lambda job: job["completed_at"])["id"]
+    for partition in country.get("partitions", []):
+        partition["latest_job_id"] = country.get("latest_job_id")
     return {"country": country, "publication": publication}

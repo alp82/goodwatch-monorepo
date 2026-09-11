@@ -147,33 +147,72 @@ def assess_backlogs(
                     excluded.get("upstream_backoff") or 0
                 ) + (count or 0)
             count, titles, oldest = 0, 0, None
+        track_pending = (
+            kind == "publication" and "unacknowledged_title_count" in snapshot
+        )
+        pending_count = (
+            count_value(snapshot.get("unacknowledged_title_count"))
+            if track_pending
+            else count
+        )
+        if track_pending and pending_count is None:
+            complete = False
         old = previous.get(scope_key, {})
+        old_pending = old.get("pending_count", old.get("count"))
+        first_pending = (
+            timestamp(old.get("first_pending_at")) if track_pending else None
+        )
         since = timestamp(old.get("last_progress_at")) or now
         causes = []
         changed = False
-        if complete:
+        if complete and pending_count is not None:
             old_success = timestamp(old.get("last_success_at"))
             old_oldest = timestamp(old.get("oldest_due_at"))
             changed = bool(
                 old.get("observation_complete")
                 and (
-                    (count < old.get("count", count))
+                    (
+                        pending_count
+                        < (
+                            old_pending
+                            if old_pending is not None
+                            else pending_count
+                        )
+                    )
                     or (
                         successful
                         and successful <= now
                         and (not old_success or successful > old_success)
                     )
-                    or (oldest and old_oldest and oldest > old_oldest)
+                    or (
+                        not track_pending
+                        and oldest
+                        and old_oldest
+                        and oldest > old_oldest
+                    )
                 )
             )
             if (
                 changed
                 or not old.get("observation_complete")
-                or not old.get("count")
-                or not count
+                or not old_pending
+                or not pending_count
             ):
                 since = now
-            if count and (now - since).total_seconds() >= window:
+                if track_pending:
+                    first_pending = now if pending_count else None
+            if track_pending and pending_count and first_pending is None:
+                first_pending = now
+                since = now
+            grace_elapsed = not track_pending or (
+                first_pending is not None
+                and (now - first_pending).total_seconds() >= grace
+            )
+            if (
+                pending_count
+                and grace_elapsed
+                and (now - since).total_seconds() >= window
+            ):
                 causes.append(
                     "country_backlog_stalled"
                     if kind == "country"
@@ -182,6 +221,10 @@ def assess_backlogs(
             progress[scope_key] = {
                 "last_progress_at": since.isoformat(),
                 "count": count,
+                "pending_count": pending_count,
+                "first_pending_at": first_pending.isoformat()
+                if first_pending
+                else None,
                 "oldest_due_at": oldest.isoformat() if oldest else None,
                 "last_success_at": successful.isoformat()
                 if successful
@@ -228,6 +271,15 @@ def assess_backlogs(
             else None
         )
         external = count_value(snapshot.get("external_failure_count")) or 0
+        reported_oldest = oldest
+        if track_pending:
+            reported_oldest = (
+                first_pending
+                if pending_count
+                and first_pending
+                and (now - first_pending).total_seconds() >= grace
+                else None
+            )
         reports.append(
             {
                 "path": f"f/monitoring/{kind}_backlog"
@@ -245,11 +297,19 @@ def assess_backlogs(
                 "latest_job_id": snapshot.get("latest_job_id"),
                 "overdue_country_count": count if kind == "country" else 0,
                 "overdue_title_count": titles,
-                "oldest_overdue_at": oldest.isoformat() if oldest else None,
+                "unacknowledged_title_count": pending_count
+                if kind == "publication"
+                else None,
+                "first_pending_at": first_pending.isoformat()
+                if first_pending
+                else None,
+                "oldest_overdue_at": reported_oldest.isoformat()
+                if reported_oldest
+                else None,
                 "oldest_overdue_age_seconds": max(
-                    0, (now - oldest).total_seconds() - grace
+                    0, (now - reported_oldest).total_seconds() - grace
                 )
-                if oldest
+                if reported_oldest
                 else None,
                 "outstanding_demand": count_value(
                     snapshot.get("outstanding_demand")
@@ -265,7 +325,9 @@ def assess_backlogs(
                 "counts_are_lower_bounds": bool(
                     snapshot.get("lower_bound") or not complete
                 ),
-                "age_basis": "due_timestamp"
+                "age_basis": "monitor_observation"
+                if track_pending
+                else "due_timestamp"
                 if kind == "country"
                 else snapshot["age_basis"]
                 if snapshot.get("age_basis")

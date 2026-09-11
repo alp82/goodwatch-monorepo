@@ -67,7 +67,8 @@ class PublicationBacklogCollectionTests(unittest.TestCase):
         self.db.run('REFRESH TABLE crawl_priority')
         result=collect_publication(self.db,[],self.now)
         self.assertEqual(result['overdue_title_count'],1)
-        self.assertEqual(result['outstanding_demand'],5)
+        self.assertEqual(result['outstanding_demand'],15)
+        self.assertEqual(result['overdue_demand'],5)
         self.assertEqual(result['age_basis'],'last_queue_update_lower_bound')
 
     def test_other_title_ack_does_not_hide_correlated_exhaustion(self):
@@ -79,3 +80,47 @@ class PublicationBacklogCollectionTests(unittest.TestCase):
         self.assertTrue(result['failure_unacknowledged'])
         self.db.run('UPDATE crawl_priority SET acknowledged_demand=5 WHERE media_type=? AND tmdb_id=?',('movie',1))
         self.assertFalse(collect_publication(self.db,[failed],self.now)['failure_unacknowledged'])
+
+    def test_renewed_claims_preserve_pending_demand_observation(self):
+        self.insert(1,lease=self.stamp+2*3600000,updated=self.stamp)
+        self.db.run('REFRESH TABLE crawl_priority')
+        initial=collect_publication(self.db,[],self.now)
+        self.assertEqual(initial['overdue_title_count'],0)
+        self.assertEqual(initial['unacknowledged_title_count'],1)
+        later=self.now+timedelta(hours=3)
+        stamp=int(later.timestamp()*1000)
+        self.db.run('UPDATE crawl_priority SET updated_at=?,lease_expires_at=? WHERE media_type=? AND tmdb_id=?',(stamp,stamp+2*3600000,'movie',1))
+        self.db.run('REFRESH TABLE crawl_priority')
+        renewed=collect_publication(self.db,[],later)
+        self.assertEqual(renewed['overdue_title_count'],0)
+        self.assertEqual(renewed['unacknowledged_title_count'],1)
+        self.db.run('UPDATE crawl_priority SET acknowledged_demand=5 WHERE media_type=? AND tmdb_id=?',('movie',1))
+        self.db.run('REFRESH TABLE crawl_priority')
+        self.assertEqual(collect_publication(self.db,[],later)['unacknowledged_title_count'],0)
+
+    def test_older_unacknowledged_exhaustion_is_not_lost_after_twenty_failures(self):
+        self.insert(1,ack=0)
+        self.insert(2,ack=5)
+        self.db.run('REFRESH TABLE crawl_priority')
+        jobs=[]
+        for index in range(21):
+            jobs.append({'publication_failure':{'classification':'attempts_exhausted','attempts':4,'retries':3,'completed_at':(self.now-timedelta(minutes=index)).isoformat(),'job_id':'failure-'+str(index),'targets':[{'media_type':'movie','tmdb_id':1 if index==20 else 2,'claimed_demand':5}]}})
+        result=collect_publication(self.db,jobs,self.now)
+        self.assertTrue(result['failure_unacknowledged'])
+        self.assertEqual(result['latest_job_id'],'failure-20')
+
+    def test_unexamined_failure_targets_prevent_false_recovery(self):
+        from f.monitoring.backlog_health import assess_backlogs
+        from f.monitoring.health import incident_transition
+        self.insert(1,ack=0)
+        self.insert(2,ack=5)
+        self.db.run('REFRESH TABLE crawl_priority')
+        jobs=[{'publication_failure':{'classification':'attempts_exhausted','attempts':4,'retries':3,'completed_at':(self.now-timedelta(minutes=index)).isoformat(),'job_id':'failure-'+str(index),'targets':[{'media_type':'movie','tmdb_id':1 if index==100 else 2,'claimed_demand':5}]}} for index in range(101)]
+        result=collect_publication(self.db,jobs,self.now)
+        self.assertFalse(result['complete'])
+        self.assertTrue(result['correlation_incomplete'])
+        report=assess_backlogs({},result,None,self.now)['reports'][1]
+        transition=incident_transition({'active':True},report,self.now)
+        self.assertEqual(report['status'],'unknown')
+        self.assertTrue(transition['state']['active'])
+        self.assertNotEqual(transition['transition'],'recovered')
