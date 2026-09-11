@@ -223,7 +223,7 @@ class MonitorCheckTests(unittest.TestCase):
             return {"country": country, "publication": publication}
 
         first = poll(
-            Api(), store, NOW, notify=False, backlog_collector=collect
+            Api(), store, NOW, notify=False, backlog_collector=collect, clock=lambda: 0
         )
         second = poll(
             Api(),
@@ -231,6 +231,7 @@ class MonitorCheckTests(unittest.TestCase):
             NOW + timedelta(hours=1),
             notify=False,
             backlog_collector=collect,
+            clock=lambda: 0,
         )
         self.assertEqual(len(second["pipelines"]), 3)
         self.assertEqual(
@@ -325,6 +326,78 @@ class MonitorCheckTests(unittest.TestCase):
         self.assertIn("jobs_u/get/old", api.calls)
         self.assertEqual(
             store.ledger[PIPELINE]["old"]["observation_version"], 2
+        )
+
+    def test_inflight_source_success_uses_snapshot_completion_for_progress_and_recovery(
+        self,
+    ) -> None:
+        from datetime import timedelta
+
+        elapsed = [1000.0]
+        store = MemoryStore()
+        earlier = NOW - timedelta(hours=1)
+        store.values["backlog-progress"] = {
+            "country": {
+                "last_progress_at": earlier.isoformat(),
+                "count": 12,
+                "pending_count": 12,
+                "oldest_due_at": "2026-09-11T08:00:00Z",
+                "last_success_at": earlier.isoformat(),
+                "observation_complete": True,
+            }
+        }
+        store.values["pipeline:f/monitoring/country_backlog"] = {
+            "incident": {
+                "active": True,
+                "opened_at": earlier.isoformat(),
+                "causes": ["country_backlog_stalled"],
+                "pending_notification": None,
+                "last_notified_at": earlier.isoformat(),
+            }
+        }
+
+        def collect(ledger, jobs, now, remaining_seconds):
+            elapsed[0] += 120
+            return {
+                "country": {
+                    "complete": True,
+                    "overdue_country_count": 12,
+                    "overdue_title_count": 4,
+                    "oldest_due_at": "2026-09-11T08:00:00Z",
+                    "last_success_at": (
+                        NOW + timedelta(seconds=90)
+                    ).isoformat(),
+                },
+                "publication": {"complete": True, "overdue_title_count": 0},
+            }
+
+        result = poll(
+            Api(),
+            store,
+            NOW,
+            notify=False,
+            backlog_collector=collect,
+            clock=lambda: elapsed[0],
+        )
+        completed = (NOW + timedelta(seconds=120)).isoformat()
+        country = next(
+            report
+            for report in result["pipelines"]
+            if report["path"] == "f/monitoring/country_backlog"
+        )
+        self.assertEqual(country["status"], "healthy")
+        self.assertTrue(country["progress_observed"])
+        self.assertEqual(country["observed_at"], completed)
+        self.assertEqual(result["backlog_observed_at"], completed)
+        self.assertEqual(
+            store.values["backlog-progress"]["country"]["last_observed_at"],
+            completed,
+        )
+        self.assertEqual(
+            store.values["pipeline:f/monitoring/country_backlog"]["incident"][
+                "recovered_at"
+            ],
+            completed,
         )
 
 

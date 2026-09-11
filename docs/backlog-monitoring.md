@@ -12,7 +12,7 @@ Movie and TV aggregates are assessed independently (`country_backlog_movie` and 
 
 Live measurement before rollout found approximately 1.49 million overdue TV-country records; movie aggregation reached the 40-second query cap. That scope remains explicitly unknown until a complete bounded observation is available. This is a material coverage limitation, not a zero backlog. The checker does not turn up query limits or repeatedly scan without a deadline.
 
-A complete scope opens one grouped country incident after **60 minutes without observed progress**. Progress means fewer overdue countries, an advancing oldest-due item, or a newer verified scrape timestamp. New backlog growth is not progress. The first observation establishes a baseline; a collection gap restarts it. Legitimate ongoing progress does not generate one alert per country.
+A complete scope opens one grouped country incident after **60 minutes without observed progress**. Progress means fewer overdue countries, an advancing oldest-due item, or a newer verified scrape timestamp. New backlog growth is not progress. The first observation establishes a baseline; a collection gap restarts it. Legitimate ongoing progress does not generate one alert per country. Backlog assessment uses snapshot completion time, derived from the poll’s UTC start plus monotonic elapsed time, so successful writes during collection count as progress. Reports expose that time separately from the workflow observation start.
 
 ## Publication and acknowledgment
 

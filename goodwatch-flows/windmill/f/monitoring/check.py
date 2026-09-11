@@ -5,7 +5,7 @@
 
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from time import monotonic
 from typing import Any, Callable
 from urllib.parse import urlencode
@@ -96,7 +96,8 @@ def poll(
     ]
     | None = None,
 ) -> dict[str, Any]:
-    deadline = clock() + budget_seconds
+    started_clock = clock()
+    deadline = started_clock + budget_seconds
     collection_deadline = deadline - 70 if backlog_collector else deadline
     store.initialize()
     if not store.acquire():
@@ -224,6 +225,7 @@ def poll(
                 for path, batch in batches.items():
                     store.save_jobs(path, batch)
         backlog_result = None
+        backlog_now = now
         if backlog_collector:
             try:
                 remaining = min(60, max(0, deadline - clock() - 10))
@@ -251,11 +253,14 @@ def poll(
                     "publication": {"complete": False},
                 }
                 infrastructure["backlogs"] = "degraded"
+            backlog_now = now + timedelta(
+                seconds=max(0, clock() - started_clock)
+            )
             backlog_result = assess_backlogs(
                 snapshots["country"],
                 snapshots["publication"],
                 store.get("backlog-progress"),
-                now,
+                backlog_now,
             )
             store.put(
                 "backlog-progress", "progress", "", backlog_result["progress"]
@@ -303,16 +308,20 @@ def poll(
         workflow_counts = dict(Counter(r["status"] for r in reports))
         if backlog_result:
             for report in backlog_result["reports"]:
+                report["observed_at"] = backlog_now.isoformat()
                 report["notification"] = record_incident(
                     store,
                     report,
-                    now,
+                    backlog_now,
                     webhook_url if notify and clock() < deadline else None,
                 )
                 reports.append(report)
         result = {
             "status": "completed",
             "observed_at": now.isoformat(),
+            "backlog_observed_at": backlog_now.isoformat()
+            if backlog_result
+            else None,
             "infrastructure": infrastructure,
             "workflow_status_counts": workflow_counts,
             "backlog_status_counts": dict(
