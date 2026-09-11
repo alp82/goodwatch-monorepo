@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   redis-replica:
     image: docker.io/bitnami/redis-cluster:7.2
@@ -7,13 +5,10 @@ services:
     volumes:
       - redis-data:/bitnami/redis/data
     network_mode: host
-    ports:
-      - "6379:6379"
-      - "16379:16379"
-      - "16380:16380"
-      - "16381:16381"
     environment:
-      - 'REDIS_NODES=78.46.209.172 168.119.242.21 91.107.208.205'
+      - 'REDIS_NODES=10.0.0.14 10.0.0.15 10.0.0.16'
+      - 'REDIS_CLUSTER_DYNAMIC_IPS=no'
+      - 'REDIS_CLUSTER_ANNOUNCE_IP=${REDIS_PRIVATE_IP:?Set the node private address (10.0.0.14-16)}'
       - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
     logging:
       driver: "json-file"
@@ -23,7 +18,11 @@ services:
     command:
       - /opt/bitnami/scripts/redis-cluster/run.sh
       - --cluster-announce-ip
-      - "${REDIS_HOST_IP}"
+      - "${REDIS_PRIVATE_IP:?Set the node private address (10.0.0.14-16)}"
+      - --cluster-announce-port
+      - "6379"
+      - --cluster-announce-bus-port
+      - "16379"
 
 volumes:
   redis-data:

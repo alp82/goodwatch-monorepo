@@ -172,6 +172,16 @@ class ReconcileTest(unittest.TestCase):
             reconcile(config(), host, apply=True, expected_plan=plan)
         self.assertEqual(host.commands, [])
 
+    def test_redis_hosts_reconcile_only_local_client_port(self) -> None:
+        for destination in ["10.0.0.14", "10.0.0.15", "10.0.0.16"]:
+            settings = config()
+            settings["destination"] = destination
+            settings["ports"] = [6379]
+            plan = reconcile(settings, Host())
+            self.assertEqual(len(plan["add"]), 1)
+            self.assertEqual(plan["add"][0][7:10], [destination, "port", "6379"])
+            self.assertEqual(plan["add"][0][-1], "gw-worker:windmill_default:6379")
+
     def test_dry_run_then_apply_scopes_ports_and_is_idempotent(self) -> None:
         host = Host()
         plan = reconcile(config(), host)
