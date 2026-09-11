@@ -81,6 +81,32 @@ class WorkflowIncidentTests(unittest.TestCase):
         record_incident(store, report, now + timedelta(minutes=6), "new-url", send)
         self.assertEqual(sent, ["old-url", "new-url"])
 
+    def test_client_identity_change_retries_legacy_gate_without_resetting_pending(self) -> None:
+        import hashlib
+        store = MemoryStore()
+        now = datetime(2026, 9, 11, tzinfo=timezone.utc)
+        report = {"path": "f/demo/run", "status": "unhealthy",
+                  "causes": ["excessive_runtime"], "latest_job_id": None}
+        webhook = "private-test-url"
+        def failed(url, notification):
+            return {"delivered": False, "message_id": None, "error_code": "http_403",
+                    "retry_after_seconds": 1800, "permanent_failure": True}
+        record_incident(store, report, now, webhook, failed)
+        pending = store.get("pipeline:f/demo/run")["incident"]["pending_notification"]
+        opened = store.get("pipeline:f/demo/run")["incident"]["opened_at"]
+        store.rows["discord-delivery"]["fingerprint"] = hashlib.sha256(webhook.encode()).hexdigest()
+        delivered = []
+        def success(url, notification):
+            delivered.append(notification)
+            return {"delivered": True, "message_id": "456", "error_code": None,
+                    "retry_after_seconds": 0, "permanent_failure": False}
+        record_incident(store, report, now + timedelta(seconds=60), webhook, success)
+        self.assertEqual(delivered, [pending])
+        state = store.get("pipeline:f/demo/run")["incident"]
+        self.assertTrue(state["active"])
+        self.assertEqual(state["opened_at"], opened)
+        self.assertIsNone(state["pending_notification"])
+
 
 if __name__ == "__main__":
     unittest.main()

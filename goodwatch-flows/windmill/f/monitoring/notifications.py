@@ -8,6 +8,11 @@ from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
+DELIVERY_CLIENT_IDENTITY = (
+    "DiscordBot (https://github.com/alp82/goodwatch-monorepo, 1.0.0)"
+)
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(
         self,
@@ -94,7 +99,10 @@ def deliver_notification(
         data=json.dumps(
             {"content": content, "allowed_mentions": {"parse": []}}
         ).encode(),
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": DELIVERY_CLIENT_IDENTITY,
+        },
         method="POST",
     )
     try:

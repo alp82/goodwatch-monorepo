@@ -36,6 +36,7 @@ class NotificationTests(unittest.TestCase):
         self.assertEqual(result["message_id"], "998877")
         request = opener.open.call_args.args[0]
         self.assertEqual(request.full_url, WEBHOOK + "?wait=true")
+        self.assertEqual(request.get_header("User-agent"), "DiscordBot (https://github.com/alp82/goodwatch-monorepo, 1.0.0)")
         payload = json.loads(request.data)
         self.assertEqual(payload["allowed_mentions"], {"parse": []})
         self.assertIn("[controlled monitor check]", payload["content"])

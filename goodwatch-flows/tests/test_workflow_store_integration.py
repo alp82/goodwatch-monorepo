@@ -72,6 +72,14 @@ class WorkflowStoreIntegrationTests(unittest.TestCase):
         self.store.put("latest-report", "report", "", report)
         self.assertEqual(self.store.get("latest-report"), report)
 
+    def test_release_does_not_depend_on_search_index_refresh(self):
+        self.db.run("ALTER TABLE workflow_monitoring SET (refresh_interval = -1)")
+        self.db.run("REFRESH TABLE workflow_monitoring")
+        self.assertTrue(self.store.acquire())
+        self.store.release()
+        replacement = MonitoringStore(LocalCrate(self.table))
+        self.assertTrue(replacement.acquire())
+
     def test_concurrent_checkers_have_exactly_one_owner(self):
         def claim(_):
             return MonitoringStore(LocalCrate(self.table)).acquire()

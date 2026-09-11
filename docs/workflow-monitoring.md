@@ -22,7 +22,7 @@ The idempotently initialized Crate table `workflow_monitoring` stores normalized
 
 ## Configuration and rollout
 
-1. Create the Windmill **secret** variable `f/monitoring/discord_webhook_url` with the chosen channel's Discord webhook URL. Never put it in Git, job arguments, or chat. The adapter accepts the fixed HTTPS Discord webhook host/path and disables redirects and mentions.
+1. Create the Windmill **secret** variable `f/monitoring/discord_webhook_url` with the chosen channel's Discord webhook URL. Never put it in Git, job arguments, or chat. The adapter accepts the fixed HTTPS Discord webhook host/path, sends Discord's required identifying User-Agent, and disables redirects and mentions. A corrected delivery-client identity also invalidates an old permanent-error gate while preserving the pending incident.
 2. Deploy the committed scripts and pinned locks through the existing main-branch Windmill workflow.
 3. Run `f/monitoring/check` with `notify=false`. Inspect `latest-report` and the returned root/unknown counts; do not infer useful success from a successful checker job.
 4. Run `f/monitoring/notification_check` with `phase=incident`, then `phase=recovery`. Both must return `status=delivered` and distinct Discord message IDs. Messages are labelled controlled checks and reference the real check job. Repeating a confirmed phase produces no extra message. This does not fail or manipulate a production pipeline.
@@ -37,3 +37,5 @@ The implementation suite covers ancestry resolution/deduplication, missing and u
 Live deployment, controlled Discord delivery, and schedule activation evidence are recorded in issue #9 when completed.
 
 Protocol references: [Discord execute webhook](https://docs.discord.com/developers/resources/webhook#execute-webhook), [Discord rate limits](https://docs.discord.com/developers/topics/rate-limits), [croniter seconds/year/timezone support](https://pypi.org/project/croniter/).
+
+The live rollout caught two protocol details now covered by regressions: Discord rejected the default urllib User-Agent (403) while the documented DiscordBot identity succeeded (200 on a read-only webhook check); and lease release must use a realtime primary-key read plus compare-and-set, because an indexed token predicate can miss the newly written lease before refresh. [Discord client identity requirement](https://docs.discord.com/developers/reference#user-agent).

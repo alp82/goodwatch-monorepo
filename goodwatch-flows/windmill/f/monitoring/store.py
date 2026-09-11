@@ -56,10 +56,16 @@ class MonitoringStore:
 
     def release(self) -> None:
         if self.owner:
-            self.db.run("""UPDATE workflow_monitoring
-                SET lease_token = NULL, lease_expires_at = NULL
-                WHERE monitor_key = 'checker-lease' AND lease_token = ?""",
-                (self.owner,))
+            # Full-primary-key reads are realtime; a token search predicate can
+            # miss our just-acquired lease before the next index refresh.
+            rows = self.db.select("""SELECT lease_token, _seq_no, _primary_term
+                FROM workflow_monitoring WHERE monitor_key = 'checker-lease'""")
+            if rows and rows[0]["lease_token"] == self.owner:
+                self.db.run("""UPDATE workflow_monitoring
+                    SET lease_token = NULL, lease_expires_at = NULL
+                    WHERE monitor_key = 'checker-lease'
+                    AND _seq_no = ? AND _primary_term = ?""",
+                    (rows[0]["_seq_no"], rows[0]["_primary_term"]))
             self.owner = None
 
     def get(self, key: str) -> dict[str, Any] | None:
