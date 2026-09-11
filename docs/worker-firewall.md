@@ -33,7 +33,19 @@ The acceptance matrix is local and peer Crate authenticated `SELECT current_user
 
 ## Rollback
 
-Stop the reconciliation timer first so it cannot undo an operator rollback. Retain the protected pre-rollout network metadata and rule snapshot. If a worker network must be restored, drain only its workers without a hard timeout, disconnect their stopped containers and recreate `windmill_default` with its saved subnet/labels and explicit `com.docker.network.bridge.name=<old bridge>`. Reconnect saved aliases, restore only the recorded worker rules using the snapshot's inverse UFW arguments, reload UFW, then restart the original containers. Validate authenticated operations and a fresh SSH session before removing the service/configuration. Never restore an entire saved iptables ruleset over Docker's current rules or erase unrelated UFW entries.
+Disable the reconciliation timer first, wait for any already running/queued service operation to finish, and hold the same lock throughout rollback. Stopping the timer alone does not stop an in-flight service. Do not kill a service midway through its verified replacement sequence.
+
+```sh
+sudo systemctl disable --now goodwatch-worker-firewall.timer
+while systemctl list-jobs --no-legend | grep -q goodwatch-worker-firewall.service; do
+  sleep 1
+done
+sudo flock --exclusive /run/lock/goodwatch-worker-firewall.lock bash
+# Perform the following network/rule rollback inside this root shell.
+# Exit the shell only after verification to release the lock.
+```
+
+The disabled timer prevents another scheduled activation, and the lock serializes any concurrent manual reconciler. Retain the protected pre-rollout network metadata and rule snapshot. If a worker network must be restored, drain only its workers without a hard timeout, disconnect their stopped containers and recreate `windmill_default` with its saved subnet/labels and explicit `com.docker.network.bridge.name=<old bridge>`. Reconnect saved aliases, restore only the recorded worker rules using the snapshot's inverse UFW arguments, reload UFW, then restart the original containers. Validate authenticated operations and a fresh SSH session before removing the service/configuration. Never restore an entire saved iptables ruleset over Docker's current rules or erase unrelated UFW entries.
 
 After an ordinary rule-only rollback, execute only that apply snapshot's exact inverse commands. Review the current network first: restoring an old bridge-specific allowance on a different live bridge would intentionally not grant access. Keep reconciliation disabled until configuration and the actual network agree.
 

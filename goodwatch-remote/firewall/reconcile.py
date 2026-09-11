@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
-from typing import Any, Protocol
+from typing import Any, NamedTuple, Protocol
 
 
 class Host(Protocol):
@@ -31,6 +31,47 @@ LEGACY = {
     6333: "Windmill to local Qdrant HTTP",
     6334: "Windmill to local Qdrant gRPC",
 }
+
+
+class InputRule(NamedTuple):
+    """A validated canonical TCP INPUT rule; unrelated UFW commands stay opaque."""
+
+    interface: str
+    source: str
+    destination: str
+    port: str
+    comment: str
+
+    def argv(self) -> list[str]:
+        return [
+            "allow",
+            "in",
+            "on",
+            self.interface,
+            "from",
+            self.source,
+            "to",
+            self.destination,
+            "port",
+            self.port,
+            "proto",
+            "tcp",
+            "comment",
+            self.comment,
+        ]
+
+    @classmethod
+    def parse(cls, argv: list[str]) -> "InputRule | None":
+        if not (
+            len(argv) == 14
+            and argv[:3] == ["allow", "in", "on"]
+            and argv[4] == "from"
+            and argv[6] == "to"
+            and argv[8] == "port"
+            and argv[10:13] == ["proto", "tcp", "comment"]
+        ):
+            return None
+        return cls(argv[3], argv[5], argv[7], argv[9], argv[13])
 
 
 def reconcile(
@@ -88,22 +129,13 @@ def reconcile(
             raise ValueError("Invalid bridge interface")
         for port in config["ports"]:
             desired.append(
-                [
-                    "allow",
-                    "in",
-                    "on",
+                InputRule(
                     interface,
-                    "from",
                     subnet,
-                    "to",
                     destination,
-                    "port",
                     str(port),
-                    "proto",
-                    "tcp",
-                    "comment",
                     PREFIX + entry["name"] + ":" + str(port),
-                ]
+                ).argv()
             )
     current = host.persistent()
     owned = []
@@ -113,39 +145,33 @@ def reconcile(
         legacy = comment in LEGACY.values()
         if not managed and not legacy:
             continue
-        # Canonical UFW argv has fourteen fields, including comment value.
-        shape = (
-            len(rule) == 14
-            and rule[:3] == ["allow", "in", "on"]
-            and rule[4] == "from"
-            and rule[6] == "to"
-            and rule[8] == "port"
-            and rule[10:13] == ["proto", "tcp", "comment"]
-        )
-        scope = (
-            shape
-            and rule[7] == destination
-            and rule[9] in [str(p) for p in config["ports"]]
-        )
+        parsed_rule = InputRule.parse(rule)
+        if parsed_rule is None:
+            if managed:
+                raise ValueError("Owned UFW rule has invalid or unconfigured scope")
+            continue
+        scope = parsed_rule.destination == destination and parsed_rule.port in [
+            str(p) for p in config["ports"]
+        ]
         if managed:
-            matching = (
-                [e for e in entries if comment == PREFIX + e["name"] + ":" + rule[9]]
-                if shape
-                else []
-            )
+            matching = [
+                e
+                for e in entries
+                if comment == PREFIX + e["name"] + ":" + parsed_rule.port
+            ]
             scope = (
                 scope
                 and bool(matching)
-                and rule[5] in matching[0]["subnets"]
-                and bool(re.fullmatch(r"[a-zA-Z0-9_-]{1,15}", rule[3]))
+                and parsed_rule.source in matching[0]["subnets"]
+                and bool(re.fullmatch(r"[a-zA-Z0-9_-]{1,15}", parsed_rule.interface))
             )
             if not scope:
                 raise ValueError("Owned UFW rule has invalid or unconfigured scope")
         elif not (
             scope
-            and rule[5] == "172.18.0.0/16"
-            and re.fullmatch(r"br-[0-9a-f]{12}", rule[3])
-            and comment == LEGACY[int(rule[9])]
+            and parsed_rule.source == "172.18.0.0/16"
+            and re.fullmatch(r"br-[0-9a-f]{12}", parsed_rule.interface)
+            and comment == LEGACY[int(parsed_rule.port)]
         ):
             continue
         owned.append(rule)
@@ -246,8 +272,12 @@ class LocalHost:
         status = self.run(["ufw", "status", "numbered"])
         if not status.startswith("Status: active\n"):
             raise RuntimeError("UFW must already be active")
+        parsed = InputRule.parse(rule)
+        if parsed is None:
+            raise ValueError("Cannot verify a noncanonical INPUT rule")
         expected = (
-            f"{rule[7]} {rule[9]}/tcp on {rule[3]} ALLOW IN {rule[5]} # {rule[-1]}"
+            f"{parsed.destination} {parsed.port}/tcp on {parsed.interface} "
+            f"ALLOW IN {parsed.source} # {parsed.comment}"
         )
         for line in status.splitlines():
             clean = re.sub(r"^\[\s*\d+\]\s*", "", line)
