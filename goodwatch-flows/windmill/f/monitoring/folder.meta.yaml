@@ -1,0 +1,6 @@
+summary: Workflow health reports and deduplicated alerts
+display_name: monitoring
+extra_perms:
+  u/Alp: true
+owners:
+  - u/Alp

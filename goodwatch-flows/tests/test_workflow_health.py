@@ -443,6 +443,66 @@ class WorkflowHealthTests(unittest.TestCase):
         )
         self.assertEqual(result["notification"]["kind"], "recovery")
 
+    def test_cancellation_cannot_recover_genuine_failure_incident(
+        self,
+    ) -> None:
+        failures = [
+            job(
+                f"failed-{index}",
+                success=False,
+                completed_at=f"2026-09-11T06:0{index}:00Z",
+            )
+            for index in range(3)
+        ]
+        initial = assess_pipeline(SCHEDULE, failures, NOW, START, THRESHOLDS)
+        self.assertEqual(initial["status"], "unhealthy")
+        active = incident_transition(None, initial, NOW)["state"]
+        active.update(
+            pending_notification=None, last_notified_at=NOW.isoformat()
+        )
+        canceled = job(
+            "cancelled",
+            canceled=True,
+            success=False,
+            completed_at="2026-09-11T06:05:00Z",
+        )
+        report = assess_pipeline(
+            SCHEDULE, failures + [canceled], NOW, START, THRESHOLDS
+        )
+        self.assertEqual(report["outcomes"]["cancelled"], 1)
+        self.assertNotEqual(report["status"], "healthy")
+        transition = incident_transition(active, report, NOW)
+        self.assertTrue(transition["state"]["active"])
+        self.assertNotEqual(transition["transition"], "recovered")
+        recovered = assess_pipeline(
+            SCHEDULE,
+            failures + [canceled, job("useful")],
+            NOW,
+            START,
+            THRESHOLDS,
+        )
+        self.assertEqual(recovered["status"], "healthy")
+        self.assertEqual(
+            incident_transition(active, recovered, NOW)["transition"],
+            "recovered",
+        )
+
+    def test_cancelled_running_incident_becomes_unknown_without_positive_completion(
+        self,
+    ) -> None:
+        report = assess_pipeline(
+            SCHEDULE,
+            [job("cancelled", canceled=True, success=False)],
+            NOW,
+            START,
+            THRESHOLDS,
+        )
+        self.assertEqual(report["status"], "unknown")
+        transition = incident_transition(
+            {"active": True, "causes": ["excessive_runtime"]}, report, NOW
+        )
+        self.assertTrue(transition["state"]["active"])
+
 
 if __name__ == "__main__":
     unittest.main()

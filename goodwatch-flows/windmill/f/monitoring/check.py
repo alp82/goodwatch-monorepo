@@ -9,12 +9,9 @@ from datetime import datetime, timezone
 from time import monotonic
 from typing import Any, Callable
 from urllib.parse import urlencode
-from zoneinfo import ZoneInfo
-
-from croniter import croniter
 
 from f.monitoring.collection import observe_execution
-from f.monitoring.health import assess_pipeline, timestamp
+from f.monitoring.health import assess_pipeline, schedule_cadence, timestamp
 from f.monitoring.incidents import record_incident
 
 OBSERVATION_START = datetime(2026, 9, 9, 21, 1, 10, tzinfo=timezone.utc)
@@ -58,15 +55,8 @@ RUNTIME_HOURS = {
 def pipeline_thresholds(
     schedule: dict[str, Any], now: datetime
 ) -> dict[str, Any]:
-    expression = schedule["schedule"]
     try:
-        iterator = croniter(
-            expression,
-            now.astimezone(ZoneInfo(schedule["timezone"])),
-            second_at_beginning=len(expression.split()) > 5,
-        )
-        first = iterator.get_next(datetime)
-        cadence = (iterator.get_next(datetime) - first).total_seconds()
+        cadence = schedule_cadence(schedule, now)
     except (ValueError, KeyError):
         cadence = 86400
     runtime = RUNTIME_HOURS.get(schedule["path"], 6) * 3600

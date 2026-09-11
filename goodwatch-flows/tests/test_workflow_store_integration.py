@@ -66,6 +66,12 @@ class WorkflowStoreIntegrationTests(unittest.TestCase):
         self.assertTrue(replacement.acquire())
         self.assertTrue(replacement.get("pipeline:f/example")["active"])
 
+    def test_large_report_roundtrips_without_index_term_limit(self):
+        self.assertTrue(self.store.acquire())
+        report = {"pipelines": [{"coverage": "x" * 40000}]}
+        self.store.put("latest-report", "report", "", report)
+        self.assertEqual(self.store.get("latest-report"), report)
+
     def test_concurrent_checkers_have_exactly_one_owner(self):
         def claim(_):
             return MonitoringStore(LocalCrate(self.table)).acquire()

@@ -1,0 +1,16 @@
+summary: Verify controlled Discord incident and recovery delivery
+description: ''
+lock: '!inline f/monitoring/notification_check.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    phase:
+      type: string
+      enum:
+      - incident
+      - recovery
+  required:
+  - phase
+timeout: 120

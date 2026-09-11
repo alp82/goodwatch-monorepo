@@ -42,6 +42,17 @@ def timestamp(value: Any) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+def schedule_cadence(schedule: dict[str, Any], now: datetime) -> float:
+    expression = schedule["schedule"]
+    iterator = croniter(
+        expression,
+        now.astimezone(ZoneInfo(schedule["timezone"])),
+        second_at_beginning=len(expression.split()) > 5,
+    )
+    first = iterator.get_next(datetime)
+    return (iterator.get_next(datetime) - first).total_seconds()
+
+
 def scheduled_occurrences(
     schedule: dict[str, Any], start: datetime, now: datetime
 ) -> tuple[list[datetime], datetime | None]:
@@ -111,14 +122,7 @@ def assess_pipeline(
     cron_error = False
     coverage_start = observation_start
     try:
-        expression = schedule["schedule"]
-        probe = croniter(
-            expression,
-            now.astimezone(ZoneInfo(schedule["timezone"])),
-            second_at_beginning=len(expression.split()) > 5,
-        )
-        first_due = probe.get_next(datetime)
-        cadence = (probe.get_next(datetime) - first_due).total_seconds()
+        cadence = schedule_cadence(schedule, now)
         # Daily local schedules can be 23 hours apart across DST.
         if cadence < 23 * 3600:
             coverage_start = max(observation_start, now - timedelta(hours=48))
@@ -156,7 +160,8 @@ def assess_pipeline(
     meaningful = [
         job
         for job in roots
-        if classify_outcome(job) not in {"overlap", "no_work", "running"}
+        if classify_outcome(job)
+        not in {"overlap", "no_work", "running", "cancelled"}
     ]
     if meaningful and meaningful[-1].get("material_child_failures"):
         causes.append("material_child_failures")
@@ -223,8 +228,11 @@ def assess_pipeline(
         now - (last_useful or observation_start)
     ).total_seconds() > float(thresholds["progress_seconds"]):
         causes.append("lack_of_progress")
+    terminal = [job for job in roots if classify_outcome(job) != "running"]
+    # Cancellation ends execution, but cannot prove that failed work recovered.
     inconclusive = bool(
-        cron_error
+        (terminal and classify_outcome(terminal[-1]) == "cancelled")
+        or cron_error
         or unknown
         or outcomes["success_unknown"]
         or outcomes["unknown"]

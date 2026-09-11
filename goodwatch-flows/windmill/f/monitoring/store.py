@@ -14,7 +14,8 @@ class MonitoringStore:
 
     def initialize(self) -> None:
         self.db.run("""CREATE TABLE IF NOT EXISTS workflow_monitoring (
-            monitor_key TEXT PRIMARY KEY, kind TEXT, pipeline TEXT, payload TEXT,
+            monitor_key TEXT PRIMARY KEY, kind TEXT, pipeline TEXT,
+            payload TEXT INDEX OFF STORAGE WITH (columnstore = false),
             updated_at TIMESTAMP WITH TIME ZONE,
             lease_token TEXT, lease_expires_at TIMESTAMP WITH TIME ZONE
         ) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '1')""")
