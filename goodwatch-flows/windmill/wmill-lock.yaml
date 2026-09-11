@@ -77,7 +77,7 @@ locks:
   f/metacritic_web/models: 153a830ed5902bf71ba751f772ffe912b0d5169ec9f6ba090edd06cda75dd8ba
   f/monitoring/backlog_collection: 1d9a7514d906bc6fb8d4dd9b0f6c83935031c1ec172dfde22a8ed133ac29d7ab
   f/monitoring/backlog_health: b631c7ed78ff1ad18a2c089ac4b1cc181f36a24332317d488943921de6608e69
-  f/monitoring/check: ba1f3319f40760e7e5b8ebff6ff185860bd6715d13b7a8e788f0704ef3ec6ad6
+  f/monitoring/check: 1a8b6dc5fa1536a6dd8124dd31f3d4651fd9b89aef3503a46fc7892b6c27ed89
   f/monitoring/collection: 03bb323461d6e50f16e8616a4cc14a9f074e5b4e896e61dc38b6096b7b9bdd1d
   f/monitoring/health: b9e53e88a3178735a67b1c3ef44891a5fd93950e2673bebd61b0d6326da15f70
   f/monitoring/incidents: 42043ae293cf1de8c1eef1f46d4b84bb2cfed2be570611aecb6638d69df3c89e
