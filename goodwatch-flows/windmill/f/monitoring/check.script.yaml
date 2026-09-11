@@ -1,0 +1,14 @@
+summary: Assess scheduled workflow health
+description: Read-only workflow observation and durable notification state.
+lock: '!inline f/monitoring/check.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    notify:
+      type: boolean
+      default: true
+      description: Deliver configured Discord incident notifications.
+  required: []
+timeout: 300

@@ -1,0 +1,9 @@
+summary: Monitoring store
+description: ''
+lock: '!inline f/monitoring/store.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

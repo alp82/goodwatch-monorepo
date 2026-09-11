@@ -1,0 +1,9 @@
+summary: Monitoring health
+description: ''
+lock: '!inline f/monitoring/health.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []
