@@ -1,0 +1,206 @@
+{
+  "reviewer": "Alper",
+  "exact_model_id": null,
+  "effort": null,
+  "exported_at": "2026-09-12T06:27:46.421Z",
+  "active_candidate_labels": [
+    "A",
+    "B",
+    "D",
+    "E",
+    "F",
+    "G",
+    "I"
+  ],
+  "reviews": [
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "A",
+      "flagged_traits": [],
+      "flags": "mystery and warfare a bit high",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "all looks good to me"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "B",
+      "flagged_traits": [],
+      "flags": "coming of age and capitalism are too high",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "rest is all good"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "C",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "failed, no result"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "D",
+      "flagged_traits": [],
+      "flags": "fantasy way too high, warfare seems too high too",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "rest is all good"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "E",
+      "flagged_traits": [],
+      "flags": "fantasy and mystery too high",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "rest good"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "F",
+      "flagged_traits": [],
+      "flags": "mystery and crime bit too high",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "rest good"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "G",
+      "flagged_traits": [],
+      "flags": "mystery, warfare, political way too high. slow burn tad too high",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "rest ok"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "H",
+      "flagged_traits": [],
+      "flags": "quite some bad choices, scare too high, also worldplay, eroticsm, satire, warfare, slow burn, ...",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "not impressed"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "I",
+      "flagged_traits": [],
+      "flags": "too high scare, political",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "rest is all good "
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "J",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "nothing in response"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "K",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "nothing in response"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "L",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "nothing in response"
+    },
+    {
+      "benchmark_id": "movie:603",
+      "candidate_label": "M",
+      "flagged_traits": [],
+      "flags": "too high romance, fantasy, mystery, coming of age, pop culture, ...",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "not impressed"
+    },
+    {
+      "benchmark_id": "movie:550",
+      "candidate_label": "A",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "very strong"
+    },
+    {
+      "benchmark_id": "movie:550",
+      "candidate_label": "B",
+      "flagged_traits": [],
+      "flags": "coming of age and pop culture too high",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "looks great otherwise"
+    },
+    {
+      "benchmark_id": "movie:550",
+      "candidate_label": "D",
+      "flagged_traits": [],
+      "flags": "too high coming of age",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "very good"
+    },
+    {
+      "benchmark_id": "movie:550",
+      "candidate_label": "E",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "very strong"
+    },
+    {
+      "benchmark_id": "movie:550",
+      "candidate_label": "F",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "very strong"
+    },
+    {
+      "benchmark_id": "movie:550",
+      "candidate_label": "G",
+      "flagged_traits": [],
+      "flags": "eroticism and physcial comedy too high",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "otherwise good"
+    },
+    {
+      "benchmark_id": "movie:550",
+      "candidate_label": "I",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": "very strong"
+    },
+    {
+      "benchmark_id": "movie:545611",
+      "candidate_label": "A",
+      "flagged_traits": [],
+      "flags": "",
+      "unsupported": "",
+      "notes": "",
+      "verdict": ""
+    }
+  ]
+}

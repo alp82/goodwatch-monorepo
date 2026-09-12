@@ -6,41 +6,42 @@ import prepare
 
 base=prepare.OUT
 out=base/'human-review'
-original=json.loads((out/'matrix-review.original.json').read_text())
-active=['A','B','D','E','F','G','I']
-policy={
-    'basis':'Owner requested early screening after their Matrix review to reduce the remaining human workload.',
-    'active_candidate_labels':active,
-    'screened_out_of_human_review':{'H':'Owner verdict: not impressed; multiple implausible traits.',
-                                   'M':'Owner verdict: not impressed; multiple implausible traits.'},
-    'unavailable':['C','J','K','L'],
-    'retained_borderline':{'G':'Owner flags several high traits, but overall verdict says rest ok.'},
-    'scope':'Provisional human-review screen from one title, not catalog-wide quality rejection or finalist selection. Preserve all first-pass evidence and the independent judge packets.',
-    'remaining_human_title_reviews':63,
-}
-prepare.dump(out/'screening.json',policy)
+settings=json.loads((out/'settings.json').read_text())
+original=json.loads((out/settings['review_source']).read_text())
+active=settings['active_candidate_labels']
+assert active and len(active)==len(set(active)) and set(active)<=set('ABCDEFGHIJKLM')
+reviews={r['benchmark_id']+'/'+r['candidate_label']:r for r in original['reviews']}
 packets=[]
 for title in json.loads((prepare.BENCH/'titles.json').read_text())['titles']:
     bid=f"{title['media_type']}:{title['tmdb_id']}"
     packet=json.loads((base/'blind-first'/(bid.replace(':','-')+'.json')).read_text())
     packet['candidates']=[r for r in packet['candidates'] if r['label'] in active]
     packets.append(packet)
+remaining=[(p,r) for p in packets for r in p['candidates']
+           if not reviews.get(p['benchmark_id']+'/'+r['label'],{}).get('verdict','').strip()]
+policy={**settings,
+    'scope':'Provisional human-review screen, not catalog-wide quality rejection or finalist selection. Preserve all first-pass evidence and independent judge packets.',
+    'remaining_human_title_reviews':len(remaining)}
+prepare.dump(out/'screening.json',policy)
 data={'packets':packets,'keys':prepare.KEYS,
       'definitions':(base/'blind-first/attribute-definitions.md').read_text(),
       'active_labels':active,'initial_review':original}
 template=Path(__file__).with_name('review-template.html').read_text()
-template=template.replace('<h1>Independent fingerprint review</h1>', '<h1>Your shortlisted fingerprint review</h1><p>Seven candidates remain: A, B, D, E, F, G, I. Your Matrix notes are loaded. H and M were screened out; C, J, K and L have no usable results. Original judgments remain in every export.</p>')
+labels=', '.join(active)
+template=template.replace('<h1>Independent fingerprint review</h1>',
+    f'<h1>Your shortlisted fingerprint review</h1><p>{len(active)} candidates remain: {labels}. Your previous notes are loaded. Original judgments remain in every export.</p>')
 (out/'review.html').write_text(template.replace('__DATA__',json.dumps(data,ensure_ascii=False).replace('<','\\u003c')))
-(out/'README.md').write_text('''# Human review after the Matrix screen
+resume=f"{remaining[0][0]['metadata']['original_title']}, candidate {remaining[0][1]['label']}" if remaining else 'all active reviews complete'
+(out/'README.md').write_text(f'''# Continuing the human fingerprint review
 
-Open `review.html`. It loads the owner's Matrix export unchanged and resumes at Fight Club, candidate A. Candidate identities remain hidden and letters retain their original meanings.
+Open `review.html`. It loads `{settings['review_source']}` unchanged and resumes at **{resume}**. Candidate identities remain hidden and letters retain their original meanings.
 
-H and M are screened out of the remaining human review based on the owner's explicit “not impressed” verdicts. C, J, K and L have no usable first-pass results. A, B, D, E, F, G and I remain. G stays provisionally because the owner judged the rest “ok”; the other retained candidates received positive overall verdicts despite individual concerns.
+Active labels: **{labels}**. **{len(remaining)} reviews remain.** `settings.json` records the current selection and pending recommendations; `screening.json` adds the calculated remaining count. Pending recommendations do not remove candidates automatically.
 
-This leaves 63 reviews: seven candidates across the remaining nine titles, down from 81 reviews of usable responses. This is an early human-review screen based on one familiar title, not a claim that H or M are worse on every title, and not the final two-candidate selection.
+H and M were screened out after the owner's Matrix judgments. C, J, K and L have no usable first-pass results. The early screen reduces human review workload; it is not a claim of catalog-wide inferiority and does not select the final two candidates.
 
-The original JSON is preserved byte for byte in `matrix-review.original.json`. Progress exports preserve all prior Matrix judgments, including the screened/unavailable candidates. Export before closing the form; Import resumes later exports.
+Each supplied JSON export is preserved byte for byte in its original snapshot file. Progress exports retain all previous judgments, including screened/unavailable candidates. Export before closing the form; Import resumes later exports.
 
-Keep this directory and its judgments out of the independent Astra/Fable sessions. Their existing `../blind-first/` packets remain unchanged; all original responses and the separate model-label key are retained. No additional inference has run.
+Keep this directory and its judgments out of independent Astra/Fable sessions. Their existing `../blind-first/` packets remain unchanged; all original responses and the separate model-label key are retained. No additional inference ran.
 ''')
-print('Created personalized review: seven active labels, Matrix notes loaded, 63 remaining reviews.')
+print(f'Created personalized review: {len(active)} active labels, {len(remaining)} remaining, resumes at {resume}.')

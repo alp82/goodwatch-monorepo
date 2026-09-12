@@ -1,11 +1,11 @@
-# Human review after the Matrix screen
+# Continuing the human fingerprint review
 
-Open `review.html`. It loads the owner's Matrix export unchanged and resumes at Fight Club, candidate A. Candidate identities remain hidden and letters retain their original meanings.
+Open `review.html`. It loads `fight-club-review.original.json` unchanged and resumes at **Everything Everywhere All at Once, candidate A**. Candidate identities remain hidden and letters retain their original meanings.
 
-H and M are screened out of the remaining human review based on the owner's explicit “not impressed” verdicts. C, J, K and L have no usable first-pass results. A, B, D, E, F, G and I remain. G stays provisionally because the owner judged the rest “ok”; the other retained candidates received positive overall verdicts despite individual concerns.
+Active labels: **A, B, D, E, F, I**. **48 reviews remain.** `settings.json` records the current selection and pending recommendations; `screening.json` adds the calculated remaining count. Pending recommendations do not remove candidates automatically.
 
-This leaves 63 reviews: seven candidates across the remaining nine titles, down from 81 reviews of usable responses. This is an early human-review screen based on one familiar title, not a claim that H or M are worse on every title, and not the final two-candidate selection.
+H and M were screened out after the owner's Matrix judgments. C, J, K and L have no usable first-pass results. The early screen reduces human review workload; it is not a claim of catalog-wide inferiority and does not select the final two candidates.
 
-The original JSON is preserved byte for byte in `matrix-review.original.json`. Progress exports preserve all prior Matrix judgments, including the screened/unavailable candidates. Export before closing the form; Import resumes later exports.
+Each supplied JSON export is preserved byte for byte in its original snapshot file. Progress exports retain all previous judgments, including screened/unavailable candidates. Export before closing the form; Import resumes later exports.
 
-Keep this directory and its judgments out of the independent Astra/Fable sessions. Their existing `../blind-first/` packets remain unchanged; all original responses and the separate model-label key are retained. No additional inference has run.
+Keep this directory and its judgments out of independent Astra/Fable sessions. Their existing `../blind-first/` packets remain unchanged; all original responses and the separate model-label key are retained. No additional inference ran.
