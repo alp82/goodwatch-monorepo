@@ -1,0 +1,27 @@
+{
+  "basis": "Owner requested early screening after their Matrix review to reduce the remaining human workload.",
+  "active_candidate_labels": [
+    "A",
+    "B",
+    "D",
+    "E",
+    "F",
+    "G",
+    "I"
+  ],
+  "screened_out_of_human_review": {
+    "H": "Owner verdict: not impressed; multiple implausible traits.",
+    "M": "Owner verdict: not impressed; multiple implausible traits."
+  },
+  "unavailable": [
+    "C",
+    "J",
+    "K",
+    "L"
+  ],
+  "retained_borderline": {
+    "G": "Owner flags several high traits, but overall verdict says rest ok."
+  },
+  "scope": "Provisional human-review screen from one title, not catalog-wide quality rejection or finalist selection. Preserve all first-pass evidence and the independent judge packets.",
+  "remaining_human_title_reviews": 63
+}
