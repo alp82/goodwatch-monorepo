@@ -56,6 +56,15 @@ class Guards(unittest.TestCase):
         self.assertEqual(run.parse_output(body('{"unknown":true}'),'movie:603')[0],'abstention')
         self.assertEqual(run.parse_output(body('```json\n{}\n```'),'movie:603')[0],'malformed_json')
 
+    def test_canonical_model_identity_requires_public_mapping(self):
+        body={'model':'deepseek/deepseek-v4.1-flash'}
+        generation={'model':'deepseek/deepseek-v4.1-flash-20260910','provider_name':'DeepInfra'}
+        run.check_identity(body,generation,body['model'],{'provider_name':'DeepInfra'})
+        with self.assertRaises(ValueError):
+            run.check_identity(body,{**generation,'model':'deepseek/other'},body['model'],{'provider_name':'DeepInfra'})
+        with self.assertRaises(ValueError):
+            run.check_identity(body,generation,body['model'],{'provider_name':'Another provider'})
+
     def test_frozen_request_order_and_settings(self):
         candidates,pairs=run.build_requests()
         self.assertEqual(len(candidates),13)

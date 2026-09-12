@@ -1,0 +1,2170 @@
+{
+  "started_at": "2026-09-12T04:56:07.065649+00:00",
+  "initial_usage": 0,
+  "target_usd": 5,
+  "inference_ceiling_usd": 9,
+  "attempts": [
+    {
+      "pair_index": 0,
+      "candidate_index": 2,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0000",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0216792",
+        "input_token_allowance": 83820,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T04:56:07.227503+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 19.995197294003447,
+      "outcome": "valid",
+      "validation_errors": [],
+      "stop_reason": "RuntimeError: GET generation returned HTTP 404",
+      "actual_cost_usd": "0.0022114",
+      "generation_id": "gen-1789188967-WR2CCH8K9y8E3K78K0Fh",
+      "reconciliation_note": "Delayed generation metadata fetched; canonical model identity verified against public catalog; all three charge records agree."
+    },
+    {
+      "pair_index": 1,
+      "candidate_index": 3,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0001",
+      "status": "held",
+      "reserved": {
+        "usd": "0.01662910",
+        "input_token_allowance": 83554,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T04:57:39.101503+00:00",
+      "http_status": 429,
+      "elapsed_seconds": 0.3595576959924074,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'z-ai/glm-5.3-flash is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'DeepInfra', 'is_byok': False, 'provider_error_code': 'engine_overloaded', 'limit_source': 'upstream_provider_shared_pool', 'remedy_hint': 'Retry shortly, add your own provider key (https://openrouter.ai/settings/integrations), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing'}}"
+      ],
+      "stop_reason": "ValueError: No generation ID/usage: reservation retained pending reconciliation",
+      "cost_note": "Upstream 429 before generation ID; zero observed key delta, full reservation held for any delayed charge. Single retry remains allowed."
+    },
+    {
+      "pair_index": 1,
+      "candidate_index": 3,
+      "benchmark_id": "show:42009",
+      "attempt": 2,
+      "artifact": "0002",
+      "status": "held",
+      "reserved": {
+        "usd": "0.01662910",
+        "input_token_allowance": 83554,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T04:58:41.396789+00:00",
+      "http_status": 429,
+      "elapsed_seconds": 0.3628130019933451,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'z-ai/glm-5.3-flash is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'DeepInfra', 'is_byok': False, 'provider_error_code': 'engine_overloaded', 'limit_source': 'upstream_provider_shared_pool', 'remedy_hint': 'Retry shortly, add your own provider key (https://openrouter.ai/settings/integrations), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing'}}"
+      ],
+      "cost_note": "No generation ID; zero observed key delta, full reservation retained as unknown cost."
+    },
+    {
+      "pair_index": 2,
+      "candidate_index": 9,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0003",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02711624",
+        "input_token_allowance": 83704,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T04:58:42.003407+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.482605534998584,
+      "outcome": "valid",
+      "validation_errors": [],
+      "stop_reason": "ValueError: Usage, generation and key-usage delta disagree",
+      "actual_cost_usd": "0.00248429",
+      "generation_id": "gen-1789189122-HkVXlTqJ8zyFiQSa9S1C",
+      "reconciliation_note": "Key usage counter was delayed; refreshed read-only counter reconciles exactly."
+    },
+    {
+      "pair_index": 3,
+      "candidate_index": 9,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0004",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02716592",
+        "input_token_allowance": 83920,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T04:59:41.837620+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 10.200975326995831,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0024771",
+      "generation_id": "gen-1789189181-g3O9fLsvijo8GI1sxXts"
+    },
+    {
+      "pair_index": 4,
+      "candidate_index": 10,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0005",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0140252",
+        "input_token_allowance": 83796,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:00:09.740663+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 16.71200131101068,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.001326276",
+      "generation_id": "gen-1789189209-COtDUe2hXiJ8QS2QGbXX"
+    },
+    {
+      "pair_index": 5,
+      "candidate_index": 8,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0006",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01746480",
+        "input_token_allowance": 83664,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:00:44.074259+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.624057405002532,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0018009",
+      "generation_id": "gen-1789189244-WU1Zi4gciCUqDTnftt4Y"
+    },
+    {
+      "pair_index": 6,
+      "candidate_index": 5,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0007",
+      "status": "held",
+      "reserved": {
+        "usd": "0.0100318",
+        "input_token_allowance": 83934,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:01:01.029007+00:00",
+      "http_status": 404,
+      "elapsed_seconds": 0.09980572501081042,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': '0 endpoints out of 1 requested are available matching your guardrail restrictions and data policy. We removed them for the following reasons (an endpoint may have matched multiple reasons):\\nPaid model training violation (account settings): 1 endpoint excluded; configurable at https://openrouter.ai/settings/privacy', 'code': 404, 'metadata': {'input_endpoint_count': 1, 'ineligibility_reasons': [{'reason': 'paid-model-training-violation-by-account', 'endpoint_count': 1, 'configure_url': 'https://openrouter.ai/settings/privacy'}], 'routing_funnel': [{'step': 'Initial Endpoints', 'endpoint_count': 1}], 'failed_routing_step': 'Filter by Guardrails'}}"
+      ],
+      "cost_note": "No generation ID; zero observed key delta, full reservation retained as unknown cost."
+    },
+    {
+      "pair_index": 6,
+      "candidate_index": 5,
+      "benchmark_id": "show:1396",
+      "attempt": 2,
+      "artifact": "0008",
+      "status": "held",
+      "reserved": {
+        "usd": "0.0100318",
+        "input_token_allowance": 83934,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:01:06.378171+00:00",
+      "http_status": 404,
+      "elapsed_seconds": 0.09668677700392436,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': '0 endpoints out of 1 requested are available matching your guardrail restrictions and data policy. We removed them for the following reasons (an endpoint may have matched multiple reasons):\\nPaid model training violation (account settings): 1 endpoint excluded; configurable at https://openrouter.ai/settings/privacy', 'code': 404, 'metadata': {'input_endpoint_count': 1, 'ineligibility_reasons': [{'reason': 'paid-model-training-violation-by-account', 'endpoint_count': 1, 'configure_url': 'https://openrouter.ai/settings/privacy'}], 'routing_funnel': [{'step': 'Initial Endpoints', 'endpoint_count': 1}], 'failed_routing_step': 'Filter by Guardrails'}}"
+      ],
+      "cost_note": "No generation ID; zero observed key delta, full reservation retained as unknown cost."
+    },
+    {
+      "pair_index": 7,
+      "candidate_index": 6,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0009",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03324394",
+        "input_token_allowance": 83982,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:01:06.662974+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 17.85527379300038,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00180224",
+      "generation_id": "gen-1789189266-vCo2rrTIrDjETEXjNRVW"
+    },
+    {
+      "pair_index": 8,
+      "candidate_index": 9,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0010",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02708220",
+        "input_token_allowance": 83556,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:01:44.367087+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 10.7384877709992,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0012141",
+      "generation_id": "gen-1789189304-8pPCdjLjpaLBTQpwIb39"
+    },
+    {
+      "pair_index": 9,
+      "candidate_index": 6,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0011",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03317604",
+        "input_token_allowance": 83788,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:02:09.412125+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 20.812262001010822,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00074032",
+      "generation_id": "gen-1789189329-S5gggQVbLOW2OfPPkDJS"
+    },
+    {
+      "pair_index": 10,
+      "candidate_index": 4,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0012",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0901548",
+        "input_token_allowance": 83788,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:02:49.816740+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 7.170309522000025,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00319775",
+      "generation_id": "gen-1789189369-heIjcF5PgdDgCeboIYXI"
+    },
+    {
+      "pair_index": 11,
+      "candidate_index": 0,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0013",
+      "status": "held",
+      "reserved": {
+        "usd": "0.0525534999999999972110",
+        "input_token_allowance": 83670,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:03:06.216999+00:00",
+      "http_status": 400,
+      "elapsed_seconds": 0.4138242829940282,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{\\n  \"error\": {\\n    \"code\": 400,\\n    \"message\": \"The specified schema produces a constraint that has too many states for serving. Typical causes of this error are schemas with lots of text (for example, very long property or enum names), schemas with long array length limits (especially when nested), or schemas using complex value matchers (for example, integers or numbers with minimum/maximum bounds or strings with complex formats like date-time)\",\\n    \"status\": \"INVALID_ARGUMENT\"\\n  }\\n}\\n', 'provider_name': 'Google AI Studio', 'is_byok': False, 'provider_error_code': '400'}}"
+      ],
+      "cost_note": "No generation ID; zero observed key delta, full reservation retained as unknown cost."
+    },
+    {
+      "pair_index": 11,
+      "candidate_index": 0,
+      "benchmark_id": "movie:603",
+      "attempt": 2,
+      "artifact": "0014",
+      "status": "held",
+      "reserved": {
+        "usd": "0.0525534999999999972110",
+        "input_token_allowance": 83670,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:03:11.832510+00:00",
+      "http_status": 400,
+      "elapsed_seconds": 0.6864315580023685,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{\\n  \"error\": {\\n    \"code\": 400,\\n    \"message\": \"The specified schema produces a constraint that has too many states for serving. Typical causes of this error are schemas with lots of text (for example, very long property or enum names), schemas with long array length limits (especially when nested), or schemas using complex value matchers (for example, integers or numbers with minimum/maximum bounds or strings with complex formats like date-time)\",\\n    \"status\": \"INVALID_ARGUMENT\"\\n  }\\n}\\n', 'provider_name': 'Google AI Studio', 'is_byok': False, 'provider_error_code': '400'}}"
+      ],
+      "cost_note": "No generation ID; zero observed key delta, full reservation retained as unknown cost."
+    },
+    {
+      "pair_index": 12,
+      "candidate_index": 12,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0015",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.433856",
+        "input_token_allowance": 83888,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:03:12.839324+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 16.366267660996527,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.026748",
+      "generation_id": "gen-1789189392-T7FpZkq2LPof8NiSMgc0"
+    },
+    {
+      "pair_index": 13,
+      "candidate_index": 11,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0016",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00835264",
+        "input_token_allowance": 83928,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:03:49.089655+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 2.0481999129988253,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00086836",
+      "generation_id": "gen-1789189429-P9Hq9Slt4HZtSQF2nz2e"
+    },
+    {
+      "pair_index": 14,
+      "candidate_index": 2,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0017",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0216600",
+        "input_token_allowance": 83724,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:04:04.555663+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 45.94026843200845,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0022476",
+      "generation_id": "gen-1789189444-6VMeWjNecmFghnZM95Ua"
+    },
+    {
+      "pair_index": 15,
+      "candidate_index": 4,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0018",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0899352",
+        "input_token_allowance": 83544,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:05:11.769933+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 7.615230249997694,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00119874",
+      "generation_id": "gen-1789189511-fi8pR2VZlkCigs2Vokkm"
+    },
+    {
+      "pair_index": 16,
+      "candidate_index": 8,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0019",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01750200",
+        "input_token_allowance": 83912,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:05:30.972682+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.447980883996934,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0017901",
+      "generation_id": "gen-1789189531-BFIG9So3RF1P60uSpMte"
+    },
+    {
+      "pair_index": 18,
+      "candidate_index": 12,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0020",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.434016",
+        "input_token_allowance": 83928,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:05:47.678930+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 17.52427870000247,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.026992",
+      "generation_id": "gen-1789189547-MBffRuGrYM9DlzSruwUJ"
+    },
+    {
+      "pair_index": 21,
+      "candidate_index": 1,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0021",
+      "status": "held",
+      "reserved": {
+        "usd": "0.0970790833333333361274",
+        "input_token_allowance": 83822,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:06:27.010147+00:00",
+      "http_status": 400,
+      "elapsed_seconds": 0.4795904479979072,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{\\n  \"error\": {\\n    \"code\": 400,\\n    \"message\": \"Request contains an invalid argument.\",\\n    \"status\": \"INVALID_ARGUMENT\"\\n  }\\n}\\n', 'provider_name': 'Google AI Studio', 'is_byok': False, 'provider_error_code': '400'}}"
+      ],
+      "cost_note": "No generation ID; zero observed key delta, full reservation retained as unknown cost."
+    },
+    {
+      "pair_index": 21,
+      "candidate_index": 1,
+      "benchmark_id": "movie:150540",
+      "attempt": 2,
+      "artifact": "0022",
+      "status": "held",
+      "reserved": {
+        "usd": "0.0970790833333333361274",
+        "input_token_allowance": 83822,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:06:32.701402+00:00",
+      "http_status": 400,
+      "elapsed_seconds": 0.4546032840007683,
+      "outcome": "transport_error",
+      "validation_errors": [
+        "{'message': 'Provider returned error', 'code': 400, 'metadata': {'raw': '{\\n  \"error\": {\\n    \"code\": 400,\\n    \"message\": \"Request contains an invalid argument.\",\\n    \"status\": \"INVALID_ARGUMENT\"\\n  }\\n}\\n', 'provider_name': 'Google AI Studio', 'is_byok': False, 'provider_error_code': '400'}}"
+      ],
+      "cost_note": "No generation ID; zero observed key delta, full reservation retained as unknown cost."
+    },
+    {
+      "pair_index": 22,
+      "candidate_index": 9,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0023",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02718294",
+        "input_token_allowance": 83994,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:06:33.375745+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 3.7440958579973085,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00123301",
+      "generation_id": "gen-1789189593-ZrQMIv2Xsl77PYeEaW5n"
+    },
+    {
+      "pair_index": 26,
+      "candidate_index": 4,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0024",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0902628",
+        "input_token_allowance": 83908,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:06:49.546170+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 7.035896141998819,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00114704",
+      "generation_id": "gen-1789189609-mFWNAhKsfGYyqdDBQE66"
+    },
+    {
+      "pair_index": 27,
+      "candidate_index": 7,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0025",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03524920",
+        "input_token_allowance": 63768,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:07:08.556179+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 11.296829537997837,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00040553",
+      "generation_id": "gen-1789189628-qqcAiQLpIrJYNCPasRDs"
+    },
+    {
+      "pair_index": 28,
+      "candidate_index": 12,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0026",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.433760",
+        "input_token_allowance": 83864,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:07:39.761715+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 25.769854136990034,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.03077",
+      "generation_id": "gen-1789189659-VnUfD2zw7oguNKrx2GRx"
+    },
+    {
+      "pair_index": 29,
+      "candidate_index": 8,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0027",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01747200",
+        "input_token_allowance": 83712,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:08:25.248142+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 6.69530369900167,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0019167",
+      "generation_id": "gen-1789189705-w3920Yb3ZkxwkgLTnMl2"
+    },
+    {
+      "pair_index": 30,
+      "candidate_index": 4,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0028",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0899766",
+        "input_token_allowance": 83590,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:08:45.379035+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 7.3677186829881975,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00114869",
+      "generation_id": "gen-1789189725-j72y9RmYTLAHwVzyKE4P"
+    },
+    {
+      "pair_index": 31,
+      "candidate_index": 9,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0029",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02716224",
+        "input_token_allowance": 83904,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:09:02.249527+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 3.580055092999828,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00117476",
+      "generation_id": "gen-1789189742-KTlqV38e4Oi7RCOk2558"
+    },
+    {
+      "pair_index": 32,
+      "candidate_index": 7,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0030",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03522850",
+        "input_token_allowance": 63722,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:09:19.361289+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 11.9706358609983,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00022173",
+      "generation_id": "gen-1789189759-J2kreIJaMIHGQPzQJN0K"
+    },
+    {
+      "pair_index": 33,
+      "candidate_index": 10,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0031",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0140420",
+        "input_token_allowance": 83916,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:09:45.454752+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 19.37209187699773,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.001234373",
+      "generation_id": "gen-1789189785-ifjPfbC64hpRQbk6ILxs"
+    },
+    {
+      "pair_index": 34,
+      "candidate_index": 10,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0032",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01399104",
+        "input_token_allowance": 83552,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:10:22.389872+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 31.313866386000882,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0003458532",
+      "generation_id": "gen-1789189822-sTeRl1FDebYcMImM6sol"
+    },
+    {
+      "pair_index": 35,
+      "candidate_index": 10,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0033",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01400504",
+        "input_token_allowance": 83652,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:11:13.676108+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 18.407281432999298,
+      "outcome": "valid",
+      "validation_errors": [],
+      "stop_reason": "RuntimeError: Generation metadata unavailable; retain reservation",
+      "actual_cost_usd": "0.001329867",
+      "generation_id": "gen-1789189873-0jOHjtNp1FxB2jXo4CFL",
+      "reconciliation_note": "Generation lookup became available on subsequent read-only reconciliation."
+    },
+    {
+      "pair_index": 38,
+      "candidate_index": 4,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0034",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0902988",
+        "input_token_allowance": 83948,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:12:33.108156+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 8.30042226301157,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00117354",
+      "generation_id": "gen-1789189953-8fpFR2pO6ZKnn79cmJn8"
+    },
+    {
+      "pair_index": 39,
+      "candidate_index": 8,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0035",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01745670",
+        "input_token_allowance": 83610,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:12:53.258855+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.167265206007869,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000757995",
+      "generation_id": "gen-1789189973-2V1hEYnFKmEOknYqk0kk"
+    },
+    {
+      "pair_index": 41,
+      "candidate_index": 12,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0036",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.432400",
+        "input_token_allowance": 83524,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:13:09.806605+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 12.651207514994894,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.026176",
+      "generation_id": "gen-1789189989-AVhxaJrSuiDlG1BTtiBv"
+    },
+    {
+      "pair_index": 45,
+      "candidate_index": 11,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0037",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00835984",
+        "input_token_allowance": 84018,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:13:34.431978+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 2.1336886409990257,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00070232",
+      "generation_id": "gen-1789190014-F1XM4eSlnsNs2nUL7iFe"
+    },
+    {
+      "pair_index": 46,
+      "candidate_index": 10,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0038",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01403976",
+        "input_token_allowance": 83900,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:13:50.442459+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 29.456965068005957,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.001329335",
+      "generation_id": "gen-1789190030-TT8J6DHbDRp182trXRbO"
+    },
+    {
+      "pair_index": 48,
+      "candidate_index": 6,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0039",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03320964",
+        "input_token_allowance": 83884,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:14:38.791807+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 15.422859639002127,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00078358",
+      "generation_id": "gen-1789190078-47pC2buYNoFpyBeMvU6n"
+    },
+    {
+      "pair_index": 49,
+      "candidate_index": 2,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0040",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0217000",
+        "input_token_allowance": 83924,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:15:12.309350+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 43.98764387999836,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000806344",
+      "generation_id": "gen-1789190112-THIXhjl6T8RRLeU1exvX"
+    },
+    {
+      "pair_index": 52,
+      "candidate_index": 9,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0041",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02709278",
+        "input_token_allowance": 83602,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:16:16.228918+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 3.7327053940098267,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00120081",
+      "generation_id": "gen-1789190176-uyrzQz8At7YiTOgGZ33Z"
+    },
+    {
+      "pair_index": 54,
+      "candidate_index": 2,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0042",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0217112",
+        "input_token_allowance": 83980,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:16:32.484207+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 48.44630813799449,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0022482",
+      "generation_id": "gen-1789190192-Q50JixhES4x8nd7rbI0c"
+    },
+    {
+      "pair_index": 55,
+      "candidate_index": 2,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0043",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0216396",
+        "input_token_allowance": 83622,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:17:40.814330+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 71.60019221500261,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.002243",
+      "generation_id": "gen-1789190260-AJexCgPJjNkh4CYUPIac"
+    },
+    {
+      "pair_index": 56,
+      "candidate_index": 4,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0044",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0902484",
+        "input_token_allowance": 83892,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:19:14.306107+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 6.959921817004215,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00116944",
+      "generation_id": "gen-1789190354-KbbW4hgAwGZFFtuBTfPK"
+    },
+    {
+      "pair_index": 57,
+      "candidate_index": 7,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0045",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03533830",
+        "input_token_allowance": 63966,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:19:32.634798+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 10.922155436011963,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0002191",
+      "generation_id": "gen-1789190372-da0FWmiRsb5xeOe0nLYE"
+    },
+    {
+      "pair_index": 58,
+      "candidate_index": 7,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0046",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03527350",
+        "input_token_allowance": 63822,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:19:53.025976+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 10.522827134002,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00022102",
+      "generation_id": "gen-1789190393-cgboryTaGQPyFIN6f8ZN"
+    },
+    {
+      "pair_index": 60,
+      "candidate_index": 4,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0047",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0903294",
+        "input_token_allowance": 83982,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:20:23.739423+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 8.408507782005472,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00122039",
+      "generation_id": "gen-1789190423-I8SIvy8GhWPpEVUSz5rE"
+    },
+    {
+      "pair_index": 61,
+      "candidate_index": 11,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0048",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00835200",
+        "input_token_allowance": 83920,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:20:44.048916+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 2.075394404993858,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00069484",
+      "generation_id": "gen-1789190444-5ti5C2EB2zL8F4d5kFGr"
+    },
+    {
+      "pair_index": 62,
+      "candidate_index": 6,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0049",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03323204",
+        "input_token_allowance": 83948,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:21:00.204110+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 19.740548491987283,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00070924",
+      "generation_id": "gen-1789190460-1jqAFNHpeDeKu5a4AKqP"
+    },
+    {
+      "pair_index": 64,
+      "candidate_index": 9,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0050",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02710520",
+        "input_token_allowance": 83656,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:21:39.464088+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 21.454531745999702,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00248383",
+      "generation_id": "gen-1789190499-xZiymSxlJcitoFZiZqqj"
+    },
+    {
+      "pair_index": 65,
+      "candidate_index": 9,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0051",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02716040",
+        "input_token_allowance": 83896,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:22:22.770518+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 10.058897003007587,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00154087",
+      "generation_id": "gen-1789190542-VKXUnjsFisf3Dm8kU6Mr"
+    },
+    {
+      "pair_index": 67,
+      "candidate_index": 12,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0052",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.432584",
+        "input_token_allowance": 83570,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:22:44.223042+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 18.31341732799774,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.027126",
+      "generation_id": "gen-1789190564-jySW3vZNVdYBe82VzemW"
+    },
+    {
+      "pair_index": 68,
+      "candidate_index": 8,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0053",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01750440",
+        "input_token_allowance": 83928,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:23:24.584825+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.870628923992626,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00181455",
+      "generation_id": "gen-1789190604-LeIL8ttrfXbsdqUkIsQL"
+    },
+    {
+      "pair_index": 69,
+      "candidate_index": 4,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0054",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0902412",
+        "input_token_allowance": 83884,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:23:46.721428+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 6.5631120479956735,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00118254",
+      "generation_id": "gen-1789190626-DL5yHSrKHTA5OYE3PQsw"
+    },
+    {
+      "pair_index": 72,
+      "candidate_index": 8,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0055",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01750080",
+        "input_token_allowance": 83904,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:24:05.269928+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 6.063572611004929,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0018153",
+      "generation_id": "gen-1789190645-ga1BQjP9KdpUmB2c7XCU"
+    },
+    {
+      "pair_index": 74,
+      "candidate_index": 12,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0056",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.433376",
+        "input_token_allowance": 83768,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:24:25.215475+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 23.456437479006127,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.03033",
+      "generation_id": "gen-1789190665-nkrOGpj18hcl8wRMX8v2"
+    },
+    {
+      "pair_index": 75,
+      "candidate_index": 9,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0057",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02717512",
+        "input_token_allowance": 83960,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:25:07.220128+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 10.116185596998548,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00120955",
+      "generation_id": "gen-1789190707-1WQDkLgHTW17Z26VB7OD"
+    },
+    {
+      "pair_index": 76,
+      "candidate_index": 6,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0058",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03310674",
+        "input_token_allowance": 83590,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:25:28.730424+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 17.8143204379885,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0007079",
+      "generation_id": "gen-1789190728-9MQzUjzXWFvkkYNjiv4R"
+    },
+    {
+      "pair_index": 77,
+      "candidate_index": 2,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0059",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0216304",
+        "input_token_allowance": 83576,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:26:04.953636+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 22.099559975002194,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.002227",
+      "generation_id": "gen-1789190765-20UqgrgUgSdO1k2UqDLR"
+    },
+    {
+      "pair_index": 78,
+      "candidate_index": 2,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0060",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0216984",
+        "input_token_allowance": 83916,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:26:45.550650+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 26.527609640994342,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000800144",
+      "generation_id": "gen-1789190805-ZPeBp6uqCLcxL4xS1ZVa"
+    },
+    {
+      "pair_index": 79,
+      "candidate_index": 12,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0061",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.432800",
+        "input_token_allowance": 83624,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:27:30.297869+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 24.870265987992752,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.031104",
+      "generation_id": "gen-1789190850-CzB8uPXVR76dgotGkslU"
+    },
+    {
+      "pair_index": 81,
+      "candidate_index": 4,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0062",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0900252",
+        "input_token_allowance": 83644,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:28:15.289544+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 6.229291422991082,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00116094",
+      "generation_id": "gen-1789190895-WFH7nUguiGeGNP8fb4LI"
+    },
+    {
+      "pair_index": 82,
+      "candidate_index": 2,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0063",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0216504",
+        "input_token_allowance": 83676,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:28:35.858486+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 58.32495674700476,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000795744",
+      "generation_id": "gen-1789190915-1iHSRohAf0nn6CuHAjNl"
+    },
+    {
+      "pair_index": 83,
+      "candidate_index": 10,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0064",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01403864",
+        "input_token_allowance": 83892,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:29:51.888129+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 18.111208265007008,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.001334655",
+      "generation_id": "gen-1789190991-HmSt1ehC9W4ysDTtjVo9"
+    },
+    {
+      "pair_index": 85,
+      "candidate_index": 12,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0065",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.432992",
+        "input_token_allowance": 83672,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:30:27.682269+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 22.60174860600091,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.029376",
+      "generation_id": "gen-1789191027-oBVMfdiM71mhy61tuRf6"
+    },
+    {
+      "pair_index": 86,
+      "candidate_index": 9,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0066",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.02713832",
+        "input_token_allowance": 83800,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:31:08.894115+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 6.182785254990449,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00117008",
+      "generation_id": "gen-1789191069-KDC6lvnR81CW7GPncRTm"
+    },
+    {
+      "pair_index": 87,
+      "candidate_index": 11,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0067",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00832480",
+        "input_token_allowance": 83580,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:31:28.980004+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 2.3071327049983665,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00068456",
+      "generation_id": "gen-1789191089-TOpId8cNmJscm9LOs0gB"
+    },
+    {
+      "pair_index": 89,
+      "candidate_index": 2,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0068",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0217180",
+        "input_token_allowance": 84014,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:31:44.903374+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 34.22445607300324,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000813144",
+      "generation_id": "gen-1789191105-NgRPRxQWRuqywirZiNQ0"
+    },
+    {
+      "pair_index": 91,
+      "candidate_index": 10,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0069",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01401176",
+        "input_token_allowance": 83700,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:32:36.750265+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 21.128536495991284,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.001332926",
+      "generation_id": "gen-1789191156-okBwZvcTXadfGFsp5B4j"
+    },
+    {
+      "pair_index": 93,
+      "candidate_index": 11,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0070",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00835392",
+        "input_token_allowance": 83944,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:33:19.738798+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 1.9636881979968166,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00068776",
+      "generation_id": "gen-1789191199-EhB2DgeMattsAOaKTpgk"
+    },
+    {
+      "pair_index": 95,
+      "candidate_index": 6,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0071",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03321804",
+        "input_token_allowance": 83908,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:33:35.221348+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 18.63638431399886,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00070804",
+      "generation_id": "gen-1789191215-8f3arprOmw9QFkhXspH9"
+    },
+    {
+      "pair_index": 96,
+      "candidate_index": 10,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0072",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01405236",
+        "input_token_allowance": 83990,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:34:13.831953+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 16.81513526600611,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.001249535",
+      "generation_id": "gen-1789191253-btm16FPpypTWllU6zME7"
+    },
+    {
+      "pair_index": 98,
+      "candidate_index": 6,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0073",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03321244",
+        "input_token_allowance": 83892,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:34:50.582285+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 16.229535993988975,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00071864",
+      "generation_id": "gen-1789191290-6Ec4tycn14FkiRtbVkoB"
+    },
+    {
+      "pair_index": 99,
+      "candidate_index": 6,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0074",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03309064",
+        "input_token_allowance": 83544,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:35:24.423863+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 21.544731745001627,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00076329",
+      "generation_id": "gen-1789191324-HL4xpVqI1OZkrsgY72OZ"
+    },
+    {
+      "pair_index": 100,
+      "candidate_index": 10,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0075",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01399748",
+        "input_token_allowance": 83598,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:36:03.768484+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 24.64608644899272,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0003438582",
+      "generation_id": "gen-1789191363-V4v6S5xE4NngwKVno2GF"
+    },
+    {
+      "pair_index": 101,
+      "candidate_index": 4,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0076",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0900684",
+        "input_token_allowance": 83692,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:36:48.747040+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 6.968253843995626,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00117584",
+      "generation_id": "gen-1789191408-qJAGYFzCKfTXIhnheXgH"
+    },
+    {
+      "pair_index": 103,
+      "candidate_index": 7,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0077",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03539230",
+        "input_token_allowance": 64086,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:37:05.975695+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 12.884254079996026,
+      "outcome": "structural_failure",
+      "validation_errors": [
+        "['results', 0, 'analysis', 'production_info']: 'animation_style' is a required property"
+      ],
+      "actual_cost_usd": "0.00040254",
+      "generation_id": "gen-1789191426-fq32SwYwO5QTrbLHfUMT"
+    },
+    {
+      "pair_index": 103,
+      "candidate_index": 7,
+      "benchmark_id": "show:1396",
+      "attempt": 2,
+      "artifact": "0078",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03989770",
+        "input_token_allowance": 74098,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:37:36.992846+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 11.136565004999284,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00025819",
+      "generation_id": "gen-1789191457-t1ceMK4pfi1yDLjBS4am"
+    },
+    {
+      "pair_index": 104,
+      "candidate_index": 8,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0079",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01748640",
+        "input_token_allowance": 83808,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:38:07.964697+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.455995693002478,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00178665",
+      "generation_id": "gen-1789191488-54xPHyUIq08H9d0ASAnJ"
+    },
+    {
+      "pair_index": 106,
+      "candidate_index": 7,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0080",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03529510",
+        "input_token_allowance": 63870,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:38:25.024767+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 13.527361239990569,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00022364",
+      "generation_id": "gen-1789191505-W4ADrT0acBuV0PSB1KHS"
+    },
+    {
+      "pair_index": 107,
+      "candidate_index": 11,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0081",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00835712",
+        "input_token_allowance": 83984,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:38:56.508937+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 2.052112023011432,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00069324",
+      "generation_id": "gen-1789191536-wXeNPcQIWwAHL8ip4jZw"
+    },
+    {
+      "pair_index": 108,
+      "candidate_index": 7,
+      "benchmark_id": "movie:550",
+      "attempt": 1,
+      "artifact": "0082",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03538150",
+        "input_token_allowance": 64062,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:39:12.208587+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 11.635674093005946,
+      "outcome": "structural_failure",
+      "validation_errors": [
+        "['results', 0, 'analysis', 'production_info']: 'animation_style' is a required property"
+      ],
+      "actual_cost_usd": "0.00022109",
+      "generation_id": "gen-1789191552-tOmmHxImceHH5BNwGczU"
+    },
+    {
+      "pair_index": 108,
+      "candidate_index": 7,
+      "benchmark_id": "movie:550",
+      "attempt": 2,
+      "artifact": "0083",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.04000030",
+        "input_token_allowance": 74326,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:39:43.804359+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 9.74163287000556,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00026175",
+      "generation_id": "gen-1789191583-VvcbVGATlf5ZL5HP9KLq"
+    },
+    {
+      "pair_index": 110,
+      "candidate_index": 6,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0084",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03314244",
+        "input_token_allowance": 83692,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:40:05.050879+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 20.86839587900613,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00077039",
+      "generation_id": "gen-1789191605-5Nbv2CF2TQWqhtUKHDBk"
+    },
+    {
+      "pair_index": 111,
+      "candidate_index": 11,
+      "benchmark_id": "show:249042",
+      "attempt": 1,
+      "artifact": "0085",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00832848",
+        "input_token_allowance": 83626,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:40:45.863942+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 2.0924154419917613,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0006868",
+      "generation_id": "gen-1789191645-dKsQNdVQS1VwSG4dBm27"
+    },
+    {
+      "pair_index": 112,
+      "candidate_index": 8,
+      "benchmark_id": "show:42009",
+      "attempt": 1,
+      "artifact": "0086",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01744980",
+        "input_token_allowance": 83564,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:41:01.741656+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.461752549002995,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000769845",
+      "generation_id": "gen-1789191661-ACsXlMM69WFIK4fDwJ8m"
+    },
+    {
+      "pair_index": 113,
+      "candidate_index": 2,
+      "benchmark_id": "show:1396",
+      "attempt": 1,
+      "artifact": "0087",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0217032",
+        "input_token_allowance": 83940,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:41:20.776053+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 28.9177928709978,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000774144",
+      "generation_id": "gen-1789191680-HwTagjDB3bmv8CeXNqqX"
+    },
+    {
+      "pair_index": 115,
+      "candidate_index": 6,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0088",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03312564",
+        "input_token_allowance": 83644,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:42:09.783330+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 32.976083393004956,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00076024",
+      "generation_id": "gen-1789191729-ARBOTXkdZcQh7JGNg9ej"
+    },
+    {
+      "pair_index": 116,
+      "candidate_index": 11,
+      "benchmark_id": "movie:545611",
+      "attempt": 1,
+      "artifact": "0089",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00833664",
+        "input_token_allowance": 83728,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:43:00.405985+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 3.743505185993854,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00069212",
+      "generation_id": "gen-1789191780-GEvtHVBqHNVG5wuf2mG7"
+    },
+    {
+      "pair_index": 117,
+      "candidate_index": 11,
+      "benchmark_id": "movie:150540",
+      "attempt": 1,
+      "artifact": "0090",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00834432",
+        "input_token_allowance": 83824,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:43:18.596437+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 3.3697884419962065,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0006798",
+      "generation_id": "gen-1789191798-iq79BvyrL6Nd6mZ2gucU"
+    },
+    {
+      "pair_index": 118,
+      "candidate_index": 10,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0091",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.0140476",
+        "input_token_allowance": 83956,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:43:35.287689+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 28.234120500987046,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.001337315",
+      "generation_id": "gen-1789191815-7PE57kYCRSw6iVQKH9gD"
+    },
+    {
+      "pair_index": 119,
+      "candidate_index": 7,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0092",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03541030",
+        "input_token_allowance": 64126,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:44:23.621422+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 12.504476329006138,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00022262",
+      "generation_id": "gen-1789191863-26zF7PMIZf7tsY6jTxhD"
+    },
+    {
+      "pair_index": 120,
+      "candidate_index": 8,
+      "benchmark_id": "show:1399",
+      "attempt": 1,
+      "artifact": "0093",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01751040",
+        "input_token_allowance": 83968,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:44:48.364757+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.327241191000212,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.000770295",
+      "generation_id": "gen-1789191888-dMbLgeWgrLtEaBAZ2uAM"
+    },
+    {
+      "pair_index": 121,
+      "candidate_index": 7,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0094",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03538510",
+        "input_token_allowance": 64070,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:45:05.031363+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 13.530726454002433,
+      "outcome": "structural_failure",
+      "validation_errors": [
+        "['results', 0, 'analysis', 'fingerprint', 'highlight_keys', 6]: 'sitcom_comedy' is not one of ['adrenaline', 'tension', 'scare', 'violence', 'romance', 'eroticism', 'wholesome', 'wonder', 'pathos', 'melancholy', 'uncanny', 'catharsis', 'nostalgia', 'situational_comedy', 'wit_wordplay', 'physical_comedy', 'cringe_humor', 'absurdist_humor', 'satire_parody', 'dark_humor', 'fantasy', 'futuristic', 'historical', 'contemporary_realism', 'crime', 'mystery', 'warfare', 'political', 'sports', 'biographical', 'coming_of_age', 'family_dynamics', 'psychological', 'showbiz', 'gaming', 'pop_culture', 'social_commentary', 'class_and_capitalism', 'technology_and_humanity', 'spiritual', 'narrative_structure', 'dialogue_quality', 'character_depth', 'slow_burn', 'fast_pace', 'intrigue', 'complexity', 'rewatchability', 'hopefulness', 'bleakness', 'ambiguity', 'novelty', 'homage_and_reference', 'non_linear_narrative', 'meta_narrative', 'surrealism', 'eccentricity', 'philosophical', 'educational', 'direction', 'acting', 'cinematography', 'editing', 'music_composition', 'world_immersion', 'spectacle', 'visual_stylization', 'pastiche', 'psychedelic', 'grotesque', 'camp_and_irony', 'dialogue_centrality', 'music_centrality', 'sound_centrality']"
+      ],
+      "actual_cost_usd": "0.00022366",
+      "generation_id": "gen-1789191905-ftk61YwJG9y1LKsxxzDl"
+    },
+    {
+      "pair_index": 121,
+      "candidate_index": 7,
+      "benchmark_id": "movie:1233066",
+      "attempt": 2,
+      "artifact": "0095",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.04104340",
+        "input_token_allowance": 76644,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:45:37.162632+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 9.1689819440071,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00027487",
+      "generation_id": "gen-1789191937-Ui2QZxY5VYZHSzQdFck8"
+    },
+    {
+      "pair_index": 122,
+      "candidate_index": 8,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0096",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.01751550",
+        "input_token_allowance": 84002,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:46:00.810388+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 5.796516784990672,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0018363",
+      "generation_id": "gen-1789191960-oPExSquszhiAVE7MYVAj"
+    },
+    {
+      "pair_index": 123,
+      "candidate_index": 12,
+      "benchmark_id": "movie:1233066",
+      "attempt": 1,
+      "artifact": "0097",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.433792",
+        "input_token_allowance": 83872,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:47:16.980212+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 20.53890246200899,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.02755",
+      "generation_id": "gen-1789192037-Fqk5A1WDv7Nftt3bDfl2"
+    },
+    {
+      "pair_index": 124,
+      "candidate_index": 7,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0098",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.03542560",
+        "input_token_allowance": 64160,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:47:55.548189+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 13.134859736994258,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.00022397",
+      "generation_id": "gen-1789192075-NffNY5UlpEU4XFl7SPFC"
+    },
+    {
+      "pair_index": 126,
+      "candidate_index": 12,
+      "benchmark_id": "show:64230",
+      "attempt": 1,
+      "artifact": "0099",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.434152",
+        "input_token_allowance": 83962,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:48:28.689352+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 23.56678778999776,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.029972",
+      "generation_id": "gen-1789192108-6yMKgovTv9I74ifp53B6"
+    },
+    {
+      "pair_index": 128,
+      "candidate_index": 11,
+      "benchmark_id": "movie:603",
+      "attempt": 1,
+      "artifact": "0100",
+      "status": "reconciled",
+      "reserved": {
+        "usd": "0.00833280",
+        "input_token_allowance": 83680,
+        "completion_token_cap": 8192,
+        "method": "2x UTF-8 wire bytes + 4096 input; worst listed rates, cache writes, undiscounted pricing"
+      },
+      "started_at": "2026-09-12T05:49:10.528745+00:00",
+      "http_status": 200,
+      "elapsed_seconds": 2.645555435010465,
+      "outcome": "valid",
+      "validation_errors": [],
+      "actual_cost_usd": "0.0006886",
+      "generation_id": "gen-1789192150-VzjLDmi89ONSE9mCkcNq"
+    }
+  ],
+  "stopped_candidates": {
+    "3": "Two compatibility/transport errors; remaining titles not attempted",
+    "5": "Two compatibility/transport errors; remaining titles not attempted",
+    "0": "Two compatibility/transport errors; remaining titles not attempted",
+    "1": "Two compatibility/transport errors; remaining titles not attempted"
+  },
+  "prepared_manifest": {
+    "status": "prepared-not-executed",
+    "seed": 20260912,
+    "evaluation_date": "2026-09-12",
+    "pairs": 130,
+    "actual_inference_cost_usd": 0,
+    "sha256": {
+      "schema.json": "642d0b51a2d0096027164f8a422d0a21f89a6090090a1f0f17e2976f6de516ea",
+      "system-prompt.txt": "42f90596cdead205be55f50f8b9fc01925d2f8c716a1ec0845cbadab9ce95ca5",
+      "candidates.json": "1577f7f0097ddcd972bc8e1dad18b0c223354fc40bd6d0eb3b79cb205eb0cec7",
+      "request-order.json": "a39eea2b6faf0f8d5c27ae3f6bc7dafb0b404fd3e793865fb9779b494fb3c510",
+      "request-example.json": "5cf6989e3da2e52969728cfd94c3d991408e407e52c7e1cea80bf8b088492c06"
+    }
+  }
+}

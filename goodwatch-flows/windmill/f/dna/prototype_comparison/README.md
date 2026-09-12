@@ -1,6 +1,6 @@
 # Throwaway fingerprint comparison preparation
 
-Work in progress for [Compare candidate fingerprints](https://github.com/alp82/goodwatch-monorepo/issues/32). This branch prepares the approved experiment. It has **not run inference**, produced candidate judgments, or selected finalists.
+First-pass evidence for [Compare candidate fingerprints](https://github.com/alp82/goodwatch-monorepo/issues/32). Nine configurations completed all ten titles: 87 full responses passed initially and three passed after structural repair. Four configurations stopped after their two transport attempts. Reconciled inference charges total **$0.3764186484**, with **$0.3525869667** additionally held as conservative reservations for rejected requests. Independent quality review and finalist selection remain pending.
 
 From the repository root:
 
@@ -16,7 +16,7 @@ Transport adaptations: one identified title per request, a results envelope, and
 
 ## Execution status and next steps
 
-The owner supplied a local credential location. Read-only key metadata checks found a valid ordinary inference key with a **$1 weekly resetting limit**, $1 remaining allowance at inspection, and zero reported BYOK usage. It is not a management/provisioning key. It does not satisfy the approved non-resetting experiment allowance. No key setting was changed and no inference was submitted. A dedicated capped key is pending.
+Paid execution used the dedicated key after the owner configured its $9 non-resetting cap and the runner verified it. Final account usage agrees with the sum of reconciled generation charges to displayed precision. No credits were purchased, no judge API or embedding calls were made, and no account privacy setting or production data was changed.
 
 `run.py` now provides a read-only preflight and a fail-closed first-pass execution driver. Use a local dotenv file; never put a secret on the command line:
 
@@ -34,17 +34,16 @@ python goodwatch-flows/windmill/f/dna/prototype_comparison/run.py --env-file /pa
 
 Before each paid request the driver durably writes the request, current route snapshot, sanitized key metadata and reservation. Reservations use twice the UTF-8 wire bytes plus 4,096 input tokens, the 8,192 completion cap, worst listed price overrides, cache-write charges, and undiscounted rates. These deliberately conservative estimates are backed by the dedicated server-side cap. The preflight sum of initial reservations was $8.57; this is **not expected or measured spend**, and reconciled actual usage replaces each reservation as the run advances.
 
-After each response the driver preserves raw text, parsed output, errors, timing and generation metadata. It checks usage cost against generation cost and the key-usage delta. Missing generation/usage data, timeouts, external key usage, BYOK, model/provider mismatch, excess input/output, or unexplained charges stop execution with the reservation retained. This may require manual reconciliation of unbilled HTTP errors or delayed usage before resuming; the driver never assumes missing usage means zero. Do not edit a reserved ledger entry to zero without evidence. Returned model version differences need explicit inspection rather than automatic alias acceptance.
+After each response the driver preserves raw text, parsed output, errors, timing and generation metadata. It checks usage cost against generation cost and the key-usage delta. Generation metadata and key-usage counters are polled read-only because both were observed to lag responses. Public canonical model IDs are verified against the captured model catalog. Rejected 400/404/429/502/503 responses without generation IDs retain their full reservation even if account usage is unchanged; these held amounts reduce every subsequent admission allowance. Unknown timeouts, external key usage, BYOK, mismatched identities, excess tokens, or unexplained charges stop execution with the reservation retained. The driver never assumes missing usage means zero. Do not edit a reserved ledger entry to zero without evidence. Returned model version differences need explicit inspection rather than automatic alias acceptance.
 
 The driver bounds pairs to two attempts and repairs only machine-detected structural errors. It does not retry abstention or valid-but-implausible scores. It does not run judges, select finalists, run repeat passes, or embed texts. Those stages still depend on the human review and independent subscriptions in the approved protocol.
 
-Remaining execution work:
+Remaining decision work:
 
-1. Supply the dedicated key and verify its allowance. Resolve account-level BYOK restrictions if present.
-2. Inspect reasoning adapter details, especially Gemini 2.5 zero budget. Public parameter advertising is not adapter confirmation. The captured DeepSeek route reports status `-2`; retain it as an availability concern, not a model-quality result.
-3. Run bounded compatibility attempts, reconcile failures, and continue the seeded first pass within budget. Preserve incomplete arms and expected-versus-attempted coverage.
-4. Generate per-title blind packets and keep the candidate key separate. Collect independent human/Astra/Fable reviews in fresh subscription sessions with exact identities/settings recorded. The human chooses two finalists.
-5. Add repeat execution and separately reserved finalist embedding measurement only after that choice. Resolve the ticket only after live human review.
+1. Collect independent human/Astra/Fable reviews using only the blind packets; record the actual subscription judge models and effort settings. No candidate-quality verdict has been supplied by this execution session.
+2. Have the human choose two finalists after reviewing all three independent judgments. Then run unchanged ten-title repeats and the separately reserved finalist embedding sample.
+3. Decide whether the incomplete configurations justify a follow-up. Both Gemini routes rejected the common schema's complexity, GLM's pinned route returned upstream 429 errors, and Muse Contributor was excluded by the existing account privacy policy. These are configuration/access findings, not assessments of trait quality. Additional configurations or attempts require a protocol follow-up; no substitution was made.
+4. Resolve this ticket only after live human review. The strategy decision and production rollout remain downstream.
 
 Run the monetary and request-guard checks without network access:
 
@@ -52,8 +51,23 @@ Run the monetary and request-guard checks without network access:
 python -m unittest discover -s goodwatch-flows/windmill/f/dna/prototype_comparison -p test_run.py
 ```
 
-Eight checks pass for resetting/unlimited keys, three-way charge reconciliation, missing usage, overspend/token caps, BYOK, conservative rate/cache reservations, duplicate JSON/abstention, and the frozen thirteen-model/130-pair settings. Paid HTTP execution remains untested until the dedicated key is supplied.
+Nine checks pass for resetting/unlimited keys, three-way charge reconciliation, missing usage, overspend/token caps, BYOK, conservative rate/cache reservations, duplicate JSON/abstention, and the frozen thirteen-model/130-pair settings. Paid execution began after the owner configured the dedicated $9 non-resetting key. See the exported execution evidence for current results.
 
 Offline validation accepted the production example and rejected ten cases covering boolean, decimal, string and out-of-range scores, missing scores, unexpected fields, duplicate highlights, anime/style mismatch, wrong title association and abstention. This fixture is a structural smoke check, not a benchmark result.
 
-References: [approved protocol](../../../../../../docs/benchmarks/fingerprint/protocol.md), [OpenRouter key metadata](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key), [reasoning controls](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens), [Chat API](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion). Current documentation advertises `max_tokens`; actual adapter handling remains a compatibility check.
+References: [approved protocol](../../../../../docs/benchmarks/fingerprint/protocol.md), [OpenRouter key metadata](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key), [reasoning controls](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens), [Chat API](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion). Current documentation advertises `max_tokens`; actual adapter handling remains a compatibility check.
+
+## Exporting evidence and blind review
+
+After execution stops, run:
+
+```bash
+python goodwatch-flows/windmill/f/dna/prototype_comparison/review.py
+python goodwatch-flows/windmill/f/dna/prototype_comparison/report.py
+```
+
+Only `docs/benchmarks/fingerprint/poc/blind-first/` goes to independent reviewers. Its self-contained `review.html` supports human annotations and JSON export/import; its per-title JSON files and attribute definitions serve the separate subscription judge sessions. Do not give reviewers `blind-key-private.json`, the candidate lineup, financial report, or others' reviews before they record their own judgments.
+
+The `evidence-first/` export contains sanitized raw captures, schema-order score vectors, coverage, latency and cost records. Account/user/workspace identifiers are removed in this public copy. The private `run-first/` originals are excluded from git and retained locally for accounting. Repairs are preserved alongside originals. No repeat or embedding stage is included until the human chooses finalists.
+
+Resume paid work from the original worktree and its existing private `run-first/ledger.json`. The published branch contains sanitized evidence, not that private execution directory; a fresh clone is for reviewing/reproducing preparation, not for silently starting a second paid experiment with a new ledger.

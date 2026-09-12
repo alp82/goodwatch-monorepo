@@ -74,6 +74,27 @@ def get_data(path, key=None):
     return json.loads(response['raw'])['data']
 
 
+def generation_metadata(generation_id, key):
+    # Read-only metadata polling never retries the inference request.
+    for attempt in range(20):
+        result = http('generation?id='+urllib.parse.quote(generation_id,safe=''),key)
+        if result['http_status'] == 200:
+            return json.loads(result['raw'])['data']
+        if result['http_status'] not in (404,429,500,502,503) or attempt == 19:
+            raise RuntimeError('Generation metadata unavailable; retain reservation')
+        time.sleep(2)
+
+
+def check_identity(body, generation, model, route):
+    identities = json.loads((prepare.OUT/'model-identities.json').read_text())['models']
+    matched = [r for r in identities if r['id'] == model]
+    allowed = {model, matched[0]['canonical_slug']} if len(matched)==1 else {model}
+    if body.get('model') not in allowed or generation.get('model') not in allowed:
+        raise ValueError('Returned model differs from public model/canonical identity')
+    if generation.get('provider_name') != route['provider_name']:
+        raise ValueError('Returned provider differs from pinned provider')
+
+
 def key_metadata(key):
     data = get_data('key', key)
     fields = ['limit','limit_remaining','limit_reset','usage','byok_usage','include_byok_in_limit',
@@ -247,14 +268,14 @@ def execute(args, key, meta, candidates, pairs, routes):
                 raise ValueError('Prepared contract changed since this run began')
             if ledger['key_fingerprint'] != fingerprint:
                 raise ValueError('Key changed; reconcile the existing experiment before switching')
-            if any(a['status'] != 'reconciled' for a in ledger['attempts']):
+            if any(a['status'] not in ('reconciled','held') for a in ledger['attempts']):
                 raise ValueError('Unresolved prior attempt: reconcile it before any further inference')
         else:
             ledger = {'started_at':now(),'key_fingerprint':fingerprint,'initial_usage':meta['usage'],
                       'target_usd':5,'inference_ceiling_usd':9,'attempts':[], 'stopped_candidates':{},
                       'prepared_manifest':json.loads((prepare.OUT/'prepared-manifest.json').read_text())}
             save(path, ledger)
-        spent = sum(number(a['actual_cost_usd']) for a in ledger['attempts'])
+        spent = sum(number(a.get('actual_cost_usd',0)) for a in ledger['attempts'])
         if abs(number(meta['usage'])-number(ledger['initial_usage'])-spent) > TOL:
             raise ValueError('Key usage changed outside reconciled attempts')
         made = 0
@@ -285,12 +306,13 @@ def execute(args, key, meta, candidates, pairs, routes):
                 if abs(number(before['usage'])-number(ledger['initial_usage'])-spent) > TOL:
                     raise ValueError('Unexplained key usage before attempt')
                 amount = number(reserve['usd'])
-                if spent + amount > 9 or amount > number(before['limit_remaining']):
+                held = sum(number(a['reserved']['usd']) for a in ledger['attempts'] if a['status']=='held')
+                if spent + held + amount > 9 or held + amount > number(before['limit_remaining']):
                     print('Stopped before request: reservation exceeds remaining allowance')
                     return
                 # Stop optional retries at the normal target; ceiling can fund
                 # approved first attempts, but cannot introduce additional arms.
-                if prior and spent + amount >= 5:
+                if prior and spent + held + amount >= 5:
                     break
                 name = f'{len(ledger["attempts"]):04d}'
                 artifact = run/name; artifact.mkdir()
@@ -311,16 +333,39 @@ def execute(args, key, meta, candidates, pairs, routes):
                     record.update(outcome=outcome, validation_errors=errors)
                     if parsed is not None:
                         save(artifact/'parsed.json',parsed)
+                    if not body.get('id') and body.get('error') and response['http_status'] in (400,404,429,502,503):
+                        after = key_metadata(key); save(artifact/'key-after.json',after)
+                        if number(after['usage']) != number(before['usage']) or number(after['byok_usage']) != 0:
+                            raise ValueError('Unexpected account charge on rejected request')
+                        record.update(status='held',outcome='transport_error',
+                            cost_note='No generation ID; zero observed key delta, full reservation retained as unknown cost.')
+                        if len(prior) >= 1:
+                            ledger['stopped_candidates'][str(ci)] = 'Two compatibility/transport errors; remaining titles not attempted'
+                        save(path,ledger)
+                        made += 1; prior.append(record)
+                        print(f'Attempt {name}: transport error; full reservation retained',flush=True)
+                        if str(ci) in ledger['stopped_candidates']:
+                            break
+                        time.sleep(5)
+                        continue
                     if not body.get('id') or not body.get('usage'):
                         raise ValueError('No generation ID/usage: reservation retained pending reconciliation')
-                    generation = get_data('generation?id='+urllib.parse.quote(body['id'],safe=''),key)
+                    generation = generation_metadata(body['id'],key)
                     save(artifact/'generation.json',generation)
-                    after = key_metadata(key); save(artifact/'key-after.json',after)
+                    observations = []
+                    for poll in range(12):
+                        after = key_metadata(key)
+                        observations.append({'captured_at':now(),'metadata':after})
+                        save(artifact/'key-after-observations.json',observations)
+                        delta = number(after['usage'])-number(before['usage'])
+                        if abs(delta-number(body['usage']['cost'])) <= TOL:
+                            break
+                        if delta > number(body['usage']['cost'])+TOL:
+                            break
+                        time.sleep(2)
+                    save(artifact/'key-after.json',after)
                     charge = measured_charge(body,generation,before,after,reserve)
-                    if body.get('model') != payload['model'] or generation.get('model') != payload['model']:
-                        raise ValueError('Returned model differs from pinned model; inspect version metadata')
-                    if generation.get('provider_name') != route_snapshot['route']['provider_name']:
-                        raise ValueError('Returned provider differs from pinned provider')
+                    check_identity(body,generation,payload['model'],route_snapshot['route'])
                     record.update(actual_cost_usd=charge, generation_id=body['id'], status='reconciled')
                     spent += number(charge)
                     if response['http_status'] in (400,401,402,403,404):

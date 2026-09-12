@@ -1,0 +1,54 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/google/gemini-2.5-flash/endpoints",
+  "captured_at": "2026-09-12T05:03:11.757443+00:00",
+  "route": {
+    "name": "Google AI Studio | google/gemini-2.5-flash",
+    "model_id": "google/gemini-2.5-flash",
+    "model_name": "Google: Gemini 2.5 Flash",
+    "context_length": 1048576,
+    "pricing": {
+      "prompt": "0.0000003",
+      "completion": "0.0000025",
+      "image": "0.0000003",
+      "audio": "0.000001",
+      "input_audio_cache": "0.0000001",
+      "web_search": "0.014",
+      "internal_reasoning": "0.0000025",
+      "input_cache_read": "0.00000003",
+      "input_cache_write": "0.0000000833333333333333",
+      "discount": 0
+    },
+    "provider_name": "Google AI Studio",
+    "tag": "google-ai-studio",
+    "quantization": "unknown",
+    "max_completion_tokens": 65535,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "structured_outputs",
+      "response_format",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "seed",
+      "tools",
+      "tool_choice",
+      "stop"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": true,
+      "function": true
+    },
+    "status": 0,
+    "uptime_last_30m": 99.98947368421052,
+    "uptime_last_5m": 100,
+    "uptime_last_1d": 99.91989766771813,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

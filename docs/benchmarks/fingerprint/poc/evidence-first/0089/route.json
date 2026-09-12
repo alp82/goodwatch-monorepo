@@ -1,0 +1,54 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/nvidia/nemotron-3.5-lightning/endpoints",
+  "captured_at": "2026-09-12T05:43:00.330798+00:00",
+  "route": {
+    "name": "DeepInfra | nvidia/nemotron-3.5-lightning-20260807",
+    "model_id": "nvidia/nemotron-3.5-lightning",
+    "model_name": "NVIDIA: Nemotron 3.5 Lightning",
+    "context_length": 262144,
+    "pricing": {
+      "prompt": "0.00000008",
+      "completion": "0.0000002",
+      "input_cache_read": "0.00000004",
+      "discount": 0
+    },
+    "provider_name": "DeepInfra",
+    "tag": "deepinfra/bf16",
+    "quantization": "bf16",
+    "max_completion_tokens": 131072,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "stop",
+      "frequency_penalty",
+      "presence_penalty",
+      "repetition_penalty",
+      "top_k",
+      "seed",
+      "min_p",
+      "response_format",
+      "structured_outputs",
+      "tools",
+      "tool_choice",
+      "logit_bias"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": false,
+      "function": false
+    },
+    "status": 0,
+    "uptime_last_30m": 100,
+    "uptime_last_5m": 100,
+    "uptime_last_1d": 99.96012131515705,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}
