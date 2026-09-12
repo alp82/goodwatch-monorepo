@@ -1,6 +1,6 @@
 # Fingerprint comparison protocol
 
-Status: proposed for live discussion; no inference or shortlist approval is implied by this draft. Canonical decision: [Choose the POC comparison protocol](https://github.com/alp82/goodwatch-monorepo/issues/31). This document makes the remaining choices concrete; the eventual resolution belongs in that issue.
+Status: approved by the owner on September 12, 2026. Canonical decision: [Choose the POC comparison protocol](https://github.com/alp82/goodwatch-monorepo/issues/31). This asset specifies the agreed experiment; the resolution is recorded in that issue. No inference was performed during planning.
 
 ## Agreed constraints
 
@@ -8,7 +8,7 @@ Use full production responses, the frozen ten-title corpus, and independent huma
 
 The owner approved twelve candidates, pinned third-party hosts and disclosed quantization, a small JSON-only comparison, and Muse Contributor's disclosed data-use condition in the [selection-policy discussion](https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643145155). Judges will run manually through existing Codex and Claude Code subscriptions. No paid judge API calls are planned.
 
-## Proposed exact lineup
+## Approved exact lineup
 
 This retains twelve candidates by replacing the older DeepSeek July variant in the research proposal with Qwen3.7 Flash. It replaces standard Muse with Contributor. Each row is a model/provider/output/thinking configuration; provider transport and precision are part of the result.
 
@@ -27,7 +27,7 @@ This retains twelve candidates by replacing the older DeepSeek July variant in t
 | `xiaomi/mimo-v2.5` | `deepinfra/fp8` | Strict schema | Request disabled; verify adapter |
 | `nvidia/nemotron-3.5-lightning` | `deepinfra/bf16` | Strict schema | Request disabled; verify adapter |
 
-The [research report](../../research/openrouter-fingerprint-candidates.md), [route matrix](../../research/openrouter-fingerprint-candidates.csv), and [endpoint evidence](../../research/openrouter-fingerprint-evidence.json) establish advertised routes and capabilities. Research proposals remain historical evidence; this draft's twelve-row table is the proposed run lineup. Larger GLM 5.3, latest Gemini 3.8, cheap Gemini Flash Lite, and Composer are not admitted merely because they were researched. Any additional arm requires a distinct follow-up decision.
+The [research report](../../research/openrouter-fingerprint-candidates.md), [route matrix](../../research/openrouter-fingerprint-candidates.csv), and [endpoint evidence](../../research/openrouter-fingerprint-evidence.json) establish advertised routes and capabilities. Research proposals remain historical evidence; this protocol's twelve-row table is the approved run lineup. Larger GLM 5.3, latest Gemini 3.8, cheap Gemini Flash Lite, and Composer are not admitted merely because they were researched. Any additional arm requires a distinct follow-up decision.
 
 Use standard synchronous service tiers. Pin the full endpoint tag with an allowlist and disabled fallbacks; do not use floating model aliases, automatic routers, model substitution, or unrecorded service-tier changes. Request parameter support explicitly. No browsing, plugins, response healing, tools, or extra title evidence.
 
@@ -69,7 +69,7 @@ Record stop/incomplete status on auth errors, insufficient credit, unresolved ac
 
 ## Budget and cost measurement
 
-The selected-route illustration is approximately $0.56 for first pass plus ten-title repeats of the two most expensive selected candidates at 6K input/2K billed output per title, or $1.81 at 12K/8K. These are updated arithmetic for this draft, with conservative Luna automatic cache writes. They exclude retries, embeddings, fee changes, and unforeseen charges; neither is a guaranteed upper bound. The GLM Flash route's current discount must not be assumed permanent.
+The selected-route illustration is approximately $0.56 for first pass plus ten-title repeats of the two most expensive selected candidates at 6K input/2K billed output per title, or $1.81 at 12K/8K. These are arithmetic for this lineup, with conservative Luna automatic cache writes. They exclude retries, embeddings, fee changes, and unforeseen charges; neither is a guaranteed upper bound. The GLM Flash route's current discount must not be assumed permanent.
 
 Keep an experiment ledger in USD. Reserve every request before launch using a conservative provider-specific input estimate, the total output cap, applicable cache-write premiums, worst applicable price overrides, any request charges, and unresolved preceding charges. Only start when the entire reserved amount fits the remaining allowance. Actual usage replaces the reservation after reconciliation. Missing usage does not mean zero cost. Include provider-side bills if any BYOK configuration is present.
 
@@ -87,13 +87,19 @@ Use blind per-title packets, shuffled candidate labels, identical attribute defi
 
 Run Astra and Fable in separate fresh subscription-authenticated Codex and Claude Code sessions. Record their actual model IDs and effort settings. If the agreed models are unavailable, pause that reviewer instead of silently substituting a different judge. The human resolves disagreement and chooses finalists; no majority vote or matching-Gemini score replaces that decision.
 
-Proposed embedding scope: after selecting the strongest two candidates, embed their valid first-pass essence descriptions using the existing `gemini-embedding-2` stage, with its deployed settings recorded before calls. That is at most twenty inputs, not an embedding call for every candidate response or retry. Reserve the separately billed amount before these calls, use at most one attempt per input, and record failures and costs independently. Do not persist the results into production indexes. This small sample measures embedding-stage expense; embedding similarity/ranking is not part of this benchmark. If there is insufficient budget or access, report this stage as unmeasured with a separately labeled current-rate estimate rather than borrowing from the hard ceiling.
+Embedding scope: after selecting the strongest two candidates, embed their valid first-pass essence descriptions using the existing `gemini-embedding-2` stage, with its deployed settings recorded before calls. That is at most twenty inputs, not an embedding call for every candidate response or retry. Reserve the separately billed amount before these calls, use at most one attempt per input, and record failures and costs independently. Do not persist the results into production indexes. This small sample measures embedding-stage expense; embedding similarity/ranking is not part of this benchmark. If there is insufficient budget or access, report this stage as unmeasured with a separately labeled current-rate estimate rather than borrowing from the hard ceiling.
 
 ## Reproducible output and handoff
 
 The subsequent [Compare candidate fingerprints](https://github.com/alp82/goodwatch-monorepo/issues/32) session creates and runs the bounded POC. Save a run manifest, immutable input/prompt/schema hashes, exact per-model configurations and provider snapshots, raw requests/responses with credentials removed, attempt and cost ledgers, validator outputs, blind review packets, independent verdicts, and repeat comparisons. Publish non-secret assets on a separate POC branch linked from that ticket. Every failed or incomplete arm remains visible.
 
-This planning ticket does not run inference, alter the production provider, write catalog fingerprints, backfill data, or select the final strategy. After the draft choices are confirmed, record the resolution in the protocol issue and add its named context pointer to the map. Execution and human evaluation remain the next ticket's work.
+This planning ticket does not run inference, alter the production provider, write catalog fingerprints, backfill data, or select the final strategy. Execution and human evaluation remain the next ticket's work.
+
+## Assessment of external critique
+
+The owner confirmed the lineup, cost-oriented generation settings, and finalist embedding sample, then requested an assessment of another model's critique. The [primary-source fact-check](https://github.com/alp82/goodwatch-monorepo/blob/e92a86b/docs/research/fingerprint-critique-fact-check.md) confirms meaningful calibration concerns and identifies inaccurate identities/configurations and overgeneralized statistics. It does not establish a reason to replace this approved pilot.
+
+Retain separate structural and semantic judgments. Reviewers should flag unsupported plot or series claims that could distort the 74 traits. Cheap reasoning settings are a cost/quality experiment, not a proven hallucination treatment. The ten familiar titles do not establish catalog-wide accuracy; Haiku, Solar Pro 4, plain Ling, latest Gemini, larger holdouts, or richer shared grounding remain possible follow-up hypotheses rather than unapproved new arms.
 
 ## Technical references
 
