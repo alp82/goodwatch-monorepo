@@ -1,6 +1,6 @@
 # Fingerprint comparison: completed human review
 
-**Provisional interpretation: Qwen3.8 Flash (F) is the strongest default-value candidate; Grok 4.6 (A) is the premium comparison, especially for shows.** This interpretation combines the owner’s blind judgments and the measured first-pass charges. It is not a resolved provider strategy or a substitute for the pending independent judges and repeats.
+**Owner selection: Qwen3.8 Flash (F) as primary, Qwen3.7 Flash (D) as fallback**, confirmed September 12, 2026 after reviewing quality and costs. Both use the pinned Alibaba route; F uses strict schema, D uses JSON-object mode with local validation, and both request disabled reasoning. See [the recorded selection](selection.json). Independent reviews, repeatability and embedding-cost validation remain pending; production implementation and exact fallback triggers are not yet defined.
 
 ## Cost, response validity, and latency
 
@@ -79,7 +79,7 @@ Those four have no usable outputs and cannot be ranked for trait quality. Each s
 - All ten titles are now human-reviewed for the five survivors. Earlier screened candidates retain their partial reviews.
 - No paid judge API calls or embedding calls ran; no credit purchases or production writes occurred. Independent Astra/Fable reviews, finalist repeatability and separate embedding measurement remain pending.
 
-**Recommended next pair for the human to consider: F and A.** This compares the low-cost general candidate with the premium option that performed especially well on shows. If minimizing spend is the overriding goal, D is the alternative challenger; if latency dominates, B is the alternative. The owner has not yet selected two finalists, and this report starts no repeat inference.
+**Selected pair: F primary + D fallback.** This supersedes the earlier assistant proposal of F + A. The owner chose the lower-cost alternative after the full comparison. Preserve D’s local validation and bounded repair behavior: its first pass needed three full-response repairs. This selection does not waive the outstanding validation steps or change production.
 
 Keep this report and human judgments out of the independent judges’ initial context. They should still use only the original blind-first packets.
 
