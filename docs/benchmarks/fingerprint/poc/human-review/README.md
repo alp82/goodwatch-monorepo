@@ -1,8 +1,8 @@
 # Continuing the human fingerprint review
 
-Open `review.html`. It loads `eeaao-review.original.json` unchanged and resumes at **Das Kanu des Manitu, candidate A**. Candidate identities remain hidden and letters retain their original meanings.
+Open `review.html`. It loads `all-movies-review.original.json` unchanged and resumes at **Breaking Bad, candidate A**. Candidate identities remain hidden and letters retain their original meanings.
 
-Active labels: **A, B, D, E, F, I**. **42 reviews remain.** `settings.json` records the current selection and pending recommendations; `screening.json` adds the calculated remaining count. Pending recommendations do not remove candidates automatically.
+Active labels: **A, B, D, E, F, I**. **30 reviews remain.** `settings.json` records the current selection and pending recommendations; `screening.json` adds the calculated remaining count. Pending recommendations do not remove candidates automatically.
 
 H and M were screened out after the owner's Matrix judgments. C, J, K and L have no usable first-pass results. The early screen reduces human review workload; it is not a claim of catalog-wide inferiority and does not select the final two candidates.
 

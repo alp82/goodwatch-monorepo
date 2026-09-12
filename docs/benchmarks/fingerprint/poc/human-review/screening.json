@@ -1,5 +1,5 @@
 {
-  "review_source": "eeaao-review.original.json",
+  "review_source": "all-movies-review.original.json",
   "active_candidate_labels": [
     "A",
     "B",
@@ -22,6 +22,7 @@
   "watchlist": {
     "B": "Repeated coming-of-age inflation, but positive overall judgments; retained."
   },
+  "pending_recommendation": "Screen out I: latest three movie verdicts were overall ok, not so good, and okay with recurring trait inflation. Owner decision pending. Keep B on watchlist into the first show; its other overall judgments remain positive.",
   "scope": "Provisional human-review screen, not catalog-wide quality rejection or finalist selection. Preserve all first-pass evidence and independent judge packets.",
-  "remaining_human_title_reviews": 42
+  "remaining_human_title_reviews": 30
 }
