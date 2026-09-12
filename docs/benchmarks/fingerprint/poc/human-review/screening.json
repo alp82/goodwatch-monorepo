@@ -1,5 +1,5 @@
 {
-  "review_source": "fight-club-review.original.json",
+  "review_source": "eeaao-review.original.json",
   "active_candidate_labels": [
     "A",
     "B",
@@ -23,5 +23,5 @@
     "B": "Repeated coming-of-age inflation, but positive overall judgments; retained."
   },
   "scope": "Provisional human-review screen, not catalog-wide quality rejection or finalist selection. Preserve all first-pass evidence and independent judge packets.",
-  "remaining_human_title_reviews": 48
+  "remaining_human_title_reviews": 42
 }
