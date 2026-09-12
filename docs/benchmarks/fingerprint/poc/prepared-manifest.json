@@ -1,0 +1,14 @@
+{
+  "status": "prepared-not-executed",
+  "seed": 20260912,
+  "evaluation_date": "2026-09-12",
+  "pairs": 130,
+  "actual_inference_cost_usd": 0,
+  "sha256": {
+    "schema.json": "642d0b51a2d0096027164f8a422d0a21f89a6090090a1f0f17e2976f6de516ea",
+    "system-prompt.txt": "42f90596cdead205be55f50f8b9fc01925d2f8c716a1ec0845cbadab9ce95ca5",
+    "candidates.json": "1577f7f0097ddcd972bc8e1dad18b0c223354fc40bd6d0eb3b79cb205eb0cec7",
+    "request-order.json": "a39eea2b6faf0f8d5c27ae3f6bc7dafb0b404fd3e793865fb9779b494fb3c510",
+    "request-example.json": "5cf6989e3da2e52969728cfd94c3d991408e407e52c7e1cea80bf8b088492c06"
+  }
+}

@@ -1,0 +1,303 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/x-ai/grok-4.6/endpoints",
+  "captured_at": "2026-09-12T04:24:22.993791+00:00",
+  "response": {
+    "data": {
+      "id": "x-ai/grok-4.6",
+      "name": "SpaceXAI: Grok 4.6",
+      "created": 1786548957,
+      "description": "Grok 4.6 is SpaceXAI's smartest model with frontier performance on coding, knowledge work, and STEM.",
+      "architecture": {
+        "tokenizer": "Grok",
+        "instruct_type": null,
+        "modality": "text+image+file->text",
+        "input_modalities": [
+          "text",
+          "image",
+          "file"
+        ],
+        "output_modalities": [
+          "text"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "xAI | x-ai/grok-4.6-20260810",
+          "model_id": "x-ai/grok-4.6",
+          "model_name": "SpaceXAI: Grok 4.6",
+          "context_length": 500000,
+          "pricing": {
+            "prompt": "0.000002",
+            "completion": "0.000006",
+            "web_search": "0.005",
+            "input_cache_read": "0.0000005",
+            "discount": 0,
+            "overrides": [
+              {
+                "min_prompt_tokens": 200000,
+                "prompt": "0.000004",
+                "completion": "0.000012",
+                "input_cache_read": "0.000001"
+              }
+            ]
+          },
+          "provider_name": "xAI",
+          "tag": "xai/zdr",
+          "quantization": "unknown",
+          "max_completion_tokens": 450000,
+          "max_prompt_tokens": null,
+          "supported_parameters": [
+            "reasoning",
+            "include_reasoning",
+            "structured_outputs",
+            "response_format",
+            "max_tokens",
+            "temperature",
+            "top_p",
+            "seed",
+            "logprobs",
+            "top_logprobs",
+            "tools",
+            "tool_choice",
+            "reasoning_effort"
+          ],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 99.06796999318027,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 99.65211540195759,
+          "supports_implicit_caching": false,
+          "supports_voice_cloning": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        },
+        {
+          "name": "xAI | x-ai/grok-4.6-20260810",
+          "model_id": "x-ai/grok-4.6",
+          "model_name": "SpaceXAI: Grok 4.6",
+          "context_length": 500000,
+          "pricing": {
+            "prompt": "0.000002",
+            "completion": "0.000006",
+            "web_search": "0.005",
+            "input_cache_read": "0.0000005",
+            "discount": 0,
+            "overrides": [
+              {
+                "min_prompt_tokens": 200000,
+                "prompt": "0.000004",
+                "completion": "0.000012",
+                "input_cache_read": "0.000001"
+              }
+            ]
+          },
+          "provider_name": "xAI",
+          "tag": "xai",
+          "quantization": "unknown",
+          "max_completion_tokens": 450000,
+          "max_prompt_tokens": null,
+          "supported_parameters": [
+            "reasoning",
+            "include_reasoning",
+            "structured_outputs",
+            "response_format",
+            "max_tokens",
+            "temperature",
+            "top_p",
+            "seed",
+            "logprobs",
+            "top_logprobs",
+            "tools",
+            "tool_choice",
+            "reasoning_effort"
+          ],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 99.70425138632163,
+          "uptime_last_5m": 99.8443579766537,
+          "uptime_last_1d": 99.61601269430452,
+          "supports_implicit_caching": false,
+          "supports_voice_cloning": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        },
+        {
+          "name": "Amazon Bedrock | x-ai/grok-4.6-20260810",
+          "model_id": "x-ai/grok-4.6",
+          "model_name": "SpaceXAI: Grok 4.6",
+          "context_length": 500000,
+          "pricing": {
+            "prompt": "0.0000022",
+            "completion": "0.0000066",
+            "web_search": "0.01",
+            "input_cache_read": "0.00000055",
+            "input_cache_write": "0",
+            "discount": 0,
+            "overrides": [
+              {
+                "min_prompt_tokens": 200000,
+                "prompt": "0.0000044",
+                "completion": "0.0000132",
+                "input_cache_read": "0.0000011",
+                "input_cache_write": "0"
+              }
+            ]
+          },
+          "provider_name": "Amazon Bedrock",
+          "tag": "amazon-bedrock/us-west-2",
+          "quantization": "unknown",
+          "max_completion_tokens": 450000,
+          "max_prompt_tokens": null,
+          "supported_parameters": [
+            "reasoning",
+            "include_reasoning",
+            "structured_outputs",
+            "response_format",
+            "max_tokens",
+            "temperature",
+            "top_p",
+            "top_k",
+            "stop",
+            "tools",
+            "tool_choice",
+            "reasoning_effort"
+          ],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": null,
+          "uptime_last_5m": null,
+          "uptime_last_1d": 100,
+          "supports_implicit_caching": true,
+          "supports_voice_cloning": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        },
+        {
+          "name": "xAI | x-ai/grok-4.6-20260810",
+          "model_id": "x-ai/grok-4.6",
+          "model_name": "SpaceXAI: Grok 4.6",
+          "context_length": 500000,
+          "pricing": {
+            "prompt": "0.000004",
+            "completion": "0.000012",
+            "web_search": "0.005",
+            "input_cache_read": "0.000001",
+            "discount": 0,
+            "overrides": [
+              {
+                "min_prompt_tokens": 200000,
+                "prompt": "0.000008",
+                "completion": "0.000024",
+                "input_cache_read": "0.000002"
+              }
+            ]
+          },
+          "provider_name": "xAI",
+          "tag": "xai/zdr/priority",
+          "quantization": "unknown",
+          "max_completion_tokens": 450000,
+          "max_prompt_tokens": null,
+          "supported_parameters": [
+            "reasoning",
+            "include_reasoning",
+            "structured_outputs",
+            "response_format",
+            "max_tokens",
+            "temperature",
+            "top_p",
+            "seed",
+            "logprobs",
+            "top_logprobs",
+            "tools",
+            "tool_choice",
+            "reasoning_effort"
+          ],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": null,
+          "uptime_last_5m": null,
+          "uptime_last_1d": 99.73696795791487,
+          "supports_implicit_caching": false,
+          "supports_voice_cloning": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        },
+        {
+          "name": "xAI | x-ai/grok-4.6-20260810",
+          "model_id": "x-ai/grok-4.6",
+          "model_name": "SpaceXAI: Grok 4.6",
+          "context_length": 500000,
+          "pricing": {
+            "prompt": "0.000004",
+            "completion": "0.000012",
+            "web_search": "0.005",
+            "input_cache_read": "0.000001",
+            "discount": 0,
+            "overrides": [
+              {
+                "min_prompt_tokens": 200000,
+                "prompt": "0.000008",
+                "completion": "0.000024",
+                "input_cache_read": "0.000002"
+              }
+            ]
+          },
+          "provider_name": "xAI",
+          "tag": "xai/priority",
+          "quantization": "unknown",
+          "max_completion_tokens": 450000,
+          "max_prompt_tokens": null,
+          "supported_parameters": [
+            "reasoning",
+            "include_reasoning",
+            "structured_outputs",
+            "response_format",
+            "max_tokens",
+            "temperature",
+            "top_p",
+            "seed",
+            "logprobs",
+            "top_logprobs",
+            "tools",
+            "tool_choice",
+            "reasoning_effort"
+          ],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": null,
+          "uptime_last_5m": null,
+          "uptime_last_1d": 99.46585272796642,
+          "supports_implicit_caching": false,
+          "supports_voice_cloning": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  }
+}

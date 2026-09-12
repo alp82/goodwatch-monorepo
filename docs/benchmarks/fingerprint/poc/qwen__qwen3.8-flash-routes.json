@@ -1,0 +1,129 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/qwen/qwen3.8-flash/endpoints",
+  "captured_at": "2026-09-12T04:24:22.533275+00:00",
+  "response": {
+    "data": {
+      "id": "qwen/qwen3.8-flash",
+      "name": "Qwen: Qwen3.8 Flash",
+      "created": 1787773060,
+      "description": "Qwen3.8 Flash is a multimodal reasoning model from Alibaba. It is suited for coding assistance, agentic workflows, visual understanding, document and codebase analysis, desktop interaction, chart analysis, and long-video analysis.",
+      "architecture": {
+        "tokenizer": "Qwen",
+        "instruct_type": null,
+        "modality": "text+image+video->text",
+        "input_modalities": [
+          "text",
+          "image",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "Makora | qwen/qwen3.8-flash-20260826",
+          "model_id": "qwen/qwen3.8-flash",
+          "model_name": "Qwen: Qwen3.8 Flash",
+          "context_length": 262144,
+          "pricing": {
+            "prompt": "0.00000015",
+            "completion": "0.00000047",
+            "input_cache_read": "0.000000016",
+            "discount": 0
+          },
+          "provider_name": "Makora",
+          "tag": "makora/fp4",
+          "quantization": "fp4",
+          "max_completion_tokens": 131072,
+          "max_prompt_tokens": null,
+          "supported_parameters": [
+            "reasoning",
+            "include_reasoning",
+            "temperature",
+            "top_p",
+            "top_k",
+            "frequency_penalty",
+            "presence_penalty",
+            "repetition_penalty",
+            "stop",
+            "max_tokens",
+            "seed",
+            "min_p",
+            "logit_bias",
+            "response_format",
+            "structured_outputs",
+            "tools",
+            "tool_choice",
+            "logprobs",
+            "top_logprobs"
+          ],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 99.93148338472079,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 99.78023433263125,
+          "supports_implicit_caching": false,
+          "supports_voice_cloning": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        },
+        {
+          "name": "Alibaba | qwen/qwen3.8-flash-20260826",
+          "model_id": "qwen/qwen3.8-flash",
+          "model_name": "Qwen: Qwen3.8 Flash",
+          "context_length": 1000000,
+          "pricing": {
+            "prompt": "0.00000015",
+            "completion": "0.00000047",
+            "input_cache_read": "0.000000016",
+            "input_cache_write": "0.0000002",
+            "discount": 0
+          },
+          "provider_name": "Alibaba",
+          "tag": "alibaba",
+          "quantization": "unknown",
+          "max_completion_tokens": 131072,
+          "max_prompt_tokens": 983616,
+          "supported_parameters": [
+            "reasoning",
+            "include_reasoning",
+            "max_tokens",
+            "temperature",
+            "top_p",
+            "seed",
+            "presence_penalty",
+            "response_format",
+            "tools",
+            "structured_outputs",
+            "top_k",
+            "frequency_penalty",
+            "stop",
+            "logprobs",
+            "top_logprobs",
+            "tool_choice"
+          ],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": false,
+            "function": false
+          },
+          "status": 0,
+          "uptime_last_30m": 99.69344834961147,
+          "uptime_last_5m": 99.65675057208237,
+          "uptime_last_1d": 99.59142198710403,
+          "supports_implicit_caching": true,
+          "supports_voice_cloning": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  }
+}

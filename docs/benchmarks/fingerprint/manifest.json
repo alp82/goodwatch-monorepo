@@ -1,0 +1,10 @@
+{
+  "source_commit": "5a24c90cc26bc6329aa11058015a8393ff43c7b5",
+  "sha256": {
+    "models.py.snapshot": "d9ef1511b76f5fa50aa8ab0cbaadc055e7a4aa59765e3496c57440414469b9ef",
+    "score-keys.json": "d43f6e429107a705c5599f8ef55e0dd63a83d93bea3c452ce7dbdc581e3a5f5b",
+    "system-instructions.txt": "be8ae514d383b844037e627929e611141c68d08d87b3033604dc14a745599771",
+    "title-inputs.txt": "963897096f9a0a2672424475757542e044d5c1e33b5ce1d353510c0b3f8dcda3",
+    "titles.json": "31e510ee3eef8f3d339d65b05c647bc78af3cb7a05e90738f4511f19340980b5"
+  }
+}
