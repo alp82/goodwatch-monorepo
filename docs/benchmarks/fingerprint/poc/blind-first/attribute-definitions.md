@@ -83,4 +83,3 @@
 * **`dialogue_centrality`**: How crucial dialogue is to understanding and enjoying the work.
 * **`music_centrality`**: How crucial the score or soundtrack is to the emotional experience.
 * **`sound_centrality`**: How crucial non-musical sound design is to the atmosphere and storytelling.
-

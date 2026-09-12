@@ -43,7 +43,7 @@ def main():
         prepare.dump(out/(bid.replace(':','-')+'.json'),packet);packets.append(packet)
     source=(prepare.BENCH/'system-instructions.txt').read_text()
     glossary=source.split('### **2. Score Glossary**')[1].split('### **3. Example Interaction**')[0]
-    (out/'attribute-definitions.md').write_text(glossary)
+    (out/'attribute-definitions.md').write_text(glossary.rstrip()+'\n')
     (out/'review-instructions.md').write_text('''# Independent blind fingerprint review
 
 Use only this directory until your initial review is complete. Do not open the candidate key, protocol lineup, financial report, or other reviewers' judgments. Candidate letters are anonymous labels shared across titles.
