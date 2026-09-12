@@ -2,7 +2,11 @@
 
 Research date: 2026-09-11. Ticket: [Explain current charges](https://github.com/alp82/goodwatch-monorepo/issues/28). Code inspected at `5a24c90cc26bc6329aa11058015a8393ff43c7b5`; deployment parity is unverified. No credentials, private billing dashboards, or inference endpoints were accessed.
 
-## Finding
+## Status update — 2026-09-12
+
+Resolved after the owner supplied project billing/usage screenshots and confirmed Windmill is the project’s only API workload. The canonical [resolution comment](https://github.com/alp82/goodwatch-monorepo/issues/28#issuecomment-5642849181) records the conclusion, evidence, remaining measurement limits, and implications for the comparison protocol. The account-evidence uncertainty below describes the original September 11 investigation and is superseded by that resolution.
+
+## Original finding — 2026-09-11
 
 **The account-specific cause remains unresolved.** The code contains request guardrails, not a free-billing guarantee. A paid-project key would explain charged requests within those guardrails, but the repository cannot establish the project's actual tier or attribute invoice charges. Generation and essence-text embedding are separate possible charges; constructing the custom fingerprint vector itself is local computation.
 
@@ -62,4 +66,4 @@ If the same project is paid and corresponding generation/embedding SKUs match jo
 
 A free route requires verified Free Tier project eligibility and active quotas for **both** API stages, with exhaustion handled as stop/defer. A predictably paid route requires per-attempt token accounting, a bounded experiment, explicit model/thinking/output settings, retry limits, and reconciliation of generation plus embedding costs per accepted title. These are proposed criteria for the later comparison protocol, not production changes or a finding that either route has already been configured.
 
-Ticket status: **needs-info; open and unclaimed** pending the redacted evidence above.
+Original ticket status on September 11: **needs-info**, pending account evidence. Superseded by the September 12 resolution linked above.
