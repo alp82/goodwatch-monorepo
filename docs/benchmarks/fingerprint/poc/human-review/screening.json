@@ -1,5 +1,5 @@
 {
-  "review_source": "first-two-shows-review.original.json",
+  "review_source": "completed-review.original.json",
   "active_candidate_labels": [
     "A",
     "B",
@@ -22,6 +22,7 @@
   "watchlist": {
     "B": "Retained: latest show verdicts looks good and very strong outweigh the earlier single weak movie result."
   },
+  "human_review_status": "Complete for all ten titles across the five retained candidates; prior screened-candidate reviews preserved.",
   "scope": "Provisional human-review screen, not catalog-wide quality rejection or finalist selection. Preserve all first-pass evidence and independent judge packets.",
-  "remaining_human_title_reviews": 15
+  "remaining_human_title_reviews": 0
 }

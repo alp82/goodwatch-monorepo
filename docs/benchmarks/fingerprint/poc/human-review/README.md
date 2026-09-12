@@ -1,8 +1,8 @@
 # Continuing the human fingerprint review
 
-Open `review.html`. It loads `first-two-shows-review.original.json` unchanged and resumes at **Adolescence, candidate A**. Candidate identities remain hidden and letters retain their original meanings.
+Open `review.html`. It loads `completed-review.original.json` unchanged and resumes at **all active reviews complete**. Candidate identities remain hidden and letters retain their original meanings.
 
-Active labels: **A, B, D, E, F**. **15 reviews remain.** `settings.json` records the current selection and pending recommendations; `screening.json` adds the calculated remaining count. Pending recommendations do not remove candidates automatically.
+Active labels: **A, B, D, E, F**. **0 reviews remain.** `settings.json` records the current selection and pending recommendations; `screening.json` adds the calculated remaining count. Pending recommendations do not remove candidates automatically.
 
 Screened from further human review: H, M, G, I. Reasons and review history are recorded in `settings.json` and the original exports. C, J, K and L have no usable first-pass results. The early screen reduces human review workload; it is not a claim of catalog-wide inferiority and does not select the final two candidates.
 
