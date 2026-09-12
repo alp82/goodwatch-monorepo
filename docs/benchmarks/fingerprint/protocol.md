@@ -6,11 +6,11 @@ Status: approved by the owner on September 12, 2026. Canonical decision: [Choose
 
 Use full production responses, the frozen ten-title corpus, and independent human/Astra/Fable review. Gemini is a candidate, not ground truth. Run all ten titles for each admitted candidate, then all ten again for the strongest two under unchanged settings. The human decides advancement and the final trade-off after independent review. Target US$5; never exceed US$10 across inference, retries, paid judging if separately approved, and embeddings.
 
-The owner approved twelve candidates, pinned third-party hosts and disclosed quantization, a small JSON-only comparison, and Muse Contributor's disclosed data-use condition in the [selection-policy discussion](https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643145155). Judges will run manually through existing Codex and Claude Code subscriptions. No paid judge API calls are planned.
+The owner approved thirteen candidates, pinned third-party hosts and disclosed quantization, a small JSON-only comparison, and Muse Contributor's disclosed data-use condition in the [selection-policy discussion](https://github.com/alp82/goodwatch-monorepo/issues/31#issuecomment-5643145155). Judges will run manually through existing Codex and Claude Code subscriptions. No paid judge API calls are planned.
 
 ## Approved exact lineup
 
-This retains twelve candidates by replacing the older DeepSeek July variant in the research proposal with Qwen3.7 Flash. It replaces standard Muse with Contributor. Each row is a model/provider/output/thinking configuration; provider transport and precision are part of the result.
+The thirteen candidates include the two configured Gemini controls, a JSON-only Qwen comparison, Muse Contributor, and Grok 4.6 as an additional model family. Each row is a model/provider/output/thinking configuration; provider transport and precision are part of the result.
 
 | OpenRouter model ID | Pinned provider tag | Output mode | Requested thinking mode |
 |---|---|---|---|
@@ -26,8 +26,9 @@ This retains twelve candidates by replacing the older DeepSeek July variant in t
 | `minimax/minimax-m3` | `coreweave/fp4` | Strict schema | Request disabled; verify adapter |
 | `xiaomi/mimo-v2.5` | `deepinfra/fp8` | Strict schema | Request disabled; verify adapter |
 | `nvidia/nemotron-3.5-lightning` | `deepinfra/bf16` | Strict schema | Request disabled; verify adapter |
+| `x-ai/grok-4.6` | `xai` | Strict schema | Low; mandatory thinking |
 
-The [research report](../../research/openrouter-fingerprint-candidates.md), [route matrix](../../research/openrouter-fingerprint-candidates.csv), and [endpoint evidence](../../research/openrouter-fingerprint-evidence.json) establish advertised routes and capabilities. Research proposals remain historical evidence; this protocol's twelve-row table is the approved run lineup. Larger GLM 5.3, latest Gemini 3.8, cheap Gemini Flash Lite, and Composer are not admitted merely because they were researched. Any additional arm requires a distinct follow-up decision.
+The [research report](../../research/openrouter-fingerprint-candidates.md), [route matrix](../../research/openrouter-fingerprint-candidates.csv), and [endpoint evidence](../../research/openrouter-fingerprint-evidence.json) establish advertised routes and capabilities. Research proposals remain historical evidence; this protocol's thirteen-row table is the approved run lineup. Larger GLM 5.3, latest Gemini 3.8, cheap Gemini Flash Lite, and Composer are not admitted merely because they were researched. Any additional arm requires a distinct follow-up decision.
 
 Use standard synchronous service tiers. Pin the full endpoint tag with an allowlist and disabled fallbacks; do not use floating model aliases, automatic routers, model substitution, or unrecorded service-tier changes. Request parameter support explicitly. No browsing, plugins, response healing, tools, or extra title evidence.
 
@@ -51,7 +52,7 @@ Leave temperature, top_p, top_k, penalties, and model seed omitted for every can
 
 Use a per-attempt ceiling of 8,192 total completion tokens, including reasoning where the provider counts it within completion. Use the currently documented OpenRouter completion-cap field and verify its mapping with the selected route. The cap is not an extra 8,192 visible tokens on top of unrestricted thinking. Do not increase it after seeing a candidate fail.
 
-Documented requested reasoning fragments are `reasoning.effort: none` for Luna/Mistral, `minimal` for Gemini3.6/Muse, `low` for GLM, and `reasoning.enabled: false` for optional-thinking rows without a none effort. Gemini2.5's zero thinking budget must be verified with its adapter. Native off-mode support or catalog optional-thinking flags do not establish that a particular reseller honors the gateway request. Do not label thinking as confirmed off solely because no reasoning text is returned.
+Documented requested reasoning fragments are `reasoning.effort: none` for Luna/Mistral, `minimal` for Gemini3.6/Muse, `low` for GLM/Grok, and `reasoning.enabled: false` for optional-thinking rows without a none effort. Gemini2.5's zero thinking budget must be verified with its adapter. Native off-mode support or catalog optional-thinking flags do not establish that a particular reseller honors the gateway request. Do not label thinking as confirmed off solely because no reasoning text is returned.
 
 Before inference, inspect current public routes, price overrides, schema-support metadata, and credential/account restrictions. The first title request for each configuration is its bounded compatibility attempt and counts toward the first pass, rather than an extra unaccounted pilot. Validate acceptance, output-cap handling, returned model/provider, and usage. A documented equivalent transport correction can be made within the same attempt budget and must be logged; changing effort, model, host, schema meaning, or token cap is a different configuration and must return to the protocol decision.
 
@@ -59,7 +60,7 @@ If the requested route/configuration is not executable after the allowed attempt
 
 ## Attempts, order, and stop rules
 
-One title per request, one request in flight, non-streaming capture. Use a fixed seeded shuffle of the 120 candidate/title pairs, preserving the same frozen inputs. Run repeat requests only after independent first-pass review and the human's selection of two finalists; repeat the same configurations with a separately recorded request-order seed.
+One title per request, one request in flight, non-streaming capture. Use a fixed seeded shuffle of the 130 candidate/title pairs, preserving the same frozen inputs. Run repeat requests only after independent first-pass review and the human's selection of two finalists; repeat the same configurations with a separately recorded request-order seed.
 
 Allow at most two attempts per candidate/title/pass: the initial request and one retry. Disable implicit SDK, gateway-configured, and outer job retries wherever controllable; any provider retry discovered in metadata remains part of reported cost. Explicitly classify 429/5xx/network failures, truncation, malformed JSON, range/schema/association errors, abstention, and factual-quality concerns.
 
@@ -69,7 +70,9 @@ Record stop/incomplete status on auth errors, insufficient credit, unresolved ac
 
 ## Budget and cost measurement
 
-The selected-route illustration is approximately $0.56 for first pass plus ten-title repeats of the two most expensive selected candidates at 6K input/2K billed output per title, or $1.81 at 12K/8K. These are arithmetic for this lineup, with conservative Luna automatic cache writes. They exclude retries, embeddings, fee changes, and unforeseen charges; neither is a guaranteed upper bound. The GLM Flash route's current discount must not be assumed permanent.
+The selected-route illustration is approximately $0.97 for first pass plus ten-title repeats of the two most expensive selected candidates at 6K input/2K billed output per title, or $3.01 at 12K/8K. These are arithmetic for this lineup, with conservative Luna automatic cache writes. They exclude retries, embeddings, fee changes, and unforeseen charges; neither is a guaranteed upper bound. The GLM Flash route's current discount must not be assumed permanent.
+
+Grok 4.6 uses the standard `xai` route at $2 input/$6 output per million tokens below the long-context threshold. Its first-pass illustration is $0.24 or $0.72 under the two scenarios. Updated totals including the illustrative two finalist repeats are $0.9694 and $3.01384; actual finalists still follow human review. The [Grok route snapshot](grok-route-evidence.json) preserves advertised schema/reasoning support, prices, and overrides. The $5 target and $10 ceiling apply to all thirteen candidates together.
 
 Keep an experiment ledger in USD. Reserve every request before launch using a conservative provider-specific input estimate, the total output cap, applicable cache-write premiums, worst applicable price overrides, any request charges, and unresolved preceding charges. Only start when the entire reserved amount fits the remaining allowance. Actual usage replaces the reservation after reconciliation. Missing usage does not mean zero cost. Include provider-side bills if any BYOK configuration is present.
 
@@ -102,6 +105,8 @@ The owner confirmed the lineup, cost-oriented generation settings, and finalist 
 Retain separate structural and semantic judgments. Reviewers should flag unsupported plot or series claims that could distort the 74 traits. Cheap reasoning settings are a cost/quality experiment, not a proven hallucination treatment. The ten familiar titles do not establish catalog-wide accuracy; Haiku, Solar Pro 4, plain Ling, latest Gemini, larger holdouts, or richer shared grounding remain possible follow-up hypotheses rather than unapproved new arms.
 
 ## Technical references
+
+- [Grok pricing](https://docs.x.ai/developers/pricing), [reasoning controls](https://docs.x.ai/developers/model-capabilities/text/reasoning), and [selected route evidence](grok-route-evidence.json): standard xAI deployment and low reasoning.
 
 - [OpenRouter provider routing](https://openrouter.ai/docs/guides/routing/provider-selection): exact endpoint selection, parameter support and fallbacks.
 - [OpenRouter reasoning controls](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens): effort, disabled reasoning, billing and model differences.
