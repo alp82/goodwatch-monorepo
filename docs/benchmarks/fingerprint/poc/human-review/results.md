@@ -6,13 +6,23 @@
 
 All figures are USD. Actual cost is the entire ten-title first pass for that configuration, including structural repair calls. The 1,000-title column is only a linear extrapolation of that observed average, not a price quote or catalog forecast. Cached input mix, title/output length, provider conditions and future prices can change the result. Embeddings, production storage and any new credit-purchase fees are excluded. No credits were purchased during this run.
 
-| Label | Model | Actual / 10 titles | Extrapolated / 1,000 | First full-response validity | Median complete-title time |
-|---|---|---:|---:|---:|---:|
-| F | Qwen3.8 Flash | $0.00846 | $0.85 | 10/10 | 19.2s |
-| A | Grok 4.6 | $0.28614 | $28.61 | 10/10 | 21.6s |
-| E | MiMo V2.5 | $0.01116 | $1.12 | 10/10 | 20.3s |
-| D | Qwen3.7 Flash | $0.00338 | $0.34 | 7/10 | 12.8s |
-| B | MiniMax M3 | $0.01619 | $1.62 | 10/10 | 8.1s |
+| Label | Model | Actual / 10 titles | Extrapolated / 1,000 | First full-response validity | Median complete-title time | Human review status |
+|---|---|---:|---:|---:|---:|---|
+| F | Qwen3.8 Flash | $0.00846 | $0.85 | 10/10 | 19.2s | Retained; 10 titles reviewed |
+| A | Grok 4.6 | $0.28614 | $28.61 | 10/10 | 21.6s | Retained; 10 titles reviewed |
+| E | MiMo V2.5 | $0.01116 | $1.12 | 10/10 | 20.3s | Retained; 10 titles reviewed |
+| D | Qwen3.7 Flash | $0.00338 | $0.34 | 7/10 | 12.8s | Retained; 10 titles reviewed |
+| B | MiniMax M3 | $0.01619 | $1.62 | 10/10 | 8.1s | Retained; 10 titles reviewed |
+| G | GPT-5.6 Luna | $0.01377 | $1.38 | 10/10 | 7.1s | Screened; 2 titles reviewed |
+| H | Mistral Small 4 | $0.01506 | $1.51 | 10/10 | 5.5s | Screened; 1 titles reviewed |
+| I | Nemotron 3.5 Lightning | $0.00708 | $0.71 | 10/10 | 2.1s | Screened; 7 titles reviewed |
+| M | DeepSeek V4.1 Flash | $0.01517 | $1.52 | 10/10 | 39.1s | Screened; 1 titles reviewed |
+| C | Muse Spark 1.3 Contributor | — | — | — | — | Unavailable: Account privacy restriction |
+| J | GLM 5.3 Flash | — | — | — | — | Unavailable: Upstream rate limits |
+| K | Gemini 3.6 Flash | — | — | — | — | Unavailable: Schema complexity rejected |
+| L | Gemini 2.5 Flash | — | — | — | — | Unavailable: Schema complexity rejected |
+
+Unavailable configurations produced no usable responses; ten-title costs, projections and successful completion times cannot be calculated. Their rejected attempts showed no measured account debit; conservative reservations are listed separately below.
 
 All five retained candidates supplied valid full responses for all ten titles after the allowed repairs. Median complete-title time spans the first attempt start through the final response, including waits between repairs. Separate HTTP latency and p95 values are in comparison-data.json and the execution report; these ten samples do not establish production throughput.
 
