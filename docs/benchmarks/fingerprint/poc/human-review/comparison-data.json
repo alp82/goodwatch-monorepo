@@ -14,7 +14,11 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 19.1893295,
-    "p95_request_seconds": 32.976083393004956
+    "p95_request_seconds": 32.976083393004956,
+    "projected_per_1000000_usd": "846.38800000",
+    "quality_stars": 5,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Retained"
   },
   {
     "label": "A",
@@ -31,7 +35,11 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 21.571317,
-    "p95_request_seconds": 25.769854136990034
+    "p95_request_seconds": 25.769854136990034,
+    "projected_per_1000000_usd": "28614.400000",
+    "quality_stars": 5,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Retained"
   },
   {
     "label": "E",
@@ -48,7 +56,11 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 20.2526335,
-    "p95_request_seconds": 31.313866386000882
+    "p95_request_seconds": 31.313866386000882,
+    "projected_per_1000000_usd": "1116.3993400000",
+    "quality_stars": 4,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Retained"
   },
   {
     "label": "D",
@@ -65,7 +77,11 @@
     "first_attempt_full_valid": 7,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 12.821011,
-    "p95_request_seconds": 13.530726454002433
+    "p95_request_seconds": 13.530726454002433,
+    "projected_per_1000000_usd": "337.97100000",
+    "quality_stars": 4,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Retained"
   },
   {
     "label": "B",
@@ -82,7 +98,11 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 8.1216045,
-    "p95_request_seconds": 21.454531745999702
+    "p95_request_seconds": 21.454531745999702,
+    "projected_per_1000000_usd": "1618.84000000",
+    "quality_stars": 4,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Retained"
   },
   {
     "label": "G",
@@ -99,7 +119,11 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 7.1034975,
-    "p95_request_seconds": 8.408507782005472
+    "p95_request_seconds": 8.408507782005472,
+    "projected_per_1000000_usd": "1377.49100000",
+    "quality_stars": 3,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Dropped"
   },
   {
     "label": "H",
@@ -116,7 +140,11 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 5.543572,
-    "p95_request_seconds": 6.69530369900167
+    "p95_request_seconds": 6.69530369900167,
+    "projected_per_1000000_usd": "1505.863500000",
+    "quality_stars": 2,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Dropped"
   },
   {
     "label": "I",
@@ -133,7 +161,11 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 2.1141509999999997,
-    "p95_request_seconds": 3.743505185993854
+    "p95_request_seconds": 3.743505185993854,
+    "projected_per_1000000_usd": "707.84000000",
+    "quality_stars": 3,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Dropped"
   },
   {
     "label": "M",
@@ -150,6 +182,58 @@
     "first_attempt_full_valid": 10,
     "after_retry_full_valid": 10,
     "median_complete_pair_seconds": 39.106818000000004,
-    "p95_request_seconds": 71.60019221500261
+    "p95_request_seconds": 71.60019221500261,
+    "projected_per_1000000_usd": "1516.672000000",
+    "quality_stars": 2,
+    "quality_basis": "Assistant qualitative synthesis of available owner notes; not an owner-assigned score or measured accuracy. Cost, latency and schema validity excluded. 1 poor, 2 weak, 3 mixed, 4 good, 5 strongest in this pilot; ties intentional. Partial review coverage limits comparisons.",
+    "status": "Dropped"
+  },
+  {
+    "label": "C",
+    "name": "Muse Spark 1.3 Contributor",
+    "quality_stars": null,
+    "human_titles_reviewed": 0,
+    "generation_titles": 0,
+    "projected_per_1000_usd": null,
+    "projected_per_1000000_usd": null,
+    "median_complete_pair_seconds": null,
+    "status": "Account privacy block",
+    "quality_basis": "No usable output to assess; failure comments are not quality reviews."
+  },
+  {
+    "label": "J",
+    "name": "GLM 5.3 Flash",
+    "quality_stars": null,
+    "human_titles_reviewed": 0,
+    "generation_titles": 0,
+    "projected_per_1000_usd": null,
+    "projected_per_1000000_usd": null,
+    "median_complete_pair_seconds": null,
+    "status": "Route rate limits",
+    "quality_basis": "No usable output to assess; failure comments are not quality reviews."
+  },
+  {
+    "label": "K",
+    "name": "Gemini 3.6 Flash",
+    "quality_stars": null,
+    "human_titles_reviewed": 0,
+    "generation_titles": 0,
+    "projected_per_1000_usd": null,
+    "projected_per_1000000_usd": null,
+    "median_complete_pair_seconds": null,
+    "status": "Schema rejected",
+    "quality_basis": "No usable output to assess; failure comments are not quality reviews."
+  },
+  {
+    "label": "L",
+    "name": "Gemini 2.5 Flash",
+    "quality_stars": null,
+    "human_titles_reviewed": 0,
+    "generation_titles": 0,
+    "projected_per_1000_usd": null,
+    "projected_per_1000000_usd": null,
+    "median_complete_pair_seconds": null,
+    "status": "Schema rejected",
+    "quality_basis": "No usable output to assess; failure comments are not quality reviews."
   }
 ]

@@ -4,25 +4,25 @@
 
 ## Cost, response validity, and latency
 
-All figures are USD. Actual cost is the entire ten-title first pass for that configuration, including structural repair calls. The 1,000-title column is only a linear extrapolation of that observed average, not a price quote or catalog forecast. Cached input mix, title/output length, provider conditions and future prices can change the result. Embeddings, production storage and any new credit-purchase fees are excluded. No credits were purchased during this run.
+All figures are USD. Both cost columns linearly extrapolate each configuration’s observed ten-title first-pass cost, including structural repair calls. Neither is a price quote or catalog forecast; one million titles were not run. Cached input mix, title/output length, provider conditions and future prices can change the result. Embeddings, production storage and any new credit-purchase fees are excluded. No credits were purchased during this run.
 
-| Label | Model | Actual / 10 titles | Extrapolated / 1,000 | First full-response validity | Median complete-title time | Human review status |
-|---|---|---:|---:|---:|---:|---|
-| F | Qwen3.8 Flash | $0.00846 | $0.85 | 10/10 | 19.2s | Retained; 10 titles reviewed |
-| A | Grok 4.6 | $0.28614 | $28.61 | 10/10 | 21.6s | Retained; 10 titles reviewed |
-| E | MiMo V2.5 | $0.01116 | $1.12 | 10/10 | 20.3s | Retained; 10 titles reviewed |
-| D | Qwen3.7 Flash | $0.00338 | $0.34 | 7/10 | 12.8s | Retained; 10 titles reviewed |
-| B | MiniMax M3 | $0.01619 | $1.62 | 10/10 | 8.1s | Retained; 10 titles reviewed |
-| G | GPT-5.6 Luna | $0.01377 | $1.38 | 10/10 | 7.1s | Screened; 2 titles reviewed |
-| H | Mistral Small 4 | $0.01506 | $1.51 | 10/10 | 5.5s | Screened; 1 titles reviewed |
-| I | Nemotron 3.5 Lightning | $0.00708 | $0.71 | 10/10 | 2.1s | Screened; 7 titles reviewed |
-| M | DeepSeek V4.1 Flash | $0.01517 | $1.52 | 10/10 | 39.1s | Screened; 1 titles reviewed |
-| C | Muse Spark 1.3 Contributor | — | — | — | — | Unavailable: Account privacy restriction |
-| J | GLM 5.3 Flash | — | — | — | — | Unavailable: Upstream rate limits |
-| K | Gemini 3.6 Flash | — | — | — | — | Unavailable: Schema complexity rejected |
-| L | Gemini 2.5 Flash | — | — | — | — | Unavailable: Schema complexity rejected |
+| Label | Model | Quality | Reviewed | Cost / 1,000 titles | Cost / 1M titles | Median time/title | Status |
+|---|---|---|---:|---:|---:|---:|---|
+| F | Qwen3.8 Flash | ★★★★★ | 10/10 | $0.85 | $846.39 | 19.2s | Retained |
+| A | Grok 4.6 | ★★★★★ | 10/10 | $28.61 | $28,614.40 | 21.6s | Retained |
+| E | MiMo V2.5 | ★★★★☆ | 10/10 | $1.12 | $1,116.40 | 20.3s | Retained |
+| D | Qwen3.7 Flash | ★★★★☆ | 10/10 | $0.34 | $337.97 | 12.8s | Retained |
+| B | MiniMax M3 | ★★★★☆ | 10/10 | $1.62 | $1,618.84 | 8.1s | Retained |
+| G | GPT-5.6 Luna | ★★★☆☆ | 2/10 | $1.38 | $1,377.49 | 7.1s | Dropped |
+| H | Mistral Small 4 | ★★☆☆☆ | 1/10 | $1.51 | $1,505.86 | 5.5s | Dropped |
+| I | Nemotron 3.5 Lightning | ★★★☆☆ | 7/10 | $0.71 | $707.84 | 2.1s | Dropped |
+| M | DeepSeek V4.1 Flash | ★★☆☆☆ | 1/10 | $1.52 | $1,516.67 | 39.1s | Dropped |
+| C | Muse Spark 1.3 Contributor | Unrated | 0/10 | — | — | — | Account privacy block |
+| J | GLM 5.3 Flash | Unrated | 0/10 | — | — | — | Route rate limits |
+| K | Gemini 3.6 Flash | Unrated | 0/10 | — | — | — | Schema rejected |
+| L | Gemini 2.5 Flash | Unrated | 0/10 | — | — | — | Schema rejected |
 
-Unavailable configurations produced no usable responses; ten-title costs, projections and successful completion times cannot be calculated. Their rejected attempts showed no measured account debit; conservative reservations are listed separately below.
+Quality stars are an assistant synthesis of the owner’s free-text notes, added at the owner’s request: 1 = poor, 2 = weak, 3 = mixed, 4 = good, 5 = strongest in this pilot. They exclude cost, speed and structural reliability, are not measured accuracy or owner-assigned ratings, and intentionally allow ties. Early cuts have only partial review coverage. Unavailable configurations remain unrated, with no per-title cost estimate.
 
 All five retained candidates supplied valid full responses for all ten titles after the allowed repairs. Median complete-title time spans the first attempt start through the final response, including waits between repairs. Separate HTTP latency and p95 values are in comparison-data.json and the execution report; these ten samples do not establish production throughput.
 
@@ -34,7 +34,7 @@ All five retained candidates supplied valid full responses for all ten titles af
 - **D — Qwen3.7 Flash, Alibaba, JSON-object mode, requested thinking disabled:** the cheapest retained configuration, with especially strong Everything Everywhere All at Once and Game of Thrones judgments. Black Mirror and Inside Out were “good.” Three full-response repairs were necessary: two omitted required-null animation_style fields in the common transport, and one used an invalid highlight key. All original 74-score sets were valid; 7/10 full responses passed initially and 10/10 after repair. The $0.00337971 total includes those repairs. It costs about 40% of F’s measured average, but requires more repair handling.
 - **B — MiniMax M3, CoreWeave FP4, strict schema, requested thinking disabled:** fastest retained option by observed median complete-title time (8.1 seconds), with strong later TV results. Das Kanu des Manitu was “overall a bit off,” and the movie reviews repeatedly noted inflated coming of age. Its $0.01618840 total is about 1.91 times F’s cost. It remains plausible when latency matters, rather than being an automatic next elimination.
 
-These are interpretations of free-text judgments, not numeric accuracy scores. “No flagged traits” was not converted into a formal pass threshold, and words such as “strong” were not assigned invented point values. Cross-candidate comparisons in the notes do not establish any candidate as ground truth.
+The requested stars are coarse qualitative summaries of free-text judgments, not numeric accuracy scores. “No flagged traits” was not converted into a formal pass threshold, and individual verdict words were not mechanically assigned point values. Cross-candidate comparisons in the notes do not establish any candidate as ground truth.
 
 ## Complete survivor verdict matrix
 
