@@ -224,48 +224,6 @@ value:
             expr: ''
             parallel: true
             skip_failure: false
-          - summary: DNA
-            modules:
-              - id: ae
-                summary: Skip DNA
-                value:
-                  type: rawscript
-                  content: '!inline skip_dna.inline_script.py'
-                  input_transforms: {}
-                  lock: '!inline skip_dna.inline_script.lock'
-                  language: python3
-              - id: ab
-                value:
-                  type: script
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.g.ids
-                  is_trigger: false
-                  path: f/dna/init/update
-              - id: ac
-                value:
-                  type: flow
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.ab
-                  path: f/dna/crawl_all_by_id
-              - id: ad
-                value:
-                  type: script
-                  input_transforms:
-                    ids:
-                      type: javascript
-                      expr: results.ab
-                    results:
-                      type: javascript
-                      expr: results.ac
-                  is_trigger: false
-                  path: f/dna/generate/vectors
-            expr: 'false'
-            parallel: true
-            skip_failure: true
         parallel: true
     - id: o
       timeout:
