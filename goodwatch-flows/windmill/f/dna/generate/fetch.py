@@ -10,6 +10,7 @@ import wmill
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.dna.models import DnaMovie, DnaTv, DNAAnalysis
+from f.dna.generate.spend_pause import SpendPause, release_unprocessed
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 PRIMARY_MODEL = "qwen/qwen3.8-flash"
@@ -476,9 +477,13 @@ def is_premium(entry):
 def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
     if not next_entries:
         return []
+    pause = SpendPause()
+    if pause.is_active():
+        release_unprocessed(next_entries)
+        return []
     api_key = wmill.get_variable("u/Alp/OPENROUTER_API_KEY")
     results = []
-    for entry in next_entries:
+    for index, entry in enumerate(next_entries):
         model = PRIMARY_MODEL if is_premium(entry) else FALLBACK_MODEL
         media_type = "Movie" if isinstance(entry, DnaMovie) else "Show"
         messages = [
@@ -493,6 +498,9 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
             transport_retries = 0
             dna = None
             while request_count < 6:
+                if pause.is_active():
+                    release_unprocessed(next_entries[index:])
+                    return results
                 request_count += 1
                 raw = ""
                 try:
@@ -500,8 +508,10 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
                 except requests.RequestException as error:
                     last_error = error
                     status = error.response.status_code if error.response is not None else None
-                    # Let the spend-pause flow handle budget/account failures.
-                    if status in (401, 402, 403):
+                    if pause.for_budget_error(error.response):
+                        release_unprocessed(next_entries[index:])
+                        return results
+                    if status in (401, 403):
                         raise
                     if status in (429, 502, 503) and transport_retries < 2 and request_count < 6:
                         time.sleep(retry_delay(error.response, transport_retries))

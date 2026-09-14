@@ -25,12 +25,6 @@ value:
               is_trigger: false
               path: f/dna/generate/fetch
             continue_on_error: false
-            retry:
-              exponential:
-                attempts: 1
-                multiplier: 1
-                random_factor: 0
-                seconds: 15
         iterator:
           type: javascript
           expr: results.a

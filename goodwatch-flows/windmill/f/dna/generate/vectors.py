@@ -91,6 +91,8 @@ def store_result(next_entry: Union[DnaMovie, DnaTv], vector_essence_text: list[f
     
 
 def main(ids: dict[str, list], results: list[dict]):
+    if results == []:
+        return {"embeddings_count": 0}
     embeddings = generate_vectors(results)
 
     init_mongodb()
