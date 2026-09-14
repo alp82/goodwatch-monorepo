@@ -147,11 +147,11 @@ layout {
         pane split_direction="vertical" size="60%" {
             pane size="60%" {
                 command "ssh"
-                args "-t" "root@10.0.0.20" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector; git pull; df -h; exec $SHELL"
+                args "-t" "root@10.0.0.20" "cd /root/goodwatch/goodwatch-monorepo; git pull; df -h; exec $SHELL"
             }
             pane {
                 command "ssh"
-                args "-t" "root@10.0.0.20" "cd /root/goodwatch/goodwatch-monorepo/goodwatch-vector && htop; exec $SHELL"
+                args "-t" "root@10.0.0.20" "cd /root/goodwatch/goodwatch-monorepo && htop; exec $SHELL"
             }
         }
     }

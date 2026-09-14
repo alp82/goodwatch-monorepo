@@ -1,5 +1,19 @@
-import { QdrantClient } from "@qdrant/js-client-grpc"
+import { QdrantClient, RecommendStrategy, type Value } from "@qdrant/js-client-grpc"
 import pc from "picocolors"
+
+function decodeValue(value: Value): unknown {
+	switch (value.kind.case) {
+		case 'integerValue': return Number(value.kind.value)
+		case 'nullValue': return null
+		case 'listValue': return value.kind.value.values.map(decodeValue)
+		case 'structValue': return Object.fromEntries(
+			Object.entries(value.kind.value.fields).map(([key, child]) => [key, decodeValue(child)]),
+		)
+		default: return value.kind.value
+	}
+}
+
+export const MEDIA_COLLECTION = "media_fingerprint_v1"
 
 type MediaType = "movie" | "show"
 
@@ -18,8 +32,8 @@ class QdrantClientWrapper {
 
 	makePointId(mediaType: MediaType, tmdbId: number): number {
 		const tid = Number(tmdbId)
-		if (tid < 0) {
-			throw new Error("tmdb_id must be non-negative")
+		if (!Number.isSafeInteger(tid) || tid < 0) {
+			throw new Error("tmdb_id must be a non-negative safe integer")
 		}
 		if (mediaType === "movie") {
 			return MOVIE_BASE + tid
@@ -61,22 +75,19 @@ class QdrantClientWrapper {
 	}
 
 	private convertConditionToGrpc(condition: any): any {
-		// Handle nested filter (should with min_should_match)
-		if (condition.should && Array.isArray(condition.should)) {
-			const nestedFilter: any = {
-				should: condition.should.map((c: any) => this.convertConditionToGrpc(c)),
-			}
-			if (condition.min_should_match !== undefined) {
-				nestedFilter.minShould = condition.min_should_match
-			}
-			return {
-				conditionOneOf: {
-					case: 'filter',
-					value: nestedFilter,
-				},
-			}
+		if (condition.is_empty) {
+			return { conditionOneOf: { case: 'isEmpty', value: { key: condition.is_empty.key } } }
 		}
-		
+		if (condition.has_id) {
+			return { conditionOneOf: { case: 'hasId', value: {
+				hasId: condition.has_id.map((id: number) => ({ pointIdOptions: { case: 'num', value: BigInt(id) } })),
+			} } }
+		}
+		// Convert nested filters recursively.
+		if (condition.should || condition.must || condition.must_not) {
+			return { conditionOneOf: { case: 'filter', value: this.convertFilterToGrpc(condition) } }
+		}
+
 		// Handle field conditions (match, range, etc.)
 		if (condition.key) {
 			const fieldCondition: any = {
@@ -92,6 +103,8 @@ class QdrantClientWrapper {
 						fieldCondition.match = {
 							matchValue: { case: 'integer', value: value },
 						}
+					} else if (typeof value === 'boolean') {
+						fieldCondition.match = { matchValue: { case: 'boolean', value } }
 					} else {
 						fieldCondition.match = {
 							matchValue: { case: 'keyword', value: String(value) },
@@ -147,6 +160,7 @@ class QdrantClientWrapper {
 		positive: (number | string)[]
 		negative?: (number | string)[]
 		using?: string
+		strategy?: 'average_vector' | 'best_score' | 'sum_scores'
 		filter?: any
 		limit?: number
 		offset?: number
@@ -182,27 +196,47 @@ class QdrantClientWrapper {
 				}
 			}
 
-			// Convert positive IDs to gRPC format
-			const positiveIds = params.positive.map(id => ({
-				pointIdOptions: { case: 'num' as const, value: typeof id === 'bigint' ? id : BigInt(Number(id)) },
-			}))
-
-			// Convert negative IDs to gRPC format if provided
-			const negativeIds = params.negative?.map(id => ({
-				pointIdOptions: { case: 'num' as const, value: typeof id === 'bigint' ? id : BigInt(Number(id)) },
-			}))
-
-			// Convert filter from REST format to gRPC format
-			let grpcFilter: any = undefined
-			if (params.filter) {
-				grpcFilter = this.convertFilterToGrpc(params.filter)
+			// Read examples from Qdrant itself, rather than inferring their presence
+			// from Crate metadata. Send vectors to avoid a lookup/deletion race.
+			const using = params.using ?? 'fingerprint_v1'
+			const seedIds = [...new Set([...params.positive, ...(params.negative ?? [])].map(Number))]
+			if (seedIds.length === 0) return []
+			const seeds = await this.client.api('points').get({
+				collectionName: params.collectionName,
+				ids: seedIds.map(id => ({ pointIdOptions: { case: 'num', value: BigInt(id) } })),
+				withPayload: { selectorOptions: { case: 'enable', value: false } },
+				withVectors: { selectorOptions: { case: 'include', value: { names: [using] } } },
+			})
+			const available = new Map<number, number[]>()
+			for (const point of seeds.result) {
+				const vectors = point.vectors?.vectorsOptions
+				if (point.id?.pointIdOptions.case !== 'num' || vectors?.case !== 'vectors') continue
+				const vector = vectors.value.vectors[using]
+				const data = vector?.vector?.case === 'dense' ? vector.vector.value.data : vector?.data
+				if (data?.length === 74 && data.every(Number.isFinite)) {
+					available.set(Number(point.id.pointIdOptions.value), data)
+				}
 			}
+			const examples = (ids: (number | string)[]) => ids.flatMap(id => {
+				const data = available.get(Number(id))
+				return data ? [{ data }] : []
+			})
+			const positiveVectors = examples(params.positive)
+			const negativeVectors = examples(params.negative ?? [])
+			const strategy = params.strategy ?? 'average_vector'
+			if (positiveVectors.length === 0 && (strategy === 'average_vector' || negativeVectors.length === 0)) return []
+			// Explicit vectors don't automatically exclude example points.
+			const grpcFilter = this.convertFilterToGrpc({
+				...params.filter,
+				must_not: [...(params.filter?.must_not ?? []), { has_id: seedIds }],
+			})
 
 			const response = await this.client.api('points').recommend({
 				collectionName: params.collectionName,
-				positive: positiveIds,
-				negative: negativeIds,
-				using: params.using,
+				positiveVectors,
+				negativeVectors,
+				using,
+				strategy: { average_vector: RecommendStrategy.AverageVector, best_score: RecommendStrategy.BestScore, sum_scores: RecommendStrategy.SumScores }[strategy],
 				filter: grpcFilter,
 				limit: params.limit ? BigInt(params.limit) : BigInt(10),
 				offset: params.offset ? BigInt(params.offset) : undefined,
@@ -231,42 +265,9 @@ class QdrantClientWrapper {
 					? Number(point.id.pointIdOptions.value)
 					: point.id?.pointIdOptions?.value
 				
-				// Convert gRPC payload format to simple object
-				const payload: any = {}
-				if (point.payload) {
-					for (const [key, value] of Object.entries(point.payload)) {
-						const val = value as any
-						if (val.kind) {
-							switch (val.kind.case) {
-								case 'stringValue':
-									payload[key] = val.kind.value
-									break
-								case 'integerValue':
-									payload[key] = Number(val.kind.value)
-									break
-								case 'doubleValue':
-									payload[key] = val.kind.value
-									break
-								case 'boolValue':
-									payload[key] = val.kind.value
-									break
-								case 'listValue':
-									payload[key] = val.kind.value.values?.map((v: any) => {
-										if (v.kind?.case === 'stringValue') return v.kind.value
-										if (v.kind?.case === 'integerValue') return Number(v.kind.value)
-										if (v.kind?.case === 'doubleValue') return v.kind.value
-										return v.kind?.value
-									})
-									break
-								case 'structValue':
-									payload[key] = val.kind.value
-									break
-								default:
-									payload[key] = val.kind?.value
-							}
-						}
-					}
-				}
+				const payload = Object.fromEntries(
+					Object.entries(point.payload ?? {}).map(([key, value]) => [key, decodeValue(value)]),
+				)
 
 				return {
 					id,
@@ -353,42 +354,9 @@ class QdrantClientWrapper {
 					? Number(point.id.pointIdOptions.value)
 					: point.id?.pointIdOptions?.value
 				
-				// Convert gRPC payload format to simple object
-				const payload: any = {}
-				if (point.payload) {
-					for (const [key, value] of Object.entries(point.payload)) {
-						const val = value as any
-						if (val.kind) {
-							switch (val.kind.case) {
-								case 'stringValue':
-									payload[key] = val.kind.value
-									break
-								case 'integerValue':
-									payload[key] = Number(val.kind.value)
-									break
-								case 'doubleValue':
-									payload[key] = val.kind.value
-									break
-								case 'boolValue':
-									payload[key] = val.kind.value
-									break
-								case 'listValue':
-									payload[key] = val.kind.value.values?.map((v: any) => {
-										if (v.kind?.case === 'stringValue') return v.kind.value
-										if (v.kind?.case === 'integerValue') return Number(v.kind.value)
-										if (v.kind?.case === 'doubleValue') return v.kind.value
-										return v.kind?.value
-									})
-									break
-								case 'structValue':
-									payload[key] = val.kind.value
-									break
-								default:
-									payload[key] = val.kind?.value
-							}
-						}
-					}
-				}
+				const payload = Object.fromEntries(
+					Object.entries(point.payload ?? {}).map(([key, value]) => [key, decodeValue(value)]),
+				)
 
 				return {
 					id,

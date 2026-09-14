@@ -1,4 +1,4 @@
-summary: ''
+summary: Persist the 74-trait fingerprint without inference
 description: ''
 lock: '!inline f/dna/generate/vectors.script.lock'
 kind: script

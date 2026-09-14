@@ -304,7 +304,7 @@ def _build_payload(
     payload["streaming_availability"] = [f"{svc}_{cc}" for (svc, cc) in streaming_uniq]
 
     # --- DNA (vectors + payload enrichments)
-    vectors: Dict[str, List[float]] = {"essence_text_v1": [], "fingerprint_v1": []}
+    vectors: Dict[str, List[float]] = {"fingerprint_v1": []}
     if dna:
         dna_root = dna.get("dna") or {}
         # suitability/context
@@ -347,10 +347,8 @@ def _build_payload(
             payload["fingerprint_scores_v1"] = fp_scores
 
         # vectors
-        v_ess = dna.get("vector_essence_text")
         v_fp = dna.get("vector_fingerprint")
-        if v_ess and v_fp:
-            vectors["essence_text_v1"] = v_ess
+        if v_fp:
             vectors["fingerprint_v1"] = v_fp
 
     # --- Tropes (optional tags list for payload filtering)
@@ -478,9 +476,7 @@ def copy_to_qdrant(
                 tropes=tropes_map.get(tmdb_id),
             )
 
-            have_vectors = bool(vectors["essence_text_v1"]) and bool(
-                vectors["fingerprint_v1"]
-            )
+            have_vectors = bool(vectors["fingerprint_v1"])
             if have_vectors:
                 upsert_buffer.append((tmdb_id, payload, vectors))
             # else: skip this id quietly (no vectors yet)

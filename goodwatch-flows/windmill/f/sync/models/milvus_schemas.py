@@ -29,13 +29,6 @@ def desired_media_collection() -> CollectionSpec:
     return CollectionSpec(
         name=MEDIA_COLLECTION,
         vectors={
-            "essence_text_v1": VectorFieldSpec(
-                dim=768,
-                metric="COSINE",
-                field_name="essence_text_v1",
-                index_type="HNSW",
-                index_params={"M": 16, "efConstruction": 200},
-            ),
             "fingerprint_v1": VectorFieldSpec(
                 dim=74,
                 metric="COSINE",

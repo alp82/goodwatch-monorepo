@@ -3,7 +3,6 @@ import type React from "react"
 import { useUserScore, useIsOnWishlist } from "~/hooks/useUserDataAccessors"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
-import type { ExploreResult } from "~/server/explore.server"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
 import { Poster } from "~/ui/Poster"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
@@ -17,7 +16,6 @@ interface MovieTvCardProps {
 		| MovieDetails
 		| TVDetails
 		| DiscoverResult
-		| ExploreResult
 		| OnboardingResult
 	mediaType: "movie" | "show"
 	prefetch?: boolean

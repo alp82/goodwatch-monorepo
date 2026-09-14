@@ -5,7 +5,7 @@ import type { FingerprintCondition } from "~/server/utils/query-db"
 import { generateFingerprintSQL } from "~/server/utils/query-db"
 import { getGenresAll } from "~/server/genres.server"
 import { cached } from "~/utils/cache"
-import { recommend, makePointId, parsePointId } from "~/utils/qdrant"
+import { MEDIA_COLLECTION, recommend, makePointId, parsePointId } from "~/utils/qdrant"
 
 export type WatchedType = "didnt-watch" | "want-to-watch" | "watched"
 export type StreamingPreset = "everywhere" | "mine" | "custom"
@@ -112,7 +112,7 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 	}
 
 	return await cached<DiscoverParams, DiscoverResults>({
-		name: "discover",
+		name: `${MEDIA_COLLECTION}:discover`,
 		target: _getSimpleDiscoverResults,
 		params,
 		ttlMinutes: 30,
@@ -310,7 +310,7 @@ async function getQdrantCandidates({
 	}
 	
 	const mustNotConditions: any[] = [
-		{ key: "poster_path", match: { value: null } },
+		{ is_empty: { key: "poster_path" } },
 	]
 	
 	// Map pillar names to their underlying fingerprint scores
@@ -361,7 +361,7 @@ async function getQdrantCandidates({
 		
 		if (positiveIds.length > 0) {
 			const results = await recommend({
-				collectionName: "media",
+				collectionName: MEDIA_COLLECTION,
 				positive: positiveIds,
 				using: "fingerprint_v1",
 				filter: {

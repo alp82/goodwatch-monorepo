@@ -264,7 +264,7 @@ def copy_media(
 
             # DNA
             dna = dna_data.get(tmdb_id, {})
-            has_dna = "dna" in dna and "vector_fingerprint" in dna and "vector_essence_text" in dna
+            has_dna = "dna" in dna and "vector_fingerprint" in dna
             essence_tags = dna["dna"].get("essence_tags", []) if has_dna else None
             essence_text = dna["dna"]["essence_text"] if has_dna else None
             fingerprint = dna["dna"]["fingerprint"] if has_dna else None
@@ -273,7 +273,6 @@ def copy_media(
             content_advisories = dna["dna"].get("content_advisories", []) if has_dna else None
             social_suitability = dna["dna"]["social_suitability"] if has_dna else None
             viewing_context = dna["dna"]["viewing_context"] if has_dna else None
-            vector_essence_text = dna["vector_essence_text"] if has_dna else None
             vector_fingerprint = dna["vector_fingerprint"] if has_dna else None
 
             # Create Media document
@@ -377,7 +376,6 @@ def copy_media(
                 fingerprint_highlight_keys=fingerprint["highlight_keys"] if fingerprint else None,
                 content_advisories=content_advisories,
 
-                vector_essence_text=vector_essence_text,
                 vector_fingerprint=vector_fingerprint,
 
                 suitability_solo_watch=social_suitability["solo_watch"] if social_suitability else None,

@@ -21,3 +21,6 @@ typing-extensions==4.15.0
 typing-inspection==0.4.2
 urllib3==2.5.0
 wmill==1.564.0
+dnspython==2.7.0
+mongoengine==0.29.1
+pymongo==4.13.1

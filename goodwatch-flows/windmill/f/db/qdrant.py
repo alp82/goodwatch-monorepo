@@ -82,7 +82,6 @@ class QdrantConnector:
 
         `vectors` example:
         {
-            "essence_text_v1": {"size": 768, "distance": "Cosine", "on_disk": False},
             "fingerprint_v1": {"size": 74,  "distance": "Cosine", "on_disk": False},
         }
         """
@@ -157,7 +156,7 @@ class QdrantConnector:
         Args:
             collection: Qdrant collection name
             items: list of (point_id:int, payload:dict, vectors_dict: {name -> list[float]})
-                   Example vectors_dict: {"essence_text_v1": [...], "fingerprint_v1": [...]}
+                   Example vectors_dict: {"fingerprint_v1": [...]}
             batch_size: per-request batch size for `upload_collection`
             parallel: parallel processes used by `upload_collection` (1 = no multiprocessing)
             max_retries: retries per batch inside `upload_collection`
