@@ -32,6 +32,11 @@ under the lease and checks ownership around writes. Vector writers read the late
 published Crate snapshot while holding these leases and finish synchronous writes
 before releasing them. Unknown snapshots retain existing vector availability; an
 unmapped scraped provider fails publication before availability is removed.
+If a scraped name is absent from the media's provider catalog, an exact-name
+match in the verified title API result for the same country and offer type can
+resolve it to a single TMDB ID already in that catalog. This handles differences
+such as `JustWatchTV` versus `JustWatch TV` without fuzzy name matching or treating
+JustWatch clickout IDs as TMDB IDs. Ambiguous API identities still fail publication.
 Crate does not provide an
 atomic transaction across child records and aggregate fields: interrupted writes
 remain recoverable by replay, and the title is acknowledged only after completion.

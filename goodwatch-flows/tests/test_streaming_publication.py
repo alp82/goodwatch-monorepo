@@ -294,6 +294,59 @@ class StreamingPublicationTests(unittest.TestCase):
             self.assertEqual(crate.rows, [availability()])
             self.assertEqual(crate.media, {})
 
+    def test_catalog_name_mismatch_uses_only_verified_scoped_api_identity(self) -> None:
+        catalog = [
+            {"name": "JustWatch TV", "tmdb_id": 2285, "media_type": "movie"},
+            {"name": "Other", "tmdb_id": 99, "media_type": "movie"},
+            {"name": "Show only", "tmdb_id": 100, "media_type": "show"},
+        ]
+        offer = {"provider_id": 2285, "provider_name": "JustWatchTV"}
+        cases = [
+            ("exact", "AU", "rent", [offer], self.now, True),
+            ("duplicate same ID", "AU", "rent", [offer, offer], self.now, True),
+            ("wrong country", "US", "rent", [offer], self.now, False),
+            ("wrong offer type", "AU", "free", [offer], self.now, False),
+            ("unverified details", "AU", "rent", [offer], None, False),
+            ("different spelling", "AU", "rent", [offer | {"provider_name": "JustWatch TV"}], self.now, False),
+            ("ambiguous", "AU", "rent", [offer, offer | {"provider_id": 99}], self.now, False),
+            ("ambiguous uncatalogued", "AU", "rent", [offer, offer | {"provider_id": 999}], self.now, False),
+            ("uncatalogued", "AU", "rent", [offer | {"provider_id": 999}], self.now, False),
+            ("missing ID", "AU", "rent", [{"provider_name": "JustWatchTV"}], self.now, False),
+            ("string ID", "AU", "rent", [offer | {"provider_id": "2285"}], self.now, False),
+            ("wrong media", "AU", "rent", [offer | {"provider_id": 100}], self.now, False),
+        ]
+        for label, country, stream_type, offers, updated_at, succeeds in cases:
+            with self.subTest(case=label):
+                self.db.tmdb_movie_details.delete_many({})
+                self.db.tmdb_movie_providers.delete_many({})
+                self.db.tmdb_movie_details.insert_one({
+                    "tmdb_id": 5, "updated_at": updated_at,
+                    "watch_providers": {"results": {country: {stream_type: offers}}},
+                })
+                self.db.tmdb_movie_providers.insert_one({
+                    "tmdb_id": 5, "country_code": "AU", "updated_at": self.now,
+                    "streaming_links": [{"provider_name": "JustWatchTV", "stream_type": "rent",
+                                         "stream_url": "https://www.justwatch.com/au/movie/four-rooms"}],
+                })
+                old = availability("AU", media_tmdb_id=5, media_type="movie")
+                crate = Crate([old])
+                original_select = crate.select
+                def select(sql: str, params: tuple | None = None) -> list[dict]:
+                    return catalog if "FROM streaming_service" in sql else original_select(sql, params)
+                crate.select = select
+                if succeeds:
+                    self.copy(crate, {"tmdb_id": {"$in": [5]}}, "movie", recent_only=False)
+                    self.assertEqual(len(crate.rows), 1)
+                    self.assertEqual(crate.rows[0]["streaming_service_id"], 2285)
+                    self.assertEqual(crate.rows[0]["streaming_type"], "rent")
+                    self.assertEqual(crate.rows[0]["stream_url"], "https://www.justwatch.com/au/movie/four-rooms")
+                    self.assertEqual(crate.media[5]["streaming_availabilities"], ["AU_2285"])
+                else:
+                    with self.assertRaisesRegex(RuntimeError, "Unmapped streaming provider 'JustWatchTV' for movie:5 in AU"):
+                        self.copy(crate, {"tmdb_id": {"$in": [5]}}, "movie", recent_only=False)
+                    self.assertEqual(crate.rows, [old])
+                    self.assertEqual(crate.media, {})
+
     def test_unknown_verified_provider_fails_without_clearing_previous_offers(self) -> None:
         self.db.tmdb_tv_providers.insert_one({
             "tmdb_id": 42, "country_code": "US", "updated_at": self.now,

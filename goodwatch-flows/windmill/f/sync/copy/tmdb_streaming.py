@@ -137,12 +137,24 @@ def scoped_provider_id(
     name: str, country: str, stream_type: str, catalog: dict[str, list[dict]],
     api_results: dict,
 ) -> int | None:
-    """Resolve exact names using the same media, country and offer type."""
+    """Resolve exact catalog or title API names in the same offer scope."""
     candidates = catalog.get(name, [])
     identities = {row["tmdb_id"] for row in candidates}
     if len(identities) == 1:
         return next(iter(identities))
     if not identities:
+        # TMDB title offers can use a different name from its provider catalog
+        # (e.g. JustWatchTV / JustWatch TV). The verified title API supplies a
+        # TMDB ID; JustWatch clickout IDs belong to a different namespace.
+        api_ids = {offer.get("provider_id")
+                   for offer in (api_results.get(country, {}).get(stream_type, []) or [])
+                   if offer.get("provider_name") == name}
+        if len(api_ids) == 1:
+            identity = next(iter(api_ids))
+            if type(identity) is int and identity > 0 and any(
+                row["tmdb_id"] == identity for candidates in catalog.values() for row in candidates
+            ):
+                return identity
         return None
     api_ids = {offer.get("provider_id")
                for offer in (api_results.get(country, {}).get(stream_type, []) or [])
