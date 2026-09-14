@@ -1,53 +1,29 @@
-from datetime import datetime, time, timedelta
-import traceback
+from datetime import datetime, timezone
 from typing import Union
-from zoneinfo import ZoneInfo
+from email.utils import parsedate_to_datetime
+import time
 
-from google import genai # pin: google-api-python-client
-from google.genai import types # pin: google-genai
-from pydantic import TypeAdapter, ValidationError
-from rediscluster import RedisCluster # pin: redis-py-cluster
+from pydantic import ValidationError
+import requests
 import wmill
 
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.db.redis import RedisConnector
 from f.dna.models import DnaMovie, DnaTv, DNAAnalysis
+from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
-# Example input for The Matrix (1999)
-"""
-[{
-  "id": "68471cdd1f87b65f3388b42a",
-  "tmdb_id": 603,
-  "type": "movie"
-}]
-"""
-
-MAX_RETRIES_PER_MODEL = 2
-RPD_HEADROOM = 5
-PACIFIC_TIME = ZoneInfo("America/Los_Angeles")
-
-
-# model names: https://ai.google.dev/gemini-api/docs/models
-# rate limits: https://ai.google.dev/gemini-api/docs/rate-limits
-models = [{
-    "name": "gemini-2.5-flash",
-    "rpd": 60,
-}, {
-    "name": "gemini-3.6-flash",
-    # Soft guardrail. Keep this aligned with the limit shown in AI Studio.
-    "rpd": 100,
-}]
-#"gemini-2.5-flash-lite-preview-06-17" # bad results
+PRIMARY_MODEL = "qwen/qwen3.8-flash"
+FALLBACK_MODEL = "qwen/qwen3.7-flash"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 system_instructions = """
-You are **DNA-AI**, a media analysis model. Your sole purpose is to process a JSON array of movie and show titles and return a strictly schema-compliant JSON array of `MediaAnalysis` objects, in the same order.
+You are **DNA-AI**, a media analysis model. Your sole purpose is to process one movie or show title and return one strictly schema-compliant `MediaAnalysis` JSON object.
 
-Your entire response must be **ONLY the raw JSON array**, without any conversational text, markdown, or surrounding content.
+Your entire response must be **ONLY the raw JSON object**, without any conversational text, markdown, or surrounding content.
 
 ### **1. Output Schema & Rules**
 
-Your output MUST be a JSON array where each object strictly follows the `MediaAnalysis` TypeScript interface defined below.
+Your output MUST be a JSON object that strictly follows the `MediaAnalysis` TypeScript interface defined below.
 
 ```typescript
 export type MediaAnalysis = {
@@ -277,352 +253,305 @@ export type CoreScores = {
 
 **Your Response:**
 ```json
-[
-  {
-    "fingerprint": {
-      "scores": {
-        "adrenaline": 4, "tension": 6, "scare": 2, "violence": 4, "romance": 7, "eroticism": 8, "wholesome": 2, "wonder": 7, "pathos": 8, "melancholy": 5, "uncanny": 7, "catharsis": 6, "nostalgia": 1, "situational_comedy": 1, "wit_wordplay": 8, "physical_comedy": 4, "cringe_humor": 6, "absurdist_humor": 9, "satire_parody": 8, "dark_humor": 8, "fantasy": 6, "futuristic": 3, "historical": 6, "contemporary_realism": 0, "crime": 2, "mystery": 1, "warfare": 0, "political": 7, "sports": 0, "biographical": 0, "coming_of_age": 9, "family_dynamics": 8, "psychological": 8, "showbiz": 0, "gaming": 0, "pop_culture": 0, "social_commentary": 9, "class_and_capitalism": 7, "technology_and_humanity": 9, "spiritual": 3, "narrative_structure": 8, "dialogue_quality": 9, "character_depth": 9, "slow_burn": 7, "fast_pace": 5, "intrigue": 7, "complexity": 8, "rewatchability": 9, "hopefulness": 7, "bleakness": 5, "ambiguity": 5, "novelty": 10, "homage_and_reference": 3, "non_linear_narrative": 6, "meta_narrative": 1, "surrealism": 9, "eccentricity": 10, "philosophical": 7, "educational": 0, "direction": 10, "acting": 10, "cinematography": 10, "editing": 9, "music_composition": 8, "world_immersion": 9, "spectacle": 8, "visual_stylization": 10, "pastiche": 4, "psychedelic": 2, "grotesque": 7, "camp_and_irony": 8, "dialogue_centrality": 8, "music_centrality": 7, "sound_centrality": 8
-      },
-      "highlight_keys": [
-        "novelty",
-        "eccentricity",
-        "visual_stylization",
-        "acting",
-        "social_commentary",
-        "technology_and_humanity",
-        "coming_of_age",
-        "surrealism"
-      ]
+{
+  "fingerprint": {
+    "scores": {
+      "adrenaline": 4,
+      "tension": 6,
+      "scare": 2,
+      "violence": 4,
+      "romance": 7,
+      "eroticism": 8,
+      "wholesome": 2,
+      "wonder": 7,
+      "pathos": 8,
+      "melancholy": 5,
+      "uncanny": 7,
+      "catharsis": 6,
+      "nostalgia": 1,
+      "situational_comedy": 1,
+      "wit_wordplay": 8,
+      "physical_comedy": 4,
+      "cringe_humor": 6,
+      "absurdist_humor": 9,
+      "satire_parody": 8,
+      "dark_humor": 8,
+      "fantasy": 6,
+      "futuristic": 3,
+      "historical": 6,
+      "contemporary_realism": 0,
+      "crime": 2,
+      "mystery": 1,
+      "warfare": 0,
+      "political": 7,
+      "sports": 0,
+      "biographical": 0,
+      "coming_of_age": 9,
+      "family_dynamics": 8,
+      "psychological": 8,
+      "showbiz": 0,
+      "gaming": 0,
+      "pop_culture": 0,
+      "social_commentary": 9,
+      "class_and_capitalism": 7,
+      "technology_and_humanity": 9,
+      "spiritual": 3,
+      "narrative_structure": 8,
+      "dialogue_quality": 9,
+      "character_depth": 9,
+      "slow_burn": 7,
+      "fast_pace": 5,
+      "intrigue": 7,
+      "complexity": 8,
+      "rewatchability": 9,
+      "hopefulness": 7,
+      "bleakness": 5,
+      "ambiguity": 5,
+      "novelty": 10,
+      "homage_and_reference": 3,
+      "non_linear_narrative": 6,
+      "meta_narrative": 1,
+      "surrealism": 9,
+      "eccentricity": 10,
+      "philosophical": 7,
+      "educational": 0,
+      "direction": 10,
+      "acting": 10,
+      "cinematography": 10,
+      "editing": 9,
+      "music_composition": 8,
+      "world_immersion": 9,
+      "spectacle": 8,
+      "visual_stylization": 10,
+      "pastiche": 4,
+      "psychedelic": 2,
+      "grotesque": 7,
+      "camp_and_irony": 8,
+      "dialogue_centrality": 8,
+      "music_centrality": 7,
+      "sound_centrality": 8
     },
-    "is_anime": false,
-    "production_info": {
-      "method": "Live-Action"
-    },
-    "content_advisories": [
-      "Nudity",
-      "Sexual Content",
-      "Strong Language",
-      "Disturbing Imagery"
-    ],
-    "social_suitability": {
-      "solo_watch": true,
-      "date_night": false,
-      "group_party": false,
-      "family": false,
-      "partner": true,
-      "friends": true,
-      "kids": false,
-      "teens": false,
-      "adults": true,
-      "intergenerational": false,
-      "public_viewing_safe": true
-    },
-    "viewing_context": {
-      "is_thought_provoking": true,
-      "is_pure_escapism": false,
-      "is_background_friendly": false,
-      "is_comfort_watch": false,
-      "is_binge_friendly": false,
-      "is_drop_in_friendly": false
-    },
-    "essence_tags": [
-      "Surreal Dark Comedy",
-      "Feminist Coming-of-Age",
-      "Visually Extravagant",
-      "Gothic Sci-Fi Fantasy",
-      "Provocative & Unconventional",
-      "Bizarre & Humorous",
-      "Philosophical Satire",
-      "Outstanding Lead Performance",
-      "Art-House Sensibility"
-    ],
-    "essence_text": "A visually extravagant and surreal odyssey that blends dark comedy with a bizarre, feminist coming-of-age story. The film's audacious style and humor are its defining features, creating a world that is both grotesque and beautiful. Anchored by a remarkable, fearless central performance, it explores themes of freedom, identity, and societal constraint through a truly unconventional narrative. This is a rich, provocative, and thought-provoking experience that rewards both the senses and the intellect."
-  }
-]
+    "highlight_keys": [
+      "novelty",
+      "eccentricity",
+      "visual_stylization",
+      "acting",
+      "social_commentary",
+      "technology_and_humanity",
+      "coming_of_age",
+      "surrealism"
+    ]
+  },
+  "is_anime": false,
+  "production_info": {
+    "method": "Live-Action",
+    "animation_style": null
+  },
+  "content_advisories": [
+    "Nudity",
+    "Sexual Content",
+    "Strong Language",
+    "Disturbing Imagery"
+  ],
+  "social_suitability": {
+    "solo_watch": true,
+    "date_night": false,
+    "group_party": false,
+    "family": false,
+    "partner": true,
+    "friends": true,
+    "kids": false,
+    "teens": false,
+    "adults": true,
+    "intergenerational": false,
+    "public_viewing_safe": true
+  },
+  "viewing_context": {
+    "is_thought_provoking": true,
+    "is_pure_escapism": false,
+    "is_background_friendly": false,
+    "is_comfort_watch": false,
+    "is_binge_friendly": false,
+    "is_drop_in_friendly": false
+  },
+  "essence_tags": [
+    "Surreal Dark Comedy",
+    "Feminist Coming-of-Age",
+    "Visually Extravagant",
+    "Gothic Sci-Fi Fantasy",
+    "Provocative & Unconventional",
+    "Bizarre & Humorous",
+    "Philosophical Satire",
+    "Outstanding Lead Performance",
+    "Art-House Sensibility"
+  ],
+  "essence_text": "A visually extravagant and surreal odyssey that blends dark comedy with a bizarre, feminist coming-of-age story. The film's audacious style and humor are its defining features, creating a world that is both grotesque and beautiful. Anchored by a remarkable, fearless central performance, it explores themes of freedom, identity, and societal constraint through a truly unconventional narrative. This is a rich, provocative, and thought-provoking experience that rewards both the senses and the intellect."
+}
 ```
 """
 
-class ResultLengthMismatch(Exception):
-    pass
+def strict_schema():
+    schema = DNAAnalysis.model_json_schema()
+
+    def visit(node):
+        if isinstance(node, dict):
+            if node.get("type") == "object":
+                node["additionalProperties"] = False
+                node["required"] = list(node.get("properties", {}))
+            node.pop("default", None)
+            for value in node.values():
+                visit(value)
+        elif isinstance(node, list):
+            for value in node:
+                visit(value)
+
+    visit(schema)
+    return schema
 
 
-class LocalQuotaExhausted(Exception):
-    pass
-
-
-def get_quota_key(model_name: str) -> str:
-    today = datetime.now(PACIFIC_TIME).strftime("%Y%m%d")
-    return f"quota:{today}:{model_name}"
-
-
-def get_model_blocked_key(model_name: str) -> str:
-    return f"quota:blocked:{model_name}"
-
-
-def seconds_until_quota_reset() -> int:
-    now = datetime.now(PACIFIC_TIME)
-    tomorrow = now.date() + timedelta(days=1)
-    reset = datetime.combine(tomorrow, time.min, tzinfo=PACIFIC_TIME)
-    return max(1, int((reset - now).total_seconds()))
-
-
-def get_model_config(model_name: str) -> dict:
-    return next(model for model in models if model["name"] == model_name)
-
-
-def get_local_request_limit(model: dict) -> int:
-    return model["rpd"] - RPD_HEADROOM
-
-
-def model_has_local_quota(redis: RedisCluster, model: dict) -> bool:
-    model_name = model["name"]
-    if redis.get(get_model_blocked_key(model_name)):
-        print(f"Model {model_name} is blocked until the daily quota reset")
-        return False
-
-    used = int(redis.get(get_quota_key(model_name)) or 0)
-    quota_left = used < get_local_request_limit(model)
-    if quota_left:
-        print(
-            f"Model {model_name} has used {used}/{model['rpd']} "
-            "locally tracked requests today"
-        )
-    else:
-        print(f"Model {model_name} reached its local daily request guardrail")
-    return quota_left
-
-
-def reserve_model_request(redis: RedisCluster, model_name: str):
-    model = get_model_config(model_name)
-    quota_key = get_quota_key(model_name)
-    used = redis.incrby(quota_key, 1)
-    if used <= get_local_request_limit(model):
-        return
-
-    redis.decrby(quota_key, 1)
-    raise LocalQuotaExhausted(
-        f"Model {model_name} reached its local daily request guardrail"
+def request_dna(api_key, model, messages):
+    response_format = {"type": "json_object"}
+    if model == PRIMARY_MODEL:
+        response_format = {
+            "type": "json_schema",
+            "json_schema": {"name": "DNAAnalysis", "strict": True, "schema": strict_schema()},
+        }
+    response = requests.post(
+        OPENROUTER_URL,
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={
+            "model": model,
+            "messages": messages,
+            "response_format": response_format,
+            "provider": {"only": ["alibaba"], "allow_fallbacks": False, "require_parameters": True},
+            "reasoning": {"enabled": False},
+            "max_tokens": 8192,
+        },
+        timeout=(10, 120),
+        allow_redirects=False,
     )
-
-
-def error_has_daily_quota_violation(error: Exception) -> bool:
-    details = getattr(error, "details", {})
-    error_details = details.get("error", details).get("details", [])
-    for detail in error_details:
-        for violation in detail.get("violations", []):
-            if "PerDay" in violation.get("quotaId", ""):
-                return True
-    return False
-
-
-def block_model_until_quota_reset(redis: RedisCluster, model_name: str):
-    redis.setex(
-        get_model_blocked_key(model_name),
-        seconds_until_quota_reset(),
-        1,
-    )
-
-
-def create_prompt(next_entries: list[Union[DnaMovie, DnaTv]]):
-    combined_prompt_parts = []
-    for index, next_entry in enumerate(next_entries):
-        media_type = "Movie" if isinstance(next_entry, DnaMovie) else "Show"
-        title = str(next_entry.original_title)
-        release_year = str(next_entry.release_year)
-        overview = str(next_entry.overview)
-        
-        combined_prompt_parts.append(f"{index+1}. {title} ({release_year}) - {media_type}: {overview}")
-    
-    final_prompt = "\n".join(combined_prompt_parts)
-    return final_prompt
-
-
-def generate_json_response(client: genai.Client, redis: RedisCluster, model_name: str, prompt: str) -> str:
-    reserve_model_request(redis=redis, model_name=model_name)
     try:
-        response = client.models.generate_content(
-            model=model_name,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instructions,
-                response_mime_type='application/json',
-            ),
-            contents=prompt,
-        )
-        usage = response.usage_metadata
-        if usage:
-            print(
-                f"Token usage for {model_name}: "
-                f"input={usage.prompt_token_count or 0}, "
-                f"output={usage.candidates_token_count or 0}, "
-                f"thinking={usage.thoughts_token_count or 0}, "
-                f"total={usage.total_token_count or 0}"
-            )
-
-        if (
-            response.candidates
-            and response.candidates[0].content
-            and response.candidates[0].content.parts
-            and response.candidates[0].content.parts[0].text
-        ):
-            return response.candidates[0].content.parts[0].text
-        else:
-            print(f"Error: No valid text part found in response from {model_name}.")
-            print(f"Full response object: {response}")
-            raise ValueError(f"Invalid response structure from LLM '{model_name}'.")
-
-    except Exception:
-        print(f"An API error occurred while calling model {model_name}.")
-        raise
+        payload = response.json()
+        usage = payload.get("usage") or {}
+        print(f"OpenRouter {model} usage.cost={usage.get('cost')}")
+        response.raise_for_status()
+        if payload.get("error"):
+            response.status_code = int(payload["error"].get("code", 502))
+            raise requests.HTTPError(f"OpenRouter error {response.status_code}", response=response)
+        content = payload["choices"][0]["message"]["content"]
+        return content if isinstance(content, str) else ""
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError) as error:
+        response.raise_for_status()
+        raise ValueError("Malformed OpenRouter response") from error
 
 
-def validate_and_parse_json(json_string: str, requested_count: int) -> list[DNAAnalysis]:
-    DNAAnalysislist = TypeAdapter(list[DNAAnalysis])
-    validated_results = DNAAnalysislist.validate_json(json_string)
-
-    if requested_count != len(validated_results):
-        raise ResultLengthMismatch(f"Warning: Mismatch in lengths. Requested Count: {requested_count}, Result Count: {len(validated_results)}")
-
-    return validated_results
-
-
-def ask_ai(client: genai.Client, redis: RedisCluster, model_name: str, next_entries: list[Union[DnaMovie, DnaTv]]) -> list[dict]:
-    user_message = create_prompt(next_entries=next_entries)
-    current_prompt = user_message
-
-    print(f"\n--- Trying Model: {model_name} ---")
-    for attempt in range(MAX_RETRIES_PER_MODEL):
-        print(f"Attempt {attempt + 1} of {MAX_RETRIES_PER_MODEL}...")
-        
-        generated_json = ""
+def retry_delay(response, retry_index):
+    retry_after = response.headers.get("Retry-After") if response is not None else None
+    if retry_after:
         try:
-            generated_json = generate_json_response(client, redis, model_name, current_prompt)
-            validated_results = validate_and_parse_json(generated_json, len(next_entries))
-            
-            print(f"✅ Success! Valid JSON received")
-            return [result.model_dump() for result in validated_results]
-
-        except ValidationError as e:
-            print(f"⚠️ Pydantic validation failed for {model_name} on attempt {attempt + 1}")
-            current_prompt = (
-                f"The previous attempt to generate JSON failed validation. "
-                f"You must correct the JSON structure and/or data types to fix the errors.\n\n"
-                f"Original User Request: {user_message}\n\n"
-                f"Faulty JSON You Provided:\n{generated_json}\n\n"
-                f"Here are the validation errors you must fix:\n{e}\n\n"
-                f"Please provide only the corrected, complete, and valid JSON object as a direct response."
-            )
-            print(current_prompt)
-
-        except ResultLengthMismatch as e:
-            print(f"⚠️ Length validation failed for {model_name} on attempt {attempt + 1}")
-            current_prompt = (
-                f"The previous attempt to generate JSON failed validation. "
-                f"You must correct the number of results to fix the errors.\n\n"
-                f"Original User Request: {user_message}\n\n"
-                f"Faulty JSON You Provided:\n{generated_json}\n\n"
-                f"Here are the validation errors you must fix:\n{e}\n\n"
-                f"Please provide only the corrected, complete, and valid JSON object as a direct response."
-            )
-            print(current_prompt)
-
-        except Exception as e:
-            error_code = getattr(e, "code", None)
-            if (
-                isinstance(error_code, int)
-                and 500 <= error_code < 600
-                and attempt + 1 < MAX_RETRIES_PER_MODEL
-            ):
-                print(f"⚠️ Server error from {model_name}; retrying once")
-                continue
-
-            print(f"❌ An unrecoverable error occurred with model {model_name}: {e}")
-            if error_code not in (404, 429):
-                traceback.print_exc()
-            raise
-
-    raise Exception("No model was able to provide a valid response after all retries.")
+            return max(0, int(retry_after))
+        except ValueError:
+            try:
+                return max(0, (parsedate_to_datetime(retry_after) - datetime.now(timezone.utc)).total_seconds())
+            except (ValueError, TypeError, OverflowError):
+                pass
+    return 2 ** retry_index
 
 
-def store_result(next_entry: Union[DnaMovie, DnaTv], dna: dict, model_name: str):
-    print(f"saving DNA for {next_entry.original_title} ({next_entry.release_year})")
-
-    next_entry.llm_model_name = model_name
-    next_entry.dna = dna
-    next_entry.save()
+def is_premium(entry):
+    if (entry.popularity or 0) >= 1.0:
+        return True
+    model, field = ((TmdbMovieDetails, "release_date") if isinstance(entry, DnaMovie)
+                    else (TmdbTvDetails, "first_air_date"))
+    details = model.objects(tmdb_id=entry.tmdb_id).only(field).first()
+    released = getattr(details, field, None)
+    today = datetime.now(timezone.utc).date()
+    try:
+        cutoff = today.replace(year=today.year - 1)
+    except ValueError:  # February 29 in a leap year.
+        cutoff = today.replace(year=today.year - 1, day=28)
+    return released is not None and cutoff <= released <= today
 
 
 def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
-    print("Generate DNA via Gemini")
-
-    rc = RedisConnector()
-    redis = rc.get_redis()
-
-    api_key = wmill.get_variable("u/Alp/GEMINI_API_KEY")
-    client = genai.Client(api_key=api_key)
-
     if not next_entries:
-        print(f"warning: no entries to fetch for DNA")
-        return
-
-    print("next entries are:")
-    for next_entry in next_entries:
-        print(
-            f"{next_entry.original_title} (popularity: {next_entry.popularity})"
-        )
-
-    last_error = None
-    for model in models:
-        model_name = model["name"]
-        if not model_has_local_quota(redis=redis, model=model):
+        return []
+    api_key = wmill.get_variable("u/Alp/OPENROUTER_API_KEY")
+    results = []
+    for entry in next_entries:
+        model = PRIMARY_MODEL if is_premium(entry) else FALLBACK_MODEL
+        media_type = "Movie" if isinstance(entry, DnaMovie) else "Show"
+        messages = [
+            {"role": "system", "content": system_instructions},
+            {"role": "user", "content": f"{entry.original_title} ({entry.release_year}) - {media_type}: {entry.overview}"},
+        ]
+        request_count = 0
+        first_model = model
+        for model in (first_model, FALLBACK_MODEL if first_model == PRIMARY_MODEL else PRIMARY_MODEL):
+            model_messages = messages
+            repairs = 0
+            transport_retries = 0
+            dna = None
+            while request_count < 6:
+                request_count += 1
+                raw = ""
+                try:
+                    raw = request_dna(api_key, model, model_messages)
+                except requests.RequestException as error:
+                    last_error = error
+                    status = error.response.status_code if error.response is not None else None
+                    # Let the spend-pause flow handle budget/account failures.
+                    if status in (401, 402, 403):
+                        raise
+                    if status in (429, 502, 503) and transport_retries < 2 and request_count < 6:
+                        time.sleep(retry_delay(error.response, transport_retries))
+                        transport_retries += 1
+                        continue
+                    break
+                except ValueError as error:
+                    last_error = error
+                    break
+                try:
+                    dna = DNAAnalysis.model_validate_json(raw, strict=True).model_dump()
+                    if any(not 0 <= score <= 10 for score in dna["fingerprint"]["scores"].values()):
+                        dna = None
+                        raise ValueError("Fingerprint scores must be integers from 0 to 10")
+                    break
+                except (ValidationError, ValueError) as error:
+                    last_error = error
+                    if repairs == 1:
+                        break
+                    repairs += 1
+                    model_messages = messages + [
+                        {"role": "assistant", "content": raw},
+                        {"role": "user", "content": f"Correct these validation errors and return the complete JSON object: {error}"},
+                    ]
+            if dna is not None:
+                break
+        else:
+            entry.failed_at = datetime.now(timezone.utc)
+            entry.error_message = f"Generation failed after {request_count} requests: {last_error}"
+            entry.is_selected = False
+            entry.save()
             continue
-
-        try:
-            results = ask_ai(
-                client=client,
-                redis=redis,
-                model_name=model_name,
-                next_entries=next_entries,
-            )
-        except LocalQuotaExhausted as error:
-            last_error = error
-            continue
-        except Exception as error:
-            last_error = error
-            error_code = getattr(error, "code", None)
-            if error_code == 429:
-                if error_has_daily_quota_violation(error):
-                    block_model_until_quota_reset(redis, model_name)
-                print(f"Quota exhausted for {model_name}; trying the next model")
-                continue
-            if error_code == 404:
-                print(f"Model {model_name} is unavailable; trying the next model")
-                continue
-
-            print(f"Model {model_name} failed; trying the next model")
-            continue
-
-        for index, next_entry in enumerate(next_entries):
-            result = results[index]
-            store_result(next_entry=next_entry, dna=result, model_name=model_name)
-
-        return results
-
-    raise Exception("No configured model was able to generate DNA") from last_error
+        entry.failed_at = None
+        entry.error_message = None
+        entry.llm_model_name = f"openrouter:{model}@alibaba"
+        entry.dna = dna
+        entry.save()
+        results.append({"id": str(entry.id), "dna": dna})
+    return results
 
 
 def main(next_ids: list[dict] = [{
-  "id": "68471cdd1f87b65f3388b42a",
-  "tmdb_id": 603,
-  "type": "movie",
+    "id": "68471cdd1f87b65f3388b42a",
+    "tmdb_id": 603,
+    "type": "movie",
 }]):
     init_mongodb()
-    next_entries = []
-    for next_id in next_ids:
-        next_entries.append(get_document_for_id(
-            next_id=next_id,
-            movie_model=DnaMovie,
-            tv_model=DnaTv,
-        ))
-    result = generate_dna(next_entries)
-    close_mongodb()
-    return result
+    try:
+        entries = [get_document_for_id(next_id=item, movie_model=DnaMovie, tv_model=DnaTv)
+                   for item in next_ids]
+        return generate_dna(entries)
+    finally:
+        close_mongodb()
