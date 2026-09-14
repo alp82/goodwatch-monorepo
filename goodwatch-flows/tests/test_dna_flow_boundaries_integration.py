@@ -87,7 +87,13 @@ class DNAFlowBoundaries(unittest.TestCase):
 
     def test_priority_crawl_publishes_without_generating_dna(self):
         called = self.run_boundary("f/priority/crawl_all")
-        self.assertIn("f/priority/publish", called)
+        for path in (
+            "f/tmdb_api/tmdb_fetch_details_from_api/fetch",
+            "f/imdb_web/crawl_all_by_id", "f/metacritic_web/crawl_all_by_id",
+            "f/rotten_web/crawl_all_by_id", "f/tvtropes_web/crawl_all_by_id",
+            "f/tmdb_web/crawl_all_by_id", "f/priority/publish",
+        ):
+            self.assertIn(path, called)
         self.assertIn("f/priority/reset", called)
         self.assertFalse([path for path in called if path.startswith("f/dna/")], called)
 
