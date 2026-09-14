@@ -325,29 +325,17 @@ def copy_media(
                 goodwatch_official_score_review_count=goodwatch_official_score_review_count,
                 goodwatch_overall_score_normalized_percent=goodwatch_overall_score_normalized_percent,
                 goodwatch_overall_score_voting_count=goodwatch_overall_score_voting_count,
-                # Metadata timestamps
-                imdb_ratings_created_at=to_timestamp(imdb_rating["created_at"])
-                if imdb_rating
-                else None,
-                imdb_ratings_updated_at=to_timestamp(imdb_rating["updated_at"])
-                if imdb_rating
-                else None,
-                metacritic_ratings_created_at=to_timestamp(meta_rating["created_at"])
-                if meta_rating
-                else None,
-                metacritic_ratings_updated_at=to_timestamp(meta_rating["updated_at"])
-                if meta_rating
-                else None,
+                # Source records can exist before their first completed crawl.
+                imdb_ratings_created_at=to_timestamp(imdb_rating.get("created_at")),
+                imdb_ratings_updated_at=to_timestamp(imdb_rating.get("updated_at")),
+                metacritic_ratings_created_at=to_timestamp(meta_rating.get("created_at")),
+                metacritic_ratings_updated_at=to_timestamp(meta_rating.get("updated_at")),
                 rotten_tomatoes_ratings_created_at=to_timestamp(
-                    rotten_rating["created_at"]
-                )
-                if rotten_rating
-                else None,
+                    rotten_rating.get("created_at")
+                ),
                 rotten_tomatoes_ratings_updated_at=to_timestamp(
-                    rotten_rating["updated_at"]
-                )
-                if rotten_rating
-                else None,
+                    rotten_rating.get("updated_at")
+                ),
             )
 
             media_documents.append(media)
