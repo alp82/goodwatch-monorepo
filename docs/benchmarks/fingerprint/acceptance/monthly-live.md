@@ -12,7 +12,7 @@ The deployed spend-pause handler recognized the exact response and created a `mo
 
 The earlier successful probe is explained by the owner-reported $0.10 setting exceeding recorded usage; the $0.01 setting now rejects the correctly assigned key. This closes the provider-wording uncertainty. Prior unrelated-403 rejection evidence remains in [permission-evidence.json](permission-evidence.json).
 
-**Cleanup pending:** the owner must restore the monthly guardrail to $30 and confirm it is saved, then the agent will remove this test-created monthly pause. No benchmark selection timestamps or DNA were changed during this test. Cost reconciliation from earlier acceptance requests remains separate and open.
+**Cleanup complete:** the owner confirmed restoring the monthly guardrail to $30. [The test-created monthly pause was removed](monthly-live-cleanup-job.json), and Redis reports no active pause. The generation schedule remains disabled. No benchmark selection timestamps or DNA were changed during this test. Cost reconciliation from earlier acceptance requests remains separate and open.
 
 ---
 
