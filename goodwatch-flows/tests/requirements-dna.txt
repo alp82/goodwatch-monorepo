@@ -1,7 +1,8 @@
-# Generation tests use the real schema/ODM and an in-memory MongoDB boundary.
+# Generation tests use the generator's dependency set and an in-memory MongoDB.
+# Windmill resolves each script separately; combining multiple complete lockfiles
+# can require contradictory versions of their shared transitive dependencies.
 -r ../windmill/f/dna/generate/fetch.script.lock
--r ../windmill/f/dna/generate/vectors.script.lock
 mongomock==4.3.0
-fakeredis[lua]==1.10.2
+fakeredis[lua]==2.26.2
 freezegun==1.5.5
 PyYAML==6.0.3

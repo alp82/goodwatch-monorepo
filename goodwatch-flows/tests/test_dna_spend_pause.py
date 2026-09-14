@@ -84,7 +84,8 @@ class SpendPauseTest(unittest.TestCase):
         self.start_patch('f.db.redis.RedisCluster', return_value=self.redis)
         self.start_patch('f.db.mongodb.connect')
         self.start_patch('f.db.mongodb.disconnect')
-        self.secret = self.start_patch('wmill.get_variable', return_value='test-secret')
+        self.secret = self.start_patch('wmill.get_variable', side_effect=lambda name:
+            '6379' if name == 'u/Alp/REDIS_PORT' else 'test-secret')
         self.post = self.start_patch('requests.post')
         self.dna = json.loads((Path(__file__).parent / 'fixtures/dna.json').read_text())
 

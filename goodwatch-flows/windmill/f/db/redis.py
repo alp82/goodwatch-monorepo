@@ -1,13 +1,15 @@
-from rediscluster import RedisCluster # pin: redis-py-cluster
+# extra_requirements:
+# redis==5.2.1
+from redis.cluster import ClusterNode, RedisCluster
 import wmill
 
 
 class RedisConnector:
     def __init__(self) -> None:
         hosts = wmill.get_variable("u/Alp/REDIS_HOSTS")
-        port = wmill.get_variable("u/Alp/REDIS_PORT")
+        port = int(wmill.get_variable("u/Alp/REDIS_PORT"))
         redis_pass = wmill.get_variable("u/Alp/REDIS_PASS")
-        startup_nodes = [{"host": host, "port": port} for host in hosts.split(",")]
+        startup_nodes = [ClusterNode(host.strip(), port) for host in hosts.split(",") if host.strip()]
         self.r = RedisCluster(
             startup_nodes=startup_nodes,
             password=redis_pass,

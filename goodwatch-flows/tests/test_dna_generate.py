@@ -37,7 +37,8 @@ class OpenRouterGenerationTest(unittest.TestCase):
         self.dna = json.loads((Path(__file__).parent / 'fixtures/dna.json').read_text())
         self.post = self.start_patch('requests.post')
         self.start_patch('f.db.redis.RedisCluster', return_value=fakeredis.FakeRedis())
-        self.start_patch('wmill.get_variable', return_value='test-key')
+        self.start_patch('wmill.get_variable', side_effect=lambda name:
+            '6379' if name == 'u/Alp/REDIS_PORT' else 'test-key')
         self.output = self.start_patch('sys.stdout', new_callable=io.StringIO)
 
     def start_patch(self, target, **kwargs):
