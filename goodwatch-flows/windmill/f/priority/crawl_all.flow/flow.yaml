@@ -15,9 +15,6 @@ value:
         path: f/priority/next
         tag_override: null
     - id: i
-      timeout:
-        type: static
-        value: 600
       value:
         type: script
         input_transforms:
@@ -28,25 +25,22 @@ value:
         tag_override: null
       continue_on_error: false
       retry:
-        constant:
-          attempts: 0
-          seconds: 0
         exponential:
           attempts: 5
           multiplier: 1
           random_factor: 0
           seconds: 2
-    - id: b
       timeout:
         type: static
-        value: 1800
+        value: 600
+    - id: b
       summary: ''
       value:
         type: branchall
         branches:
           - summary: IMDB
             modules:
-              - id: 'n'
+              - id: n
                 value:
                   type: script
                   input_transforms:
@@ -57,9 +51,6 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
-                  constant:
-                    attempts: 0
-                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -93,9 +84,6 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
-                  constant:
-                    attempts: 0
-                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -129,9 +117,6 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
-                  constant:
-                    attempts: 0
-                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -165,9 +150,6 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
-                  constant:
-                    attempts: 0
-                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -201,9 +183,6 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
-                  constant:
-                    attempts: 0
-                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -224,53 +203,11 @@ value:
             expr: ''
             parallel: true
             skip_failure: false
-          - summary: DNA
-            modules:
-              - id: ae
-                summary: Skip DNA
-                value:
-                  type: rawscript
-                  content: '!inline skip_dna.inline_script.py'
-                  input_transforms: {}
-                  lock: '!inline skip_dna.inline_script.lock'
-                  language: python3
-              - id: ab
-                value:
-                  type: script
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.g.ids
-                  is_trigger: false
-                  path: f/dna/init/update
-              - id: ac
-                value:
-                  type: flow
-                  input_transforms:
-                    next_ids:
-                      type: javascript
-                      expr: results.ab
-                  path: f/dna/crawl_all_by_id
-              - id: ad
-                value:
-                  type: script
-                  input_transforms:
-                    ids:
-                      type: javascript
-                      expr: results.ab
-                    results:
-                      type: javascript
-                      expr: results.ac
-                  is_trigger: false
-                  path: f/dna/generate/vectors
-            expr: 'false'
-            parallel: true
-            skip_failure: true
         parallel: true
-    - id: o
       timeout:
         type: static
-        value: 600
+        value: 1800
+    - id: o
       summary: Publish crawled titles to CrateDB
       value:
         type: script
@@ -280,7 +217,10 @@ value:
             expr: results.g.tmdb_ids
         path: f/priority/publish
       continue_on_error: false
-    - id: 'y'
+      timeout:
+        type: static
+        value: 600
+    - id: y
       value:
         type: script
         input_transforms:
@@ -292,9 +232,8 @@ value:
             expr: results.o
         path: f/priority/reset
         tag_override: null
-  concurrency_time_window_s: 0
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   order:
     - movie_tmdb_id
