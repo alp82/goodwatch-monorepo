@@ -105,6 +105,56 @@ class OpenRouterGenerationTest(unittest.TestCase):
         self.assertIn('{"unknown": true}', json.dumps(payloads[1]['messages']).replace('\\"', '"'))
         self.assertIn('0.002', self.output.getvalue())
 
+    def test_unknown_highlight_keys_are_repaired_before_persistence(self):
+        for popularity in [1.0, 0.5]:
+            for invalid_key in ['action_core_scores_placeholder_check', 'erotica']:
+                with self.subTest(popularity=popularity, invalid_key=invalid_key):
+                    self.post.reset_mock()
+                    movie = self.title(popularity=popularity, dna=self.dna)
+                    invalid = json.loads(json.dumps(self.dna))
+                    invalid['fingerprint']['highlight_keys'][0] = invalid_key
+                    bad_response = response({'choices': [{'message': {'content': json.dumps(invalid)}}]})
+
+                    def respond(*args, **kwargs):
+                        self.assertEqual(movie.reload().dna, self.dna)
+                        if self.post.call_count == 1:
+                            return bad_response
+                        self.assertIn(invalid_key, kwargs['json']['messages'][-1]['content'])
+                        return self.success()
+
+                    self.post.side_effect = respond
+                    self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
+                    expected_model = PRIMARY if popularity == 1.0 else FALLBACK
+                    self.assertEqual([c.kwargs['json']['model'] for c in self.post.call_args_list],
+                                     [expected_model, expected_model])
+                    self.assertEqual(movie.reload().dna, self.dna)
+
+    def test_unknown_highlights_use_bounded_repairs_and_preserve_prior_dna_on_failure(self):
+        for popularity, models in [(1.0, [PRIMARY, PRIMARY, FALLBACK, FALLBACK]),
+                                   (0.5, [FALLBACK, FALLBACK, PRIMARY, PRIMARY])]:
+            for recovers in [True, False]:
+                with self.subTest(popularity=popularity, recovers=recovers):
+                    self.post.reset_mock()
+                    movie = self.title(popularity=popularity, dna=self.dna, is_selected=True)
+                    invalid = json.loads(json.dumps(self.dna))
+                    invalid['fingerprint']['highlight_keys'][0] = 'erotica'
+                    bad_response = response({'choices': [{'message': {'content': json.dumps(invalid)}}]})
+                    self.post.side_effect = ([bad_response, bad_response, self.success()]
+                                             if recovers else [bad_response] * 4)
+                    result = fetch.generate_dna([movie])
+                    movie.reload()
+                    self.assertEqual(movie.dna, self.dna)
+                    if recovers:
+                        self.assertEqual(result, [{'id': str(movie.id), 'dna': self.dna}])
+                        self.assertEqual(movie.llm_model_name, f'openrouter:{models[2]}@alibaba')
+                    else:
+                        self.assertEqual(result, [])
+                        self.assertIsNotNone(movie.failed_at)
+                        self.assertIn('erotica', movie.error_message)
+                        self.assertFalse(movie.is_selected)
+                    self.assertEqual([c.kwargs['json']['model'] for c in self.post.call_args_list],
+                                     models[:3] if recovers else models)
+
     def test_exhausted_repairs_switch_models_in_both_directions(self):
         for popularity, expected in [(1.0, [PRIMARY, PRIMARY, FALLBACK]),
                                       (0.5, [FALLBACK, FALLBACK, PRIMARY])]:
