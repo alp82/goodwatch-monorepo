@@ -524,10 +524,14 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
                 try:
                     dna = DNAAnalysis.model_validate_json(raw, strict=True).model_dump()
                     if any(not 0 <= score <= 10 for score in dna["fingerprint"]["scores"].values()):
-                        dna = None
                         raise ValueError("Fingerprint scores must be integers from 0 to 10")
+                    unknown_highlights = sorted(set(dna["fingerprint"]["highlight_keys"])
+                                                - dna["fingerprint"]["scores"].keys())
+                    if unknown_highlights:
+                        raise ValueError(f"Highlight keys must be score keys; unknown keys: {unknown_highlights}")
                     break
                 except (ValidationError, ValueError) as error:
+                    dna = None
                     last_error = error
                     if repairs == 1:
                         break
