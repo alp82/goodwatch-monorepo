@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import mongomock
+import fakeredis
 import requests
 from mongoengine import connect, disconnect
 
@@ -35,6 +36,7 @@ class OpenRouterGenerationTest(unittest.TestCase):
         self.addCleanup(disconnect)
         self.dna = json.loads((Path(__file__).parent / 'fixtures/dna.json').read_text())
         self.post = self.start_patch('requests.post')
+        self.start_patch('f.db.redis.RedisCluster', return_value=fakeredis.FakeRedis())
         self.start_patch('wmill.get_variable', return_value='test-key')
         self.output = self.start_patch('sys.stdout', new_callable=io.StringIO)
 
@@ -163,8 +165,8 @@ class OpenRouterGenerationTest(unittest.TestCase):
                 self.assertIsNotNone(movie.failed_at)
                 self.assertTrue(movie.error_message)
 
-    def test_budget_and_authorization_errors_propagate_without_title_failure_or_fallback(self):
-        for status in [402, 403]:
+    def test_authorization_errors_propagate_without_title_failure_or_fallback(self):
+        for status in [401, 403]:
             for embedded in [False, True]:
                 with self.subTest(status=status, embedded=embedded):
                     self.post.reset_mock()

@@ -1,0 +1,9 @@
+summary: Shared OpenRouter spend pause
+description: Coordinate daily and monthly spend pauses across DNA selection and fetch jobs.
+lock: '!inline f/dna/generate/spend_pause.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

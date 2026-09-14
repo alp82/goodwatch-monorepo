@@ -64,3 +64,36 @@ python -m venv /tmp/goodwatch-dna-tests
 /tmp/goodwatch-dna-tests/bin/pip install -r tests/requirements-dna.txt
 /tmp/goodwatch-dna-tests/bin/python -m unittest discover -s tests -p 'test_dna_*.py'
 ```
+
+These tests include the checked-in `f/dna/generate_dna` and nested
+`f/dna/crawl_all_by_id` wiring with fake HTTP, Redis, and MongoDB services.
+The local driver resolves their dotted input expressions and runs loop iterations
+sequentially; it does not emulate the Windmill runtime or its parallel scheduler.
+Real Windmill validation remains part of
+[Run the acceptance criteria on the ten benchmark titles](https://github.com/alp82/goodwatch-monorepo/issues/39).
+
+### Spend pause
+
+DNA selection and fetch jobs share the Redis key `dna:openrouter:spend_pause`.
+An OpenRouter 402 pauses generation until the next UTC midnight. An explicit
+monthly-budget exhaustion message in a 403 pauses it until the first of the next
+month at UTC midnight, matching the provisioned monthly guardrail. This includes
+error codes embedded in HTTP 200 responses. The monthly classifier requires both
+`monthly` and `budget ... exceeded`, `budget ... exhausted`, or `budget ... reached`
+in the top-level error message. Unknown 403s continue to fail visibly, including
+budget errors that do not name the supported interval.
+
+[OpenRouter documents budget and access rejections as 403](https://openrouter.ai/docs/guides/features/guardrails/overview),
+but does not specify a stable guardrail budget-error message schema there.
+The classifier therefore needs checking against the actual guardrail response
+during acceptance; it must not treat every 403 as a spending limit.
+
+Concurrent workers check the key before every generation request, including
+repairs and retries. Requests already in flight can finish. A shorter pause cannot
+overwrite a longer one. Unprocessed titles have `is_selected` and `selected_at`
+cleared; completed DNA continues through embeddings. Runs starting while paused
+return zero embeddings without accessing MongoDB or either inference service.
+
+The key expires automatically. If the owner changes the provider budget before
+the deadline, deleting this key from the configured Redis cluster allows selection
+to resume. Redis errors remain visible rather than permitting unguarded inference.

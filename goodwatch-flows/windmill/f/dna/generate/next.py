@@ -1,6 +1,7 @@
 from f.data_source.common import retrieve_next_entry_ids_full
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.dna.models import DnaMovie, DnaTv
+from f.dna.generate.spend_pause import SpendPause
 
 
 BATCH_SIZE = 100
@@ -8,6 +9,11 @@ BUFFER_SELECTED_AT_MINUTES = 60
 
 
 def main():
+    if SpendPause().is_active():
+        return {
+            "ids": {"movie_ids": [], "tv_ids": []},
+            "tmdb_ids": {"movie_ids": [], "tv_ids": []},
+        }
     init_mongodb()
     result = retrieve_next_entry_ids_full(
         count=BATCH_SIZE,

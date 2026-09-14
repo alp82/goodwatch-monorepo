@@ -7,6 +7,8 @@ DNA_CHUNK_SIZE = 5
 
 
 def main(next_ids: dict):
+    if not next_ids.get("movie_ids") and not next_ids.get("tv_ids"):
+        return []
     init_mongodb()
     next_entries = get_documents_for_ids(
         next_ids=next_ids,
