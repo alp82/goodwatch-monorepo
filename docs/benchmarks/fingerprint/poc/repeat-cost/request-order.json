@@ -1,0 +1,102 @@
+[
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "show:1399",
+    "source": "0049"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "show:1396",
+    "source": "0071"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:603",
+    "source": "0046"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:150540",
+    "source": "0045"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "movie:150540",
+    "source": "0011"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:249042",
+    "source": "0025"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "movie:603",
+    "source": "0088"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:64230",
+    "source": "0098"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:1396",
+    "source": "0077"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:42009",
+    "source": "0030"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "show:249042",
+    "source": "0058"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "movie:550",
+    "source": "0039"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "movie:1233066",
+    "source": "0073"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:1233066",
+    "source": "0094"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "movie:545611",
+    "source": "0084"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:1399",
+    "source": "0092"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "show:64230",
+    "source": "0009"
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "benchmark_id": "show:42009",
+    "source": "0074"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:550",
+    "source": "0082"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:545611",
+    "source": "0080"
+  }
+]

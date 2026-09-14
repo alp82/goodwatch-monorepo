@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789409885-fxAUqBZwYQGgWqXjxevx",
+  "object": "chat.completion",
+  "created": 1789409885,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n  \"benchmark_id\": \"show:1399\",\n  \"analysis\": {\n   \"fingerprint\": {\n   \"scores\": {\n   \"adrenaline\": 8,\n   \"tension\": 9,\n   \"scare\": 6,\n   \"violence\": 10,\n   \"romance\": 7,\n   \"eroticism\": 6,\n   \"wholesome\": 2,\n   \"wonder\": 8,\n   \"pathos\": 8,\n   \"melancholy\": 7,\n   \"uncanny\": 4,\n   \"catharsis\": 5,\n   \"nostalgia\": 3,\n   \"situational_comedy\": 2,\n   \"wit_wordplay\": 8,\n   \"physical_comedy\": 1,\n   \"cringe_humor\": 1,\n   \"absurdist_humor\": 1,\n   \"satire_parody\": 3,\n   \"dark_humor\": 5,\n   \"fantasy\": 10,\n   \"futuristic\": 0,\n   \"historical\": 0,\n   \"contemporary_realism\": 0,\n   \"crime\": 5,\n   \"mystery\": 7,\n   \"warfare\": 9,\n   \"political\": 10,\n   \"sports\": 0,\n   \"biographical\": 0,\n   \"coming_of_age\": 7,\n   \"family_dynamics\": 9,\n   \"psychological\": 8,\n   \"showbiz\": 0,\n   \"gaming\": 0,\n   \"pop_culture\": 8,\n   \"social_commentary\": 7,\n   \"class_and_capitalism\": 6,\n   \"technology_and_humanity\": 2,\n   \"spiritual\": 6,\n   \"narrative_structure\": 8,\n   \"dialogue_quality\": 9,\n   \"character_depth\": 9,\n   \"slow_burn\": 7,\n   \"fast_pace\": 6,\n   \"intrigue\": 10,\n   \"complexity\": 9,\n   \"rewatchability\": 7,\n   \"hopefulness\": 3,\n   \"bleakness\": 8,\n   \"ambiguity\": 6,\n   \"novelty\": 8,\n   \"homage_and_reference\": 2,\n   \"non_linear_narrative\": 3,\n   \"meta_narrative\": 1,\n   \"surrealism\": 2,\n   \"eccentricity\": 4,\n   \"philosophical\": 6,\n   \"educational\": 1,\n   \"direction\": 9,\n   \"acting\": 9,\n   \"cinematography\": 9,\n   \"editing\": 8,\n   \"music_composition\": 10,\n   \"world_immersion\": 10,\n   \"spectacle\": 9,\n   \"visual_stylization\": 7,\n   \"pastiche\": 2,\n   \"psychedelic\": 1,\n   \"grotesque\": 7,\n   \"camp_and_irony\": 2,\n   \"dialogue_centrality\": 9,\n   \"music_centrality\": 9,\n   \"sound_centrality\": 8\n   },\n   \"highlight_keys\": [\n   \"political\",\n   \"fantasy\",\n   \"world_immersion\",\n   \"music_composition\",\n   \"violence\",\n   \"character_depth\",\n   \"intrigue\",\n   \"family_dynamics\"\n   ]\n   },\n   \"is_anime\": false,\n   \"production_info\": {\n   \"method\": \"Live-Action\",\n   \"animation_style\": null\n   },\n   \"content_advisories\": [\n   \"Violence\",\n   \"Nudity\",\n   \"Sexual Content\",\n   \"Strong Language\",\n   \"Drug Use\",\n   \"Disturbing Imagery\"\n   ],\n   \"social_suitability\": {\n   \"solo_watch\": true,\n   \"date_night\": false,\n   \"group_party\": true,\n   \"family\": false,\n   \"partner\": true,\n   \"friends\": true,\n   \"kids\": false,\n   \"teens\": false,\n   \"adults\": true,\n   \"intergenerational\": false,\n   \"public_viewing_safe\": false\n   },\n   \"viewing_context\": {\n   \"is_thought_provoking\": true,\n   \"is_pure_escapism\": false,\n   \"is_background_friendly\": false,\n   \"is_comfort_watch\": false,\n   \"is_binge_friendly\": true,\n   \"is_drop_in_friendly\": false\n   },\n   \"essence_tags\": [\n   \"Epic High Fantasy\",\n   \"Intricate Political Maneuvering\",\n   \"Brutal & Unpredictable\",\n   \"Deep Character Arcs\",\n   \"Visually Stunning World-Building\",\n   \"Dark Medieval Tone\",\n   \"Complex Family Dynamics\",\n   \"Cultural Phenomenon\"\n   ],\n   \"essence_text\": \"A sprawling epic that masterfully blends high fantasy with gritty political realism, where power struggles and ancient threats collide. The narrative is defined by its ruthless unpredictability, shocking violence, and profound character depth, forcing viewers to constantly reassess allegiances. Immersive world-building and a legendary score elevate the experience beyond typical genre fare, creating a tense, dark, and intellectually engaging saga. While visually spectacular, it remains emotionally heavy, often prioritizing consequence over comfort.\"\n   }\n   }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7992,
+    "completion_tokens": 1278,
+    "total_tokens": 9270,
+    "cost": 0.00179946,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00179946,
+      "upstream_inference_prompt_cost": 0.0011988,
+      "upstream_inference_completions_cost": 0.00060066
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

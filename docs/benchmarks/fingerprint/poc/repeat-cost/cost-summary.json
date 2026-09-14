@@ -1,0 +1,11 @@
+{
+  "observed_generation_charges_usd": "0.00930598",
+  "unresolved_rejection_reservations_usd": "0.006466144",
+  "embedding_measured_tokens": 1881,
+  "embedding_rate_derived_usd": "0.0003762",
+  "embedding_invoice_charge_usd": null,
+  "combined_generation_charge_and_embedding_rate_derived_usd": "0.00968218",
+  "budget_accounted_usd_including_held_rejections": "0.016148324",
+  "hard_budget_usd": "0.05",
+  "status": "partial: D rate limited; do not resolve validation gate"
+}

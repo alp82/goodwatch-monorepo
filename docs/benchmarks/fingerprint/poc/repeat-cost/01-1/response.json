@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789409911-txAkz60SGNjhalNVysiI",
+  "object": "chat.completion",
+  "created": 1789409911,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n  \"benchmark_id\": \"show:1396\",\n  \"analysis\": {\n   \"fingerprint\": {\n   \"scores\": {\n   \"adrenaline\": 8,\n   \"tension\": 10,\n   \"scare\": 4,\n   \"violence\": 9,\n   \"romance\": 2,\n   \"eroticism\": 1,\n   \"wholesome\": 0,\n   \"wonder\": 1,\n   \"pathos\": 8,\n   \"melancholy\": 7,\n   \"uncanny\": 3,\n   \"catharsis\": 9,\n   \"nostalgia\": 1,\n   \"situational_comedy\": 2,\n   \"wit_wordplay\": 6,\n   \"physical_comedy\": 1,\n   \"cringe_humor\": 5,\n   \"absurdist_humor\": 3,\n   \"satire_parody\": 4,\n   \"dark_humor\": 7,\n   \"fantasy\": 0,\n   \"futuristic\": 0,\n   \"historical\": 0,\n   \"contemporary_realism\": 9,\n   \"crime\": 10,\n   \"mystery\": 6,\n   \"warfare\": 0,\n   \"political\": 2,\n   \"sports\": 0,\n   \"biographical\": 0,\n   \"coming_of_age\": 1,\n   \"family_dynamics\": 9,\n   \"psychological\": 9,\n   \"showbiz\": 0,\n   \"gaming\": 0,\n   \"pop_culture\": 8,\n   \"social_commentary\": 7,\n   \"class_and_capitalism\": 6,\n   \"technology_and_humanity\": 2,\n   \"spiritual\": 2,\n   \"narrative_structure\": 10,\n   \"dialogue_quality\": 9,\n   \"character_depth\": 10,\n   \"slow_burn\": 8,\n   \"fast_pace\": 6,\n   \"intrigue\": 10,\n   \"complexity\": 8,\n   \"rewatchability\": 9,\n   \"hopefulness\": 1,\n   \"bleakness\": 8,\n   \"ambiguity\": 3,\n   \"novelty\": 7,\n   \"homage_and_reference\": 2,\n   \"non_linear_narrative\": 4,\n   \"meta_narrative\": 0,\n   \"surrealism\": 1,\n   \"eccentricity\": 5,\n   \"philosophical\": 6,\n   \"educational\": 2,\n   \"direction\": 10,\n   \"acting\": 10,\n   \"cinematography\": 9,\n   \"editing\": 9,\n   \"music_composition\": 7,\n   \"world_immersion\": 9,\n   \"spectacle\": 6,\n   \"visual_stylization\": 8,\n   \"pastiche\": 0,\n   \"psychedelic\": 2,\n   \"grotesque\": 6,\n   \"camp_and_irony\": 2,\n   \"dialogue_centrality\": 8,\n   \"music_centrality\": 5,\n   \"sound_centrality\": 6\n   },\n   \"highlight_keys\": [\n   \"character_depth\",\n   \"tension\",\n   \"crime\",\n   \"family_dynamics\",\n   \"narrative_structure\",\n   \"acting\",\n   \"psychological\",\n   \"direction\"\n   ]\n   },\n   \"is_anime\": false,\n   \"production_info\": {\n   \"method\": \"Live-Action\",\n   \"animation_style\": null\n   },\n   \"content_advisories\": [\n   \"Violence\",\n   \"Strong Language\",\n   \"Drug Use\",\n   \"Disturbing Imagery\"\n   ],\n   \"social_suitability\": {\n   \"solo_watch\": true,\n   \"date_night\": true,\n   \"group_party\": false,\n   \"family\": false,\n   \"partner\": true,\n   \"friends\": true,\n   \"kids\": false,\n   \"teens\": false,\n   \"adults\": true,\n   \"intergenerational\": false,\n   \"public_viewing_safe\": false\n   },\n   \"viewing_context\": {\n   \"is_thought_provoking\": true,\n   \"is_pure_escapism\": false,\n   \"is_background_friendly\": false,\n   \"is_comfort_watch\": false,\n   \"is_binge_friendly\": true,\n   \"is_drop_in_friendly\": false\n   },\n   \"essence_tags\": [\n   \"Crime Drama\",\n   \"Character Study\",\n   \"Anti-Hero Transformation\",\n   \"High-Stakes Tension\",\n   \"Family Dysfunction\",\n   \"Methamphetamine Trade\",\n   \"Psychological Thriller\",\n   \"Visual Storytelling\",\n   \"Tragic Downfall\",\n   \"Cultural Phenomenon\"\n   ],\n   \"essence_text\": \"A meticulously crafted descent into moral ambiguity that transforms a sympathetic protagonist into a terrifying antagonist. The series relies on suffocating tension and complex character dynamics rather than gratuitous action to drive its narrative forward. It explores the devastating impact of pride and desperation on family structures with unflinching realism. Visually distinct and emotionally exhausting, it stands as a definitive example of prestige television storytelling.\"\n   }\n   }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7984,
+    "completion_tokens": 1256,
+    "total_tokens": 9240,
+    "cost": 0.0007588,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0007588,
+      "upstream_inference_prompt_cost": 0.00016848,
+      "upstream_inference_completions_cost": 0.00059032
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

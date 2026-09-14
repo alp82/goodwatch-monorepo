@@ -1,0 +1,548 @@
+[
+  {
+    "model_label": "F",
+    "benchmark_id": "show:1399",
+    "first_artifact": "0049",
+    "repeat_artifact": "00-1",
+    "full_response_valid": true,
+    "score_changes": [
+      {
+        "attribute": "historical",
+        "first": 6,
+        "repeat": 0,
+        "delta": -6
+      }
+    ],
+    "first_highlights": [
+      "world_immersion",
+      "music_composition",
+      "political",
+      "violence",
+      "family_dynamics",
+      "warfare",
+      "character_depth",
+      "fantasy"
+    ],
+    "repeat_highlights": [
+      "political",
+      "fantasy",
+      "world_immersion",
+      "music_composition",
+      "violence",
+      "character_depth",
+      "intrigue",
+      "family_dynamics"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "intrigue"
+    ],
+    "highlights_removed": [
+      "warfare"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "The historical decrease better matches the frozen definition, which requires a real-world past era; the corpus describes a mythical land. The owner’s concerns were scare, nostalgia and coming of age, so this is not evidence those concerns were fixed. Replacing warfare with intrigue weakens explicit emphasis on a defining military theme; political, fantasy and family emphasis remains. Overall: improved score calibration, but unstable highlight selection."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:1396",
+    "first_artifact": "0071",
+    "repeat_artifact": "01-1",
+    "full_response_valid": true,
+    "score_changes": [
+      {
+        "attribute": "pop_culture",
+        "first": 2,
+        "repeat": 8,
+        "delta": 6
+      }
+    ],
+    "first_highlights": [
+      "character_depth",
+      "tension",
+      "crime",
+      "family_dynamics",
+      "psychological",
+      "narrative_structure",
+      "acting",
+      "bleakness"
+    ],
+    "repeat_highlights": [
+      "character_depth",
+      "tension",
+      "crime",
+      "family_dynamics",
+      "narrative_structure",
+      "acting",
+      "psychological",
+      "direction"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "direction"
+    ],
+    "highlights_removed": [
+      "bleakness"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "Pop culture rises to a near-defining 8 despite the frozen definition requiring pop culture as a central theme. The owner called the first result very strong and the title input centers on a teacher becoming a drug dealer. I judge this an unsupported promotion, potentially confusing cultural popularity with subject matter. Swapping bleakness for direction shifts a thematic highlight toward craft; the core character/tension/crime/family emphasis remains. Overall: a material score regression, with smaller highlight drift."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "movie:603",
+    "first_artifact": "0046",
+    "repeat_artifact": "02-1",
+    "full_response_valid": false,
+    "score_changes": [
+      {
+        "attribute": "meta_narrative",
+        "first": 5,
+        "repeat": 2,
+        "delta": -3
+      }
+    ],
+    "first_highlights": [
+      "novelty",
+      "technology_and_humanity",
+      "visual_stylization",
+      "cinematography",
+      "spectacle",
+      "world_immersion",
+      "philosophical",
+      "sound_centrality"
+    ],
+    "repeat_highlights": [
+      "visual_stylization",
+      "cinematography",
+      "novelty",
+      "technology_and_humanity",
+      "futuristic",
+      "adrenaline",
+      "sound_centrality",
+      "pop_culture"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "futuristic",
+      "adrenaline",
+      "pop_culture"
+    ],
+    "highlights_removed": [
+      "spectacle",
+      "world_immersion",
+      "philosophical"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "Lower meta-narrative fits the distinction between questioning reality and self-referential storytelling. However, the highlight replacements remove philosophical, world_immersion and spectacle, adding futuristic, adrenaline and pop_culture. The first two additions are defensible; replacing an explicitly philosophical emphasis with pop culture is a thematic regression against the otherwise accepted first result. The owner’s fantasy/warfare concerns are not resolved by this flag review. Overall: one improved score, but defining-highlight drift. The structural repair did not change any scores or highlights."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "movie:150540",
+    "first_artifact": "0045",
+    "repeat_artifact": "03-1",
+    "full_response_valid": true,
+    "score_changes": [
+      {
+        "attribute": "technology_and_humanity",
+        "first": 6,
+        "repeat": 0,
+        "delta": -6
+      },
+      {
+        "attribute": "meta_narrative",
+        "first": 3,
+        "repeat": 0,
+        "delta": -3
+      },
+      {
+        "attribute": "psychedelic",
+        "first": 3,
+        "repeat": 0,
+        "delta": -3
+      }
+    ],
+    "first_highlights": [
+      "pathos",
+      "catharsis",
+      "psychological",
+      "character_depth",
+      "narrative_structure",
+      "family_dynamics",
+      "coming_of_age",
+      "music_composition"
+    ],
+    "repeat_highlights": [
+      "psychological",
+      "coming_of_age",
+      "pathos",
+      "narrative_structure",
+      "character_depth",
+      "wholesome",
+      "catharsis",
+      "music_composition"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "wholesome"
+    ],
+    "highlights_removed": [
+      "family_dynamics"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "Technology_and_humanity falling from 6 to 0 directly follows the owner’s request to lower technology. Lower meta-narrative and psychedelic are plausible calibration changes; the owner supplied no exact target for them. Family_dynamics leaves the highlights while wholesome enters, reducing emphasis on the family context in the frozen synopsis; psychological, coming_of_age, pathos and catharsis remain. Overall: score movement mostly improves alignment, with a modest loss in the highlight emphasis. This review does not claim the separate sports/nonlinear concerns are fixed."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:150540",
+    "first_artifact": "0011",
+    "repeat_artifact": "04-1",
+    "full_response_valid": true,
+    "score_changes": [],
+    "first_highlights": [
+      "psychological",
+      "coming_of_age",
+      "novelty",
+      "visual_stylization",
+      "wholesome",
+      "catharsis",
+      "family_dynamics",
+      "world_immersion"
+    ],
+    "repeat_highlights": [
+      "psychological",
+      "coming_of_age",
+      "novelty",
+      "catharsis",
+      "wholesome",
+      "world_immersion",
+      "character_depth",
+      "music_composition"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "character_depth",
+      "music_composition"
+    ],
+    "highlights_removed": [
+      "visual_stylization",
+      "family_dynamics"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "No score crosses the threshold. Novelty and the central psychological/coming-of-age/emotional features remain highlighted, but visual_stylization and family_dynamics are replaced by character_depth and music_composition. The latter increases craft emphasis relative to the prompt’s preference for emotional/thematic highlights. Overall: secondary-highlight drift; no demonstrated collapse of the defining core."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:603",
+    "first_artifact": "0088",
+    "repeat_artifact": "06-1",
+    "full_response_valid": true,
+    "score_changes": [],
+    "first_highlights": [
+      "technology_and_humanity",
+      "visual_stylization",
+      "cinematography",
+      "spectacle",
+      "philosophical",
+      "world_immersion",
+      "futuristic",
+      "adrenaline"
+    ],
+    "repeat_highlights": [
+      "technology_and_humanity",
+      "visual_stylization",
+      "novelty",
+      "cinematography",
+      "philosophical",
+      "adrenaline",
+      "world_immersion",
+      "spectacle"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "novelty"
+    ],
+    "highlights_removed": [
+      "futuristic"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "No score crosses the threshold. Novelty replaces futuristic and the highlight order changes. Technology_and_humanity, visual_stylization, philosophical and the action/craft features remain represented. Overall: plausible reprioritization, with no clear defining-attribute regression in the flagged items. This is not a re-review of unchanged mystery/crime scores."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:249042",
+    "first_artifact": "0058",
+    "repeat_artifact": "10-1",
+    "full_response_valid": true,
+    "score_changes": [
+      {
+        "attribute": "non_linear_narrative",
+        "first": 2,
+        "repeat": 8,
+        "delta": 6
+      },
+      {
+        "attribute": "visual_stylization",
+        "first": 4,
+        "repeat": 7,
+        "delta": 3
+      }
+    ],
+    "first_highlights": [
+      "acting",
+      "tension",
+      "coming_of_age",
+      "family_dynamics",
+      "crime",
+      "psychological",
+      "contemporary_realism",
+      "narrative_structure"
+    ],
+    "repeat_highlights": [
+      "tension",
+      "family_dynamics",
+      "contemporary_realism",
+      "acting",
+      "direction",
+      "psychological",
+      "coming_of_age",
+      "crime"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "direction"
+    ],
+    "highlights_removed": [
+      "narrative_structure"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "Non_linear_narrative jumping to 8 is a material regression: the repeat essence also newly claims a non-linear structure, whereas Netflix describes the drama’s real-time storytelling and continuous-shot episodes. The frozen trait definition requires non-chronological storytelling. Visual_stylization increasing to 7 is more defensible given the unusual presentation and the owner’s complaint that D understated direction/visual traits; this does not validate the false non-linear claim. Direction replaces narrative_structure in the highlights while tension, family, realism, acting, psychological, coming_of_age and crime stay. Overall: a clear structural/semantic error despite retained central themes. See the primary-source check below."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:550",
+    "first_artifact": "0039",
+    "repeat_artifact": "11-1",
+    "full_response_valid": true,
+    "score_changes": [
+      {
+        "attribute": "wonder",
+        "first": 2,
+        "repeat": 6,
+        "delta": 4
+      },
+      {
+        "attribute": "mystery",
+        "first": 8,
+        "repeat": 5,
+        "delta": -3
+      },
+      {
+        "attribute": "technology_and_humanity",
+        "first": 3,
+        "repeat": 6,
+        "delta": 3
+      }
+    ],
+    "first_highlights": [
+      "psychological",
+      "social_commentary",
+      "dialogue_quality",
+      "narrative_structure",
+      "satire_parody",
+      "violence",
+      "dark_humor",
+      "class_and_capitalism"
+    ],
+    "repeat_highlights": [
+      "social_commentary",
+      "psychological",
+      "narrative_structure",
+      "dialogue_quality",
+      "class_and_capitalism",
+      "satire_parody",
+      "violence",
+      "cinematography"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "cinematography"
+    ],
+    "highlights_removed": [
+      "dark_humor"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "The owner called the first result very strong. Wonder and technology_and_humanity both increase without grounding in the frozen input’s fight-club/criminal-escalation premise; I judge those changes less aligned with the accepted profile, especially conflating social critique with technology. Mystery dropping to 5 is a meaningful decrease whose acceptability is not settled by the owner’s notes. Dark_humor is replaced by cinematography, shifting emphasis toward craft while the psychological/social/class core remains. Overall: mixed drift with likely peripheral score inflation and loss of a thematic highlight; no wholesale change of the title’s core."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:1233066",
+    "first_artifact": "0073",
+    "repeat_artifact": "12-1",
+    "full_response_valid": true,
+    "score_changes": [
+      {
+        "attribute": "cringe_humor",
+        "first": 3,
+        "repeat": 6,
+        "delta": 3
+      }
+    ],
+    "first_highlights": [
+      "satire_parody",
+      "situational_comedy",
+      "physical_comedy",
+      "homage_and_reference",
+      "nostalgia",
+      "pastiche",
+      "camp_and_irony",
+      "dialogue_quality"
+    ],
+    "repeat_highlights": [
+      "situational_comedy",
+      "satire_parody",
+      "pastiche",
+      "homage_and_reference",
+      "nostalgia",
+      "camp_and_irony",
+      "wholesome",
+      "absurdist_humor"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "wholesome",
+      "absurdist_humor"
+    ],
+    "highlights_removed": [
+      "physical_comedy",
+      "dialogue_quality"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "Cringe_humor rises from 3 to 6. The owner accepted the first result without a specific preference on this trait; the short frozen synopsis cannot adjudicate that difference, so it remains uncertain. Physical_comedy and dialogue_quality leave the highlights; wholesome and absurdist_humor enter. The western-parody/pastiche/reference/nostalgia core remains, but the comedy emphasis changes. Overall: unresolved humor calibration and highlight drift, not an established factual regression."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:545611",
+    "first_artifact": "0084",
+    "repeat_artifact": "14-1",
+    "full_response_valid": true,
+    "score_changes": [
+      {
+        "attribute": "romance",
+        "first": 2,
+        "repeat": 5,
+        "delta": 3
+      },
+      {
+        "attribute": "coming_of_age",
+        "first": 0,
+        "repeat": 6,
+        "delta": 6
+      }
+    ],
+    "first_highlights": [
+      "absurdist_humor",
+      "surrealism",
+      "family_dynamics",
+      "novelty",
+      "catharsis",
+      "pathos",
+      "visual_stylization",
+      "acting"
+    ],
+    "repeat_highlights": [
+      "absurdist_humor",
+      "family_dynamics",
+      "novelty",
+      "eccentricity",
+      "visual_stylization",
+      "acting",
+      "catharsis",
+      "surrealism"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "eccentricity"
+    ],
+    "highlights_removed": [
+      "pathos"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "Coming_of_age rising from 0 to 6 moves toward the owner’s explicit cross-candidate complaint that A’s coming-of-age score was far too low. Romance rising from 2 to 5 goes in the opposite direction of the owner’s requests to lower romance on A/B, although those notes do not specify a numeric target for F. Eccentricity replaces pathos in the highlights; the family/absurdist/surreal/novelty/catharsis core remains but emotional emphasis weakens. Overall: a useful coming-of-age correction alongside romance calibration risk and highlight drift."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:64230",
+    "first_artifact": "0009",
+    "repeat_artifact": "16-1",
+    "full_response_valid": true,
+    "score_changes": [],
+    "first_highlights": [
+      "spiritual",
+      "dark_humor",
+      "violence",
+      "absurdist_humor",
+      "satire_parody",
+      "eccentricity",
+      "fast_pace",
+      "dialogue_quality"
+    ],
+    "repeat_highlights": [
+      "spiritual",
+      "dark_humor",
+      "absurdist_humor",
+      "violence",
+      "surrealism",
+      "eccentricity",
+      "satire_parody",
+      "social_commentary"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "surrealism",
+      "social_commentary"
+    ],
+    "highlights_removed": [
+      "fast_pace",
+      "dialogue_quality"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "No score crosses the threshold. Surrealism and social_commentary replace fast_pace and dialogue_quality. Promoting surrealism follows the owner’s explicit preference that F understated it; the spiritual/dark-humor/violence/absurdist/satirical core remains. Overall: highlight movement is largely aligned with the owner’s preference. This does not claim the unchanged grotesque/cringe concerns were fixed."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:42009",
+    "first_artifact": "0074",
+    "repeat_artifact": "17-1",
+    "full_response_valid": true,
+    "score_changes": [],
+    "first_highlights": [
+      "technology_and_humanity",
+      "social_commentary",
+      "bleakness",
+      "satire_parody",
+      "psychological",
+      "futuristic",
+      "uncanny",
+      "tension"
+    ],
+    "repeat_highlights": [
+      "technology_and_humanity",
+      "social_commentary",
+      "futuristic",
+      "bleakness",
+      "psychological",
+      "uncanny",
+      "satire_parody",
+      "philosophical"
+    ],
+    "highlights_changed": true,
+    "highlights_added": [
+      "philosophical"
+    ],
+    "highlights_removed": [
+      "tension"
+    ],
+    "highlight_order_only": false,
+    "agent_assessment": "No score crosses the threshold. Philosophical replaces tension and the remaining highlights are reordered; technology_and_humanity, social_commentary, futuristic, bleakness and psychological remain. Overall: plausible alternative emphasis with no clear defining-core regression among the flags. The owner’s eroticism concern is outside these changed items."
+  }
+]
