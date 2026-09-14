@@ -1,5 +1,5 @@
 import { cached } from "~/utils/cache"
-import { recommend, makePointId } from "~/utils/qdrant"
+import { MEDIA_COLLECTION, recommend, makePointId } from "~/utils/qdrant"
 import type { AllRatings } from "~/utils/ratings"
 import {
 	type QdrantMediaPayload,
@@ -74,7 +74,7 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 	const cacheKey = `related-movie-${params.tmdb_id}-${params.fingerprint_key || 'all'}-${params.source_media_type}-${params.streaming_combinations?.join(',') || 'none'}`
 	
 	return await cached({
-		name: cacheKey,
+		name: `${MEDIA_COLLECTION}:${cacheKey}`,
 		target: _getRelatedMovies as any,
 		params,
 		ttlMinutes: 60 * 24,
@@ -87,7 +87,7 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 	const cacheKey = `related-show-${params.tmdb_id}-${params.fingerprint_key || 'all'}-${params.source_media_type}-${params.streaming_combinations?.join(',') || 'none'}`
 	
 	return await cached({
-		name: cacheKey,
+		name: `${MEDIA_COLLECTION}:${cacheKey}`,
 		target: _getRelatedShows as any,
 		params,
 		ttlMinutes: 60 * 24,
@@ -143,7 +143,7 @@ async function getRelatedTitles({
 	target_media_type: "movie" | "show"
 	streaming_combinations?: string[]
 }): Promise<(RelatedMovie | RelatedShow)[]> {
-	const collectionName = "media"
+	const collectionName = MEDIA_COLLECTION
 	const sourcePointId = makePointId(source_media_type, tmdb_id)
 	const withKey = Boolean(fingerprint_key && fingerprint_key.length > 0)
 
@@ -155,8 +155,8 @@ async function getRelatedTitles({
 	]
 
 	const additionalMustNot: any[] = [
-		{ key: "poster_path", match: { value: null } },
-		{ key: "backdrop_path", match: { value: null } },
+		{ is_empty: { key: "poster_path" } },
+		{ is_empty: { key: "backdrop_path" } },
 	]
 
 	if (source_media_type === target_media_type) {
@@ -187,7 +187,6 @@ async function getRelatedTitles({
 		
 		additionalMust.push({
 			should: streamingShouldConditions,
-			minimum_should: 1 // At least one streaming combination must match
 		})
 	}
 
@@ -327,7 +326,7 @@ export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
 	const cacheKey = `related-by-category-${params.countries.join(',')}-${params.streaming_ids?.join(',') || 'all'}`
 	
 	return await cached({
-		name: cacheKey,
+		name: `${MEDIA_COLLECTION}:${cacheKey}`,
 		target: _getRelatedByCategory as any,
 		params,
 		ttlMinutes: 60 * 24,

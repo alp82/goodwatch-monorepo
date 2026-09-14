@@ -1,5 +1,5 @@
 import { cached } from "~/utils/cache"
-import { makePointId, recommend } from "~/utils/qdrant"
+import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
 import { type AllRatings } from "~/utils/ratings"
 
 interface QdrantMediaPayload {
@@ -76,7 +76,7 @@ export interface GuestShowRecommendationsParams {
 
 export const getGuestMovieRecommendations = async (params: GuestMovieRecommendationsParams) => {
 	return await cached({
-		name: "guest-recommendations-movie",
+		name: `${MEDIA_COLLECTION}:guest-recommendations-movie`,
 		target: _getGuestMovieRecommendations as any,
 		params,
 		//ttlMinutes: 5,
@@ -86,7 +86,7 @@ export const getGuestMovieRecommendations = async (params: GuestMovieRecommendat
 
 export const getGuestShowRecommendations = async (params: GuestShowRecommendationsParams) => {
 	return await cached({
-		name: "guest-recommendations-show",
+		name: `${MEDIA_COLLECTION}:guest-recommendations-show`,
 		target: _getGuestShowRecommendations as any,
 		params,
 		//ttlMinutes: 5,
@@ -144,7 +144,7 @@ async function getGuestRecommendations({
 		return []
 	}
 
-	const collectionName = "media"
+	const collectionName = MEDIA_COLLECTION
 
 	// Use relative scoring: top half as positive, bottom half as negative
 	// This allows recommendations to work with any ratings, not just scores >= 6
@@ -185,14 +185,8 @@ async function getGuestRecommendations({
 			},
 		],
 		must_not: [
-			{
-				key: "poster_path",
-				match: { value: null },
-			},
-			{
-				key: "backdrop_path",
-				match: { value: null },
-			},
+			{ is_empty: { key: "poster_path" } },
+			{ is_empty: { key: "backdrop_path" } },
 			...excludeIds.map(id => ({
 				key: "tmdb_id",
 				match: { value: id },

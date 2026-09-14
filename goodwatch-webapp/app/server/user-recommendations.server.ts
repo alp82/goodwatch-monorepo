@@ -1,6 +1,6 @@
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
-import { makePointId, recommend } from "~/utils/qdrant"
+import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
 import type { AllRatings } from "~/utils/ratings"
 import {
 	type QdrantMediaPayload,
@@ -44,7 +44,7 @@ const MAX_POSITIVE_EXAMPLES = 50
 const MAX_NEGATIVE_EXAMPLES = 50
 export const getUserRecommendations = async (params: GetUserRecommendationsParams) => {
 	return await cached({
-		name: "user-recommendations",
+		name: `${MEDIA_COLLECTION}:user-recommendations`,
 		target: _getUserRecommendations as any,
 		params,
 		ttlMinutes: 1,
@@ -128,36 +128,11 @@ async function _getUserRecommendations({
 	)
 
 	// Build filter conditions
-	const mustConditions: any[] = [
-		{
-			key: "goodwatch_overall_score_voting_count",
-			range: { gte: 50000 },
-		},
-		{
-			key: "goodwatch_overall_score_normalized_percent",
-			range: { gte: 50 },
-		},
-	]
-
-	// Add media type filter if not "all"
-	if (mediaType !== "all") {
-		mustConditions.push({
-			key: "media_type",
-			match: { value: mediaType },
-		})
-		
-	}
-
-	// Build filter conditions using shared utility
 	const { must, must_not } = buildBaseFilterConditions({
 		mediaType,
-		minVotingCount: 10000,
+		minVotingCount: 50000,
 		minScore: 60,
-		additionalMust: mustConditions,
-		additionalMustNot: [
-			{ key: "poster_path", match: { value: null } },
-			...buildExcludeFilter(excludeIds),
-		],
+		additionalMustNot: buildExcludeFilter(excludeIds),
 	})
 
 	const filterConditions = { must, must_not }
@@ -170,7 +145,7 @@ async function _getUserRecommendations({
 
 	// Call Qdrant recommend
 	const recommendParams: any = {
-		collectionName: "media",
+		collectionName: MEDIA_COLLECTION,
 		using: "fingerprint_v1",
 		strategy: "average_vector",
 		positive: positivePoints,

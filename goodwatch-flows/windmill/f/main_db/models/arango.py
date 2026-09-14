@@ -221,7 +221,6 @@ class MediaBase(BaseArangoModel):
     fingerprint_scores: Optional[CoreScores] = None
     fingerprint_highlight_keys: Optional[list[str]] = None
 
-    vector_essence_text: Optional[list[float]] = None
     vector_fingerprint: Optional[list[float]] = None
 
     suitability_solo_watch: Optional[bool] = None

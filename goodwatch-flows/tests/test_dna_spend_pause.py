@@ -6,7 +6,6 @@ import sys
 import unittest
 from datetime import datetime
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 import fakeredis
@@ -124,7 +123,7 @@ class SpendPauseTest(unittest.TestCase):
             self.assertIsNone(entry.selected_at)
             self.assertIsNone(entry.failed_at)
         done.reload()
-        self.assertTrue(done.is_selected)  # Embeddings still need to finish.
+        self.assertTrue(done.is_selected)  # Fingerprint persistence still needs to finish.
         self.assertEqual(done.selected_at, datetime(2026, 9, 14, 10))
         self.assertEqual(done.dna, self.dna)
 
@@ -198,37 +197,32 @@ class SpendPauseTest(unittest.TestCase):
                 first.reload()
                 self.assertIsNone(first.failed_at)
 
-    def test_empty_vectors_returns_zero_without_api_key_embedding_or_database_calls(self):
-        with patch('google.genai.Client') as client, patch('f.db.mongodb.connect') as mongodb:
+    def test_empty_fingerprints_returns_zero_without_api_key_or_database_calls(self):
+        with patch('f.db.mongodb.connect') as mongodb:
             self.assertEqual(vectors.main({'movie_ids': [], 'tv_ids': []}, []),
-                             {'embeddings_count': 0})
-        client.assert_not_called()
+                             {'fingerprints_count': 0})
         mongodb.assert_not_called()
         self.secret.assert_not_called()
 
     def test_generate_dna_flow_passes_paused_batch_through_without_inference_or_mongodb(self):
         self.redis.set(PAUSE_KEY, 'daily', ex=60)
-        with patch('google.genai.Client') as client, patch('f.db.mongodb.connect') as mongodb:
-            self.assertEqual(run_flow('f/dna/generate_dna', {}), {'embeddings_count': 0})
+        with patch('f.db.mongodb.connect') as mongodb:
+            self.assertEqual(run_flow('f/dna/generate_dna', {}), {'fingerprints_count': 0})
         self.post.assert_not_called()
-        client.assert_not_called()
         mongodb.assert_not_called()
 
     @freeze_time('2026-09-14 12:00:00')
-    def test_generate_dna_flow_embeds_completed_title_after_budget_rejection_without_flow_retry(self):
+    def test_generate_dna_flow_persists_completed_fingerprint_after_budget_rejection_without_flow_retry(self):
         done, stopped, pending = self.title(1), self.title(2), self.title(3, DnaTv)
         for entry in [done, stopped, pending]:
             entry.update(set__selected_at=None, set__is_selected=False)
         done.update(set__popularity=3.0)
         self.post.side_effect = [self.success(), response({'error': {'code': 402}}, 402)]
-        with patch('google.genai.Client') as client:
-            embed = client.return_value.models.embed_content
-            embed.return_value = SimpleNamespace(embeddings=[SimpleNamespace(values=[0.1] * 768)])
-            self.assertEqual(run_flow('f/dna/generate_dna', {}), {'embeddings_count': 1})
+        self.assertEqual(run_flow('f/dna/generate_dna', {}), {'fingerprints_count': 1})
         self.assertEqual(self.post.call_count, 2)
-        self.assertEqual(embed.call_args.kwargs['contents'], [self.dna['essence_text']])
+        self.assertNotIn('u/Alp/GEMINI_API_KEY', [c.args[0] for c in self.secret.call_args_list])
         done.reload()
-        self.assertEqual(done.vector_essence_text, [0.1] * 768)
+        self.assertEqual(done.dna['essence_text'], self.dna['essence_text'])
         self.assertEqual(len(done.vector_fingerprint), 74)
         self.assertFalse(done.is_selected)
         for entry in [stopped, pending]:

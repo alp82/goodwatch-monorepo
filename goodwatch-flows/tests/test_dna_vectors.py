@@ -2,13 +2,9 @@ import importlib.util
 import sys
 import unittest
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
 from unittest.mock import patch
 
 
-VECTORS_PATH = (
-    Path(__file__).parents[1] / "windmill" / "f" / "dna" / "generate" / "vectors.py"
-)
 FLATTEN_RESULTS_PATH = (
     Path(__file__).parents[1]
     / "windmill"
@@ -19,62 +15,10 @@ FLATTEN_RESULTS_PATH = (
 )
 
 
-class FakeEmbedContentConfig:
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-
-class FakeModels:
-    def embed_content(self, **kwargs):
-        self.call = kwargs
-        return SimpleNamespace(
-            embeddings=[SimpleNamespace(values=[0.1, 0.2])]
-        )
-
-
-class FakeClient:
-    instance = None
-
-    def __init__(self, **kwargs):
-        self.api_key = kwargs["api_key"]
-        self.models = FakeModels()
-        FakeClient.instance = self
-
-
 def load_vectors_module():
-    google = ModuleType("google")
-    google_genai = ModuleType("google.genai")
-    google_genai.Client = FakeClient
-    google_genai.types = SimpleNamespace(EmbedContentConfig=FakeEmbedContentConfig)
-    google.genai = google_genai
-
-    wmill = ModuleType("wmill")
-    wmill.get_variable = lambda _path: "test-api-key"
-
-    mongodb = ModuleType("f.db.mongodb")
-    mongodb.init_mongodb = lambda: None
-    mongodb.close_mongodb = lambda: None
-
-    dna_models = ModuleType("f.dna.models")
-    dna_models.CoreScores = object
-    dna_models.DnaMovie = object
-    dna_models.DnaTv = object
-
-    modules = {
-        "google": google,
-        "google.genai": google_genai,
-        "wmill": wmill,
-        "f": ModuleType("f"),
-        "f.db": ModuleType("f.db"),
-        "f.db.mongodb": mongodb,
-        "f.dna": ModuleType("f.dna"),
-        "f.dna.models": dna_models,
-    }
-    spec = importlib.util.spec_from_file_location("dna_vectors", VECTORS_PATH)
-    module = importlib.util.module_from_spec(spec)
-    with patch.dict(sys.modules, modules):
-        spec.loader.exec_module(module)
-    return module
+    sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
+    from f.dna.generate import vectors
+    return vectors
 
 
 def load_flatten_results_module():
@@ -87,25 +31,29 @@ def load_flatten_results_module():
 
 
 class GenerateVectorsTest(unittest.TestCase):
-    def test_uses_current_model_with_existing_vector_dimensions(self):
+    def test_fingerprint_uses_schema_order_without_inference(self):
+        import json
         vectors = load_vectors_module()
+        from f.dna.models import CoreScores
+        dna = json.loads((Path(__file__).parent / "fixtures/dna.json").read_text())
+        scores = dna["fingerprint"]["scores"]
+        result = vectors.create_fingerprint(dict(reversed(list(scores.items()))))
+        self.assertEqual(result, [float(scores[key]) for key in CoreScores.model_fields])
+        self.assertEqual(len(result), 74)
 
-        result = vectors.generate_vectors([{"dna": {"essence_text": "test"}}])
-        call = FakeClient.instance.models.call
-
-        self.assertEqual(result, [[0.1, 0.2]])
-        self.assertEqual(call["model"], "gemini-embedding-2")
-        self.assertEqual(call["config"].output_dimensionality, 768)
-        self.assertEqual(call["config"].task_type, "RETRIEVAL_DOCUMENT")
-
-    def test_rejects_string_dna_with_the_result_index(self):
+    def test_rejects_string_dna_before_database_access(self):
         vectors = load_vectors_module()
+        with patch.object(vectors, "init_mongodb") as connect:
+            with self.assertRaisesRegex(ValueError, r"results\[0\]\.dna must be an object"):
+                vectors.main({"movie_ids": [], "tv_ids": []}, [{"id": "entry-id", "dna": "failed result"}])
+        connect.assert_not_called()
 
-        with self.assertRaisesRegex(
-            ValueError,
-            r"results\[0\]\.dna must be an object",
-        ):
-            vectors.generate_vectors([{"id": "entry-id", "dna": "failed result"}])
+    def test_rejects_unselected_title_before_database_access(self):
+        vectors = load_vectors_module()
+        with patch.object(vectors, "init_mongodb") as connect:
+            with self.assertRaisesRegex(ValueError, "id was not selected"):
+                vectors.main({"movie_ids": [], "tv_ids": []}, [{"id": "unknown", "dna": {}}])
+        connect.assert_not_called()
 
 
 class FlattenResultsTest(unittest.TestCase):

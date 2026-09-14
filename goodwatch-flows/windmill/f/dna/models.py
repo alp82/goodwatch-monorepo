@@ -32,11 +32,11 @@ class BaseDNA(Document):
 
     llm_model_name = StringField()
     dna = DictField()
-    vector_essence_text = ListField(FloatField())
     vector_fingerprint = ListField(FloatField())
 
     meta = {
         "abstract": True,
+        "strict": False,
         "indexes": [
             "tmdb_id",
             "popularity",

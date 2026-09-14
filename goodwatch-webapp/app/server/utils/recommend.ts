@@ -203,14 +203,8 @@ export function buildBaseFilterConditions(options: {
 	]
 
 	const mustNot: any[] = [
-		{
-			key: "poster_path",
-			match: { value: null },
-		},
-		{
-			key: "backdrop_path",
-			match: { value: null },
-		},
+		{ is_empty: { key: "poster_path" } },
+		{ is_empty: { key: "backdrop_path" } },
 		...additionalMustNot,
 	]
 

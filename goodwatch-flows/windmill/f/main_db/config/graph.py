@@ -1,6 +1,5 @@
 # The dimensions of your vectors depend on the model used to create them.
 # Replace these placeholders with your actual vector dimensions.
-TEXT_VECTOR_DIMENSIONS = 768
 FINGERPRINT_VECTOR_DIMENSIONS = 74
 
 FINGERPRINT_SCORE_FIELDS = [
@@ -164,7 +163,6 @@ INDEX_DEFINITIONS = {
         {'type': 'persistent', 'fields': VIEWING_FLAG_FIELDS, 'unique': False, 'name': 'idx_movies_viewing_flags'},
         
         # === Vector Indexes (for similarity search) ===
-        #{'type': 'vector', 'fields': ['vector_essence_text'], 'params': { 'metric': 'cosine', 'dimension': TEXT_VECTOR_DIMENSIONS, 'nLists': 100 }, 'name': 'idx_movies_vector_essence_text'},
         #{'type': 'vector', 'fields': ['vector_fingerprint'], 'params': { 'metric': 'cosine', 'dimension': FINGERPRINT_VECTOR_DIMENSIONS, 'nLists': 100 }, 'name': 'idx_movies_vector_fingerprint'},
     ],
     'shows': [
@@ -192,7 +190,6 @@ INDEX_DEFINITIONS = {
         {'type': 'persistent', 'fields': VIEWING_FLAG_FIELDS, 'unique': False, 'name': 'idx_shows_viewing_flags'},
 
         # === Vector Indexes (for similarity search) ===
-        #{'type': 'vector', 'fields': ['vector_essence_text'], 'params': { 'metric': 'cosine', 'dimension': TEXT_VECTOR_DIMENSIONS, 'nLists': 100 }, 'name': 'idx_shows_vector_essence_text'},
         #{'type': 'vector', 'fields': ['vector_fingerprint'], 'params': { 'metric': 'cosine', 'dimension': FINGERPRINT_VECTOR_DIMENSIONS, 'nLists': 100 }, 'name': 'idx_shows_vector_fingerprint'},
     ],
     'seasons': [

@@ -49,7 +49,6 @@ interface Conditions {
 	maxScore?: string
 	minYear?: string
 	maxYear?: string
-	similarityVector?: string
 	watchedType?: WatchedType
 	withCast?: string
 	withCastCombinationType?: CombinationType
@@ -85,7 +84,6 @@ interface OrderByConfig {
 		| "popularity"
 		| "goodwatch_overall_score_normalized_percent"
 		| "release_date"
-		| "vector"
 	direction: "ASC" | "DESC"
 }
 interface ConstructSelectQueryParams {
@@ -178,7 +176,6 @@ export const constructFullQuery = ({
 		"popularity",
 		"goodwatch_overall_score_normalized_percent",
 		"release_date",
-		"vector",
 	]
 	if (!validOrderByColumns.includes(orderBy.column)) {
 		throw new Error("Invalid orderBy.column")
@@ -230,7 +227,6 @@ export const constructFullQuery = ({
 	// Collect additional parameters for the final query
 	const params: Record<string, unknown> = {
 		...collectedParams,
-		similarityVector: conditions.similarityVector,
 		pageSize,
 		offset,
 	}

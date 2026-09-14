@@ -91,8 +91,8 @@ during acceptance; it must not treat every 403 as a spending limit.
 Concurrent workers check the key before every generation request, including
 repairs and retries. Requests already in flight can finish. A shorter pause cannot
 overwrite a longer one. Unprocessed titles have `is_selected` and `selected_at`
-cleared; completed DNA continues through embeddings. Runs starting while paused
-return zero embeddings without accessing MongoDB or either inference service.
+cleared; completed DNA continues through local fingerprint persistence. Runs starting while paused
+return zero fingerprints without accessing MongoDB or the inference service.
 
 The key expires automatically. If the owner changes the provider budget before
 the deadline, deleting this key from the configured Redis cluster allows selection

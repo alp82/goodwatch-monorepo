@@ -10,7 +10,6 @@ MediaType = Union[Literal["movie"], Literal["show"]]
 
 class MediaVectors(BaseModel):
     """Named vectors stored in Qdrant."""
-    essence_text_v1: List[float] = Field(default_factory=list, description="768-d semantic text embedding.")
     fingerprint_v1: List[float] = Field(default_factory=list, description="74-d GoodWatch fingerprint embedding.")
 
 # ---- Scores & counts ----

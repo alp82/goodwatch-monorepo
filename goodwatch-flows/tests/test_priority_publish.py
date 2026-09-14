@@ -242,7 +242,7 @@ class VectorPublicationTests(unittest.TestCase):
                     "_fetch_tmdb_ids_keyset": fetch_ids,
                     "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
                     "_fetch_multimap_by_ids": lambda *args: {},
-                    "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"essence_text_v1": [0.1], "fingerprint_v1": [0.2]}),
+                    "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"fingerprint_v1": [0.2]}),
                     "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
                     "MEDIA_COLLECTION": "media",
                     "qm": SimpleNamespace(PointStruct=lambda **kw: kw, UpdateStatus=SimpleNamespace(COMPLETED="completed")),
@@ -289,7 +289,7 @@ class VectorSerializationTests(unittest.TestCase):
             "_fetch_tmdb_ids_keyset": MagicMock(side_effect=[([42], 42), ([], 42)]),
             "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
             "_fetch_multimap_by_ids": lambda *args: {},
-            "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"essence_text_v1": [0.1], "fingerprint_v1": [0.2]}),
+            "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"fingerprint_v1": [0.2]}),
             "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
             "MEDIA_COLLECTION": "media",
             "qm": SimpleNamespace(PointStruct=lambda **kw: kw, UpdateStatus=SimpleNamespace(COMPLETED="completed")),
@@ -306,7 +306,7 @@ class VectorSerializationTests(unittest.TestCase):
         from test_qdrant_publication_retry import RpcFailure
         import grpc
         self.namespace["_build_payload"] = Mock(return_value=(
-            {"tmdb_id": 42}, {"essence_text_v1": [0.1], "fingerprint_v1": [0.2]},
+            {"tmdb_id": 42}, {"fingerprint_v1": [0.2]},
         ))
         self.qc.client.upsert.side_effect = [
             RpcFailure(grpc.StatusCode.UNAVAILABLE), SimpleNamespace(status="completed"),

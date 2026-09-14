@@ -1,9 +1,0 @@
-summary: ''
-description: ''
-lock: '!inline f/recommendations/100_movies.script.lock'
-kind: script
-schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
-  type: object
-  properties: {}
-  required: []

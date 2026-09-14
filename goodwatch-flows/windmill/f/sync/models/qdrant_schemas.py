@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+from f.dna.models import CoreScores
 from typing import Dict, List, Literal, Optional
 
 # ---- Constants ----
-MEDIA_COLLECTION = "media"
+MEDIA_COLLECTION = "media_fingerprint_v1"
 
 VectorDistance = Literal["Cosine", "Dot", "Euclid"]
 
@@ -39,9 +40,6 @@ def desired_media_collection() -> CollectionSpec:
     return CollectionSpec(
         name=MEDIA_COLLECTION,
         vectors={
-            "essence_text_v1": NamedVectorSpec(
-                size=768, distance="Cosine", on_disk=False
-            ),
             "fingerprint_v1": NamedVectorSpec(
                 size=74, distance="Cosine", on_disk=False
             ),
@@ -65,8 +63,7 @@ def desired_media_collection() -> CollectionSpec:
 def desired_payload_indexes() -> List[PayloadIndexSpec]:
     """
     ONLY index fields you actually filter/sort on.
-    Fingerprint dimensions are present in payload but not indexed by default.
-    Add specific ones below if you will filter on them.
+    Related-title and preview queries filter any of the 74 fingerprint traits.
     """
     idx: List[PayloadIndexSpec] = []
 
@@ -139,7 +136,8 @@ def desired_payload_indexes() -> List[PayloadIndexSpec]:
     idx.append(PayloadIndexSpec("streaming_availability", "keyword"))
 
     # Fingerprint scores
-    idx.append(PayloadIndexSpec("fingerprint_scores_v1", "keyword"))
+    idx.extend(PayloadIndexSpec(f"fingerprint_scores_v1.{name}", "integer")
+               for name in CoreScores.model_fields)
 
     return idx
 

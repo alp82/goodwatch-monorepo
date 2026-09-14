@@ -1,5 +1,5 @@
 import { query as crateQuery } from "~/utils/crate"
-import { makePointId, recommend } from "~/utils/qdrant"
+import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
 import { DISTINCT_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import {
 	type QdrantMediaPayload,
@@ -110,7 +110,7 @@ export async function getFingerprintRecommendations({
 		return []
 	}
 
-	const collectionName = "media"
+	const collectionName = MEDIA_COLLECTION
 
 	const positivePoints = likedItems.map(item =>
 		makePointId(item.media_type, item.tmdb_id)
