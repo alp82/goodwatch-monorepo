@@ -1,5 +1,7 @@
 # Live DNA acceptance — September 14, 2026
 
+**Subsequent update:** [The Matrix and Preacher have been regenerated and verified](regeneration.md) after the highlight-validator fix. The report below records the original acceptance run; its statements about invalid stored records describe that earlier state. Other acceptance gates remain open.
+
 **Acceptance failed and remains open.** Ten titles were generated and embedded, but two contain invalid highlight keys. Actual monthly guardrail wording and one request's exact cost also remain unverified. The DNA generation schedule is disabled.
 
 Canonical ticket: [Run the acceptance criteria on the ten benchmark titles](https://github.com/alp82/goodwatch-monorepo/issues/39), under [Implement the Windmill fingerprinting strategy](https://github.com/alp82/goodwatch-monorepo/issues/35).

@@ -1,0 +1,10 @@
+{
+  "known_generation_cost_usd": 0.001377894,
+  "retained_429_reservation_usd": 0.009492839999999999,
+  "embedding_cost_upper_estimate_usd": 0.00034199999999999996,
+  "generation_schedule_enabled": false,
+  "verified_titles": [
+    "The Matrix",
+    "Preacher"
+  ]
+}
