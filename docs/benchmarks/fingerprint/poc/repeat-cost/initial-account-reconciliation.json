@@ -1,6 +1,6 @@
 {
-  "generation_charges_usd": "0.01179756",
-  "observed_key_delta_usd": "0.011797560",
+  "generation_charges_usd": "0.00930598",
+  "observed_key_delta_usd": "0.009305980",
   "difference_usd": "0E-9",
   "status": "matched",
   "rejected_requests": "No generation IDs; conservative allowances retained independently of counter reconciliation."

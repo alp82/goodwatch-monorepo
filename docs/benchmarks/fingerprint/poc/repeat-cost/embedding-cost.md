@@ -6,7 +6,7 @@ This is a rate-derived cost using measured token usage, **not an observed invoic
 
 ## Sample and settings
 
-- Ten original first-pass F essence texts and ten original first-pass D essence texts from commit `a7841d2`. “First pass” includes its allowed structural repairs: the earliest fully schema-valid result for each model/title is selected. These are the original comparison experiment’s texts, not newly generated repeat texts. The D repeat outage does not reduce this pre-existing valid sample.
+- Ten original first-pass F essence texts and ten original first-pass D essence texts from commit `a7841d2`. “First pass” includes its allowed structural repairs: the earliest fully schema-valid result for each model/title is selected. These are the original comparison experiment’s texts, not newly generated repeat texts. The initial D repeat outage did not reduce this pre-existing valid sample; D repeats subsequently completed in the authorized continuation.
 - The [input manifest](embedding-inputs.json) records model label, title ID, original artifact and exact essence text for every input.
 - Deployed settings verified read-only from Windmill before calls: `gemini-embedding-2`, `RETRIEVAL_DOCUMENT`, 768 dimensions; [deployed script snapshot](deployed-vectors.py.snapshot).
 - One synchronous `batchEmbedContents` request containing twenty independent content requests, matching the deployed list-input embedding behavior. No asynchronous Batch API discount applies. One attempt per input; no retries, truncation, padding, title prefix, model substitution or production database/index writes.
@@ -27,7 +27,7 @@ This is a rate-derived cost using measured token usage, **not an observed invoic
 
 Formula: `1881 / 1_000_000 × 0.20 = 0.0003762`; scaling the twenty-title sample by `1000 / 20` gives `0.01881`.
 
-The conservative pre-call reservation was $0.0032324, calculated from UTF-8 input bytes plus per-input overhead at the standard paid text rate. Measured usage reduced the rate-derived allowance to $0.0003762. Combined experiment accounting, including two unresolved generation-rejection reservations, is $0.016148324, below the approved $0.05.
+The conservative pre-call reservation was $0.0032324, calculated from UTF-8 input bytes plus per-input overhead at the standard paid text rate. Measured usage reduced the rate-derived allowance to $0.0003762. Combined experiment accounting, including two unresolved generation-rejection reservations, is $0.018639904, below the approved $0.05.
 
 [Google’s current pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-embedding-2) supports the standard paid rate; [the API reference](https://ai.google.dev/api/embeddings) defines synchronous batch output ordering and usage metadata. Both were checked on 2026-09-14.
 

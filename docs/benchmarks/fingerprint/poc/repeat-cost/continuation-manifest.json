@@ -1,0 +1,20 @@
+{
+  "owner_authorization": "sure do it: retry eight unfinished Qwen3.7 titles within original total $0.05; renewed two-attempt allowance for Adolescence",
+  "started_at": "2026-09-14T19:50:47Z",
+  "completed_indices_excluded": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    10,
+    11,
+    12,
+    14,
+    16,
+    17
+  ],
+  "budget_before_including_embedding_usd": "0.016148324",
+  "request_settings": "Unchanged original POC payloads; preserve original shuffled order among remaining D titles"
+}

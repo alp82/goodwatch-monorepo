@@ -1,0 +1,58 @@
+[
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:64230",
+    "source": "0098",
+    "index": 7,
+    "status": "not_attempted",
+    "reason": "D stopped after two upstream 429 responses for Adolescence"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:1396",
+    "source": "0077",
+    "index": 8,
+    "status": "not_attempted",
+    "reason": "D stopped after two upstream 429 responses for Adolescence"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:42009",
+    "source": "0030",
+    "index": 9,
+    "status": "not_attempted",
+    "reason": "D stopped after two upstream 429 responses for Adolescence"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:1233066",
+    "source": "0094",
+    "index": 13,
+    "status": "not_attempted",
+    "reason": "D stopped after two upstream 429 responses for Adolescence"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "show:1399",
+    "source": "0092",
+    "index": 15,
+    "status": "not_attempted",
+    "reason": "D stopped after two upstream 429 responses for Adolescence"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:550",
+    "source": "0082",
+    "index": 18,
+    "status": "not_attempted",
+    "reason": "D stopped after two upstream 429 responses for Adolescence"
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "benchmark_id": "movie:545611",
+    "source": "0080",
+    "index": 19,
+    "status": "not_attempted",
+    "reason": "D stopped after two upstream 429 responses for Adolescence"
+  }
+]

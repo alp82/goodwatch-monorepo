@@ -1,0 +1,40 @@
+{
+  "expected_pairs": 20,
+  "completed_pairs": 20,
+  "outstanding_pairs": [],
+  "http_calls": 25,
+  "rejected_http_calls": 2,
+  "structural_repairs": [
+    {
+      "model_label": "D",
+      "benchmark_id": "movie:603",
+      "initial_artifact": "02-1",
+      "repaired_artifact": "02-2",
+      "errors": [
+        "$.results[0].analysis.production_info: 'animation_style' is a required property"
+      ],
+      "fingerprint_identical": true
+    },
+    {
+      "model_label": "D",
+      "benchmark_id": "show:64230",
+      "initial_artifact": "07-1",
+      "repaired_artifact": "07-2",
+      "errors": [
+        "$.results[0].analysis.production_info: 'animation_style' is a required property"
+      ],
+      "fingerprint_identical": true
+    },
+    {
+      "model_label": "D",
+      "benchmark_id": "movie:550",
+      "initial_artifact": "18-1",
+      "repaired_artifact": "18-2",
+      "errors": [
+        "$.results[0].analysis.production_info: 'animation_style' is a required property"
+      ],
+      "fingerprint_identical": true
+    }
+  ],
+  "owner_authorized_continuation": "Eight unfinished D titles, including renewed allowance for Adolescence; original $0.05 total cap."
+}

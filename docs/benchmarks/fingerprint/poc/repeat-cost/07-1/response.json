@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789415466-GB3tOH62O0MIjDHSPpNo",
+  "object": "chat.completion",
+  "created": 1789415466,
+  "model": "qwen/qwen3.7-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n    {\n      \"benchmark_id\": \"show:64230\",\n      \"analysis\": {\n        \"fingerprint\": {\n          \"scores\": {\n            \"adrenaline\": 7,\n            \"tension\": 5,\n            \"scare\": 3,\n            \"violence\": 8,\n            \"romance\": 4,\n            \"eroticism\": 5,\n            \"wholesome\": 1,\n            \"wonder\": 6,\n            \"pathos\": 3,\n            \"melancholy\": 2,\n            \"uncanny\": 7,\n            \"catharsis\": 4,\n            \"nostalgia\": 2,\n            \"situational_comedy\": 3,\n            \"wit_wordplay\": 5,\n            \"physical_comedy\": 4,\n            \"cringe_humor\": 2,\n            \"absurdist_humor\": 8,\n            \"satire_parody\": 7,\n            \"dark_humor\": 9,\n            \"fantasy\": 7,\n            \"futuristic\": 0,\n            \"historical\": 0,\n            \"contemporary_realism\": 4,\n            \"crime\": 5,\n            \"mystery\": 4,\n            \"warfare\": 1,\n            \"political\": 6,\n            \"sports\": 0,\n            \"biographical\": 0,\n            \"coming_of_age\": 2,\n            \"family_dynamics\": 3,\n            \"psychological\": 4,\n            \"showbiz\": 2,\n            \"gaming\": 0,\n            \"pop_culture\": 1,\n            \"social_commentary\": 8,\n            \"class_and_capitalism\": 3,\n            \"technology_and_humanity\": 1,\n            \"spiritual\": 9,\n            \"narrative_structure\": 6,\n            \"dialogue_quality\": 7,\n            \"character_depth\": 6,\n            \"slow_burn\": 4,\n            \"fast_pace\": 6,\n            \"intrigue\": 6,\n            \"complexity\": 5,\n            \"rewatchability\": 5,\n            \"hopefulness\": 3,\n            \"bleakness\": 5,\n            \"ambiguity\": 4,\n            \"novelty\": 7,\n            \"homage_and_reference\": 4,\n            \"non_linear_narrative\": 1,\n            \"meta_narrative\": 2,\n            \"surrealism\": 7,\n            \"eccentricity\": 9,\n            \"philosophical\": 7,\n            \"educational\": 0,\n            \"direction\": 6,\n            \"acting\": 7,\n            \"cinematography\": 6,\n            \"editing\": 6,\n            \"music_composition\": 6,\n            \"world_immersion\": 6,\n            \"spectacle\": 6,\n            \"visual_stylization\": 7,\n            \"pastiche\": 2,\n            \"psychedelic\": 3,\n            \"grotesque\": 6,\n            \"camp_and_irony\": 8,\n            \"dialogue_centrality\": 7,\n            \"music_centrality\": 5,\n            \"sound_centrality\": 5\n          },\n          \"highlight_keys\": [\n            \"eccentricity\",\n            \"dark_humor\",\n            \"spiritual\",\n            \"social_commentary\",\n            \"absurdist_humor\",\n            \"camp_and_irony\",\n            \"violence\",\n            \"uncanny\"\n          ]\n        },\n        \"is_anime\": false,\n        \"production_info\": {\n          \"method\": \"Live-Action\"\n        },\n        \"content_advisories\": [\n          \"Violence\",\n          \"Nudity\",\n          \"Sexual Content\",\n          \"Strong Language\",\n          \"Drug Use\",\n          \"Disturbing Imagery\"\n        ],\n        \"social_suitability\": {\n          \"solo_watch\": true,\n          \"date_night\": false,\n          \"group_party\": true,\n          \"family\": false,\n          \"partner\": false,\n          \"friends\": true,\n          \"kids\": false,\n          \"teens\": false,\n          \"adults\": true,\n          \"intergenerational\": false,\n          \"public_viewing_safe\": true\n        },\n        \"viewing_context\": {\n          \"is_thought_provoking\": true,\n          \"is_pure_escapism\": false,\n          \"is_background_friendly\": false,\n          \"is_comfort_watch\": false,\n          \"is_binge_friendly\": true,\n          \"is_drop_in_friendly\": false\n        },\n        \"essence_tags\": [\n          \"Gritty Dark Comedy\",\n          \"Theological Satire\",\n          \"Supernatural Action-Adventure\",\n          \"Bizarre & Unhinged\",\n          \"Visceral Violence\",\n          \"Cult Classic Aesthetic\",\n          \"Anti-Hero Journey\",\n          \"Southern Gothic Fantasy\",\n          \"Provocative Social Critique\",\n          \"Unpredictable Narrative\"\n        ],\n        \"essence_text\": \"A raucous and visually distinct blend of theological satire and supernatural action, following a preacher on an unholy quest to confront God. The series is defined by its irreverent tone, mixing graphic violence with absurd humor and sharp social commentary. It creates a unique world where the divine and the grotesque collide, driven by eccentric characters and unpredictable plot twists. This is a wild, unapologetic ride that challenges religious norms while delivering high-octane entertainment.\"\n      }\n    }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7998,
+    "completion_tokens": 1309,
+    "total_tokens": 9307,
+    "cost": 0.00022579,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00022579,
+      "upstream_inference_prompt_cost": 5.562e-05,
+      "upstream_inference_completions_cost": 0.00017017
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
