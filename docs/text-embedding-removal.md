@@ -81,6 +81,9 @@ retained authoritative copy; do not roll back to a build that targets `media`.
   strategy to gRPC.
 - Decode nested protobuf values so trait scores can actually participate in
   the existing Related/Preview ranking formula.
+- Keep the live search index enabled during scheduled publication and close both
+  database connections even when publication fails. Bulk indexing changes belong
+  only to the isolated migration destination.
 - Version affected cache names with the new collection to avoid serving old
   rankings after deployment.
 - Retire the old Explore text-vector API with HTTP 410; old page URLs redirect
@@ -99,7 +102,8 @@ AGENTS.md; verify the existing dev server and a production build instead.
 
 - 31 DNA tests, 20 publication tests, 8 publication-retry tests and 5 migration
   tests pass (64 total). An additional native-payload migration regression and
-  all 49 streaming-country/publication tests also pass (114 total).
+  all 49 streaming-country/publication tests also pass. The scheduled publisher
+  failure regression also passes (115 total).
 - The production webapp build passes. Typechecking reports 287 existing errors,
   compared with 292 on the unchanged parent commit; the changed Qdrant wrapper
   has no TypeScript errors. The differing union-member order and absolute paths

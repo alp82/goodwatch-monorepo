@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import unittest
 import warnings
+from unittest.mock import Mock, patch
 
 import mongomock
 from qdrant_client import QdrantClient, grpc, models as qm
@@ -102,6 +103,19 @@ class TextEmbeddingRemovalTest(unittest.TestCase):
         source.ClearField("vectors")
         with self.assertRaisesRegex(ValueError, "no valid"):
             migration.fingerprint(migration.retained_point(source))
+
+    def test_scheduled_publication_keeps_indexes_and_closes_connections_on_failure(self):
+        from f.sync.copy import vector_data
+        connector = Mock()
+        with patch.object(vector_data, "init_mongodb"), \
+                patch.object(vector_data, "close_mongodb") as close, \
+                patch.object(vector_data, "QdrantConnector", return_value=connector), \
+                patch.object(vector_data, "copy_to_qdrant", side_effect=RuntimeError("write failed")):
+            with self.assertRaisesRegex(RuntimeError, "write failed"):
+                vector_data.main(movie_ids=["603"])
+        connector.client.update_collection.assert_not_called()
+        connector.close.assert_called_once()
+        close.assert_called_once()
 
 
 if __name__ == "__main__":

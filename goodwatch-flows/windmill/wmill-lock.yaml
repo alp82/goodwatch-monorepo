@@ -113,7 +113,7 @@ locks:
   f/sync/copy/tmdb_details: 70e0a525de5a1e5bfaae8fc728bc8fdb2cbde37ad571dd3e6e93d329ec7f89e5
   f/sync/copy/tmdb_streaming: e0cb0b6578c4f6196165d24956dfa023265786ae8a5bfc943a9459ba3d4852bc
   f/sync/copy/tvtropes: 6918d36b4f895e7cd30d8cab9b051821c01b099f4a453b19403a5c7caa475201
-  f/sync/copy/vector_data: df3716f1909c2bb2baf8aa58d9e58bcea928302fb586da4c8ecf0efa34a30cb9
+  f/sync/copy/vector_data: a777c4d788783382d19ba2c68028562b03c8301b9cf141befb7b1211c035464c
   f/sync/init/cratedb: aabd1d0a9793c172a5d2b6f0acfd9a5662038437c4db8085229be21a30c8b59d
   f/sync/init/milvus: 5df8f35e0f5a1cd76913276651f81b69c068459960c1db48afa82d4f73dcbe56
   f/sync/init/qdrant: 9ef9848baf4354fd647038385655b9b6b85f72a85cf247212e606361bf468c4b

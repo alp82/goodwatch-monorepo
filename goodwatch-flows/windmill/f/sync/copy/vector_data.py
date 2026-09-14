@@ -532,48 +532,20 @@ def main(
     movie_ids: Optional[List[str]] = None,
     show_ids: Optional[List[str]] = None,
 ):
-    """
-    - If you pass IDs, we'll restrict to those (across recent window).
-    - payload_only=True -> update payloads even if vectors are missing.
-    """
-    movie_ids = movie_ids or []
-    show_ids = show_ids or []
-
-    init_mongodb()
-    qc = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
-
-    # disable index building entirely
-    # vectors will be stored, but not indexed until enabled after the copy process
-    qc.client.update_collection(
-        collection_name=MEDIA_COLLECTION,
-        hnsw_config=qm.HnswConfigDiff(
-            m=0,
-        ),
-    )
-
-    def _id_selector(ids: List[str]) -> dict:
+    """Publish recent fingerprints, optionally restricting each media type to IDs."""
+    def _id_selector(ids: Optional[List[str]]) -> dict:
         if not ids:
             return {}
-        # your build_query_selector_for_object_ids logic inlined:
         return {"tmdb_id": {"$in": [int(x) for x in ids]}}
 
-    res = {}
-    if movie_ids is not None:
-        print("Copying MOVIES to Qdrant…")
-        res["movies"] = copy_to_qdrant(qc, "movie", _id_selector(movie_ids))
-    if show_ids is not None:
-        print("Copying SHOWS to Qdrant…")
-        res["shows"] = copy_to_qdrant(qc, "show", _id_selector(show_ids))
-
-    # re-enable index building
-    qc.client.update_collection(
-        collection_name=MEDIA_COLLECTION,
-        hnsw_config=qm.HnswConfigDiff(
-            m=16,
-        ),
-    )
-
-    qc.close()
-    close_mongodb()
-
-    return res
+    # Routine publication must not disable/rebuild the collection's live HNSW
+    # graph. Only the isolated migration destination needs bulk-load tuning.
+    with ExitStack() as stack:
+        init_mongodb()
+        stack.callback(close_mongodb)
+        qc = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
+        stack.callback(qc.close)
+        return {
+            "movies": copy_to_qdrant(qc, "movie", _id_selector(movie_ids)),
+            "shows": copy_to_qdrant(qc, "show", _id_selector(show_ids)),
+        }
