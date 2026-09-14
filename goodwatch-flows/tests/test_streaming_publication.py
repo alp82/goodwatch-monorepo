@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Iterator, Optional
 import unittest
 import sys
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from html import escape
 
 import mongomock
@@ -70,7 +70,7 @@ def availability(country: str = "US", **fields: Any) -> dict:
 def load_copy(db: Any) -> Callable[..., dict]:
     path = ROOT / "sync" / "copy" / "tmdb_streaming.py"
     tree = ast.parse(path.read_text())
-    body = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.Assign))]
+    body = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.Assign, ast.ClassDef))]
     namespace = dict(defaultdict=defaultdict, datetime=datetime, timedelta=timedelta,
                      Optional=Optional, Any=Any, Callable=Callable, Iterator=Iterator,
                      contextmanager=contextmanager, uuid4=uuid4, DuplicateKeyError=DuplicateKeyError,
@@ -83,13 +83,14 @@ def load_copy(db: Any) -> Callable[..., dict]:
     namespace["MediaType"] = str
     exec(compile(ast.Module(body=[model], type_ignores=[]), "crate_models.py", "exec"), namespace)
     exec(compile(ast.Module(body=body, type_ignores=[]), str(path), "exec"), namespace)
+    namespace["refresh_unmapped_country"] = Mock(return_value={"outcome": "failed"})
     return namespace["copy_media"]
 
 
 class StreamingPublicationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.db = mongomock.MongoClient().db
-        self.now = datetime(2026, 9, 10)
+        self.now = datetime.utcnow()
         self.db.tmdb_tv_details.insert_one({"tmdb_id": 42})
         self.copy = load_copy(self.db)
 
@@ -98,7 +99,7 @@ class StreamingPublicationTests(unittest.TestCase):
 
     def test_details_then_pending_streaming_preserves_published_child_aggregate_and_vector(self) -> None:
         import sys
-        from unittest.mock import patch
+        from unittest.mock import Mock, patch
         sys.path.insert(0, str(ROOT.parent))
         from f.sync.copy import tmdb_details, tmdb_streaming
         from test_priority_publish import VectorSerializationTests
@@ -181,6 +182,74 @@ class StreamingPublicationTests(unittest.TestCase):
         self.assertEqual(set(crate.media[42]["streaming_availabilities"]), {"US_9", "DE_8"})
         self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], ["DE"])
 
+    def test_old_resolvable_country_publishes_without_refresh(self) -> None:
+        self.db.tmdb_tv_providers.insert_one({
+            "tmdb_id": 42, "country_code": "CA", "updated_at": self.now - timedelta(days=480),
+            "streaming_links": [{"provider_name": "Amazon", "stream_type": "buy", "stream_url": "https://old-valid"}],
+        })
+        crate = Crate()
+        result = self.publish(crate)
+        self.assertEqual(crate.rows[0]["stream_url"], "https://old-valid")
+        self.assertEqual(result["publication"]["status"], "success")
+        self.copy.__globals__["refresh_unmapped_country"].assert_not_called()
+
+    def test_missing_provider_refreshes_outside_lease_and_reloads_before_publication(self) -> None:
+        for age in (0, 480):
+            with self.subTest(age=age):
+                self.db.tmdb_tv_providers.delete_many({})
+                identity = self.db.tmdb_tv_providers.insert_one({
+                    "tmdb_id": 42, "country_code": "CA", "updated_at": self.now - timedelta(days=age),
+                    "streaming_links": [{"provider_name": "Cineplex", "stream_type": "buy", "stream_url": clickout_url("Cineplex", 140)}],
+                }).inserted_id
+                crate = Crate([availability("CA")])
+                def refresh(provider, media_type):
+                    self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
+                    self.assertEqual(crate.rows, [availability("CA")])
+                    self.assertEqual((provider["_id"], media_type), (identity, "show"))
+                    self.db.tmdb_tv_providers.update_one({"_id": identity}, {"$set": {
+                        "updated_at": self.now, "streaming_links": [{"provider_name": "Amazon", "stream_type": "buy", "stream_url": "https://refreshed"}],
+                    }})
+                    return {"outcome": "fetched"}
+                with patch.dict(self.copy.__globals__, refresh_unmapped_country=Mock(side_effect=refresh)):
+                    result = self.publish(crate)
+                    self.copy.__globals__["refresh_unmapped_country"].assert_called_once()
+                self.assertEqual(crate.rows[0]["stream_url"], "https://refreshed")
+                self.assertEqual(result["publication"]["status"], "success")
+
+    def test_refresh_adapter_uses_country_id_and_explicit_mapping_retry(self) -> None:
+        from f.sync.copy.tmdb_streaming import refresh_unmapped_country
+        import wmill
+        for media_type, crawler_type in (("movie", "movie"), ("show", "tv")):
+            with patch.object(wmill, "run_script", return_value={"outcome": "fetched"}) as run:
+                result = refresh_unmapped_country({"_id": "country-document-id"}, media_type)
+                self.assertEqual(result["outcome"], "fetched")
+                run.assert_called_once_with(
+                    path="f/tmdb_web/tmdb_crawl_providers/fetch",
+                    args={"next_id": {"id": "country-document-id", "type": crawler_type}, "refresh_for_mapping": True},
+                    timeout=90,
+                )
+
+    def test_failed_or_still_unmapped_refresh_defers_only_that_country(self) -> None:
+        for outcome in ("failed", "deferred", "fetched", "exception"):
+            with self.subTest(outcome=outcome):
+                self.db.tmdb_tv_providers.delete_many({})
+                self.db.tmdb_tv_providers.insert_many([
+                    {"tmdb_id": 42, "country_code": "US", "updated_at": self.now, "streaming_links": []},
+                    {"tmdb_id": 42, "country_code": "CA", "updated_at": self.now - timedelta(days=480),
+                     "streaming_links": [{"provider_name": "Cineplex", "stream_type": "buy", "stream_url": clickout_url("Cineplex", 140)}]},
+                ])
+                retained = availability("CA")
+                crate = Crate([availability(), retained])
+                refresh = Mock(return_value={"outcome": outcome})
+                if outcome == "exception":
+                    refresh.side_effect = RuntimeError("fetch worker failed")
+                with patch.dict(self.copy.__globals__, refresh_unmapped_country=refresh):
+                    result = self.copy(crate, media_type="show")
+                refresh.assert_called_once()
+                self.assertEqual(crate.rows, [retained])
+                self.assertEqual(crate.media[42]["streaming_availabilities"], ["CA_8"])
+                self.assertEqual(result["publication"]["status"], "partial_success")
+
     def test_watch_page_provider_identity_survives_publication_and_vendor_namespace(self) -> None:
         from f.tmdb_web.tmdb_crawl_providers.fetch import crawl_tmdb_watch_page
         identities = [('U-NEXT', 84, 84), ('HBO Max on U-Next', 2284, 2284), ('Disney Plus', 2706, 337)]
@@ -214,14 +283,18 @@ class StreamingPublicationTests(unittest.TestCase):
         self.publish(crate)
         self.assertEqual(crate.media[42]['streaming_availabilities'], ['JP_2284'])
 
-    def test_invalid_context_or_unknown_full_name_fails_before_any_write(self) -> None:
+    def test_invalid_context_fails_and_unknown_full_name_defers_without_data_loss(self) -> None:
         for url in ['https://click.justwatch.com/a?cx=bad!', clickout_url('Unknown full provider', 9)]:
             self.db.tmdb_tv_providers.delete_many({})
             self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US', 'updated_at': self.now,
                 'streaming_links': [{'provider_name': 'Amazon', 'stream_type': 'flatrate', 'stream_url': url}]})
             crate = Crate([availability()])
-            with self.assertRaises((ValueError, RuntimeError)):
-                self.publish(crate)
+            if "cx=bad!" in url:
+                with self.assertRaises(ValueError):
+                    self.publish(crate)
+            else:
+                result = self.publish(crate)
+                self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], ["US"])
             self.assertEqual(crate.rows, [availability()])
             self.assertEqual(crate.media, {})
 
@@ -240,8 +313,8 @@ class StreamingPublicationTests(unittest.TestCase):
                 self.publish(crate)
                 self.assertEqual(crate.media[42]['streaming_availabilities'], ['US_9'])
             else:
-                with self.assertRaises(RuntimeError):
-                    self.publish(crate)
+                result = self.publish(crate)
+                self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], ["US"])
                 self.assertEqual(crate.rows, [availability()])
                 self.assertEqual(crate.media, {})
 
@@ -267,10 +340,10 @@ class StreamingPublicationTests(unittest.TestCase):
                     return original_select(sql, params)
                 crate.select = select
                 if expected is None:
-                    with self.assertRaises(RuntimeError):
-                        self.publish(crate)
-                    self.assertEqual(crate.rows, [availability()])
-                    self.assertEqual(crate.media, {})
+                    result = self.publish(crate)
+                    self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], [country])
+                    self.assertIn(availability(), crate.rows)
+                    self.assertFalse(any(row.get("stream_url") == "https://old-provider.example" for row in crate.rows))
                 else:
                     self.publish(crate)
                     offers = [row for row in crate.rows if row['country_code'] == country and row.get('stream_url') == 'https://old-provider.example']
@@ -289,10 +362,10 @@ class StreamingPublicationTests(unittest.TestCase):
                     return [{'name': 'HBO Max', 'tmdb_id': identity, 'media_type': 'show', 'order_by_country': {'BE': 1, 'NL': 1}} for identity in [384, 1899]]
                 return original_select(sql, params)
             crate.select = select
-            with self.assertRaises(RuntimeError):
-                self.publish(crate)
-            self.assertEqual(crate.rows, [availability()])
-            self.assertEqual(crate.media, {})
+            result = self.publish(crate)
+            self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], ["BE"])
+            self.assertIn(availability(), crate.rows)
+            self.assertFalse(any(row.get("stream_url") == "https://old-provider.example" for row in crate.rows))
 
     def test_catalog_name_mismatch_uses_only_verified_scoped_api_identity(self) -> None:
         catalog = [
@@ -342,20 +415,21 @@ class StreamingPublicationTests(unittest.TestCase):
                     self.assertEqual(crate.rows[0]["stream_url"], "https://www.justwatch.com/au/movie/four-rooms")
                     self.assertEqual(crate.media[5]["streaming_availabilities"], ["AU_2285"])
                 else:
-                    with self.assertRaisesRegex(RuntimeError, "Unmapped streaming provider 'JustWatchTV' for movie:5 in AU"):
-                        self.copy(crate, {"tmdb_id": {"$in": [5]}}, "movie", recent_only=False)
-                    self.assertEqual(crate.rows, [old])
-                    self.assertEqual(crate.media, {})
+                    result = self.copy(crate, {"tmdb_id": {"$in": [5]}}, "movie", recent_only=False)
+                    self.assertEqual(result["publication"]["titles"]["5"]["deferred_countries"], ["AU"])
+                    self.assertIn(old, crate.rows)
+                    self.assertFalse(any(row.get("stream_url") == "https://www.justwatch.com/au/movie/four-rooms" for row in crate.rows))
 
-    def test_unknown_verified_provider_fails_without_clearing_previous_offers(self) -> None:
+    def test_unknown_verified_provider_defers_without_clearing_previous_offers(self) -> None:
         self.db.tmdb_tv_providers.insert_one({
             "tmdb_id": 42, "country_code": "US", "updated_at": self.now,
             "streaming_links": [{"provider_name": "Unmapped Service", "stream_type": "flatrate",
                                  "stream_url": "https://new"}],
         })
         crate = Crate([availability()])
-        with self.assertRaisesRegex(RuntimeError, "Unmapped streaming provider"):
-            self.publish(crate)
+        result = self.publish(crate)
+        self.assertEqual(result["publication"]["titles"]["42"]["deferred_countries"], ["US"])
+        self.copy.__globals__["refresh_unmapped_country"].assert_called_once()
         self.assertEqual(crate.rows, [availability()])
         self.assertEqual(crate.media, {})
         self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)

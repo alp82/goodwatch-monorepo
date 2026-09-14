@@ -177,7 +177,7 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
     )
 
 
-def main(next_id: dict) -> dict:
+def main(next_id: dict, refresh_for_mapping: bool = False) -> dict:
     media_type = next_id.get("type")
     if (
         media_type not in ("movie", "tv")
@@ -213,7 +213,7 @@ def main(next_id: dict) -> dict:
         )
         outcome["country_code"] = country
         country_state.normalize_document(collection, document, country)
-        claimed = country_state.claim(db, collection, identity)
+        claimed = country_state.claim(db, collection, identity, refresh_for_mapping=refresh_for_mapping)
         if claimed is None:
             current = collection.find_one({"_id": identity})
             now = datetime.utcnow()
@@ -226,8 +226,9 @@ def main(next_id: dict) -> dict:
             )
             return {
                 **outcome,
-                "outcome": "fresh" if fresh else "deferred",
+                "outcome": "fresh" if fresh and not refresh_for_mapping else "deferred",
                 "next_fetch_at": current.get("next_fetch_at"),
+                "mapping_refresh_after": current.get("mapping_refresh_after"),
                 "upstream_retry_at": country_state.upstream_deadline(db),
             }
         try:

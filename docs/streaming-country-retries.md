@@ -12,6 +12,11 @@ and retry after 30 minutes, two hours, then six hours with positive jitter and
 any longer upstream retry delay. A shared upstream backoff prevents another
 country or worker immediately bypassing a source rate limit.
 
+An unresolved provider during publication can request a mapping-recovery fetch,
+even for a fresh successful scrape. This uses the same atomic country claim and
+failure/upstream backoff, with an additional 30-minute `mapping_refresh_after`
+deadline to bound repeated requests. It does not alter normal scheduled freshness.
+
 A worker claims a country atomically immediately before requesting its page.
 An expiring token fences both successful and failed writes: an expired worker
 cannot overwrite or release its replacement's claim. Fresh, failed and deferred

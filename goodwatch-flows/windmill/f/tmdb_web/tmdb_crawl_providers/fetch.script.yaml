@@ -6,6 +6,10 @@ schema:
   $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
+    refresh_for_mapping:
+      type: boolean
+      description: Retry an unresolved provider identity while respecting claims and failure backoff.
+      default: false
     next_id:
       type: object
       description: ''

@@ -15,6 +15,7 @@ from pymongo.database import Database
 
 FRESHNESS = timedelta(days=7)
 LEASE_DURATION = timedelta(minutes=5)
+MAPPING_REFRESH_BACKOFF = timedelta(minutes=30)
 
 
 def eligibility(now: datetime | None = None) -> dict:
@@ -49,18 +50,29 @@ def claim(
     collection: Collection,
     identity: ObjectId,
     now: datetime | None = None,
+    *, refresh_for_mapping: bool = False,
 ) -> dict | None:
     now = now or datetime.utcnow()
     if upstream_deadline(db, now) is not None:
         return None
+    selector = eligibility(now)
+    lease = {"lease_token": uuid4().hex, "lease_expires_at": now + LEASE_DURATION}
+    if refresh_for_mapping:
+        # A failed identity lookup can invalidate even a recent successful scrape.
+        # Bypass its freshness deadline, never an active claim or failure backoff.
+        selector = {"$and": [
+            {"country_identity_error": None},
+            {"$or": [{"lease_expires_at": None}, {"lease_expires_at": {"$lte": now}}]},
+            {"$or": [{"mapping_refresh_after": None}, {"mapping_refresh_after": {"$lte": now}}]},
+            {"$or": [{"consecutive_failures": None}, {"consecutive_failures": 0},
+                     {"next_fetch_at": {"$lte": now}}]},
+        ]}
+        # Retain this after a successful HTTP response: its provider names may
+        # still be unmapped, and repeated publication must not hammer the source.
+        lease["mapping_refresh_after"] = now + MAPPING_REFRESH_BACKOFF
     return collection.find_one_and_update(
-        {"_id": identity, **eligibility(now)},
-        {
-            "$set": {
-                "lease_token": uuid4().hex,
-                "lease_expires_at": now + LEASE_DURATION,
-            }
-        },
+        {"_id": identity, **selector},
+        {"$set": lease},
         return_document=ReturnDocument.AFTER,
     )
 

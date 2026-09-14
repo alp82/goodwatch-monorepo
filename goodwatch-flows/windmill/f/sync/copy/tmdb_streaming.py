@@ -166,15 +166,23 @@ def scoped_provider_id(
     return next(iter(country_ids)) if len(country_ids) == 1 else None
 
 
+class UnmappedStreamingProvider(RuntimeError):
+    def __init__(self, name: str, tmdb_id: int, media_type: str, country: str):
+        super().__init__(f"Unmapped streaming provider {name!r} for {media_type}:{tmdb_id} in {country}")
+        self.country = country
+
+
 def reconcile_availability(
     tmdb_id: int, media_type: str, existing: list[dict], details: dict,
     providers: list[dict], service_ids: dict[str, list[dict]],
+    deferred_countries: set[str] | None = None,
 ) -> tuple[dict, dict, dict]:
     """Replace confirmed source scopes and retain the other source's contribution."""
     api_results = (details.get("watch_providers") or {}).get("results")
     api_results = api_results if details.get("updated_at") and isinstance(api_results, dict) else {}
     verified = {row["country_code"]: row for row in providers
                 if row.get("country_code") and row.get("updated_at")
+                and row["country_code"] not in (deferred_countries or set())
                 and not row.get("consecutive_failures") and not row.get("country_identity_error")}
     rows = {}
     for original in existing:
@@ -216,14 +224,63 @@ def reconcile_availability(
             provider_name = provider_name_from_url(offer.get("stream_url")) or offer.get("provider_name")
             service_id = scoped_provider_id(provider_name, country, offer["stream_type"], service_ids, api_results)
             if service_id is None:
-                raise RuntimeError(
-                    f"Unmapped streaming provider {provider_name!r} "
-                    f"for {media_type}:{tmdb_id} in {country}"
-                )
+                raise UnmappedStreamingProvider(provider_name, tmdb_id, media_type, country)
             entry(country, offer["stream_type"], service_id).update(
                 stream_url=offer.get("stream_url"), price_dollar=offer.get("price_dollar"),
                 quality=offer.get("quality"))
     return rows, verified, api_results
+
+
+def refresh_unmapped_country(provider: dict, media_type: str) -> dict:
+    import wmill
+
+    return wmill.run_script(
+        path="f/tmdb_web/tmdb_crawl_providers/fetch",
+        args={"next_id": {"id": str(provider["_id"]), "type": "movie" if media_type == "movie" else "tv"},
+              "refresh_for_mapping": True},
+        timeout=90,
+    )
+
+
+@contextmanager
+def publication_snapshot(
+    db: Any, connector: CrateConnector, tmdb_id: int, media_type: str,
+    details_collection: Any, providers_collection: Any, service_ids: dict,
+) -> Iterator[tuple]:
+    """Retry unresolved countries once, without holding a write lease during HTTP."""
+    refresh_outcomes = {}
+    deferred = set()
+    while True:
+        with publication_lease(db, media_type, tmdb_id) as check_owned:
+            details = fetch_documents_in_batch([tmdb_id], details_collection).get(tmdb_id, {})
+            providers = fetch_all_documents_in_batch([tmdb_id], providers_collection).get(tmdb_id, [])
+            check_owned()
+            connector.run("REFRESH TABLE streaming_availability")
+            existing = connector.select(
+                "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?",
+                ([tmdb_id], media_type),
+            )
+            try:
+                rows, verified, api_results = reconcile_availability(
+                    tmdb_id, media_type, existing, details, providers, service_ids, deferred)
+            except UnmappedStreamingProvider as error:
+                country = error.country
+                if country in refresh_outcomes:
+                    deferred.add(country)
+                    continue
+                provider = next(row for row in providers if row.get("country_code") == country)
+            else:
+                yield check_owned, existing, providers, rows, verified, api_results, refresh_outcomes
+                return
+        # The fetch job owns the country claim, retry state and source writes.
+        # Re-read both source snapshots and published state after reacquiring the
+        # publication lease; another publisher may have run while we fetched.
+        try:
+            result = refresh_unmapped_country(provider, media_type)
+            refresh_outcomes[country] = result.get("outcome", "failed")
+        except Exception:
+            refresh_outcomes[country] = "failed"
+        print(f"Provider mapping refresh for {media_type}:{tmdb_id}/{country}: {refresh_outcomes[country]}")
 
 
 def copy_media(
@@ -276,27 +333,17 @@ def copy_media(
         if not tmdb_ids:
             break
         for tmdb_id in tmdb_ids:
-            with publication_lease(mongo_db, media_type, tmdb_id) as check_owned:
-                # Read each source snapshot while holding the shared title lock.
-                details_by_id = fetch_documents_in_batch([tmdb_id], mongo_details)
-                providers_by_id = fetch_all_documents_in_batch([tmdb_id], mongo_providers)
-                check_owned()
-                connector.run("REFRESH TABLE streaming_availability")
-                existing_by_id = {tmdb_id: connector.select(
-                    "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?",
-                    ([tmdb_id], media_type),
-                )}
-                providers = providers_by_id.get(tmdb_id, [])
-                existing = existing_by_id[tmdb_id]
-                rows, verified, api_results = reconcile_availability(
-                    tmdb_id, media_type, existing, details_by_id.get(tmdb_id, {}), providers, service_ids)
+            with publication_snapshot(
+                mongo_db, connector, tmdb_id, media_type, mongo_details, mongo_providers, service_ids,
+            ) as snapshot:
+                check_owned, existing, providers, rows, verified, api_results, refresh_outcomes = snapshot
                 unverified = [
                     row for row in providers
                     if verified.get(row.get("country_code")) is not row
                 ]
                 deferred = sorted({row["country_code"] for row in unverified
                                    if row.get("country_code")})
-                summary = {"verified_countries": sorted(verified), "deferred_countries": deferred,
+                summary = {"provider_refresh_outcomes": refresh_outcomes, "verified_countries": sorted(verified), "deferred_countries": deferred,
                            "api_countries": sorted(api_results), "provider_state": "present" if providers else "absent",
                            "deferred_country_count": len(unverified),
                            "unidentified_country_count": sum(not row.get("country_code") for row in unverified),
