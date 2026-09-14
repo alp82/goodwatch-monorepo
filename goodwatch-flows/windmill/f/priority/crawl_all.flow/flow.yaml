@@ -15,6 +15,9 @@ value:
         path: f/priority/next
         tag_override: null
     - id: i
+      timeout:
+        type: static
+        value: 600
       value:
         type: script
         input_transforms:
@@ -25,22 +28,25 @@ value:
         tag_override: null
       continue_on_error: false
       retry:
+        constant:
+          attempts: 0
+          seconds: 0
         exponential:
           attempts: 5
           multiplier: 1
           random_factor: 0
           seconds: 2
+    - id: b
       timeout:
         type: static
-        value: 600
-    - id: b
+        value: 1800
       summary: ''
       value:
         type: branchall
         branches:
           - summary: IMDB
             modules:
-              - id: n
+              - id: 'n'
                 value:
                   type: script
                   input_transforms:
@@ -51,6 +57,9 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -84,6 +93,9 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -117,6 +129,9 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -150,6 +165,9 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -183,6 +201,9 @@ value:
                   tag_override: null
                 continue_on_error: false
                 retry:
+                  constant:
+                    attempts: 0
+                    seconds: 0
                   exponential:
                     attempts: 5
                     multiplier: 1
@@ -204,10 +225,10 @@ value:
             parallel: true
             skip_failure: false
         parallel: true
+    - id: o
       timeout:
         type: static
-        value: 1800
-    - id: o
+        value: 600
       summary: Publish crawled titles to CrateDB
       value:
         type: script
@@ -217,10 +238,7 @@ value:
             expr: results.g.tmdb_ids
         path: f/priority/publish
       continue_on_error: false
-      timeout:
-        type: static
-        value: 600
-    - id: y
+    - id: 'y'
       value:
         type: script
         input_transforms:
@@ -232,8 +250,9 @@ value:
             expr: results.o
         path: f/priority/reset
         tag_override: null
+  concurrency_time_window_s: 0
 schema:
-  $schema: https://json-schema.org/draft/2020-12/schema
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
   order:
     - movie_tmdb_id
