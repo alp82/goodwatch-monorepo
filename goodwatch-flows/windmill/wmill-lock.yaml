@@ -14,15 +14,16 @@ locks:
   f/db/milvus: 3a4b8805c5d17c0584d3b942f01aa70142dd23b4f254d0fa5e484628b3340585
   f/db/mongodb: 0067eac7ec0bdba1a7d3a42a3b7ee334d4006d56023808852c28397afc8a3a17
   f/db/qdrant: 11395fb35c968869b412658b2e428dbcc1da8dd06379e46602a0cf0ce4a093a1
-  f/db/redis: dd6632c358bc3dd6b0cd66db3ec1b102248459c3bac77f02bb84fb9eca97f842
+  f/db/redis: 5fd583e9b1dcd7d08657a4e3c4061f5e7ab323cfb11809d690861301bf7becf1
   f/dna/crawl_all_by_id.flow:
     __flow_hash: 3c19f64f5490bfeba2d6f63817c377ac320c0c0f7b9d28a13d32eca8dd05beda
     flatten_and_combine_results.inline_script.py: 2f594b15e5b7549c9249f39c0729a5928594d58a6971cad4ab09a475bb85c698
   f/dna/generate_dna.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
-  f/dna/generate/fetch: 0eea708e51ecfeadece4013b2da868dc1f442452f87a88337799a80af0e260d6
+  f/dna/generate/fetch: d50c1e0bb402fe9862aea9c62671480b332502fdf0de8e78d1379095e0f19954
   f/dna/generate/iterate: 47e09dd757cab2870951446e16d566d37db2e1a87c5674e41b204908f6b481a7
-  f/dna/generate/next: fa2d15df0f52193707b4b64810001fda128bad9ddeeff43730c7b6a03017e74d
+  f/dna/generate/next: ebd6d502da3c068b3bafc976ad8df74b3202139b89937d3b85b4498b9bee1abb
+  f/dna/generate/spend_pause: b89bc4ae772639b23385eebc826972f5154f84b1c6ef3c325848db4672e2e67f
   f/dna/generate/vectors: 1fb5e6f43253d2b50b1a0140a0c2613a7ae2d2b5f32660b3c02585807e49acf8
   f/dna/init/main: 77d63a8d563e5da7698327f6d7fb4dd718be883e6f78fca98da657dfbe8efae3
   f/dna/init/update: 69cb4aac86975a3173250982c18e76e362e3962844570e85e82dc329f9cd4d96
