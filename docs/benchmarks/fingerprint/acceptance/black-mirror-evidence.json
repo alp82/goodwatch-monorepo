@@ -1,0 +1,570 @@
+[
+  {
+    "id": "01a0a011-873b-3d97-1b8e-d7a382199786",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark",
+    "script_hash": null,
+    "duration_ms": 24055,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 4,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a011-876a-c77c-5663-76a43e442c3c",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a011-8c1d-8ebc-a699-0aceee9543f0",
+          "type": "Success",
+          "skipped": false,
+          "flow_jobs": [
+            "01a0a011-8c1d-8ebc-a699-0aceee9543f0"
+          ],
+          "flow_jobs_success": [
+            true
+          ],
+          "flow_jobs_duration": {
+            "started_at": [
+              "2026-09-14T13:18:19.698666Z"
+            ],
+            "duration_ms": [
+              19405
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "job": "01a0a011-d821-7b04-3e76-63a4d926dbc8",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "vectors",
+          "job": "01a0a011-d8a8-6dd3-e746-9c5cb5037d51",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a011-876a-c77c-5663-76a43e442c3c",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 1164,
+    "result": [
+      [
+        {
+          "id": "6849900909c1e22f75691114",
+          "type": "tv",
+          "tmdb_id": 42009
+        }
+      ]
+    ],
+    "logs": "job=01a0a011-876a-c77c-5663-76a43e442c3c tag=python3 worker=wk-default-5a13c6df3030-F9Ldo hostname=5a13c6df3030 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a011-8c1d-8ebc-a699-0aceee9543f0",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0",
+    "script_hash": null,
+    "duration_ms": 19405,
+    "result": [
+      {
+        "id": "6849900909c1e22f75691114",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 6,
+              "scare": 5,
+              "acting": 8,
+              "gaming": 6,
+              "pathos": 7,
+              "sports": 0,
+              "wonder": 4,
+              "editing": 8,
+              "fantasy": 2,
+              "mystery": 7,
+              "novelty": 8,
+              "romance": 3,
+              "showbiz": 2,
+              "tension": 9,
+              "uncanny": 9,
+              "warfare": 1,
+              "intrigue": 9,
+              "pastiche": 2,
+              "violence": 6,
+              "ambiguity": 6,
+              "bleakness": 9,
+              "catharsis": 5,
+              "direction": 8,
+              "eroticism": 4,
+              "fast_pace": 5,
+              "grotesque": 5,
+              "nostalgia": 2,
+              "political": 7,
+              "slow_burn": 7,
+              "spectacle": 6,
+              "spiritual": 3,
+              "wholesome": 1,
+              "adrenaline": 6,
+              "complexity": 7,
+              "dark_humor": 7,
+              "futuristic": 10,
+              "historical": 0,
+              "melancholy": 8,
+              "surrealism": 6,
+              "educational": 4,
+              "hopefulness": 2,
+              "pop_culture": 7,
+              "psychedelic": 3,
+              "biographical": 0,
+              "cringe_humor": 7,
+              "eccentricity": 7,
+              "wit_wordplay": 6,
+              "coming_of_age": 2,
+              "philosophical": 9,
+              "psychological": 10,
+              "satire_parody": 9,
+              "camp_and_irony": 4,
+              "cinematography": 8,
+              "meta_narrative": 5,
+              "rewatchability": 6,
+              "absurdist_humor": 4,
+              "character_depth": 8,
+              "family_dynamics": 5,
+              "physical_comedy": 0,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 6,
+              "sound_centrality": 7,
+              "music_composition": 7,
+              "social_commentary": 10,
+              "situational_comedy": 1,
+              "visual_stylization": 7,
+              "dialogue_centrality": 7,
+              "narrative_structure": 9,
+              "class_and_capitalism": 7,
+              "contemporary_realism": 8,
+              "homage_and_reference": 3,
+              "non_linear_narrative": 4,
+              "technology_and_humanity": 10
+            },
+            "highlight_keys": [
+              "technology_and_humanity",
+              "social_commentary",
+              "psychological",
+              "bleakness",
+              "satire_parody",
+              "uncanny",
+              "futuristic",
+              "philosophical"
+            ]
+          },
+          "essence_tags": [
+            "Dystopian Sci-Fi Anthology",
+            "Technological Cautionary Tales",
+            "Psychological Horror",
+            "Social Satire",
+            "Dark Speculative Fiction",
+            "Existential Dread",
+            "Modern Paranoia",
+            "Visually Polished",
+            "Provocative & Unsettling",
+            "Cultural Mirror"
+          ],
+          "essence_text": "A chilling anthology that holds a dark mirror up to contemporary society, exploring the unintended and often horrifying consequences of our dependence on technology. Each episode functions as a standalone cautionary tale, blending sharp social satire with psychological tension and visceral discomfort. The series is defined by its bleak outlook, frequently leaving viewers with a lingering sense of unease and existential dread rather than resolution. It demands active engagement, forcing audiences to confront uncomfortable truths about privacy, morality, and human nature in an increasingly digital world.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": true,
+            "is_drop_in_friendly": true,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Nudity",
+            "Sexual Content",
+            "Strong Language",
+            "Disturbing Imagery",
+            "Suicide Themes",
+            "Drug Use"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": false,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": false,
+            "solo_watch": true,
+            "group_party": false,
+            "intergenerational": false,
+            "public_viewing_safe": false
+          }
+        }
+      }
+    ],
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "c",
+          "job": "01a0a011-8c41-fb57-e4bd-1b497670223d",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a011-8c41-fb57-e4bd-1b497670223d",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0/c",
+    "script_hash": null,
+    "duration_ms": 19346,
+    "result": [
+      {
+        "id": "6849900909c1e22f75691114",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 6,
+              "scare": 5,
+              "acting": 8,
+              "gaming": 6,
+              "pathos": 7,
+              "sports": 0,
+              "wonder": 4,
+              "editing": 8,
+              "fantasy": 2,
+              "mystery": 7,
+              "novelty": 8,
+              "romance": 3,
+              "showbiz": 2,
+              "tension": 9,
+              "uncanny": 9,
+              "warfare": 1,
+              "intrigue": 9,
+              "pastiche": 2,
+              "violence": 6,
+              "ambiguity": 6,
+              "bleakness": 9,
+              "catharsis": 5,
+              "direction": 8,
+              "eroticism": 4,
+              "fast_pace": 5,
+              "grotesque": 5,
+              "nostalgia": 2,
+              "political": 7,
+              "slow_burn": 7,
+              "spectacle": 6,
+              "spiritual": 3,
+              "wholesome": 1,
+              "adrenaline": 6,
+              "complexity": 7,
+              "dark_humor": 7,
+              "futuristic": 10,
+              "historical": 0,
+              "melancholy": 8,
+              "surrealism": 6,
+              "educational": 4,
+              "hopefulness": 2,
+              "pop_culture": 7,
+              "psychedelic": 3,
+              "biographical": 0,
+              "cringe_humor": 7,
+              "eccentricity": 7,
+              "wit_wordplay": 6,
+              "coming_of_age": 2,
+              "philosophical": 9,
+              "psychological": 10,
+              "satire_parody": 9,
+              "camp_and_irony": 4,
+              "cinematography": 8,
+              "meta_narrative": 5,
+              "rewatchability": 6,
+              "absurdist_humor": 4,
+              "character_depth": 8,
+              "family_dynamics": 5,
+              "physical_comedy": 0,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 6,
+              "sound_centrality": 7,
+              "music_composition": 7,
+              "social_commentary": 10,
+              "situational_comedy": 1,
+              "visual_stylization": 7,
+              "dialogue_centrality": 7,
+              "narrative_structure": 9,
+              "class_and_capitalism": 7,
+              "contemporary_realism": 8,
+              "homage_and_reference": 3,
+              "non_linear_narrative": 4,
+              "technology_and_humanity": 10
+            },
+            "highlight_keys": [
+              "technology_and_humanity",
+              "social_commentary",
+              "psychological",
+              "bleakness",
+              "satire_parody",
+              "uncanny",
+              "futuristic",
+              "philosophical"
+            ]
+          },
+          "essence_tags": [
+            "Dystopian Sci-Fi Anthology",
+            "Technological Cautionary Tales",
+            "Psychological Horror",
+            "Social Satire",
+            "Dark Speculative Fiction",
+            "Existential Dread",
+            "Modern Paranoia",
+            "Visually Polished",
+            "Provocative & Unsettling",
+            "Cultural Mirror"
+          ],
+          "essence_text": "A chilling anthology that holds a dark mirror up to contemporary society, exploring the unintended and often horrifying consequences of our dependence on technology. Each episode functions as a standalone cautionary tale, blending sharp social satire with psychological tension and visceral discomfort. The series is defined by its bleak outlook, frequently leaving viewers with a lingering sense of unease and existential dread rather than resolution. It demands active engagement, forcing audiences to confront uncomfortable truths about privacy, morality, and human nature in an increasingly digital world.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": true,
+            "is_drop_in_friendly": true,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Nudity",
+            "Sexual Content",
+            "Strong Language",
+            "Disturbing Imagery",
+            "Suicide Themes",
+            "Drug Use"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": false,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": false,
+            "solo_watch": true,
+            "group_party": false,
+            "intergenerational": false,
+            "public_viewing_safe": false
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a011-8c41-fb57-e4bd-1b497670223d tag=python3 worker=wk-default-d90a911198c0-lM4Oy hostname=d90a911198c0 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nACCEPTANCE_RESERVATION {\"model\": \"qwen/qwen3.8-flash\", \"usd\": 0.00948264, \"input_byte_bound\": 28162}\nACCEPTANCE_USAGE {\"model\": \"qwen/qwen3.8-flash\", \"id\": \"gen-1789391901-BLfZyW3OMVArcSo4GRlx\", \"provider\": \"Alibaba\", \"usage\": {\"prompt_tokens\": 4517, \"completion_tokens\": 1135, \"total_tokens\": 5652, \"cost\": 0.000627832, \"is_byok\": false, \"prompt_tokens_details\": {\"cached_tokens\": 4352, \"cache_write_tokens\": 0, \"audio_tokens\": 0, \"video_tokens\": 0}, \"cost_details\": {\"upstream_inference_cost\": 0.000627832, \"upstream_inference_prompt_cost\": 9.4382e-05, \"upstream_inference_completions_cost\": 0.00053345}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"image_tokens\": 0, \"audio_tokens\": 0}}}\nOpenRouter qwen/qwen3.8-flash usage.cost=0.000627832\nACCEPTANCE_ACCOUNTED_USD 0.000627832",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a011-d821-7b04-3e76-63a4d926dbc8",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/d",
+    "script_hash": null,
+    "duration_ms": 84,
+    "result": [
+      {
+        "id": "6849900909c1e22f75691114",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 6,
+              "scare": 5,
+              "acting": 8,
+              "gaming": 6,
+              "pathos": 7,
+              "sports": 0,
+              "wonder": 4,
+              "editing": 8,
+              "fantasy": 2,
+              "mystery": 7,
+              "novelty": 8,
+              "romance": 3,
+              "showbiz": 2,
+              "tension": 9,
+              "uncanny": 9,
+              "warfare": 1,
+              "intrigue": 9,
+              "pastiche": 2,
+              "violence": 6,
+              "ambiguity": 6,
+              "bleakness": 9,
+              "catharsis": 5,
+              "direction": 8,
+              "eroticism": 4,
+              "fast_pace": 5,
+              "grotesque": 5,
+              "nostalgia": 2,
+              "political": 7,
+              "slow_burn": 7,
+              "spectacle": 6,
+              "spiritual": 3,
+              "wholesome": 1,
+              "adrenaline": 6,
+              "complexity": 7,
+              "dark_humor": 7,
+              "futuristic": 10,
+              "historical": 0,
+              "melancholy": 8,
+              "surrealism": 6,
+              "educational": 4,
+              "hopefulness": 2,
+              "pop_culture": 7,
+              "psychedelic": 3,
+              "biographical": 0,
+              "cringe_humor": 7,
+              "eccentricity": 7,
+              "wit_wordplay": 6,
+              "coming_of_age": 2,
+              "philosophical": 9,
+              "psychological": 10,
+              "satire_parody": 9,
+              "camp_and_irony": 4,
+              "cinematography": 8,
+              "meta_narrative": 5,
+              "rewatchability": 6,
+              "absurdist_humor": 4,
+              "character_depth": 8,
+              "family_dynamics": 5,
+              "physical_comedy": 0,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 6,
+              "sound_centrality": 7,
+              "music_composition": 7,
+              "social_commentary": 10,
+              "situational_comedy": 1,
+              "visual_stylization": 7,
+              "dialogue_centrality": 7,
+              "narrative_structure": 9,
+              "class_and_capitalism": 7,
+              "contemporary_realism": 8,
+              "homage_and_reference": 3,
+              "non_linear_narrative": 4,
+              "technology_and_humanity": 10
+            },
+            "highlight_keys": [
+              "technology_and_humanity",
+              "social_commentary",
+              "psychological",
+              "bleakness",
+              "satire_parody",
+              "uncanny",
+              "futuristic",
+              "philosophical"
+            ]
+          },
+          "essence_tags": [
+            "Dystopian Sci-Fi Anthology",
+            "Technological Cautionary Tales",
+            "Psychological Horror",
+            "Social Satire",
+            "Dark Speculative Fiction",
+            "Existential Dread",
+            "Modern Paranoia",
+            "Visually Polished",
+            "Provocative & Unsettling",
+            "Cultural Mirror"
+          ],
+          "essence_text": "A chilling anthology that holds a dark mirror up to contemporary society, exploring the unintended and often horrifying consequences of our dependence on technology. Each episode functions as a standalone cautionary tale, blending sharp social satire with psychological tension and visceral discomfort. The series is defined by its bleak outlook, frequently leaving viewers with a lingering sense of unease and existential dread rather than resolution. It demands active engagement, forcing audiences to confront uncomfortable truths about privacy, morality, and human nature in an increasingly digital world.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": true,
+            "is_drop_in_friendly": true,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Nudity",
+            "Sexual Content",
+            "Strong Language",
+            "Disturbing Imagery",
+            "Suicide Themes",
+            "Drug Use"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": false,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": false,
+            "solo_watch": true,
+            "group_party": false,
+            "intergenerational": false,
+            "public_viewing_safe": false
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a011-d821-7b04-3e76-63a4d926dbc8 tag=python3 worker=wk-default-d90a911198c0-lM4Oy hostname=d90a911198c0 isolation=none\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a011-d8a8-6dd3-e746-9c5cb5037d51",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/vectors",
+    "script_hash": "d7d1a5ead6496c07",
+    "duration_ms": 3195,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "job=01a0a011-d8a8-6dd3-e746-9c5cb5037d51 tag=python3 worker=wk-default-a783bd7cee0b-sVs1m hostname=a783bd7cee0b isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, cachetools==6.2.2, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, google-auth==2.43.0, google-genai==1.53.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pyasn1==0.6.1, pyasn1-modules==0.4.2, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, requests==2.32.5, rsa==4.9.1, tenacity==9.1.2, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, websockets==15.0.1, wmill==1.589.1\n\n\nCopying some packages from cache to job_dir...\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nSuccessfully generated 1 embeddings.\nInitializing mongodb...\nSuccessfully initialized mongodb\nsaving DNA for Black Mirror (2011)\n[6.0, 9.0, 5.0, 6.0, 3.0, 4.0, 1.0, 4.0, 7.0, 8.0, 9.0, 5.0, 2.0, 1.0, 6.0, 0.0, 7.0, 4.0, 9.0, 7.0, 2.0, 10.0, 0.0, 8.0, 6.0, 7.0, 1.0, 7.0, 0.0, 0.0, 2.0, 5.0, 10.0, 2.0, 6.0, 7.0, 10.0, 7.0, 10.0, 3.0, 9.0, 8.0, 8.0, 7.0, 5.0, 9.0, 7.0, 6.0, 2.0, 9.0, 6.0, 8.0, 3.0, 4.0, 5.0, 6.0, 7.0, 9.0, 4.0, 8.0, 8.0, 8.0, 8.0, 7.0, 9.0, 6.0, 7.0, 2.0, 3.0, 5.0, 4.0, 7.0, 6.0, 7.0]",
+    "flow_status": null
+  }
+]

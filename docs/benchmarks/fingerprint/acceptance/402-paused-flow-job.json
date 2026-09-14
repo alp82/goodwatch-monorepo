@@ -1,0 +1,101 @@
+{
+  "type": "CompletedJob",
+  "id": "01a0a012-fca4-b87b-9e00-90bd5871606f",
+  "created_at": "2026-09-14T13:19:54.016479Z",
+  "started_at": "2026-09-14T13:19:54.027222Z",
+  "completed_at": "2026-09-14T13:19:58.863534Z",
+  "duration_ms": 4836,
+  "success": true,
+  "script_hash": "0000000000000073",
+  "script_path": "f/dna/generate_dna",
+  "args": {},
+  "result": {
+    "embeddings_count": 0
+  },
+  "result_columns": null,
+  "logs": "Flow job completed with success\n",
+  "deleted": false,
+  "canceled": false,
+  "job_kind": "flow",
+  "flow_status": {
+    "step": 3,
+    "modules": [
+      {
+        "id": "a",
+        "job": "01a0a012-fcba-8326-187d-5fa1a34547a2",
+        "type": "Success",
+        "skipped": false
+      },
+      {
+        "id": "b",
+        "job": "01a0a013-0162-0f6b-6c88-90493622be8f",
+        "type": "Success",
+        "skipped": false
+      },
+      {
+        "id": "c",
+        "job": "01a0a013-04f3-b4aa-8f2a-590159228d02",
+        "type": "Success",
+        "skipped": false
+      }
+    ],
+    "cleanup_module": {},
+    "failure_module": {
+      "id": "failure",
+      "type": "WaitingForPriorSteps"
+    },
+    "preprocessor_module": null
+  },
+  "is_flow_step": false,
+  "is_skipped": false,
+  "visible_to_owner": true,
+  "tag": "flow",
+  "is_retry": false,
+  "resolved": false,
+  "trigger_kind": "webhook",
+  "raw_flow": {
+    "modules": [
+      {
+        "id": "a",
+        "value": {
+          "type": "script",
+          "input_transforms": {},
+          "path": "f/dna/generate/next",
+          "is_trigger": false
+        }
+      },
+      {
+        "id": "b",
+        "value": {
+          "type": "flow",
+          "input_transforms": {
+            "next_ids": {
+              "type": "javascript",
+              "expr": "results.a.ids"
+            }
+          },
+          "path": "f/dna/crawl_all_by_id"
+        }
+      },
+      {
+        "id": "c",
+        "value": {
+          "type": "script",
+          "input_transforms": {
+            "ids": {
+              "type": "javascript",
+              "expr": "results.a.ids"
+            },
+            "results": {
+              "type": "javascript",
+              "expr": "results.b"
+            }
+          },
+          "path": "f/dna/generate/vectors",
+          "is_trigger": false
+        }
+      }
+    ]
+  },
+  "worker": "wk-default-6ff53ddc8c5b-GY9NA"
+}

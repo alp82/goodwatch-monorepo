@@ -1,0 +1,86 @@
+{
+  "captured_at": "2026-09-12T03:00:44.311677+00:00",
+  "source": "GoodWatch CrateDB movie/show catalog; synopsis maps from TMDB overview in f/sync/copy/tmdb_details.py. No user identifiers or activity records included.",
+  "titles": [
+    {
+      "tmdb_id": 603,
+      "title": "The Matrix",
+      "original_title": "The Matrix",
+      "release_year": 1999,
+      "overview": "Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.",
+      "media_type": "movie"
+    },
+    {
+      "tmdb_id": 550,
+      "title": "Fight Club",
+      "original_title": "Fight Club",
+      "release_year": 1999,
+      "overview": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.",
+      "media_type": "movie"
+    },
+    {
+      "tmdb_id": 545611,
+      "title": "Everything Everywhere All at Once",
+      "original_title": "Everything Everywhere All at Once",
+      "release_year": 2022,
+      "overview": "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what's important to her by connecting with the lives she could have led in other universes.",
+      "media_type": "movie"
+    },
+    {
+      "tmdb_id": 1233066,
+      "title": "Manitou's Canoe",
+      "original_title": "Das Kanu des Manitu",
+      "release_year": 2025,
+      "overview": "Abahachi, the Apache chief, and his white blood brother Ranger fight tirelessly for peace and justice - but a new, up-and-coming gang is making life particularly difficult for them! They lure Abahachi and Ranger into a trap in order to get their hands on the legendary “Canoe of Manitou”.",
+      "media_type": "movie"
+    },
+    {
+      "tmdb_id": 150540,
+      "title": "Inside Out",
+      "original_title": "Inside Out",
+      "release_year": 2015,
+      "overview": "When 11-year-old Riley moves to a new city, her Emotions team up to help her through the transition. Joy, Fear, Anger, Disgust and Sadness work together, but when Joy and Sadness get lost, they must journey through unfamiliar places to get back home.",
+      "media_type": "movie"
+    },
+    {
+      "tmdb_id": 1396,
+      "title": "Breaking Bad",
+      "original_title": "Breaking Bad",
+      "release_year": 2008,
+      "overview": "Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime.",
+      "media_type": "show"
+    },
+    {
+      "tmdb_id": 1399,
+      "title": "Game of Thrones",
+      "original_title": "Game of Thrones",
+      "release_year": 2011,
+      "overview": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond.",
+      "media_type": "show"
+    },
+    {
+      "tmdb_id": 249042,
+      "title": "Adolescence",
+      "original_title": "Adolescence",
+      "release_year": 2025,
+      "overview": "When a 13-year-old is accused of the murder of a classmate, his family, therapist and the detective in charge are all left asking: what really happened?",
+      "media_type": "show"
+    },
+    {
+      "tmdb_id": 42009,
+      "title": "Black Mirror",
+      "original_title": "Black Mirror",
+      "release_year": 2011,
+      "overview": "Twisted tales run wild in this mind-bending anthology series that reveals humanity's worst traits, greatest innovations and more.",
+      "media_type": "show"
+    },
+    {
+      "tmdb_id": 64230,
+      "title": "Preacher",
+      "original_title": "Preacher",
+      "release_year": 2016,
+      "overview": "A preacher sets out on a mission to make the almighty himself confess his sin of abandoning the world. With his best friend Cassidy, an alcoholic Irish vampire, his love Tulip, a red blooded gun towing Texan, and the power of genesis, an unholy child born from an angel and a devil, Jesse gives up everything to set the world straight with its creator.",
+      "media_type": "show"
+    }
+  ]
+}

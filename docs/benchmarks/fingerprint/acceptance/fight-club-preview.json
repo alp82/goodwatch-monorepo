@@ -1,0 +1,108 @@
+{
+  "value": {
+    "modules": [
+      {
+        "id": "a",
+        "value": {
+          "path": "f/dna/generate/iterate",
+          "type": "script",
+          "is_trigger": false,
+          "input_transforms": {
+            "next_ids": {
+              "expr": "flow_input.next_ids",
+              "type": "javascript"
+            }
+          }
+        }
+      },
+      {
+        "id": "b",
+        "value": {
+          "type": "forloopflow",
+          "modules": [
+            {
+              "id": "c",
+              "value": {
+                "type": "rawscript",
+                "language": "python3",
+                "content": "import json\nimport requests\nfrom f.dna.generate import fetch\n\nclass AcceptanceBudgetStop(Exception):\n    pass\n\ndef main(next_ids: list, allowance: float, inject: str = ''):\n    original = requests.post\n    spent = 0.0\n    injected = False\n    def guarded(url, **kwargs):\n        nonlocal spent,injected\n        if url != fetch.OPENROUTER_URL:\n            return original(url, **kwargs)\n        payload = kwargs['json']\n        model = payload['model']\n        if inject and not injected and (inject != 'fallback' or model == fetch.PRIMARY_MODEL):\n            injected = True\n            status = 500 if inject == 'fallback' else 402\n            response = requests.Response()\n            response.status_code = status\n            response._content = json.dumps({'error':{'code':status,'message':'Acceptance injected failure'}}).encode()\n            print('ACCEPTANCE_INJECTED '+str(status)+' '+model)\n            return response\n        # UTF-8 byte count plus framing conservatively bounds text tokens;\n        # reserve maximum output and highest applicable listed cache-write rate.\n        size = len(json.dumps(payload, ensure_ascii=False).encode()) + 2048\n        if model == fetch.PRIMARY_MODEL:\n            input_rate,output_rate = 0.00000020,0.00000047\n        else:\n            input_rate,output_rate = (0.00000025,0.0000008) if size >= 256000 else ((0.000000125,0.0000004) if size >= 32000 else (0.000000038,0.00000013))\n        reserve = size*input_rate + payload['max_tokens']*output_rate\n        if spent + reserve > allowance:\n            raise AcceptanceBudgetStop('Insufficient acceptance allowance for request reservation')\n        spent += reserve\n        print('ACCEPTANCE_RESERVATION '+json.dumps({'model':model,'usd':reserve,'input_byte_bound':size}))\n        response = original(url, **kwargs)\n        try:\n            data = response.json()\n            cost = data.get('usage',{}).get('cost')\n        except Exception:\n            cost = None\n        if cost is None:\n            print('ACCEPTANCE_UNRECONCILED '+str(reserve))\n            raise AcceptanceBudgetStop('Missing usage.cost; reserve retained, stop paid work')\n        if not isinstance(cost,(int,float)) or cost < 0 or cost > reserve:\n            raise AcceptanceBudgetStop('Reported cost outside reserved bound')\n        spent += cost-reserve\n        print('ACCEPTANCE_USAGE '+json.dumps({'model':model,'id':data.get('id'),'provider':data.get('provider'),'usage':data.get('usage')}))\n        return response\n    requests.post = guarded\n    try:\n        return fetch.main(next_ids)\n    finally:\n        requests.post = original\n        print('ACCEPTANCE_ACCOUNTED_USD '+str(spent))\n",
+                "lock": "# py: 3.11\nannotated-types==0.7.0\nanyio==4.12.0\ncertifi==2025.11.12\ncharset-normalizer==3.4.4\ndnspython==2.8.0\nh11==0.16.0\nhttpcore==1.0.9\nhttpx==0.28.1\nidna==3.11\nmongoengine==0.29.1\npydantic==2.12.5\npydantic-core==2.41.5\npymongo==4.15.5\nredis==3.5.3\nredis-py-cluster==2.1.3\nrequests==2.32.5\ntyping-extensions==4.15.0\ntyping-inspection==0.4.2\nurllib3==2.5.0\nwmill==1.589.1\n",
+                "input_transforms": {
+                  "next_ids": {
+                    "type": "javascript",
+                    "expr": "flow_input.iter.value"
+                  },
+                  "allowance": {
+                    "type": "static",
+                    "value": 0.042
+                  },
+                  "inject": {
+                    "type": "static",
+                    "value": ""
+                  }
+                }
+              },
+              "continue_on_error": false
+            }
+          ],
+          "iterator": {
+            "expr": "results.a",
+            "type": "javascript"
+          },
+          "parallel": true,
+          "parallelism": {
+            "type": "static",
+            "value": 5
+          },
+          "skip_failures": false
+        }
+      },
+      {
+        "id": "d",
+        "value": {
+          "lock": "# py311\n",
+          "type": "rawscript",
+          "content": "def main(next_ids: dict, results: list[list[dict]]) -> list[dict]:\n    movie_ids = next_ids.get(\"movie_ids\", [])\n    tv_ids = next_ids.get(\"tv_ids\", [])\n    all_ids = set(movie_ids + tv_ids)\n    seen_ids = set()\n\n    flattened_results = []\n    for batch_index, batch in enumerate(results):\n        if not isinstance(batch, list):\n            raise ValueError(\n                f\"results[{batch_index}] must be a list; got {type(batch).__name__}. \"\n                \"The DNA generation loop may have returned a failed iteration.\"\n            )\n\n        for result_index, result in enumerate(batch):\n            if not isinstance(result, dict):\n                raise ValueError(\n                    f\"results[{batch_index}][{result_index}] must be an object; \"\n                    f\"got {type(result).__name__}\"\n                )\n            result_id = result.get(\"id\")\n            if not isinstance(result_id, str) or result_id not in all_ids or result_id in seen_ids:\n                raise ValueError(f\"Unexpected or duplicate result ID: {result_id}\")\n            if not isinstance(result.get(\"dna\"), dict):\n                raise ValueError(f\"results[{batch_index}][{result_index}].dna must be an object\")\n            seen_ids.add(result_id)\n            flattened_results.append(result)\n\n    return flattened_results\n",
+          "language": "python3",
+          "input_transforms": {
+            "results": {
+              "expr": "results.b",
+              "type": "javascript"
+            },
+            "next_ids": {
+              "expr": "flow_input.next_ids",
+              "type": "javascript"
+            }
+          }
+        },
+        "summary": "Flatten and combine Results"
+      },
+      {
+        "id": "vectors",
+        "value": {
+          "type": "script",
+          "path": "f/dna/generate/vectors",
+          "input_transforms": {
+            "ids": {
+              "type": "javascript",
+              "expr": "flow_input.next_ids"
+            },
+            "results": {
+              "type": "javascript",
+              "expr": "results.d"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "path": "f/dna/acceptance/benchmark",
+  "args": {
+    "next_ids": {
+      "movie_ids": [
+        "68471cdd1f87b65f3388b3c3"
+      ],
+      "tv_ids": []
+    }
+  }
+}

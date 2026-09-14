@@ -1,0 +1,37 @@
+[
+  {
+    "path": "f/dna/generate/fetch",
+    "hash": "19dd0e37271dd229",
+    "content_sha256": "57e81382e9d762c4557a5b7e40d488a55a16d5340b4f36da91b88b2fe7710ad3",
+    "matches_commit_255ae62": true,
+    "python_lock_first_line": "# py: 3.11"
+  },
+  {
+    "path": "f/dna/generate/iterate",
+    "hash": "39d43a45f8959150",
+    "content_sha256": "6a2bcee13fe50fd295826c7f85e5e72b801a0289e45d2cac10fe48a5ab22b4e7",
+    "matches_commit_255ae62": true,
+    "python_lock_first_line": "# py: 3.11"
+  },
+  {
+    "path": "f/dna/generate/next",
+    "hash": "0999f83718c4c69c",
+    "content_sha256": "f9185d75a8164686cf591ee164301e8edcc2d85b6519ddd01a79f8779980b276",
+    "matches_commit_255ae62": true,
+    "python_lock_first_line": "# py: 3.11"
+  },
+  {
+    "path": "f/dna/generate/vectors",
+    "hash": "d7d1a5ead6496c07",
+    "content_sha256": "c72fbb827b3b10a1267abe0a9f2110d86f35af2ecc0815dad87fbd8881b2c6cf",
+    "matches_commit_255ae62": true,
+    "python_lock_first_line": "# workspace-dependencies-mode: manual"
+  },
+  {
+    "path": "f/dna/generate/spend_pause",
+    "hash": "cf94a3b8806d1424",
+    "content_sha256": "56a21fdd74f1cc4168526dfab8c6034f9c3da7364a1abeb618352e4c939a156f",
+    "matches_commit_255ae62": true,
+    "python_lock_first_line": "# py: 3.11"
+  }
+]
