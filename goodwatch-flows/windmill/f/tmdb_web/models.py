@@ -61,6 +61,7 @@ class BaseTmdbProviders(Document):
     created_at = DateTimeField()
     updated_at = DateTimeField()
     next_fetch_at = DateTimeField()
+    mapping_refresh_after = DateTimeField()
     consecutive_failures = IntField(default=0)
     lease_token = StringField()
     lease_expires_at = DateTimeField()

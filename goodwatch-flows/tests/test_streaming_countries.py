@@ -101,6 +101,45 @@ class CountryStateTests(unittest.TestCase):
             )
         )
 
+    def test_mapping_refresh_can_claim_fresh_country_but_repeated_requests_back_off(self) -> None:
+        identity = self.country(updated_at=self.now, next_fetch_at=self.now + timedelta(days=7))
+        self.assertIsNone(country_state.claim(self.db, self.collection, identity, now=self.now))
+        claimed = country_state.claim(self.db, self.collection, identity, now=self.now, refresh_for_mapping=True)
+        self.assertIsNotNone(claimed)
+        self.assertIsNone(country_state.claim(self.db, self.collection, identity, now=self.now, refresh_for_mapping=True))
+        country_state.save_success(self.collection, claimed, [], now=self.now)
+        self.assertIsNone(country_state.claim(self.db, self.collection, identity, now=self.now + timedelta(minutes=1), refresh_for_mapping=True))
+        self.assertIsNotNone(country_state.claim(self.db, self.collection, identity, now=self.now + timedelta(minutes=30), refresh_for_mapping=True))
+
+    def test_fetch_entrypoint_refreshes_fresh_unmapped_country_once(self) -> None:
+        from f.tmdb_web.tmdb_crawl_providers import fetch
+        now = datetime.utcnow()
+        identity = self.country(updated_at=now, next_fetch_at=now + timedelta(days=7),
+                                streaming_links=[{"provider_name": "Cineplex"}])
+        page = country_control("US") + '<div id="ott_offers_window"><p class="no_offers">No offers</p></div>'
+        response = SimpleNamespace(status_code=200, text=page, headers={})
+        with patch.object(fetch, "init_mongodb"), patch.object(fetch, "close_mongodb"), patch.object(fetch, "get_db", return_value=self.db), patch.object(fetch.requests, "get", return_value=response) as request:
+            result = fetch.main({"id": str(identity), "type": "movie"}, refresh_for_mapping=True)
+            self.assertEqual(result["outcome"], "fetched")
+            result = fetch.main({"id": str(identity), "type": "movie"}, refresh_for_mapping=True)
+            self.assertEqual(result["outcome"], "deferred")
+            request.assert_called_once()
+        stored = self.collection.find_one({"_id": identity})
+        self.assertEqual(stored["streaming_links"], [])
+        self.assertGreater(stored["next_fetch_at"], now)
+
+    def test_mapping_refresh_respects_failure_upstream_and_active_claim(self) -> None:
+        for fields in (
+            {"consecutive_failures": 1, "next_fetch_at": self.now + timedelta(hours=2)},
+            {"lease_token": "other", "lease_expires_at": self.now + timedelta(minutes=4)},
+            {"country_identity_error": "Invalid country"},
+        ):
+            identity = self.country(**fields)
+            self.assertIsNone(country_state.claim(self.db, self.collection, identity, now=self.now, refresh_for_mapping=True))
+        self.db.tmdb_streaming_upstream.insert_one({"_id": "tmdb_watch", "blocked_until": self.now + timedelta(hours=1)})
+        identity = self.country()
+        self.assertIsNone(country_state.claim(self.db, self.collection, identity, now=self.now, refresh_for_mapping=True))
+
     def test_failure_preserves_links_and_success_and_respects_shared_upstream_delay(
         self,
     ) -> None:

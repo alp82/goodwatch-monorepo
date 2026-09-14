@@ -161,8 +161,9 @@ class SelectionTests(unittest.TestCase):
                     }
                     functions = [function]
                     if name == "tmdb_streaming":
-                        functions += [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in (
-                            "fetch_documents_in_batch", "fetch_all_documents_in_batch", "reconcile_availability", "availability_key")]
+                        from test_streaming_publication import load_copy
+                        namespace["publication_snapshot"] = load_copy(db).__globals__["publication_snapshot"]
+                        namespace["publication_snapshot"].__wrapped__.__globals__["publication_lease"] = lambda *args: nullcontext(lambda: None)
                     exec(compile(ast.Module(body=functions, type_ignores=[]), str(ROOT / name), "exec"), namespace)
                     namespace["copy_media"](connector, {"tmdb_id": {"$in": [42]}}, recent_only=recent_only)
                     selectors = []

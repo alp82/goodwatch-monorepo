@@ -16,6 +16,21 @@ empty web response does not erase API availability, and pending or failed countr
 do not erase their previously published contribution. Legacy rows without source
 attribution are preserved when their ownership cannot be established safely.
 
+Publication attempts provider resolution regardless of scrape age. If a country
+contains an unresolved provider, it releases the publication lease and runs the
+existing country-fetch job once with `refresh_for_mapping: true`. It then reloads
+source and published state under a new lease and retries reconciliation. A failed
+or blocked refresh, or a provider that remains unresolved, defers that country's
+scraped contribution and preserves its published links, prices, and quality.
+API contributions and other countries can still publish independently. A successful
+empty refresh can clear the old scraped contribution normally.
+
+Mapping recovery bypasses the successful scrape's seven-day freshness deadline,
+but respects country ownership, failed-fetch retry deadlines and upstream backoff.
+An atomic `mapping_refresh_after` deadline limits these recovery fetches to one per
+country per 30 minutes, even if a successful fetch still returns an unmapped name.
+Targeted publication reports each attempted country's `provider_refresh_outcomes`.
+
 Child availability and the title's streaming arrays are derived from the same
 reconciled result. Both targeted and scheduled Qdrant publication read the latest
 published Crate streaming arrays under the shared publication lease. Verified replacement explicitly clears obsolete nullable fields;
@@ -31,12 +46,12 @@ publication without acknowledging demand. Each writer reads source and child sta
 under the lease and checks ownership around writes. Vector writers read the latest
 published Crate snapshot while holding these leases and finish synchronous writes
 before releasing them. Unknown snapshots retain existing vector availability; an
-unmapped scraped provider fails publication before availability is removed.
+unmapped scraped provider triggers the bounded refresh-and-retry path above.
 If a scraped name is absent from the media's provider catalog, an exact-name
 match in the verified title API result for the same country and offer type can
 resolve it to a single TMDB ID already in that catalog. This handles differences
 such as `JustWatchTV` versus `JustWatch TV` without fuzzy name matching or treating
-JustWatch clickout IDs as TMDB IDs. Ambiguous API identities still fail publication.
+JustWatch clickout IDs as TMDB IDs. Ambiguous API identities remain unresolved and use the same refresh-and-defer path.
 Crate does not provide an
 atomic transaction across child records and aggregate fields: interrupted writes
 remain recoverable by replay, and the title is acknowledged only after completion.
