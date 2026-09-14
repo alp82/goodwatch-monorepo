@@ -1,6 +1,6 @@
 # Live DNA acceptance — September 14, 2026
 
-**Subsequent update:** [The Matrix and Preacher have been regenerated and verified](regeneration.md) after the highlight-validator fix. The report below records the original acceptance run; its statements about invalid stored records describe that earlier state. Other acceptance gates remain open.
+**Subsequent update:** [The Matrix and Preacher have been regenerated and verified](regeneration.md) after the highlight-validator fix. The report below records the original acceptance run; its statements about invalid stored records describe that earlier state. [The actual monthly guardrail response has also been verified](monthly-live.md); restoring the test limit/pause and cost reconciliation remain open.
 
 **Acceptance failed and remains open.** Ten titles were generated and embedded, but two contain invalid highlight keys. Actual monthly guardrail wording and one request's exact cost also remain unverified. The DNA generation schedule is disabled.
 
