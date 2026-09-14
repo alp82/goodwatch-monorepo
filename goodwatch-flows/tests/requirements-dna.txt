@@ -1,0 +1,3 @@
+# Generation tests use the real schema/ODM and an in-memory MongoDB boundary.
+-r ../windmill/f/dna/generate/fetch.script.lock
+mongomock==4.3.0

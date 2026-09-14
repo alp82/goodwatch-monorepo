@@ -114,8 +114,8 @@ class FlattenResultsTest(unittest.TestCase):
         dna = {"essence_text": "test"}
 
         result = flatten_results.main(
-            next_ids={"movie_ids": ["entry-id"], "tv_ids": []},
-            results=[[dna]],
+            next_ids={"movie_ids": ["failed-id", "entry-id"], "tv_ids": []},
+            results=[[{"id": "entry-id", "dna": dna}]],
         )
 
         self.assertEqual(result, [{"id": "entry-id", "dna": dna}])

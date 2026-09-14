@@ -1,307 +1,205 @@
-import importlib.util
+"""Generation contract tests; HTTP, MongoDB, secrets and time are external seams."""
 import io
 import json
 import sys
 import unittest
+from datetime import datetime
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
 from unittest.mock import patch
 
+import mongomock
+import requests
+from mongoengine import connect, disconnect
 
-FETCH_PATH = (
-    Path(__file__).parents[1] / "windmill" / "f" / "dna" / "generate" / "fetch.py"
-)
+sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
+from f.dna.generate import fetch
+from f.dna.models import DnaMovie, DnaTv
+from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
-
-class FakeApiError(Exception):
-    def __init__(self, code, details):
-        self.code = code
-        self.details = details
-        super().__init__(f"{code}: {details}")
-
-
-class FakeAnalysis:
-    def __init__(self, value):
-        self.value = value
-
-    def model_dump(self):
-        return self.value
+PRIMARY = 'qwen/qwen3.8-flash'
+FALLBACK = 'qwen/qwen3.7-flash'
 
 
-class FakeTypeAdapter:
-    def __init__(self, _schema):
-        pass
-
-    def validate_json(self, value):
-        return [FakeAnalysis(item) for item in json.loads(value)]
-
-
-class FakeGenerateContentConfig:
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+def response(content, status=200, headers=None):
+    result = requests.Response()
+    result.status_code = status
+    result.headers.update(headers or {})
+    result._content = json.dumps(content).encode()
+    return result
 
 
-class FakeModelsApi:
-    def __init__(self, outcomes):
-        self.outcomes = outcomes
-        self.calls = []
+class OpenRouterGenerationTest(unittest.TestCase):
+    def setUp(self):
+        disconnect()
+        connect('dna_test', mongo_client_class=mongomock.MongoClient, uuidRepresentation='standard')
+        self.addCleanup(disconnect)
+        self.dna = json.loads((Path(__file__).parent / 'fixtures/dna.json').read_text())
+        self.post = self.start_patch('requests.post')
+        self.start_patch('wmill.get_variable', return_value='test-key')
+        self.output = self.start_patch('sys.stdout', new_callable=io.StringIO)
 
-    def generate_content(self, **kwargs):
-        self.calls.append(kwargs)
-        outcome = self.outcomes[kwargs["model"]].pop(0)
-        if isinstance(outcome, Exception):
-            raise outcome
-        return outcome
+    def start_patch(self, target, **kwargs):
+        patcher = patch(target, **kwargs)
+        result = patcher.start()
+        self.addCleanup(patcher.stop)
+        return result
 
+    def title(self, cls=DnaMovie, **kwargs):
+        return cls(tmdb_id=kwargs.pop('tmdb_id', 603), original_title='The Matrix',
+                   release_year=1999, overview='A programmer discovers a simulated world.',
+                   popularity=kwargs.pop('popularity', 1.0), **kwargs).save()
 
-class FakeClient:
-    outcomes = {}
-    instance = None
+    def success(self):
+        return response({'choices': [{'message': {'content': json.dumps(self.dna)}}],
+                         'usage': {'cost': 0.001}})
 
-    def __init__(self, **kwargs):
-        self.api_key = kwargs["api_key"]
-        self.models = FakeModelsApi(self.outcomes)
-        FakeClient.instance = self
-
-
-class FakeRedis:
-    def __init__(self):
-        self.values = {}
-        self.expiring_values = {}
-
-    def get(self, key):
-        if key in self.expiring_values:
-            return self.expiring_values[key][0]
-        return self.values.get(key)
-
-    def incrby(self, key, amount):
-        value = int(self.values.get(key, 0)) + amount
-        self.values[key] = value
-        return value
-
-    def decrby(self, key, amount):
-        value = int(self.values.get(key, 0)) - amount
-        self.values[key] = value
-        return value
-
-    def setex(self, key, ttl, value):
-        self.expiring_values[key] = (value, ttl)
-
-
-class FakeDnaMovie:
-    def __init__(self):
-        self.original_title = "Test Movie"
-        self.release_year = 2026
-        self.overview = "A test overview."
-        self.popularity = 10.0
-        self.llm_model_name = None
-        self.dna = None
-        self.saved = False
-
-    def save(self):
-        self.saved = True
-
-
-def successful_response():
-    content = SimpleNamespace(
-        parts=[SimpleNamespace(text=json.dumps([{"essence_text": "result"}]))]
-    )
-    return SimpleNamespace(
-        candidates=[SimpleNamespace(content=content)],
-        usage_metadata=SimpleNamespace(
-            prompt_token_count=100,
-            candidates_token_count=50,
-            thoughts_token_count=25,
-            total_token_count=175,
-        ),
-    )
-
-
-def daily_quota_error():
-    return FakeApiError(
-        429,
-        {
-            "error": {
-                "details": [
-                    {
-                        "@type": "type.googleapis.com/google.rpc.QuotaFailure",
-                        "violations": [
-                            {
-                                "quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"
-                            }
-                        ],
-                    }
-                ]
-            }
-        },
-    )
-
-
-def api_error(code):
-    return FakeApiError(code, {"error": {"details": []}})
-
-
-def load_fetch_module(redis):
-    google = ModuleType("google")
-    google_genai = ModuleType("google.genai")
-    google_genai.Client = FakeClient
-    google_genai.types = SimpleNamespace(
-        GenerateContentConfig=FakeGenerateContentConfig
-    )
-    google.genai = google_genai
-
-    pydantic = ModuleType("pydantic")
-    pydantic.TypeAdapter = FakeTypeAdapter
-    pydantic.ValidationError = type("ValidationError", (Exception,), {})
-
-    wmill = ModuleType("wmill")
-    wmill.get_variable = lambda _path: "test-api-key"
-
-    data_source = ModuleType("f.data_source.common")
-    data_source.get_document_for_id = lambda *args, **kwargs: None
-
-    mongodb = ModuleType("f.db.mongodb")
-    mongodb.init_mongodb = lambda: None
-    mongodb.close_mongodb = lambda: None
-
-    redis_module = ModuleType("f.db.redis")
-    redis_module.RedisConnector = lambda: SimpleNamespace(get_redis=lambda: redis)
-
-    rediscluster = ModuleType("rediscluster")
-    rediscluster.RedisCluster = FakeRedis
-
-    dna_models = ModuleType("f.dna.models")
-    dna_models.DnaMovie = FakeDnaMovie
-    dna_models.DnaTv = type("DnaTv", (), {})
-    dna_models.DNAAnalysis = object
-
-    modules = {
-        "google": google,
-        "google.genai": google_genai,
-        "pydantic": pydantic,
-        "wmill": wmill,
-        "rediscluster": rediscluster,
-        "f": ModuleType("f"),
-        "f.data_source": ModuleType("f.data_source"),
-        "f.data_source.common": data_source,
-        "f.db": ModuleType("f.db"),
-        "f.db.mongodb": mongodb,
-        "f.db.redis": redis_module,
-        "f.dna": ModuleType("f.dna"),
-        "f.dna.models": dna_models,
-    }
-    spec = importlib.util.spec_from_file_location("dna_generate", FETCH_PATH)
-    module = importlib.util.module_from_spec(spec)
-    with patch.dict(sys.modules, modules):
-        spec.loader.exec_module(module)
-    return module
-
-
-class GenerateDnaTest(unittest.TestCase):
-    def test_daily_quota_exhaustion_falls_back_to_next_supported_model(self):
-        redis = FakeRedis()
-        fetch = load_fetch_module(redis)
-        movie = FakeDnaMovie()
-        FakeClient.outcomes = {
-            "gemini-2.5-flash": [daily_quota_error()],
-            "gemini-3.6-flash": [successful_response()],
-        }
-
+    def test_premium_title_uses_pinned_primary_and_saves_valid_dna_and_provenance(self):
+        movie = self.title()
+        self.post.return_value = self.success()
         result = fetch.generate_dna([movie])
+        self.assertEqual(result, [{'id': str(movie.id), 'dna': self.dna}])
+        self.assertEqual(movie.dna, self.dna)
+        self.assertEqual(movie.llm_model_name, 'openrouter:qwen/qwen3.8-flash@alibaba')
+        payload = self.post.call_args.kwargs['json']
+        self.assertEqual(payload['model'], PRIMARY)
+        self.assertEqual(payload['provider'], {'only': ['alibaba'], 'allow_fallbacks': False, 'require_parameters': True})
+        self.assertEqual(payload['reasoning'], {'enabled': False})
+        self.assertEqual(payload['max_tokens'], 8192)
+        self.assertEqual(payload['response_format']['type'], 'json_schema')
+        self.assertTrue(payload['response_format']['json_schema']['strict'])
+        self.assertIn('0.001', self.output.getvalue())
 
-        self.assertEqual(result, [{"essence_text": "result"}])
-        self.assertEqual(
-            [call["model"] for call in FakeClient.instance.models.calls],
-            ["gemini-2.5-flash", "gemini-3.6-flash"],
-        )
-        self.assertEqual(movie.llm_model_name, "gemini-3.6-flash")
-        self.assertTrue(movie.saved)
-        blocked_key = fetch.get_model_blocked_key("gemini-2.5-flash")
-        self.assertEqual(redis.expiring_values[blocked_key][0], 1)
-        self.assertGreater(redis.expiring_values[blocked_key][1], 0)
-
-    def test_unavailable_model_falls_back_without_retrying_it(self):
-        redis = FakeRedis()
-        fetch = load_fetch_module(redis)
-        movie = FakeDnaMovie()
-        FakeClient.outcomes = {
-            "gemini-2.5-flash": [api_error(404)],
-            "gemini-3.6-flash": [successful_response()],
-        }
-
+    def test_economy_title_uses_json_object_fallback(self):
+        movie = self.title(popularity=0.99)
+        self.post.return_value = self.success()
         fetch.generate_dna([movie])
+        payload = self.post.call_args.kwargs['json']
+        self.assertEqual(payload['model'], FALLBACK)
+        self.assertEqual(payload['response_format'], {'type': 'json_object'})
+        self.assertEqual(movie.llm_model_name, 'openrouter:qwen/qwen3.7-flash@alibaba')
 
-        self.assertEqual(
-            [call["model"] for call in FakeClient.instance.models.calls],
-            ["gemini-2.5-flash", "gemini-3.6-flash"],
-        )
+    def test_recent_release_routes_to_premium_using_exact_movie_and_tv_dates(self):
+        with patch.object(fetch, 'datetime', wraps=datetime) as clock:
+            clock.now.return_value = datetime(2026, 9, 14)
+            for cls, details_cls, field in [(DnaMovie, TmdbMovieDetails, 'release_date'),
+                                             (DnaTv, TmdbTvDetails, 'first_air_date')]:
+                for index, (released, expected) in enumerate([
+                    ('2025-09-14', PRIMARY), ('2025-09-13', FALLBACK),
+                    ('2026-09-14', PRIMARY), ('2026-09-15', FALLBACK),
+                ]):
+                    with self.subTest(cls=cls, released=released):
+                        title = self.title(cls, tmdb_id=index, popularity=0.5)
+                        details_cls(tmdb_id=index, **{field: released}).save()
+                        self.post.return_value = self.success()
+                        fetch.generate_dna([title])
+                        self.assertEqual(self.post.call_args.kwargs['json']['model'], expected)
 
-    def test_server_error_is_retried_once_on_the_same_model(self):
-        redis = FakeRedis()
-        fetch = load_fetch_module(redis)
-        movie = FakeDnaMovie()
-        FakeClient.outcomes = {
-            "gemini-2.5-flash": [api_error(503), successful_response()],
-            "gemini-3.6-flash": [],
-        }
+    def test_invalid_dna_gets_one_full_response_repair(self):
+        movie = self.title()
+        self.post.side_effect = [response({'choices': [{'message': {'content': '{"unknown": true}'}}], 'usage': {'cost': 0.002}}), self.success()]
+        self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
+        payloads = [call.kwargs['json'] for call in self.post.call_args_list]
+        self.assertEqual([p['model'] for p in payloads], [PRIMARY, PRIMARY])
+        self.assertIn('{"unknown": true}', json.dumps(payloads[1]['messages']).replace('\\"', '"'))
+        self.assertIn('0.002', self.output.getvalue())
 
-        fetch.generate_dna([movie])
+    def test_exhausted_repairs_switch_models_in_both_directions(self):
+        for popularity, expected in [(1.0, [PRIMARY, PRIMARY, FALLBACK]),
+                                      (0.5, [FALLBACK, FALLBACK, PRIMARY])]:
+            with self.subTest(popularity=popularity):
+                self.post.reset_mock()
+                movie = self.title(popularity=popularity)
+                invalid = response({'choices': [{'message': {'content': '{}'}}]})
+                self.post.side_effect = [invalid, invalid, self.success()]
+                self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
+                self.assertEqual([c.kwargs['json']['model'] for c in self.post.call_args_list], expected)
+                self.assertEqual(movie.llm_model_name, f'openrouter:{expected[-1]}@alibaba')
 
-        self.assertEqual(
-            [call["model"] for call in FakeClient.instance.models.calls],
-            ["gemini-2.5-flash", "gemini-2.5-flash"],
-        )
-        self.assertEqual(redis.values[fetch.get_quota_key("gemini-2.5-flash")], 2)
+    def test_transport_failures_retry_twice_then_fall_back_honoring_retry_after(self):
+        for status in [429, 502, 503]:
+            with self.subTest(status=status), patch('time.sleep') as sleep:
+                self.post.reset_mock()
+                movie = self.title()
+                error = response({'error': {'code': status}}, status, {'Retry-After': '7'})
+                self.post.side_effect = [error, error, error, self.success()]
+                self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
+                self.assertEqual([c.kwargs['json']['model'] for c in self.post.call_args_list], [PRIMARY]*3+[FALLBACK])
+                self.assertEqual([c.args[0] for c in sleep.call_args_list], [7, 7])
 
-    def test_local_guardrail_skips_model_before_calling_api(self):
-        redis = FakeRedis()
-        fetch = load_fetch_module(redis)
-        movie = FakeDnaMovie()
-        redis.values[fetch.get_quota_key("gemini-2.5-flash")] = 55
-        FakeClient.outcomes = {
-            "gemini-2.5-flash": [],
-            "gemini-3.6-flash": [successful_response()],
-        }
+    def test_six_request_cap_marks_failure_and_continues_next_title(self):
+        failed = self.title(is_selected=True)
+        next_title = self.title(tmdb_id=550)
+        invalid = response({'choices': [{'message': {'content': '{}'}}]})
+        unavailable = response({}, 503)
+        self.post.side_effect = [unavailable, unavailable, invalid, invalid,
+                                 unavailable, invalid, self.success()]
+        with patch('time.sleep'):
+            self.assertEqual(fetch.generate_dna([failed, next_title]), [{'id': str(next_title.id), 'dna': self.dna}])
+        self.assertEqual(self.post.call_count, 7)
+        self.assertIsNotNone(failed.failed_at)
+        self.assertTrue(failed.error_message)
+        self.assertFalse(failed.is_selected)
+        self.assertEqual(failed.dna, {})
+        self.assertEqual(next_title.dna, self.dna)
 
-        fetch.generate_dna([movie])
+    def test_out_of_range_or_non_integer_scores_are_repaired(self):
+        for score in [11, -1, 3.5, '5', True]:
+            with self.subTest(score=score):
+                movie = self.title()
+                bad = json.loads(json.dumps(self.dna))
+                bad['fingerprint']['scores']['adrenaline'] = score
+                self.post.side_effect = [response({'choices': [{'message': {'content': json.dumps(bad)}}]}), self.success()]
+                self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
 
-        self.assertEqual(
-            [call["model"] for call in FakeClient.instance.models.calls],
-            ["gemini-3.6-flash"],
-        )
+    def test_malformed_provider_responses_are_bounded_and_do_not_abort_batch(self):
+        for payload in [{}, {'choices': []}, {'choices': [{'message': {'content': None}}]},
+                        {'choices': [{'message': {'content': 'not json'}}]},
+                        {'error': {'code': 502, 'message': 'provider failed'}}]:
+            with self.subTest(payload=payload), patch('time.sleep'):
+                self.post.side_effect = None
+                self.post.return_value = response(payload)
+                movie = self.title()
+                self.assertEqual(fetch.generate_dna([movie]), [])
+                self.assertIsNotNone(movie.failed_at)
+                self.assertTrue(movie.error_message)
 
-    def test_success_tracks_request_and_reports_exact_token_usage(self):
-        redis = FakeRedis()
-        fetch = load_fetch_module(redis)
-        movie = FakeDnaMovie()
-        FakeClient.outcomes = {
-            "gemini-2.5-flash": [successful_response()],
-            "gemini-3.6-flash": [],
-        }
+    def test_budget_and_authorization_errors_propagate_without_title_failure_or_fallback(self):
+        for status in [402, 403]:
+            for embedded in [False, True]:
+                with self.subTest(status=status, embedded=embedded):
+                    self.post.reset_mock()
+                    movie = self.title()
+                    self.post.return_value = response({'error': {'code': status}}, 200 if embedded else status)
+                    with self.assertRaises(requests.HTTPError) as caught:
+                        fetch.generate_dna([movie])
+                    self.assertEqual(caught.exception.response.status_code, status)
+                    self.assertIsNone(movie.failed_at)
+                    self.assertEqual(self.post.call_count, 1)
 
-        output = io.StringIO()
-        with patch("sys.stdout", output):
-            fetch.generate_dna([movie])
+    def test_request_prompt_and_schema_describe_a_single_object(self):
+        self.post.return_value = self.success()
+        fetch.generate_dna([self.title()])
+        payload = self.post.call_args.kwargs['json']
+        schema = payload['response_format']['json_schema']['schema']
+        self.assertEqual(schema['type'], 'object')
+        for node in [schema, *schema['$defs'].values()]:
+            if node.get('type') == 'object':
+                self.assertFalse(node['additionalProperties'])
+                self.assertEqual(set(node['required']), set(node['properties']))
+        prompt = payload['messages'][0]['content']
+        example = prompt.split('```json\n', 1)[1].split('```', 1)[0]
+        self.assertIsInstance(json.loads(example), dict)
 
-        self.assertEqual(redis.values[fetch.get_quota_key("gemini-2.5-flash")], 1)
-        self.assertIn(
-            "input=100, output=50, thinking=25, total=175",
-            output.getvalue(),
-        )
+    def test_successes_carry_identity_when_an_earlier_title_fails(self):
+        failed = self.title()
+        success = self.title(tmdb_id=550)
+        invalid = response({'choices': [{'message': {'content': '{}'}}]})
+        self.post.side_effect = [invalid] * 4 + [self.success()]
+        self.assertEqual(fetch.generate_dna([failed, success]),
+                         [{'id': str(success.id), 'dna': self.dna}])
 
-    def test_minute_quota_exhaustion_does_not_block_model_for_the_day(self):
-        redis = FakeRedis()
-        fetch = load_fetch_module(redis)
-        movie = FakeDnaMovie()
-        FakeClient.outcomes = {
-            "gemini-2.5-flash": [api_error(429)],
-            "gemini-3.6-flash": [successful_response()],
-        }
-
-        fetch.generate_dna([movie])
-
-        self.assertIsNone(redis.get(fetch.get_model_blocked_key("gemini-2.5-flash")))
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_logs_usage_cost_even_when_http_response_is_an_error(self):
+        self.post.side_effect = [response({'usage': {'cost': 0.0042}}, 502), self.success()]
+        with patch('time.sleep'):
+            fetch.generate_dna([self.title()])
+        self.assertIn('usage.cost=0.0042', self.output.getvalue())

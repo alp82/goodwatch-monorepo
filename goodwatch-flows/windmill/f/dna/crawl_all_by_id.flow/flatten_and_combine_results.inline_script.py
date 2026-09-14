@@ -1,7 +1,8 @@
 def main(next_ids: dict, results: list[list[dict]]) -> list[dict]:
     movie_ids = next_ids.get("movie_ids", [])
     tv_ids = next_ids.get("tv_ids", [])
-    all_ids = movie_ids + tv_ids
+    all_ids = set(movie_ids + tv_ids)
+    seen_ids = set()
 
     flattened_results = []
     for batch_index, batch in enumerate(results):
@@ -17,16 +18,12 @@ def main(next_ids: dict, results: list[list[dict]]) -> list[dict]:
                     f"results[{batch_index}][{result_index}] must be an object; "
                     f"got {type(result).__name__}"
                 )
+            result_id = result.get("id")
+            if not isinstance(result_id, str) or result_id not in all_ids or result_id in seen_ids:
+                raise ValueError(f"Unexpected or duplicate result ID: {result_id}")
+            if not isinstance(result.get("dna"), dict):
+                raise ValueError(f"results[{batch_index}][{result_index}].dna must be an object")
+            seen_ids.add(result_id)
             flattened_results.append(result)
 
-    if len(all_ids) != len(flattened_results):
-        raise ValueError(
-            f"Mismatch in lengths. IDs: {len(all_ids)}, "
-            f"Results: {len(flattened_results)}"
-        )
-
-    combined_results = [
-        {"id": id, "dna": result}
-        for id, result in zip(all_ids, flattened_results)
-    ]
-    return combined_results
+    return flattened_results

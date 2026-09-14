@@ -54,3 +54,13 @@ The repository must have:
 - a `WMILL_URL` Actions secret containing the publicly reachable Windmill URL
 - a `WMILL_TOKEN` Actions secret containing a Windmill user token with permission
   to sync the workspace
+
+## DNA generation tests
+
+Run without live HTTP requests, credentials, or MongoDB:
+
+```sh
+python -m venv /tmp/goodwatch-dna-tests
+/tmp/goodwatch-dna-tests/bin/pip install -r tests/requirements-dna.txt
+/tmp/goodwatch-dna-tests/bin/python -m unittest discover -s tests -p 'test_dna_*.py'
+```
