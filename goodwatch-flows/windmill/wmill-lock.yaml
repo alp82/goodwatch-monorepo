@@ -92,7 +92,6 @@ locks:
   f/priority/publish: f701baaeae9ff66444fdf0f7bec9804d180c02f0196b1ebb456247fb92c1024a
   f/priority/queue: aec3e00c51eaee8f7a78278a09fe932a902dc2d3ff94f7ca0d13c9e3df5dee65
   f/priority/reset: 360562732de31e0ec28d089aeebbfd0e9c010c8c62e95a80d8a53378847cf817
-  f/recommendations/query_movies: e23a1e59fa7345f26efcfe014bb5a3975db377d8d0e15f96f1a7f16a464c56a8
   f/rotten_web/crawl_all_by_id.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/rotten_web/models: 62c00432af519c435135475647acab10e81616a6b5afce1f2c0fca8cc3ccc20c

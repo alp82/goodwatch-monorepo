@@ -20,6 +20,8 @@ The script `goodwatch-flows/scripts/remove_text_embeddings.py` uses Qdrant clien
 1.15.1 plus the dependencies of `f/dna/models.py`. Set `QDRANT_URL` and
 `QDRANT_API_KEY` in the environment. `cleanup-mongo` also requires `MONGODB_URI`
 with a default database. Never place credentials in command arguments or reports.
+For large collections, run the script on the Qdrant host: its native gRPC path
+retains protobuf payloads directly, avoiding expensive nested value conversions.
 
 1. `prefill`: copy while the old deployment remains live. This is reversible;
    it never changes the source collection. A successful comparison is evidence
@@ -39,7 +41,8 @@ with a default database. Never place credentials in command arguments or reports
    numeric indexes; ordinary Discover filters remain in CrateDB.
 5. Archive the removed Windmill embedding experiments and helper flow explicitly:
    `f/dna/test/vectorize`, `f/vector/test_embeddings_transformer`,
-   `f/recommendations/test`, and `f/recommendations/movie_batch_embeddings`.
+   `f/recommendations/test`, `f/recommendations/query_movies`, and
+   `f/recommendations/movie_batch_embeddings`.
    Also check the already-retired legacy embedding paths listed in the old
    deployment lock. CI uses `--keep-deleted`, so source deletion alone does not
    archive a deployed script. The old self-hosted embedding service has been
@@ -48,7 +51,9 @@ with a default database. Never place credentials in command arguments or reports
 6. Run `cleanup-mongo --writers-paused`: remove only `vector_essence_text` from
    `dna_movie` and `dna_tv`. The schema temporarily tolerates legacy Mongo fields
    during the rolling deployment. Verify essence text, tags, fingerprints and
-   queue state remain intact. The retired Arango/Milvus definitions are cleaned
+   queue state remain intact. The retired embedding generators, schema setup, clustering and recommendation
+   experiments are removed from the repository; their history remains in Git.
+   The retired Arango/Milvus definitions are cleaned
    in source; if an alternate store is found still deployed, inventory it before
    declaring its data retired.
 7. Run `delete-source --writers-paused --deployment-verified`. This re-verifies
@@ -93,7 +98,8 @@ AGENTS.md; verify the existing dev server and a production build instead.
 ### Implementation checks (2026-09-14)
 
 - 31 DNA tests, 20 publication tests, 8 publication-retry tests and 5 migration
-  tests pass (64 total).
+  tests pass (64 total). An additional native-payload migration regression and
+  all 49 streaming-country/publication tests also pass (114 total).
 - The production webapp build passes. Typechecking reports 287 existing errors,
   compared with 292 on the unchanged parent commit; the changed Qdrant wrapper
   has no TypeScript errors. The differing union-member order and absolute paths

@@ -6,7 +6,7 @@ import unittest
 import warnings
 
 import mongomock
-from qdrant_client import QdrantClient, models as qm
+from qdrant_client import QdrantClient, grpc, models as qm
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 from f.dna.models import CoreScores
@@ -85,6 +85,23 @@ class TextEmbeddingRemovalTest(unittest.TestCase):
         self.assertNotIn("fingerprint_scores_v1", indexes)
         for name in CoreScores.model_fields:
             self.assertEqual(indexes[f"fingerprint_scores_v1.{name}"], "integer")
+
+    def test_native_grpc_preserves_nested_payloads_and_rejects_missing_vectors(self):
+        source = grpc.RetrievedPoint(
+            id=grpc.PointId(num=1000000000603),
+            payload={"dna": grpc.Value(struct_value=grpc.Struct(fields={
+                "essence_text": grpc.Value(string_value="Keep the text"),
+                "score": grpc.Value(integer_value=9),
+            }))},
+            vectors=grpc.VectorsOutput(vectors=grpc.NamedVectorsOutput(vectors={
+                migration.VECTOR: grpc.VectorOutput(data=[1.0] * 74)})))
+        retained = migration.retained_point(source)
+        self.assertEqual(retained.id, 1000000000603)
+        self.assertEqual(retained.payload, source.payload)
+        self.assertEqual(migration.fingerprint(retained), [1.0] * 74)
+        source.ClearField("vectors")
+        with self.assertRaisesRegex(ValueError, "no valid"):
+            migration.fingerprint(migration.retained_point(source))
 
 
 if __name__ == "__main__":

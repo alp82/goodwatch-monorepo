@@ -12,9 +12,11 @@ import math
 import os
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "windmill"))
-from qdrant_client import QdrantClient, models as qm
+from qdrant_client import QdrantClient, grpc, models as qm
+from qdrant_client.qdrant_remote import QdrantRemote
 from f.sync.models.qdrant_schemas import desired_payload_indexes
 
 SOURCE = "media"
@@ -23,9 +25,40 @@ VECTOR = "fingerprint_v1"
 BATCH_SIZE = 2000
 
 
+def grpc_storage(client):
+    return isinstance(client._client, QdrantRemote)
+
+
+def retained_point(point):
+    """Keep protobuf payloads intact instead of decoding/re-encoding every value."""
+    vectors = point.vectors.vectors.vectors
+    vector = vectors.get(VECTOR)
+    data = list(vector.data or vector.dense.data) if vector is not None else None
+    return SimpleNamespace(id=point.id.num if point.id.HasField("num") else point.id.uuid,
+                           payload=point.payload, vector={VECTOR: data})
+
+
+def vector_selector():
+    return grpc.WithVectorsSelector(include=grpc.VectorsSelector(names=[VECTOR]))
+
+
+def point_id(value):
+    return grpc.PointId(num=value) if isinstance(value, int) else grpc.PointId(uuid=value)
+
+
 def points(client, collection):
     offset = None
     while True:
+        if grpc_storage(client):
+            result = client.grpc_points.Scroll(grpc.ScrollPoints(
+                collection_name=collection, limit=BATCH_SIZE, offset=offset,
+                with_payload=grpc.WithPayloadSelector(enable=True),
+                with_vectors=vector_selector()), timeout=180)
+            yield from map(retained_point, result.result)
+            if not result.HasField("next_page_offset"):
+                break
+            offset = result.next_page_offset
+            continue
         batch, offset = client.scroll(collection_name=collection, limit=BATCH_SIZE,
                                       offset=offset, with_payload=True, with_vectors=[VECTOR])
         yield from batch
@@ -89,8 +122,15 @@ def copy(client):
     # already exist, so the final graph incorporates their filtering edges.
     client.update_collection(TARGET, optimizers_config=qm.OptimizersConfigDiff(indexing_threshold=0))
     def write_batch(batch):
-        existing = {p.id: p for p in client.retrieve(
-            TARGET, ids=[p.id for p in batch], with_payload=True, with_vectors=[VECTOR])}
+        if grpc_storage(client):
+            result = client.grpc_points.Get(grpc.GetPoints(
+                collection_name=TARGET, ids=[point_id(p.id) for p in batch],
+                with_payload=grpc.WithPayloadSelector(enable=True),
+                with_vectors=vector_selector()), timeout=180)
+            existing = {p.id: p for p in map(retained_point, result.result)}
+        else:
+            existing = {p.id: p for p in client.retrieve(
+                TARGET, ids=[p.id for p in batch], with_payload=True, with_vectors=[VECTOR])}
         changed = []
         for point in batch:
             old = existing.get(point.id)
@@ -103,12 +143,22 @@ def copy(client):
                     pass
             changed.append(point)
         if changed:
-            client.upsert(TARGET, changed, wait=True)
+            if grpc_storage(client):
+                client.grpc_points.Upsert(grpc.UpsertPoints(
+                    collection_name=TARGET, wait=True, points=[grpc.PointStruct(
+                        id=point_id(p.id), payload=p.payload,
+                        vectors=grpc.Vectors(vectors=grpc.NamedVectors(vectors={
+                            VECTOR: grpc.Vector(data=p.vector[VECTOR])})))
+                        for p in changed]), timeout=180)
+            else:
+                client.upsert(TARGET, [qm.PointStruct(
+                    id=p.id, payload=p.payload, vector=p.vector) for p in changed], wait=True)
 
     batch = []
     count = 0
     for point in points(client, SOURCE):
-        batch.append(qm.PointStruct(id=point.id, payload=point.payload, vector={VECTOR: fingerprint(point)}))
+        batch.append(SimpleNamespace(id=point.id, payload=point.payload,
+                                     vector={VECTOR: fingerprint(point)}))
         if len(batch) == BATCH_SIZE:
             write_batch(batch)
             count += len(batch)
