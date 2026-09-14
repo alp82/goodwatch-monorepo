@@ -41,9 +41,9 @@ def run_flow(path, flow_input):
     def run_modules(modules, inputs):
         results = {}
         for module in modules:
-            if 'retry' in module:
-                raise AssertionError('DNA fetch owns retries; flow retries must be absent')
             value = module['value']
+            if value.get('path') == 'f/dna/generate/fetch' and 'retry' in module:
+                raise AssertionError('DNA fetch owns retries; its flow retry must be absent')
             scope = {'flow_input': inputs, 'results': results}
             arguments = {key: flow_value(transform['expr'], scope)
                          for key, transform in value.get('input_transforms', {}).items()}
