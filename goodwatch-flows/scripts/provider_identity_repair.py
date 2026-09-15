@@ -338,20 +338,26 @@ def verify(db, progress=None):
             'pending': {'$sum': {'$cond': [pending, 1, 0]}},
             'pending_failed': {'$sum': {'$cond': [{'$and': [pending,
                 {'$ifNull': ['$consecutive_failures', 0]}]}, 1, 0]}},
-        }}], allowDiskUse=True))
+        }}], allowDiskUse=True, maxTimeMS=540000))
         counts = totals[0] if totals else {'documents': 0, 'unready': 0, 'pending': 0, 'pending_failed': 0}
         counts.pop('_id', None)
-        counts['invalid'] = 0
         if progress:
             progress(media, {**counts, 'stage': 'server_counts_complete'})
+        counts['invalid'] = 0
         # PCRE \z is strict end-of-string; $ would also match before a newline.
         # The slug cannot contain controls, query separators or fragments.
-        pattern = {'$concat': [r'^https://(?:www\.)?themoviedb\.org(?::443)?/' + media + '/',
-            string('tmdb_id'), r'(?:-[^\x00-\x20/?#]*)?/watch/?\?locale=', string('country_code'), r'\z']}
-        fast_valid = {'$and': [VALIDATOR, {'$expr': {'$regexMatch': {
-            'input': string('tmdb_watch_url'), 'regex': pattern}}}]}
+        # Keep the regex constant so MongoDB compiles it once, not per document.
+        pattern = (r'^https://(?:www\.)?themoviedb\.org(?::443)?/' + media
+            + r'/([0-9]+)(?:-[^\x00-\x20/?#]*)?/watch/?\?locale=([A-Z]{2})\z')
+        canonical = {'$let': {'vars': {'match': {'$regexFind': {
+            'input': string('tmdb_watch_url'), 'regex': pattern}}}, 'in': {'$and': [
+                {'$ne': ['$$match', None]},
+                {'$eq': [{'$arrayElemAt': ['$$match.captures', 0]}, string('tmdb_id')]},
+                {'$eq': [{'$arrayElemAt': ['$$match.captures', 1]}, string('country_code')]},
+            ]}}}
+        fast_valid = {'$and': [VALIDATOR, {'$expr': canonical}]}
         candidates = collection.find({'$nor': [fast_valid]}, {'tmdb_id': 1,
-            'country_code': 1, 'tmdb_watch_url': 1}).batch_size(5000)
+            'country_code': 1, 'tmdb_watch_url': 1}).batch_size(5000).max_time_ms(540000)
         for row in candidates:
             try:
                 country = country_from_url(row.get('tmdb_watch_url'), row.get('tmdb_id'), media)
@@ -372,7 +378,7 @@ def verify(db, progress=None):
             duplicates = list(collection.aggregate([
                 {'$group': {'_id': {'tmdb_id': '$tmdb_id', 'country': '$country_code'}, 'n': {'$sum': 1}}},
                 {'$match': {'n': {'$gt': 1}}}, {'$count': 'groups'},
-            ], allowDiskUse=True))
+            ], allowDiskUse=True, maxTimeMS=540000))
             counts['duplicates'] = duplicates[0]['groups'] if duplicates else 0
         counts['quarantined_unresolved_titles'] = db.provider_identity_unresolved.count_documents(
             {'media': media, 'status': 'unresolved'})
