@@ -104,6 +104,7 @@ class RepairIntegrationTests(unittest.TestCase):
         repair.finish_maintenance(self.db, final=True)
         country_state.ensure_indexes(self.col)
         for row in [{'tmdb_id': 42}, {'tmdb_id': True, 'country_code': 'AU', 'country_identity_ready': True, 'tmdb_watch_url': 'x'},
+                    {'tmdb_id': 45, 'country_code': 'AU\n', 'country_identity_ready': True, 'tmdb_watch_url': 'x'},
                     {'tmdb_id': 44, 'country_code': 'au', 'country_identity_ready': True, 'tmdb_watch_url': 'x'}]:
             with self.assertRaises(OperationFailure):
                 self.col.insert_one(row)
@@ -257,6 +258,57 @@ class RepairIntegrationTests(unittest.TestCase):
         self.assertFalse(set(country_state.select_country_ids(self.col, now)) & set(pending))
         self.col.update_many({'identity_repair_pending': 'repair'}, {'$set': {'next_fetch_at': now, 'lease_expires_at': now + timedelta(minutes=1)}})
         self.assertFalse(set(country_state.select_country_ids(self.col, now)) & set(pending))
+
+    def test_monitor_counts_pending_backoff_and_quarantines_independently(self):
+        from f.monitoring.backlog_collection import collect_identity_repairs
+        now = datetime.utcnow()
+        self.col.insert_one({'tmdb_id': 42, 'identity_repair_pending': 'repair',
+                             'next_fetch_at': now + timedelta(hours=1), 'consecutive_failures': 2})
+        self.db.tmdb_streaming_upstream.insert_one({'_id': 'tmdb_watch', 'blocked_until': now + timedelta(hours=1)})
+        self.db.provider_identity_unresolved.insert_one({'_id': 'movie:99', 'media': 'movie',
+            'tmdb_id': 99, 'status': 'unresolved', 'source_document_count': 3})
+        result = collect_identity_repairs(self.db, now)
+        self.assertTrue(result['complete'])
+        self.assertEqual(result['partitions'][0]['pending_count'], 1)
+        self.assertEqual(result['partitions'][0]['pending_backoff_count'], 1)
+        self.assertEqual(result['partitions'][0]['pending_failed_count'], 1)
+        self.assertEqual(result['unresolved_quarantines'][0]['tmdb_id'], 99)
+
+    def test_server_verifier_matches_parser_for_variants_and_malformed_bson(self):
+        self.col.drop_index('validated_country_identity')
+        base = {'tmdb_id': 42, 'country_code': 'AU', 'country_identity_ready': True,
+                'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=AU'}
+        variants = [
+            {}, {'tmdb_watch_url': 'https://www.themoviedb.org/movie/42-élan/watch?locale=AU'},
+            {'tmdb_watch_url': 'HTTPS://WWW.THEMOVIEDB.ORG/movie/42/watch?locale=AU'},
+            {'tmdb_watch_url': 'https://themoviedb.org:443/movie/42/watch/?locale=AU'},
+            {'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=%41%55'},
+            {'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?x=y&locale=AU#fragment'},
+            {'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=AU\n'},
+            {'tmdb_watch_url': 'https://www.themoviedb.org/movie/42-name?query/watch?locale=AU'},
+            {'tmdb_watch_url': 'https://www.themoviedb.org/movie/42-name#fragment/watch?locale=AU'},
+            {'tmdb_watch_url': 'https://www.themoviedb.org:444/movie/42/watch?locale=AU'},
+            {'tmdb_watch_url': 'https://www.themoviedb.org/tv/42/watch?locale=AU'},
+            {'tmdb_id': 43}, {'tmdb_id': True}, {'tmdb_id': 42.0}, {'tmdb_id': '42'},
+            {'tmdb_id': None}, {'country_code': 'GB'}, {'country_code': 'AU\n'},
+            {'country_code': 'au'}, {'country_code': None}, {'country_code': ['AU']},
+            {'tmdb_watch_url': []}, {'tmdb_watch_url': None}, {'country_identity_ready': False},
+        ]
+        documents = [{**base, **variant} for variant in variants]
+        self.col.insert_many(documents)
+        invalid = 0
+        for row in documents:
+            try:
+                country = country_state.country_from_url(row.get('tmdb_watch_url'), row.get('tmdb_id'), 'movie')
+                if country != row.get('country_code'):
+                    raise ValueError('Country mismatch')
+            except (ValueError, TypeError):
+                invalid += 1
+        report = repair.verify(self.db)['movie']
+        self.assertEqual(report['documents'], len(documents))
+        self.assertEqual(report['invalid'], invalid)
+        self.assertEqual(report['unready'], 1)
+        self.assertGreater(report['duplicates'], 0)
 
 
 if __name__ == '__main__':

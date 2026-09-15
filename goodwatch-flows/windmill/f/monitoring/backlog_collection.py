@@ -92,6 +92,51 @@ def main() -> None:
     pass
 
 
+def collect_identity_repairs(db: Any, now: datetime, *, budget_seconds: float = 10) -> dict:
+    """Report all pending repairs, even when ordinary backlog excludes backoff."""
+    deadline = monotonic() + budget_seconds
+    result = {"complete": True, "observed_at": iso(now), "partitions": []}
+    try:
+        result["maintenance_active"] = bool(db.provider_identity_maintenance.find_one(
+            {"_id": "repair", "active": True}, {"_id": 1}))
+        unresolved = list(db.provider_identity_unresolved.find({"status": "unresolved"}, {
+            "_id": 0, "media": 1, "tmdb_id": 1, "source_document_count": 1,
+        }))
+        result["unresolved_quarantines"] = unresolved
+        for media in ("movie", "tv"):
+            collection = db[f"tmdb_{media}_providers"]
+            indexes = collection.index_information()
+            if "pending_identity_refresh" not in indexes:
+                raise RuntimeError("Pending repair index missing")
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise TimeoutError("Repair monitoring budget exhausted")
+            stats = list(collection.aggregate([
+                {"$match": {"identity_repair_pending": {"$exists": True}}},
+                {"$group": {"_id": None, "pending_count": {"$sum": 1},
+                    "pending_failed_count": {"$sum": {"$cond": [
+                        {"$gt": [{"$ifNull": ["$consecutive_failures", 0]}, 0]}, 1, 0]}},
+                    "pending_backoff_count": {"$sum": {"$cond": [
+                        {"$gt": ["$next_fetch_at", now]}, 1, 0]}},
+                    "pending_leased_count": {"$sum": {"$cond": [
+                        {"$gt": ["$lease_expires_at", now]}, 1, 0]}},
+                    "oldest_next_fetch_at": {"$min": "$next_fetch_at"},
+                }},
+            ], hint="pending_identity_refresh", maxTimeMS=max(1, int(remaining * 1000))))
+            partition = stats[0] if stats else {"pending_count": 0, "pending_failed_count": 0,
+                "pending_backoff_count": 0, "pending_leased_count": 0}
+            partition.pop("_id", None)
+            partition["oldest_next_fetch_at"] = iso(partition.get("oldest_next_fetch_at"))
+            index = indexes.get("country_identity", {})
+            partition.update(media_type=media, full_unique_identity=bool(index.get("unique")
+                and index.get("key") == [("tmdb_id", 1), ("country_code", 1)]
+                and not index.get("partialFilterExpression") and not index.get("sparse")))
+            result["partitions"].append(partition)
+    except Exception:
+        result.update(complete=False, collection_error="identity_repair_metrics_unavailable")
+    return result
+
+
 def collect_publication(db: Any, jobs: list[dict], now: datetime) -> dict:
     from f.monitoring.backlog_health import PUBLICATION_GRACE_SECONDS
     from f.priority.queue import COOLDOWN_MS
@@ -186,8 +231,11 @@ def collect_backlogs(store: Any, jobs: list[dict], now: datetime,
             socketTimeoutMS=45000, tz_aware=True,
         )
         budget = remaining_seconds - (monotonic() - start)
+        repairs = collect_identity_repairs(client[name], now, budget_seconds=min(10, max(0, budget)))
+        budget = remaining_seconds - (monotonic() - start)
         if budget > 0:
             country = collect_countries(client[name], now, budget_seconds=budget)
+        country["identity_repair"] = repairs
     except Exception:
         country["collection_errors"] = ["country_connection_unavailable"]
     finally:

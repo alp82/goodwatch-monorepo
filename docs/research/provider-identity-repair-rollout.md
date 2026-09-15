@@ -9,9 +9,11 @@ Reviewed the transaction/archive implementation and reran its real MongoDB repli
 - Lossless quarantine for a whole title whose stored numeric ID conflicts with its watch URL. Originals are copied transactionally into `provider_identity_quarantine`; a durable `provider_identity_unresolved` marker prevents either initializer from recreating those sources and freezes the entire published title, including API availability. Quarantines remain separately visible in verification counts.
 - A count cross-check on every archived Crate title snapshot so a truncated SQL response cannot be accepted as a complete backup.
 - Two pending-repair slots in each five-country scheduled batch, respecting eligibility, source leases, shared upstream blocking and failure backoff. Ordinary due work retains three slots. A partial eligibility index covers pending repairs.
-- Progress callbacks for full verification and removal of the redundant drain scan when finishing an already-frozen maintenance window.
+- Full verification uses server counts and a conservative canonical-URL fast path; every noncanonical candidate is checked with the existing exact parser. Differential tests cover malformed BSON, missing fields, Unicode slugs, percent-encoded query values, wrong IDs/countries and control characters. Exact two-character country length closes the regex trailing-newline loophole.
+- Progress callbacks for verification and removal of the redundant drain scan when finishing an already-frozen maintenance window.
+- Existing monitoring reports now retain all pending, failed, backoff and leased repair counts plus unresolved quarantines, even when ordinary backlog reporting excludes shared upstream backoff. No new notification route or rule was added.
 
-Twelve real MongoDB integration tests, 49 streaming tests and 20 priority tests cover the original repair and these additions. All original BSON values and published rows are archived privately before source deletion. Archives are fsynced and checked against complete hashes; transaction receipts make completed mutations restartable.
+Fourteen real MongoDB integration tests, 49 streaming tests and 20 priority tests cover the original repair and these additions. Eleven monitoring tests and two read-only backlog tests also pass; five existing Crate integration tests require a separate test endpoint and were skipped. All original BSON values and published rows are archived privately before source deletion. Archives are fsynced and checked against complete hashes; transaction receipts make completed mutations restartable.
 
 ## Full inventory
 
@@ -64,6 +66,12 @@ Movie 526028/Argentina publishes three offers. TV 69283/Australia has no remaini
 Only scoped Python paths are deployed via the Windmill API with captured parent hashes, schemas, locks and runtime fields. Windmill automatically rebuilt dependent script locks, including an unwanted standalone `bson` package and Python upgrades. Those generated locks were replaced with the repository's known-good pinned locks. Four actual read-only Windmill jobs imported the complete fetch, priority initializer, bulk initializer and priority publisher dependency chains and verified that the new guards were loaded.
 
 Full replay/production evidence and recoverable source/publication archives are in the private directory `/home/alp/.local/state/goodwatch/provider-identity-repair`. Credentials are loaded in memory and are not included in repository artifacts. Exact schedule states are retained in `paused-schedules.json`; archive receipts reference their durable paths and hashes.
+
+## Capacity and execution
+
+The scheduled crawler runs every 20 seconds. Two repair slots per media type imply a theoretical ceiling of 8,640 repaired countries per day per media type: roughly eight days for the movie backlog and two days for TV, before pauses, upstream limits and failed retries. This is capacity arithmetic, not a freshness promise. Existing published availability remains frozen per pending country until verified success.
+
+Structural application uses 200-title checkpoints and 32 bounded workers. Country replacements are grouped into one ordered Mongo bulk operation within each title transaction. Complete Crate snapshots are fetched per checkpoint and independently checked against per-title counts before archiving. A separate four-worker verifier checks archive hashes, source after-hashes and unchanged publication while the gate remains closed. Interrupted execution resumed from majority-committed receipts without losing completed titles.
 
 ## Remaining rollout work
 

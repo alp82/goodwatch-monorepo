@@ -330,6 +330,8 @@ def poll(
             if backlog_result
             else {},
             "pipelines": reports,
+            "provider_identity_repair": snapshots["country"].get("identity_repair")
+            if backlog_result else None,
             "resolved_this_poll": resolved,
             "daily_paths_present": sorted(DAILY_PATHS & set(plans)),
             "daily_paths_missing": sorted(DAILY_PATHS - set(plans)),
