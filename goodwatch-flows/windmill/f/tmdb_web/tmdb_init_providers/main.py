@@ -42,13 +42,15 @@ def initialize_batch(
         existing[document["tmdb_id"]].append(document)
     operations: list[UpdateOne] = []
     errors: list[dict] = []
-    quarantined = {row["tmdb_id"] for row in collection.database.provider_identity_unresolved.find({
-        "media": media_type, "status": "unresolved",
+    quarantined = {row["tmdb_id"]: row["status"] for row in collection.database.provider_identity_unresolved.find({
+        "media": media_type, "status": {"$in": ["unresolved", "resolved_alias"]},
         "tmdb_id": {"$in": [title["tmdb_id"] for title in titles]},
-    }, {"tmdb_id": 1})}
+    }, {"tmdb_id": 1, "status": 1})}
     now = datetime.utcnow()
     for title in titles:
         tmdb_id = title["tmdb_id"]
+        if quarantined.get(tmdb_id) == "resolved_alias":
+            continue
         if tmdb_id in quarantined:
             errors.append({"id": str(tmdb_id), "error": "Quarantined provider identity requires resolution"})
             continue

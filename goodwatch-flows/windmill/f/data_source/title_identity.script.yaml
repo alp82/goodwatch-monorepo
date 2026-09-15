@@ -1,0 +1,9 @@
+summary: Resolved historical movie identities
+description: ''
+lock: '!inline f/data_source/title_identity.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

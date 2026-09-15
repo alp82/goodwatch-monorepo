@@ -1,3 +1,4 @@
+import { canonicalTitleId } from "~/utils/title-identity"
 import { cached } from "~/utils/cache"
 import { getRatingKeys } from "~/utils/ratings"
 import {
@@ -26,6 +27,7 @@ import {
 } from "~/server/types/details-types"
 
 export const getDetailsForMovie = async (params: DetailsMovieParams, options?: { bypassCache: boolean }) => {
+	params = { ...params, movieId: String(canonicalTitleId("movie", Number(params.movieId))) }
 	if (options?.bypassCache) return await _getDetailsForMovie(params)
 	return await cached<DetailsMovieParams, MovieResult>({
 		name: "details-movie",

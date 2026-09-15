@@ -6,6 +6,7 @@ SCHEMAS = {
             "demand": "BIGINT DEFAULT 0",
             "acknowledged_demand": "BIGINT DEFAULT 0",
             "claimed_demand": "BIGINT DEFAULT 0",
+            "alias_demand_transfers": "OBJECT(DYNAMIC)",
             "last_success_at": "TIMESTAMP",
             "lease_token": "TEXT",
             "lease_expires_at": "TIMESTAMP",

@@ -20,6 +20,20 @@ from test_streaming_publication import load_copy, availability
 
 @unittest.skipUnless(os.environ.get('PROVIDER_REPAIR_TEST_URI'), 'requires isolated replica-set MongoDB')
 class RepairIntegrationTests(unittest.TestCase):
+    def test_final_maintenance_preserves_retired_movie_validator(self):
+        from provider_alias_resolution import retired_validator
+        self.db.command('collMod', self.col.name,
+                        validator=retired_validator(repair.VALIDATOR))
+        repair.begin_maintenance(self.db)
+        repair.finish_maintenance(self.db, final=True)
+        with self.assertRaises(OperationFailure):
+            self.col.insert_one({'tmdb_id': 162483, 'country_code': 'DE',
+                                 'country_identity_ready': True,
+                                 'tmdb_watch_url': 'https://www.themoviedb.org/movie/162483/watch?locale=DE'})
+        self.col.insert_one({'tmdb_id': 10679, 'country_code': 'DE',
+                             'country_identity_ready': True,
+                             'tmdb_watch_url': 'https://www.themoviedb.org/movie/10679/watch?locale=DE'})
+
     def setUp(self):
         self.client = MongoClient(os.environ['PROVIDER_REPAIR_TEST_URI'])
         self.db = self.client['repair_test_' + uuid4().hex]

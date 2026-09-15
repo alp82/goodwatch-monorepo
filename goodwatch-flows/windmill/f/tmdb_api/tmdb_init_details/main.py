@@ -1,3 +1,4 @@
+from f.data_source.title_identity import canonical_title_id
 from datetime import datetime
 from mongoengine import get_db
 from pymongo import UpdateOne
@@ -20,6 +21,8 @@ def initialize_documents():
     movie_operations = []
     tv_operations = []
     for tmdb_dump in tmdb_daily_dump_collection.find():
+        if canonical_title_id(tmdb_dump.get("type"), tmdb_dump["tmdb_id"]) != tmdb_dump["tmdb_id"]:
+            continue
         date_now = datetime.utcnow()
         update_fields = {
             "original_title": tmdb_dump.get("original_title"),

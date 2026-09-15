@@ -1,6 +1,7 @@
 """CrateDB queue leases. Ranking may be stale; full-key OCC decides ownership."""
 
 from uuid import uuid4
+from f.data_source.title_identity import canonical_title_id
 
 COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000
 LEASE_MS = 2 * 60 * 60 * 1000
@@ -38,6 +39,8 @@ def candidate_ids(db, media_type, offset=0):
 def claim(db, media_type, tmdb_id, *, explicit=False):
     if media_type not in ("movie", "show") or int(tmdb_id) <= 0:
         raise ValueError("Invalid queue key")
+    if canonical_title_id(media_type, tmdb_id) != int(tmdb_id):
+        raise ValueError("Retired movie identity; use its canonical ID")
     tmdb_id = int(tmdb_id)
     if explicit:
         db.run(
