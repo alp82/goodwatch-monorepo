@@ -1,6 +1,6 @@
 # Provider identity repair rollout
 
-September 15, 2026. Live rollout in progress; this document is updated as evidence completes.
+September 15, 2026. Structural repair and database prevention are complete. Fresh country verification continues through the durable retry queue; three historical aliases remain explicitly unresolved in quarantine.
 
 ## Independent review and additions
 
@@ -9,7 +9,7 @@ Reviewed the transaction/archive implementation and reran its real MongoDB repli
 - Lossless quarantine for a whole title whose stored numeric ID conflicts with its watch URL. Originals are copied transactionally into `provider_identity_quarantine`; a durable `provider_identity_unresolved` marker prevents either initializer from recreating those sources and freezes the entire published title, including API availability. Quarantines remain separately visible in verification counts.
 - A count cross-check on every archived Crate title snapshot so a truncated SQL response cannot be accepted as a complete backup.
 - Two pending-repair slots in each five-country scheduled batch, respecting eligibility, source leases, shared upstream blocking and failure backoff. Ordinary due work retains three slots. A partial eligibility index covers pending repairs.
-- Full verification uses server counts and a conservative canonical-URL fast path; every noncanonical candidate is checked with the existing exact parser. Differential tests cover malformed BSON, missing fields, Unicode slugs, percent-encoded query values, wrong IDs/countries and control characters. Exact two-character country length closes the regex trailing-newline loophole.
+- Full verification uses server counts and a conservative canonical-URL fast path; every noncanonical candidate is checked with the existing exact parser. The server compiles a constant URL regex once and compares its captured ID/country against stored identity fields. Differential tests cover malformed BSON, missing fields, Unicode slugs, percent-encoded query values, wrong IDs/countries and control characters. Exact two-character country length closes the regex trailing-newline loophole.
 - Progress callbacks for verification and removal of the redundant drain scan when finishing an already-frozen maintenance window.
 - Existing monitoring reports now retain all pending, failed, backoff and leased repair counts plus unresolved quarantines, even when ordinary backlog reporting excludes shared upstream backoff. No new notification route or rule was added.
 
@@ -52,7 +52,7 @@ Fresh source evidence from the actual deployed priority flow:
 
 The initial explicit priority attempts encountered existing two-hour queue leases left by prior failed flows. Owning selection jobs and terminal failed parents were matched by exact lease token before invoking the existing fenced release operation. Demand was not acknowledged by that release. One owning failed parent is the original reported run `01a0a3de-c2ae-8dee-1fca-0950def1eb15`.
 
-Current actual priority verification parents:
+Completed priority verification parents:
 
 - `01a0a43a-46f1-b37a-6382-13816bb2fb0e`: movie 526028 and TV 69283.
 - `01a0a43a-473d-b310-c2af-514970b49f49`: movie and TV 406.
@@ -71,8 +71,36 @@ Full replay/production evidence and recoverable source/publication archives are 
 
 The scheduled crawler runs every 20 seconds. Two repair slots per media type imply a theoretical ceiling of 8,640 repaired countries per day per media type: roughly eight days for the movie backlog and two days for TV, before pauses, upstream limits and failed retries. This is capacity arithmetic, not a freshness promise. Existing published availability remains frozen per pending country until verified success.
 
-Structural application uses 200-title checkpoints and 32 bounded workers. Country replacements are grouped into one ordered Mongo bulk operation within each title transaction. Complete Crate snapshots are fetched per checkpoint and independently checked against per-title counts before archiving. A separate four-worker verifier checks archive hashes, source after-hashes and unchanged publication while the gate remains closed. Interrupted execution resumed from majority-committed receipts without losing completed titles.
+Structural application uses 200-title checkpoints and 32 bounded workers. Country replacements are grouped into one ordered Mongo bulk operation within each title transaction. Complete Crate snapshots are fetched per checkpoint and independently checked against per-title counts before archiving. A separate four-worker verifier checks archive hashes, source after-hashes and unchanged publication while the gate remains closed. Interrupted execution resumed from majority-committed receipts without losing completed titles. A read-only verification scan exceeded the initial two-minute socket timeout; no mutations were repeated, obsolete queries were confirmed gone, and the final scan restarted with a nine-minute server limit, ten-minute socket timeout and automatic read retries disabled.
 
-## Remaining rollout work
+## Completed full structural repair
 
-Complete sample publication/acknowledgment verification; apply the full checkpointed batches and lossless quarantines; perform final full invariant verification and install nonpartial unique indexes/strict validators; restore schedules and verify real pending-repair progress; integrate the scoped code into the repository so future deployment retains the protections.
+The full batch completed 35,875 targets, including five already-repaired/no-op targets. It removed 85,961 excess source documents; the sample removed 122, giving exactly 86,083 excess documents removed across both windows. The full phase normalized 273,568 singleton country records and marked 84,634 duplicate survivors pending refresh.
+
+Independent frozen-window verification checked 35,870 mutated-title archives containing 444,201 original source documents and 230,594 unchanged published rows, totaling 722,127,066 bytes. Every archive hash and repaired source after-hash matched its transaction receipt. All three quarantines were additionally checked against their archive hashes, transactionally preserved MongoDB originals and unchanged publication.
+
+The reopen baseline contains 68,337 pending movie countries and 16,325 pending TV countries (84,662 total), including 28 countries still pending from the sample. These countries remain durably eligible/backed off for fresh verification; pending does not mean freshly verified. Existing scheduled monitoring has already persisted repair counters and all three quarantine markers in its normal latest report.
+
+## Final full identity verification
+
+Every active record passed final identity validation while the maintenance gate remained closed:
+
+| Collection | Active documents | Invalid identities | Duplicate groups | Unready records | Pending fresh verification |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Movie | 6,546,972 | 0 | 0 | 0 | 68,337 |
+| TV | 1,493,378 | 0 | 0 | 0 | 16,325 |
+| Total | 8,040,350 | 0 | 0 | 0 | 84,662 |
+
+Ten valid records appeared between the concurrent original inventory and frozen final verification (three movie, seven TV). The separate unresolved quarantine population is 171 source documents across three movie aliases.
+
+Both collections now enforce a nonpartial unique `(tmdb_id, country_code)` index and a strict validator requiring positive integer IDs, exact uppercase two-character country codes and ready identities. Live rollback-only transaction probes on each collection confirmed duplicate rejection (11000) and rejection of unready records, newline-suffixed countries and noninteger IDs (121). Valid positive controls were also inserted and aborted; no probe records persisted.
+
+The maintenance gate is open and all four schedules were restored to their original enabled state: streaming publication, provider initialization, priority crawl and scheduled country crawl.
+
+## Scheduled progress after reopening
+
+The first resumed scheduled parent `01a0a468-23cb-0f6d-a978-8ee96a40fbe3` produced actual fresh source successes for movie 18 in Luxembourg/Netherlands and TV 42412 in Iceland/South Korea. Each country was present in the reopen pending baseline, its source timestamp advanced, its failure count is zero, and its pending marker was removed. Representative fetch jobs are `01a0a468-66d4-dcf3-5f99-5b49f051836d` (movie/Luxembourg) and `01a0a468-7737-c172-3b01-e1c04a0226a3` (TV/South Korea).
+
+The live read-only monitoring check `01a0a468-9d13-6aac-81f5-d4fe90e45087` at 09:31:55 UTC confirmed the gate open, both full unique indexes present, all three quarantine markers retained, and pending counts down to 68,335 movie / 16,323 TV with zero pending failures at that observation. Counts continue changing as schedules run.
+
+Scoped repository commits contain the deployed runtime protections, operator tooling, focused tests and this evidence. Unrelated workspace edits are excluded from integration.
