@@ -146,6 +146,7 @@ class SelectionTests(unittest.TestCase):
                     tree = ast.parse((ROOT / "sync" / "copy" / f"{name}.py").read_text())
                     function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "copy_media")
                     db = MagicMock()
+                    db.provider_identity_unresolved.find_one.return_value = None
                     for collection in ("tmdb_movie_details", "tmdb_movie_providers", "imdb_movie_rating", "metacritic_movie_rating", "rotten_tomatoes_movie_rating", "tv_tropes_movie_tags", "dna_movie"):
                         cursor = getattr(db, collection).find.return_value
                         cursor.sort.return_value.skip.return_value.limit.return_value = []

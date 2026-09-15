@@ -100,6 +100,8 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
 @contextmanager
 def publication_lease(db: Any, media_type: str, tmdb_id: int) -> Iterator[Callable[[], None]]:
     """Serialize scheduled/targeted streaming snapshots, independently of demand."""
+    if db.provider_identity_maintenance.find_one({"_id": "repair", "active": True}):
+        raise RuntimeError("Provider identity maintenance in progress")
     collection = db.streaming_publication_leases
     identity = f"{media_type}:{tmdb_id}"
     token = str(uuid4())
@@ -114,6 +116,8 @@ def publication_lease(db: Any, media_type: str, tmdb_id: int) -> Iterator[Callab
         raise RuntimeError(f"Streaming publication busy for {identity}") from error
 
     def check_owned() -> None:
+        if db.provider_identity_maintenance.find_one({"_id": "repair", "active": True}):
+            raise RuntimeError("Provider identity maintenance in progress")
         # Leave more time than the Crate request timeout before takeover can
         # happen. Check again after the writes; an expired worker cannot succeed.
         if not collection.find_one({"_id": identity, "token": token,
@@ -180,10 +184,13 @@ def reconcile_availability(
     """Replace confirmed source scopes and retain the other source's contribution."""
     api_results = (details.get("watch_providers") or {}).get("results")
     api_results = api_results if details.get("updated_at") and isinstance(api_results, dict) else {}
+    frozen = {row.get("country_code") for row in providers if row.get("identity_repair_pending")}
+    api_results = {country: result for country, result in api_results.items() if country not in frozen}
     verified = {row["country_code"]: row for row in providers
                 if row.get("country_code") and row.get("updated_at")
                 and row["country_code"] not in (deferred_countries or set())
-                and not row.get("consecutive_failures") and not row.get("country_identity_error")}
+                and not row.get("consecutive_failures") and not row.get("country_identity_error")
+                and not row.get("identity_repair_pending")}
     rows = {}
     for original in existing:
         row = StreamingAvailability(**original).model_dump()
@@ -333,6 +340,23 @@ def copy_media(
         if not tmdb_ids:
             break
         for tmdb_id in tmdb_ids:
+            unresolved = mongo_db.provider_identity_unresolved.find_one({
+                "media": "movie" if is_movie else "tv", "tmdb_id": tmdb_id,
+                "status": "unresolved",
+            })
+            if unresolved:
+                # Quarantined source identities are not an empty availability
+                # snapshot. Freeze the entire published title, including API
+                # contributions, until its identity is authoritatively resolved.
+                publication["status"] = "partial_success"
+                if targeted_ids is not None:
+                    publication["titles"][str(tmdb_id)] = {
+                        "provider_state": "quarantined", "identity_resolution": "unresolved",
+                        "deferred_country_count": unresolved["source_country_count"],
+                        "unidentified_country_count": unresolved["source_document_count"],
+                        "streaming_availability": None,
+                    }
+                continue
             with publication_snapshot(
                 mongo_db, connector, tmdb_id, media_type, mongo_details, mongo_providers, service_ids,
             ) as snapshot:

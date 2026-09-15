@@ -42,9 +42,16 @@ def initialize_batch(
         existing[document["tmdb_id"]].append(document)
     operations: list[UpdateOne] = []
     errors: list[dict] = []
+    quarantined = {row["tmdb_id"] for row in collection.database.provider_identity_unresolved.find({
+        "media": media_type, "status": "unresolved",
+        "tmdb_id": {"$in": [title["tmdb_id"] for title in titles]},
+    }, {"tmdb_id": 1})}
     now = datetime.utcnow()
     for title in titles:
         tmdb_id = title["tmdb_id"]
+        if tmdb_id in quarantined:
+            errors.append({"id": str(tmdb_id), "error": "Quarantined provider identity requires resolution"})
+            continue
         countries, invalid = identity_map(existing[tmdb_id], media_type)
         if invalid:
             errors.extend(
@@ -53,12 +60,14 @@ def initialize_batch(
             )
             continue
         title_operations: list[UpdateOne] = []
+        normalization_positions: dict[str, int] = {}
         for country, matches in countries.items():
             selector, update = normalization_update(matches[0], country)
             update["$set"].update(
                 original_title=title.get("original_title"),
                 popularity=title.get("popularity"),
             )
+            normalization_positions[country] = len(title_operations)
             title_operations.append(UpdateOne(selector, update))
         try:
             for country_key, provider in title["watch_providers"][
@@ -73,6 +82,14 @@ def initialize_batch(
                         "Provider country conflicts with watch URL"
                     )
                 if country in countries:
+                    document = countries[country][0]
+                    selector, update = normalization_update(document, country)
+                    update["$set"].update(
+                        tmdb_watch_url=url,
+                        original_title=title.get("original_title"),
+                        popularity=title.get("popularity"),
+                    )
+                    title_operations[normalization_positions[country]] = UpdateOne(selector, update)
                     continue
                 selector, update = insertion_update(
                     tmdb_id,

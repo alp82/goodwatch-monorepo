@@ -107,6 +107,7 @@ def save_success(
                 "lease_expires_at": "",
                 "error_message": "",
                 "failed_at": "",
+                "identity_repair_pending": "",
             },
         },
     )
@@ -263,11 +264,44 @@ def ensure_indexes(collection: Collection) -> None:
         name="country_eligibility",
     )
     collection.create_index(
+        [("next_fetch_at", 1), ("lease_expires_at", 1)],
+        name="pending_identity_refresh",
+        partialFilterExpression={"identity_repair_pending": {"$exists": True}},
+    )
+    final_index = collection.index_information().get("country_identity")
+    if final_index:
+        if (final_index.get("key") != [("tmdb_id", 1), ("country_code", 1)]
+                or not final_index.get("unique") or final_index.get("partialFilterExpression")
+                or final_index.get("sparse")):
+            raise RuntimeError("country_identity index does not enforce full unique identity")
+        return
+    collection.create_index(
         [("tmdb_id", 1), ("country_code", 1)],
         unique=True,
         partialFilterExpression={"country_identity_ready": True},
         name="validated_country_identity",
     )
+
+
+def select_country_ids(collection: Collection, now: datetime, batch_size: int = 5) -> list[str]:
+    """Give pending repairs two slots while keeping ordinary due work moving."""
+    identities = []
+    def take(selector, order, limit):
+        if limit <= 0:
+            return
+        cursor = collection.find({"$and": [selector, eligibility(now),
+            {"_id": {"$nin": identities}}]}, {"_id": 1}).sort(order, 1).limit(limit)
+        identities.extend(row["_id"] for row in cursor)
+    pending = {"identity_repair_pending": {"$exists": True}, "next_fetch_at": {"$lte": now}}
+    take(pending, "next_fetch_at", min(2, batch_size))
+    for selector, order in (
+        ({"next_fetch_at": {"$lte": now}}, "next_fetch_at"),
+        ({"next_fetch_at": None, "updated_at": None}, "updated_at"),
+        ({"next_fetch_at": None, "updated_at": {"$lte": now - FRESHNESS}}, "updated_at"),
+    ):
+        take({**selector, "identity_repair_pending": {"$exists": False}}, order, batch_size - len(identities))
+    take(pending, "next_fetch_at", batch_size - len(identities))
+    return [str(identity) for identity in identities]
 
 
 def backfill(
@@ -330,6 +364,10 @@ def initialize_countries(
 ) -> dict:
     from pymongo.errors import DuplicateKeyError
 
+    if collection.database.provider_identity_unresolved.find_one({
+        "media": media_type, "tmdb_id": tmdb_id, "status": "unresolved",
+    }):
+        raise ValueError(f"Quarantined provider identity requires resolution: {media_type}/{tmdb_id}")
     documents = list(collection.find({"tmdb_id": tmdb_id}))
     countries, errors = identity_map(documents, media_type)
     if errors:
@@ -346,6 +384,7 @@ def initialize_countries(
         if country != country_key.upper():
             raise ValueError(f"Watch country {country_key} conflicts with URL")
         if country in countries:
+            refresh_url(collection, countries[country][0], country, url)
             continue
         selector, update = insertion_update(
             tmdb_id, country, url, original_title, popularity, now
@@ -403,3 +442,12 @@ def record_identity_error(
         },
         {"$set": {"country_identity_error": error}},
     )
+
+
+def refresh_url(collection: Collection, document: dict, country: str, url: str) -> bool:
+    """URL metadata can change without creating a new country or touching a claim."""
+    return collection.update_one(
+        {"_id": document["_id"], "tmdb_watch_url": document.get("tmdb_watch_url"),
+         "country_code": country},
+        {"$set": {"tmdb_watch_url": url}},
+    ).matched_count == 1
