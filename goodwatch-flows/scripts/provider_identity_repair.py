@@ -29,7 +29,7 @@ VALIDATOR = {'$jsonSchema': {'bsonType': 'object',
     'required': ['tmdb_id', 'country_code', 'country_identity_ready', 'tmdb_watch_url'],
     'properties': {
         'tmdb_id': {'bsonType': ['int', 'long'], 'minimum': 1},
-        'country_code': {'bsonType': 'string', 'pattern': '^[A-Z]{2}$'},
+        'country_code': {'bsonType': 'string', 'pattern': '^[A-Z]{2}$', 'minLength': 2, 'maxLength': 2},
         'country_identity_ready': {'enum': [True]},
         'tmdb_watch_url': {'bsonType': 'string'},
     }}}
@@ -318,34 +318,68 @@ def quarantine_title(db, media, tmdb_id, output, read_published):
 
 
 def verify(db, progress=None):
-    """Full bounded-cursor scan; aggregate distinct identities without huge arrays."""
+    """Exact server counts; only noncanonical URLs cross the network for parsing.
+
+    The fast path is a subset of country_from_url, never a replacement parser.
+    Safe conversion prevents malformed BSON from aborting the server predicate.
+    A verified unique index covering every ready record proves uniqueness once
+    the independently counted unready population is zero.
+    """
     report = {}
+    def string(field):
+        return {'$convert': {'input': '$' + field, 'to': 'string', 'onError': '', 'onNull': ''}}
     for media in MEDIA:
         collection = db[f'tmdb_{media}_providers']
-        counts = {'documents': 0, 'invalid': 0, 'unready': 0, 'pending': 0, 'pending_failed': 0}
-        for row in collection.find({}, {'tmdb_id': 1, 'country_code': 1, 'tmdb_watch_url': 1,
-                'country_identity_ready': 1, 'identity_repair_pending': 1, 'consecutive_failures': 1}).batch_size(5000):
-            counts['documents'] += 1
+        pending = {'$and': [{'$ifNull': ['$identity_repair_pending', False]},
+                            {'$ne': ['$identity_repair_pending', '']}]}
+        totals = list(collection.aggregate([{'$group': {
+            '_id': None, 'documents': {'$sum': 1},
+            'unready': {'$sum': {'$cond': [{'$eq': ['$country_identity_ready', True]}, 0, 1]}},
+            'pending': {'$sum': {'$cond': [pending, 1, 0]}},
+            'pending_failed': {'$sum': {'$cond': [{'$and': [pending,
+                {'$ifNull': ['$consecutive_failures', 0]}]}, 1, 0]}},
+        }}], allowDiskUse=True))
+        counts = totals[0] if totals else {'documents': 0, 'unready': 0, 'pending': 0, 'pending_failed': 0}
+        counts.pop('_id', None)
+        counts['invalid'] = 0
+        if progress:
+            progress(media, {**counts, 'stage': 'server_counts_complete'})
+        # PCRE \z is strict end-of-string; $ would also match before a newline.
+        # The slug cannot contain controls, query separators or fragments.
+        pattern = {'$concat': [r'^https://(?:www\.)?themoviedb\.org(?::443)?/' + media + '/',
+            string('tmdb_id'), r'(?:-[^\x00-\x20/?#]*)?/watch/?\?locale=', string('country_code'), r'\z']}
+        fast_valid = {'$and': [VALIDATOR, {'$expr': {'$regexMatch': {
+            'input': string('tmdb_watch_url'), 'regex': pattern}}}]}
+        candidates = collection.find({'$nor': [fast_valid]}, {'tmdb_id': 1,
+            'country_code': 1, 'tmdb_watch_url': 1}).batch_size(5000)
+        for row in candidates:
             try:
                 country = country_from_url(row.get('tmdb_watch_url'), row.get('tmdb_id'), media)
                 if row.get('country_code') != country:
                     raise ValueError('Country mismatch')
             except (ValueError, TypeError):
                 counts['invalid'] += 1
-            counts['unready'] += row.get('country_identity_ready') is not True
-            counts['pending'] += bool(row.get('identity_repair_pending'))
-            counts['pending_failed'] += bool(row.get('identity_repair_pending') and row.get('consecutive_failures'))
-            if progress and counts['documents'] % 100000 == 0:
-                progress(media, dict(counts))
-        duplicates = list(collection.aggregate([
-            {'$group': {'_id': {'tmdb_id': '$tmdb_id', 'country': '$country_code'}, 'n': {'$sum': 1}}},
-            {'$match': {'n': {'$gt': 1}}}, {'$group': {'_id': None, 'groups': {'$sum': 1}, 'excess': {'$sum': {'$subtract': ['$n', 1]}}}}
-        ], allowDiskUse=True))
-        counts['duplicates'] = duplicates[0]['groups'] if duplicates else 0
+        covering = False
+        for index in collection.index_information().values():
+            if (index.get('key') == [('tmdb_id', 1), ('country_code', 1)]
+                    and index.get('unique') and not index.get('sparse')
+                    and (not index.get('partialFilterExpression')
+                         or (not counts['unready'] and index['partialFilterExpression'] == {'country_identity_ready': True}))):
+                covering = True
+        if covering:
+            counts['duplicates'] = 0
+        else:
+            duplicates = list(collection.aggregate([
+                {'$group': {'_id': {'tmdb_id': '$tmdb_id', 'country': '$country_code'}, 'n': {'$sum': 1}}},
+                {'$match': {'n': {'$gt': 1}}}, {'$count': 'groups'},
+            ], allowDiskUse=True))
+            counts['duplicates'] = duplicates[0]['groups'] if duplicates else 0
         counts['quarantined_unresolved_titles'] = db.provider_identity_unresolved.count_documents(
             {'media': media, 'status': 'unresolved'})
         counts['quarantined_documents'] = db.provider_identity_quarantine.count_documents({'media': media})
         report[media] = counts
+        if progress:
+            progress(media, {**counts, 'stage': 'full_invariant_checked'})
     return report
 
 
