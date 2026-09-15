@@ -1,5 +1,7 @@
 # Live Windmill application Postgres dependency audit
 
+> **September 15, 2026:** The retired native Postgres cluster and pgAdmin have been removed. See [final execution and recovery retention](postgres-final-removal.md). Earlier shutdown/rollback steps below are historical; removed services cannot simply be restarted.
+
 Initial read-only audit at 2026-09-09T13:19:26.099619+00:00 inspected all 172 current script paths and 40 current flow paths in the `goodwatch` workspace. After migration validation, remote retirement completed at 16:08 UTC: 65 scripts and 13 flows were archived, preserving their history, and 15 already-disabled schedules were removed. The post-retirement audit at 16:08:40 UTC found 107 current script paths and 27 current flow paths, with no remaining retirement candidates or identified application Postgres dependencies in the enabled schedules.
 
 ## Current consumers

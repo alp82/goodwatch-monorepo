@@ -1,5 +1,7 @@
 # Application Postgres service inventory and reversible shutdown
 
+> **September 15, 2026:** The retired native Postgres cluster and pgAdmin have been removed. See [final execution and recovery retention](postgres-final-removal.md). Earlier shutdown/rollback steps below are historical; removed services cannot simply be restarted.
+
 Read-only SSH inspection on 2026-09-09. No production service, credential, cron entry, or database configuration was changed. This document proposes later actions; none of the stop commands below have been executed.
 
 ## Exact service ownership

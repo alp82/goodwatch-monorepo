@@ -1,5 +1,7 @@
 # Application Postgres retirement
 
+> **September 15, 2026:** The retired native Postgres cluster and pgAdmin have been removed. See [final execution and recovery retention](postgres-final-removal.md). Earlier shutdown/rollback steps below are historical; removed services cannot simply be restarted.
+
 Implementation and deployment runbook, 2026-09-09.
 
 ## Scope and current status
