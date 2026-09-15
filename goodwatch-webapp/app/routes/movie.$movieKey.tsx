@@ -1,3 +1,5 @@
+import { redirect } from "@remix-run/node"
+import { canonicalTitleId } from "~/utils/title-identity"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
@@ -46,6 +48,13 @@ export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const movieId = (params.movieKey || "").split("-")[0]
+
+	const canonicalId = canonicalTitleId("movie", Number(movieId))
+	if (Number.isSafeInteger(canonicalId) && canonicalId !== Number(movieId)) {
+		const url = new URL(request.url)
+		url.pathname = `/movie/${canonicalId}`
+		return redirect(url.pathname + url.search, 301)
+	}
 
 	const userId = await getUserIdFromRequest({ request })
 	const userSettings = await getUserSettings({ userId })

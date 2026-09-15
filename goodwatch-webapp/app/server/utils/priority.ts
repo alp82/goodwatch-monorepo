@@ -1,3 +1,4 @@
+import { canonicalTitleId } from "~/utils/title-identity"
 import { execute } from "~/utils/crate"
 
 export interface PriorityImpression {
@@ -7,6 +8,7 @@ export interface PriorityImpression {
 
 export async function increasePriority(items: PriorityImpression[], amount = 1) {
 	if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error("Invalid priority increment")
+	items = items.map(item => ({ ...item, tmdb_id: canonicalTitleId(item.media_type, item.tmdb_id) }))
 	const unique = [...new Map(items.map(item => [`${item.media_type}:${item.tmdb_id}`, item])).values()]
 	if (!unique.length) return
 	if (unique.some(item => !["movie", "show"].includes(item.media_type) || !Number.isSafeInteger(item.tmdb_id) || item.tmdb_id <= 0 || item.tmdb_id > 2_147_483_647)) {

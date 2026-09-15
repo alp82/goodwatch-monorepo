@@ -1,3 +1,4 @@
+from f.data_source.title_identity import canonical_title_id
 from mongoengine import get_db
 
 from f.db.mongodb import init_mongodb, close_mongodb
@@ -22,6 +23,8 @@ def ranked_ids(db, media_type):
 
 
 def select_batch(db, mongo_db, movie_tmdb_id=None, tv_tmdb_id=None):
+    if movie_tmdb_id:
+        movie_tmdb_id = canonical_title_id("movie", movie_tmdb_id)
     result = {
         "ids": {"movie_ids": [], "tv_ids": []},
         "tmdb_ids": {"movie_ids": [], "tv_ids": []},

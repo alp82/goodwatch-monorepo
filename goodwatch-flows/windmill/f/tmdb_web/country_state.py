@@ -365,7 +365,7 @@ def initialize_countries(
     from pymongo.errors import DuplicateKeyError
 
     if collection.database.provider_identity_unresolved.find_one({
-        "media": media_type, "tmdb_id": tmdb_id, "status": "unresolved",
+        "media": media_type, "tmdb_id": tmdb_id, "status": {"$in": ["unresolved", "resolved_alias"]},
     }):
         raise ValueError(f"Quarantined provider identity requires resolution: {media_type}/{tmdb_id}")
     documents = list(collection.find({"tmdb_id": tmdb_id}))

@@ -1,3 +1,4 @@
+import { canonicalTitleId } from "~/utils/title-identity"
 import { createHash } from "node:crypto"
 import type { ActionFunctionArgs } from "@remix-run/node"
 import { z } from "zod"
@@ -58,7 +59,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const clientKey = createHash("sha256").update(address).digest("hex")
 		const count = Number(await redis.eval(rateLimitScript, 1, `poster-rate:${clientKey}`))
 		if (count > 60) return new Response(null, { status: 429, headers: { "Retry-After": "60" } })
-		const unique = [...new Map(parsed.data.items.map(item => [`${item.media_type}:${item.tmdb_id}`, item])).values()]
+		const unique = [...new Map(parsed.data.items.map(item => ({ ...item, tmdb_id: canonicalTitleId(item.media_type, item.tmdb_id) })).map(item => [`${item.media_type}:${item.tmdb_id}`, item])).values()]
 		const accepted = []
 		for (const mediaType of ["movie", "show"] as const) {
 			const ids = unique.filter(item => item.media_type === mediaType).map(item => item.tmdb_id)

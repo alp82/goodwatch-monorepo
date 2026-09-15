@@ -408,7 +408,11 @@ def finish_maintenance(db, final=False, progress=None):
             collection = db[f'tmdb_{media}_providers']
             collection.create_index([('tmdb_id', 1), ('country_code', 1)], unique=True, name='country_identity')
             ensure_indexes(collection)
-            db.command('collMod', collection.name, validator=VALIDATOR,
+            # Preserve operator constraints such as retired-title exclusions
+            # across subsequent maintenance windows.
+            previous = state['original_options'][media].get('validator', {})
+            validator = {'$and': [VALIDATOR, previous]} if previous else VALIDATOR
+            db.command('collMod', collection.name, validator=validator,
                        validationLevel='strict', validationAction='error', writeConcern={'w': 'majority'})
     else:
         for media in MEDIA:

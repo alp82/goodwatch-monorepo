@@ -342,7 +342,7 @@ def copy_media(
         for tmdb_id in tmdb_ids:
             unresolved = mongo_db.provider_identity_unresolved.find_one({
                 "media": "movie" if is_movie else "tv", "tmdb_id": tmdb_id,
-                "status": "unresolved",
+                "status": {"$in": ["unresolved", "resolved_alias"]},
             })
             if unresolved:
                 # Quarantined source identities are not an empty availability
@@ -351,7 +351,7 @@ def copy_media(
                 publication["status"] = "partial_success"
                 if targeted_ids is not None:
                     publication["titles"][str(tmdb_id)] = {
-                        "provider_state": "quarantined", "identity_resolution": "unresolved",
+                        "provider_state": "quarantined", "identity_resolution": unresolved["status"],
                         "deferred_country_count": unresolved["source_country_count"],
                         "unidentified_country_count": unresolved["source_document_count"],
                         "streaming_availability": None,

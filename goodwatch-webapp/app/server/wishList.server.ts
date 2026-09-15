@@ -1,3 +1,4 @@
+import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server";
 import { resetUserDataCache } from "~/server/userData.server";
 import { execute, upsert } from "~/utils/crate";
@@ -30,6 +31,8 @@ export const updateWishList = async ({
 			status: "failed",
 		};
 	}
+
+	tmdb_id = canonicalTitleId(media_type, tmdb_id)
 
 	let result: { rowcount?: number };
 
