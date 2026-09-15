@@ -24,12 +24,7 @@ import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
 import { buildDiscoverParams } from "~/utils/discover"
 
-export function headers() {
-	return {
-		"Cache-Control":
-			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	}
-}
+export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const mediaType = data?.mediaType || "all"

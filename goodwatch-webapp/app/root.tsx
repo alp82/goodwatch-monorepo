@@ -1,3 +1,8 @@
+import { json } from "@remix-run/node"
+import type { User } from "@supabase/auth-js"
+import { getUserData } from "~/server/userData.server"
+import { getQueryKeyUserData } from "~/routes/api.user-data"
+import { AuthProvider } from "~/ui/auth/AuthProvider"
 import type {
 	LinksFunction,
 	LoaderFunction,
@@ -15,6 +20,8 @@ import {
 import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix"
 import { createBrowserClient } from "@supabase/ssr"
 import {
+	type DehydratedState,
+	dehydrate,
 	HydrationBoundary,
 	QueryClient,
 	QueryClientProvider,
@@ -38,7 +45,7 @@ import cssToastify from "react-toastify/dist/ReactToastify.css?url"
 import App from "~/app"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
-import { AuthContext, useUser } from "./utils/auth"
+import { getAuthFromRequest, useUser } from "./utils/auth"
 
 export const links: LinksFunction = () => [
 	{ rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
@@ -81,7 +88,11 @@ export const links: LinksFunction = () => [
 	},
 ]
 
+export { pageHeaders as headers } from "~/utils/headers"
+
 type LoaderData = {
+	user: User | null
+	dehydratedState: DehydratedState
 	locale: {
 		language: string
 		country: string
@@ -95,15 +106,27 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
-	// get locale
 	const { locale } = getLocaleFromRequest(request)
-	return {
-		locale,
-		env: {
-			SUPABASE_URL: process.env.SUPABASE_URL!,
-			SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
-		},
+	const { user, headers } = await getAuthFromRequest({ request })
+	const queryClient = new QueryClient()
+	if (user) {
+		await queryClient.prefetchQuery({
+			queryKey: getQueryKeyUserData(user.id),
+			queryFn: () => getUserData({ user_id: user.id }),
+		})
 	}
+	return json<LoaderData>(
+		{
+			user,
+			dehydratedState: dehydrate(queryClient),
+			locale,
+			env: {
+				SUPABASE_URL: process.env.SUPABASE_URL!,
+				SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+			},
+		},
+		{ headers },
+	)
 }
 
 const PostHogInit = () => {
@@ -227,7 +250,7 @@ export function ErrorBoundary() {
 }
 
 function Root() {
-	const { locale, env } = useLoaderData<LoaderData>()
+	const { locale, env, user } = useLoaderData<LoaderData>()
 	const location = useLocation()
 
 	// Add check for custom scroll handling
@@ -254,7 +277,9 @@ function Root() {
 		}
 	}, [])
 
-	const supabase = createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
+	const [supabase] = React.useState(() =>
+		createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY),
+	)
 
 	const [queryClient] = React.useState(
 		() =>
@@ -285,7 +310,7 @@ function Root() {
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
 					<LocaleContext.Provider value={{ locale }}>
-						<AuthContext.Provider value={{ supabase }}>
+						<AuthProvider supabase={supabase} initialUser={user}>
 							<HydrationBoundary state={dehydratedState}>
 								<App />
 								{/* <CookieConsent /> */}
@@ -308,7 +333,7 @@ gtag('config', 'G-5NK4EX51SM');
 									}}
 								/>
 							</HydrationBoundary>
-						</AuthContext.Provider>
+						</AuthProvider>
 					</LocaleContext.Provider>
 					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>

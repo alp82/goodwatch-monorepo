@@ -2,7 +2,7 @@ import { type LoaderFunction, json } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import type { UserData } from "~/types/user-data"
 import { getUserData } from "~/server/userData.server"
-import { getUserIdFromRequest, useUser } from "~/utils/auth"
+import { getAuthFromRequest, useUser } from "~/utils/auth"
 
 export const queryKeyUserData = ["user-data"] as const
 
@@ -10,10 +10,11 @@ export const getQueryKeyUserData = (userId?: string) =>
 	userId ? [...queryKeyUserData, userId] : queryKeyUserData
 
 export const loader: LoaderFunction = async ({ request }) => {
-	const userId = await getUserIdFromRequest({ request })
-	const userData = await getUserData({ user_id: userId })
+	const { user, headers } = await getAuthFromRequest({ request })
+	headers.set("Cache-Control", "private, no-store")
+	const userData = await getUserData({ user_id: user?.id })
 
-	return json<UserData>(userData)
+	return json<UserData>(userData, { headers })
 }
 
 export const useUserData = () => {

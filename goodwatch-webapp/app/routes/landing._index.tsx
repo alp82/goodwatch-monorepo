@@ -7,7 +7,6 @@ import {
 } from "@heroicons/react/24/solid"
 import type { MetaFunction } from "@remix-run/node"
 import {
-	type HeadersFunction,
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	json,
@@ -36,19 +35,13 @@ import {
 	getTrendingTV,
 } from "~/server/trending.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
-import { prefetchUserData } from "~/server/userData.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { getLocaleFromRequest } from "~/utils/locale"
 
 import RemoteControl from "~/ui/start/RemoteControl"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
-export const headers: HeadersFunction = () => {
-	return {
-		"Cache-Control":
-			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	}
-}
+export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = () => {
 	return [
@@ -84,10 +77,7 @@ export const loader: LoaderFunction = async ({
 
 	// prefetch data
 	const queryClient = new QueryClient()
-	await Promise.all([
-		prefetchUserData({ queryClient, request }),
-		prefetchUserSettings({ queryClient, request }),
-	])
+	await prefetchUserSettings({ queryClient, request })
 
 	return json<LoaderData>({
 		trendingMovies,

@@ -1,5 +1,4 @@
 import type {
-	HeadersFunction,
 	LoaderFunction,
 	LoaderFunctionArgs,
 	MetaFunction,
@@ -14,7 +13,6 @@ import {
 } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import { prefetchUserSettings } from "~/server/user-settings.server"
-import { prefetchUserData } from "~/server/userData.server"
 import { getTrendingMovies, getTrendingTV } from "~/server/trending.server"
 import { getUserRecommendations } from "~/server/user-recommendations.server"
 import { getWatchlistItems } from "~/server/watchlist-items.server"
@@ -22,17 +20,12 @@ import { getShowcaseExamples } from "~/server/showcase-examples.server"
 import TasteLanding from "~/ui/taste/screens/TasteLanding"
 import ShowcaseSection from "~/ui/showcase/ShowcaseSection"
 import LoggedInHome from "~/ui/home/LoggedInHome"
-import { getUserFromRequest, getUserIdFromRequest } from "~/utils/auth"
+import { getUserFromRequest } from "~/utils/auth"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import { getLocaleFromRequest } from "~/utils/locale"
 import logo from "~/img/goodwatch-logo.png";
 
-export const headers: HeadersFunction = () => {
-	return {
-		"Cache-Control":
-			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	}
-}
+export { pageHeaders as headers } from "~/utils/headers"
 
 export const links: LinksFunction = () => {
 	const links = [
@@ -95,7 +88,7 @@ export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest({ request })
-	const userId = await getUserIdFromRequest({ request })
+	const userId = user?.id
 	const isLoggedIn = !!user
 	const { locale } = getLocaleFromRequest(request)
 
@@ -122,7 +115,6 @@ export const loader: LoaderFunction = async ({
 			getTrendingTV(apiParams),
 			getUserRecommendations({ userId, limit: 40 }),
 			getWatchlistItems({ userId, limit: 40 }),
-			prefetchUserData({ queryClient, request }),
 			prefetchUserSettings({ queryClient, request }),
 		])
 
