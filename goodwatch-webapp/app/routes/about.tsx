@@ -1,12 +1,7 @@
 import type { MetaFunction } from "@remix-run/node"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
-export function headers() {
-	return {
-		"Cache-Control":
-			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	}
-}
+export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {

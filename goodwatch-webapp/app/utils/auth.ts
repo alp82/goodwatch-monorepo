@@ -1,34 +1,53 @@
-import type { Session } from "@supabase/auth-js"
+import type { User } from "@supabase/auth-js"
 import { createServerClient, parse, serialize } from "@supabase/ssr"
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext } from "react"
 
 // server
 
-export const getUserFromRequest = async ({ request }: { request: Request }) => {
+export const getAuthFromRequest = async ({ request }: { request: Request }) => {
 	const cookies = parse(request.headers.get("Cookie") ?? "")
-	const headers = new Headers()
+	const headers = new Headers({ Vary: "Cookie, Accept-Language" })
+	const cookieName = `sb-${new URL(process.env.SUPABASE_URL!).hostname.split(".")[0]}-auth-token`
+	const hasAuthCookie = Object.keys(cookies).some(
+		(name) => name === cookieName || name.startsWith(`${cookieName}.`),
+	)
+	headers.set(
+		"Cache-Control",
+		hasAuthCookie
+			? "private, no-store"
+			: "max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+	)
+	if (!hasAuthCookie) return { user: null, headers }
+
 	const supabase = createServerClient(
 		process.env.SUPABASE_URL!,
 		process.env.SUPABASE_ANON_KEY!,
 		{
 			cookies: {
-				get(key) {
-					return cookies[key]
+				getAll() {
+					return Object.entries(cookies).map(([name, value]) => ({
+						name,
+						value: value ?? "",
+					}))
 				},
-				set(key, value, options) {
-					headers.append("Set-Cookie", serialize(key, value, options))
-				},
-				remove(key, options) {
-					headers.append("Set-Cookie", serialize(key, "", options))
+				setAll(updates) {
+					for (const { name, value, options } of updates) {
+						cookies[name] = value
+						headers.append("Set-Cookie", serialize(name, value, options))
+					}
 				},
 			},
 		},
 	)
 	const {
 		data: { user },
-		error,
 	} = await supabase.auth.getUser()
+	return { user, headers }
+}
+
+export const getUserFromRequest = async ({ request }: { request: Request }) => {
+	const { user } = await getAuthFromRequest({ request })
 	return user
 }
 
@@ -39,60 +58,25 @@ export const getUserIdFromRequest = async ({
 	return user?.id
 }
 
-// client
+// client: the provider owns a single auth subscription for the whole app.
 
 interface AuthContext {
 	supabase?: SupabaseClient
+	user: User | null
+	loading: boolean
 }
 
 export const AuthContext = createContext<AuthContext>({
 	supabase: undefined,
+	user: null,
+	loading: true,
 })
 
 export function useSupabase() {
 	return useContext(AuthContext)
 }
 
-export const useSession = () => {
-	const [session, setSession] = useState<Session | null>(null)
-	const [loading, setLoading] = useState(true)
-
-	const { supabase } = useSupabase()
-	useEffect(() => {
-		if (!supabase) return
-
-		let isMounted = true
-
-		supabase.auth.getSession().then(({ data, error }) => {
-			if (!isMounted) return
-			if (error) {
-				console.error(error)
-				setLoading(false)
-				return
-			}
-			setSession(data.session)
-			setLoading(false)
-		})
-
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event, session) => {
-			if (!isMounted) return
-			setSession(session)
-			setLoading(false)
-		})
-
-		return () => {
-			isMounted = false
-			subscription.unsubscribe()
-		}
-	}, [supabase])
-
-	return { session, loading }
-}
-
 export const useUser = () => {
-	const { session, loading } = useSession()
-	const { user } = session || {}
+	const { user, loading } = useContext(AuthContext)
 	return { user, loading }
 }

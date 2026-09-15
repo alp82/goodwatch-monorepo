@@ -1,5 +1,4 @@
 import type {
-	HeadersFunction,
 	LoaderFunction,
 	LoaderFunctionArgs,
 	MetaFunction,
@@ -13,19 +12,13 @@ import {
 } from "@tanstack/react-query"
 import { getSmartTitlesForGuest, getSmartTitlesForUser } from "~/server/smart-titles.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
-import { prefetchUserData } from "~/server/userData.server"
 import TasteQuiz from "~/ui/taste/TasteQuiz"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { getUserFromRequest } from "~/utils/auth"
 import { getLocaleFromRequest } from "~/utils/locale"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
-export const headers: HeadersFunction = () => {
-	return {
-		"Cache-Control":
-			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	}
-}
+export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = () => {
 	const pageMeta: PageMeta = {
@@ -69,10 +62,7 @@ export const loader: LoaderFunction = async ({
 
 	const queryClient = new QueryClient()
 	if (isLoggedIn) {
-		await Promise.all([
-			prefetchUserData({ queryClient, request }),
-			prefetchUserSettings({ queryClient, request }),
-		])
+		await prefetchUserSettings({ queryClient, request })
 	}
 
 	return json<LoaderData>({

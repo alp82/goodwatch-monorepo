@@ -19,7 +19,6 @@ import { LockedFeatureCard, NextUnlockCard } from "./components/index"
 
 interface TasteProfileProps {
 	userId: string
-	ratingsCount: number
 }
 
 const PROFILE_FEATURE_IDS = ["fingerprint_preview", "fingerprint_detection", "genre_detection", "decade_detection", "creator_detection"]
@@ -47,9 +46,9 @@ function getProfileFeatures(ratingsCount: number) {
 	return { unlocked: unlockedFiltered, locked: lockedFiltered }
 }
 
-export default function TasteProfile({ userId, ratingsCount }: TasteProfileProps) {
+export default function TasteProfile({ userId }: TasteProfileProps) {
 	const { data: userData } = useUserData()
-	const currentRatingsCount = userData ? Object.keys(userData.scores).length : ratingsCount
+	const currentRatingsCount = userData ? Object.keys(userData.scores).length : 0
 	
 	
 	const { unlocked: unlockedFeatures, locked: lockedFeatures } = getProfileFeatures(currentRatingsCount)

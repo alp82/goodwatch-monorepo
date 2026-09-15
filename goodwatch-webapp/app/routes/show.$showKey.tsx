@@ -19,12 +19,7 @@ import useLocale from "~/utils/locale"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import type { ShowQueryResult } from "~/server/types/details-types"
 
-export function headers() {
-	return {
-		"Cache-Control":
-			"max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
-	}
-}
+export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const pageMeta: PageMeta = {

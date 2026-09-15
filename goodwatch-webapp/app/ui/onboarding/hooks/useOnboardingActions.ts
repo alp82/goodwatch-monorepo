@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "@remix-run/react"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import type { OnboardingStep } from "./useOnboardingStep"
@@ -9,9 +9,10 @@ export const useOnboardingActions = (
 ) => {
 	const navigate = useNavigate()
 	const setUserSettings = useSetUserSettings()
-	const [isDismissed, setIsDismissed] = useState(() => 
-		sessionStorage.getItem("onboarding-banner-dismissed") === "true"
-	)
+	const [isDismissed, setIsDismissed] = useState(false)
+	useEffect(() => {
+		setIsDismissed(sessionStorage.getItem("onboarding-banner-dismissed") === "true")
+	}, [])
 
 	const continueFromImport = () => {
 		const countryCode = guessedCountry || "US"

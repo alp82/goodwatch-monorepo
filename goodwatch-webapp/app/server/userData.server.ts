@@ -1,24 +1,8 @@
-import { getQueryKeyUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
 import type { UserData, MediaType } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
-import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
 import { cached, resetCache } from "~/utils/cache"
 import { query } from "~/utils/crate"
-
-// loader prefetch
-
-export const prefetchUserData = async ({
-	queryClient,
-	request,
-}: PrefetchParams) => {
-	await prefetchQuery({
-		queryClient,
-		queryKey: ({ userId }) => getQueryKeyUserData(userId),
-		getter: async ({ userId }) => await getUserData({ user_id: userId }),
-		request,
-	})
-}
 
 // Normalized user data (optimized for performance)
 
