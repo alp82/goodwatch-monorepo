@@ -2,7 +2,21 @@
 
 ```
 
-recommendations with own streaming filter
+rate limit and crawling research
+    tvtropes
+
+---
+
+recommendations:
+    how much do i like this movie or show?
+    recommendations with own streaming filter
+
+---
+
+new design for start page
+    https://chatgpt.com/c/6aa52454-cd3c-83eb-a121-74195a4b6a4b
+    living room
+    remote control
 
 ---
 
@@ -70,13 +84,6 @@ better og images
     dynamic with text?
     https://gemini.google.com/app/8f9832dc2c62d13a
     https://tailwind-generator.com/og-image-generator/generator
-
----
-
-priority queue
-    priority.ts
-    postgres -> crate
-    windmill script updates
 
 ---
 
