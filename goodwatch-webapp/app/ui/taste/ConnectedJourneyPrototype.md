@@ -1,34 +1,39 @@
 # Connected exploration prototype
 
-Question: how should discovery, details, Wishlist, watchability and account continuity fit together across entry points?
+Question: how can GoodWatch connect interest discovery, title exploration, Wishlist and signup while retaining its existing experience?
 
-Throwaway source for [Choose the connected exploration and signup experience](https://github.com/alp82/goodwatch-monorepo/issues/86), on branch `prototype/connected-exploration`. No design has been selected yet.
+Branch: `prototype/connected-exploration`. Decision: [Choose the connected exploration and signup experience](https://github.com/alp82/goodwatch-monorepo/issues/86).
+
+The user rejected all three standalone variants for both visual design and flow. This revision replaces them with targeted changes inside the existing Taste components. It is awaiting review, not an accepted design or finished delivery.
 
 ## Open
 
-Use http://localhost:3003/taste/quiz?prototype=journey&variant=A on the existing app dev server. The project's `npm run dev` command starts the host when needed; repository instructions say agents must use the existing server rather than start it themselves.
+http://localhost:3003/taste/quiz?prototype=journey
 
-The host loader, authentication, header and footer remain unchanged. Prototype interaction and authentication buttons perform no real mutations. Prototype rendering is gated out in production. State is in memory and resets on reload.
+The existing app development server runs via `npm run dev`. Compare with `/taste/quiz` using the link below the preview. The old variant query parameters are no longer used. Rendering remains gated out of production.
 
-- A: discovery feed with progress beside the results.
-- B: one-title workbench with controls and progress alongside it.
-- C: guided interest → shortlist → watchability journey; every step stays directly accessible.
+## Changes to review
 
-Switch with the floating arrows or keyboard arrows. Variant changes preserve demo state and update the URL.
+- Retains the existing header, typography, buttons, progress strip, rating experience and responsive recommendation carousel.
+- Starts with general suggestions from the existing title loader. Rating familiar titles remains an optional way to obtain personalized suggestions using the existing recommendation APIs.
+- Opens recommendation cards into a responsive title preview with real synopsis/genres, Want to See, Skip and a return to the same underlying screen. Escape closes the dialog; focus is managed by the existing Headless UI library.
+- Keeps Wishlist beside discovery and rating, using the existing one-interaction-per-title model. Details and Wishlist share the preview's state.
+- Opens the existing full details/viewing-options page in a new tab, leaving Taste in place. Does not invent offers or claim freshness.
+- Replaces automatic guest interruption with a dismissible reminder at 10 ratings. At 20, another new rating prompts signup; browsing, Want to See, Skip and editing an existing rating remain available.
+- Gives signup a short explanation tied to accumulated progress and browser storage limits. Account creation/import is deliberately not connected in this prototype.
 
-## Review walkthrough
+## Storage and boundaries
 
-1. Explore with no ratings or services. Open details, choose Want to See, and check Wishlist. Rate the same title to see the interaction replace Want to See.
-2. Change the arrival selector: title details and Wishlist land on those surfaces; other entries simulate the source of exploration. This is not implementation on every real route.
-3. Select What can I watch, supply country/service, and opt into rentals. Open details of other titles to compare current, missing, and unknown offers. Offers are fictional and independent of actual country/service catalogs.
-4. Try loading, empty and error responses. Empty results preview a broader direction without silently changing the chosen direction.
-5. Seed 10 ratings to review the dismissible reminder. Seed 20 to try another rating while preserving browsing, Want to See and Skip.
-6. Keep my progress → existing account: select new entries, inspect unselected example conflicts/preferences, confirm or keep the account unchanged. Close without confirming and resume from the pending-transfer banner.
-7. Try new-account success, interrupted transfer/retry, and failed sign-in. Check return to the previous surface and preservation of controls. The simulated member collection shows transferred title interactions, not a real account.
-8. Repeat A/B/C at desktop and mobile widths. Choose one presentation or specify pieces to combine.
+Interactions, title metadata and feature state use separate `prototype_journey_*` browser-storage keys. This intentional prototype persistence lets reloads retain the preview Wishlist without touching normal guest progress or account data. It is not the production storage design. No simulated account-success path is presented.
 
-## Boundaries and verification
+This is a bounded Taste review. Global Wishlist integration, actual cross-route context restoration, new/existing-account handoff, availability freshness verification and the complete watchability filter remain with the map's delivery and verification tickets. The full details link opens the existing page with its existing behavior. The prototype does not claim to have connected every entry point or verified personalized recommendation quality.
 
-The demo reuses real title data when available, with fictional fallback titles. Ranking, search/refinement, direct arrivals, offers, account conflicts and transfers are simulated. It does not prove storage persistence, real import safety, scroll restoration, or continuity across actual routes. Those remain delivery/verification work. Shared guest terminology and limits follow prior decisions.
+## Validation
 
-TypeScript checking reports errors elsewhere in the app, with no diagnostics in the prototype files or modified Taste route. Formatting and whitespace checks pass. Browser QA and Lighthouse have not run: localhost:3003 refused connections and Chrome DevTools MCP was unavailable in the authoring session. Live user review is required before resolving the decision ticket.
+Browser review uses the locally installed Chrome DevTools MCP through its SDK transport. Desktop and 390px mobile views were inspected. The walkthrough checks title opening, Want to See, Wishlist, reload retention, Escape/return, isolated storage and the guest limit. Screenshots and Lighthouse reports are stored under `/tmp/goodwatch-*` in the authoring workspace; final results are recorded in the decision ticket.
+
+No automated tests were added, following the webapp instructions. App-wide TypeScript checking still fails elsewhere; the changed files have no diagnostics. Whitespace checks pass.
+
+Final mobile Lighthouse navigation audit: accessibility 95, best practices 100, SEO 100. The remaining accessibility findings concern unnamed links in the existing header/mobile navigation. Agentic-browsing score was 30; its report also flags the existing llms.txt response and layout shift. No production performance claim is made from this development-server audit. Reports: `/tmp/goodwatch-journey-lighthouse-final/report.html` and `report.json`.
+
+The cap walkthrough retained 20 ratings after a blocked new rating, then successfully added one Wishlist entry and one Skip. Normal `onboarding_ratings` remained untouched in the isolated browser. Desktop title preview, mobile layout, Wishlist reload, and Escape return were exercised. Actual account transfer, freshness and cross-route continuity were not tested by this prototype.

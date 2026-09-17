@@ -1,3 +1,5 @@
+import { JourneyPrototypeContext } from "./JourneyPrototypeContext"
+import JourneyTitlePreview from "./JourneyTitlePreview"
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import type { Score } from "~/server/scores.server"
 import type { ScoringMedia, LastRatedItem } from "~/ui/scoring/types"
@@ -22,6 +24,7 @@ import { useUserData } from "~/routes/api.user-data"
 const allFeaturesDescending = [...FEATURES].reverse()
 
 interface TasteQuizProps {
+	journeyPrototype?: boolean
 	availableTitles: ScoringMedia[]
 	onComplete?: (ratings: GuestRating[]) => void
 	onSignUp?: () => void
@@ -30,14 +33,15 @@ interface TasteQuizProps {
 }
 
 export default function TasteQuiz({
+	journeyPrototype = false,
 	availableTitles,
 	onComplete,
 	onSignUp,
 	isAuthenticated = false,
 	userId,
 }: TasteQuizProps) {
-	const { interactions, ratingsCount, addScore, addSkip, addPlanToWatch, clearInteractions } = useTasteScoring({ isAuthenticated })
-	const { activatedFeatures, activateFeature, clearFeatures } = useFeatureActivation({ isAuthenticated, ratingsCount })
+	const { interactions, ratingsCount, addScore, addSkip, addPlanToWatch, clearInteractions } = useTasteScoring({ isAuthenticated, prototype: journeyPrototype })
+	const { activatedFeatures, activateFeature, clearFeatures } = useFeatureActivation({ isAuthenticated, ratingsCount, prototype: journeyPrototype })
 	const modals = useFeatureModals()
 	useUserData()
 	
@@ -47,6 +51,8 @@ export default function TasteQuiz({
 	})
 	
 	// Track selected media from recommendations/last rated
+	const [previewMedia, setPreviewMedia] = useState<ScoringMedia | null>(null)
+	const [limitNotice, setLimitNotice] = useState(false)
 	const [selectedMedia, setSelectedMedia] = useState<ScoringMedia | null>(null)
 	
 	// Track when a feature threshold is crossed (for celebration screen)
@@ -182,11 +188,12 @@ export default function TasteQuiz({
 
 
 	const [skippedSignUpPrompt, setSkippedSignUpPrompt] = useState(false)
-	const showSignInPrompt = guestLimitReached && !skippedSignUpPrompt
+	const showSignInPrompt = !journeyPrototype && guestLimitReached && !skippedSignUpPrompt
 
 	const handleScore = (score: Score) => {
-		if (guestLimitReached) {
+		if (guestLimitReached && (!journeyPrototype || !interactions.some(i => i.type === "score" && i.tmdb_id === (selectedMedia || titleQueue.current)?.tmdb_id && i.media_type === (selectedMedia || titleQueue.current)?.media_type))) {
 			setSkippedSignUpPrompt(false)
+			setLimitNotice(true)
 			return
 		}
 		// Use selected media if available, otherwise use current from queue
@@ -201,7 +208,7 @@ export default function TasteQuiz({
 	}
 
 	const handleSkip = () => {
-		if (guestLimitReached) {
+		if (guestLimitReached && !journeyPrototype) {
 			setSkippedSignUpPrompt(false)
 			return
 		}
@@ -217,7 +224,7 @@ export default function TasteQuiz({
 	}
 
 	const handlePlanToWatch = () => {
-		if (guestLimitReached) {
+		if (guestLimitReached && !journeyPrototype) {
 			setSkippedSignUpPrompt(false)
 			return
 		}
@@ -285,7 +292,7 @@ export default function TasteQuiz({
 
 		// If no recommendations yet (not enough data), return empty
 		if (recommendations.length === 0) {
-			return []
+			return journeyPrototype ? availableTitles.filter(title => !interactions.some(i => i.tmdb_id === title.tmdb_id && i.media_type === title.media_type)).slice(0, 12).map(title => ({ ...title, matchPercentage: 0 })) : []
 		}
 
 		// Sort by match percentage and return top results
@@ -295,7 +302,7 @@ export default function TasteQuiz({
 	}
 
 	// Determine current media: selected media takes priority over queue
-	const currentMedia = selectedMedia || titleQueue.current
+	const currentMedia = selectedMedia || titleQueue.current || (journeyPrototype ? availableTitles[0] : null)
 	const nextMedia = titleQueue.next
 	
 
@@ -303,6 +310,9 @@ export default function TasteQuiz({
 	const mediaCache = useRef(new Map<string, ScoringMedia>())
 	
 	// Cache current media for last rated display
+	for (const title of [...interactions.flatMap(i => i.media ? [i.media] : []), ...availableTitles, ...generateRecommendations()]) {
+		mediaCache.current.set(`${title.media_type}-${title.tmdb_id}`, title)
+	}
 	if (titleQueue.current) {
 		const key = `${titleQueue.current.media_type}-${titleQueue.current.tmdb_id}`
 		if (!mediaCache.current.has(key)) {
@@ -374,7 +384,16 @@ export default function TasteQuiz({
 		}
 		
 		return (
-			<>
+			<JourneyPrototypeContext.Provider value={journeyPrototype ? {
+				openTitle: setPreviewMedia,
+				wishlist: interactions.filter(i => i.type === "plan").map(i => mediaCache.current.get(`${i.media_type}-${i.tmdb_id}`)).filter((title): title is ScoringMedia => Boolean(title)),
+				onSignUp: () => onSignUp?.(),
+				limitNotice,
+				dismissLimit: () => setLimitNotice(false),
+				recommendationStatus: hasRecommendationsUnlocked && (movieRecommendations.isFetching || showRecommendations.isFetching) ? "loading" : movieRecommendations.isError || showRecommendations.isError ? "error" : "ready",
+				retryRecommendations: () => { movieRecommendations.refetch(); showRecommendations.refetch() },
+				personalized: hasRecommendationsUnlocked && (movieRecommendations.data?.recommendations?.length || showRecommendations.data?.recommendations?.length || 0) > 0,
+			} : null}>
 				<TasteRating
 					media={mediaWithRecommendation}
 					nextMedia={nextMedia}
@@ -388,7 +407,7 @@ export default function TasteQuiz({
 					isGuest={!isAuthenticated}
 					onSelectLastRated={handleSelectLastRated}
 					selectedMediaId={selectedMedia?.tmdb_id || null}
-					recommendationsUnlocked={hasRecommendationsUnlocked}
+					recommendationsUnlocked={journeyPrototype || hasRecommendationsUnlocked}
 					justUnlockedFeature={justUnlockedFeature}
 					onDismissCelebration={handleDismissCelebration}
 					fingerprintPreview={fingerprintPreview.data}
@@ -402,7 +421,14 @@ export default function TasteQuiz({
 						ratingsCount={ratingsCount}
 					/>
 				)}
-			</>
+				{journeyPrototype && previewMedia && <JourneyTitlePreview
+					media={mediaCache.current.get(`${previewMedia.media_type}-${previewMedia.tmdb_id}`) || previewMedia}
+					interaction={interactions.find(i => i.tmdb_id === previewMedia.tmdb_id && i.media_type === previewMedia.media_type)}
+					onClose={() => setPreviewMedia(null)}
+					onPlan={() => addPlanToWatch(previewMedia)}
+					onSkip={() => { addSkip(previewMedia); setPreviewMedia(null) }}
+				/>}
+			</JourneyPrototypeContext.Provider>
 		)
 	}
 

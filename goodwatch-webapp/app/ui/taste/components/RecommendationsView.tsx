@@ -1,13 +1,13 @@
+import { useJourneyPrototype } from "../JourneyPrototypeContext"
 import { useState } from "react"
 import { Link } from "@remix-run/react"
 import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import type { Recommendation } from "../types"
 import type { Feature } from "../features"
-import type { FingerprintPreviewResult, FingerprintRecommendation } from "~/server/fingerprint-preview.server"
+import type { FingerprintPreviewResult } from "~/server/fingerprint-preview.server"
 import RecommendationSwiper from "./RecommendationSwiper"
 import StartOverButton from "./StartOverButton"
 import FingerprintTabs from "./FingerprintTabs"
-import FingerprintPosters from "./FingerprintPosters"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 
 interface RecommendationsViewProps {
@@ -35,6 +35,7 @@ export default function RecommendationsView({
 	fingerprintData,
 	isGuest = false,
 }: RecommendationsViewProps) {
+	const journey = useJourneyPrototype()
 	const accuracy = getAccuracyLabel(ratingsCount)
 	
 	// State for fingerprint tabs
@@ -55,15 +56,17 @@ export default function RecommendationsView({
 			{/* Header with accuracy indicator */}
 			<div className="flex flex-col px-4 md:px-6 py-2 md:py-4 border-b border-gray-700/50 bg-gray-800/50">
 				<div>
-					<h3 className="text-lg md:text-2xl font-semibold text-white">
-						{currentFeature.icon} {currentFeature.name}
-					</h3>
+					<h2 className="text-lg md:text-2xl font-semibold text-white">
+						{journey ? (journey.personalized ? "Your picks" : "A few possibilities to start with") : `${currentFeature.icon} ${currentFeature.name}`}
+					</h2>
 					<div className="text-sm md:text-lg text-gray-400">
-						Based on {ratingsCount} ratings · <span className={accuracy.color}>{accuracy.label}</span>
+						{journey ? (journey.personalized ? `Shaped by your ${ratingsCount} ratings · Open a title to explore it` : "General suggestions · Your services won’t limit what you discover") : <>Based on {ratingsCount} ratings · <span className={accuracy.color}>{accuracy.label}</span></>}
 					</div>
 				</div>
 			</div>
 
+			{journey?.recommendationStatus === "loading" && <p role="status" className="px-4 pt-3 text-sm text-gray-400 md:px-6">Updating your personal picks. Keep exploring while we find them.</p>}
+			{journey?.recommendationStatus === "error" && <p role="status" className="px-4 pt-3 text-sm text-gray-400 md:px-6">We couldn’t refresh your personal picks. Your progress is still here. <button type="button" className="text-cyan-300 underline" onClick={journey.retryRecommendations}>Try again</button></p>}
 			{/* Content Area */}
 			<div className="flex-1 px-4 md:px-6 py-4 overflow-hidden">
 				{variant === 'fingerprint' && fingerprintData ? (
@@ -95,7 +98,7 @@ export default function RecommendationsView({
 			</div>
 
 			{/* Footer Actions */}
-			{isGuest && <div className="flex flex-col px-4 md:px-6 py-2 md:py-4 border-t border-gray-700/50 bg-gray-800/50">
+			{isGuest && !journey && <div className="flex flex-col px-4 md:px-6 py-2 md:py-4 border-t border-gray-700/50 bg-gray-800/50">
 				<StartOverButton onStartOver={onStartOver} />
 			</div>}
 

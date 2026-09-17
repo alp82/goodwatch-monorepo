@@ -4,6 +4,8 @@ import type { ScoringMedia } from "~/ui/scoring/types"
 export type InteractionType = "score" | "skip" | "plan"
 
 export interface TasteInteraction {
+	/** Title metadata retained only by the isolated journey prototype. */
+	media?: ScoringMedia
 	tmdb_id: number
 	media_type: "movie" | "show"
 	type: InteractionType

@@ -9,9 +9,12 @@ import { useScoreMutation, useSkippedMutation, useWishlistMutation } from "~/hoo
 
 interface UseTasteScoringProps {
 	isAuthenticated: boolean
+	prototype?: boolean
 }
 
-export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
+export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTasteScoringProps) => {
+	const ratingsKey = prototype ? "prototype_journey_ratings" : ONBOARDING_RATINGS_KEY
+	const unlockKey = prototype ? "prototype_journey_unlock" : FIRST_UNLOCK_COUNT_KEY
 	const [interactions, setInteractions] = useState<TasteInteraction[]>([])
 	const [firstUnlockCount, setFirstUnlockCount] = useState<number | null>(null)
 	
@@ -21,7 +24,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 
 	useEffect(() => {
 		if (!isAuthenticated) {
-			const stored = localStorage.getItem(ONBOARDING_RATINGS_KEY)
+			const stored = localStorage.getItem(ratingsKey)
 			if (stored) {
 				try {
 					const parsed = JSON.parse(stored)
@@ -30,22 +33,23 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 					console.error("Failed to parse stored interactions", e)
 				}
 			}
-			const storedUnlockCount = localStorage.getItem(FIRST_UNLOCK_COUNT_KEY)
+			const storedUnlockCount = localStorage.getItem(unlockKey)
 			if (storedUnlockCount) {
 				setFirstUnlockCount(Number.parseInt(storedUnlockCount, 10))
 			}
 		}
-	}, [isAuthenticated])
+	}, [isAuthenticated, ratingsKey, unlockKey])
 
 	useEffect(() => {
 		if (!isAuthenticated && interactions.length > 0) {
-			localStorage.setItem(ONBOARDING_RATINGS_KEY, JSON.stringify(interactions))
+			localStorage.setItem(ratingsKey, JSON.stringify(interactions))
 		}
-	}, [interactions, isAuthenticated])
+	}, [interactions, isAuthenticated, ratingsKey])
 
 	const updateInteractions = useCallback((media: ScoringMedia, interaction: Omit<TasteInteraction, 'timestamp'>) => {
 		const fullInteraction: TasteInteraction = {
 			...interaction,
+			...(prototype ? { media } : {}),
 			timestamp: Date.now(),
 		}
 
@@ -62,7 +66,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 			}
 			return next
 		})
-	}, [])
+	}, [prototype])
 
 	const addScore = useCallback((media: ScoringMedia, score: Score): number | undefined => {
 		if (isAuthenticated) {
@@ -76,6 +80,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		let newCount: number | undefined
 		setInteractions(prev => {
 			const interaction: TasteInteraction = {
+				...(prototype ? { media } : {}),
 				tmdb_id: media.tmdb_id,
 				media_type: media.media_type,
 				type: 'score',
@@ -96,7 +101,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 			return next
 		})
 		return newCount
-	}, [isAuthenticated, scoreMutation])
+	}, [isAuthenticated, scoreMutation, prototype])
 
 	const addSkip = useCallback((media: ScoringMedia) => {
 		if (isAuthenticated) {
@@ -134,10 +139,10 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		if (!isAuthenticated) {
 			setInteractions([])
 			setFirstUnlockCount(null)
-			localStorage.removeItem(ONBOARDING_RATINGS_KEY)
-			localStorage.removeItem(FIRST_UNLOCK_COUNT_KEY)
+			localStorage.removeItem(ratingsKey)
+			localStorage.removeItem(unlockKey)
 		}
-	}, [isAuthenticated])
+	}, [isAuthenticated, ratingsKey, unlockKey])
 
 	const ratingsCount = useRatingsCount({ isAuthenticated, interactions })
 	
@@ -147,9 +152,9 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		if (!isAuthenticated && positiveRatingsCount >= GUEST_LIMITS.FIRST_UNLOCK && firstUnlockCount === null) {
 			const count = interactions.filter(i => i.type === 'score').length
 			setFirstUnlockCount(count)
-			localStorage.setItem(FIRST_UNLOCK_COUNT_KEY, String(count))
+			localStorage.setItem(unlockKey, String(count))
 		}
-	}, [isAuthenticated, positiveRatingsCount, firstUnlockCount, interactions])
+	}, [isAuthenticated, positiveRatingsCount, firstUnlockCount, interactions, unlockKey])
 
 	return {
 		interactions,

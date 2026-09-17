@@ -1,9 +1,12 @@
+import { useJourneyPrototype } from "../JourneyPrototypeContext"
+import JourneyProgress from "../JourneyProgress"
+import RecommendationSwiper from "../components/RecommendationSwiper"
 import { useState } from "react"
 import SingleItemScorer from "~/ui/scoring/SingleItemScorer"
 import TasteStream from "../components/TasteStream"
 import UnlockCelebration from "../components/UnlockCelebration"
 import RecommendationsView from "../components/RecommendationsView"
-import type { FingerprintPreviewResult, FingerprintRecommendation } from "~/server/fingerprint-preview.server"
+import type { FingerprintPreviewResult } from "~/server/fingerprint-preview.server"
 import type { ScoringMedia, LastRatedItem } from "~/ui/scoring/types"
 import type { Score } from "~/server/scores.server"
 import type { Feature } from "../features"
@@ -47,15 +50,17 @@ export default function TasteRating({
 	onDismissCelebration,
 	fingerprintPreview,
 }: TasteRatingProps) {
-	const [showPicks, setShowPicks] = useState(false)
+	const journey = useJourneyPrototype()
+	const [showPicks, setShowPicks] = useState(Boolean(journey))
+	const [showWishlist, setShowWishlist] = useState(false)
 	
-	const handleViewPicks = () => setShowPicks(true)
-	const handleDismissPicks = () => setShowPicks(false)
+	const handleViewPicks = () => { setShowWishlist(false); setShowPicks(true) }
+	const handleDismissPicks = () => { setShowWishlist(false); setShowPicks(false) }
 	
 	const unlockedFeatures = getUnlockedFeatures(ratingsCount)
 	const currentFeature = unlockedFeatures[unlockedFeatures.length - 1] || null
 	
-	const showCelebration = justUnlockedFeature !== null
+	const showCelebration = !journey && justUnlockedFeature !== null
 	const showRecommendations = !showCelebration && showPicks
 
 	return (
@@ -70,7 +75,7 @@ export default function TasteRating({
 								Your Taste Profile
 							</h1>
 							<p className="text-gray-400 text-md md:text-lg lg:text-xl">
-								Rate movies and shows to unlock recommendations
+								{journey ? "Find something you want to watch. Rate familiar titles to make it more personal." : "Rate movies and shows to unlock recommendations"}
 							</p>
 						</div>
 					</div>
@@ -89,9 +94,11 @@ export default function TasteRating({
 					recommendationsShown={showRecommendations}
 					onViewPicks={handleViewPicks}
 					onContinueRating={handleDismissPicks}
+					onWishlist={() => { setShowWishlist(true); setShowPicks(false) }}
 				/>
 			</div>
 
+			{journey && <JourneyProgress ratingsCount={ratingsCount} />}
 			{/* Content Area - 3 possible views */}
 			<div className="flex-1 px-3 py-2 md:px-4 md:py-4">
 				<div className="max-w-6xl mx-auto">
@@ -106,11 +113,12 @@ export default function TasteRating({
 						/>
 					)}
 					
-					{showRecommendations && (
+					{showWishlist && journey && <section className="rounded-2xl border border-gray-700/50 bg-gray-900/95 p-4 md:p-6"><div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-semibold">Your Wishlist</h2><button type="button" className="text-sm text-cyan-300 hover:text-cyan-200" onClick={handleViewPicks}>Back to discoveries →</button></div>{journey.wishlist.length ? <RecommendationSwiper recommendations={journey.wishlist.map(title => ({ ...title, matchPercentage: 0 }))} /> : <p className="py-10 text-center text-gray-400">See something interesting? Choose Want to See to keep it here.</p>}</section>}
+					{showRecommendations && !showWishlist && (
 						<RecommendationsView
-							variant={fingerprintPreview ? 'fingerprint' : 'regular'}
+							variant={!journey && fingerprintPreview ? 'fingerprint' : 'regular'}
 							recommendations={recommendations}
-							currentFeature={currentFeature}
+							currentFeature={currentFeature || getUnlockedFeatures(5)[0]}
 							ratingsCount={ratingsCount}
 							onStartOver={onStartOver}
 							fingerprintData={fingerprintPreview || undefined}
@@ -118,7 +126,7 @@ export default function TasteRating({
 						/>
 					)}
 					
-					{!showCelebration && !showRecommendations && (
+					{!showCelebration && !showRecommendations && !showWishlist && (
 						<SingleItemScorer
 							media={media}
 							nextMedia={nextMedia}
@@ -134,7 +142,7 @@ export default function TasteRating({
 			</div>
 			
 			{/* Motivational text - Mobile only (below scorer) */}
-			{!showCelebration && !showRecommendations && (
+			{!showCelebration && !showRecommendations && !showWishlist && (
 				<div className="md:hidden px-3 py-4 text-center">
 					<p className="text-gray-500 text-sm">
 						Keep swiping to build your taste profile

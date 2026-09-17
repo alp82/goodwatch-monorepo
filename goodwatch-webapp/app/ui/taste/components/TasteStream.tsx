@@ -1,3 +1,4 @@
+import { useJourneyPrototype } from "../JourneyPrototypeContext"
 import { motion } from "framer-motion"
 import { Link } from "@remix-run/react"
 import { LockClosedIcon, SparklesIcon } from "@heroicons/react/24/outline"
@@ -17,6 +18,7 @@ interface TasteStreamProps {
 	recommendationsShown: boolean
 	onViewPicks: () => void
 	onContinueRating: () => void
+	onWishlist?: () => void
 }
 
 export default function TasteStream({
@@ -29,7 +31,9 @@ export default function TasteStream({
 	recommendationsShown,
 	onViewPicks,
 	onContinueRating,
+	onWishlist,
 }: TasteStreamProps) {
+	const journey = useJourneyPrototype()
 	const nextFeature = getNextUnlockableFeature(ratingsCount)
 	const unlockedFeatures = getUnlockedFeatures(ratingsCount)
 	const lastUnlockedFeature = unlockedFeatures[unlockedFeatures.length - 1]
@@ -74,7 +78,7 @@ export default function TasteStream({
 								mode="dark"
 								size="sm"
 							>
-								<span>Continue Rating</span>
+								<span>{journey ? "Rate familiar titles" : "Continue Rating"}</span>
 								<ArrowRightIcon className="w-4 h-4" />
 							</Button>
 						) : (
@@ -119,10 +123,15 @@ export default function TasteStream({
 							)}
 						</div>}
 
+						{journey && recommendationsShown && <p className="hidden md:block flex-1 text-center text-sm text-gray-400">{ratingsCount ? `${ratingsCount} ratings shaping your taste` : "Start with what catches your eye"}</p>}
 						{/* Right: Action Buttons (vertical stack) */}
 						<div className="md:ml-24 flex flex-col gap-1.5">
+							{journey && <>
+								<Button size="xs" highlight="sky" mode="dark" onClick={onWishlist}>Wishlist{journey.wishlist.length ? ` · ${journey.wishlist.length}` : ""}</Button>
+								{(ratingsCount > 0 || journey.wishlist.length > 0) && <button type="button" className="text-xs text-gray-400 hover:text-white" onClick={journey.onSignUp}>Keep my progress →</button>}
+							</>}
 							{/* Save Progress Button (guests only) */}
-							{isGuest && (
+							{isGuest && !journey && (
 								<Link to="/sign-up?redirectTo=/taste">
 									<Button
 										disabled={lastRated.length == 0}
@@ -147,7 +156,7 @@ export default function TasteStream({
 									? <SparklesIcon className="w-3.5 h-3.5" />
 									: <LockClosedIcon className="w-3.5 h-3.5" />
 								}
-								<span>For You</span>
+								<span>{journey ? "Discover picks" : "For You"}</span>
 							</Button> : null}
 						</div>
 					</div>
