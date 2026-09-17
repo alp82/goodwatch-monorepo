@@ -1,6 +1,8 @@
+import { Link, useSearchParams } from "@remix-run/react"
+import { journeyTitleHref, readJourney, rememberJourney } from "../journey-session"
 import { useJourneyPrototype } from "../JourneyPrototypeContext"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { FreeMode, Navigation } from "swiper/modules"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
@@ -22,7 +24,7 @@ function PosterCard({ recommendation }: { recommendation: Recommendation }) {
 				className="w-full h-full object-cover"
 			/>
 			<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-			{journey && <button type="button" aria-label={`Explore ${recommendation.title}`} onClick={() => journey.openTitle(recommendation)} className="absolute inset-0 z-10 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 hover:bg-white/5" />}
+			{journey && <Link to={journeyTitleHref(recommendation)} aria-label={`Explore ${recommendation.title}`} onClick={journey.rememberJourney} className="absolute inset-0 z-10 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 hover:bg-white/5" />}
 			<div className="absolute bottom-0 left-0 right-0 p-3">
 				<h3 className="text-white font-semibold text-sm truncate">{recommendation.title}</h3>
 				<div className="flex items-center gap-2 mt-1">
@@ -49,7 +51,7 @@ function BackdropCard({ recommendation }: { recommendation: Recommendation }) {
 				className="w-full h-full object-cover"
 			/>
 			<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-			{journey && <button type="button" aria-label={`Explore ${recommendation.title}`} onClick={() => journey.openTitle(recommendation)} className="absolute inset-0 z-10 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 hover:bg-white/5" />}
+			{journey && <Link to={journeyTitleHref(recommendation)} aria-label={`Explore ${recommendation.title}`} onClick={journey.rememberJourney} className="absolute inset-0 z-10 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 hover:bg-white/5" />}
 			<div className="absolute bottom-0 left-0 right-0 p-3">
 				<h3 className="text-white font-semibold text-base truncate">{recommendation.title}</h3>
 				<div className="flex items-center gap-2 mt-0.5">
@@ -63,10 +65,16 @@ function BackdropCard({ recommendation }: { recommendation: Recommendation }) {
 }
 
 function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
+	const ready = useRef(false)
+	const journey = useJourneyPrototype()
+	const [params] = useSearchParams()
+	const slideKey = params.get("view") === "wishlist" ? "wishlistSlide" : "picksSlide"
 	return (
 		<div className="relative px-10">
 			<Swiper
 				modules={[Navigation, FreeMode]}
+				onSwiper={swiper => { if (journey) swiper.slideTo(readJourney()[slideKey] || 0, 0); ready.current = true }}
+				onSlideChange={swiper => { if (journey && ready.current) rememberJourney({ [slideKey]: swiper.activeIndex }) }}
 				spaceBetween={16}
 				slidesPerView={4}
 				slidesPerGroup={1}
@@ -109,10 +117,16 @@ function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
 }
 
 function MobileSwiper({ recommendations }: RecommendationSwiperProps) {
+	const ready = useRef(false)
+	const journey = useJourneyPrototype()
+	const [params] = useSearchParams()
+	const slideKey = params.get("view") === "wishlist" ? "wishlistSlide" : "picksSlide"
 	return (
 		<div className="relative py-8">
 			<Swiper
 				modules={[Navigation, FreeMode]}
+				onSwiper={swiper => { if (journey) swiper.slideTo(readJourney()[slideKey] || 0, 0); ready.current = true }}
+				onSlideChange={swiper => { if (journey && ready.current) rememberJourney({ [slideKey]: swiper.activeIndex }) }}
 				direction="vertical"
 				spaceBetween={12}
 				slidesPerView={3}

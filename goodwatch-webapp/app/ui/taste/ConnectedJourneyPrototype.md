@@ -1,39 +1,47 @@
-# Connected exploration prototype
+# Taste → real details → Taste
 
-Question: how can GoodWatch connect interest discovery, title exploration, Wishlist and signup while retaining its existing experience?
-
-Branch: `prototype/connected-exploration`. Decision: [Choose the connected exploration and signup experience](https://github.com/alp82/goodwatch-monorepo/issues/86).
-
-The user rejected all three standalone variants for both visual design and flow. This revision replaces them with targeted changes inside the existing Taste components. It is awaiting review, not an accepted design or finished delivery.
+Working prototype for [Choose the connected exploration and signup experience](https://github.com/alp82/goodwatch-monorepo/issues/86), on `prototype/connected-exploration`. Awaiting user review; no final design acceptance is inferred.
 
 ## Open
 
 http://localhost:3003/taste/quiz?prototype=journey
 
-The existing app development server runs via `npm run dev`. Compare with `/taste/quiz` using the link below the preview. The old variant query parameters are no longer used. Rendering remains gated out of production.
+Uses the existing app development server. The original `/taste/quiz` is available for comparison. Preview behavior remains gated out of production.
 
-## Changes to review
+## What changed
 
-- Retains the existing header, typography, buttons, progress strip, rating experience and responsive recommendation carousel.
-- Starts with general suggestions from the existing title loader. Rating familiar titles remains an optional way to obtain personalized suggestions using the existing recommendation APIs.
-- Opens recommendation cards into a responsive title preview with real synopsis/genres, Want to See, Skip and a return to the same underlying screen. Escape closes the dialog; focus is managed by the existing Headless UI library.
-- Keeps Wishlist beside discovery and rating, using the existing one-interaction-per-title model. Details and Wishlist share the preview's state.
-- Opens the existing full details/viewing-options page in a new tab, leaving Taste in place. Does not invent offers or claim freshness.
-- Replaces automatic guest interruption with a dismissible reminder at 10 ratings. At 20, another new rating prompts signup; browsing, Want to See, Skip and editing an existing rating remain available.
-- Gives signup a short explanation tied to accumulated progress and browser storage limits. Account creation/import is deliberately not connected in this prototype.
+The user rejected the standalone layouts, then rejected the mini details dialog because the real details page still lost the journey. Both are removed.
 
-## Storage and boundaries
+Taste posters now link directly to actual movie/show pages in the same tab. The real details header offers a return to the originating Taste picks, rating card or Wishlist, plus a Wishlist count and the next unhandled suggestion. Related-title links retain this context. Country initialization preserves the preview flag and replaces its URL update rather than adding an extra browser-back step.
 
-Interactions, title metadata and feature state use separate `prototype_journey_*` browser-storage keys. This intentional prototype persistence lets reloads retain the preview Wishlist without touching normal guest progress or account data. It is not the production storage design. No simulated account-success path is presented.
+The real details action area shares the preview's guest interactions with Taste. Want to See, Skip and ratings update the same progress. The existing ratings section reflects the same score. Trailers, descriptions, fingerprint, related titles and viewing options remain on the real page.
 
-This is a bounded Taste review. Global Wishlist integration, actual cross-route context restoration, new/existing-account handoff, availability freshness verification and the complete watchability filter remain with the map's delivery and verification tickets. The full details link opens the existing page with its existing behavior. The prototype does not claim to have connected every entry point or verified personalized recommendation quality.
+Taste still uses its existing header, styling, scorer and responsive carousel. General suggestions appear immediately; familiar-title ratings can unlock the existing personalized recommendation APIs. A dismissible reminder appears after 10 ratings. At 20, a new rating requires an account; editing a rating, browsing, Wishlist and Skip remain available.
 
-## Validation
+## Walkthrough
 
-Browser review uses the locally installed Chrome DevTools MCP through its SDK transport. Desktop and 390px mobile views were inspected. The walkthrough checks title opening, Want to See, Wishlist, reload retention, Escape/return, isolated storage and the guest limit. Screenshots and Lighthouse reports are stored under `/tmp/goodwatch-*` in the authoring workspace; final results are recorded in the decision ticket.
+1. Open a pick midway through the carousel. It opens the real details page.
+2. Choose Want to See. Check the Wishlist count and active action.
+3. Follow a related title or Next pick. The Taste return path remains visible.
+4. Return to Taste. The source view, carousel position and scroll position are restored; Wishlist reflects the details action.
+5. Switch to rating familiar titles, open the current card's real details, and rate it there. Return to the same card and check the shared rating.
+6. Repeat at mobile width, with details reloads and browser Back.
 
-No automated tests were added, following the webapp instructions. App-wide TypeScript checking still fails elsewhere; the changed files have no diagnostics. Whitespace checks pass.
+## Boundaries
 
-Final mobile Lighthouse navigation audit: accessibility 95, best practices 100, SEO 100. The remaining accessibility findings concern unnamed links in the existing header/mobile navigation. Agentic-browsing score was 30; its report also flags the existing llms.txt response and layout shift. No production performance claim is made from this development-server audit. Reports: `/tmp/goodwatch-journey-lighthouse-final/report.html` and `report.json`.
+Guest interactions, title metadata and feature state use separate `prototype_journey_*` local-storage keys. The tab's source view, remaining rating queue, selected edit card, suggestion snapshot, carousel position and scroll position use session storage. This intentionally exercises continuity without changing normal guest progress or account data; it is not the final persistence architecture.
 
-The cap walkthrough retained 20 ratings after a blocked new rating, then successfully added one Wishlist entry and one Skip. Normal `onboarding_ratings` remained untouched in the isolated browser. Desktop title preview, mobile layout, Wishlist reload, and Escape return were exercised. Actual account transfer, freshness and cross-route continuity were not tested by this prototype.
+Signup remains presentation-only. Real account transfer, global Wishlist integration beyond this path, all remaining discovery entry points, recommendation quality and availability freshness remain delivery/verification work. Existing viewing options are used; the prototype does not claim to implement the 30-day availability rule.
+
+## Evidence
+
+Chrome DevTools MCP walkthrough:
+
+- Opened Better Call Saul from carousel index 4 at scroll position 178, chose Want to See on real details, and returned to index 4 / scroll 178 with Wishlist updated.
+- From rating, opened A Clockwork Orange, rated it 8/10, followed the related Blade Runner link, and returned to the original rating card with the rating visible in Taste.
+- At 390px, the return path remained visible and page width stayed at 390px.
+- Prior shared-store checks retained 20 ratings after a blocked additional rating while Wishlist and Skip succeeded. Normal guest storage remained untouched.
+
+No automated tests were added, following webapp instructions. App-wide TypeScript checking still fails on the existing baseline; this revision introduces no new diagnostics. Whitespace checks pass. Screenshots and Lighthouse reports are under `/tmp/goodwatch-real-details-*`; audit results are recorded in the decision ticket.
+
+The real movie page's mobile Lighthouse navigation audit reported accessibility 84, best practices 77 and SEO 92. Findings included existing unnamed navigation/carousel controls, focusable hidden related-title panels, rating-markup issues, third-party cookies and non-crawlable rating links. A new Next pick accessible-label mismatch was identified and corrected. These figures describe this development-page audit, not a performance or quality improvement over the existing app.

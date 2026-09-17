@@ -1,3 +1,4 @@
+import { useJourneyDetails, JourneyDetailScore } from "~/ui/taste/JourneyDetails"
 import React, { useState } from "react"
 import RatingBadges from "~/ui/ratings/RatingBadges"
 import { extractRatings } from "~/utils/ratings"
@@ -18,6 +19,8 @@ export default function DetailsRatings({
 	media,
 	sectionProps,
 }: DetailsRatingsProps) {
+	const journey = useJourneyDetails()
+	const RatingControl = journey ? JourneyDetailScore : ScoreSelector
 	const { details } = media
 	const ratings = extractRatings(details)
 
@@ -63,7 +66,7 @@ export default function DetailsRatings({
 						<div className="hidden md:block">
 							<Appear isVisible={ratingVisible}>
 								<div className="py-2 px-4 bg-gray-900/50 border-t-[1px] border-gray-700">
-									<ScoreSelector media={media} />
+									<RatingControl media={media} />
 								</div>
 							</Appear>
 						</div>
@@ -71,7 +74,7 @@ export default function DetailsRatings({
 						{/* Mobile Drawer */}
 						<div className="md:hidden">
 							<Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-								<ScoreSelector
+								<RatingControl
 									media={media}
 									onCancel={() => setDrawerOpen(false)}
 								/>

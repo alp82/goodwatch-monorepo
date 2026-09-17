@@ -2,7 +2,7 @@
 import { createContext, useContext } from "react";
 import type { ScoringMedia } from "~/ui/scoring/types";
 export const JourneyPrototypeContext = createContext<{
-	openTitle: (title: ScoringMedia) => void;
+	rememberJourney: () => void;
 	wishlist: ScoringMedia[];
 	onSignUp: () => void;
 	limitNotice: boolean;

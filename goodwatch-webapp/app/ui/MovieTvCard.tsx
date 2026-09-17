@@ -1,4 +1,5 @@
-import { Link } from "@remix-run/react"
+import { useJourneyDetails } from "~/ui/taste/JourneyDetails"
+import { Link, useSearchParams } from "@remix-run/react"
 import type React from "react"
 import { useUserScore, useIsOnWishlist } from "~/hooks/useUserDataAccessors"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
@@ -26,10 +27,15 @@ export function MovieTvCard({
 	mediaType,
 	prefetch = false,
 }: MovieTvCardProps) {
+	const [params] = useSearchParams()
+	const journey = useJourneyDetails()
+	const inJourney = process.env.NODE_ENV !== "production" && params.get("prototype") === "journey"
+	const interaction = journey?.interactions.find(i => i.tmdb_id === details.tmdb_id && i.media_type === mediaType)
 	const ratings = extractRatings(details)
 	const userScoreData = useUserScore(mediaType, details.tmdb_id)
-	const userScore = userScoreData?.score ?? null
-	const onWishList = useIsOnWishlist(mediaType, details.tmdb_id)
+	const userScore = journey ? (interaction?.type === "score" ? interaction.score ?? null : null) : userScoreData?.score ?? null
+	const memberWishlist = useIsOnWishlist(mediaType, details.tmdb_id)
+	const onWishList = journey ? interaction?.type === "plan" : memberWishlist
 
 	return (
 		<Link
@@ -41,7 +47,7 @@ export function MovieTvCard({
 				transition-transform duration-100 transform scale-95 hover:scale-100
 				group
 			"
-			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`}
+			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}${inJourney ? "?prototype=journey" : ""}`}
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
 		>

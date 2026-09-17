@@ -1,3 +1,4 @@
+import { JourneyDetailsBoundary } from "~/ui/taste/JourneyDetails"
 import React from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
@@ -28,7 +29,7 @@ export default function Details({ media, country }: DetailsProps) {
 	)
 
 	return (
-		<>
+		<JourneyDetailsBoundary media={media}>
 			{backdrop_path && (
 				<div
 					className="pointer-events-none absolute top-0 z-0 w-full h-full"
@@ -86,6 +87,6 @@ export default function Details({ media, country }: DetailsProps) {
 					/>
 				</div>
 			</div>
-		</>
+		</JourneyDetailsBoundary>
 	)
 }

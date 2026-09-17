@@ -1,7 +1,9 @@
+import { useSearchParams, Link } from "@remix-run/react"
+import { readJourney, rememberJourney, journeyTitleHref } from "../journey-session"
 import { useJourneyPrototype } from "../JourneyPrototypeContext"
 import JourneyProgress from "../JourneyProgress"
 import RecommendationSwiper from "../components/RecommendationSwiper"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import SingleItemScorer from "~/ui/scoring/SingleItemScorer"
 import TasteStream from "../components/TasteStream"
 import UnlockCelebration from "../components/UnlockCelebration"
@@ -51,11 +53,31 @@ export default function TasteRating({
 	fingerprintPreview,
 }: TasteRatingProps) {
 	const journey = useJourneyPrototype()
+	const [params, setParams] = useSearchParams()
 	const [showPicks, setShowPicks] = useState(Boolean(journey))
 	const [showWishlist, setShowWishlist] = useState(false)
 	
-	const handleViewPicks = () => { setShowWishlist(false); setShowPicks(true) }
-	const handleDismissPicks = () => { setShowWishlist(false); setShowPicks(false) }
+	useEffect(() => {
+		if (!journey) return
+		const view = params.get("view") || readJourney().view || "picks"
+		setShowWishlist(view === "wishlist")
+		setShowPicks(view === "picks")
+	}, [params])
+	useEffect(() => {
+		if (!journey) return
+		const frame = requestAnimationFrame(() => window.scrollTo(0, readJourney().scrollY || 0))
+		return () => cancelAnimationFrame(frame)
+	}, [])
+	function changeView(view: "picks" | "rate" | "wishlist") {
+		setShowWishlist(view === "wishlist"); setShowPicks(view === "picks")
+		if (journey) {
+			rememberJourney({view, scrollY: 0})
+			const next = new URLSearchParams(params); next.set("view", view)
+			setParams(next, { replace: true, preventScrollReset: true })
+		}
+	}
+	const handleViewPicks = () => changeView("picks")
+	const handleDismissPicks = () => changeView("rate")
 	
 	const unlockedFeatures = getUnlockedFeatures(ratingsCount)
 	const currentFeature = unlockedFeatures[unlockedFeatures.length - 1] || null
@@ -94,7 +116,7 @@ export default function TasteRating({
 					recommendationsShown={showRecommendations}
 					onViewPicks={handleViewPicks}
 					onContinueRating={handleDismissPicks}
-					onWishlist={() => { setShowWishlist(true); setShowPicks(false) }}
+					onWishlist={() => changeView("wishlist")}
 				/>
 			</div>
 
@@ -127,6 +149,8 @@ export default function TasteRating({
 					)}
 					
 					{!showCelebration && !showRecommendations && !showWishlist && (
+						<>
+						{journey && <div className="mb-2 text-right"><Link to={journeyTitleHref(media)} onClick={journey.rememberJourney} className="text-sm text-cyan-300 hover:text-cyan-200">Explore {media.title} →</Link></div>}
 						<SingleItemScorer
 							media={media}
 							nextMedia={nextMedia}
@@ -137,6 +161,7 @@ export default function TasteRating({
 							ratingsCount={ratingsCount}
 							isGuest={isGuest}
 						/>
+						</>
 					)}
 				</div>
 			</div>

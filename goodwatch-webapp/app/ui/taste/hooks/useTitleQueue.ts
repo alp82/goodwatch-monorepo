@@ -1,3 +1,4 @@
+import { readJourney } from "../journey-session"
 import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ScoringMedia } from "~/ui/scoring/types"
@@ -5,6 +6,7 @@ import type { TasteInteraction } from "../types"
 import { queryKeySmartTitles } from "~/routes/api.smart-titles"
 
 interface UseTitleQueueParams {
+	journeyPrototype?: boolean
 	initialTitles: ScoringMedia[]
 	isAuthenticated: boolean
 	interactions: TasteInteraction[]
@@ -14,6 +16,7 @@ interface UseTitleQueueParams {
 }
 
 interface TitleQueueState {
+	remainingTitles: ScoringMedia[]
 	current: ScoringMedia | null
 	next: ScoringMedia | null
 	advance: () => void
@@ -27,6 +30,7 @@ const DEFAULT_PREFETCH_THRESHOLD = 5
 const DEFAULT_BATCH_SIZE = 20
 
 export function useTitleQueue({
+	journeyPrototype = false,
 	initialTitles,
 	isAuthenticated,
 	interactions,
@@ -74,7 +78,8 @@ export function useTitleQueue({
 	useEffect(() => {
 		if (hasInitialized.current || initialTitles.length === 0) return
 		
-		const filtered = filterNewTitles(initialTitles)
+		const savedQueue = journeyPrototype ? readJourney().ratingQueue : undefined
+		const filtered = filterNewTitles(savedQueue?.length ? savedQueue : initialTitles)
 		if (filtered.length > 0) {
 			// Mark all as seen
 			filtered.forEach(t => seenIds.current.add(makeKey(t)))
@@ -137,6 +142,7 @@ export function useTitleQueue({
 	const showLoading = !hasInitialized.current && initialTitles.length === 0
 
 	return {
+		remainingTitles: queue.slice(currentIndex),
 		current,
 		next,
 		advance,

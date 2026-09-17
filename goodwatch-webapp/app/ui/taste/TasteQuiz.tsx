@@ -1,5 +1,5 @@
 import { JourneyPrototypeContext } from "./JourneyPrototypeContext"
-import JourneyTitlePreview from "./JourneyTitlePreview"
+import { readJourney, rememberJourney } from "./journey-session"
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import type { Score } from "~/server/scores.server"
 import type { ScoringMedia, LastRatedItem } from "~/ui/scoring/types"
@@ -51,9 +51,15 @@ export default function TasteQuiz({
 	})
 	
 	// Track selected media from recommendations/last rated
-	const [previewMedia, setPreviewMedia] = useState<ScoringMedia | null>(null)
 	const [limitNotice, setLimitNotice] = useState(false)
 	const [selectedMedia, setSelectedMedia] = useState<ScoringMedia | null>(null)
+	const [returnPicks, setReturnPicks] = useState<Recommendation[] | null>(null)
+	useEffect(() => {
+		if (!journeyPrototype) return
+		const saved = readJourney()
+		setSelectedMedia(saved.selectedMedia || null)
+		setReturnPicks(saved.picks || null)
+	}, [journeyPrototype])
 	
 	// Track when a feature threshold is crossed (for celebration screen)
 	const [justUnlockedFeature, setJustUnlockedFeature] = useState<Feature | null>(null)
@@ -110,6 +116,7 @@ export default function TasteQuiz({
 
 	// Use the stable title queue
 	const titleQueue = useTitleQueue({
+		journeyPrototype,
 		initialTitles: availableTitles,
 		isAuthenticated,
 		interactions,
@@ -199,6 +206,7 @@ export default function TasteQuiz({
 		// Use selected media if available, otherwise use current from queue
 		const currentMedia = selectedMedia || titleQueue.current
 		if (currentMedia) {
+			if (journeyPrototype) setReturnPicks(null)
 			scoreHandler(currentMedia, score)
 			// Clear selection after scoring
 			if (selectedMedia) {
@@ -248,6 +256,9 @@ export default function TasteQuiz({
 
 
 	const generateRecommendations = (): Recommendation[] => {
+		if (journeyPrototype && returnPicks?.length) {
+			return returnPicks.filter(title => !interactions.some(i => i.tmdb_id === title.tmdb_id && i.media_type === title.media_type))
+		}
 		const recommendations: Recommendation[] = []
 
 		// For authenticated users, use user recommendations
@@ -385,7 +396,12 @@ export default function TasteQuiz({
 		
 		return (
 			<JourneyPrototypeContext.Provider value={journeyPrototype ? {
-				openTitle: setPreviewMedia,
+				rememberJourney: () => rememberJourney({
+					ratingQueue: titleQueue.remainingTitles,
+					selectedMedia,
+					picks: generateRecommendations(),
+					scrollY: window.scrollY,
+				}),
 				wishlist: interactions.filter(i => i.type === "plan").map(i => mediaCache.current.get(`${i.media_type}-${i.tmdb_id}`)).filter((title): title is ScoringMedia => Boolean(title)),
 				onSignUp: () => onSignUp?.(),
 				limitNotice,
@@ -421,13 +437,6 @@ export default function TasteQuiz({
 						ratingsCount={ratingsCount}
 					/>
 				)}
-				{journeyPrototype && previewMedia && <JourneyTitlePreview
-					media={mediaCache.current.get(`${previewMedia.media_type}-${previewMedia.tmdb_id}`) || previewMedia}
-					interaction={interactions.find(i => i.tmdb_id === previewMedia.tmdb_id && i.media_type === previewMedia.media_type)}
-					onClose={() => setPreviewMedia(null)}
-					onPlan={() => addPlanToWatch(previewMedia)}
-					onSkip={() => { addSkip(previewMedia); setPreviewMedia(null) }}
-				/>}
 			</JourneyPrototypeContext.Provider>
 		)
 	}
