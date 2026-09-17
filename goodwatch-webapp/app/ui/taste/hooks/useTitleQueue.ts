@@ -1,4 +1,4 @@
-import { readJourney } from "../journey-session"
+import { readExploration } from "../exploration"
 import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ScoringMedia } from "~/ui/scoring/types"
@@ -6,7 +6,7 @@ import type { TasteInteraction } from "../types"
 import { queryKeySmartTitles } from "~/routes/api.smart-titles"
 
 interface UseTitleQueueParams {
-	journeyPrototype?: boolean
+	resume?: boolean
 	initialTitles: ScoringMedia[]
 	isAuthenticated: boolean
 	interactions: TasteInteraction[]
@@ -30,7 +30,7 @@ const DEFAULT_PREFETCH_THRESHOLD = 5
 const DEFAULT_BATCH_SIZE = 20
 
 export function useTitleQueue({
-	journeyPrototype = false,
+	resume = false,
 	initialTitles,
 	isAuthenticated,
 	interactions,
@@ -78,15 +78,15 @@ export function useTitleQueue({
 	useEffect(() => {
 		if (hasInitialized.current || initialTitles.length === 0) return
 		
-		const savedQueue = journeyPrototype ? readJourney().ratingQueue : undefined
-		const filtered = filterNewTitles(savedQueue?.length ? savedQueue : initialTitles)
+		const saved = resume ? readExploration().ratingQueue : undefined
+		const filtered = filterNewTitles(saved?.length ? saved : initialTitles)
 		if (filtered.length > 0) {
 			// Mark all as seen
 			filtered.forEach(t => seenIds.current.add(makeKey(t)))
 			setQueue(filtered)
 			hasInitialized.current = true
 		}
-	}, [initialTitles, filterNewTitles, makeKey])
+	}, [initialTitles, filterNewTitles, makeKey, resume])
 
 	// Prefetch more titles when queue is running low
 	const prefetchMore = useCallback(async () => {

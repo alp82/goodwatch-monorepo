@@ -11,7 +11,7 @@ export const useUpdateUrlParams = <T extends {}>({
 	params,
 }: UseUpdateUrlParams<T>) => {
 	const [currentParams, setCurrentParams] = useState(params);
-	const { pathname, search } = useLocation();
+	const { pathname } = useLocation();
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -33,17 +33,13 @@ export const useUpdateUrlParams = <T extends {}>({
 
 	const constructUrl = (newParams: T) => {
 		const nonEmptyNewParams = getNonEmptyParams(newParams);
-		const query = new URLSearchParams(nonEmptyNewParams as unknown as Record<string, string>);
-		if (process.env.NODE_ENV !== "production" && new URLSearchParams(search).get("prototype") === "journey") query.set("prototype", "journey");
-		return `${pathname}?${query.toString()}`;
+		return `${pathname}?${new URLSearchParams(nonEmptyNewParams as unknown as Record<string, string>).toString()}`;
 	};
 
 	const updateParams = (newParams: T, replace = false) => {
 		const nonEmptyNewParams = getNonEmptyParams(newParams);
 		setCurrentParams(nonEmptyNewParams);
-		// Locale initialization must not insert an extra history step into the preview journey.
-		const inJourney = process.env.NODE_ENV !== "production" && new URLSearchParams(search).get("prototype") === "journey";
-		navigate(constructUrl(newParams), { replace: replace || inJourney });
+		navigate(constructUrl(newParams), { replace });
 	};
 
 	return {

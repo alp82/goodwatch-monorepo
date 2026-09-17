@@ -1,4 +1,3 @@
-import { useJourneyDetails } from "~/ui/taste/JourneyDetails"
 import React from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import imdbLogo from "~/img/imdb-logo-250.png"
@@ -25,9 +24,7 @@ export default function RatingBadges({
 	const { tmdb_id } = details
 
 	const userScoreData = useUserScore(mediaType, tmdb_id)
-	const journey = useJourneyDetails()
-	const guestInteraction = journey?.interactions.find(i => i.tmdb_id === tmdb_id && i.media_type === mediaType)
-	const userScore = journey ? (guestInteraction?.type === "score" ? guestInteraction.score || null : null) : userScoreData?.score || null
+	const userScore = userScoreData?.score || null
 
 	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
 		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10

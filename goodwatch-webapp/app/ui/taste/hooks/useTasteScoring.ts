@@ -9,12 +9,9 @@ import { useScoreMutation, useSkippedMutation, useWishlistMutation } from "~/hoo
 
 interface UseTasteScoringProps {
 	isAuthenticated: boolean
-	prototype?: boolean
 }
 
-export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTasteScoringProps) => {
-	const ratingsKey = prototype ? "prototype_journey_ratings" : ONBOARDING_RATINGS_KEY
-	const unlockKey = prototype ? "prototype_journey_unlock" : FIRST_UNLOCK_COUNT_KEY
+export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const [interactions, setInteractions] = useState<TasteInteraction[]>([])
 	const [firstUnlockCount, setFirstUnlockCount] = useState<number | null>(null)
 	
@@ -24,7 +21,7 @@ export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTaste
 
 	useEffect(() => {
 		if (!isAuthenticated) {
-			const stored = localStorage.getItem(ratingsKey)
+			const stored = localStorage.getItem(ONBOARDING_RATINGS_KEY)
 			if (stored) {
 				try {
 					const parsed = JSON.parse(stored)
@@ -33,23 +30,22 @@ export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTaste
 					console.error("Failed to parse stored interactions", e)
 				}
 			}
-			const storedUnlockCount = localStorage.getItem(unlockKey)
+			const storedUnlockCount = localStorage.getItem(FIRST_UNLOCK_COUNT_KEY)
 			if (storedUnlockCount) {
 				setFirstUnlockCount(Number.parseInt(storedUnlockCount, 10))
 			}
 		}
-	}, [isAuthenticated, ratingsKey, unlockKey])
+	}, [isAuthenticated])
 
 	useEffect(() => {
 		if (!isAuthenticated && interactions.length > 0) {
-			localStorage.setItem(ratingsKey, JSON.stringify(interactions))
+			localStorage.setItem(ONBOARDING_RATINGS_KEY, JSON.stringify(interactions))
 		}
-	}, [interactions, isAuthenticated, ratingsKey])
+	}, [interactions, isAuthenticated])
 
 	const updateInteractions = useCallback((media: ScoringMedia, interaction: Omit<TasteInteraction, 'timestamp'>) => {
 		const fullInteraction: TasteInteraction = {
 			...interaction,
-			...(prototype ? { media } : {}),
 			timestamp: Date.now(),
 		}
 
@@ -66,7 +62,7 @@ export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTaste
 			}
 			return next
 		})
-	}, [prototype])
+	}, [])
 
 	const addScore = useCallback((media: ScoringMedia, score: Score): number | undefined => {
 		if (isAuthenticated) {
@@ -80,7 +76,6 @@ export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTaste
 		let newCount: number | undefined
 		setInteractions(prev => {
 			const interaction: TasteInteraction = {
-				...(prototype ? { media } : {}),
 				tmdb_id: media.tmdb_id,
 				media_type: media.media_type,
 				type: 'score',
@@ -101,7 +96,7 @@ export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTaste
 			return next
 		})
 		return newCount
-	}, [isAuthenticated, scoreMutation, prototype])
+	}, [isAuthenticated, scoreMutation])
 
 	const addSkip = useCallback((media: ScoringMedia) => {
 		if (isAuthenticated) {
@@ -139,10 +134,10 @@ export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTaste
 		if (!isAuthenticated) {
 			setInteractions([])
 			setFirstUnlockCount(null)
-			localStorage.removeItem(ratingsKey)
-			localStorage.removeItem(unlockKey)
+			localStorage.removeItem(ONBOARDING_RATINGS_KEY)
+			localStorage.removeItem(FIRST_UNLOCK_COUNT_KEY)
 		}
-	}, [isAuthenticated, ratingsKey, unlockKey])
+	}, [isAuthenticated])
 
 	const ratingsCount = useRatingsCount({ isAuthenticated, interactions })
 	
@@ -152,9 +147,9 @@ export const useTasteScoring = ({ isAuthenticated, prototype = false }: UseTaste
 		if (!isAuthenticated && positiveRatingsCount >= GUEST_LIMITS.FIRST_UNLOCK && firstUnlockCount === null) {
 			const count = interactions.filter(i => i.type === 'score').length
 			setFirstUnlockCount(count)
-			localStorage.setItem(unlockKey, String(count))
+			localStorage.setItem(FIRST_UNLOCK_COUNT_KEY, String(count))
 		}
-	}, [isAuthenticated, positiveRatingsCount, firstUnlockCount, interactions, unlockKey])
+	}, [isAuthenticated, positiveRatingsCount, firstUnlockCount, interactions])
 
 	return {
 		interactions,

@@ -1,4 +1,3 @@
-import { useJourneyDetails, JourneyDetailActions } from "~/ui/taste/JourneyDetails"
 import React from "react"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import { Poster } from "~/ui/Poster"
@@ -20,7 +19,6 @@ export default function DetailsOverview({
 	media,
 	sectionProps,
 }: DetailsOverviewProps) {
-	const journey = useJourneyDetails()
 	const { details, videos } = media
 	const { backdrop_path, poster_path, title } = details
 
@@ -53,8 +51,8 @@ export default function DetailsOverview({
 				{/* User Actions */}
 				<div className="overflow-hidden pt-2">
 					<div className="flex items-center justify-evenly gap-2">
-						{journey ? <JourneyDetailActions /> : <><PlanToWatchButton media={media} />
-						<WatchHistoryButton media={media} /></>}
+						<PlanToWatchButton media={media} />
+						<WatchHistoryButton media={media} />
 						{/*<span className="hidden md:inline">*/}
 						{/*	<FavoriteButton media={media} />*/}
 						{/*</span>*/}

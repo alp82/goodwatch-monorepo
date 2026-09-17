@@ -4,8 +4,7 @@ import type {
 	MetaFunction,
 } from "@remix-run/node"
 import { json } from "@remix-run/node"
-import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react"
-import ConnectedJourneyPrototype from "~/ui/taste/ConnectedJourneyPrototype"
+import { useLoaderData, useNavigate } from "@remix-run/react"
 import {
 	type DehydratedState,
 	QueryClient,
@@ -77,14 +76,9 @@ export const loader: LoaderFunction = async ({
 export default function TasteQuizRoute() {
 	const { isLoggedIn, userId, smartTitles } = useLoaderData<LoaderData>()
 	const navigate = useNavigate()
-	const [searchParams] = useSearchParams()
 
 	const handleSignUp = () => {
 		navigate('/sign-up/?redirectTo=/taste/quiz')
-	}
-
-	if (process.env.NODE_ENV !== "production" && searchParams.get("prototype") === "journey") {
-		return <ConnectedJourneyPrototype titles={smartTitles} />
 	}
 
 	return (

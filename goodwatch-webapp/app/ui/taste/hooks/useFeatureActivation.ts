@@ -5,7 +5,6 @@ import { TASTE_PROFILE_FEATURES_KEY } from "../constants"
 interface UseFeatureActivationProps {
 	isAuthenticated: boolean
 	ratingsCount: number
-	prototype?: boolean
 }
 
 /**
@@ -13,14 +12,13 @@ interface UseFeatureActivationProps {
  * - Authenticated users: Features derived from ratingsCount (database)
  * - Guest users: Features stored in localStorage and manually activated
  */
-export const useFeatureActivation = ({ isAuthenticated, ratingsCount, prototype = false }: UseFeatureActivationProps) => {
-	const featuresKey = prototype ? "prototype_journey_features" : TASTE_PROFILE_FEATURES_KEY
+export const useFeatureActivation = ({ isAuthenticated, ratingsCount }: UseFeatureActivationProps) => {
 	const [guestActivatedFeatures, setGuestActivatedFeatures] = useState<Set<string>>(new Set())
 
 	// Load guest features from localStorage on mount
 	useEffect(() => {
 		if (!isAuthenticated) {
-			const stored = localStorage.getItem(featuresKey)
+			const stored = localStorage.getItem(TASTE_PROFILE_FEATURES_KEY)
 			if (stored) {
 				try {
 					const features = JSON.parse(stored) as string[]
@@ -30,17 +28,17 @@ export const useFeatureActivation = ({ isAuthenticated, ratingsCount, prototype 
 				}
 			}
 		}
-	}, [isAuthenticated, featuresKey])
+	}, [isAuthenticated])
 
 	// Save guest features to localStorage
 	useEffect(() => {
 		if (!isAuthenticated) {
 			localStorage.setItem(
-				featuresKey,
+				TASTE_PROFILE_FEATURES_KEY,
 				JSON.stringify(Array.from(guestActivatedFeatures))
 			)
 		}
-	}, [guestActivatedFeatures, isAuthenticated, featuresKey])
+	}, [guestActivatedFeatures, isAuthenticated])
 
 	// Get activated features based on user type
 	const activatedFeatures = useMemo(() => {
@@ -63,7 +61,7 @@ export const useFeatureActivation = ({ isAuthenticated, ratingsCount, prototype 
 	const clearFeatures = () => {
 		if (!isAuthenticated) {
 			setGuestActivatedFeatures(new Set())
-			localStorage.removeItem(featuresKey)
+			localStorage.removeItem(TASTE_PROFILE_FEATURES_KEY)
 		}
 	}
 

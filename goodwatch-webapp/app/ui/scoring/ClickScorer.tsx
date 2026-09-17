@@ -1,3 +1,4 @@
+import { TasteTitleLink } from "~/ui/taste/exploration"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import { motion } from "framer-motion"
 import { BookmarkIcon, ForwardIcon, FilmIcon, TvIcon, InformationCircleIcon } from "@heroicons/react/24/outline"
@@ -75,7 +76,7 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 			<div className="w-full flex relative">
 				{/* Poster */}
 				<div className="flex-shrink-0 z-10 relative">
-					<div className="h-64 md:h-80 lg:h-96 aspect-[2/3] relative">
+					<TasteTitleLink media={media} aria-label={`Explore ${media.title}`} className="block h-64 md:h-80 lg:h-96 aspect-[2/3] relative focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300">
 						<img
 							ref={impressionRef}
 							src={posterUrl}
@@ -93,11 +94,12 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 								}}
 							/>
 						)}
-					</div>
+					</TasteTitleLink>
 				</div>
 
 				{/* Backdrop */}
 				<div className="flex-1 relative">
+					<TasteTitleLink media={media} aria-label={`Explore ${media.title} details`} className="absolute inset-0 z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300" />
 					{backdropUrl ? (
 						<img
 							src={backdropUrl}
@@ -120,15 +122,15 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 					)}
 
 					{/* Title & Genres Overlay - Top */}
-					<div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/90 via-black/60 to-transparent pt-4 pb-8 pl-4 pr-20">
+					<div className="absolute z-20 pointer-events-none inset-x-0 top-0 bg-gradient-to-b from-black/90 via-black/60 to-transparent pt-4 pb-8 pl-4 pr-20">
 						<h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-lg">
-							{media.title}
+							<TasteTitleLink media={media} className="pointer-events-auto hover:underline">{media.title}</TasteTitleLink>
 							{media.release_year && (
 								<span className="text-gray-300 font-normal ml-2">({media.release_year})</span>
 							)}
 						</h2>
 						{media.genres && media.genres.length > 0 && (
-							<div className="flex flex-wrap gap-2 mt-3">
+							<div className="pointer-events-auto flex flex-wrap gap-2 mt-3">
 								{media.genres.slice(0, 4).map((genre) => (
 									<GenreBadge key={genre} genre={genre} />
 								))}
@@ -143,8 +145,8 @@ export default function ClickScorer({ media, onScore, onSkip, onPlanToWatch }: C
 					</div>
 
 					{/* Bottom Action Bar - Inside Image */}
-					<div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12 pb-5 px-6">
-						<div className="flex justify-end gap-4">
+					<div className="absolute z-20 pointer-events-none inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-12 pb-5 px-6">
+						<div className="pointer-events-auto flex justify-end gap-4">
 							<div>
 								<Button icon={BookmarkIcon} highlight="sky" mode="dark" size="sm" onClick={onPlanToWatch}>
 									Want to See
