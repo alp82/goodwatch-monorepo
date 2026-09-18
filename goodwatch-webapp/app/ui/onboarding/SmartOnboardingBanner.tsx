@@ -7,7 +7,6 @@ import { getCountryName } from "~/server/resources/country-names"
 import CountrySelector from "~/ui/onboarding/CountrySelector"
 import StreamingSelector from "~/ui/onboarding/StreamingSelector"
 import { useOnboardingStep } from "~/ui/onboarding/hooks/useOnboardingStep"
-import { useGuestRatingImport } from "~/ui/onboarding/hooks/useGuestRatingImport"
 import { useOnboardingActions } from "~/ui/onboarding/hooks/useOnboardingActions"
 
 export const SmartOnboardingBanner = () => {
@@ -16,10 +15,8 @@ export const SmartOnboardingBanner = () => {
 		isResolved,
 		currentStep,
 		setCurrentStep,
-		guestInteractions,
 		guessedCountry,
 	} = useOnboardingStep()
-	const { importProgress, importError, importInteractions } = useGuestRatingImport()
 	const actions = useOnboardingActions(setCurrentStep, guessedCountry)
 	
 	const [showCountrySelection, setShowCountrySelection] = useState(false)
@@ -30,20 +27,6 @@ export const SmartOnboardingBanner = () => {
 			setShowCountrySelection(false)
 		}
 	}, [currentStep?.type])
-
-	// Auto-start import when step is set to import
-	useEffect(() => {
-		if (currentStep?.type === 'import' && !currentStep.isComplete && guestInteractions.length > 0) {
-			setTimeout(() => handleImportInteractions(), 100)
-		}
-	}, [currentStep?.type])
-
-	const handleImportInteractions = async () => {
-		const success = await importInteractions(guestInteractions)
-		if (success && currentStep?.type === 'import') {
-			setCurrentStep({ type: 'import', count: currentStep.count, isComplete: true })
-		}
-	}
 
 	const handleConfirmCountry = (countryCode: string) => {
 		actions.confirmCountry(countryCode)
@@ -63,82 +46,7 @@ export const SmartOnboardingBanner = () => {
 	const bgColor = "from-slate-900 via-slate-800 to-slate-900"
 	let content: React.ReactNode = null
 
-	if (currentStep.type === 'import') {
-		content = (
-			<>
-				<div className="flex items-center gap-2 md:gap-3 flex-1">
-					{importError ? (
-						<ExclamationCircleIcon className="h-5 w-5 md:h-7 md:w-7 text-red-400 flex-shrink-0" />
-					) : currentStep.isComplete ? (
-						<CheckCircleIcon className="h-5 w-5 md:h-7 md:w-7 text-white flex-shrink-0" />
-					) : (
-						<SparklesIcon className="h-5 w-5 md:h-7 md:w-7 text-white flex-shrink-0 animate-pulse" />
-					)}
-					<div className="flex-1 min-w-0">
-						<p className="text-white font-bold text-sm md:text-lg">
-							{importError
-								? `Failed to import ratings`
-								: currentStep.isComplete
-								? `Successfully imported ${currentStep.count} ${currentStep.count === 1 ? 'rating' : 'ratings'}`
-								: `Importing ${currentStep.count} ${currentStep.count === 1 ? 'rating' : 'ratings'}...`
-							}
-						</p>
-						{importError && (
-							<p className="text-red-300 text-xs md:text-sm mt-0.5 md:mt-1">
-								{importError}
-							</p>
-						)}
-						{currentStep.isComplete && !importError && (
-							<p className="text-white/90 text-xs md:text-sm mt-0.5 md:mt-1">
-								We are analyzing your taste profile right now
-							</p>
-						)}
-						{!currentStep.isComplete && !importError && (
-							<div className="mt-1.5 md:mt-2 flex items-center gap-2">
-								<div className="flex-1 h-1.5 md:h-2 bg-white/30 rounded-full overflow-hidden">
-									<motion.div
-										initial={{ width: 0 }}
-										animate={{ width: `${importProgress}%` }}
-										transition={{ duration: 0.3, ease: "easeOut" }}
-										className="h-full bg-white rounded-full"
-									/>
-								</div>
-								<span className="text-white/90 text-xs md:text-sm font-medium">
-									{importProgress}%
-								</span>
-							</div>
-						)}
-					</div>
-				</div>
-				{importError ? (
-					<div className="flex items-center gap-2 flex-shrink-0">
-						<button
-							type="button"
-							onClick={handleImportInteractions}
-							className="px-4 py-2 md:px-6 md:py-3 bg-emerald-600 text-white hover:bg-emerald-500 rounded-lg font-bold text-sm md:text-base transition-colors shadow-md hover:shadow-lg cursor-pointer whitespace-nowrap"
-						>
-							Retry
-						</button>
-						<button
-							type="button"
-							onClick={actions.dismiss}
-							className="px-4 py-2 md:px-4 md:py-3 bg-white/10 text-white hover:bg-white/20 rounded-lg text-sm md:text-base transition-colors cursor-pointer whitespace-nowrap"
-						>
-							Skip
-						</button>
-					</div>
-				) : currentStep.isComplete && (
-					<button
-						type="button"
-						onClick={actions.continueFromImport}
-						className="px-4 py-2 md:px-6 md:py-3 bg-emerald-600 text-white hover:bg-emerald-500 rounded-lg font-bold text-sm md:text-base transition-colors shadow-md hover:shadow-lg cursor-pointer whitespace-nowrap"
-					>
-						Next
-					</button>
-				)}
-			</>
-		)
-	} else if (currentStep.type === 'country') {
+	if (currentStep.type === 'country') {
 		const countryName = getCountryName(currentStep.countryCode)
 		content = showCountrySelection ? (
 			<div className="w-full">

@@ -1,3 +1,4 @@
+import { beginAuthentication } from "~/utils/account-transfer"
 import React from "react";
 import { useSupabase } from "~/utils/auth";
 
@@ -32,6 +33,7 @@ export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
 	const handleSignInWithGoogle = () => {
 		if (!supabase) return;
 
+		beginAuthentication("oauth", window.location.pathname + window.location.search)
 		const redirectHash = `#redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`;
 		const redirectTo = `${window.location.origin}${redirectHash}`;
 

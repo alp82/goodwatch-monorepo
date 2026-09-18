@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react"
 import { useFetcher } from "@remix-run/react"
 import { useUserSettings } from "~/routes/api.user-settings.get"
-import type { GuestInteraction, TasteInteraction } from "~/ui/taste/types"
-import { ONBOARDING_RATINGS_KEY } from "~/ui/taste/constants"
 
 export type OnboardingStep = 
-	| { type: 'import', count: number, isComplete: boolean }
 	| { type: 'country', countryCode: string }
 	| { type: 'streaming' }
 	| { type: 'complete' }
@@ -19,7 +16,6 @@ export const useOnboardingStep = () => {
 	const guessCountryFetcher = useFetcher<{ country: string }>()
 	
 	const [currentStep, setCurrentStep] = useState<OnboardingStep | null>(null)
-	const [guestInteractions, setGuestInteractions] = useState<GuestInteraction[]>([])
 	const onboardingCompleted =
 		userSettings?.onboarding_country_completed === "yes" &&
 		userSettings?.onboarding_streaming_completed === "yes"
@@ -51,32 +47,6 @@ export const useOnboardingStep = () => {
 			return
 		}
 
-		const interactionsJson = localStorage.getItem(ONBOARDING_RATINGS_KEY)
-		if (interactionsJson) {
-			try {
-				const interactions = JSON.parse(interactionsJson) as TasteInteraction[]
-				const allInteractions: GuestInteraction[] = interactions.map(i => ({
-					tmdb_id: i.tmdb_id,
-					media_type: i.media_type,
-					type: i.type,
-					score: i.score,
-					timestamp: i.timestamp,
-				}))
-				
-				if (allInteractions.length > 0) {
-					setGuestInteractions(allInteractions)
-					setCurrentStep((prev) => {
-						if (prev?.type === "import") {
-							return prev
-						}
-						return { type: "import", count: allInteractions.length, isComplete: false }
-					})
-					return
-				}
-			} catch (e) {
-				console.error("Failed to parse guest interactions", e)
-			}
-		}
 
 		// Determine step based on completion status
 		const countryCompleted = userSettings?.onboarding_country_completed === "yes"
@@ -111,8 +81,6 @@ export const useOnboardingStep = () => {
 		isResolved: settingsFetched,
 		currentStep,
 		setCurrentStep,
-		guestInteractions,
-		setGuestInteractions,
 		guessedCountry: guessCountryFetcher.data?.country,
 	}
 }

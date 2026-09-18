@@ -1,3 +1,4 @@
+import { cleanupCompletedTransferOnLogout } from "~/utils/account-transfer"
 import type { User } from "@supabase/auth-js"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { useRevalidator } from "@remix-run/react"
@@ -36,6 +37,8 @@ export function AuthProvider({
 		previousUserId.current = user?.id
 		// Reconcile server-rendered pages on login/logout, including other tabs.
 		if (oldUserId) {
+			try { cleanupCompletedTransferOnLogout(oldUserId) } catch {}
+			queryClient.removeQueries({ queryKey: ["account-transfer-review", oldUserId] })
 			queryClient.removeQueries({ queryKey: ["user-data", oldUserId] })
 			queryClient.removeQueries({ queryKey: ["user-settings", oldUserId] })
 		}

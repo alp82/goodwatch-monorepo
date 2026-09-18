@@ -14,10 +14,6 @@ export const useOnboardingActions = (
 		setIsDismissed(sessionStorage.getItem("onboarding-banner-dismissed") === "true")
 	}, [])
 
-	const continueFromImport = () => {
-		const countryCode = guessedCountry || "US"
-		setCurrentStep({ type: 'country', countryCode })
-	}
 
 	const confirmCountry = (countryCode: string) => {
 		setUserSettings.mutate(
@@ -64,7 +60,6 @@ export const useOnboardingActions = (
 
 	return {
 		isDismissed,
-		continueFromImport,
 		confirmCountry,
 		completeStreaming,
 		continueToQuiz,

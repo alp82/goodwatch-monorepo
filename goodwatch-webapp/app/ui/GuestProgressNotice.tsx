@@ -62,7 +62,7 @@ export function GuestProgressNotice() {
 							Keep rating with a free account
 						</DialogTitle>
 						<p>
-							You've rated 20 titles as a guest. Create an account to rate
+							You've rated 20 titles in this browser. Create an account to rate
 							another title. You can still edit ratings, use Want to See or
 							Skip, and keep exploring.
 						</p>

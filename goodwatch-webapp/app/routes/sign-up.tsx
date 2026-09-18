@@ -1,3 +1,4 @@
+import { discoveryReturnTo } from "~/utils/account-transfer"
 import type { LoaderFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
@@ -39,7 +40,7 @@ export default function SignUpRoute() {
 
 	useEffect(() => {
 		if (user?.id) {
-			navigate(redirectUri || "/")
+			navigate(discoveryReturnTo(redirectUri))
 		}
 	}, [user, navigate, redirectUri])
 

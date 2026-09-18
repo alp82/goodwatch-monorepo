@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { beginAuthentication, discoveryReturnTo, noteCreatedAccount } from "~/utils/account-transfer"
+import { useEffect, useState } from "react"
 import { Link, useNavigate } from "@remix-run/react"
 import { toast } from "react-toastify"
 import { useSupabase } from "~/utils/auth"
@@ -17,6 +18,10 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 	const [loading, setLoading] = useState(false)
 	const [oauthLoading, setOAuthLoading] = useState(false)
 	const [rememberMe, setRememberMe] = useState(false)
+	const [confirmationSent, setConfirmationSent] = useState(false)
+	const [authReturnTo, setAuthReturnTo] = useState(redirectTo || "/taste/quiz")
+	useEffect(() => setAuthReturnTo(discoveryReturnTo(redirectTo)), [redirectTo])
+	const returnTo = () => authReturnTo
 
 	const handleEmailAuth = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -24,15 +29,18 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 
 		setLoading(true)
 		try {
+			beginAuthentication(mode, returnTo())
 			if (mode === "sign-up") {
 				const { error, data } = await supabase.auth.signUp({
 					email,
 					password,
 					options: {
-						emailRedirectTo: `${window.location.origin}${redirectTo || "/"}`,
+						emailRedirectTo: `${window.location.origin}${returnTo()}`,
 					},
 				})
 				if (error) throw error
+				noteCreatedAccount(data.user)
+				setConfirmationSent(!data.session)
 				
 				// Check if email confirmation is required
 				if (data.user && !data.user.identities?.length) {
@@ -40,7 +48,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 				} else if (data.session) {
 					// User is automatically signed in
 					toast.success("Account created successfully!")
-					navigate(redirectTo || "/")
+					navigate(returnTo())
 				} else {
 					toast.success("Check your email to confirm your account!")
 				}
@@ -60,7 +68,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 				// Future implementation could use custom session storage
 				
 				toast.success("Welcome back!")
-				navigate(redirectTo || "/")
+				navigate(returnTo())
 			}
 		} catch (error: any) {
 			console.error("Auth error:", error)
@@ -76,10 +84,11 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 
 		setOAuthLoading(true)
 		try {
+			beginAuthentication("oauth", returnTo())
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider: "google",
 				options: {
-					redirectTo: `${window.location.origin}${redirectTo || "/"}`,
+					redirectTo: `${window.location.origin}${returnTo()}`,
 					queryParams: {
 						access_type: rememberMe ? "offline" : "online",
 						prompt: "consent",
@@ -145,6 +154,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						</div>
 					</div>
 
+					{confirmationSent && <p role="status" className="rounded-lg border border-emerald-700 p-4 text-sm text-white">Check your email to confirm your account. If you open the email on another device, return to this browser and sign in to finish transferring your progress.</p>}
 					<form onSubmit={handleEmailAuth} className="space-y-6">
 						<div>
 							<label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -213,7 +223,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						{mode === "sign-up" ? (
 							<p className="text-gray-400">
 								Already have an account?{" "}
-								<Link to="/sign-in" className="text-amber-500 hover:text-amber-400 font-medium">
+								<Link to={`/sign-in?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
 									Sign in
 								</Link>
 							</p>
@@ -226,7 +236,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 								</p>
 								<p className="text-gray-400 mt-2">
 									Don't have an account?{" "}
-									<Link to="/sign-up" className="text-amber-500 hover:text-amber-400 font-medium">
+									<Link to={`/sign-up?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
 										Sign up
 									</Link>
 								</p>

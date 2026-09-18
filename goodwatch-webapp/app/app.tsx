@@ -1,4 +1,4 @@
-import { AccountTransferPrototype } from "~/ui/onboarding/AccountTransferPrototype"
+import { AccountTransfer } from "~/ui/onboarding/AccountTransfer"
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { Outlet, useLocation } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -7,14 +7,12 @@ import React from "react"
 import Footer from "~/ui/Footer"
 import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
-import { SmartOnboardingBanner } from "~/ui/onboarding/SmartOnboardingBanner"
 import { useUser } from "~/utils/auth"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 
 function App() {
 	const location = useLocation()
 	const { user } = useUser()
-	const transferPreview = import.meta.env.DEV && new URLSearchParams(location.search).get("prototype") === "account-transfer"
 
 	useInvalidateOnVisibility()
 
@@ -22,7 +20,7 @@ function App() {
 		<>
 			<Header />
 			{/* Show smart onboarding banner for logged-in users */}
-			{transferPreview ? <AccountTransferPrototype /> : user && <SmartOnboardingBanner />}
+			{user && <AccountTransfer key={user.id} />}
 			<main className="relative grow mx-auto mt-16 pb-2 w-full text-neutral-300">
 				<GuestProgressNotice />
 				<AnimatePresence mode="wait">

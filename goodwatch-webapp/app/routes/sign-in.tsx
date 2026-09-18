@@ -1,3 +1,4 @@
+import { discoveryReturnTo } from "~/utils/account-transfer"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
@@ -46,7 +47,7 @@ export default function SignInRedirectTo() {
 
 	useEffect(() => {
 		if (user?.id) {
-			navigate(redirectUri || "/");
+			navigate(discoveryReturnTo(redirectUri));
 		}
 	}, [user, navigate, redirectUri]);
 
