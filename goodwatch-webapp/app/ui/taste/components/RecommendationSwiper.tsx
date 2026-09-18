@@ -1,8 +1,14 @@
+import { readExploration, rememberExploration } from "../exploration"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import { useEffect, useState } from "react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { FreeMode, Navigation } from "swiper/modules"
-import { ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
+import {
+	ChevronLeftIcon,
+	ChevronRightIcon,
+	ChevronUpIcon,
+	ChevronDownIcon,
+} from "@heroicons/react/24/outline"
 import type { Recommendation } from "../types"
 
 interface RecommendationSwiperProps {
@@ -10,7 +16,10 @@ interface RecommendationSwiperProps {
 }
 
 function PosterCard({ recommendation }: { recommendation: Recommendation }) {
-	const impressionRef = usePosterImpression(recommendation.media_type, recommendation.tmdb_id)
+	const impressionRef = usePosterImpression(
+		recommendation.media_type,
+		recommendation.tmdb_id,
+	)
 	return (
 		<div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-lg group">
 			<img
@@ -21,10 +30,14 @@ function PosterCard({ recommendation }: { recommendation: Recommendation }) {
 			/>
 			<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 			<div className="absolute bottom-0 left-0 right-0 p-3">
-				<h4 className="text-white font-semibold text-sm truncate">{recommendation.title}</h4>
+				<h4 className="text-white font-semibold text-sm truncate">
+					{recommendation.title}
+				</h4>
 				<div className="flex items-center gap-2 mt-1">
 					{recommendation.release_year && (
-						<span className="text-gray-300 text-xs">{recommendation.release_year}</span>
+						<span className="text-gray-300 text-xs">
+							{recommendation.release_year}
+						</span>
 					)}
 				</div>
 			</div>
@@ -33,10 +46,10 @@ function PosterCard({ recommendation }: { recommendation: Recommendation }) {
 }
 
 function BackdropCard({ recommendation }: { recommendation: Recommendation }) {
-	const imageUrl = recommendation.backdrop_path 
+	const imageUrl = recommendation.backdrop_path
 		? `https://image.tmdb.org/t/p/w780${recommendation.backdrop_path}`
 		: `https://image.tmdb.org/t/p/w500${recommendation.poster_path}`
-	
+
 	return (
 		<div className="relative w-full h-32 rounded-xl overflow-hidden shadow-lg">
 			<img
@@ -46,10 +59,14 @@ function BackdropCard({ recommendation }: { recommendation: Recommendation }) {
 			/>
 			<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
 			<div className="absolute bottom-0 left-0 right-0 p-3">
-				<h4 className="text-white font-semibold text-base truncate">{recommendation.title}</h4>
+				<h4 className="text-white font-semibold text-base truncate">
+					{recommendation.title}
+				</h4>
 				<div className="flex items-center gap-2 mt-0.5">
 					{recommendation.release_year && (
-						<span className="text-gray-300 text-xs">{recommendation.release_year}</span>
+						<span className="text-gray-300 text-xs">
+							{recommendation.release_year}
+						</span>
 					)}
 				</div>
 			</div>
@@ -61,13 +78,17 @@ function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
 	return (
 		<div className="relative px-10">
 			<Swiper
+				initialSlide={readExploration().carouselIndex || 0}
+				onSlideChange={(swiper) =>
+					rememberExploration({ carouselIndex: swiper.activeIndex })
+				}
 				modules={[Navigation, FreeMode]}
 				spaceBetween={16}
 				slidesPerView={4}
 				slidesPerGroup={1}
 				navigation={{
-					prevEl: '.swiper-button-prev-desktop',
-					nextEl: '.swiper-button-next-desktop',
+					prevEl: ".swiper-button-prev-desktop",
+					nextEl: ".swiper-button-next-desktop",
 				}}
 				freeMode={true}
 				grabCursor={true}
@@ -84,7 +105,7 @@ function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
 					</SwiperSlide>
 				))}
 			</Swiper>
-			
+
 			<button
 				type="button"
 				className="swiper-button-prev-desktop absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full shadow-lg transition-colors cursor-pointer disabled:opacity-30"
@@ -105,14 +126,18 @@ function MobileSwiper({ recommendations }: RecommendationSwiperProps) {
 	return (
 		<div className="relative py-8">
 			<Swiper
+				initialSlide={readExploration().carouselIndex || 0}
+				onSlideChange={(swiper) =>
+					rememberExploration({ carouselIndex: swiper.activeIndex })
+				}
 				modules={[Navigation, FreeMode]}
 				direction="vertical"
 				spaceBetween={12}
 				slidesPerView={3}
 				slidesPerGroup={1}
 				navigation={{
-					prevEl: '.swiper-button-prev-mobile',
-					nextEl: '.swiper-button-next-mobile',
+					prevEl: ".swiper-button-prev-mobile",
+					nextEl: ".swiper-button-next-mobile",
 				}}
 				freeMode={true}
 				grabCursor={true}
@@ -124,7 +149,7 @@ function MobileSwiper({ recommendations }: RecommendationSwiperProps) {
 					</SwiperSlide>
 				))}
 			</Swiper>
-			
+
 			<button
 				type="button"
 				className="swiper-button-prev-mobile absolute left-1/2 -translate-x-1/2 top-0 z-10 p-2 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full shadow-lg transition-colors cursor-pointer disabled:opacity-30"
@@ -141,7 +166,9 @@ function MobileSwiper({ recommendations }: RecommendationSwiperProps) {
 	)
 }
 
-export default function RecommendationSwiper({ recommendations }: RecommendationSwiperProps) {
+export default function RecommendationSwiper({
+	recommendations,
+}: RecommendationSwiperProps) {
 	const [isMobile, setIsMobile] = useState(false)
 
 	useEffect(() => {
@@ -159,7 +186,9 @@ export default function RecommendationSwiper({ recommendations }: Recommendation
 		)
 	}
 
-	return isMobile 
-		? <MobileSwiper recommendations={recommendations} />
-		: <DesktopSwiper recommendations={recommendations} />
+	return isMobile ? (
+		<MobileSwiper recommendations={recommendations} />
+	) : (
+		<DesktopSwiper recommendations={recommendations} />
+	)
 }

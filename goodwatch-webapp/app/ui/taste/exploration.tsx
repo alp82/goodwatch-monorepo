@@ -13,6 +13,7 @@ export const defaultExploreFilters: ExploreFilters = {
 	order: "queue",
 }
 export type TasteExploration = {
+	carouselIndex?: number
 	titles?: ScoringMedia[]
 	ratingQueue?: ScoringMedia[]
 	selectedMedia?: ScoringMedia | null
@@ -24,7 +25,11 @@ const storageKey = "taste_exploration"
 export function readExploration(): TasteExploration {
 	if (typeof window === "undefined") return {}
 	try {
-		const value = JSON.parse(sessionStorage.getItem(storageKey) || "{}")
+		const value = JSON.parse(
+			localStorage.getItem(storageKey) ||
+				sessionStorage.getItem(storageKey) ||
+				"{}",
+		)
 		return value && typeof value === "object" ? value : {}
 	} catch {
 		return {}
@@ -32,7 +37,7 @@ export function readExploration(): TasteExploration {
 }
 export function rememberExploration(update: Partial<TasteExploration>) {
 	try {
-		sessionStorage.setItem(
+		localStorage.setItem(
 			storageKey,
 			JSON.stringify({ ...readExploration(), ...update }),
 		)

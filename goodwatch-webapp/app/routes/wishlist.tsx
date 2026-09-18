@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -11,7 +12,6 @@ import { seededRandomSin } from "~/utils/random"
 import { useUserData } from "~/routes/api.user-data"
 import type { DiscoverResult } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { TvCard } from "~/ui/TvCard"
 import WishlistFilter, {
 	type FilterByStreaming,
 	type SortBy,
@@ -23,8 +23,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "Wishlist | GoodWatch",
-		description:
-			"Your personal watchlist of movies and TV shows to watch next",
+		description: "Your personal watchlist of movies and TV shows to watch next",
 		url: "https://goodwatch.app/wishlist",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Your GoodWatch Wishlist",
@@ -59,41 +58,50 @@ export const loader: LoaderFunction = async ({
 
 export default function Wishlist() {
 	const { currentParams } = useLoaderData<LoaderData>()
-	const { data: userData, isLoading } = useUserData()
+	const { data: userData } = useUserData()
 	const { sortBy, filterByStreaming } = currentParams
-
-	const handleFilterChange = (filters: any) => {
-		console.log({ filters })
-	}
-
-	// Convert normalized wishlist data to array format for display
-	const sortedWishlist = userData
-		? Object.entries(userData.wishlist).map(([key, value]) => ({
-				tmdb_id: parseInt(key.split("-")[1]),
-				onWishListSince: value.updatedAt,
-		  }))
-		: []
-
-	for (const result of sortedWishlist) {
-		const streamingLinks = result.streaming_links || []
-		const includedProviders: number[] = []
-		result.streaming_links = streamingLinks.reduce((links, link) => {
-			if (
-				includedProviders.includes(link.provider_id) ||
-				(filterByStreaming === "free" &&
-					!["free", "flatrate"].includes(link.stream_type)) ||
-				(filterByStreaming === "mine" &&
-					!["free", "flatrate"].includes(link.stream_type))
-			) {
-				return links
-			}
-
-			includedProviders.push(link.provider_id)
-			links.push(link)
-			return links
-		}, [] as StreamingLink[])
-	}
-	const wishlistToShow = sortedWishlist.filter((item) => true)
+	const keys = Object.keys(userData?.wishlist || {}).sort()
+	const {
+		data: titles = [],
+		isLoading,
+		isError,
+		refetch,
+	} = useQuery<DiscoverResult[]>({
+		queryKey: ["wishlist-titles", keys],
+		enabled: keys.length > 0,
+		queryFn: async () => {
+			const chunks = Array.from(
+				{ length: Math.ceil(keys.length / 100) },
+				(_, i) => keys.slice(i * 100, i * 100 + 100),
+			)
+			const results = await Promise.all(
+				chunks.map(async (chunk) => {
+					const response = await fetch(
+						`/api/wishlist-titles?keys=${encodeURIComponent(chunk.join(","))}`,
+					)
+					if (!response.ok) throw new Error("Could not load Wishlist titles")
+					return (await response.json()).titles as DiscoverResult[]
+				}),
+			)
+			return results.flat()
+		},
+	})
+	const handleFilterChange = () => {}
+	const wishlistToShow = [...titles].sort((a, b) => {
+		const date = (item: DiscoverResult) =>
+			new Date(
+				userData?.wishlist[`${item.media_type}-${item.tmdb_id}`]?.updatedAt ||
+					0,
+			).getTime()
+		if (sortBy === "highest_score")
+			return (
+				(b.goodwatch_overall_score_normalized_percent || 0) -
+				(a.goodwatch_overall_score_normalized_percent || 0)
+			)
+		return sortBy === "least_recently_added"
+			? date(a) - date(b)
+			: date(b) - date(a)
+	})
 
 	const navigation = useNavigation()
 
@@ -102,6 +110,15 @@ export default function Wishlist() {
 			<div className="mt-6 text-lg md:text-xl lg:text-2xl font-semibold">
 				My Wishlist
 			</div>
+
+			{isError && (
+				<p role="alert">
+					Could not load your Wishlist.{" "}
+					<button type="button" className="underline" onClick={() => refetch()}>
+						Try again
+					</button>
+				</p>
+			)}
 
 			<WishlistFilter
 				sortBy={sortBy}
@@ -120,6 +137,7 @@ export default function Wishlist() {
 					)}
 					{!wishlistToShow.length &&
 					!isLoading &&
+					!isError &&
 					navigation.state === "idle" ? (
 						<div className="my-6 text-lg italic">
 							You don't have any titles in your Wishlist.
@@ -135,7 +153,7 @@ export default function Wishlist() {
 						navigation.state === "idle" &&
 						wishlistToShow.map((result, index) => {
 							return (
-								<div key={result.tmdb_id}>
+								<div key={`${result.media_type}-${result.tmdb_id}`}>
 									<motion.div
 										key={currentParams.sortBy}
 										initial={{
@@ -156,10 +174,10 @@ export default function Wishlist() {
 												prefetch={index < 6}
 											/>
 										)}
-										{result.media_type === "tv" && (
+										{result.media_type === "show" && (
 											<MovieTvCard
 												details={result as DiscoverResult}
-												mediaType="tv"
+												mediaType="show"
 												prefetch={index < 6}
 											/>
 										)}

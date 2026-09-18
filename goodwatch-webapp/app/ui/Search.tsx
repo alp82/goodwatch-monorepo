@@ -15,7 +15,19 @@ export interface SearchAutocompleteItem extends AutocompleteItem {
 
 export default function Search() {
 	// TODO debounce
-	const fetcher = useFetcher()
+	const fetcher = useFetcher<{ searchResults: SearchResult[] }>()
+	const [query, setQuery] = React.useState("")
+	React.useEffect(() => {
+		try {
+			const saved = localStorage.getItem("goodwatch_search") || ""
+			setQuery(saved)
+			if (saved)
+				fetcher.submit(
+					{ query: saved },
+					{ method: "get", action: "/api/search" },
+				)
+		} catch {}
+	}, [])
 	const autocompleteItems: SearchAutocompleteItem[] = (
 		fetcher.data?.searchResults || []
 	).map((searchResult: SearchResult) => {
@@ -23,7 +35,7 @@ export default function Search() {
 			? `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${searchResult.poster_path}`
 			: placeholder
 		return {
-			key: searchResult.id,
+			key: String(searchResult.id),
 			mediaType: searchResult.media_type,
 			label: searchResult.title || searchResult.name,
 			year: (
@@ -95,7 +107,14 @@ export default function Search() {
 						placeholder="Search..."
 						autoComplete="off"
 						className="w-full bg-transparent border-0 focus:ring-transparent group-focus-within:text-lg"
-						onChange={(event) => fetcher.submit(event.target.form)}
+						value={query}
+						onChange={(event) => {
+							setQuery(event.target.value)
+							try {
+								localStorage.setItem("goodwatch_search", event.target.value)
+							} catch {}
+							fetcher.submit(event.target.form)
+						}}
 						onClick={() => setIsFocused(true)}
 						onFocus={() => setIsFocused(true)}
 					/>
@@ -104,7 +123,7 @@ export default function Search() {
 					<div className="absolute left-0 top-full mt-1 w-full bg-slate-950 text-white rounded-md shadow-lg">
 						{autocompleteItems.map((item, index) => (
 							<Link
-								key={item.key}
+								key={`${item.mediaType}-${item.key}`}
 								to={`/${item.mediaType}/${item.key}-${titleToDashed(item.label)}`}
 								prefetch={index < 5 ? "render" : "intent"}
 								onClick={() => setIsFocused(false)}

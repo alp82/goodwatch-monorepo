@@ -1,3 +1,4 @@
+import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { getUserData } from "~/server/userData.server"
@@ -312,6 +313,7 @@ function Root() {
 					<LocaleContext.Provider value={{ locale }}>
 						<AuthProvider supabase={supabase} initialUser={user}>
 							<HydrationBoundary state={dehydratedState}>
+								<DiscoveryContinuity />
 								<App />
 								{/* <CookieConsent /> */}
 								<ToastContainer />

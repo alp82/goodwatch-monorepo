@@ -1,16 +1,27 @@
-import { useSearchParams } from "@remix-run/react"
-import { TasteExplorationContext, readExploration, rememberExploration, uniqueTitles } from "./exploration"
+import {
+	canGuestRate,
+	guestLimitEvent,
+	readGuestInteractions,
+} from "~/utils/guest-progress"
+import {
+	TasteExplorationContext,
+	readExploration,
+	rememberExploration,
+	uniqueTitles,
+} from "./exploration"
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import type { Score } from "~/server/scores.server"
 import type { ScoringMedia, LastRatedItem } from "~/ui/scoring/types"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
-import { useGuestMovieRecommendations, useGuestShowRecommendations } from "~/routes/api.guest-recommendations"
+import {
+	useGuestMovieRecommendations,
+	useGuestShowRecommendations,
+} from "~/routes/api.guest-recommendations"
 import { useUserRecommendations } from "~/routes/api.user-recommendations"
 import { useFingerprintPreview } from "~/routes/api.fingerprint-preview"
-import SignInPrompt from "./components/SignInPrompt"
 import FeatureTooltip from "./components/modals/FeatureTooltip"
 import type { GuestRating, Recommendation } from "./types"
-import { GUEST_LIMITS, isGuestLimitReached, FEATURES, type Feature } from "./features"
+import { GUEST_LIMITS, FEATURES, type Feature } from "./features"
 import TasteRating from "./screens/TasteRating"
 import { useTasteScoring } from "./hooks/useTasteScoring"
 import { useFeatureActivation } from "./hooks/useFeatureActivation"
@@ -19,7 +30,6 @@ import { useGuestScoring } from "./hooks/useGuestScoring"
 import { useTitleQueue } from "./hooks/useTitleQueue"
 import { useRecentActions } from "./hooks/useRecentActions"
 import { useUserData } from "~/routes/api.user-data"
-
 
 const allFeaturesDescending = [...FEATURES].reverse()
 
@@ -38,31 +48,52 @@ export default function TasteQuiz({
 	isAuthenticated = false,
 	userId,
 }: TasteQuizProps) {
-	const [params] = useSearchParams()
-	const resume = params.get("resume") === "1"
-	const { interactions, ratingsCount, addScore, addSkip, addPlanToWatch, clearInteractions } = useTasteScoring({ isAuthenticated })
-	const { activatedFeatures, activateFeature, clearFeatures } = useFeatureActivation({ isAuthenticated, ratingsCount })
+	const resume = true
+	const {
+		interactions,
+		ratingsCount,
+		addScore,
+		addSkip,
+		addPlanToWatch,
+		clearInteractions,
+	} = useTasteScoring({ isAuthenticated })
+	const { activatedFeatures, activateFeature, clearFeatures } =
+		useFeatureActivation({ isAuthenticated, ratingsCount })
 	const modals = useFeatureModals()
 	useUserData()
-	
-	const { lastRatedItems: dbLastRatedItems } = useRecentActions({ 
-		limit: GUEST_LIMITS.FIRST_UNLOCK, 
-		enabled: isAuthenticated 
+
+	const { lastRatedItems: dbLastRatedItems } = useRecentActions({
+		limit: GUEST_LIMITS.FIRST_UNLOCK,
+		enabled: isAuthenticated,
 	})
-	
+
 	// Track selected media from recommendations/last rated
 	const [selectedMedia, setSelectedMedia] = useState<ScoringMedia | null>(null)
-	useEffect(() => { if (resume) setSelectedMedia(readExploration().selectedMedia || null) }, [resume])
-	
+	useEffect(() => {
+		if (resume) setSelectedMedia(readExploration().selectedMedia || null)
+	}, [resume])
+
 	// Track when a feature threshold is crossed (for celebration screen)
-	const [justUnlockedFeature, setJustUnlockedFeature] = useState<Feature | null>(null)
-	const previousRatingsCount = useRef(ratingsCount)
-	
+	const [justUnlockedFeature, setJustUnlockedFeature] =
+		useState<Feature | null>(null)
+	const previousRatingsCount = useRef(
+		isAuthenticated
+			? ratingsCount
+			: readGuestInteractions().filter((i) => i.type === "score").length,
+	)
+
 	// Detect threshold crossings
 	useEffect(() => {
+		// Hydration of persisted ratings is not a newly earned unlock.
+		if (
+			!isAuthenticated &&
+			ratingsCount !==
+				readGuestInteractions().filter((i) => i.type === "score").length
+		)
+			return
 		const prev = previousRatingsCount.current
 		const current = ratingsCount
-		
+
 		// Check if we crossed any feature threshold
 		for (const feature of allFeaturesDescending) {
 			if (prev < feature.unlockAt && current >= feature.unlockAt) {
@@ -70,22 +101,19 @@ export default function TasteQuiz({
 				break
 			}
 		}
-		
+
 		previousRatingsCount.current = current
 	}, [ratingsCount])
-	
+
 	const handleDismissCelebration = useCallback(() => {
 		setJustUnlockedFeature(null)
 	}, [])
 
-	// Check if guest limit is reached
-	const guestLimitReached = !isAuthenticated && isGuestLimitReached(ratingsCount)
-
 	// For guests, derive scored items from interactions (for recommendations)
 	const guestScoredItems = useMemo(() => {
 		return interactions
-			.filter(i => i.type === 'score' && i.score)
-			.map(i => ({
+			.filter((i) => i.type === "score" && i.score)
+			.map((i) => ({
 				tmdb_id: i.tmdb_id,
 				media_type: i.media_type,
 				score: i.score!,
@@ -95,13 +123,13 @@ export default function TasteQuiz({
 	// For guests, derive items to exclude from recommendations (skips + plan-to-watch)
 	const guestExcludeIds = useMemo(() => {
 		return interactions
-			.filter(i => i.type === 'skip' || i.type === 'plan')
-			.map(i => ({
+			.filter((i) => i.type === "skip" || i.type === "plan")
+			.map((i) => ({
 				tmdb_id: i.tmdb_id,
 				media_type: i.media_type,
 			}))
 	}, [interactions])
-	
+
 	// Create fetch function for the queue
 	const fetchMoreTitles = useCallback(async () => {
 		return fetchSmartTitles({ count: 20 })
@@ -119,6 +147,14 @@ export default function TasteQuiz({
 	})
 
 	// Fetch recommendations when first unlock threshold is reached (5 ratings)
+	useEffect(() => {
+		if (!titleQueue.current) return
+		rememberExploration({
+			ratingQueue: titleQueue.remainingTitles,
+			selectedMedia,
+		})
+	}, [titleQueue.current, selectedMedia])
+
 	const hasRecommendationsUnlocked = ratingsCount >= GUEST_LIMITS.FIRST_UNLOCK
 
 	// For authenticated users, use user recommendations API
@@ -147,8 +183,8 @@ export default function TasteQuiz({
 	const hasFingerprintPreviewUnlocked = ratingsCount >= 15
 	const guestLikedItems = useMemo(() => {
 		return interactions
-			.filter(i => i.type === 'score' && i.score && i.score >= 6)
-			.map(i => ({
+			.filter((i) => i.type === "score" && i.score && i.score >= 6)
+			.map((i) => ({
 				tmdb_id: i.tmdb_id,
 				media_type: i.media_type,
 			}))
@@ -159,13 +195,16 @@ export default function TasteQuiz({
 		likedItems: !isAuthenticated ? guestLikedItems : undefined,
 		scoredItems: !isAuthenticated ? guestScoredItems : undefined,
 		excludeIds: !isAuthenticated ? guestExcludeIds : undefined,
-		enabled: hasFingerprintPreviewUnlocked && (
-			isAuthenticated ? true : guestLikedItems.length >= 3
-		),
+		enabled:
+			hasFingerprintPreviewUnlocked &&
+			(isAuthenticated ? true : guestLikedItems.length >= 3),
 	})
 
-
-	const { handleScore: scoreHandler, handleSkip: skipHandler, handlePlanToWatch: planToWatchHandler } = useGuestScoring({
+	const {
+		handleScore: scoreHandler,
+		handleSkip: skipHandler,
+		handlePlanToWatch: planToWatchHandler,
+	} = useGuestScoring({
 		interactions,
 		ratingsCount,
 		activatedFeatures,
@@ -179,22 +218,24 @@ export default function TasteQuiz({
 
 	// Handle selection from last rated or recommendations
 	const handleSelectLastRated = (media: ScoringMedia) => {
-		setSelectedMedia(prev => 
-			prev?.tmdb_id === media.tmdb_id && prev?.media_type === media.media_type 
-				? null 
-				: media
+		setSelectedMedia((prev) =>
+			prev?.tmdb_id === media.tmdb_id && prev?.media_type === media.media_type
+				? null
+				: media,
 		)
 	}
 
-
-	const [skippedSignUpPrompt, setSkippedSignUpPrompt] = useState(false)
-	const showSignInPrompt = guestLimitReached && !skippedSignUpPrompt
-
 	const handleScore = (score: Score) => {
-		if (guestLimitReached) {
-			setSkippedSignUpPrompt(false)
+		const target = selectedMedia || titleQueue.current
+		if (
+			!isAuthenticated &&
+			target &&
+			!canGuestRate(target.media_type, target.tmdb_id)
+		) {
+			window.dispatchEvent(new Event(guestLimitEvent))
 			return
 		}
+
 		// Use selected media if available, otherwise use current from queue
 		const currentMedia = selectedMedia || titleQueue.current
 		if (currentMedia) {
@@ -207,10 +248,6 @@ export default function TasteQuiz({
 	}
 
 	const handleSkip = () => {
-		if (guestLimitReached) {
-			setSkippedSignUpPrompt(false)
-			return
-		}
 		// Use selected media if available, otherwise use current from queue
 		const currentMedia = selectedMedia || titleQueue.current
 		if (currentMedia) {
@@ -223,10 +260,6 @@ export default function TasteQuiz({
 	}
 
 	const handlePlanToWatch = () => {
-		if (guestLimitReached) {
-			setSkippedSignUpPrompt(false)
-			return
-		}
 		// Use selected media if available, otherwise use current from queue
 		const currentMedia = selectedMedia || titleQueue.current
 		if (currentMedia) {
@@ -245,13 +278,12 @@ export default function TasteQuiz({
 		setSelectedMedia(null)
 	}
 
-
 	const generateRecommendations = (): Recommendation[] => {
 		const recommendations: Recommendation[] = []
 
 		// For authenticated users, use user recommendations
 		if (isAuthenticated && userRecommendations.data?.recommendations) {
-			const userRecs = userRecommendations.data.recommendations.map(rec => ({
+			const userRecs = userRecommendations.data.recommendations.map((rec) => ({
 				tmdb_id: rec.tmdb_id,
 				title: rec.title,
 				poster_path: rec.poster_path,
@@ -264,27 +296,31 @@ export default function TasteQuiz({
 			// For guests, use guest recommendations
 			// Add movie recommendations if available
 			if (movieRecommendations.data?.recommendations) {
-				const movieRecs = movieRecommendations.data.recommendations.map(rec => ({
-					tmdb_id: rec.tmdb_id,
-					title: rec.title,
-					poster_path: rec.poster_path,
-					media_type: "movie" as const,
-					release_year: rec.release_year,
-					matchPercentage: rec.match_percentage,
-				}))
+				const movieRecs = movieRecommendations.data.recommendations.map(
+					(rec) => ({
+						tmdb_id: rec.tmdb_id,
+						title: rec.title,
+						poster_path: rec.poster_path,
+						media_type: "movie" as const,
+						release_year: rec.release_year,
+						matchPercentage: rec.match_percentage,
+					}),
+				)
 				recommendations.push(...movieRecs)
 			}
 
 			// Add show recommendations if available
 			if (showRecommendations.data?.recommendations) {
-				const showRecs = showRecommendations.data.recommendations.map(rec => ({
-					tmdb_id: rec.tmdb_id,
-					title: rec.title,
-					poster_path: rec.poster_path,
-					media_type: "show" as const,
-					release_year: rec.release_year,
-					matchPercentage: rec.match_percentage,
-				}))
+				const showRecs = showRecommendations.data.recommendations.map(
+					(rec) => ({
+						tmdb_id: rec.tmdb_id,
+						title: rec.title,
+						poster_path: rec.poster_path,
+						media_type: "show" as const,
+						release_year: rec.release_year,
+						matchPercentage: rec.match_percentage,
+					}),
+				)
 				recommendations.push(...showRecs)
 			}
 		}
@@ -303,11 +339,10 @@ export default function TasteQuiz({
 	// Determine current media: selected media takes priority over queue
 	const currentMedia = selectedMedia || titleQueue.current
 	const nextMedia = titleQueue.next
-	
 
 	// Track media info for last rated items (for guests)
 	const mediaCache = useRef(new Map<string, ScoringMedia>())
-	
+
 	// Cache current media for last rated display
 	if (titleQueue.current) {
 		const key = `${titleQueue.current.media_type}-${titleQueue.current.tmdb_id}`
@@ -322,13 +357,25 @@ export default function TasteQuiz({
 		return interactions
 			.slice(-GUEST_LIMITS.FIRST_UNLOCK)
 			.reverse()
-			.map(interaction => {
+			.map((interaction) => {
 				const key = `${interaction.media_type}-${interaction.tmdb_id}`
-				const media = mediaCache.current.get(key) ||
-					availableTitles.find(t => t.tmdb_id === interaction.tmdb_id && t.media_type === interaction.media_type)
-				
+				const media =
+					mediaCache.current.get(key) ||
+					availableTitles.find(
+						(t) =>
+							t.tmdb_id === interaction.tmdb_id &&
+							t.media_type === interaction.media_type,
+					)
+
 				return {
-					media: media || { tmdb_id: interaction.tmdb_id, media_type: interaction.media_type, title: '', poster_path: '' } as ScoringMedia,
+					media:
+						media ||
+						({
+							tmdb_id: interaction.tmdb_id,
+							media_type: interaction.media_type,
+							title: "",
+							poster_path: "",
+						} as ScoringMedia),
 					score: interaction.score || null,
 					actionType: interaction.type,
 					timestamp: interaction.timestamp,
@@ -337,28 +384,9 @@ export default function TasteQuiz({
 	}, [isAuthenticated, interactions, availableTitles])
 
 	// Use DB data for authenticated users, local interactions for guests
-	const lastRatedItems = isAuthenticated ? dbLastRatedItems : guestLastRatedItems
-
-
-	// Show sign-in prompt
-	if (showSignInPrompt) {
-		return (
-			<SignInPrompt
-				onSignUp={() => {
-					setSkippedSignUpPrompt(true)
-					onSignUp?.()
-				}}
-				onCancel={() => setSkippedSignUpPrompt(true)}
-				onStartOver={handleStartOver}
-				ratingsCount={ratingsCount}
-				onFeatureInfoTap={modals.openFeatureInfo}
-				recommendations={generateRecommendations()}
-				isGuest={!isAuthenticated}
-			/>
-		)
-	}
-
-	// Remove QuizReveal - guest limit is now handled by SignInPrompt overlay
+	const lastRatedItems = isAuthenticated
+		? dbLastRatedItems
+		: guestLastRatedItems
 
 	// Show loading state when no media available
 	if (!currentMedia && titleQueue.isLoading) {
@@ -366,7 +394,9 @@ export default function TasteQuiz({
 			<div className="flex items-center justify-center min-h-screen bg-gray-900">
 				<div className="text-center">
 					<div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-					<p className="text-gray-400 text-lg">Finding movies and shows for you...</p>
+					<p className="text-gray-400 text-lg">
+						Finding movies and shows for you...
+					</p>
 				</div>
 			</div>
 		)
@@ -376,16 +406,25 @@ export default function TasteQuiz({
 		const mediaWithRecommendation = {
 			...currentMedia,
 			// Use the isRecommended flag from backend if available, otherwise false
-			isRecommended: hasRecommendationsUnlocked && (currentMedia.isRecommended || false),
+			isRecommended:
+				hasRecommendationsUnlocked && (currentMedia.isRecommended || false),
 		}
-		
+
 		return (
-			<TasteExplorationContext.Provider value={() => rememberExploration({
-				titles: uniqueTitles([currentMedia, ...generateRecommendations(), ...availableTitles]),
-				ratingQueue: titleQueue.remainingTitles,
-				selectedMedia,
-				scrollY: window.scrollY,
-			})}>
+			<TasteExplorationContext.Provider
+				value={() =>
+					rememberExploration({
+						titles: uniqueTitles([
+							currentMedia,
+							...generateRecommendations(),
+							...availableTitles,
+						]),
+						ratingQueue: titleQueue.remainingTitles,
+						selectedMedia,
+						scrollY: window.scrollY,
+					})
+				}
+			>
 				<TasteRating
 					media={mediaWithRecommendation}
 					nextMedia={nextMedia}
@@ -416,7 +455,6 @@ export default function TasteQuiz({
 			</TasteExplorationContext.Provider>
 		)
 	}
-
 
 	return null
 }
