@@ -6,6 +6,7 @@ import { useUser } from "~/utils/auth";
 import {
 	attachTransfer,
 	completeTransfer,
+	completeEmptyTransfer,
 	pendingTransfer,
 	saveTransfer,
 	transferEvent,
@@ -56,7 +57,7 @@ export function AccountTransfer() {
 	}, [user?.id]);
 	const review = useQuery<Review>({
 		queryKey: ["account-transfer-review", user?.id, pending?.id],
-		enabled: !!pending && !pending.changes,
+		enabled: !!pending && !pending.changes && !pending.confirmed?.length,
 		queryFn: async () => {
 			const response = await fetch("/api/import-guest-interactions");
 			if (!response.ok)
@@ -68,7 +69,7 @@ export function AccountTransfer() {
 	});
 	const titles = useQuery<Record<string, string>>({
 		queryKey: ["account-transfer-titles", pending?.id],
-		enabled: !!pending && !pending.changes,
+		enabled: !!pending && !pending.changes && !pending.confirmed?.length,
 		queryFn: async () => {
 			const items = pending!.snapshot.interactions;
 			const result: Record<string, string> = {};
@@ -93,6 +94,7 @@ export function AccountTransfer() {
 		if (
 			!pending ||
 			pending.changes ||
+			pending.confirmed?.length ||
 			!review.data ||
 			!titles.data ||
 			!providersReady ||
@@ -147,7 +149,13 @@ export function AccountTransfer() {
 				review.data.settings[
 					kind === "country" ? "country_default" : "streaming_providers_default"
 				] ?? null;
-			if (value === null || value === before) continue;
+			const normalizedBefore =
+				kind === "services"
+					? [...new Set((before || "").split(",").filter(Boolean))]
+							.sort((a, b) => Number(a) - Number(b))
+							.join(",")
+					: before;
+			if (value === null || value === normalizedBefore) continue;
 			changes.push({
 				id: kind,
 				kind,
@@ -220,7 +228,7 @@ export function AccountTransfer() {
 	useEffect(() => {
 		if (
 			pending?.automatic &&
-			pending.changes &&
+			pending.changes?.length &&
 			!pending.confirmed &&
 			autoStarted.current !== pending.id
 		) {
@@ -228,6 +236,15 @@ export function AccountTransfer() {
 			void finish();
 		}
 	}, [pending]);
+	useEffect(() => {
+		if (pending?.changes?.length === 0 && !pending.confirmed?.length && !busy) {
+			try {
+				completeEmptyTransfer(pending);
+			} catch {
+				setError("Browser cleanup could not finish. Reload to retry.");
+			}
+		}
+	}, [pending, busy]);
 	if (!ready) return null;
 	if (!pending)
 		return error ? (
@@ -241,9 +258,30 @@ export function AccountTransfer() {
 		) : (
 			<SmartOnboardingBanner />
 		);
+	// Do not open an empty dialog while differences load, or after a no-op comparison.
+	// Failed/in-progress confirmed transfers retain their recovery controls.
+	if (!pending.changes?.length && !pending.confirmed?.length) {
+		const failure = error || review.error?.message || titles.error?.message;
+		return failure ? (
+			<div role="alert" className="mt-16 p-4 text-amber-200">
+				<p>{failure}</p>
+				<button
+					type="button"
+					className="underline py-2"
+					onClick={() => {
+						void review.refetch();
+						void titles.refetch();
+					}}
+				>
+					Retry loading progress
+				</button>
+			</div>
+		) : null;
+	}
 	const locked = !!pending.confirmed || busy;
-	const changes = pending.changes || [];
-	const selected = pending.selected || [];
+	const changes = pending.confirmed || pending.changes || [];
+	const selected =
+		pending.confirmed?.map((change) => change.id) || pending.selected || [];
 	const changeSelection = (ids: string[]) => {
 		try {
 			saveTransfer({ ...pending, selected: ids });
