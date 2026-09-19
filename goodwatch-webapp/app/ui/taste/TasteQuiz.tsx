@@ -1,3 +1,4 @@
+import { useInterestDiscovery } from "~/ui/discovery/useInterestDiscovery"
 import {
 	canGuestRate,
 	guestLimitEvent,
@@ -13,11 +14,6 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import type { Score } from "~/server/scores.server"
 import type { ScoringMedia, LastRatedItem } from "~/ui/scoring/types"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
-import {
-	useGuestMovieRecommendations,
-	useGuestShowRecommendations,
-} from "~/routes/api.guest-recommendations"
-import { useUserRecommendations } from "~/routes/api.user-recommendations"
 import { useFingerprintPreview } from "~/routes/api.fingerprint-preview"
 import FeatureTooltip from "./components/modals/FeatureTooltip"
 import type { GuestRating, Recommendation } from "./types"
@@ -155,29 +151,8 @@ export default function TasteQuiz({
 		})
 	}, [titleQueue.current, selectedMedia])
 
-	const hasRecommendationsUnlocked = ratingsCount >= GUEST_LIMITS.FIRST_UNLOCK
-
-	// For authenticated users, use user recommendations API
-	const userRecommendations = useUserRecommendations({
-		mediaType: "all",
-		limit: 20,
-		enabled: isAuthenticated && hasRecommendationsUnlocked,
-	})
-
-	// For guests, use guest recommendations APIs with exclusions for skips/plan-to-watch
-	const movieRecommendations = useGuestMovieRecommendations({
-		scoredItems: guestScoredItems,
-		excludeIds: guestExcludeIds,
-		limit: 10,
-		enabled: !isAuthenticated && hasRecommendationsUnlocked,
-	})
-
-	const showRecommendations = useGuestShowRecommendations({
-		scoredItems: guestScoredItems,
-		excludeIds: guestExcludeIds,
-		limit: 10,
-		enabled: !isAuthenticated && hasRecommendationsUnlocked,
-	})
+	const hasRecommendationsUnlocked = true
+	const discovery = useInterestDiscovery()
 
 	// Fingerprint preview unlocks at 15 ratings
 	const hasFingerprintPreviewUnlocked = ratingsCount >= 15
@@ -278,63 +253,7 @@ export default function TasteQuiz({
 		setSelectedMedia(null)
 	}
 
-	const generateRecommendations = (): Recommendation[] => {
-		const recommendations: Recommendation[] = []
-
-		// For authenticated users, use user recommendations
-		if (isAuthenticated && userRecommendations.data?.recommendations) {
-			const userRecs = userRecommendations.data.recommendations.map((rec) => ({
-				tmdb_id: rec.tmdb_id,
-				title: rec.title,
-				poster_path: rec.poster_path,
-				media_type: rec.media_type,
-				release_year: rec.release_year,
-				matchPercentage: rec.match_percentage,
-			}))
-			recommendations.push(...userRecs)
-		} else {
-			// For guests, use guest recommendations
-			// Add movie recommendations if available
-			if (movieRecommendations.data?.recommendations) {
-				const movieRecs = movieRecommendations.data.recommendations.map(
-					(rec) => ({
-						tmdb_id: rec.tmdb_id,
-						title: rec.title,
-						poster_path: rec.poster_path,
-						media_type: "movie" as const,
-						release_year: rec.release_year,
-						matchPercentage: rec.match_percentage,
-					}),
-				)
-				recommendations.push(...movieRecs)
-			}
-
-			// Add show recommendations if available
-			if (showRecommendations.data?.recommendations) {
-				const showRecs = showRecommendations.data.recommendations.map(
-					(rec) => ({
-						tmdb_id: rec.tmdb_id,
-						title: rec.title,
-						poster_path: rec.poster_path,
-						media_type: "show" as const,
-						release_year: rec.release_year,
-						matchPercentage: rec.match_percentage,
-					}),
-				)
-				recommendations.push(...showRecs)
-			}
-		}
-
-		// If no recommendations yet (not enough data), return empty
-		if (recommendations.length === 0) {
-			return []
-		}
-
-		// Sort by match percentage and return top results
-		return recommendations
-			.sort((a, b) => b.matchPercentage - a.matchPercentage)
-			.slice(0, 20)
-	}
+	const generateRecommendations = () => discovery.data?.recommendations || []
 
 	// Determine current media: selected media takes priority over queue
 	const currentMedia = selectedMedia || titleQueue.current

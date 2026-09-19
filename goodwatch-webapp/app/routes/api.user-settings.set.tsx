@@ -36,6 +36,7 @@ export const useSetUserSettings = () => {
 	const queryClient = useQueryClient()
 
 	return useMutation({
+		scope: { id: "user-settings" },
 		mutationFn: async ({
 			settings,
 			options,
@@ -49,12 +50,13 @@ export const useSetUserSettings = () => {
 				options,
 			}
 
-			return await (
-				await fetch(url, {
-					method: "POST",
-					body: JSON.stringify(params),
-				})
-			).json()
+			const response = await fetch(url, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(params),
+			})
+			if (!response.ok) throw new Error("Could not save preferences")
+			return response.json()
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({

@@ -1,3 +1,4 @@
+import WatchableList from "~/ui/discovery/WatchableList"
 import { useQuery } from "@tanstack/react-query"
 import {
 	type LoaderFunction,
@@ -126,67 +127,71 @@ export default function Wishlist() {
 				onChange={handleFilterChange}
 			/>
 
-			<div
-				className={
-					"relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-				}
-			>
-				<AnimatePresence initial={false}>
-					{(navigation.state === "loading" || isLoading) && (
-						<span className="absolute top-2 left-6 animate-ping inline-flex h-8 w-8 rounded-full bg-sky-300 opacity-75" />
-					)}
-					{!wishlistToShow.length &&
-					!isLoading &&
-					!isError &&
-					navigation.state === "idle" ? (
-						<div className="my-6 text-lg italic">
-							You don't have any titles in your Wishlist.
-						</div>
-						// ) : !wishlistToShow.length && navigation.state === "idle" ? (
-						// 	<div className="my-6 text-lg italic">
-						// 		No matches with your current filter settings.
-						// 	</div>
-					) : (
-						<></>
-					)}
-					{wishlistToShow.length > 0 &&
-						navigation.state === "idle" &&
-						wishlistToShow.map((result, index) => {
-							return (
-								<div key={`${result.media_type}-${result.tmdb_id}`}>
-									<motion.div
-										key={currentParams.sortBy}
-										initial={{
-											y: `-${Math.floor(seededRandomSin(index + 1) * 10) + 5}%`,
-											opacity: 0,
-										}}
-										animate={{ y: "0", opacity: 1 }}
-										exit={{
-											y: `${Math.floor(seededRandomSin(index + 1) * 10) + 5}%`,
-											opacity: 0,
-										}}
-										transition={{ duration: 0.5, type: "tween" }}
-									>
-										{result.media_type === "movie" && (
-											<MovieTvCard
-												details={result as DiscoverResult}
-												mediaType="movie"
-												prefetch={index < 6}
-											/>
-										)}
-										{result.media_type === "show" && (
-											<MovieTvCard
-												details={result as DiscoverResult}
-												mediaType="show"
-												prefetch={index < 6}
-											/>
-										)}
-									</motion.div>
+			<WatchableList titles={wishlistToShow}>
+				{(visibleTitles) => (
+					<div
+						className={
+							"relative mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+						}
+					>
+						<AnimatePresence initial={false}>
+							{(navigation.state === "loading" || isLoading) && (
+								<span className="absolute top-2 left-6 animate-ping inline-flex h-8 w-8 rounded-full bg-sky-300 opacity-75" />
+							)}
+							{!wishlistToShow.length &&
+							!isLoading &&
+							!isError &&
+							navigation.state === "idle" ? (
+								<div className="my-6 text-lg italic">
+									You don't have any titles in your Wishlist.
 								</div>
-							)
-						})}
-				</AnimatePresence>
-			</div>
+								// ) : !wishlistToShow.length && navigation.state === "idle" ? (
+								// 	<div className="my-6 text-lg italic">
+								// 		No matches with your current filter settings.
+								// 	</div>
+							) : (
+								<></>
+							)}
+							{visibleTitles.length > 0 &&
+								navigation.state === "idle" &&
+								visibleTitles.map((result, index) => {
+									return (
+										<div key={`${result.media_type}-${result.tmdb_id}`}>
+											<motion.div
+												key={currentParams.sortBy}
+												initial={{
+													y: `-${Math.floor(seededRandomSin(index + 1) * 10) + 5}%`,
+													opacity: 0,
+												}}
+												animate={{ y: "0", opacity: 1 }}
+												exit={{
+													y: `${Math.floor(seededRandomSin(index + 1) * 10) + 5}%`,
+													opacity: 0,
+												}}
+												transition={{ duration: 0.5, type: "tween" }}
+											>
+												{result.media_type === "movie" && (
+													<MovieTvCard
+														details={result as DiscoverResult}
+														mediaType="movie"
+														prefetch={index < 6}
+													/>
+												)}
+												{result.media_type === "show" && (
+													<MovieTvCard
+														details={result as DiscoverResult}
+														mediaType="show"
+														prefetch={index < 6}
+													/>
+												)}
+											</motion.div>
+										</div>
+									)
+								})}
+						</AnimatePresence>
+					</div>
+				)}
+			</WatchableList>
 		</div>
 	)
 }

@@ -65,6 +65,7 @@ export default function TasteProfile({ userId }: TasteProfileProps) {
 				/>
 				
 				<div className="mt-8 space-y-6">
+<Link to="/taste/quiz" className="block text-sky-200 underline">Explore suggestions · What can I watch?</Link>
 					{nextFeature && (
 						<NextUnlockCard 
 							feature={nextFeature} 

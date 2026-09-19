@@ -1,6 +1,11 @@
-import { readExploration, rememberExploration } from "../exploration"
+import { useUserData } from "~/routes/api.user-data"
+import {
+	TasteTitleLink,
+	readExploration,
+	rememberExploration,
+} from "../exploration"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useId } from "react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { FreeMode, Navigation } from "swiper/modules"
 import {
@@ -30,9 +35,9 @@ function PosterCard({ recommendation }: { recommendation: Recommendation }) {
 			/>
 			<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 			<div className="absolute bottom-0 left-0 right-0 p-3">
-				<h4 className="text-white font-semibold text-sm truncate">
+				<p className="text-white font-semibold text-sm truncate">
 					{recommendation.title}
-				</h4>
+				</p>
 				<div className="flex items-center gap-2 mt-1">
 					{recommendation.release_year && (
 						<span className="text-gray-300 text-xs">
@@ -59,9 +64,9 @@ function BackdropCard({ recommendation }: { recommendation: Recommendation }) {
 			/>
 			<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
 			<div className="absolute bottom-0 left-0 right-0 p-3">
-				<h4 className="text-white font-semibold text-base truncate">
+				<p className="text-white font-semibold text-base truncate">
 					{recommendation.title}
-				</h4>
+				</p>
 				<div className="flex items-center gap-2 mt-0.5">
 					{recommendation.release_year && (
 						<span className="text-gray-300 text-xs">
@@ -75,6 +80,7 @@ function BackdropCard({ recommendation }: { recommendation: Recommendation }) {
 }
 
 function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
+	const navigationId = useId().replace(/:/g, "")
 	return (
 		<div className="relative px-10">
 			<Swiper
@@ -87,8 +93,8 @@ function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
 				slidesPerView={4}
 				slidesPerGroup={1}
 				navigation={{
-					prevEl: ".swiper-button-prev-desktop",
-					nextEl: ".swiper-button-next-desktop",
+					prevEl: `#${navigationId}-previous`,
+					nextEl: `#${navigationId}-next`,
 				}}
 				freeMode={true}
 				grabCursor={true}
@@ -101,19 +107,28 @@ function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
 			>
 				{recommendations.map((rec, index) => (
 					<SwiperSlide key={`${rec.media_type}-${rec.tmdb_id}-${index}`}>
-						<PosterCard recommendation={rec} />
+						<TasteTitleLink
+							media={rec}
+							className="block focus-visible:ring-2 focus-visible:ring-sky-400"
+						>
+							<PosterCard recommendation={rec} />
+						</TasteTitleLink>
 					</SwiperSlide>
 				))}
 			</Swiper>
 
 			<button
 				type="button"
+				aria-label="Previous suggestions"
+				id={`${navigationId}-previous`}
 				className="swiper-button-prev-desktop absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full shadow-lg transition-colors cursor-pointer disabled:opacity-30"
 			>
 				<ChevronLeftIcon className="w-5 h-5" />
 			</button>
 			<button
 				type="button"
+				aria-label="Next suggestions"
+				id={`${navigationId}-next`}
 				className="swiper-button-next-desktop absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full shadow-lg transition-colors cursor-pointer disabled:opacity-30"
 			>
 				<ChevronRightIcon className="w-5 h-5" />
@@ -123,6 +138,7 @@ function DesktopSwiper({ recommendations }: RecommendationSwiperProps) {
 }
 
 function MobileSwiper({ recommendations }: RecommendationSwiperProps) {
+	const navigationId = useId().replace(/:/g, "")
 	return (
 		<div className="relative py-8">
 			<Swiper
@@ -136,8 +152,8 @@ function MobileSwiper({ recommendations }: RecommendationSwiperProps) {
 				slidesPerView={3}
 				slidesPerGroup={1}
 				navigation={{
-					prevEl: ".swiper-button-prev-mobile",
-					nextEl: ".swiper-button-next-mobile",
+					prevEl: `#${navigationId}-previous`,
+					nextEl: `#${navigationId}-next`,
 				}}
 				freeMode={true}
 				grabCursor={true}
@@ -145,19 +161,28 @@ function MobileSwiper({ recommendations }: RecommendationSwiperProps) {
 			>
 				{recommendations.map((rec, index) => (
 					<SwiperSlide key={`${rec.media_type}-${rec.tmdb_id}-${index}`}>
-						<BackdropCard recommendation={rec} />
+						<TasteTitleLink
+							media={rec}
+							className="block focus-visible:ring-2 focus-visible:ring-sky-400"
+						>
+							<BackdropCard recommendation={rec} />
+						</TasteTitleLink>
 					</SwiperSlide>
 				))}
 			</Swiper>
 
 			<button
 				type="button"
+				aria-label="Previous suggestions"
+				id={`${navigationId}-previous`}
 				className="swiper-button-prev-mobile absolute left-1/2 -translate-x-1/2 top-0 z-10 p-2 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full shadow-lg transition-colors cursor-pointer disabled:opacity-30"
 			>
 				<ChevronUpIcon className="w-5 h-5" />
 			</button>
 			<button
 				type="button"
+				aria-label="Next suggestions"
+				id={`${navigationId}-next`}
 				className="swiper-button-next-mobile absolute left-1/2 -translate-x-1/2 bottom-0 z-10 p-2 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full shadow-lg transition-colors cursor-pointer disabled:opacity-30"
 			>
 				<ChevronDownIcon className="w-5 h-5" />
@@ -170,6 +195,15 @@ export default function RecommendationSwiper({
 	recommendations,
 }: RecommendationSwiperProps) {
 	const [isMobile, setIsMobile] = useState(false)
+	const { data: history } = useUserData()
+	const excluded = new Set(
+		["scores", "skipped", "watched", "wishlist"].flatMap((key) =>
+			Object.keys(history?.[key] || {}),
+		),
+	)
+	recommendations = recommendations.filter(
+		(title) => !excluded.has(`${title.media_type}-${title.tmdb_id}`),
+	)
 
 	useEffect(() => {
 		const checkMobile = () => setIsMobile(window.innerWidth < 768)

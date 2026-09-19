@@ -48,9 +48,9 @@ export default function TasteRating({
 	onDismissCelebration,
 	fingerprintPreview,
 }: TasteRatingProps) {
-	const [showPicks, setShowPicks] = useState(false)
+	const [showPicks, setShowPicks] = useState(true)
 	useEffect(() => {
-		setShowPicks(readExploration().view === "picks")
+		setShowPicks(readExploration().view !== "rate")
 		const frame = requestAnimationFrame(() =>
 			window.scrollTo(0, readExploration().scrollY || 0),
 		)
@@ -89,7 +89,8 @@ export default function TasteRating({
 								Your Taste Profile
 							</h1>
 							<p className="text-gray-400 text-md md:text-lg lg:text-xl">
-								Rate movies and shows to unlock recommendations
+								Explore suggestions, or rate familiar titles to refine your
+								taste
 							</p>
 						</div>
 					</div>

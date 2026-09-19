@@ -13,6 +13,8 @@ export const defaultExploreFilters: ExploreFilters = {
 	order: "queue",
 }
 export type TasteExploration = {
+	discovery?: { genre: string; watch: boolean }
+	watchSelection?: { includePaid: boolean }
 	carouselIndex?: number
 	titles?: ScoringMedia[]
 	ratingQueue?: ScoringMedia[]
