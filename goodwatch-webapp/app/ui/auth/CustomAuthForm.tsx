@@ -19,6 +19,9 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 	const [oauthLoading, setOAuthLoading] = useState(false)
 	const [rememberMe, setRememberMe] = useState(false)
 	const [confirmationSent, setConfirmationSent] = useState(false)
+	const [confirmationEmail, setConfirmationEmail] = useState("")
+	const [resending, setResending] = useState(false)
+	const [confirmationMessage, setConfirmationMessage] = useState("")
 	const [authReturnTo, setAuthReturnTo] = useState(redirectTo || "/taste/quiz")
 	useEffect(() => setAuthReturnTo(discoveryReturnTo(redirectTo)), [redirectTo])
 	const returnTo = () => authReturnTo
@@ -41,6 +44,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 				if (error) throw error
 				noteCreatedAccount(data.user)
 				setConfirmationSent(!data.session)
+				if (!data.session) setConfirmationEmail(email)
 				
 				// Check if email confirmation is required
 				if (data.user && !data.user.identities?.length) {
@@ -72,10 +76,33 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 			}
 		} catch (error: any) {
 			console.error("Auth error:", error)
+			if (error.code === "email_not_confirmed") {
+				setConfirmationSent(true)
+				setConfirmationEmail(email)
+				setConfirmationMessage("Your email is not confirmed. If your link expired, request a new one below.")
+			}
 			// Provide more specific error messages
 			toast.error(error.message || "An error occurred")
 		} finally {
 			setLoading(false)
+		}
+	}
+
+	const resendConfirmation = async () => {
+		if (!supabase || !confirmationEmail || resending) return
+		setResending(true)
+		try {
+			const { error } = await supabase.auth.resend({
+				type: "signup",
+				email: confirmationEmail,
+				options: { emailRedirectTo: `${window.location.origin}${returnTo()}` },
+			})
+			if (error) throw error
+			setConfirmationMessage("A new confirmation email has been sent. Open the newest email; older links may no longer work.")
+		} catch (error) {
+			setConfirmationMessage(error instanceof Error ? error.message : "Could not resend the email. Please try again.")
+		} finally {
+			setResending(false)
 		}
 	}
 
@@ -154,7 +181,11 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						</div>
 					</div>
 
-					{confirmationSent && <p role="status" className="rounded-lg border border-emerald-700 p-4 text-sm text-white">Check your email to confirm your account. If you open the email on another device, return to this browser and sign in to finish transferring your progress.</p>}
+					{confirmationSent && <div className="rounded-lg border border-emerald-700 p-4 text-sm text-white">
+						<p role="status">{confirmationMessage || "Check your email to confirm your account."}</p>
+						<p className="mt-2">If you open the email on another device, return to this browser and sign in to finish transferring your progress.</p>
+						<button type="button" onClick={resendConfirmation} disabled={resending} className="mt-3 rounded-lg border border-emerald-500 px-3 py-2 font-semibold hover:bg-emerald-900 disabled:opacity-50">{resending ? "Sending…" : "Resend confirmation email"}</button>
+					</div>}
 					<form onSubmit={handleEmailAuth} className="space-y-6">
 						<div>
 							<label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">

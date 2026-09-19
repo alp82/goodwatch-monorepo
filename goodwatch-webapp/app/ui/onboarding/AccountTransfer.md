@@ -34,6 +34,14 @@ Chrome DevTools MCP, localhost:3003, existing controlled account, desktop 1440×
 
 Mobile review document width: 390px at 390px viewport. Lighthouse snapshot: accessibility 92, best practices 100, SEO 100. Findings concern existing Wishlist score-badge contrast and unnamed shared-navigation links; no performance score or navigation-audit claim. Reports: `/tmp/goodwatch-transfer90/implemented-lighthouse/report.{json,html}`; screenshot `/tmp/goodwatch-transfer90/implemented-mobile.png`. Repository typechecking retains existing diagnostics; none name the changed transfer/auth/onboarding files. No deployment performed.
 
+## Expired confirmation recovery, 2026-09-19
+
+The user returned an `otp_expired` callback. Normal password sign-in in the original isolated browser returned “Email not confirmed”; the attempted link did not establish a confirmed account. Its bound three-interaction snapshot remained intact. No stale token was replayed.
+
+The existing auth form now offers **Resend confirmation email** after an unconfirmed-account sign-in and after signup. It uses the installed Supabase SDK's ordinary `auth.resend({type: "signup", email, options: {emailRedirectTo}})` flow for the same account, retaining the safe discovery return target and browser snapshot. The button reports sending/success/error, preserves the signup email after form reset, and explains using the newest email and returning to the original browser.
+
+The real UI successfully requested one fresh confirmation email for the same account. The returned status says “A new confirmation email has been sent. Open the newest email; older links may no longer work.” Desktop and 390px mobile form checks passed with no horizontal overflow. Typechecking still reports repository baseline errors, none in the changed auth form. This small recovery control adds no new transfer-layout decision; no automated tests or deployment. Actual confirmation and post-confirmation transfer remain pending; do not interpret successful resend as verified email ownership.
+
 ## Live checkpoint and fixture handoff
 
 The user must confirm `alportac+goodwatch-transfer-20260918@gmail.com`, preferably using another browser/device, then report completion. Original browser: Chrome page 5, isolated context `new-transfer90`, with three interactions and DE/services 8,9 still pending. Password is only in mode-0600 `/tmp/goodwatch-transfer90/new-account-credentials.json` within a mode-0700 directory; never publish it. Sign in normally in that original browser afterward and verify automatic persistence of all five selected parts, unchanged Taste return context, completed cleanup, reload and logout. Do not fabricate confirmation or replay its token.
