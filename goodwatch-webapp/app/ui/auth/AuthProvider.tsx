@@ -1,3 +1,4 @@
+import { AuthCallbackError } from "~/ui/auth/AuthCallbackError"
 import { cleanupCompletedTransferOnLogout } from "~/utils/account-transfer"
 import type { User } from "@supabase/auth-js"
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -47,6 +48,7 @@ export function AuthProvider({
 
 	return (
 		<AuthContext.Provider value={{ supabase, user, loading: false }}>
+			<AuthCallbackError />
 			{children}
 		</AuthContext.Provider>
 	)
