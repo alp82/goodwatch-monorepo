@@ -1,0 +1,1359 @@
+{
+  "observed_at": "2026-09-19T04:26:32.741026Z",
+  "read_only": true,
+  "deployed": {
+    "f/sync/copy/tmdb_streaming": {
+      "hash": "0999245320595c4f",
+      "matches_local_source": true
+    },
+    "f/priority/publish": {
+      "hash": "347547eb782839a2",
+      "matches_local_source": true
+    },
+    "f/tmdb_web/country_state": {
+      "hash": "0344620c36d2382f",
+      "matches_local_source": true
+    },
+    "f/tmdb_api/tmdb_fetch_details_from_api/fetch": {
+      "hash": "9a1092f60964e64f",
+      "matches_local_source": true
+    }
+  },
+  "samples": [
+    {
+      "media_type": "movie",
+      "tmdb_id": 1226863,
+      "country": "US",
+      "scrape_checked_at": "2026-09-10 08:34:42.533000",
+      "scrape_offer_count": 12,
+      "consecutive_failures": 0,
+      "failed_at": null,
+      "api_title_updated_at_not_offer_proof": "2026-09-04 08:11:56.103000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/movie/1226863-the-super-mario-galaxy-movie/watch?locale=US",
+        "rent": [
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 9
+          },
+          {
+            "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 20
+          },
+          {
+            "logo_path": "/pTnn5JwWr4p3pG8H6VrpiQo7Vs0.jpg",
+            "provider_id": 192,
+            "provider_name": "YouTube",
+            "display_priority": 21
+          },
+          {
+            "logo_path": "/oIXE9vJdkilIxCLAtlbtiqewgvn.jpg",
+            "provider_id": 7,
+            "provider_name": "Fandango At Home",
+            "display_priority": 37
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg",
+            "provider_id": 386,
+            "provider_name": "Peacock Premium",
+            "display_priority": 16
+          },
+          {
+            "logo_path": "/drPlq5beqXtBaP7MNs8W616YRhm.jpg",
+            "provider_id": 387,
+            "provider_name": "Peacock Premium Plus",
+            "display_priority": 213
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 9
+          },
+          {
+            "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 20
+          },
+          {
+            "logo_path": "/pTnn5JwWr4p3pG8H6VrpiQo7Vs0.jpg",
+            "provider_id": 192,
+            "provider_name": "YouTube",
+            "display_priority": 21
+          },
+          {
+            "logo_path": "/oIXE9vJdkilIxCLAtlbtiqewgvn.jpg",
+            "provider_id": 7,
+            "provider_name": "Fandango At Home",
+            "display_priority": 37
+          }
+        ]
+      },
+      "published_title_max_ms": 1789029543460,
+      "published_offers": [
+        {
+          "streaming_service_id": 192,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 192,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 386,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 387,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 7,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 7,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 3,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 3,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1226863,
+      "country": "DE",
+      "scrape_checked_at": "2026-09-10 08:38:04.903000",
+      "scrape_offer_count": 15,
+      "consecutive_failures": 0,
+      "failed_at": null,
+      "api_title_updated_at_not_offer_proof": "2026-09-04 08:11:56.103000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/movie/1226863-the-super-mario-galaxy-movie/watch?locale=DE",
+        "rent": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          },
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/nCsFBTEmlCMc5NA4fwPuluTz6AO.jpg",
+            "provider_id": 178,
+            "provider_name": "MagentaTV",
+            "display_priority": 15
+          },
+          {
+            "logo_path": "/cBN4jd4wPq6on0kESiTlevqvlnL.jpg",
+            "provider_id": 20,
+            "provider_name": "maxdome Store",
+            "display_priority": 18
+          },
+          {
+            "logo_path": "/59TxOAYcoFaufd6CWm465oPchD.jpg",
+            "provider_id": 130,
+            "provider_name": "Sky Store",
+            "display_priority": 20
+          },
+          {
+            "logo_path": "/bZvc9dXrXNly7cA0V4D9pR8yJwm.jpg",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 22
+          },
+          {
+            "logo_path": "/dKh2TJ9lTWV0UIcDQGMnMyQ8AIN.jpg",
+            "provider_id": 1993,
+            "provider_name": "Videoload",
+            "display_priority": 104
+          },
+          {
+            "logo_path": "/xo4zowa5gbKT4z65ZathH6H4Cdg.jpg",
+            "provider_id": 2209,
+            "provider_name": "Freenet meinVOD",
+            "display_priority": 127
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          },
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/nCsFBTEmlCMc5NA4fwPuluTz6AO.jpg",
+            "provider_id": 178,
+            "provider_name": "MagentaTV",
+            "display_priority": 15
+          },
+          {
+            "logo_path": "/cBN4jd4wPq6on0kESiTlevqvlnL.jpg",
+            "provider_id": 20,
+            "provider_name": "maxdome Store",
+            "display_priority": 18
+          },
+          {
+            "logo_path": "/59TxOAYcoFaufd6CWm465oPchD.jpg",
+            "provider_id": 130,
+            "provider_name": "Sky Store",
+            "display_priority": 20
+          },
+          {
+            "logo_path": "/bZvc9dXrXNly7cA0V4D9pR8yJwm.jpg",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 22
+          },
+          {
+            "logo_path": "/dKh2TJ9lTWV0UIcDQGMnMyQ8AIN.jpg",
+            "provider_id": 1993,
+            "provider_name": "Videoload",
+            "display_priority": 104
+          }
+        ]
+      },
+      "published_title_max_ms": 1789029543460,
+      "published_offers": [
+        {
+          "streaming_service_id": 20,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 178,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 35,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 130,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1993,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 178,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 35,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1993,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2209,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 20,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 130,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1226863,
+      "country": "CV",
+      "scrape_checked_at": "2026-09-10 08:38:02.818000",
+      "scrape_offer_count": 0,
+      "consecutive_failures": 0,
+      "failed_at": null,
+      "api_title_updated_at_not_offer_proof": "2026-09-04 08:11:56.103000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/movie/1226863-the-super-mario-galaxy-movie/watch?locale=CV",
+        "rent": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 11
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 11
+          }
+        ]
+      },
+      "published_title_max_ms": 1789029543460,
+      "published_offers": [
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "buy",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": false
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "rent",
+          "updated_at": 1789063275735,
+          "api_contribution": true,
+          "scrape_contribution": false
+        }
+      ]
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 256591,
+      "country": "BR",
+      "scrape_checked_at": "2026-09-14 17:45:37.957000",
+      "scrape_offer_count": 8,
+      "consecutive_failures": 0,
+      "failed_at": null,
+      "api_title_updated_at_not_offer_proof": "2026-06-06 10:56:42.919000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/movie/256591-focus/watch?locale=BR",
+        "rent": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 12
+          },
+          {
+            "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 13
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+            "provider_id": 1899,
+            "provider_name": "HBO Max",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/embS4GPK7c8pjbuY2O2irV5rYch.jpg",
+            "provider_id": 1825,
+            "provider_name": "HBO Max Amazon Channel",
+            "display_priority": 48
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 12
+          },
+          {
+            "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 13
+          }
+        ]
+      },
+      "published_title_max_ms": 1789407963566,
+      "published_offers": [
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "rent",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "rent",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 3,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1825,
+          "streaming_type": "flatrate",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1899,
+          "streaming_type": "flatrate",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "buy",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "buy",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 3,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 256591,
+      "country": "DE",
+      "scrape_checked_at": "2025-09-19 11:45:03.355000",
+      "scrape_offer_count": 15,
+      "consecutive_failures": 0,
+      "failed_at": "2024-07-30 22:54:45.224000",
+      "api_title_updated_at_not_offer_proof": "2026-06-06 10:56:42.919000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/movie/256591-focus/watch?locale=DE",
+        "rent": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/59TxOAYcoFaufd6CWm465oPchD.jpg",
+            "provider_id": 130,
+            "provider_name": "Sky Store",
+            "display_priority": 15
+          },
+          {
+            "logo_path": "/bZvc9dXrXNly7cA0V4D9pR8yJwm.jpg",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 16
+          },
+          {
+            "logo_path": "/cBN4jd4wPq6on0kESiTlevqvlnL.jpg",
+            "provider_id": 20,
+            "provider_name": "maxdome Store",
+            "display_priority": 17
+          },
+          {
+            "logo_path": "/nCsFBTEmlCMc5NA4fwPuluTz6AO.jpg",
+            "provider_id": 178,
+            "provider_name": "MagentaTV",
+            "display_priority": 22
+          },
+          {
+            "logo_path": "/dKh2TJ9lTWV0UIcDQGMnMyQ8AIN.jpg",
+            "provider_id": 1993,
+            "provider_name": "Videoload",
+            "display_priority": 104
+          },
+          {
+            "logo_path": "/xo4zowa5gbKT4z65ZathH6H4Cdg.jpg",
+            "provider_id": 2209,
+            "provider_name": "Freenet meinVOD",
+            "display_priority": 128
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/59TxOAYcoFaufd6CWm465oPchD.jpg",
+            "provider_id": 130,
+            "provider_name": "Sky Store",
+            "display_priority": 15
+          },
+          {
+            "logo_path": "/bZvc9dXrXNly7cA0V4D9pR8yJwm.jpg",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 16
+          },
+          {
+            "logo_path": "/cBN4jd4wPq6on0kESiTlevqvlnL.jpg",
+            "provider_id": 20,
+            "provider_name": "maxdome Store",
+            "display_priority": 17
+          },
+          {
+            "logo_path": "/nCsFBTEmlCMc5NA4fwPuluTz6AO.jpg",
+            "provider_id": 178,
+            "provider_name": "MagentaTV",
+            "display_priority": 22
+          },
+          {
+            "logo_path": "/dKh2TJ9lTWV0UIcDQGMnMyQ8AIN.jpg",
+            "provider_id": 1993,
+            "provider_name": "Videoload",
+            "display_priority": 104
+          }
+        ]
+      },
+      "published_title_max_ms": 1789407963566,
+      "published_offers": [
+        {
+          "streaming_service_id": 1993,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 35,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 178,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "rent",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": false
+        },
+        {
+          "streaming_service_id": 350,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": false,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 178,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1993,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 350,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": false,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 130,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 20,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 130,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "buy",
+          "updated_at": 1789407964369,
+          "api_contribution": true,
+          "scrape_contribution": false
+        },
+        {
+          "streaming_service_id": 20,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2209,
+          "streaming_type": "rent",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 35,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "buy",
+          "updated_at": 1789063255772,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 256591,
+      "country": "NE",
+      "scrape_checked_at": "2023-12-27 16:04:46.180000",
+      "scrape_offer_count": 0,
+      "consecutive_failures": 1,
+      "failed_at": "2026-09-13 08:11:01.948000",
+      "api_title_updated_at_not_offer_proof": "2026-06-06 10:56:42.919000",
+      "api_country_payload": null,
+      "published_title_max_ms": 1789407963566,
+      "published_offers": []
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 1399,
+      "country": "US",
+      "scrape_checked_at": "2025-11-03 18:26:25.497000",
+      "scrape_offer_count": 6,
+      "consecutive_failures": 0,
+      "failed_at": "2025-01-25 15:47:45.998000",
+      "api_title_updated_at_not_offer_proof": "2026-09-09 13:31:11.942000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/tv/1399-game-of-thrones/watch?locale=US",
+        "flatrate": [
+          {
+            "logo_path": "/64fLWeSyZ1KQZhIdvTdy4QHeWty.png",
+            "provider_id": 1825,
+            "provider_name": "HBO Max Amazon Channel",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/skypuy7SXuugIQeYg0IglmzoKaS.png",
+            "provider_id": 1899,
+            "provider_name": "HBO Max",
+            "display_priority": 152
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 9
+          },
+          {
+            "logo_path": "/aZRENwYILujqs0RVOZutTh0BVGV.png",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 20
+          },
+          {
+            "logo_path": "/wpOt6x0dRxTrIzuBosto4LGd7E9.png",
+            "provider_id": 7,
+            "provider_name": "Fandango At Home",
+            "display_priority": 37
+          }
+        ]
+      },
+      "published_title_max_ms": 1789029284461,
+      "published_offers": [
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 3,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 7,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 384,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": false,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 350,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": false,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1825,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1899,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 1399,
+      "country": "GR",
+      "scrape_checked_at": "2026-09-10 08:34:05.568000",
+      "scrape_offer_count": 2,
+      "consecutive_failures": 0,
+      "failed_at": null,
+      "api_title_updated_at_not_offer_proof": "2026-09-09 13:31:11.942000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/tv/1399-game-of-thrones/watch?locale=GR",
+        "buy": [
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 34
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/skypuy7SXuugIQeYg0IglmzoKaS.png",
+            "provider_id": 1899,
+            "provider_name": "HBO Max",
+            "display_priority": 36
+          }
+        ]
+      },
+      "published_title_max_ms": 1789029284461,
+      "published_offers": [
+        {
+          "streaming_service_id": 1899,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": false
+        },
+        {
+          "streaming_service_id": 384,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": false,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 1399,
+      "country": "DE",
+      "scrape_checked_at": "2025-11-03 23:07:43.053000",
+      "scrape_offer_count": 8,
+      "consecutive_failures": 0,
+      "failed_at": "2025-01-25 14:14:13.755000",
+      "api_title_updated_at_not_offer_proof": "2026-09-09 13:31:11.942000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/tv/1399-game-of-thrones/watch?locale=DE",
+        "flatrate": [
+          {
+            "logo_path": "/skypuy7SXuugIQeYg0IglmzoKaS.png",
+            "provider_id": 1899,
+            "provider_name": "HBO Max",
+            "display_priority": 217
+          },
+          {
+            "logo_path": "/64fLWeSyZ1KQZhIdvTdy4QHeWty.png",
+            "provider_id": 1825,
+            "provider_name": "HBO Max Amazon Channel",
+            "display_priority": 218
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/f1uWfExJA6DSAvuTL0YJ9Kyftfg.png",
+            "provider_id": 178,
+            "provider_name": "MagentaTV",
+            "display_priority": 15
+          },
+          {
+            "logo_path": "/mjB4eyswPoC0XeJPUd1W1oitOlh.png",
+            "provider_id": 20,
+            "provider_name": "maxdome Store",
+            "display_priority": 18
+          },
+          {
+            "logo_path": "/kWgg0b4wHDr4pwSyOXVK8nAsNKB.png",
+            "provider_id": 1993,
+            "provider_name": "Videoload",
+            "display_priority": 104
+          },
+          {
+            "logo_path": "/iUGee0WhY5ZSBZZuCunNt0K7au2.png",
+            "provider_id": 2209,
+            "provider_name": "Freenet meinVOD",
+            "display_priority": 127
+          }
+        ]
+      },
+      "published_title_max_ms": 1789029284461,
+      "published_offers": [
+        {
+          "streaming_service_id": 30,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2551,
+          "streaming_type": "buy",
+          "updated_at": 1763168439859,
+          "api_contribution": true,
+          "scrape_contribution": false
+        },
+        {
+          "streaming_service_id": 1825,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": false
+        },
+        {
+          "streaming_service_id": 178,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1993,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2209,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 350,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": false,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 20,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 29,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 68,
+          "streaming_type": "buy",
+          "updated_at": 1751374546727,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 2,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 10,
+          "streaming_type": "buy",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1899,
+          "streaming_type": "flatrate",
+          "updated_at": 1789063278163,
+          "api_contribution": true,
+          "scrape_contribution": false
+        },
+        {
+          "streaming_service_id": 2550,
+          "streaming_type": "buy",
+          "updated_at": 1763168439859,
+          "api_contribution": true,
+          "scrape_contribution": false
+        }
+      ]
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 66732,
+      "country": "US",
+      "scrape_checked_at": "2025-11-09 09:26:28.071000",
+      "scrape_offer_count": 2,
+      "consecutive_failures": 0,
+      "failed_at": "2024-07-01 15:02:51.103000",
+      "api_title_updated_at_not_offer_proof": "2025-11-09 09:22:43.162000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/tv/66732-stranger-things/watch?locale=US",
+        "flatrate": [
+          {
+            "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+            "provider_id": 8,
+            "provider_name": "Netflix",
+            "display_priority": 1
+          },
+          {
+            "logo_path": "/dpR8r13zWDeUR0QkzWidrdMxa56.jpg",
+            "provider_id": 1796,
+            "provider_name": "Netflix Standard with Ads",
+            "display_priority": 157
+          }
+        ]
+      },
+      "published_title_max_ms": 1763024885293,
+      "published_offers": [
+        {
+          "streaming_service_id": 1796,
+          "streaming_type": "flatrate",
+          "updated_at": 1763190053965,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 8,
+          "streaming_type": "flatrate",
+          "updated_at": 1763190053965,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 66732,
+      "country": "DE",
+      "scrape_checked_at": "2025-11-09 09:26:19.003000",
+      "scrape_offer_count": 2,
+      "consecutive_failures": 0,
+      "failed_at": "2024-12-08 01:21:19.300000",
+      "api_title_updated_at_not_offer_proof": "2025-11-09 09:22:43.162000",
+      "api_country_payload": {
+        "link": "https://www.themoviedb.org/tv/66732-stranger-things/watch?locale=DE",
+        "flatrate": [
+          {
+            "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+            "provider_id": 8,
+            "provider_name": "Netflix",
+            "display_priority": 0
+          },
+          {
+            "logo_path": "/dpR8r13zWDeUR0QkzWidrdMxa56.jpg",
+            "provider_id": 1796,
+            "provider_name": "Netflix Standard with Ads",
+            "display_priority": 84
+          }
+        ]
+      },
+      "published_title_max_ms": 1763024885293,
+      "published_offers": [
+        {
+          "streaming_service_id": 8,
+          "streaming_type": "flatrate",
+          "updated_at": 1763190053965,
+          "api_contribution": true,
+          "scrape_contribution": true
+        },
+        {
+          "streaming_service_id": 1796,
+          "streaming_type": "flatrate",
+          "updated_at": 1763190053965,
+          "api_contribution": true,
+          "scrape_contribution": true
+        }
+      ]
+    }
+  ],
+  "http": [
+    {
+      "sample": "http-show-1399-GR.json",
+      "country": "GR",
+      "count": 3,
+      "keys": [
+        "streaming_service_id",
+        "streaming_type",
+        "tmdb_link",
+        "stream_url",
+        "price_dollar",
+        "quality"
+      ]
+    },
+    {
+      "sample": "http-show-1399-US.json",
+      "country": "US",
+      "count": 8,
+      "keys": [
+        "streaming_service_id",
+        "streaming_type",
+        "tmdb_link",
+        "stream_url",
+        "price_dollar",
+        "quality"
+      ]
+    },
+    {
+      "sample": "http-movie-1226863-CV.json",
+      "country": "CV",
+      "count": 2,
+      "keys": [
+        "streaming_service_id",
+        "streaming_type",
+        "tmdb_link",
+        "stream_url",
+        "price_dollar",
+        "quality"
+      ]
+    },
+    {
+      "sample": "http-movie-256591-BR.json",
+      "country": "BR",
+      "count": 8,
+      "keys": [
+        "streaming_service_id",
+        "streaming_type",
+        "tmdb_link",
+        "stream_url",
+        "price_dollar",
+        "quality"
+      ]
+    },
+    {
+      "sample": "http-movie-256591-DE.json",
+      "country": "DE",
+      "count": 17,
+      "keys": [
+        "streaming_service_id",
+        "streaming_type",
+        "tmdb_link",
+        "stream_url",
+        "price_dollar",
+        "quality"
+      ]
+    }
+  ],
+  "pending_examples": [
+    {
+      "media_type": "movie",
+      "tmdb_id": 899,
+      "country_code": "NE",
+      "updated_at": "2025-08-28 15:42:08.677000",
+      "consecutive_failures": 1,
+      "failed_at": "2026-09-15 09:58:21.737000",
+      "identity_repair_pending": true,
+      "retained_web_offers": 0
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 14546,
+      "country_code": "NE",
+      "failed_at": "2026-09-15 12:17:22.023000",
+      "updated_at": "2024-11-27 07:25:04.740000",
+      "consecutive_failures": 1,
+      "identity_repair_pending": true,
+      "retained_web_offers": 0
+    },
+    {
+      "media_type": "tv",
+      "tmdb_id": 9361,
+      "country_code": "AT",
+      "updated_at": "2025-06-17 14:48:20.300000",
+      "consecutive_failures": 8,
+      "failed_at": "2026-09-18 22:48:44.088000",
+      "identity_repair_pending": true,
+      "retained_web_offers": 5
+    },
+    {
+      "media_type": "tv",
+      "tmdb_id": 9361,
+      "country_code": "DE",
+      "updated_at": "2025-06-17 14:47:48.276000",
+      "consecutive_failures": 8,
+      "failed_at": "2026-09-18 22:49:44.067000",
+      "identity_repair_pending": true,
+      "retained_web_offers": 9
+    }
+  ]
+}
