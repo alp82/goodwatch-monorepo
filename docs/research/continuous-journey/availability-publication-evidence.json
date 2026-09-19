@@ -1,0 +1,525 @@
+{
+  "environment": "isolated local CrateDB 5.10.9 at 127.0.0.1:14296; synthetic movie/show ID42; actual publisher and server reader; Chrome DevTools evaluator on localhost3003",
+  "production_write": false,
+  "server_readback": [
+    {
+      "media_type": "movie",
+      "country_code": "BR",
+      "state": "watchable",
+      "reason": "verified_offer",
+      "offers": [
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "b77e9e9ddee8ab746251266f14d764fd5622d7de66621cac5cef66bf10922d8b",
+          "stream_url": "https://example.test/watch",
+          "price_dollar": null,
+          "quality": "HD",
+          "source": "tmdb_web",
+          "checked_at": 1789793417682
+        },
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "bcedfe0562b7cae8b7db9cc0aea83e7459470a8285ba0d64000a6ff42792b615",
+          "tmdb_link": null,
+          "source": "tmdb_api",
+          "checked_at": 1789793417682
+        }
+      ],
+      "evaluatedAt": 1789793418236,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "movie",
+      "country_code": "DE",
+      "state": "watchable",
+      "reason": "verified_offer",
+      "offers": [
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "c5b9e72e9592f1dbd8aa7dbdea96f3d23e5931fc18a1a1af98cd3259225c88c5",
+          "tmdb_link": null,
+          "source": "tmdb_api",
+          "checked_at": 1789793417682
+        }
+      ],
+      "evaluatedAt": 1789793418245,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "movie",
+      "country_code": "CV",
+      "state": "no_match",
+      "reason": "verified_no_match",
+      "offers": [],
+      "evaluatedAt": 1789793418250,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "movie",
+      "country_code": "US",
+      "state": "unknown",
+      "reason": "source_conflict",
+      "offers": [],
+      "evaluatedAt": 1789793418254,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "movie",
+      "country_code": "GR",
+      "state": "watchable",
+      "reason": "verified_offer",
+      "offers": [
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "72d2fabfe1edf48a48f6b25ece7d84062ca62e41279b9bfa74bcaa24f7d6d6e1",
+          "tmdb_link": null,
+          "source": "tmdb_api",
+          "checked_at": 1789793417682
+        }
+      ],
+      "evaluatedAt": 1789793418257,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "movie",
+      "country_code": "AT",
+      "state": "unknown",
+      "reason": "incomplete_or_expired_evidence",
+      "offers": [],
+      "evaluatedAt": 1789793418260,
+      "expiresAt": null
+    },
+    {
+      "media_type": "movie",
+      "country_code": "ZZ",
+      "state": "unknown",
+      "reason": "missing_evidence",
+      "offers": [],
+      "evaluatedAt": 1789793418263,
+      "expiresAt": null
+    },
+    {
+      "media_type": "show",
+      "country_code": "BR",
+      "state": "watchable",
+      "reason": "verified_offer",
+      "offers": [
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "d962d34b26ca0ad327fffb261ad07903011d54ea84c1ed2d69d983df824fc4c1",
+          "stream_url": "https://example.test/watch",
+          "price_dollar": null,
+          "quality": "HD",
+          "source": "tmdb_web",
+          "checked_at": 1789793417682
+        },
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "874db9b0af35ee50b54e0d1bbf4ba47b03e7316184e8a9bd4a92025a948feaee",
+          "tmdb_link": null,
+          "source": "tmdb_api",
+          "checked_at": 1789793417682
+        }
+      ],
+      "evaluatedAt": 1789793418265,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "show",
+      "country_code": "DE",
+      "state": "watchable",
+      "reason": "verified_offer",
+      "offers": [
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "268ee7caf29f013b6e8734a70148eba73cd1395de6135189e0bcf1ceec005213",
+          "tmdb_link": null,
+          "source": "tmdb_api",
+          "checked_at": 1789793417682
+        }
+      ],
+      "evaluatedAt": 1789793418268,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "show",
+      "country_code": "CV",
+      "state": "no_match",
+      "reason": "verified_no_match",
+      "offers": [],
+      "evaluatedAt": 1789793418271,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "show",
+      "country_code": "US",
+      "state": "unknown",
+      "reason": "source_conflict",
+      "offers": [],
+      "evaluatedAt": 1789793418276,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "show",
+      "country_code": "GR",
+      "state": "watchable",
+      "reason": "verified_offer",
+      "offers": [
+        {
+          "service_id": 8,
+          "offer_type": "flatrate",
+          "snapshot_id": "8596a8d0db6df36ebdb8eb38fb3c1b03c75e820b9ff420638ac15d9f07f8a6cb",
+          "tmdb_link": null,
+          "source": "tmdb_api",
+          "checked_at": 1789793417682
+        }
+      ],
+      "evaluatedAt": 1789793418279,
+      "expiresAt": 1792385417682
+    },
+    {
+      "media_type": "show",
+      "country_code": "AT",
+      "state": "unknown",
+      "reason": "incomplete_or_expired_evidence",
+      "offers": [],
+      "evaluatedAt": 1789793418281,
+      "expiresAt": null
+    },
+    {
+      "media_type": "show",
+      "country_code": "ZZ",
+      "state": "unknown",
+      "reason": "missing_evidence",
+      "offers": [],
+      "evaluatedAt": 1789793418283,
+      "expiresAt": null
+    }
+  ],
+  "browser": {
+    "results": [
+      {
+        "scope": "movie:AT",
+        "state": "unknown",
+        "reason": "incomplete_or_expired_evidence",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": null
+      },
+      {
+        "scope": "movie:BR",
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "b77e9e9ddee8ab746251266f14d764fd5622d7de66621cac5cef66bf10922d8b",
+            "stream_url": "https://example.test/watch",
+            "price_dollar": null,
+            "quality": "HD",
+            "source": "tmdb_web",
+            "checked_at": 1789793417682
+          },
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "bcedfe0562b7cae8b7db9cc0aea83e7459470a8285ba0d64000a6ff42792b615",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1789793417682
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "movie:CV",
+        "state": "no_match",
+        "reason": "verified_no_match",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "movie:DE",
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "c5b9e72e9592f1dbd8aa7dbdea96f3d23e5931fc18a1a1af98cd3259225c88c5",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1789793417682
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "movie:GR",
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "72d2fabfe1edf48a48f6b25ece7d84062ca62e41279b9bfa74bcaa24f7d6d6e1",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1789793417682
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "movie:US",
+        "state": "unknown",
+        "reason": "source_conflict",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "show:AT",
+        "state": "unknown",
+        "reason": "incomplete_or_expired_evidence",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": null
+      },
+      {
+        "scope": "show:BR",
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "d962d34b26ca0ad327fffb261ad07903011d54ea84c1ed2d69d983df824fc4c1",
+            "stream_url": "https://example.test/watch",
+            "price_dollar": null,
+            "quality": "HD",
+            "source": "tmdb_web",
+            "checked_at": 1789793417682
+          },
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "874db9b0af35ee50b54e0d1bbf4ba47b03e7316184e8a9bd4a92025a948feaee",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1789793417682
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "show:CV",
+        "state": "no_match",
+        "reason": "verified_no_match",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "show:DE",
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "268ee7caf29f013b6e8734a70148eba73cd1395de6135189e0bcf1ceec005213",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1789793417682
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "show:GR",
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "8596a8d0db6df36ebdb8eb38fb3c1b03c75e820b9ff420638ac15d9f07f8a6cb",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1789793417682
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      },
+      {
+        "scope": "show:US",
+        "state": "unknown",
+        "reason": "source_conflict",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1792385417682
+      }
+    ],
+    "boundary": [
+      {
+        "ageOffset": -1,
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "b77e9e9ddee8ab746251266f14d764fd5622d7de66621cac5cef66bf10922d8b",
+            "stream_url": "https://example.test/watch",
+            "price_dollar": null,
+            "quality": "HD",
+            "source": "tmdb_web",
+            "checked_at": 1787201417828
+          },
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "bcedfe0562b7cae8b7db9cc0aea83e7459470a8285ba0d64000a6ff42792b615",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1787201417828
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1789793417828
+      },
+      {
+        "ageOffset": 0,
+        "state": "unknown",
+        "reason": "incomplete_or_expired_evidence",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": null
+      },
+      {
+        "ageOffset": 1,
+        "state": "unknown",
+        "reason": "incomplete_or_expired_evidence",
+        "offers": [],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": null
+      }
+    ],
+    "cacheAging": [
+      {
+        "state": "watchable",
+        "reason": "verified_offer",
+        "offers": [
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "b77e9e9ddee8ab746251266f14d764fd5622d7de66621cac5cef66bf10922d8b",
+            "stream_url": "https://example.test/watch",
+            "price_dollar": null,
+            "quality": "HD",
+            "source": "tmdb_web",
+            "checked_at": 1787201477827
+          },
+          {
+            "service_id": 8,
+            "offer_type": "flatrate",
+            "snapshot_id": "bcedfe0562b7cae8b7db9cc0aea83e7459470a8285ba0d64000a6ff42792b615",
+            "tmdb_link": null,
+            "source": "tmdb_api",
+            "checked_at": 1787201477827
+          }
+        ],
+        "evaluatedAt": 1789793417827,
+        "expiresAt": 1789793477827
+      },
+      {
+        "state": "unknown",
+        "reason": "incomplete_or_expired_evidence",
+        "offers": [],
+        "evaluatedAt": 1789793537827,
+        "expiresAt": null
+      }
+    ],
+    "invalid": [
+      {
+        "value": "null",
+        "state": "unknown"
+      },
+      {
+        "value": "NaN",
+        "state": "unknown"
+      },
+      {
+        "value": "1789793417828",
+        "state": "unknown"
+      },
+      {
+        "value": "1789793417",
+        "state": "unknown"
+      }
+    ],
+    "missingSelection": {
+      "state": "unknown",
+      "reason": "needs_selection",
+      "offers": [],
+      "evaluatedAt": 1789793417827,
+      "expiresAt": null
+    },
+    "wrongCountry": {
+      "state": "unknown",
+      "reason": "scope_mismatch",
+      "offers": [],
+      "evaluatedAt": 1789793417827,
+      "expiresAt": null
+    },
+    "noSelectedMatch": {
+      "state": "no_match",
+      "reason": "verified_no_match",
+      "offers": [],
+      "evaluatedAt": 1789793417827,
+      "expiresAt": 1792385417682
+    }
+  },
+  "legacy_loader_fallback": [
+    {
+      "media": "movie",
+      "tmdb_id": 256591,
+      "country": "DE",
+      "http": 200,
+      "offers": 17,
+      "availability_evidence": null
+    },
+    {
+      "media": "movie",
+      "tmdb_id": 256591,
+      "country": "BR",
+      "http": 200,
+      "offers": 8,
+      "availability_evidence": null
+    },
+    {
+      "media": "show",
+      "tmdb_id": 1399,
+      "country": "GR",
+      "http": 200,
+      "offers": 3,
+      "availability_evidence": null
+    }
+  ]
+}

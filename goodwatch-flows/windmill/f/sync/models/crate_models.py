@@ -389,6 +389,13 @@ class PersonWorkedOn(BaseModel):
     episode_count_total: Optional[int] = None
 
 
+class StreamingEvidence(BaseModel):
+    media_tmdb_id: int
+    media_type: MediaType
+    country_code: str
+    payload: str
+
+
 class StreamingAvailability(BaseModel):
     media_tmdb_id: int
     media_type: MediaType
