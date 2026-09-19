@@ -1,6 +1,8 @@
 import type { User } from "@supabase/auth-js";
 import {
 	clearGuestProgress,
+	normalizeGuestInteractions,
+	readGuestInteractions,
 	snapshotGuestProgress,
 } from "~/utils/guest-progress";
 
@@ -63,16 +65,41 @@ export function saveTransfer(transfer: PendingTransfer) {
 		transfer,
 	]);
 }
+export function normalizeTransferSnapshot(
+	snapshot: PendingTransfer["snapshot"],
+) {
+	return {
+		...snapshot,
+		interactions: normalizeGuestInteractions(snapshot.interactions),
+		country:
+			typeof snapshot.country === "string" &&
+			/^[A-Z]{2}$/.test(snapshot.country)
+				? snapshot.country
+				: null,
+		services:
+			typeof snapshot.services === "string" &&
+			/^(\d+(,\d+)*)?$/.test(snapshot.services)
+				? [...new Set(snapshot.services.split(",").filter(Boolean))]
+						.sort((a, b) => Number(a) - Number(b))
+						.join(",")
+				: null,
+	};
+}
 export function pendingTransfer(accountId: string) {
-	return read<PendingTransfer[]>(pendingKey, []).find(
+	const transfer = read<PendingTransfer[]>(pendingKey, []).find(
 		(t) => t.accountId === accountId,
 	);
+	// A confirmed payload is immutable, including partially written retries.
+	return transfer && !transfer.confirmed?.length
+		? { ...transfer, snapshot: normalizeTransferSnapshot(transfer.snapshot) }
+		: transfer;
 }
+
 export function beginAuthentication(
 	mode: "sign-in" | "sign-up" | "oauth",
 	returnTo?: string,
 ) {
-	const snapshot = snapshotGuestProgress();
+	const snapshot = normalizeTransferSnapshot(snapshotGuestProgress());
 	const transfers = read<PendingTransfer[]>(pendingKey, []);
 	// Bound snapshots belong to their original account, even after signing out.
 	const alreadyOwned = transfers.some(
@@ -81,14 +108,19 @@ export function beginAuthentication(
 			JSON.stringify(t.snapshot.interactions) ===
 				JSON.stringify(snapshot.interactions),
 	);
-	const transfer = !alreadyOwned
-		? {
-				id: crypto.randomUUID(),
-				snapshot,
-				returnTo: discoveryReturnTo(returnTo),
-				automatic: false,
-			}
-		: undefined;
+	const hasProgress =
+		snapshot.interactions.length > 0 ||
+		snapshot.country !== null ||
+		snapshot.services !== null;
+	const transfer =
+		!alreadyOwned && hasProgress
+			? {
+					id: crypto.randomUUID(),
+					snapshot,
+					returnTo: discoveryReturnTo(returnTo),
+					automatic: false,
+				}
+			: undefined;
 	if (transfer) {
 		write(pendingKey, [...transfers.filter((t) => t.accountId), transfer]);
 	}
@@ -127,7 +159,7 @@ export function attachTransfer(user: User) {
 	);
 	// Migrate interactions left by the earlier onboarding implementation. Never infer newness from onboarding.
 	if (!transfer && !transfers.some((t) => t.accountId)) {
-		const snapshot = snapshotGuestProgress();
+		const snapshot = normalizeTransferSnapshot(snapshotGuestProgress());
 		if (snapshot.interactions.length)
 			transfer = {
 				id: crypto.randomUUID(),
@@ -148,12 +180,18 @@ export function attachTransfer(user: User) {
 			createdDuringOAuth,
 	});
 }
-export function completeTransfer(transfer: PendingTransfer) {
+export function completeTransfer(
+	transfer: PendingTransfer,
+	clearProgress = true,
+) {
 	// Preserve a completion marker until cleanup succeeds, preventing stale in-memory progress resurfacing.
-	write("goodwatch_transfer_completed", transfer.accountId);
-	clearGuestProgress();
-	if (JSON.parse(localStorage.getItem("onboarding_ratings") || "[]").length)
-		throw new Error("Browser cleanup could not finish. Please retry.");
+	if (clearProgress) {
+		write("goodwatch_transfer_completed", transfer.accountId);
+		clearGuestProgress();
+		if (JSON.parse(localStorage.getItem("onboarding_ratings") || "[]").length)
+			throw new Error("Browser cleanup could not finish. Please retry.");
+	}
+
 	write(
 		pendingKey,
 		read<PendingTransfer[]>(pendingKey, []).filter((t) => t.id !== transfer.id),
@@ -175,4 +213,19 @@ export function cleanupCompletedTransferOnLogout(accountId: string) {
 		clearGuestProgress();
 		localStorage.removeItem("goodwatch_transfer_completed");
 	}
+}
+
+// No selected work exists and no request can be in flight. Retire bookkeeping silently,
+// clearing only the same source snapshot, never newer browser interactions.
+export function completeEmptyTransfer(transfer: PendingTransfer) {
+	if (
+		transfer.confirmed?.length ||
+		!transfer.changes ||
+		transfer.changes.length
+	)
+		return;
+	const sameSource =
+		JSON.stringify(readGuestInteractions()) ===
+		JSON.stringify(transfer.snapshot.interactions);
+	completeTransfer(transfer, sameSource);
 }

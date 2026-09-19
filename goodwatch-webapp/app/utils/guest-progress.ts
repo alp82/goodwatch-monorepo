@@ -17,6 +17,35 @@ let memoryOnly = false
 const empty: TasteInteraction[] = []
 let lastRaw = ""
 let cached = empty
+export function normalizeGuestInteractions(parsed: unknown): TasteInteraction[] {
+	const unique = new Map<string, TasteInteraction>()
+	if (Array.isArray(parsed))
+		for (const value of parsed) {
+			if (
+				!value ||
+				!Number.isInteger(value.tmdb_id) ||
+				value.tmdb_id <= 0 ||
+				!["movie", "show"].includes(value.media_type)
+			)
+				continue
+			value.tmdb_id = canonicalTitleId(value.media_type, value.tmdb_id)
+			const type = value.type || (value.score ? "score" : undefined)
+			if (
+				!["score", "plan", "skip"].includes(type) ||
+				(type === "score" &&
+					(!Number.isInteger(value.score) ||
+						value.score < 1 ||
+						value.score > 10))
+			)
+				continue
+			unique.set(`${value.media_type}-${value.tmdb_id}`, {
+				...value,
+				type,
+				timestamp: Number(value.timestamp) || 0,
+			})
+		}
+	return [...unique.values()]
+}
 export function readGuestInteractions(): TasteInteraction[] {
 	if (typeof window === "undefined") return empty
 	let raw = fallback
@@ -27,33 +56,7 @@ export function readGuestInteractions(): TasteInteraction[] {
 	lastRaw = raw
 	try {
 		const parsed = JSON.parse(raw)
-		const unique = new Map<string, TasteInteraction>()
-		if (Array.isArray(parsed))
-			for (const value of parsed) {
-				if (
-					!value ||
-					!Number.isInteger(value.tmdb_id) ||
-					value.tmdb_id <= 0 ||
-					!["movie", "show"].includes(value.media_type)
-				)
-					continue
-				value.tmdb_id = canonicalTitleId(value.media_type, value.tmdb_id)
-				const type = value.type || (value.score ? "score" : undefined)
-				if (
-					!["score", "plan", "skip"].includes(type) ||
-					(type === "score" &&
-						(!Number.isInteger(value.score) ||
-							value.score < 1 ||
-							value.score > 10))
-				)
-					continue
-				unique.set(`${value.media_type}-${value.tmdb_id}`, {
-					...value,
-					type,
-					timestamp: Number(value.timestamp) || 0,
-				})
-			}
-		cached = [...unique.values()]
+		cached = normalizeGuestInteractions(parsed)
 	} catch {
 		cached = empty
 	}
