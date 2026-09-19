@@ -496,6 +496,11 @@ SCHEMAS = {
         "primary_key": ["media_tmdb_id", "media_type", "person_tmdb_id", "credit_id"],
         "shards": 6,
     },
+    "streaming_evidence": {
+        "columns": {"media_tmdb_id": "INTEGER", "media_type": "TEXT", "country_code": "TEXT", "payload": "TEXT INDEX OFF"},
+        "primary_key": ["media_tmdb_id", "media_type", "country_code"],
+        "shards": 6,
+    },
     "streaming_availability": {
         "columns": {
             "media_tmdb_id": "INTEGER",

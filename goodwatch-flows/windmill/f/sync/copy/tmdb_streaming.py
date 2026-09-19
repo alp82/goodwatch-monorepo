@@ -19,8 +19,10 @@ from f.sync.models.crate_models import (
     Movie,
     Show,
     StreamingAvailability,
+    StreamingEvidence,
 )
 from f.sync.models.crate_schemas import SCHEMAS
+from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.tmdb_web.provider_identity import provider_name_from_url
 
 BATCH_SIZE = 5000
@@ -63,6 +65,9 @@ def fetch_documents_in_batch(tmdb_ids: list[int], collection: Any) -> dict:
     projection = {
         "tmdb_id": 1,
         "watch_providers": 1,
+        "watch_providers_check": 1,
+        "watch_providers_attempted_at": 1,
+        "watch_providers_error": 1,
         "updated_at": 1,
     }
     return {
@@ -277,7 +282,7 @@ def publication_snapshot(
                     continue
                 provider = next(row for row in providers if row.get("country_code") == country)
             else:
-                yield check_owned, existing, providers, rows, verified, api_results, refresh_outcomes
+                yield check_owned, existing, providers, rows, verified, api_results, refresh_outcomes, details
                 return
         # The fetch job owns the country claim, retry state and source writes.
         # Re-read both source snapshots and published state after reacquiring the
@@ -304,7 +309,16 @@ def copy_media(
     mongo_providers = mongo_db.tmdb_movie_providers if is_movie else mongo_db.tmdb_tv_providers
     media_table_name = "movie" if is_movie else "show"
     MediaClass = Movie if is_movie else Show
-    updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}} if recent_only else {}
+    cutoff = datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)
+    updated_at_filter = {"$or": [{field: {"$gte": cutoff}} for field in ("updated_at", "failed_at")]} if recent_only else {}
+    details_filter = {"$or": [{field: {"$gte": cutoff}} for field in ("updated_at", "watch_providers_attempted_at")]} if recent_only else {}
+    # Failure/pending invalidation must not require a new whole-catalog scan.
+    # Index creation is idempotent; deploy these before enabling the new writer.
+    mongo_providers.create_index([("failed_at", 1), ("tmdb_id", 1)])
+    mongo_details.create_index([("watch_providers_attempted_at", 1), ("tmdb_id", 1)])
+    for marker in ("identity_repair_pending", "country_identity_error"):
+        mongo_providers.create_index([("tmdb_id", 1)], name=f"evidence_{marker}",
+                                     partialFilterExpression={marker: {"$exists": True}})
     streaming_services = connector.select(
         "SELECT tmdb_id, name, media_type, order_by_country FROM streaming_service WHERE media_type = ?",
         (media_type,),
@@ -330,10 +344,22 @@ def copy_media(
             pipeline += [{"$group": {"_id": "$tmdb_id"}}, {"$sort": {"_id": 1}},
                          {"$limit": BATCH_SIZE}]
             candidates = {row["_id"] for row in mongo_providers.aggregate(pipeline)}
+            invalidation_match = {"$or": [{"identity_repair_pending": {"$exists": True, "$nin": [None, False, ""]}}, {"country_identity_error": {"$exists": True, "$nin": [None, False, ""]}}]}
+            invalidation_pipeline = [{"$match": {"$and": [query_selector, invalidation_match]}}]
+            if last_tmdb_id is not None:
+                invalidation_pipeline.append({"$match": {"tmdb_id": {"$gt": last_tmdb_id}}})
+            invalidation_pipeline += [{"$group": {"_id": "$tmdb_id"}}, {"$sort": {"_id": 1}}, {"$limit": BATCH_SIZE}]
+            candidates.update(row["_id"] for row in mongo_providers.aggregate(invalidation_pipeline))
+            if not query_selector:
+                quarantine_query = {"media": "movie" if is_movie else "tv", "status": {"$in": ["unresolved", "resolved_alias"]}}
+                if last_tmdb_id is not None:
+                    quarantine_query["tmdb_id"] = {"$gt": last_tmdb_id}
+                candidates.update(row["tmdb_id"] for row in mongo_db.provider_identity_unresolved.find(quarantine_query).sort("tmdb_id", 1).limit(BATCH_SIZE))
             # ObjectId selectors refer to provider documents in this entrypoint.
             # Preserve that legacy interface instead of applying them to details.
             if "_id" not in query_selector:
-                candidates.update(row["_id"] for row in mongo_details.aggregate(pipeline))
+                candidates.update(row["_id"] for row in mongo_details.aggregate(
+                    [{"$match": query_selector | details_filter}] + pipeline[1:]))
             tmdb_ids = sorted(candidates)[:BATCH_SIZE]
             if tmdb_ids:
                 last_tmdb_id = tmdb_ids[-1]
@@ -348,6 +374,15 @@ def copy_media(
                 # Quarantined source identities are not an empty availability
                 # snapshot. Freeze the entire published title, including API
                 # contributions, until its identity is authoritatively resolved.
+                # Invalidate evidence even while legacy offers remain frozen.
+                with publication_lease(mongo_db, media_type, tmdb_id) as check_owned:
+                    check_owned()
+                    connector.run("REFRESH TABLE streaming_evidence")
+                    previous = connector.select("SELECT * FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?", ([tmdb_id], media_type))
+                    evidence = [StreamingEvidence(**row) for row in quarantine_evidence(previous)]
+                    if evidence:
+                        connector.upsert_many(table="streaming_evidence", records=evidence,
+                            conflict_columns=SCHEMAS["streaming_evidence"]["primary_key"], silent=True, replace_nulls=True)
                 publication["status"] = "partial_success"
                 if targeted_ids is not None:
                     publication["titles"][str(tmdb_id)] = {
@@ -360,7 +395,7 @@ def copy_media(
             with publication_snapshot(
                 mongo_db, connector, tmdb_id, media_type, mongo_details, mongo_providers, service_ids,
             ) as snapshot:
-                check_owned, existing, providers, rows, verified, api_results, refresh_outcomes = snapshot
+                check_owned, existing, providers, rows, verified, api_results, refresh_outcomes, details = snapshot
                 unverified = [
                     row for row in providers
                     if verified.get(row.get("country_code")) is not row
@@ -377,6 +412,19 @@ def copy_media(
                     publication["status"] = "partial_success"
                 if targeted_ids is not None:
                     publication["titles"][str(tmdb_id)] = summary
+                check_owned()
+                connector.run("REFRESH TABLE streaming_evidence")
+                prior_evidence = connector.select(
+                    "SELECT country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
+                    ([tmdb_id], media_type))
+                evidence = [StreamingEvidence(**record) for record in build_evidence(
+                    tmdb_id, media_type, details, providers, rows, verified, scoped_provider_id, service_ids,
+                    [record["country_code"] for record in prior_evidence])]
+                if evidence:
+                    check_owned()
+                    connector.upsert_many(table="streaming_evidence", records=evidence,
+                        conflict_columns=SCHEMAS["streaming_evidence"]["primary_key"], silent=True, replace_nulls=True)
+                    check_owned()
                 if not verified and not api_results:
                     continue
                 old_rows = {availability_key(row): StreamingAvailability(**row).model_dump() for row in existing}

@@ -1,0 +1,26 @@
+{
+  "mobile": {
+    "url": "http://localhost:3003/taste/quiz?resume=1",
+    "scores": {
+      "accessibility": 0.96,
+      "best-practices": 1,
+      "seo": 1
+    },
+    "failed_audits": [
+      "link-name",
+      "agent-accessibility-tree",
+      "llms-txt"
+    ]
+  },
+  "desktop": {
+    "url": "http://localhost:3003/taste/quiz?resume=1",
+    "scores": {
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    },
+    "failed_audits": [
+      "llms-txt"
+    ]
+  }
+}

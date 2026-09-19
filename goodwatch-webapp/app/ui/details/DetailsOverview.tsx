@@ -1,5 +1,6 @@
+import SkipButton from "~/ui/user/SkipButton"
+import { useUser } from "~/utils/auth"
 import React from "react"
-import type { MovieDetails, TVDetails } from "~/server/details.server"
 import { Poster } from "~/ui/Poster"
 import TrailerOverlay from "~/ui/TrailerOverlay"
 import type { SectionIds } from "~/ui/details/sections"
@@ -19,6 +20,7 @@ export default function DetailsOverview({
 	media,
 	sectionProps,
 }: DetailsOverviewProps) {
+	const { user } = useUser()
 	const { details, videos } = media
 	const { backdrop_path, poster_path, title } = details
 
@@ -31,7 +33,12 @@ export default function DetailsOverview({
 				{/* Poster and Trailer */}
 				<div className="flex justify-center gap-2">
 					<div className="relative w-[calc(21.8%-0.125rem)] min-w-[3.8rem] shrink-0">
-						<Poster path={poster_path} title={title} mediaType={details.media_type} tmdbId={details.tmdb_id} />
+						<Poster
+							path={poster_path}
+							title={title}
+							mediaType={details.media_type}
+							tmdbId={details.tmdb_id}
+						/>
 						{/* <RatingOverlay ratings={ratings} /> */}
 					</div>
 					<div className="relative grow min-w-[220px] flex items-center justify-center">
@@ -53,6 +60,7 @@ export default function DetailsOverview({
 					<div className="flex items-center justify-evenly gap-2">
 						<PlanToWatchButton media={media} />
 						<WatchHistoryButton media={media} />
+						{!user && <SkipButton media={media} />}
 						{/*<span className="hidden md:inline">*/}
 						{/*	<FavoriteButton media={media} />*/}
 						{/*</span>*/}

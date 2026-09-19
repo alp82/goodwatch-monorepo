@@ -1,3 +1,8 @@
+import {
+	getInterestDiscovery,
+	type DiscoveryResult,
+} from "~/server/interest-discovery.server"
+import { getUserData } from "~/server/userData.server"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
@@ -10,7 +15,10 @@ import {
 	QueryClient,
 	dehydrate,
 } from "@tanstack/react-query"
-import { getSmartTitlesForGuest, getSmartTitlesForUser } from "~/server/smart-titles.server"
+import {
+	getSmartTitlesForGuest,
+	getSmartTitlesForUser,
+} from "~/server/smart-titles.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import TasteQuiz from "~/ui/taste/TasteQuiz"
 import type { ScoringMedia } from "~/ui/scoring/types"
@@ -37,6 +45,7 @@ type LoaderData = {
 	isLoggedIn: boolean
 	userId?: string
 	smartTitles: ScoringMedia[]
+	discovery: DiscoveryResult
 	dehydratedState: DehydratedState
 }
 
@@ -53,12 +62,12 @@ export const loader: LoaderFunction = async ({
 				userId: user!.id,
 				count: 300,
 				locale,
-		  })
+			})
 		: await getSmartTitlesForGuest({
 				count: 300,
 				locale,
 				ratingsCount: 0,
-		  })
+			})
 
 	const queryClient = new QueryClient()
 	if (isLoggedIn) {
@@ -69,6 +78,9 @@ export const loader: LoaderFunction = async ({
 		isLoggedIn,
 		userId: user?.id,
 		smartTitles,
+		discovery: await getInterestDiscovery(
+			user ? await getUserData({ user_id: user.id }) : undefined,
+		),
 		dehydratedState: dehydrate(queryClient),
 	})
 }
@@ -78,13 +90,13 @@ export default function TasteQuizRoute() {
 	const navigate = useNavigate()
 
 	const handleSignUp = () => {
-		navigate('/sign-up/?redirectTo=/taste/quiz')
+		navigate("/sign-up/?redirectTo=/taste/quiz")
 	}
 
 	return (
 		<div className="relative">
-			<TasteQuiz 
-				availableTitles={smartTitles} 
+			<TasteQuiz
+				availableTitles={smartTitles}
 				onSignUp={handleSignUp}
 				isAuthenticated={isLoggedIn}
 				userId={userId}

@@ -8,6 +8,7 @@ import wmill
 
 from f.data_source.common import get_documents_for_ids
 from f.db.mongodb import init_mongodb, close_mongodb
+from f.tmdb_api.provider_evidence import capture_provider_check, snapshot_id
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 
@@ -19,12 +20,15 @@ TMDB_API_KEY = wmill.get_variable("u/Alp/TMDB_API_KEY")
 async def fetch_api_data(
     next_entry: Union[TmdbMovieDetails, TmdbTvDetails],
 ) -> tuple[dict, Union[TmdbMovieDetails, TmdbTvDetails]]:
-    if isinstance(next_entry, TmdbMovieDetails):
-        return fetch_movie_data(next_entry)
-    elif isinstance(next_entry, TmdbTvDetails):
-        return fetch_tv_data(next_entry)
-    else:
-        raise Exception(f"next_entry has an unexpected type: {type(next_entry)}")
+    try:
+        if isinstance(next_entry, TmdbMovieDetails):
+            return fetch_movie_data(next_entry)
+        elif isinstance(next_entry, TmdbTvDetails):
+            return fetch_tv_data(next_entry)
+        raise TypeError("Unexpected TMDB media model")
+    except Exception:
+        next_entry.update(set__watch_providers_attempted_at=datetime.utcnow(), set__watch_providers_error="provider_request_failed")
+        raise
 
 
 def fetch_movie_data(next_entry: TmdbMovieDetails) -> tuple[dict, TmdbMovieDetails]:
@@ -33,7 +37,9 @@ def fetch_movie_data(next_entry: TmdbMovieDetails) -> tuple[dict, TmdbMovieDetai
         f"?api_key={TMDB_API_KEY}"
         f"&append_to_response=alternative_titles,credits,images,keywords,recommendations,release_dates,similar,translations,videos,watch/providers"
     )
-    return requests.get(url).json(), next_entry
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json(), next_entry
 
 
 def fetch_tv_data(next_entry: TmdbTvDetails) -> tuple[dict, TmdbTvDetails]:
@@ -42,12 +48,27 @@ def fetch_tv_data(next_entry: TmdbTvDetails) -> tuple[dict, TmdbTvDetails]:
         f"?api_key={TMDB_API_KEY}"
         f"&append_to_response=aggregate_credits,alternative_titles,content_ratings,external_ids,images,keywords,recommendations,similar,translations,videos,watch/providers"
     )
-    return requests.get(url).json(), next_entry
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json(), next_entry
 
 
 async def convert_and_save_details(
     next_entry: Union[TmdbMovieDetails, TmdbTvDetails], details: dict
 ):
+    now = datetime.utcnow()
+    try:
+        proof = capture_provider_check(details, next_entry.tmdb_id, now)
+    except ValueError:
+        next_entry.update(set__watch_providers_attempted_at=now, set__watch_providers_error="identity_mismatch")
+        raise
+    next_entry.watch_providers_attempted_at = now
+    next_entry.watch_providers_error = "" if proof else "missing_or_invalid_provider_response"
+    if proof:
+        next_entry.watch_providers_check = proof
+    else:
+        # Keep prior payload and proof together; omission must never refresh them.
+        details.pop("watch/providers", None)
     if isinstance(next_entry, TmdbMovieDetails):
         converted_details = convert_movie_details(details)
     elif isinstance(next_entry, TmdbTvDetails):
@@ -77,6 +98,9 @@ async def convert_and_save_details(
 
             setattr(next_entry, key, value)
 
+    if proof:
+        # Bind to Mongo's normalized representation, including cleaned strings.
+        next_entry.watch_providers_check = proof | {"payload_hash": snapshot_id(next_entry.watch_providers.to_mongo().to_dict())}
     next_entry.updated_at = datetime.utcnow()
     next_entry.is_selected = False
     try:

@@ -1,5 +1,6 @@
+import { TasteTitleLink } from "~/ui/taste/exploration"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { motion, useMotionValue, useTransform, useAnimation } from "framer-motion"
 import { FilmIcon, TvIcon } from "@heroicons/react/24/outline"
 
@@ -27,6 +28,7 @@ const DRAG_DISTANCE = 140
 export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanToWatch, isGuest = false, isFirstItem = false }: SwipeScorerProps) {
 	const impressionRef = usePosterImpression(media.media_type, media.tmdb_id)
 	const [isDragging, setIsDragging] = useState(false)
+	const dragged = useRef(false)
 	const mediaTypeLabel = media.media_type === "movie" ? "Movie" : "Show"
 	const MediaTypeIcon = media.media_type === "movie" ? FilmIcon : TvIcon
 	const [currentScore, setCurrentScore] = useState<Score>(5)
@@ -223,7 +225,8 @@ export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanT
 					dragConstraints={{ left: -DRAG_DISTANCE, right: DRAG_DISTANCE }}
 					dragElastic={0.2}
 					dragMomentum={false}
-					onDragStart={() => setIsDragging(true)}
+					onPointerDown={() => { dragged.current = false }}
+					onDragStart={() => { dragged.current = true; setIsDragging(true) }}
 					onDragEnd={handleDragEnd}
 					animate={isFirstItem && !hasInteracted ? controls : { x: 0, rotate: 0 }}
 					transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -238,6 +241,7 @@ export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanT
 							draggable={false}
 						/>
 
+						<TasteTitleLink media={media} aria-label={`Explore ${media.title}`} onClick={event => { if (dragged.current) event.preventDefault() }} className="absolute inset-0 z-10 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300" />
 						{/* Color Overlay */}
 						<motion.div
 							className="absolute inset-0 pointer-events-none"
@@ -248,9 +252,9 @@ export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanT
 						/>
 
 						{/* Title Overlay */}
-						<div className="absolute top-0 left-0 right-0 bg-gradient-to-t from-transparent via-black/70 to-black/95 p-6">
+						<div className="absolute z-20 pointer-events-none top-0 left-0 right-0 bg-gradient-to-t from-transparent via-black/70 to-black/95 p-6">
 							<h2 className="text-white text-2xl font-bold">
-								{media.title}
+								<TasteTitleLink media={media} className="pointer-events-auto hover:underline" onClick={event => { if (dragged.current) event.preventDefault() }}>{media.title}</TasteTitleLink>
 								{media.release_year && (
 									<span className="text-gray-300 font-normal ml-2">({media.release_year})</span>
 								)}
@@ -258,7 +262,7 @@ export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanT
 
 							{/* Genres inline */}
 							{media.genres && media.genres.length > 0 && (
-								<div className="flex flex-wrap gap-1.5 mt-2">
+								<div className="pointer-events-auto flex flex-wrap gap-1.5 mt-2">
 									{media.genres.slice(0, 3).map((genre) => (
 										<GenreBadge key={genre} genre={genre} size="sm" />
 									))}
@@ -266,9 +270,9 @@ export default function SwipeScorer({ media, nextMedia, onScore, onSkip, onPlanT
 							)}
 						</div>
 
-						<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4">
+						<div className="absolute z-20 pointer-events-none bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4">
 							{/* Action Buttons */}
-							<div className="flex items-center justify-center gap-2 mb-2">
+							<div className="pointer-events-auto flex items-center justify-center gap-2 mb-2">
 								<Button icon={BookmarkIcon} highlight="sky" mode="dark" size="sm" onClick={onPlanToWatch}>
 									Want to See
 								</Button>

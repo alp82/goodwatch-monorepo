@@ -1,3 +1,4 @@
+import { getAvailabilityEvidence } from "~/server/availability.server"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { cached } from "~/utils/cache"
 import { getRatingKeys } from "~/utils/ratings"
@@ -28,25 +29,27 @@ import {
 
 export const getDetailsForMovie = async (params: DetailsMovieParams, options?: { bypassCache: boolean }) => {
 	params = { ...params, movieId: String(canonicalTitleId("movie", Number(params.movieId))) }
-	if (options?.bypassCache) return await _getDetailsForMovie(params)
-	return await cached<DetailsMovieParams, MovieResult>({
+	if (options?.bypassCache) return { ...await _getDetailsForMovie(params), availability_evidence: await getAvailabilityEvidence({ mediaType: "movie", tmdbId: Number(params.movieId), country: params.country }, options) }
+	const result = await cached<DetailsMovieParams, MovieResult>({
 		name: "details-movie",
 		target: _getDetailsForMovie,
 		params,
 		ttlMinutes: 30,
 		//ttlMinutes: 0,
 	})
+	return { ...result, availability_evidence: await getAvailabilityEvidence({ mediaType: "movie", tmdbId: Number(params.movieId), country: params.country }) }
 }
 
 export const getDetailsForShow = async (params: DetailsShowParams, options?: { bypassCache: boolean }) => {
-	if (options?.bypassCache) return await _getDetailsForShow(params)
-	return await cached<DetailsShowParams, ShowResult>({
+	if (options?.bypassCache) return { ...await _getDetailsForShow(params), availability_evidence: await getAvailabilityEvidence({ mediaType: "show", tmdbId: Number(params.showId), country: params.country }, options) }
+	const result = await cached<DetailsShowParams, ShowResult>({
 		name: "details-show",
 		target: _getDetailsForShow,
 		params,
 		ttlMinutes: 30,
 		//ttlMinutes: 0,
 	})
+	return { ...result, availability_evidence: await getAvailabilityEvidence({ mediaType: "show", tmdbId: Number(params.showId), country: params.country }) }
 }
 
 const _getDetailsForMovie = async ({

@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { readExploration, rememberExploration } from "../exploration"
+import { useState, useEffect } from "react"
 import SingleItemScorer from "~/ui/scoring/SingleItemScorer"
 import TasteStream from "../components/TasteStream"
 import UnlockCelebration from "../components/UnlockCelebration"
 import RecommendationsView from "../components/RecommendationsView"
-import type { FingerprintPreviewResult, FingerprintRecommendation } from "~/server/fingerprint-preview.server"
+import type { FingerprintPreviewResult } from "~/server/fingerprint-preview.server"
 import type { ScoringMedia, LastRatedItem } from "~/ui/scoring/types"
 import type { Score } from "~/server/scores.server"
 import type { Feature } from "../features"
@@ -47,19 +48,37 @@ export default function TasteRating({
 	onDismissCelebration,
 	fingerprintPreview,
 }: TasteRatingProps) {
-	const [showPicks, setShowPicks] = useState(false)
-	
-	const handleViewPicks = () => setShowPicks(true)
-	const handleDismissPicks = () => setShowPicks(false)
-	
+	const [showPicks, setShowPicks] = useState(true)
+	useEffect(() => {
+		setShowPicks(readExploration().view !== "rate")
+		const frame = requestAnimationFrame(() =>
+			window.scrollTo(0, readExploration().scrollY || 0),
+		)
+		return () => cancelAnimationFrame(frame)
+	}, [])
+
+	const handleViewPicks = () => {
+		setShowPicks(true)
+		rememberExploration({ view: "picks" })
+	}
+	const handleDismissPicks = () => {
+		setShowPicks(false)
+		rememberExploration({ view: "rate" })
+	}
+
 	const unlockedFeatures = getUnlockedFeatures(ratingsCount)
 	const currentFeature = unlockedFeatures[unlockedFeatures.length - 1] || null
-	
+
 	const showCelebration = justUnlockedFeature !== null
 	const showRecommendations = !showCelebration && showPicks
 
 	return (
-		<div className="flex flex-col relative min-h-screen">
+		<div
+			className="flex flex-col relative min-h-screen"
+			onClickCapture={() =>
+				rememberExploration({ view: showPicks ? "picks" : "rate" })
+			}
+		>
 			{/* Header - Always visible */}
 			<div className="px-3 py-3 md:px-4 md:py-4 w-full">
 				<div className="max-w-6xl mx-auto">
@@ -70,7 +89,8 @@ export default function TasteRating({
 								Your Taste Profile
 							</h1>
 							<p className="text-gray-400 text-md md:text-lg lg:text-xl">
-								Rate movies and shows to unlock recommendations
+								Explore suggestions, or rate familiar titles to refine your
+								taste
 							</p>
 						</div>
 					</div>
@@ -105,10 +125,10 @@ export default function TasteRating({
 							onContinueRating={onDismissCelebration}
 						/>
 					)}
-					
+
 					{showRecommendations && (
 						<RecommendationsView
-							variant={fingerprintPreview ? 'fingerprint' : 'regular'}
+							variant={fingerprintPreview ? "fingerprint" : "regular"}
 							recommendations={recommendations}
 							currentFeature={currentFeature}
 							ratingsCount={ratingsCount}
@@ -117,7 +137,7 @@ export default function TasteRating({
 							isGuest={isGuest}
 						/>
 					)}
-					
+
 					{!showCelebration && !showRecommendations && (
 						<SingleItemScorer
 							media={media}
@@ -132,7 +152,7 @@ export default function TasteRating({
 					)}
 				</div>
 			</div>
-			
+
 			{/* Motivational text - Mobile only (below scorer) */}
 			{!showCelebration && !showRecommendations && (
 				<div className="md:hidden px-3 py-4 text-center">
