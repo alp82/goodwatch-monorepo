@@ -453,6 +453,9 @@ class CreatedBy(EmbeddedDocument):
 
 
 class BaseTmdbDetails(Document):
+    watch_providers_check = DictField()
+    watch_providers_attempted_at = DateTimeField()
+    watch_providers_error = StringField()
     tmdb_id = IntField()
     original_title = StringField()
     popularity = FloatField()

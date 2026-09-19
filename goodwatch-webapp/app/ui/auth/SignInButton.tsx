@@ -1,16 +1,17 @@
-import { ArrowRightCircleIcon } from "@heroicons/react/24/solid";
-import { Link } from "@remix-run/react";
-import React, { useEffect, useState } from "react";
+import { ArrowRightCircleIcon } from "@heroicons/react/24/solid"
+import { Link, useLocation } from "@remix-run/react"
+import React, { useEffect, useState } from "react"
 
-type SignInButtonProps = {};
+type SignInButtonProps = {}
 
 export const SignInButton = ({}: SignInButtonProps) => {
-	const [redirectTo, setRedirectTo] = useState("");
+	const location = useLocation()
+	const [redirectTo, setRedirectTo] = useState("")
 	useEffect(() => {
 		setRedirectTo(
 			`?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`,
-		);
-	}, []);
+		)
+	}, [location.pathname, location.search, location.hash])
 
 	return (
 		<Link
@@ -28,5 +29,5 @@ export const SignInButton = ({}: SignInButtonProps) => {
 			<ArrowRightCircleIcon className="w-5 h-5" />
 			Sign In
 		</Link>
-	);
-};
+	)
+}

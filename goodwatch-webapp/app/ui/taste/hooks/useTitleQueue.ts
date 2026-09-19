@@ -1,3 +1,4 @@
+import { readExploration, rememberExploration } from "../exploration"
 import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ScoringMedia } from "~/ui/scoring/types"
@@ -5,6 +6,7 @@ import type { TasteInteraction } from "../types"
 import { queryKeySmartTitles } from "~/routes/api.smart-titles"
 
 interface UseTitleQueueParams {
+	resume?: boolean
 	initialTitles: ScoringMedia[]
 	isAuthenticated: boolean
 	interactions: TasteInteraction[]
@@ -14,6 +16,7 @@ interface UseTitleQueueParams {
 }
 
 interface TitleQueueState {
+	remainingTitles: ScoringMedia[]
 	current: ScoringMedia | null
 	next: ScoringMedia | null
 	advance: () => void
@@ -27,6 +30,7 @@ const DEFAULT_PREFETCH_THRESHOLD = 5
 const DEFAULT_BATCH_SIZE = 20
 
 export function useTitleQueue({
+	resume = false,
 	initialTitles,
 	isAuthenticated,
 	interactions,
@@ -38,19 +42,19 @@ export function useTitleQueue({
 	const [queue, setQueue] = useState<ScoringMedia[]>([])
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [isPrefetching, setIsPrefetching] = useState(false)
-	
+
 	// Track which items have been seen to avoid duplicates
 	const seenIds = useRef(new Set<string>())
-	
+
 	// Track if we've initialized from initial titles
 	const hasInitialized = useRef(false)
-	
+
 	// Track ongoing fetch to prevent duplicate requests
 	const fetchInProgress = useRef(false)
 
 	// Get IDs of items user has already interacted with
 	const interactedIds = useMemo(() => {
-		return new Set(interactions.map(i => `${i.media_type}-${i.tmdb_id}`))
+		return new Set(interactions.map((i) => `${i.media_type}-${i.tmdb_id}`))
 	}, [interactions])
 
 	// Helper to create unique key for a media item
@@ -59,46 +63,50 @@ export function useTitleQueue({
 	}, [])
 
 	// Filter out already-interacted items and duplicates
-	const filterNewTitles = useCallback((titles: ScoringMedia[]): ScoringMedia[] => {
-		return titles.filter(title => {
-			const key = makeKey(title)
-			// Skip if already in queue or already interacted with
-			if (seenIds.current.has(key) || interactedIds.has(key)) {
-				return false
-			}
-			return true
-		})
-	}, [makeKey, interactedIds])
+	const filterNewTitles = useCallback(
+		(titles: ScoringMedia[]): ScoringMedia[] => {
+			return titles.filter((title) => {
+				const key = makeKey(title)
+				// Skip if already in queue or already interacted with
+				if (seenIds.current.has(key) || interactedIds.has(key)) {
+					return false
+				}
+				return true
+			})
+		},
+		[makeKey, interactedIds],
+	)
 
 	// Initialize queue from initial titles (only once)
 	useEffect(() => {
 		if (hasInitialized.current || initialTitles.length === 0) return
-		
-		const filtered = filterNewTitles(initialTitles)
+
+		const saved = resume ? readExploration().ratingQueue : undefined
+		const filtered = saved?.length ? saved : filterNewTitles(initialTitles)
 		if (filtered.length > 0) {
 			// Mark all as seen
-			filtered.forEach(t => seenIds.current.add(makeKey(t)))
+			filtered.forEach((t) => seenIds.current.add(makeKey(t)))
 			setQueue(filtered)
 			hasInitialized.current = true
 		}
-	}, [initialTitles, filterNewTitles, makeKey])
+	}, [initialTitles, filterNewTitles, makeKey, resume])
 
 	// Prefetch more titles when queue is running low
 	const prefetchMore = useCallback(async () => {
 		if (fetchInProgress.current || isPrefetching) return
-		
+
 		fetchInProgress.current = true
 		setIsPrefetching(true)
-		
+
 		try {
 			const newTitles = await fetchMoreTitles()
 			const filtered = filterNewTitles(newTitles)
-			
+
 			if (filtered.length > 0) {
 				// Mark new titles as seen
-				filtered.forEach(t => seenIds.current.add(makeKey(t)))
+				filtered.forEach((t) => seenIds.current.add(makeKey(t)))
 				// Append to queue without affecting current position
-				setQueue(prev => [...prev, ...filtered])
+				setQueue((prev) => [...prev, ...filtered])
 			}
 		} catch (error) {
 			console.error("[TitleQueue] Failed to prefetch:", error)
@@ -118,11 +126,17 @@ export function useTitleQueue({
 
 	// Advance to next title
 	const advance = useCallback(() => {
-		setCurrentIndex(prev => prev + 1)
+		setCurrentIndex((prev) => prev + 1)
 	}, [])
 
 	// Reset queue (for start over functionality)
 	const reset = useCallback(() => {
+		rememberExploration({
+			ratingQueue: [],
+			selectedMedia: null,
+			view: "rate",
+			scrollY: 0,
+		})
 		setCurrentIndex(0)
 		setQueue([])
 		seenIds.current.clear()
@@ -137,6 +151,7 @@ export function useTitleQueue({
 	const showLoading = !hasInitialized.current && initialTitles.length === 0
 
 	return {
+		remainingTitles: queue.slice(currentIndex),
 		current,
 		next,
 		advance,

@@ -28,6 +28,7 @@ export default function SkippedAction({
 
 	return (
 		<UserAction
+			requiresLogin={false}
 			instructions={<>Add titles you want to ignore for now.</>}
 			onChange={onChange}
 		>

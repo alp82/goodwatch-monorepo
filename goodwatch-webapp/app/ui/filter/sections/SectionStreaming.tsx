@@ -109,7 +109,7 @@ export default function SectionStreaming({
 			return
 		}
 
-		const streamingPreset = user?.id ? "mine" : "everywhere"
+		const streamingPreset = "everywhere"
 		onSelectStreamingPreset(streamingPreset)
 	}, [user?.id, params.streamingPreset, editing])
 

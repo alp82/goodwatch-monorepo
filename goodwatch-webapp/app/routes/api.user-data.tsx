@@ -17,12 +17,18 @@ export const loader: LoaderFunction = async ({ request }) => {
 	return json<UserData>(userData, { headers })
 }
 
+import { guestUserData, useGuestInteractions } from "~/utils/guest-progress"
+import { useMemo } from "react"
+
 export const useUserData = () => {
+	const interactions = useGuestInteractions()
+	const guestData = useMemo(() => guestUserData(interactions), [interactions])
 	const { user, loading } = useUser()
 	const url = "/api/user-data"
-	return useQuery<UserData>({
+	const query = useQuery<UserData>({
 		queryKey: getQueryKeyUserData(user?.id),
 		queryFn: async () => await (await fetch(url)).json(),
 		enabled: !loading && Boolean(user?.id),
 	})
+	return user ? query : { ...query, data: guestData, isLoading: false }
 }

@@ -19,6 +19,8 @@ from pydantic import BaseModel, ConfigDict
 ROOT = Path(__file__).parents[1] / "windmill" / "f"
 sys.path.insert(0, str(ROOT.parent))
 from f.tmdb_web.provider_identity import provider_name_from_url
+from f.sync.availability_evidence import build_evidence, quarantine_evidence
+from f.sync.models.crate_models import StreamingEvidence
 from test_provider_identity import clickout_url
 
 
@@ -30,6 +32,7 @@ class Crate:
     def __init__(self, rows: Iterable[dict] = ()) -> None:
         self.rows = list(deepcopy(rows))
         self.media = {}
+        self.evidence = {}
         self.cur = type("Cursor", (), {"rowcount": 1})()
         self.writes = []
 
@@ -37,13 +40,17 @@ class Crate:
         if "FROM streaming_service" in sql:
             return [{"tmdb_id": 8, "name": "Netflix"}, {"tmdb_id": 9, "name": "Amazon"}]
         assert params is not None
+        if "FROM streaming_evidence" in sql:
+            return deepcopy([r for r in self.evidence.values() if r["media_tmdb_id"] in params[0] and r["media_type"] == params[1]])
         return deepcopy([r for r in self.rows if r["media_tmdb_id"] in params[0] and r["media_type"] == params[1]])
 
     def upsert_many(self, table: str, records: list[BaseModel], **kwargs: Any) -> dict[str, int]:
         self.writes.append(table)
         for record in records:
             row = record.model_dump()
-            if table == "streaming_availability":
+            if table == "streaming_evidence":
+                self.evidence[(row["media_tmdb_id"], row["media_type"], row["country_code"])] = row
+            elif table == "streaming_availability":
                 self.rows = [old for old in self.rows if key(old) != key(row)]
                 self.rows.append(row)
             else:
@@ -52,7 +59,9 @@ class Crate:
 
     def run(self, sql: str, params: tuple | None = None) -> None:
         self.writes.append(sql)
-        if sql.startswith("DELETE"):
+        if sql.startswith("DELETE FROM streaming_evidence"):
+            self.evidence = {key: value for key, value in self.evidence.items() if key[:2] != tuple(params)}
+        elif sql.startswith("DELETE"):
             assert params is not None
             self.rows = [row for row in self.rows if key(row) != tuple(params)]
 
@@ -75,8 +84,8 @@ def load_copy(db: Any) -> Callable[..., dict]:
                      Optional=Optional, Any=Any, Callable=Callable, Iterator=Iterator,
                      contextmanager=contextmanager, uuid4=uuid4, DuplicateKeyError=DuplicateKeyError,
                      BaseModel=BaseModel, CrateConnector=Crate,
-                     Movie=Record, Show=Record, StreamingAvailability=Record,
-                     SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability")},
+                     Movie=Record, Show=Record, StreamingAvailability=Record, StreamingEvidence=StreamingEvidence, build_evidence=build_evidence, quarantine_evidence=quarantine_evidence,
+                     SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability", "streaming_evidence")},
                      get_db=lambda: db, provider_name_from_url=provider_name_from_url)
     model_tree = ast.parse((ROOT / "sync" / "models" / "crate_models.py").read_text())
     model = next(node for node in model_tree.body if isinstance(node, ast.ClassDef) and node.name == "StreamingAvailability")
@@ -469,7 +478,7 @@ class StreamingPublicationTests(unittest.TestCase):
     def test_absent_sources_are_explicit_and_do_not_write(self) -> None:
         crate = Crate([availability()])
         result = self.publish(crate)
-        self.assertFalse(any(sql != "REFRESH TABLE streaming_availability" for sql in crate.writes))
+        self.assertFalse(any(sql not in ("REFRESH TABLE streaming_availability", "REFRESH TABLE streaming_evidence", "streaming_evidence") for sql in crate.writes))
         self.assertEqual(result["publication"]["titles"]["42"]["provider_state"], "absent")
 
     def test_api_empty_clears_only_api_contribution_while_scrape_is_pending(self) -> None:

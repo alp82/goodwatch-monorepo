@@ -1,6 +1,11 @@
+import { useUser } from "~/utils/auth"
+import { canGuestRate, guestLimitEvent } from "~/utils/guest-progress"
 import React from "react"
 import { useUserScore } from "~/hooks/useUserDataAccessors"
-import { useScoreMutation, useWatchedMutation } from "~/hooks/useUserDataMutations"
+import {
+	useScoreMutation,
+	useWatchedMutation,
+} from "~/hooks/useUserDataMutations"
 import type { Score } from "~/server/scores.server"
 import UserAction from "~/ui/auth/UserAction"
 import type { UserActionProps } from "~/ui/user/actions/types"
@@ -17,13 +22,19 @@ export default function ScoreAction({
 	onChange,
 	isGuest = false,
 }: ScoreActionProps) {
+	const { user } = useUser()
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
 	const { mutate: updateScore, isPending: isScorePending } = useScoreMutation()
-	const { mutate: updateWatched, isPending: isWatchedPending } = useWatchedMutation()
+	const { mutate: updateWatched, isPending: isWatchedPending } =
+		useWatchedMutation()
 
 	const handleClick = () => {
+		if (!user && score !== null && !canGuestRate(mediaType, tmdb_id)) {
+			window.dispatchEvent(new Event(guestLimitEvent))
+			return
+		}
 		updateScore({
 			mediaType,
 			tmdbId: tmdb_id,
@@ -31,11 +42,12 @@ export default function ScoreAction({
 		})
 
 		const watchHistoryAction = score === null ? "remove" : "add"
-		updateWatched({
-			mediaType,
-			tmdbId: tmdb_id,
-			action: watchHistoryAction,
-		})
+		if (user)
+			updateWatched({
+				mediaType,
+				tmdbId: tmdb_id,
+				action: watchHistoryAction,
+			})
 
 		onChange?.()
 	}
@@ -44,11 +56,9 @@ export default function ScoreAction({
 
 	return (
 		<UserAction
-			instructions={
-				<>Rate movies and shows to get better recommendations.</>
-			}
+			instructions={<>Rate movies and shows to get better recommendations.</>}
 			onChange={onChange}
-			requiresLogin={!isGuest}
+			requiresLogin={false}
 		>
 			{React.cloneElement(children, {
 				onClick: handleClick,

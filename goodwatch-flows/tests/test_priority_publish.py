@@ -163,7 +163,8 @@ class SelectionTests(unittest.TestCase):
                     functions = [function]
                     if name == "tmdb_streaming":
                         from test_streaming_publication import load_copy
-                        namespace["publication_snapshot"] = load_copy(db).__globals__["publication_snapshot"]
+                        streaming = load_copy(db).__globals__
+                        namespace.update({key: streaming[key] for key in ("publication_snapshot", "build_evidence", "StreamingEvidence", "SCHEMAS", "scoped_provider_id")})
                         namespace["publication_snapshot"].__wrapped__.__globals__["publication_lease"] = lambda *args: nullcontext(lambda: None)
                     exec(compile(ast.Module(body=functions, type_ignores=[]), str(ROOT / name), "exec"), namespace)
                     namespace["copy_media"](connector, {"tmdb_id": {"$in": [42]}}, recent_only=recent_only)
@@ -174,9 +175,14 @@ class SelectionTests(unittest.TestCase):
                         elif method.endswith("aggregate"):
                             selectors.append(args[0][0]["$match"])
                     self.assertTrue(selectors)
+                    def clauses(selector):
+                        yield selector
+                        for operator in ("$and", "$or"):
+                            for child in selector.get(operator, []):
+                                yield from clauses(child)
                     for selector in selectors:
-                        self.assertEqual(selector["tmdb_id"], {"$in": [42]})
-                        self.assertEqual("updated_at" in selector, recent_only)
+                        self.assertTrue(any(part.get("tmdb_id") == {"$in": [42]} for part in clauses(selector)))
+                    self.assertEqual(any("updated_at" in part for selector in selectors for part in clauses(selector)), recent_only)
 
 
 class VectorKeysetTests(unittest.TestCase):

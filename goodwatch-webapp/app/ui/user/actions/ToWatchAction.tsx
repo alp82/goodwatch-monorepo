@@ -31,6 +31,7 @@ export default function ToWatchAction({
 
 	return (
 		<UserAction
+			requiresLogin={false}
 			instructions={<>Curate your wishlist to track what you want to watch.</>}
 			onChange={onChange}
 		>

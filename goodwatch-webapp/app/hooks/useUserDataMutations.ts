@@ -1,3 +1,4 @@
+import { updateGuestInteraction } from "~/utils/guest-progress"
 import { useCallback } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { UserData, MediaType, MediaKey } from "~/types/user-data"
@@ -155,8 +156,23 @@ export const useScoreMutation = () => {
 	const { user } = useUser()
 	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
-	return useMutation<MutationResult, Error, UseScoreMutationParams, MutationContext>({
+	return useMutation<
+		MutationResult,
+		Error,
+		UseScoreMutationParams,
+		MutationContext
+	>({
 		mutationFn: async ({ mediaType, tmdbId, score, review }) => {
+			if (!user) {
+				updateGuestInteraction(
+					mediaType,
+					tmdbId,
+					"score",
+					score,
+					score === null,
+				)
+				return { status: "success" }
+			}
 			const response = await fetch("/api/update-scores", {
 				method: "POST",
 				body: JSON.stringify({
@@ -169,11 +185,10 @@ export const useScoreMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, score, review }) => {
+			if (!user) return {}
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(
-				userDataQueryKey,
-			)
+			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateScoreOptimistic(old, mediaType, tmdbId, score, review || null),
@@ -194,8 +209,23 @@ export const useWishlistMutation = () => {
 	const { user } = useUser()
 	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
-	return useMutation<MutationResult, Error, UseWishlistMutationParams, MutationContext>({
+	return useMutation<
+		MutationResult,
+		Error,
+		UseWishlistMutationParams,
+		MutationContext
+	>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
+			if (!user) {
+				updateGuestInteraction(
+					mediaType,
+					tmdbId,
+					"plan",
+					undefined,
+					action === "remove",
+				)
+				return { status: "success" }
+			}
 			const response = await fetch("/api/update-wishlist", {
 				method: "POST",
 				body: JSON.stringify({
@@ -207,11 +237,10 @@ export const useWishlistMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
+			if (!user) return {}
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(
-				userDataQueryKey,
-			)
+			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateWishlistOptimistic(old, mediaType, tmdbId, action),
@@ -232,7 +261,12 @@ export const useWatchedMutation = () => {
 	const { user } = useUser()
 	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
-	return useMutation<MutationResult, Error, UseWatchedMutationParams, MutationContext>({
+	return useMutation<
+		MutationResult,
+		Error,
+		UseWatchedMutationParams,
+		MutationContext
+	>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
 			const response = await fetch("/api/update-watch-history", {
 				method: "POST",
@@ -247,9 +281,7 @@ export const useWatchedMutation = () => {
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(
-				userDataQueryKey,
-			)
+			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateWatchedOptimistic(old, mediaType, tmdbId, action),
@@ -270,7 +302,12 @@ export const useFavoriteMutation = () => {
 	const { user } = useUser()
 	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
-	return useMutation<MutationResult, Error, UseFavoriteMutationParams, MutationContext>({
+	return useMutation<
+		MutationResult,
+		Error,
+		UseFavoriteMutationParams,
+		MutationContext
+	>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
 			const response = await fetch("/api/update-favorite", {
 				method: "POST",
@@ -285,9 +322,7 @@ export const useFavoriteMutation = () => {
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(
-				userDataQueryKey,
-			)
+			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateFavoriteOptimistic(old, mediaType, tmdbId, action),
@@ -308,8 +343,23 @@ export const useSkippedMutation = () => {
 	const { user } = useUser()
 	const userDataQueryKey = getQueryKeyUserData(user?.id)
 
-	return useMutation<MutationResult, Error, UseSkippedMutationParams, MutationContext>({
+	return useMutation<
+		MutationResult,
+		Error,
+		UseSkippedMutationParams,
+		MutationContext
+	>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
+			if (!user) {
+				updateGuestInteraction(
+					mediaType,
+					tmdbId,
+					"skip",
+					undefined,
+					action === "remove",
+				)
+				return { status: "success" }
+			}
 			const response = await fetch("/api/update-skipped", {
 				method: "POST",
 				body: JSON.stringify({
@@ -321,11 +371,10 @@ export const useSkippedMutation = () => {
 			return await response.json()
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
+			if (!user) return {}
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(
-				userDataQueryKey,
-			)
+			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateSkippedOptimistic(old, mediaType, tmdbId, action),

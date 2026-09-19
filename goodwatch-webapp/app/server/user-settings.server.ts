@@ -153,7 +153,7 @@ export const resetUserSettingsCache = async (
 
 	return await resetCache({
 		name: "user-settings",
-		params,
+		params: { userId: params.user_id },
 	});
 };
 

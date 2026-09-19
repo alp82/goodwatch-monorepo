@@ -1,0 +1,8 @@
+summary: Availability evidence helpers
+description: Internal shared module
+kind: script
+lock: ""
+schema:
+  type: object
+  properties: {}
+  required: []
