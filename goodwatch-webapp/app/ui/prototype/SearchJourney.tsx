@@ -40,7 +40,7 @@ import Checkbox from "~/ui/form/Checkbox"
 import placeholder from "~/img/placeholder-poster.png"
 
 const path = "/prototype/search-journey"
-const storage = "goodwatch_prototype_search_journey_v2"
+const storage = "goodwatch_prototype_search_journey_v3"
 const control =
 	"rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus-visible:outline focus-visible:outline-cyan-300 disabled:opacity-40"
 type Metadata = {
@@ -53,7 +53,11 @@ type Metadata = {
 }
 type Batch = { q: string; rows: Row[]; errors: string[]; metadata: Metadata[] }
 type Variant = "A" | "B" | "C"
-const names = { A: "Inline filters", B: "Filter sidebar", C: "Compact results" }
+const names = {
+	A: "Inline filters",
+	B: "Filter sidebar",
+	C: "Compact results",
+}
 const refinements = [
 	"type",
 	"genre",
@@ -109,7 +113,7 @@ function useController() {
 		editing.current = value
 		setDraft(value)
 		setFocused(-1)
-		navigate(resultsHref({ q: value }), {
+		navigate(resultsHref({ q: value, page: null }), {
 			replace: true,
 			preventScrollReset: location.pathname === path,
 		})
@@ -138,7 +142,7 @@ function useController() {
 			editing.current = null
 		}
 		setFocused(-1)
-	}, [q, navigationType])
+	}, [q, navigationType, location.search])
 	useEffect(() => {
 		if (!active || !ready) return
 		const timer = setTimeout(() => setRequested(q), 1000)
@@ -146,7 +150,7 @@ function useController() {
 	}, [q, active, ready])
 
 	const search = useQuery({
-		queryKey: ["prototype-connected-search", requested, revision],
+		queryKey: ["prototype-connected-search-paged", requested, revision],
 		enabled:
 			active &&
 			ready &&
@@ -182,18 +186,29 @@ function useController() {
 			const keys = rows
 				.filter((r) => r.type === "movie" || r.type === "show")
 				.map((r) => r.key)
-			if (keys.length)
+			if (keys.length) {
 				try {
-					const response = await fetch(
-						`${path}?metadata=${encodeURIComponent(keys.join(","))}&_data=routes%2Fprototype.search-journey`,
-						{ signal },
+					const chunks = Array.from(
+						{ length: Math.ceil(keys.length / 40) },
+						(_, i) => keys.slice(i * 40, (i + 1) * 40),
 					)
-					if (!response.ok) throw new Error("Metadata unavailable")
-					metadata = (await response.json()).titles
+					metadata = (
+						await Promise.all(
+							chunks.map(async (chunk) => {
+								const response = await fetch(
+									`${path}?metadata=${encodeURIComponent(chunk.join(","))}&_data=routes%2Fprototype.search-journey`,
+									{ signal },
+								)
+								if (!response.ok) throw new Error("Metadata unavailable")
+								return (await response.json()).titles as Metadata[]
+							}),
+						)
+					).flat()
 				} catch (error) {
 					if (signal.aborted) throw error
 					errors.push("Additional title metadata unavailable")
 				}
+			}
 			return { q, rows, errors, metadata }
 		},
 	})
@@ -363,10 +378,29 @@ function useController() {
 			`${r.type}:${canonicalTitleId(r.type, Number(r.key.split(":")[1]))}` ===
 			currentKey,
 	)
+	const pageCount = Math.max(1, Math.ceil(rows.length / 20))
+	const parsedPage = Number(setting("page", "1"))
+	const page = Math.min(
+		pageCount,
+		Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1,
+	)
+	const pageRows = rows.slice((page - 1) * 20, page * 20)
 	const detailHref = (row: Row) =>
-		`/${row.type}/${canonicalTitleId(row.type, Number(row.key.split(":")[1]))}?${makeParams({ q: batch?.q ?? q })}`
+		`/${row.type}/${canonicalTitleId(row.type, Number(row.key.split(":")[1]))}?${makeParams(
+			{
+				q: batch?.q ?? q,
+				page: String(
+					Math.floor(
+						Math.max(
+							0,
+							rows.findIndex((r) => r.key === row.key),
+						) / 20,
+					) + 1,
+				),
+			},
+		)}`
 	const update = (changes: Record<string, string | null>) =>
-		navigate(`${location.pathname}?${makeParams(changes)}`, {
+		navigate(`${location.pathname}?${makeParams({ page: null, ...changes })}`, {
 			preventScrollReset: true,
 		})
 	const loading =
@@ -394,6 +428,9 @@ function useController() {
 		ready,
 		batch,
 		rows,
+		pageRows,
+		page,
+		pageCount,
 		sequence,
 		index,
 		currentKey,
@@ -539,12 +576,25 @@ export function JourneyHeader() {
 							}
 							if (e.key === "ArrowDown" || e.key === "ArrowUp") {
 								e.preventDefault()
-								const count = j.sequence.length
-								j.setFocused((n) =>
-									count
-										? (n + (e.key === "ArrowDown" ? 1 : -1) + count) % count
-										: -1,
-								)
+								const indices = j.pageRows
+									.filter((r) => r.type !== "person")
+									.map((r) =>
+										j.sequence.findIndex((item) => item.key === r.key),
+									)
+								j.setFocused((n) => {
+									if (!indices.length) return -1
+									const current = indices.indexOf(n)
+									const next =
+										current < 0
+											? e.key === "ArrowDown"
+												? 0
+												: indices.length - 1
+											: (current +
+													(e.key === "ArrowDown" ? 1 : -1) +
+													indices.length) %
+												indices.length
+									return indices[next]
+								})
 							}
 						}}
 					/>
@@ -568,15 +618,19 @@ export function JourneyHeader() {
 }
 function JourneyList({ compact = false }: { compact?: boolean }) {
 	const j = useSearchJourney()!
-	const limit = undefined
 	return (
-		<section
-			aria-label="Search results"
-			aria-busy={j.loading}
-			className="min-w-0"
-		>
-			<div role="status" className="px-4 py-3 min-h-14 text-sm text-gray-400">
-				{j.status}
+		<section aria-label="Search results" className="min-w-0">
+			<div
+				role="status"
+				className={`flex items-center gap-2 px-4 py-3 min-h-14 text-sm ${j.loading ? "text-cyan-200 bg-cyan-400/10" : "text-gray-400"}`}
+			>
+				{j.loading && (
+					<ArrowPathIcon
+						aria-hidden="true"
+						className="h-5 w-5 shrink-0 animate-spin motion-reduce:animate-none"
+					/>
+				)}
+				<span>{j.status}</span>
 				{j.batch?.errors.length ||
 				j.status.startsWith("Search is unavailable") ? (
 					<button onClick={j.retry} className="ml-2 underline text-cyan-300">
@@ -584,8 +638,8 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 					</button>
 				) : null}
 			</div>
-			<ul className="divide-y divide-gray-700/60">
-				{j.rows.slice(0, limit).map((r, i) => {
+			<ul aria-busy={j.loading} className="divide-y divide-gray-700/60">
+				{j.pageRows.map((r, i) => {
 					const body = (
 						<>
 							<img
@@ -659,6 +713,44 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 					)
 				})}
 			</ul>
+			{j.rows.length > 0 && (
+				<nav
+					aria-label="Search pages"
+					className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-700 p-4 text-sm"
+				>
+					<span className="text-gray-400">
+						{(j.page - 1) * 20 + 1}–{Math.min(j.page * 20, j.rows.length)} of{" "}
+						{j.rows.length}
+					</span>
+					<div className="flex items-center gap-3">
+						{j.page > 1 && (
+							<Link
+								className={control}
+								to={j.resultsHref({
+									q: j.batch?.q ?? j.q,
+									page: String(j.page - 1),
+								})}
+							>
+								Previous page
+							</Link>
+						)}
+						<span>
+							Page {j.page} of {j.pageCount}
+						</span>
+						{j.page < j.pageCount && (
+							<Link
+								className={control}
+								to={j.resultsHref({
+									q: j.batch?.q ?? j.q,
+									page: String(j.page + 1),
+								})}
+							>
+								Next page
+							</Link>
+						)}
+					</div>
+				</nav>
+			)}
 			{!j.rows.length && !j.loading && (
 				<div className="p-6 text-gray-400">
 					{j.batch
@@ -1144,15 +1236,6 @@ export function JourneyResultsPage() {
 						Search in the header. Open any result to explore its full details.
 					</p>
 				</div>
-				<button
-					className={control}
-					onClick={() => {
-						j.setOpen(true)
-						j.input.current?.focus()
-					}}
-				>
-					Focus header search ↑
-				</button>
 			</div>
 			<p className="text-xs text-gray-400 mb-6">
 				Live search and real title pages. Rating, Want to See, and Skip on

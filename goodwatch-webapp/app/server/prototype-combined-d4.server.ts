@@ -887,7 +887,7 @@ interface Query {
 const GENRE_BOOST = 0.3
 const GENRE_PENALTY = 0.5
 
-const retrieve = async (reading: Query, flags: FlagJudgment[], tropeQuery: string) => {
+const retrieve = async (reading: Query, flags: FlagJudgment[], tropeQuery: string, resultLimit = RESULTS) => {
 	const started = Date.now()
 	const empty = { results: [] as Result[], ms: 0, tropeMs: 0, tropeMode: "none", pool: 0 }
 	if (reading.vector.every((x) => x === 0)) return empty
@@ -898,7 +898,7 @@ const retrieve = async (reading: Query, flags: FlagJudgment[], tropeQuery: strin
 		query: reading.vector,
 		using: "fingerprint_v1",
 		filter: qdrantFilter(flags) as never,
-		limit: wide ? options.pool : RESULTS,
+		limit: wide ? options.pool : resultLimit,
 		with_payload: [...used.map(([key]) => `fingerprint_scores_v1.${key}`), ...(reading.genres.length ? ["genres"] : [])],
 	})
 	const decidedGenres = reading.genres.filter((g) => g.decision)
@@ -942,7 +942,7 @@ const retrieve = async (reading: Query, flags: FlagJudgment[], tropeQuery: strin
 			return { ...p, matches, combined: (base(p) - min) / span + p.genre.shift + TROPE_WEIGHT * (matches[0]?.score ?? 0) }
 		})
 		.sort((a, b) => b.combined - a.combined || b.cosine - a.cosine)
-		.slice(0, RESULTS)
+		.slice(0, resultLimit)
 
 	const displayStarted = Date.now()
 	const points = ranked.length
@@ -1199,6 +1199,7 @@ const runPhraseVariant = async (
 	spec: PhraseSpec,
 	attributes: Awaited<ReturnType<typeof readFlags>>,
 	vectorQuery: Query,
+	resultLimit = RESULTS,
 ) => {
 	const started = Date.now()
 	const notes: string[] = []
@@ -1283,13 +1284,13 @@ const runPhraseVariant = async (
 		}
 		// Too few matches: try the next phrases
 		for (const p of phrases.slice(first.length, first.length + 3)) {
-			if (pool.size >= RESULTS || p.probability < 0.01) break
+			if (pool.size >= resultLimit || p.probability < 0.01) break
 			const found = await searchEssence(p.phrase.split(" "))
 			searched.push(p.phrase)
 			notes.push(`Too few matches, so "${p.phrase}" was searched too: ${found} new titles.`)
 		}
 
-		if (spec.wider && pool.size < RESULTS) {
+		if (spec.wider && pool.size < resultLimit) {
 			// The essence text holds too little. Search the concrete words alone, because a pair such
 			// as "scifi sunglasses" never appears in a keyword or a trope name.
 			const concrete = attributes.split.filter((w) => w.isConcrete).map((w) => w.word)
@@ -1369,7 +1370,7 @@ const runPhraseVariant = async (
 	let ranked = rows
 		.map((r) => ({ ...r, combined: (r.weightedSum - min) / span + TEXT_BLEND * Math.min(r.text, 4) }))
 		.sort((a, b) => b.combined - a.combined)
-		.slice(0, spec.judge ? JUDGED : RESULTS)
+		.slice(0, spec.judge ? JUDGED : resultLimit)
 
 	const display = new Map<string, TextRow>()
 	await Promise.all(
@@ -1417,7 +1418,7 @@ const runPhraseVariant = async (
 			.map((r, i) => ({ r, i }))
 			.sort((a, b) => Math.round((fit.get(b.r.key) ?? 0) * 4) - Math.round((fit.get(a.r.key) ?? 0) * 4) || a.i - b.i)
 			.map(({ r }) => r)
-			.slice(0, RESULTS)
+			.slice(0, resultLimit)
 		// Batches run in parallel, so the wall-clock time is about one request
 		extra.ms = Math.round(extra.ms / Math.max(batches.length, 1))
 		notes.push(`Jev judged the top ${fit.size} titles in ${batches.length} parallel requests.`)
@@ -1457,12 +1458,12 @@ const runPhraseVariant = async (
 	})
 
 	let ms = Date.now() - started - extra.ms
-	if (results.length < RESULTS && vectorQuery.vector.some((x) => x !== 0)) {
-		const fill = await retrieve(vectorQuery, attributes.flags, "")
+	if (results.length < resultLimit && vectorQuery.vector.some((x) => x !== 0)) {
+		const fill = await retrieve(vectorQuery, attributes.flags, "", resultLimit)
 		const seen = new Set(results.map((r) => `${r.media_type}:${r.tmdb_id}`))
 		const found = results.length
 		for (const r of fill.results) {
-			if (results.length >= RESULTS) break
+			if (results.length >= resultLimit) break
 			if (!seen.has(`${r.media_type}:${r.tmdb_id}`)) results.push({ ...r, rank: results.length + 1 })
 		}
 		ms += fill.ms
@@ -1609,12 +1610,12 @@ export const interpretEvidencePrototype = async (request: string) => {
 }
 
 // Combined-search experiment: accepted D4+ thresholds and ranking, optional routing question.
-export const runCombinedDescription = async (request: string, routing = false) => {
+export const runCombinedDescription = async (request: string, routing = false, resultLimit = RESULTS) => {
     const started = Date.now()
     const [attributes, reading] = await Promise.all([readFlags(request, "full", routing), readWantAvoid(request, "short")])
     const weights = pick(reading.details, d => d.weight >= 0.6 || d.weight <= -1.2, 74)
     const result = await runPhraseVariant(request, {twoPhrases: true, moodGate: true, wider: true}, attributes,
-        {weights, vector: sparseVector(weights), order: "weighted_sum", genres: []})
+        {weights, vector: sparseVector(weights), order: "weighted_sum", genres: []}, Math.max(1, Math.min(100, resultLimit)))
     return {results: result.results, notes: result.notes, routing: attributes.routing ?? null,
         ms: Date.now() - started, tokens: attributes.usage.tokens + reading.usage.tokens,
         usd: attributes.usage.usd + reading.usage.usd, model: MODEL}

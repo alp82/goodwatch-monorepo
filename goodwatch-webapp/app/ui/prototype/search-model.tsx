@@ -123,7 +123,7 @@ export function blend(
 				b.popularity - a.popularity ||
 				a.key.localeCompare(b.key),
 		)
-		.slice(0, 20)
+		.slice(0, 100)
 }
 export async function get<T>(
 	q: string,
@@ -132,7 +132,7 @@ export async function get<T>(
 ): Promise<T> {
 	const p = new URLSearchParams({ q, kind })
 	const response = await fetch(
-		`/prototype/combined-search?${p}&_data=routes%2Fprototype.combined-search`,
+		`/prototype/search-journey?${p}&_data=routes%2Fprototype.search-journey`,
 		{ signal },
 	)
 	const body = await response.json()
