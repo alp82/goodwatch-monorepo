@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "overall": {
+    "verdict": "Keep the existing baselines. No experimental ranker earned adoption.",
+    "summary": "The loop found useful improvements on individual requests, but each broader ranking or retrieval change introduced material regressions or extra overhead. Conservative catalog cleanup is the only retained improvement, limited to ordinary film and series scope.",
+    "defaultRecommendation": "Keep D4+ corrected as the general baseline. Keep combined evidence and its phrase-matching option for comparison. Per-request preferences below are assessments, not a new automatic routing policy.",
+    "limits": "The original 13 requests and 50,000 titles stayed fixed. Two requests cannot be judged without production vector fill. The 28 supplemental requests were a separate, already-seen regression set. This is a practical stopping decision for the tested approaches, not proof that all possible improvements are exhausted.",
+    "costSummary": "No extra runtime model stage. New experiment API spending: $0.006069252 across 39 attribute calls. Retrieval benchmarks and local ranking timings are separate; they are not full-search latency.",
+    "deploymentStatus": "Prototype findings only; no production search change was deployed."
+  },
+  "retainedChoices": [
+    {
+      "label": "D4+ corrected",
+      "decision": "Retain as the general baseline",
+      "reason": "Strong existing results, especially for chases, gritty crime and warm comedy; no alternative consistently surpassed it within the requirements.",
+      "variantIds": [
+        "corrected"
+      ]
+    },
+    {
+      "label": "Combined evidence",
+      "decision": "Retain as the faster comparison option",
+      "reason": "Useful narrator, wealthy-misconduct and realistic-crime results, with remaining generic matches. It is not declared a universal quality winner.",
+      "variantIds": [
+        "english"
+      ]
+    },
+    {
+      "label": "Combined evidence with phrase matching",
+      "decision": "Retain as a comparison option",
+      "reason": "A strong existing alternative for wealthy comedy and getaway driving.",
+      "variantIds": [
+        "english_phrase"
+      ]
+    },
+    {
+      "label": "Conservative catalog cleanup",
+      "decision": "Retain the narrow finding; not a replacement ranker",
+      "reason": "An audit of all 50,000 rows identified three explicit attraction experiences and one standalone unreleased pilot. Filtering them repaired affected car and narrator lists while preserving ordinary adaptations and ambiguous works. Applies to ordinary film and series scope; not deployed. The displayed cleaned list uses a fresh combined-evidence capture; cleanup changes only car and narrator results versus that matching fresh control. Other differences from the historical baseline are not cleanup gains.",
+      "variantIds": [
+        "clean_english_native_combined"
+      ]
+    }
+  ],
+  "rejectedFamilies": [
+    {
+      "label": "Subject emphasis, score mixing and routing",
+      "reason": "Some strong sunglasses and suspense results, but regressions in wealthy-person relationships and realistic crime prevent general adoption."
+    },
+    {
+      "label": "Smaller reranking shortlists",
+      "reason": "Reduced work in some configurations but sometimes lost useful candidates; no consistent quality and speed winner."
+    },
+    {
+      "label": "Database field boosts and alternative phrase matching",
+      "reason": "Credible driving lists, but no broad improvement over the strongest existing controls."
+    },
+    {
+      "label": "Larger recall pools and dictionary expansion",
+      "reason": "Added generic or wrong-sense matches and local work without a demonstrated quality gain."
+    },
+    {
+      "label": "Retrieving both requested concepts together",
+      "reason": "Faster and promising for wealthy comedy and getaway driving, but supplemental tests failed older-robber and peaceful-alien intent. Not safe as the default."
+    },
+    {
+      "label": "Same-budget interpretation rewrites",
+      "reason": "One rewrite wrongly removed the long suspense request from the text path; the other mostly preserved results without a clear quality gain."
+    },
+    {
+      "label": "Consistent word stemming",
+      "reason": "Recovered Arrival and some workplace comedies, but promoted unrelated horror for car pursuits and did not resolve the alien-contact mismatch."
+    },
+    {
+      "label": "Superseded implementation failures",
+      "reason": "Routing, fallback and earlier normalization defects are preserved only as history. They are discarded results, not final contenders."
+    }
+  ],
+  "requests": [
+    {
+      "request": "car chases",
+      "verdict": "Keep D4+ corrected",
+      "preferredBaseline": "D4+ corrected",
+      "preferredVariantIds": [
+        "corrected"
+      ],
+      "improved": "Source-based ranking recovered the strong chase-focused leaders. Catalog cleanup removed an explicitly identified attraction from affected alternatives.",
+      "notAdopted": "Most alternatives matched the existing quality; some promoted an attraction or less chase-focused action.",
+      "limits": "No clear quality gain over D4+ corrected."
+    },
+    {
+      "request": "sunglasses",
+      "verdict": "Useful local improvement; no replacement",
+      "preferredBaseline": "No decisive baseline preference",
+      "preferredVariantIds": [],
+      "improved": "Emphasizing the central subject consistently put They Live, Fiancés on the Bridge and Dream a Little Dream 2 together near the front.",
+      "notAdopted": "The same general ranking rule regressed other requests; its routing and broader-recall alternatives sometimes promoted incidental sunglasses.",
+      "limits": "A good result for this request does not justify a universal switch."
+    },
+    {
+      "request": "unreliable narrator",
+      "verdict": "Keep combined evidence; retain catalog cleanup",
+      "preferredBaseline": "Combined evidence",
+      "preferredVariantIds": [
+        "english"
+      ],
+      "improved": "Conservative cleanup removed the unreleased 1999 pilot and supplied relevant replacements; unfamiliar narrator titles also had direct supporting evidence.",
+      "notAdopted": "Changing familiar titles was not itself a loss, but no alternative clearly surpassed the combined list.",
+      "limits": "Catalog cleanup improves scope, not narrator understanding."
+    },
+    {
+      "request": "dark comedy about rich people",
+      "verdict": "Keep combined evidence with phrase matching",
+      "preferredBaseline": "Combined evidence with phrase matching",
+      "preferredVariantIds": [
+        "english_phrase"
+      ],
+      "improved": "Retrieving both requested concepts together produced Saltburn, The Righteous Gemstones, The White Lotus and The Favourite among its leaders, with faster matched retrieval.",
+      "notAdopted": "The Raspberry Reich remained a weaker wealthy-subject match; the same retrieval rule failed older-robber and peaceful-alien requests.",
+      "limits": "Promising for this request, but no general winner; the existing phrase-based option remains competitive."
+    },
+    {
+      "request": "tense but not bleak",
+      "verdict": "Unevaluable",
+      "preferredBaseline": "None: text results were gated",
+      "preferredVariantIds": [],
+      "improved": "No comparable improvement was established.",
+      "notAdopted": "Adding offline candidates changes coverage; it does not demonstrate improvement over the missing production vector results.",
+      "limits": "Production vector fill was absent. Empty text results cannot establish quality or full-search speed."
+    },
+    {
+      "request": "no anime, gritty crime show",
+      "verdict": "Keep D4+ corrected",
+      "preferredBaseline": "D4+ corrected",
+      "preferredVariantIds": [
+        "corrected"
+      ],
+      "improved": "Fixing clause boundaries restored positive gritty-crime intent. The best alternatives recovered Suburræterna, Gomorrah and Spiral.",
+      "notAdopted": "Those were already strong D4+ choices; the fixes did not establish a better general ranker.",
+      "limits": "Documentaries were not prohibited and were not treated as automatic failures."
+    },
+    {
+      "request": "with my parents",
+      "verdict": "Unevaluable",
+      "preferredBaseline": "None: text results were gated",
+      "preferredVariantIds": [],
+      "improved": "No comparable improvement was established.",
+      "notAdopted": "Extra recall often confused watching with parents with family or children’s subject matter.",
+      "limits": "Production vector fill was absent, and co-viewing suitability was not established."
+    },
+    {
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "verdict": "Unresolved; no accepted winner",
+      "preferredBaseline": "No demonstrated baseline winner",
+      "preferredVariantIds": [],
+      "improved": "Separating positive and negative evidence promoted Now You See Me, supported as a twisty, entertaining mystery, over explicitly bleak alternatives.",
+      "notAdopted": "Other endings remained unverified, the general rule regressed elsewhere, and revised interpretation wording incorrectly gated away this text path.",
+      "limits": "The supplied catalog evidence does not reliably establish whether an ending will feel miserable."
+    },
+    {
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "verdict": "Keep combined evidence",
+      "preferredBaseline": "Combined evidence",
+      "preferredVariantIds": [
+        "english"
+      ],
+      "improved": "Separating positive and negative evidence restored Saltburn and The Righteous Gemstones after earlier variants had lost the requested relationship.",
+      "notAdopted": "Other rules confused people being awful to each other with robbing or extorting rich victims. The repairs mostly recovered existing strengths.",
+      "limits": "Political satire and wealthy-victim plots remain weaker matches than mutual misconduct among wealthy people."
+    },
+    {
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "verdict": "Keep combined evidence",
+      "preferredBaseline": "Combined evidence",
+      "preferredVariantIds": [
+        "english"
+      ],
+      "improved": "The experiments identified misleading matches to a show within a show and to comic, wealthy crime-solving.",
+      "notAdopted": "They did not consistently beat the direct realism of 24 Hours in Police Custody and Hidden in the combined baseline.",
+      "limits": "A documentary can fit this request; no fiction-only restriction was invented."
+    },
+    {
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "verdict": "Unresolved; no accepted winner",
+      "preferredBaseline": "Combined evidence, with substantial uncertainty",
+      "preferredVariantIds": [
+        "english"
+      ],
+      "improved": "Source checks removed misleading literal matches such as halfway through a school year.",
+      "notAdopted": "Surreal stories, twists, time travel and literal feeding were repeatedly mistaken for a deceptive storyteller. No rewrite or recall expansion established a clear gain.",
+      "limits": "Understanding the indirect description of an unreliable narrator remains unsolved."
+    },
+    {
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "verdict": "Keep D4+ corrected; phrase matching also credible",
+      "preferredBaseline": "D4+ corrected or combined evidence with phrase matching",
+      "preferredVariantIds": [
+        "corrected",
+        "english_phrase"
+      ],
+      "improved": "Source centrality and joint retrieval produced directly supported getaway stories such as Motorway, Baby Driver and Drive. Joint retrieval was faster in the matched benchmark.",
+      "notAdopted": "Existing controls were already strong. A clearer extracted phrase or a different credible driver title was not a decisive quality gain; joint retrieval failed other requests.",
+      "limits": "Chase intensity varies among valid getaway stories; unfamiliar titles were not penalized for unfamiliarity."
+    },
+    {
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "verdict": "Keep D4+ corrected",
+      "preferredBaseline": "D4+ corrected",
+      "preferredVariantIds": [
+        "corrected"
+      ],
+      "improved": "Source boundaries recovered Here We Go, Moone Boy and Fever Pitch, all supported as warm comedies.",
+      "notAdopted": "Other variations leaned toward holiday earnestness, children’s entertainment or general nostalgia without a demonstrated improvement over the existing leaders.",
+      "limits": "Whether a warm comedy feels painfully cheesy remains subjective."
+    }
+  ],
+  "provenance": [
+    "cheap-loop-findings.md",
+    "cheap-loop-round1-independent-review.json",
+    "cheap-loop-round2-independent-review.json",
+    "cheap-loop-round3-independent-review.json",
+    "cheap-loop-shortlist-independent-review.json",
+    "cheap-loop-preconjunction-independent-review.json",
+    "cheap-loop-preconjunction-supplemental-independent-review.json",
+    "cheap-loop-jev-independent-review.json",
+    "cheap-loop-hygiene-ablation-independent-review.json",
+    "cheap-loop-stem-independent-review.json",
+    "cheap-loop-spend.json",
+    "cheap-loop-hygiene-review.json"
+  ]
+}

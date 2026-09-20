@@ -1,6 +1,6 @@
 # Reproduce the cheap review
 
-Open [cheap-loop-review.html](cheap-loop-review.html) locally. Original 13 requests default to corrected D4+ versus combined English; promising candidates are selectable. Search variants by name or family. Round history retains full variant families, including all 75 shortlist arms and 80 hygiene comparisons. Posters load from TMDB; click to view original-size imagery and Escape to close. User judgments export separately.
+Open [cheap-loop-review.html](cheap-loop-review.html) locally. Original 13 requests default to corrected D4+ versus combined English; six choices are shown by default: three original controls, one retained cleanup and two explicitly rejected approaches with partial gains. The opening final assessment explains why no universal winner was accepted. Expand the final-decision archive to see every approach and its disposition. Check “Include archived / rejected variants” for the remaining variants, or open a historical round. Search variants by name or family. Round history retains full variant families, including all 75 shortlist arms and 80 hygiene comparisons. Posters load from TMDB; click to view original-size imagery and Escape to close. User judgments export separately.
 
 From the repository root:
 
