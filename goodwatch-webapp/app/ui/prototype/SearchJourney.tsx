@@ -29,6 +29,11 @@ import {
 } from "./search-model"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { useStreamingProviders } from "~/routes/api.streaming-providers"
+import { useGenres } from "~/routes/api.genres.all"
+import SectionGenre from "~/ui/filter/sections/SectionGenre"
+import SectionRelease from "~/ui/filter/sections/SectionRelease"
+import FilterCountries from "~/ui/filter/FilterCountries"
+import { Tag } from "~/ui/tags/Tag"
 import FilterBarSection from "~/ui/filter/FilterBarSection"
 import Select from "~/ui/form/Select"
 import Checkbox from "~/ui/form/Checkbox"
@@ -53,6 +58,7 @@ const refinements = [
 	"type",
 	"genre",
 	"minYear",
+	"maxYear",
 	"availability",
 	"country",
 	"services",
@@ -330,10 +336,15 @@ function useController() {
 		(r) =>
 			(setting("type", "all") === "all" || r.type === setting("type")) &&
 			(!setting("genre") ||
-				(metadata.get(r.key)?.genres ?? r.discovery?.genres ?? []).includes(
-					setting("genre"),
-				)) &&
+				setting("genre")
+					.split(",")
+					.every((genre) =>
+						(metadata.get(r.key)?.genres ?? r.discovery?.genres ?? []).includes(
+							genre,
+						),
+					)) &&
 			(!setting("minYear") || Number(r.year) >= Number(setting("minYear"))) &&
+			(!setting("maxYear") || Number(r.year) <= Number(setting("maxYear"))) &&
 			(mode !== "only" ||
 				serviceIds.length === 0 ||
 				watch.isFetching ||
@@ -662,7 +673,7 @@ type FilterKey = "type" | "genre" | "minYear" | "country" | "availability"
 const filterNames: Record<FilterKey, string> = {
 	type: "Titles",
 	genre: "Genre",
-	minYear: "Released since",
+	minYear: "Release year",
 	country: "Country",
 	availability: "Availability",
 }
@@ -722,6 +733,14 @@ function FilterField({
 			: field === "country"
 				? "DE"
 				: ""
+	if (field === "country")
+		return (
+			<FilterCountries
+				mediaType="movie"
+				selectedCountry={j.setting("country", "DE")}
+				onChange={(country) => j.update({ country })}
+			/>
+		)
 	return (
 		<label
 			className={
@@ -795,12 +814,14 @@ function ServiceSelection() {
 export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 	const j = useSearchJourney()!
 	const [added, setAdded] = useState<FilterKey[]>([])
-	const [servicesOpen, setServicesOpen] = useState(false)
+	const [editing, setEditing] = useState<FilterKey | null>(null)
+	const { data: genres = [] } = useGenres()
 	const all = Object.keys(filterNames) as FilterKey[]
 	const visible = all.filter(
 		(k) =>
 			k === "type" ||
 			added.includes(k) ||
+			(k === "minYear" && Boolean(j.setting("maxYear"))) ||
 			(k === "country"
 				? j.setting(k, "DE") !== "DE"
 				: j.setting(k) && j.setting(k) !== "all"),
@@ -811,37 +832,70 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 				refinements.filter((k) => k !== "country").map((k) => [k, null]),
 			),
 		)
-	if (inline)
+	if (inline) {
+		const remove = (field: FilterKey) => {
+			j.update({
+				[field]: null,
+				...(field === "minYear" ? { maxYear: null } : {}),
+				...(field === "availability" ? { services: null, paid: null } : {}),
+			})
+			setAdded((a) => a.filter((k) => k !== field))
+			setEditing(null)
+		}
+		const summaries: Record<FilterKey, string> = {
+			type: j.setting("type", "all"),
+			genre:
+				j.setting("genre").split(",").filter(Boolean).join(" + ") ||
+				"Any genre",
+			minYear:
+				j.setting("minYear") || j.setting("maxYear")
+					? `${j.setting("minYear", "Any")} – ${j.setting("maxYear", "today")}`
+					: "Any year",
+			country: j.setting("country", "DE"),
+			availability:
+				j.mode === "all"
+					? "Explore everything"
+					: `${j.mode === "only" ? "Only" : "Prefer"} my services (${j.serviceIds.length})`,
+		}
 		return (
 			<div aria-label="Inline search filters" className="relative">
-				<div className="flex items-center gap-2 overflow-x-auto pb-2 whitespace-nowrap">
+				<div className="flex items-stretch gap-2 overflow-x-auto pb-2 whitespace-nowrap">
 					{visible.map((field) => (
 						<div key={field} className="shrink-0">
 							<FilterBarSection
 								color={filterColors[field]}
 								isCompact
-								isActive={false}
+								isActive={editing === field}
 							>
-								<div className="flex items-center gap-1 px-1 py-1">
-									<FilterField field={field} inline />
-									{field !== "type" && (
+								{field === "type" ? (
+									<div className="p-1">
+										<FilterField field={field} inline />
+									</div>
+								) : (
+									<div className="flex items-center gap-1">
 										<button
+											type="button"
+											aria-expanded={editing === field}
+											className="flex items-center gap-2 p-1.5 text-sm"
+											onClick={() =>
+												setEditing(editing === field ? null : field)
+											}
+										>
+											<span className="font-semibold">
+												{filterNames[field]}
+											</span>
+											<Tag>{summaries[field]}</Tag>
+										</button>
+										<button
+											type="button"
 											aria-label={`Remove ${filterNames[field]} filter`}
 											className="p-1 text-gray-400 hover:text-white"
-											onClick={() => {
-												j.update({
-													[field]: null,
-													...(field === "availability"
-														? { services: null, paid: null }
-														: {}),
-												})
-												setAdded((a) => a.filter((k) => k !== field))
-											}}
+											onClick={() => remove(field)}
 										>
 											<XMarkIcon className="w-4" />
 										</button>
-									)}
-								</div>
+									</div>
+								)}
 							</FilterBarSection>
 						</div>
 					))}
@@ -849,9 +903,11 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 						<select
 							aria-label="Add filter"
 							value=""
-							onChange={(e) =>
-								setAdded((a) => [...a, e.target.value as FilterKey])
-							}
+							onChange={(e) => {
+								const field = e.target.value as FilterKey
+								setAdded((a) => [...a, field])
+								setEditing(field)
+							}}
 							className={`${control} shrink-0`}
 						>
 							<option value="">＋ Add filter</option>
@@ -864,33 +920,90 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 								))}
 						</select>
 					)}
-					{j.mode !== "all" && (
-						<button
-							className={`${control} shrink-0`}
-							onClick={() => setServicesOpen((x) => !x)}
-						>
-							Services ({j.serviceIds.length})
-						</button>
-					)}
 					{visible.length > 1 && (
 						<button
+							type="button"
 							className="text-xs text-gray-400 px-2"
 							onClick={() => {
 								reset()
 								setAdded([])
+								setEditing(null)
 							}}
 						>
 							Reset
 						</button>
 					)}
 				</div>
-				{j.mode !== "all" && servicesOpen && (
-					<div className="max-w-sm border border-gray-700 rounded-lg bg-gray-950 p-4 mb-4">
-						<ServiceSelection />
+				{editing && (
+					<div
+						className="max-w-2xl mb-4"
+						role="region"
+						aria-label={`${filterNames[editing]} editor`}
+					>
+						{editing === "genre" ? (
+							<SectionGenre
+								params={{
+									withGenres: genres
+										.filter((g) =>
+											j.setting("genre").split(",").includes(g.name),
+										)
+										.map((g) => g.id)
+										.join(","),
+								}}
+								editing
+								onEdit={() => setEditing("genre")}
+								onClose={() => setEditing(null)}
+								onChange={({ withGenres }) =>
+									j.update({
+										genre:
+											genres
+												.filter((g) =>
+													withGenres.split(",").includes(String(g.id)),
+												)
+												.map((g) => g.name)
+												.join(",") || null,
+									})
+								}
+							/>
+						) : editing === "minYear" ? (
+							<SectionRelease
+								params={{
+									minYear: j.setting("minYear") || undefined,
+									maxYear: j.setting("maxYear") || undefined,
+								}}
+								editing
+								initializeOnEdit={false}
+								onEdit={() => setEditing("minYear")}
+								onClose={() => setEditing(null)}
+								onChange={(years) =>
+									j.update({
+										minYear: years.minYear || null,
+										maxYear: years.maxYear || null,
+									})
+								}
+							/>
+						) : (
+							<FilterBarSection
+								label={filterNames[editing]}
+								color={filterColors[editing]}
+								isActive
+								onClick={() => setEditing(null)}
+								onRemove={() => remove(editing)}
+							>
+								<div className="w-full max-w-sm space-y-3">
+									<FilterField field={editing} />
+									{editing === "availability" && j.mode !== "all" && (
+										<ServiceSelection />
+									)}
+								</div>
+							</FilterBarSection>
+						)}
 					</div>
 				)}
 			</div>
 		)
+	}
+
 	return (
 		<div aria-label="Search filter sidebar" className="space-y-3">
 			<div className="flex items-center justify-between">

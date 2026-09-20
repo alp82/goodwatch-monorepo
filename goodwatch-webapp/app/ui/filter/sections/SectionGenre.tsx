@@ -19,7 +19,8 @@ import { Ping } from "~/ui/wait/Ping"
 import { useNav } from "~/utils/navigation"
 
 interface SectionGenreParams {
-	params: DiscoverParams
+	params: Partial<Pick<DiscoverParams, "withGenres" | "withoutGenres">>
+	onChange?: (params: Pick<DiscoverParams, "withGenres">) => void
 	editing: boolean
 	onEdit: () => void
 	onClose: () => void
@@ -30,6 +31,7 @@ export default function SectionGenre({
 	editing,
 	onEdit,
 	onClose,
+	onChange,
 }: SectionGenreParams) {
 	// data retrieval
 
@@ -45,10 +47,10 @@ export default function SectionGenre({
 		.map((genre) => genre.name)
 
 	const genresToInclude = allGenres.filter((genre) =>
-		withGenres.includes(genre.id.toString()),
+		genreIds.includes(genre.id.toString()),
 	)
 	const genresToExclude = allGenres.filter((genre) =>
-		withoutGenres.includes(genre.id.toString()),
+		withoutGenres.split(",").includes(genre.id.toString()),
 	)
 
 	// autocomplete data
@@ -87,13 +89,14 @@ export default function SectionGenre({
 	const { updateQueryParams } =
 		useNav<Pick<DiscoverParams, "withGenres" | "withoutGenres">>()
 	const updateGenres = (genresToInclude: Genre[], genresToExclude: Genre[]) => {
-		updateQueryParams({
+		;(onChange ?? updateQueryParams)({
 			withGenres: genresToInclude.map((genre) => genre.id).join(","),
 			// withoutGenres: genresToExclude.map((genre) => genre.id).join(","),
 		})
 	}
 
 	const handleSelect = (selectedItem: AutocompleteItem) => {
+		if (genreIds.includes(selectedItem.key)) return
 		const updatedGenresToInclude: Genre[] = [
 			...genresToInclude,
 			{
@@ -153,6 +156,7 @@ export default function SectionGenre({
 									key={genre.id}
 									index={index}
 									amount={selectedGenres.length}
+									mode="all"
 								>
 									<Tag
 										icon={TagIcon}
