@@ -1,0 +1,90 @@
+{
+  "reviewer": "Independent assistant",
+  "input": "private/cheap-loop/shortlist-all-native.json",
+  "review_scope": "All13 requests; top3/top5 representative six arms: English fields2cap64, nativephrase fields2cap64, stockEnglishphrase fields2cap64/anti64/RRF60full/lexical75d425full. Does not claim every75-arm tail independently adjudicated.",
+  "overall": {
+    "winner_id": null,
+    "assessment": "Bounded preparation offers viable local overhead on some arms and genuine case gains, especially phrase-pool anti for wealth conjunction and fields2 for object centrality. No single reviewed arm clears material-regression gate. Full-list retention is diagnostic, not quality ground truth; unfamiliar direct fits are accepted. Whole-fit longtense and indirect relation gaps remain.",
+    "timing_caveat": "Use measured fresh normalization+selection+ranking total, not rank-only; combine with contemporaneous native source retrieval as reconstruction, not measured live end-to-end."
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "outcome": "mixed",
+      "assessment": "fields2 cap64 car lists directly support chases; native phrase retains FastFive/LostBullet2/WhiteStorm. Gains mostly recover corrected quality."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "outcome": "better_or_tie",
+      "assessment": "fields2 cap64 across English/nativephrase/stockphrase consistently keeps plot-central TheyLive/Fiancés/Dream2; direct source-supported improvement over incidental third-place glasses tags."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "outcome": "tie",
+      "assessment": "English fields2 cap64 Ultrasound/MarbleHornets/ChasingSleep all explicitly unreliable narrators. Losing familiar FightClub/UsualSuspects is not intrinsically worse. Nativephrase still puts unreleased pilot#3 until separate cleanup."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "outcome": "better",
+      "assessment": "Stockphrase anti64 Saltburn/Gemstones/WhiteLotus provides distributed wealthy-subject and darkcomedy support, stronger than genericdark prose arms. Stockphrase RRF Saltburn/Gemstones/Succession also promising. English fields2 cap64 retains generic satire; mechanism depends on source pool."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "outcome": "unevaluable",
+      "assessment": "Gated empty for all shortlist arms; no production-fill claim."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "outcome": "tie",
+      "assessment": "Phrase anti64 Suburræterna/Gomorrah/Spiral all directly grittycrime. Fields2 varied police/crime leaders are supported; corrected already strong."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "outcome": "unevaluable",
+      "assessment": "Gated empty; parents suitability unavailable."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "outcome": "worse_or_uncertain",
+      "assessment": "English fields2 cap64 Duranga/Terapist/ControlFactor emphasizes dark psychological suspense without nonmiserable support; stockphrase anti FoolMeOnce/Chosen/Caught retains ending unknowns. Earlier fullpool NowYouSeeMe benefit can disappear through shortlist truncation."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "outcome": "mixed",
+      "assessment": "Stockphrase anti64 restores OurCartoonPresident/Saltburn/Gemstones, much stronger subject relation than fields2 Snake/Cartouche. RRF NeoYokio/Politician shifts to class/politics satire; preference rather than universal gain. Fields2 remains poor relation handling."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "outcome": "worse_or_tie",
+      "assessment": "fields2 and anti largely retain MostWanted/Vengeance/TenDays; English fields2 adds SérieNoire darkcrime comedy. Strongest English control direct police realism remains hard to improve. No documentary exclusion invented."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "outcome": "mixed",
+      "assessment": "Stockphrase RRF HeLovesMe #1 explicitly unreliable narrator and perspective reveal is stronger direct fit than generic reality puzzles. Ludo #2 merely nonlinear interconnected anthology remains weak. Lexical75 retains wrong-sense WordsOnBathroomWalls #1; nativephrase fields2 Game/Murk/AmericanSportsStory require specific narrator proof, not mere surprises."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "outcome": "mixed",
+      "assessment": "Fields2 Refuge/HitRun/Ranam explicitly getaway drivers, but prior corrected chase-central BabyDriver is a stronger conjunction anchor. Lexical75 stockphrase DriveHard/Motorway/BabyDriver directly supported. Larger/full retention alone does not select quality."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "outcome": "better_or_tie",
+      "assessment": "Fields2 cap64 HereWeGo/MooneBoy/FeverPitch all directly warm/comic. Lexical75 stockphrase same titles reordered. Anti holiday-heavy alternatives carry subjective cheesy uncertainty; no hard family/children ban."
+    }
+  ]
+}

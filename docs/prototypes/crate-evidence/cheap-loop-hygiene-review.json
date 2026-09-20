@@ -1,0 +1,229 @@
+{
+  "reviewer": "Independent assistant",
+  "scope": {
+    "frozen_rows": 50000,
+    "old_rule_flag_count": 15,
+    "additional_broad_pattern_candidates_reviewed": 3,
+    "source": "private/sample.json",
+    "sample_sha256": "642c9d89ac6e18bfb1d94ee9c71b2737f31aeb14f29133c4da8f0b4b3b1e34f8",
+    "model_calls": 0,
+    "db_calls": 0
+  },
+  "overall": {
+    "decision": "Do not reuse old candidate_hygiene unchanged.",
+    "assessment": "Of15 flagged rows,11 are ordinary narrative content and1 is an ambiguous attraction-exhibited short. Only3 clearly support nonstandard-artifact identity; a further clear attraction is missed. This audit finds a high false-positive rate in the sampled flagged set, not a universal precision estimate.",
+    "ordinary_scope": "These are catalog hygiene candidates, not title quality judgments. Even clear attraction works may be relevant when the request explicitly seeks them."
+  },
+  "proposed_conditions": [
+    "Exclude from ordinary film/series search only when prose identifies the current record itself as an attraction/simulator experience, corroborated by audience seating/movement, ride installation, immersive display or explicit designed-as-attraction wording. A brand/venue mention alone is insufficient.",
+    "Never use a substring inside based on theme park ride, adaptation, setting, characters visiting a ride, or metaphorical thrill ride as identity evidence. Tags alone cannot establish current-record identity.",
+    "For pilots require current-record identification as an original/standalone pilot version AND explicit nonrelease/rejection, with no evidence that this same record became a released series or feature. Historical precursor-pilot mentions do not qualify.",
+    "Keep ambiguous shorts/films shown at parks. Missing distribution information is unknown, not exclusion evidence.",
+    "Rules must remain title-ID-free and query-independent except any explicit product/request media-scope choice; preserve matched source spans and rejection reasons. No paid planner gates."
+  ],
+  "cases": [
+    {
+      "key": "movie:22",
+      "title": "Pirates of the Caribbean: The Curse of the Black Pearl",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "After Port Royal is attacked and pillaged by a mysterious pirate crew, capturing the governor's daughter Elizabeth Swann in the process, William Turner asks free-willing pirate Jack Sparrow to help him locate the crew's ship—The Black Pearl—so that he can rescue the woman he loves.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:58",
+      "title": "Pirates of the Caribbean: Dead Man's Chest",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "Jack's got a blood debt to pay: he owes his soul to the legendary Davy Jones, ghastly Ruler of the Ocean Depths.  But ever-crafty Jack isn't about to go down without a fight.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:1865",
+      "title": "Pirates of the Caribbean: On Stranger Tides",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "When Jack crosses paths with a woman from his past, he's not sure if it's love...or if she's a ruthless con artist using him to find the fabled Fountain of Youth.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:451048",
+      "title": "Jungle Cruise",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "Dr. Lily Houghton enlists the aid of wisecracking skipper Frank Wolff to take her down the Amazon in his dilapidated boat. Together, they search for an ancient tree that holds the power to heal – a discovery that will change the future of medicine.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:826914",
+      "title": "Muppets Haunted Mansion",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "Gonzo is challenged to spend one night in The Haunted Mansion on Halloween night.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:1296427",
+      "title": "T2 3-D: Battle Across Time",
+      "old_reasons": [
+        "theme park attraction",
+        "theme park ride"
+      ],
+      "decision": "artifact_supported",
+      "assessment": "Essence explicitly says designed as an immersive theme park attraction; indexed subject is an attraction short/experience, not merely a film based on a ride.",
+      "source_excerpt": "This exhilarating 3D experience thrusts audiences directly into the heart of the Terminator universe, delivering a relentless barrage of futuristic action and groundbreaking visual spectacle. Designed as an immersive theme park attraction, it prioritizes visceral thrills and an intense, fast-paced encounter with iconic characters and a dystopian future. The short film is a high-octane celebration of its blockbuster origins, offering pure escapism through its loud sound design and impressive special effects. It's a non-stop adrenaline rush for fans seeking an immediate, impactful sci-fi adventure. Three freedom fighters attack a large corporation to prevent a future apocalypse.",
+      "conservative_detector_flags": true
+    },
+    {
+      "key": "movie:2067",
+      "title": "Mission to Mars",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "When the first manned mission to Mars meets with a catastrophic and mysterious disaster after reporting an unidentified structure, a rescue mission is launched to investigate the tragedy and bring back any survivors.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:15422",
+      "title": "Dark Ride",
+      "old_reasons": [
+        "theme park attraction"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "Ten years after he brutally murdered two girls, a killer escapes from a mental institution and returns to his turf, the theme park attraction called Dark Ride. About to crash his path are a group of college kids on a road trip who stumble across the park.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:10756",
+      "title": "The Haunted Mansion",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "Workaholic Jim Evers and his wife/business partner Sara get a call one night from  a mansion owner, Edward Gracey, who wants to sell his house. Once the Evers family arrive at the mansion, a torrential thunderstorm of mysterious origin strands them with the brooding, eccentric Gracey, his mysterious butler, and a variety of residents both seen and unseen.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:28605",
+      "title": "Ghoulies II",
+      "old_reasons": [
+        "amusement park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "Ghoulies II picks up a short time after the first movie, a few of the little nasties stow away on an amusement park ride and bring big bucks to a dying fair. The creatures are mad after an attempt to kill them, so the creatures go on a rampage through the fairgrounds, ultimately leading to an explosive conclusion!",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:616747",
+      "title": "Haunted Mansion",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "A woman and her son enlist a motley crew of so-called spiritual experts to help rid their home of supernatural squatters.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:1500440",
+      "title": "Captain EO",
+      "old_reasons": [
+        "theme park attraction"
+      ],
+      "decision": "ambiguous_keep",
+      "assessment": "Synopsis calls it a3D science-fiction film shown at Disney parks. Exhibition venue does not prove an unavailable ride-only experience; keep unless product explicitly excludes attraction shorts.",
+      "source_excerpt": "In this 3-D science fiction film that was shown at Disney theme parks, the infamous Captain EO and his ragtag crew are sent on a diplomatic mission through space to deliver a gift to the mysterious and menacing Supreme Leader of a desolate industrial planet.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:43274",
+      "title": "Tower of Terror",
+      "old_reasons": [
+        "theme park ride"
+      ],
+      "decision": "ordinary_content_keep",
+      "assessment": "Source describes an ordinary narrative film/special. Theme-park phrase describes adaptation origin or a setting/plot location, not the catalog item itself.",
+      "source_excerpt": "A disgraced reporter investigates an abandoned luxury hotel where five people mysteriously disappeared sixty years earlier.",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "movie:1114081",
+      "title": "Back To The Future: The Ride",
+      "old_reasons": [
+        "theme park attraction",
+        "theme park ride"
+      ],
+      "decision": "artifact_supported",
+      "assessment": "Essence explicitly describes simulation technology and a thrilling ride; synopsis seats and rocks the audience in a DeLorean, confirming physical attraction experience.",
+      "source_excerpt": "Buckle up for a high-speed journey through time in a DeLorean! This thrilling ride combines state-of-the-art simulation technology with the beloved Back to the Future franchise. The immersive experience delivers a potent dose of adrenaline and wonder. While the story is simple, the visual spectacle and breakneck pace create a memorable and nostalgic adventure. Sitting in a flying DeLorean, the audience gets rocked when traveling through several times.",
+      "conservative_detector_flags": true
+    },
+    {
+      "key": "movie:185789",
+      "title": "Mulholland Dr.",
+      "old_reasons": [
+        "pilot_with_explicit_non_release_or_rejection"
+      ],
+      "decision": "artifact_supported",
+      "assessment": "Synopsis identifies this record as original TV pilot version, explicitly rejected and not publicly released; it distinguishes the later reworked feature.",
+      "source_excerpt": "A dark and twisting neo-noir mystery set against the backdrop of Hollywood. This psychological thriller unravels a dreamlike narrative with an unreliable narrator, pulling the viewer into a world of intrigue and paranoia. Expect to be captivated by its intense atmosphere, surreal imagery, and complex plot. The film's ambiguity and dream logic demand careful attention, rewarding multiple viewings. \"This is the original TV pilot version of Mulholland Drive (2001), which was rejected by ABC and failed to become a series. David Lynch considers this version of the project embarrassing and did not released it to the public. However, a VHS copy from the time of its release did find its way online. The existing pilot was reworked with new footage t",
+      "conservative_detector_flags": true
+    },
+    {
+      "key": "movie:1286710",
+      "title": "Fast & Furious: Supercharged",
+      "old_reasons": [],
+      "decision": "artifact_supported",
+      "assessment": "Old rule misses this. Synopsis explicitly invites audience into an all-new ride at Universal Studios with360-degree projected imagery; essence describes simulated reality. Direct attraction identity, not adaptation or metaphor.",
+      "source_excerpt": "In this all new ride at Universal Studios Hollywood, join the all-star cast from the hit movies on an exhilarating high-speed chase that exceeds 120 miles per hour and catapults you into the high-stakes underworld of fast cars and international crime cartels. You'll be engulfed in a world of cutting-edge, hyper-realistic special effects, including 3D-HD imagery projected onto the world's most expansive 360-degree screens!",
+      "conservative_detector_flags": true
+    },
+    {
+      "key": "movie:1427159",
+      "title": "Elena of Avalor: Ready to Rule",
+      "old_reasons": [],
+      "decision": "ordinary_content_keep",
+      "assessment": "Disney and ride occur near one another in promotional prose, but ride is metaphorical; source describes an animated narrative about restoring a kingdom.",
+      "source_excerpt": "Loyal and brave, 16-year-old Elena must learn to reign with wisdom and compassion over Avalor -- a land bursting with magic and majesty. Fortunately, she'll have plenty of help from her grandparents, her sister Isabel, wizard-in-training Mateo and more. With friends and family by her side, it's a wild and daring ride! Experience the fun, action and adventure as Disney's most inspiring new hero embarks on a bold quest to restore her kingdom to greatness and prove she's READY TO RULE!",
+      "conservative_detector_flags": false
+    },
+    {
+      "key": "show:35372",
+      "title": "The Problem Solverz",
+      "old_reasons": [],
+      "decision": "ordinary_content_keep",
+      "assessment": "A rejected pilot is mentioned as development history; synopsis explicitly identifies the current released animated series and network premiere. Never exclude released series merely because a precursor pilot was rejected.",
+      "source_excerpt": "The Problem Solverz is an American animated television series created by Ben Jones, a member of the art collective Paper Rad, for Cartoon Network. The series centered on the titular Problem Solverz trio of Alfe, Roba, and Horace, as they solve and sometimes create the various problems that plague their town, Farboro. The series is rated TV-PG. The original pilot Neon Knome was rejected by Cartoon Network's late-night programming block Adult Swim, but was picked up and re-tooled by the main network, which premiered the series on April 4, 2011.\n\nOn September 20, 2012, a statement on a Facebook page for the show said that the second half of Season 2 was intended to debut September 24, 2012, but the scheduling was delayed. Selected reruns have been aired during Cartoon Network's January 2013 revival of their Cartoon Planet variety show.\n\nOn M",
+      "conservative_detector_flags": false
+    }
+  ],
+  "detector_validation": {
+    "version": 1,
+    "all_reviewed_counterexamples": 18,
+    "matched_review_expectations": 18,
+    "full_catalog_flag_count": 4,
+    "all_new_flags_reviewed": true,
+    "status": "Standalone detector only; not wired into ranking.",
+    "note": "Three attraction identity flags and one nonreleased-pilot flag. CaptainEO kept; all11 old false-positive ordinary works kept; metaphor/precursor-pilot counterexamples kept."
+  }
+}

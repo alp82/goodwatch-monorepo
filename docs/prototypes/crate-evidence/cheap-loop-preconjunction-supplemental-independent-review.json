@@ -1,0 +1,268 @@
+{
+  "reviewer": "Independent assistant",
+  "inputs": [
+    "private/cheap-loop/native-preconjunction-v2-supplemental.json (repaired fallback)",
+    "private/cheap-loop/preconjunction-ranked-supplemental28.json"
+  ],
+  "scope": "All28 guard/output deltas reviewed. Detailed source adjudication focuses4 activated cases; unchanged26 local-rerank paths are not falsely labeled successful. Already-seen fixed supplemental cohort, not fresh held-out data.",
+  "overall": {
+    "winner_id": null,
+    "decision": "Reject current generic pre-cap conjunction route and anti refinement as universal default.",
+    "assessment": "The original13 structural gains do not generalize cleanly. Four SQL activations: nature is credible but baseline already good; legal falls back without quality gain; older-robbery joint priority introduces severe wrong-sense top3; peaceful-aliens joint and anti regress subject/genre, with anti over50ms. Existing original13 gains can remain a scoped prototype finding, but not a title/request-exception production router. No winner follows from mostly unchanged cases.",
+    "next_step": "Investigate general full-concept evidence and fallback-priority assumptions if more refinement is authorized; otherwise retain cheaper original alternatives plus separately validated hygiene. Do not tune per-request/title exceptions."
+  },
+  "cases": [
+    {
+      "id": "54f28fa29638",
+      "request": "A gentle science-fiction film about making contact, without a war or a horror atmosphere.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "c05b3f733463",
+      "request": "A tense legal thriller with clever courtroom arguments, not a serial-killer investigation.",
+      "activated": true,
+      "fallback": true,
+      "preference": "unchanged English path",
+      "outcome": "tie_with_added_work",
+      "assessment": "Only2 joint candidates triggers fallback. Final Section375/DeadlyAmericanMarriage/HowToGetAwayWithMurder matches English opening. Section375 directly courtroom arguments; documentary second is legal dispute but not necessarily fiction-thriller. No quality gain; failed probe adds retrieval work."
+    },
+    {
+      "id": "717260825ed1",
+      "request": "A comedy about ordinary coworkers, not high school or teenagers.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "0206e75fb053",
+      "request": "A fast-paced heist where the plan goes wrong, but keep the violence mild.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "134bc9d838cf",
+      "request": "A documentary series about the natural world; no true crime.",
+      "activated": true,
+      "fallback": false,
+      "preference": "tie: baseline and joint natural-world documentaries",
+      "outcome": "tie",
+      "assessment": "Joint TinyWorld/Undergrowth/Mammals and anti Animal/Africa/LifeOnEarth/Galapagos/Americas are directly nature documentary series. Original English already strongly fits. Reordering is credible, not evidence of superior quality. Local anti reported5.74ms; no overall speed inference from a single supplemental screen."
+    },
+    {
+      "id": "02d75f344631",
+      "request": "Un thriller de ciencia ficción sobre recuerdos falsos, sin terror.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "b02a6546100d",
+      "request": "A story about a university professor, not space or the universe.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "ee4de4e1e371",
+      "request": "Something to watch with my parents: we all enjoy dark adult comedy, so it does not need to be family-friendly.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "b73f9ce2e43d",
+      "request": "A survival film about climbing a mountain, with no monsters or supernatural explanation.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "7e429b8e7953",
+      "request": "A funny series about people working in a restaurant.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "9e768eb13bb9",
+      "request": "A warm film about adult sisters reconnecting, but not a romantic comedy.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "5616da92c7eb",
+      "request": "A thoughtful space exploration film with a sense of wonder, not constant battles.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "1cf0fb38d823",
+      "request": "A clever con-artist story where I have to question what I am being told.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "cc4145d28ca5",
+      "request": "An easygoing comedy for a tired evening, without humiliation or cringe humor.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "800bee20ddb3",
+      "request": "A thriller built around a driver escaping pursuit in a car.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "3bb5a3cf6f10",
+      "request": "A viciously funny story about a wealthy family fighting over power.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "1d05af06915e",
+      "request": "A documentary about ancient civilizations, not fictional historical drama.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "70c26cda5720",
+      "request": "A realistic espionage series about betrayal, without gadgets or superheroes.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "8321aaeefbdc",
+      "request": "My parents and I love tense political dramas. Find us something to watch together.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "5f9a8ef52221",
+      "request": "A suspenseful mystery that feels hopeful rather than cruel or despairing.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "f33844e6bf12",
+      "request": "A funny film about older people pulling off a robbery.",
+      "activated": true,
+      "fallback": true,
+      "preference": "original English; conjunction priority rejected",
+      "outcome": "worse",
+      "assessment": "Fallback prioritizes3 weak joint matches: PinkPanther is bumbling detective investigating theft; Snatch is ensemble crime without supplied central older-robber focus; Shazam explicitly a child gaining adult superhero powers. These do not entail older people committing robbery. English is imperfect but had HuntingElephants among top5; replacing its opening with3 wrong-sense titles is a material new regression. Never certify joint lexical matches as relevant by construction."
+    },
+    {
+      "id": "e0b4a21244ce",
+      "request": "A tense film set mostly on a train, without zombies.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval. Baseline TrainToBusan appears despite explicit no-zombies; this is inherited, not caused by conjunction."
+    },
+    {
+      "id": "0a18fc525237",
+      "request": "A series about doctors at work, with dry humor rather than slapstick.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval. Baseline TwentyTwelve/Fisk/Divorce opening is not established medical workplace; inherited failure remains visible."
+    },
+    {
+      "id": "6a68e089581d",
+      "request": "A documentary about making music, not a fictional musician biopic.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "f0504a308ff7",
+      "request": "A hopeful drama about rebuilding life after leaving prison.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "1ec90db05dd8",
+      "request": "A science-fiction story about communicating with aliens, with a peaceful mood.",
+      "activated": true,
+      "fallback": false,
+      "preference": "original English; reject joint/anti default",
+      "outcome": "worse",
+      "assessment": "Raw joint puts MisterRogers #3; anti top5 BuzzLightyear/PAWPatrol/FlightToMars/StarTrek/MisterRogers. Wholesome child programming is not evidence of a science-fiction alien-communication story. Buzz source emphasizes action heroics; MisterRogers empathy lessons, not alien fiction. Original English at least retains Arrival/Cocoon among top5. This material regression invalidates the current generic guard, and anti local63.63ms also misses50ms target."
+    },
+    {
+      "id": "aa23d46aea84",
+      "request": "A crime thriller about a getaway driver, not a racing competition.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    },
+    {
+      "id": "d44ffa7b6d69",
+      "request": "A darkly funny series about political ambition, aimed at adults.",
+      "activated": false,
+      "fallback": false,
+      "preference": "unchanged English path",
+      "outcome": "unchanged",
+      "assessment": "Structural guard does not activate; no new benefit or regression attributed to conjunction. Existing baseline weaknesses remain, and unchanged is not a quality approval."
+    }
+  ]
+}

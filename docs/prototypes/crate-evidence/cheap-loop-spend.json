@@ -1,0 +1,243 @@
+{
+  "scope": "Current cheap-loop experiments only. Historical higher-cost loop spending is separate.",
+  "actual_api_calls": 39,
+  "actual_api_spend_usd": 0.006069252000000001,
+  "calls": [
+    {
+      "request": "car chases",
+      "mode": "control",
+      "cost_usd": 0.00013797,
+      "runtime_model_cost_usd": 0.00032314800000000004
+    },
+    {
+      "request": "sunglasses",
+      "mode": "control",
+      "cost_usd": 0.00012923400000000002,
+      "runtime_model_cost_usd": 0.000314412
+    },
+    {
+      "request": "unreliable narrator",
+      "mode": "control",
+      "cost_usd": 0.00013847400000000003,
+      "runtime_model_cost_usd": 0.00032373600000000003
+    },
+    {
+      "request": "dark comedy about rich people",
+      "mode": "control",
+      "cost_usd": 0.000149814,
+      "runtime_model_cost_usd": 0.000335076
+    },
+    {
+      "request": "tense but not bleak",
+      "mode": "control",
+      "cost_usd": 0.00012927600000000003,
+      "runtime_model_cost_usd": 0.00031453800000000006
+    },
+    {
+      "request": "no anime, gritty crime show",
+      "mode": "control",
+      "cost_usd": 0.00014397600000000003,
+      "runtime_model_cost_usd": 0.00032928000000000005
+    },
+    {
+      "request": "with my parents",
+      "mode": "control",
+      "cost_usd": 0.00012915000000000002,
+      "runtime_model_cost_usd": 0.00031432800000000006
+    },
+    {
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "mode": "control",
+      "cost_usd": 0.000168294,
+      "runtime_model_cost_usd": 0.00035418600000000004
+    },
+    {
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "mode": "control",
+      "cost_usd": 0.000179802,
+      "runtime_model_cost_usd": 0.00036535800000000003
+    },
+    {
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "mode": "control",
+      "cost_usd": 0.00019723200000000004,
+      "runtime_model_cost_usd": 0.00038320800000000006
+    },
+    {
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "mode": "control",
+      "cost_usd": 0.00019160400000000003,
+      "runtime_model_cost_usd": 0.00037737000000000003
+    },
+    {
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "mode": "control",
+      "cost_usd": 0.000180222,
+      "runtime_model_cost_usd": 0.00036603000000000004
+    },
+    {
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "mode": "control",
+      "cost_usd": 0.00015015000000000002,
+      "runtime_model_cost_usd": 0.00033579000000000004
+    },
+    {
+      "request": "car chases",
+      "mode": "revised",
+      "cost_usd": 0.00013784400000000003,
+      "runtime_model_cost_usd": 0.00032302200000000007
+    },
+    {
+      "request": "sunglasses",
+      "mode": "revised",
+      "cost_usd": 0.00012923400000000002,
+      "runtime_model_cost_usd": 0.000314412
+    },
+    {
+      "request": "unreliable narrator",
+      "mode": "revised",
+      "cost_usd": 0.00013834800000000002,
+      "runtime_model_cost_usd": 0.00032361000000000005
+    },
+    {
+      "request": "dark comedy about rich people",
+      "mode": "revised",
+      "cost_usd": 0.000149688,
+      "runtime_model_cost_usd": 0.00033495000000000004
+    },
+    {
+      "request": "tense but not bleak",
+      "mode": "revised",
+      "cost_usd": 0.00012927600000000003,
+      "runtime_model_cost_usd": 0.00031453800000000006
+    },
+    {
+      "request": "no anime, gritty crime show",
+      "mode": "revised",
+      "cost_usd": 0.00014385000000000003,
+      "runtime_model_cost_usd": 0.000329154
+    },
+    {
+      "request": "with my parents",
+      "mode": "revised",
+      "cost_usd": 0.00012915000000000002,
+      "runtime_model_cost_usd": 0.00031432800000000006
+    },
+    {
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "mode": "revised",
+      "cost_usd": 0.00016611000000000002,
+      "runtime_model_cost_usd": 0.000352002
+    },
+    {
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "mode": "revised",
+      "cost_usd": 0.00017967600000000003,
+      "runtime_model_cost_usd": 0.00036523200000000006
+    },
+    {
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "mode": "revised",
+      "cost_usd": 0.00019685400000000002,
+      "runtime_model_cost_usd": 0.00038283
+    },
+    {
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "mode": "revised",
+      "cost_usd": 0.00019118400000000003,
+      "runtime_model_cost_usd": 0.00037695000000000003
+    },
+    {
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "mode": "revised",
+      "cost_usd": 0.00018009600000000003,
+      "runtime_model_cost_usd": 0.00036590400000000007
+    },
+    {
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "mode": "revised",
+      "cost_usd": 0.000149814,
+      "runtime_model_cost_usd": 0.000335454
+    },
+    {
+      "request": "car chases",
+      "mode": "candidates-only",
+      "cost_usd": 0.00013797,
+      "runtime_model_cost_usd": 0.00032314800000000004
+    },
+    {
+      "request": "sunglasses",
+      "mode": "candidates-only",
+      "cost_usd": 0.00012923400000000002,
+      "runtime_model_cost_usd": 0.000314412
+    },
+    {
+      "request": "unreliable narrator",
+      "mode": "candidates-only",
+      "cost_usd": 0.00013847400000000003,
+      "runtime_model_cost_usd": 0.00032373600000000003
+    },
+    {
+      "request": "dark comedy about rich people",
+      "mode": "candidates-only",
+      "cost_usd": 0.000149814,
+      "runtime_model_cost_usd": 0.000335076
+    },
+    {
+      "request": "tense but not bleak",
+      "mode": "candidates-only",
+      "cost_usd": 0.00012927600000000003,
+      "runtime_model_cost_usd": 0.00031453800000000006
+    },
+    {
+      "request": "no anime, gritty crime show",
+      "mode": "candidates-only",
+      "cost_usd": 0.00014397600000000003,
+      "runtime_model_cost_usd": 0.00032928000000000005
+    },
+    {
+      "request": "with my parents",
+      "mode": "candidates-only",
+      "cost_usd": 0.00012915000000000002,
+      "runtime_model_cost_usd": 0.00031432800000000006
+    },
+    {
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "mode": "candidates-only",
+      "cost_usd": 0.00016623600000000003,
+      "runtime_model_cost_usd": 0.00035212800000000005
+    },
+    {
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "mode": "candidates-only",
+      "cost_usd": 0.000179802,
+      "runtime_model_cost_usd": 0.00036535800000000003
+    },
+    {
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "mode": "candidates-only",
+      "cost_usd": 0.00019723200000000004,
+      "runtime_model_cost_usd": 0.00038320800000000006
+    },
+    {
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "mode": "candidates-only",
+      "cost_usd": 0.00019160400000000003,
+      "runtime_model_cost_usd": 0.00037737000000000003
+    },
+    {
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "mode": "candidates-only",
+      "cost_usd": 0.000180222,
+      "runtime_model_cost_usd": 0.00036603000000000004
+    },
+    {
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "mode": "candidates-only",
+      "cost_usd": 0.00014994000000000002,
+      "runtime_model_cost_usd": 0.00033558000000000004
+    }
+  ],
+  "runtime_calls_per_search": 2,
+  "extra_runtime_stages": 0
+}

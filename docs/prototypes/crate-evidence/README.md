@@ -4,7 +4,11 @@ Prepared for [Scratch-table prototype of the evidence column in Crate](https://g
 
 Question: does combining tags, keywords and trope names into strong evidence, alongside description text, improve retrieval over D4+ while reducing query work?
 
-## Latest result
+## Current cheap-loop review
+
+Open [the cheap-loop comparison](cheap-loop-review.html) for the unchanged original 13 requests, fresh native controls, bounded ranking alternatives and separately labeled supplemental cases. No global winner is accepted. [Current findings](cheap-loop-findings.md), [cost ledger](cheap-loop-spend.json), [review regeneration](cheap-loop-report.md) and [retrieval reproduction](cheap-loop-reproduction.md) distinguish current cheap experiments from the earlier expensive model loop. The final normalization-only check is complete; no universal replacement passed the quality and cost gates.
+
+## Earlier higher-cost experiment
 
 Open the [iterative comparison](loop-review.html) for the **original 13 requests**, restored as the primary matched view. The earlier practical-winner claim is retracted: semantic planning plus Flash reranking is a **higher-cost quality experiment**, not an accepted replacement for the cheap controls. Compare recurring per-search cost and latency on those same 13 requests using [matched metrics](matched-comparison-metrics.json).
 

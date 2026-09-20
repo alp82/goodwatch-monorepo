@@ -1,0 +1,137 @@
+{
+  "reviewer": "Independent assistant",
+  "round": "cheap round2",
+  "overall": {
+    "winner_id": null,
+    "assessment": "Reject confidence routing and phrase-pool blend as universal defaults: catastrophic sunglasses loss plus weak rich-short scope. Keep clause-boundary repair and anti-compensation as mechanisms worth refining; anti improves long-tense affect and restores rich-long anchors, but material short-wealth and gritty-long weaknesses remain. Field centrality remains strongest object/driver mechanism. No global winner.",
+    "surviving_mechanisms": [
+      "Clause-scoped negation and phrase sense",
+      "Prose centrality for concrete subject matter",
+      "Bounded anti-compensation for mood and distributed evidence"
+    ],
+    "rejected_defaults": [
+      "r2_confidence_route",
+      "r2_phrase_pool",
+      "r2_conjunctive as universal default"
+    ]
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "preference": "corrected ≈ r2_field_boundaries",
+      "outcome": "tie",
+      "assessment": "All field/conjunction/anti top3 remain strong explicitly chase-centered Fast Five/Lost Bullet 2/White Storm 2. These recover existing corrected quality; no new global gain.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "preference": "r2_field_boundaries / r2_conjunctive",
+      "outcome": "mixed",
+      "assessment": "Central plot sunglasses remain They Live/Fiancés/Dream a Little Dream 2. Anti drops Dream to make room for weaker incidental Minority Report at #3. Confidence-route/phrase-pool remove both They Live and Fiancés entirely from top5 in favor of incidental tags: a decisive top3 regression.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "preference": "r2_anti_compensation / original english",
+      "outcome": "better_or_tie",
+      "assessment": "Anti avoids the rejected1999pilot at #3 and retains Usual Suspects/Fight Club. Mr Robot has psychological unreliability support in indexed evidence; prose alone is more general. Field/conjunctive retain pilot flaw. Avoiding catalog failure is useful, but does not establish superiority over original English Mosaic.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "preference": "original english_phrase",
+      "outcome": "worse",
+      "assessment": "Conjunctive now raises Saltburn/Gemstones to #2/#3, useful whole-fit gains, but #1 Raspberry Reich centers a radical revolutionary gang; kidnapping a rich businessman’s son is incidental wealth, not a comedy centrally about rich people. Anti still #1 Wonder Showzen. Routing reverts toward generic dark satire. None beats original phrase opening.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "preference": "unavailable",
+      "outcome": "unevaluable",
+      "assessment": "All variants remain gated empty; full search and vector fill unobserved.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "preference": "r2_anti_compensation ≈ corrected",
+      "outcome": "better_or_tie",
+      "assessment": "Anti top3 Suburræterna/Gomorrah/Spiral all explicitly gritty organized crime or police/legal investigations. Corrected already contains these three at front, so improvement is chiefly over round1 lexical mechanism. Clause repair restores positive crime intent without inventing fiction-only exclusion.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "preference": "unavailable",
+      "outcome": "unevaluable",
+      "assessment": "All variants remain gated empty; parent co-viewing suitability untested.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "preference": "r2_anti_compensation / r2_confidence_route",
+      "outcome": "better_with_uncertainty",
+      "assessment": "Now You See Me at #1 explicitly combines mystery/twists with exhilarating popcorn entertainment, stronger affect fit than explicitly bleak Beasts at round1#2. Anti Sleuth/Fool Me Once have suspense but no verified ending; route Conan has satisfying plot-unraveling, not proof of a happy ending. Non-Stop synopsis and essence describe potentially different premises: source ambiguity prevents familiarity-based certainty.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "preference": "r2_anti_compensation ≈ english",
+      "outcome": "better_or_tie",
+      "assessment": "Anti restores Saltburn/Gemstones at #2/#3 rather than Snake/Cartouche, clearly repairing rich-person relationship scope. Our Cartoon President #1 is political/inner-circle satire with less explicit mutual-wealth-misconduct support; original English already starts it and Saltburn. Field/conjunctive retain the relation failure.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "preference": "original english",
+      "outcome": "worse",
+      "assessment": "Anti moves Americas Most Wanted to #1 with direct truecrime support, but Vengeance Unlimited/Ten Days remain less direct realistic-procedural fits than original English24 Hours/Hidden. Flex x Cop high still emphasizes wealthy comic crime-solving. Nothing in the prompt prohibits documentaries; rank relevance, not invented format rules.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "preference": "original english / r2_field_boundaries with uncertainty",
+      "outcome": "mixed",
+      "assessment": "Field-boundary removes wrong-sense halfway-through-school match Words on Bathroom Walls. Leading Mulholland Drive/Twin Peaks/Rehearsal still mostly supported as surreal/meta rather than demonstrably a lying storyteller. Anti promoting Psycho over Rehearsal does not itself establish narrator deception from supplied prose. No clear top3 improvement over strongest English list.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "preference": "round1 c_centrality / corrected",
+      "outcome": "mixed",
+      "assessment": "Round2 #1Refuge/#3Ranam have explicit getaway-driver plots, so not arbitrary failures. But chase centrality is less explicit than Baby Driver, which slips to #5 under anti/route; round1 Motorway/BabyDriver/HitRun gave stronger conjunction support. Avoid interpreting unfamiliarity as failure; do not count noun-match reorder as proven gain.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "preference": "r2_field_boundaries ≈ corrected",
+      "outcome": "tie_or_mixed",
+      "assessment": "Field boundaries put HereWeGo/MooneBoy/FeverPitch top3, all directly warm/comic. Anti Elf/MaryTylerMoore/CrocodileDundee also have warm comic evidence, so no hard exclusion failure, but holiday earnestness may conflict with cheesy preference. Route Pumuckl-led list leans whimsical children entertainment; weaker low-assumption fit than existing realistic comedy leaders, though not prohibited.",
+      "next_experiment": "Preserve directly supported leaders; test general mechanism changes against per-request top3 regressions.",
+      "evidence_basis": "Actual round2 source prose and matched evidence; original controls and round1."
+    }
+  ]
+}
