@@ -28,7 +28,6 @@ import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useUser } from "~/utils/auth"
 
 const mainNav = [
-	{ label: "Wishlist", path: "/wishlist" },
 	{
 		label: "Taste",
 		path: "/taste",
