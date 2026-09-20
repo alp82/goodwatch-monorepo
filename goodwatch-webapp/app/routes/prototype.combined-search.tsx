@@ -1,6 +1,5 @@
-// THROWAWAY: three routing policies over the accepted D4+ search. No production route changes.
+// THROWAWAY: one blended list over the accepted D4+ search, with atomic result replacement.
 import { json, type LoaderFunctionArgs } from "@remix-run/node"
-import { useSearchParams } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { runCombinedDescription } from "~/server/prototype-combined-d4.server"
@@ -30,91 +29,126 @@ export async function loader({request}: LoaderFunctionArgs) {
 
 type Title = {id: number; title: string; original?: string; type: string; year: string; poster: string | null; popularity: number; knownFor: string}
 type Description = Awaited<ReturnType<typeof runCombinedDescription>>
-const variants = ["A", "B", "C"] as const
-const names = {A: "Code chooses the lead", B: "Jev chooses the group", C: "Both groups stay visible"}
 const examples = ["Heat", "Drive", "Her", "like Game of Thrones, but sci-fi", "Tom Hanks", "Incepton", "Game of Th", "tense but not bleak"]
-const normalized = (s: string) => s.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim()
-async function get<T>(q: string, kind: string, routing: boolean, signal: AbortSignal): Promise<T> {
-  const p = new URLSearchParams({q,kind,routing:String(routing)})
+const words = (s: string): string[] => s.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []
+const normalized = (s: string) => words(s).join(" ")
+type Policy = "balanced" | "title" | "discovery"
+type Row = {key: string; title: string; original?: string; type: string; year: string; poster: string | null; knownFor?: string; popularity: number; discovery?: Description["results"][number]; lexical: number; match: string; score: number}
+function titleMatch(title: string, query: string) {
+  const name = normalized(title), request = normalized(query)
+  if (!name || !request) return {lexical:0,match:""}
+  if (name === request) return {lexical:2,match:"Exact title"}
+  const target = words(title), wanted = words(query)
+  const hits = [...new Set(wanted)].filter(w=>target.includes(w)).length
+  const coverage = hits / new Set(wanted).size
+  if (` ${name} `.includes(` ${request} `)) return {lexical:1.05,match:"Exact phrase in title"}
+  if (coverage === 1) return {lexical:.9,match:"All search words in title"}
+  if (hits) return {lexical:.65*coverage,match:"Words in title"}
+  if (wanted.length && target.some(w=>w.startsWith(wanted[wanted.length-1])) && wanted[wanted.length-1].length>=2)
+    return {lexical:.15,match:"Partial word in title"}
+  return {lexical:0,match:"Catalog suggestion"}
+}
+function blend(titles: Title[], description: Description | null, q: string, policy: Policy) {
+  const rows = new Map<string,Row>()
+  for (const t of titles) {
+    const type = t.type === "tv" ? "show" : t.type
+    const key = `${type}:${t.id}`
+    rows.set(key,{key,title:t.title,original:t.original,type,year:t.year,poster:t.poster,knownFor:t.knownFor,popularity:t.popularity,...titleMatch(t.title,q),score:0})
+  }
+  for (const d of description?.results ?? []) {
+    const key = `${d.media_type}:${d.tmdb_id}`
+    const row = rows.get(key) ?? {key,title:d.title,type:d.media_type,year:String(d.release_year),poster:d.poster_path,popularity:0,...titleMatch(d.title,q),score:0}
+    row.discovery=d;rows.set(key,row)
+  }
+  for (const row of rows.values()) {
+    const original = titleMatch(row.original ?? "",q)
+    if (original.lexical>row.lexical) {row.lexical=original.lexical;row.match=`${original.match} (original name)`}
+    // Rank fusion avoids pretending that text relevance and fingerprint scores share a scale.
+    const fingerprint = row.discovery ? 10/(9+row.discovery.rank) : 0
+    const titleWeight = policy === "title" ? 1.4 : policy === "discovery" ? .75 : 1
+    const discoveryWeight = policy === "discovery" ? 1.1 : .9
+    row.score = row.lexical===2 ? 3 + .1*fingerprint : Math.max(row.lexical*titleWeight, fingerprint*discoveryWeight) + Math.min(row.lexical, fingerprint)*.15
+  }
+  return [...rows.values()].sort((a,b)=>b.score-a.score || b.popularity-a.popularity || a.key.localeCompare(b.key)).slice(0,20)
+}
+async function get<T>(q: string, kind: string, signal: AbortSignal): Promise<T> {
+  const p = new URLSearchParams({q,kind})
   const response = await fetch(`/prototype/combined-search?${p}&_data=routes%2Fprototype.combined-search`, {signal})
   const body = await response.json()
   if (!response.ok || body.error) throw new Error(body.error ?? "Search failed")
   return body
 }
-function Poster({path}: {path: string | null}) {
-  return path ? <img className="w-12 h-16 rounded object-cover" src={`https://image.tmdb.org/t/p/w92${path}`} alt=""/> : <div className="w-12 h-16 rounded bg-slate-700 shrink-0"/>
+function Highlight({text,query}: {text:string;query:string}) {
+  const terms = new Set(words(query))
+  const last = words(query).at(-1) ?? ""
+  return <>{text.split(/([\p{L}\p{N}]+)/gu).map((part,i)=>{
+    const lower=part.toLocaleLowerCase()
+    if (terms.has(lower)) return <mark key={i} className="rounded bg-amber-300/20 text-amber-200 px-0.5">{part}</mark>
+    if (last.length>=2 && lower.startsWith(last)) return <span key={i}><mark className="rounded bg-amber-300/20 text-amber-200">{part.slice(0,last.length)}</mark>{part.slice(last.length)}</span>
+    return <span key={i}>{part}</span>
+  })}</>
 }
+function Poster({path}: {path: string | null}) {
+  return path ? <img className="w-12 h-16 shrink-0 rounded object-cover" width={48} height={64} src={`https://image.tmdb.org/t/p/w92${path}`} alt=""/> : <div className="w-12 h-16 rounded bg-slate-700 shrink-0"/>
+}
+type Batch = {q:string;titles:Title[];description:Description|null;errors:string[]}
 export default function CombinedSearchPrototype() {
-  const [params,setParams] = useSearchParams()
-  const variant = variants.includes(params.get("variant") as any) ? params.get("variant") as typeof variants[number] : "C"
   const [input,setInput] = useState("")
   const [debounced,setDebounced] = useState("")
-  const [submitted,setSubmitted] = useState("")
-  const [alternate,setAlternate] = useState(false)
-  useEffect(() => { const id = setTimeout(() => setDebounced(input.trim()), 300); return () => clearTimeout(id) }, [input])
-  const cycle = (direction: number) => {setParams({variant: variants[(variants.indexOf(variant)+direction+3)%3]}, {preventScrollReset:true});setAlternate(false)}
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).closest("input,textarea,[contenteditable]")) return
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {e.preventDefault();cycle(e.key === "ArrowLeft" ? -1 : 1)}
-    }
-    window.addEventListener("keydown",key);return () => window.removeEventListener("keydown",key)
-  }, [variant])
-  const titles = useQuery({queryKey:["prototype-combined-title",debounced],enabled:debounced.length>=2,
-    queryFn:({signal})=>get<{results:Title[];ms:number}>(debounced,"titles",false,signal), retry:false})
-  const description = useQuery({queryKey:["prototype-combined-description",submitted,variant === "B"],enabled:!!submitted && submitted === input.trim(),
-    queryFn:({signal})=>get<Description>(submitted,"description",variant === "B",signal), retry:false})
-  const current = submitted !== "" && submitted === input.trim()
-  const found = debounced === input.trim() ? titles.data?.results ?? [] : []
-  const exact = (t:Title) => [t.title,t.original ?? ""].some(n=>normalized(n)===normalized(input))
-  const ordered = [...found].sort((a,b)=>Number(exact(b))-Number(exact(a)) || b.popularity-a.popularity)
-  const codeLead = ordered.some(exact) ? "titles" : "description"
-  const route = current ? description.data?.routing : null
-  const lead = variant === "B" && route && route.confidence >= .65 && route.choice !== "uncertain"
-    ? route.choice === "lookup" ? "titles" : "description" : codeLead
-  const showBoth = variant === "C" || alternate || (variant === "B" && (!route || route.choice === "uncertain" || route.confidence < .65))
-  const titleGroup = <section className="rounded-xl border border-slate-700 p-5" key="titles">
-    <h2 className="text-xl font-semibold mb-4">Titles & people</h2>
-    {titles.isFetching && <p role="status">Looking up names…</p>}
-    {titles.error && <p role="alert">Title lookup unavailable. {titles.error.message}</p>}
-    {!titles.isFetching && found.length===0 && input.trim().length>=2 && <p>No matching names found. Try a different spelling.</p>}
-    <ul className="space-y-4">{ordered.map(t=><li key={`${t.type}:${t.id}`} className="flex gap-3">
-      <Poster path={t.poster}/><div><strong>{t.title}</strong><div className="text-sm text-slate-400">{t.year} · {t.type}{exact(t) ? " · Exact name" : ""}</div>
-      {t.type === "person" && <p className="text-sm">Known for: {t.knownFor || "No credits returned"}</p>}</div>
-    </li>)}</ul>
-  </section>
-  const descriptionGroup = <section className="rounded-xl border border-slate-700 p-5" key="description">
-    <h2 className="text-xl font-semibold mb-4">Matches your description</h2>
-    {!current && <p className="text-slate-400">Press Enter to find something matching your description.</p>}
-    {current && description.isFetching && <p role="status">Finding matches…</p>}
-    {current && description.error && <p role="alert">Description search unavailable. {description.error.message}</p>}
-    {current && description.data && <><p className="mb-4 text-sm text-slate-400">Results for “{submitted}”</p>
-    <ul className="space-y-4">{description.data.results.slice(0,10).map(r=><li key={`${r.media_type}:${r.tmdb_id}`} className="flex gap-3">
-      <Poster path={r.poster_path}/><div><strong>{r.title}</strong><div className="text-sm text-slate-400">{r.release_year} · {r.media_type}</div>
-      <p className="text-sm text-sky-300">{r.reasons.filter(r=>r.kind!=="mismatch").slice(0,3).map(r=>r.text).join(" · ")}</p>
-    </div></li>)}</ul>{!description.data.results.length && <p>No description matches found.</p>}</>}
-  </section>
-  return <main className="max-w-6xl mx-auto p-6 pb-28 text-slate-100">
-    <p className="text-xs uppercase tracking-widest text-amber-400">Throwaway prototype · live catalog + D4+ (corrected)</p>
+  const [snapshot,setSnapshot] = useState<Batch|null>(null)
+  const [policy,setPolicy] = useState<Policy>("balanced")
+  useEffect(() => {const id=setTimeout(()=>setDebounced(input.trim()),1000);return ()=>clearTimeout(id)},[input])
+  const search = useQuery({queryKey:["prototype-combined-batch",debounced],enabled:debounced.length>=2,
+    queryFn:async ({signal}):Promise<Batch>=>{
+      const [titles,description]=await Promise.allSettled([
+        get<{results:Title[];ms:number}>(debounced,"titles",signal),get<Description>(debounced,"description",signal),
+      ])
+      if (signal.aborted) throw new DOMException("Canceled","AbortError")
+      if(titles.status==="rejected" && description.status==="rejected") throw new Error("Search unavailable. Your previous results are still shown.")
+      return {q:debounced,titles:titles.status==="fulfilled"?titles.value.results:[],description:description.status==="fulfilled"?description.value:null,
+        errors:[...(titles.status==="rejected"?["Title lookup unavailable"]:[]),...(description.status==="rejected"?["Description search unavailable"]:[])]}
+    },retry:false,refetchOnWindowFocus:false,refetchOnReconnect:false})
+  useEffect(()=>{if(search.data && search.data.q===input.trim())setSnapshot(search.data)},[search.data,input])
+  const waiting=input.trim()!==debounced
+  const loading=input.trim().length>=2 && (waiting || search.isFetching)
+  const rows=snapshot?blend(snapshot.titles,snapshot.description,snapshot.q,policy):[]
+  const status=loading ? snapshot ? `Updating results for “${input.trim()}”… Showing “${snapshot.q}” until ready.` : `Searching for “${input.trim()}”…`
+    : search.error && input.trim()===debounced ? search.error.message
+    : input.trim().length<2 ? "Type at least two characters to search."
+    : snapshot ? `${rows.length} results for “${snapshot.q}”${snapshot.errors.length?` · ${snapshot.errors.join("; ")}`:""}` : "Search by title, person, or description."
+  return <main className="max-w-4xl mx-auto p-6 pb-16 text-slate-100">
+    <p className="text-xs uppercase tracking-widest text-amber-400">Combined search prototype</p>
     <h1 className="text-3xl font-semibold mt-3">Find your next watch</h1>
-    <p className="text-slate-400 mt-2 mb-6">One box for a title, a person, or what you feel like watching.</p>
-    <form onSubmit={e=>{e.preventDefault();setSubmitted(input.trim());setAlternate(false)}} className="flex gap-3">
-      <input aria-label="Search titles, people, or descriptions" value={input} onChange={e=>{setInput(e.target.value);setSubmitted("");setAlternate(false)}} className="w-full bg-slate-900 rounded-lg border border-slate-600 px-4 py-3" placeholder="A title, a name, or a story you’re in the mood for…"/>
-      <button className="bg-sky-700 rounded-lg px-5" disabled={!input.trim()}>Search</button>
+    <p className="text-slate-400 mt-2 mb-6">A title, a person, or what you feel like watching.</p>
+    <form onSubmit={e=>{e.preventDefault();setDebounced(input.trim())}} className="flex gap-3">
+      <input aria-label="Search titles, people, or descriptions" value={input} onChange={e=>setInput(e.target.value)} className="min-w-0 w-full bg-slate-900 rounded-lg border border-slate-600 px-4 py-3" placeholder="A title, a name, or a story…"/>
+      <button className="bg-sky-700 rounded-lg px-5" disabled={input.trim().length<2}>Search</button>
     </form>
-    <div className="flex flex-wrap gap-2 my-4">{examples.map(q=><button key={q} className="text-sm border border-slate-600 rounded-full px-3 py-1" onClick={()=>{setInput(q);setSubmitted("");setAlternate(false)}}>{q}</button>)}</div>
-    <div className={`grid gap-5 ${showBoth && current ? "lg:grid-cols-2" : ""}`}>
-      {!current ? titleGroup : showBoth ? lead === "titles" ? [titleGroup,descriptionGroup] : [descriptionGroup,titleGroup] : lead === "titles" ? titleGroup : descriptionGroup}
+    <div className="flex flex-wrap gap-2 my-4">{examples.map(q=><button key={q} className="text-sm border border-slate-600 rounded-full px-3 py-1" onClick={()=>setInput(q)}>{q}</button>)}</div>
+    <div role="status" aria-live="polite" className="min-h-16 flex items-start gap-3 py-2 text-sm text-slate-400">
+      <span className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 ${loading?"animate-spin border-sky-400 border-t-transparent":"border-transparent"}`} aria-hidden="true"/>
+      <span>{status}</span>
     </div>
-    {current && !showBoth && <button className="mt-4 underline text-sky-300" onClick={()=>setAlternate(true)}>Also show {lead === "titles" ? "description matches" : "titles & people"}</button>}
-    <details className="mt-8 border-t border-slate-700 pt-4"><summary>Prototype observations & current state</summary>
-      <p className="my-3 text-sm">Question: should code or Jev pick a group, or should both stay visible? All variants use the same ranking. A runs both on submission and leads with exact catalog names. B adds one routing Choice to the attribute request and uses a provisional 0.65 confidence threshold; uncertainty shows both. C always shows both after submission. Name suggestions run after a 300 ms pause; descriptions run on Enter. No person filmography expansion or reference-title understanding is added.</p>
-      <dl className="grid grid-cols-2 gap-2 text-sm"><dt>Input</dt><dd>{input || "Empty"}</dd><dt>Submitted</dt><dd>{submitted || "Not submitted"}</dd><dt>Lead group</dt><dd>{current ? lead : "Names while typing"}</dd><dt>Title lookup</dt><dd>{titles.data?.ms ?? "—"} ms</dd><dt>Description</dt><dd>{current && description.data ? `${description.data.ms} ms; ${description.data.tokens} input tokens; $${description.data.usd.toFixed(6)}` : "Not available"}</dd><dt>Routing</dt><dd>{route ? `${route.choice}; confidence ${route.confidence}` : "No Jev route judgment"}</dd></dl>
-      {route && <pre className="text-xs mt-3">{JSON.stringify(route.probabilities,null,2)}</pre>}
-      <p className="text-sm mt-3">Typing clears submitted results; canceled requests may already have incurred provider cost. Reference-title requests are passed unchanged to D4+: routing does not supply missing title knowledge. Typo behavior depends on catalog lookup.</p>
+    <section aria-label="Search results" aria-busy={loading} className="min-h-[600px] rounded-xl border border-slate-700 overflow-hidden">
+      {!snapshot && loading && <div aria-hidden="true" className="divide-y divide-slate-800">{Array.from({length:6},(_,i)=><div key={i} className="p-4 flex gap-4 h-28 animate-pulse"><div className="w-12 h-16 bg-slate-800 rounded"/><div className="flex-1 space-y-3"><div className="w-1/2 h-4 rounded bg-slate-800"/><div className="w-1/3 h-3 rounded bg-slate-800"/></div></div>)}</div>}
+      <ul className="divide-y divide-slate-800">{rows.map(r=><li key={r.key} className="p-4 flex gap-4 min-h-28" data-result-key={r.key}>
+        <Poster path={r.poster}/><div className="min-w-0"><strong className="text-lg"><Highlight text={r.title} query={snapshot?.q??""}/></strong>
+        <div className="text-sm text-slate-400">{r.year} · {r.type}</div>
+        {r.match.includes("original name") && <p className="text-sm text-slate-300">Original: <Highlight text={r.original??""} query={snapshot?.q??""}/></p>}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {r.lexical>0 && <span className="text-xs rounded bg-amber-300/10 text-amber-200 px-2 py-1">{r.match}</span>}
+          {r.discovery?.reasons.filter(reason=>reason.kind!=="mismatch").slice(0,3).map(reason=><span key={reason.text} className="text-xs rounded bg-sky-400/10 text-sky-200 px-2 py-1">{reason.text}</span>)}
+          {r.discovery && !r.discovery.reasons.some(reason=>reason.kind!=="mismatch") && <span className="text-xs text-sky-200">Description match</span>}
+        </div>
+        {r.type==="person" && <p className="text-sm mt-2 text-slate-400">Known for: {r.knownFor||"No credits returned"}</p>}
+      </div></li>)}</ul>
+      {!rows.length && !loading && <p className="p-6 text-slate-400">{snapshot?"No matches. Try another title or description.":"Your results will appear here."}</p>}
+    </section>
+    <details className="mt-8 border-t border-slate-700 pt-4"><summary>Prototype ranking comparison</summary>
+      <label className="block mt-4">Ranking idea <select aria-label="Ranking idea" value={policy} onChange={e=>setPolicy(e.target.value as Policy)} className="ml-2 bg-slate-900 border border-slate-600 rounded p-2"><option value="balanced">Balanced blend</option><option value="title">Stronger title phrases</option><option value="discovery">Stronger fingerprint results</option></select></label>
+      <p className="text-sm text-slate-400 my-3">Exact full titles always lead. Whole phrases and complete word matches rank above weak partial matches; top fingerprint results mix in using their D4+ rank. A small bonus rewards results found by both. Movie/show IDs are deduplicated. These are provisional ranking ideas, not calibrated relevance probabilities. Switching ideas reuses the same results without more Jev calls.</p>
+      <p className="text-sm text-slate-400">Both sources run after one second without typing. Enter searches immediately. Results are replaced together after both sources settle; a failed source leaves a usable partial list. Existing results remain during loading, with highlights tied to the displayed query.</p>
+      {snapshot?.description && <p className="text-sm mt-3">Description: {snapshot.description.ms} ms · {snapshot.description.tokens} tokens · ${snapshot.description.usd.toFixed(6)}</p>}
     </details>
-    <div className="fixed z-50 bottom-5 left-1/2 -translate-x-1/2 bg-white text-slate-950 shadow-xl rounded-full flex items-center gap-3 px-4 py-3 whitespace-nowrap">
-      <button aria-label="Previous variant" onClick={()=>cycle(-1)}>←</button><span className="text-sm">{variant}: {names[variant]}</span><button aria-label="Next variant" onClick={()=>cycle(1)}>→</button>
-    </div>
   </main>
 }
