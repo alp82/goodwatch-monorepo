@@ -1588,3 +1588,13 @@ export const runVectorComparison = async (request: string, chosen: Options) => {
 }
 
 export type VectorComparison = Awaited<ReturnType<typeof runVectorComparison>>
+
+// Throwaway evidence-column experiment: freeze the unchanged D4+ interpretation.
+export const interpretEvidencePrototype = async (request: string) => {
+	const [attributes, reading] = await Promise.all([readFlags(request, "full"), readWantAvoid(request, "short")])
+	return {
+		request, model: MODEL, capturedAt: new Date().toISOString(), attributes,
+		reading, weights: pick(reading.details, (d) => d.weight >= 0.6 || d.weight <= -1.2, 74),
+		filters: { movie: flagSql(attributes.flags, "movie"), show: flagSql(attributes.flags, "show") },
+	}
+}

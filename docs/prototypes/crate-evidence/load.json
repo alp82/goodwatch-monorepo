@@ -1,0 +1,24 @@
+{
+  "created": {
+    "rows": [
+      {}
+    ],
+    "server_ms": 210.52615,
+    "wall_ms": 270.25454999966314,
+    "rowcount": 1,
+    "results": null
+  },
+  "counts": [
+    {
+      "media_type": "movie",
+      "n": 2500
+    },
+    {
+      "media_type": "show",
+      "n": 2500
+    }
+  ],
+  "loaded_at": "2026-09-20T05:29:06Z",
+  "trope_titles": 3700,
+  "bytes_evidence": 14680668
+}

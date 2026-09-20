@@ -1,0 +1,5822 @@
+[
+  {
+    "term": "car chase",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 4.4535847
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 3.9626896
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9285,
+        "title": "Road Trip",
+        "_score": 3.8564212
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 3.7623167
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 763285,
+        "title": "Ambulance",
+        "_score": 3.2899218
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4660,
+        "title": "Adam-12",
+        "_score": 3.2367501
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 13387,
+        "title": "Transporter 3",
+        "_score": 3.1811728
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 3.171298
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 243954,
+        "title": "Motorheads",
+        "_score": 3.152691
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 136797,
+        "title": "Need for Speed",
+        "_score": 3.1293938
+      }
+    ],
+    "server_ms": 16.733248,
+    "wall_ms": 84.35521899809828,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chase",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 4.453585
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 3.096905
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 3.073907
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4660,
+        "title": "Adam-12",
+        "_score": 2.6389785
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 7461,
+        "title": "Vantage Point",
+        "_score": 2.56051
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 242582,
+        "title": "Nightcrawler",
+        "_score": 2.498684
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 13387,
+        "title": "Transporter 3",
+        "_score": 2.4514318
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 2.394703
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9705,
+        "title": "Swordfish",
+        "_score": 2.3835764
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114466,
+        "title": "Baymax!",
+        "_score": 2.3835764
+      }
+    ],
+    "server_ms": 12.748678,
+    "wall_ms": 59.66592199547449,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chase",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 22.04037
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 19.82425
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 18.950592
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 18.657145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 18.49929
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 18.096693
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 17.07108
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 17.07108
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 17.07108
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 17.07108
+      }
+    ],
+    "server_ms": 12.033954,
+    "wall_ms": 61.64729200099828,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chase",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 5.696849
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 4.6115727
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 4.458144
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 4.408818
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 584,
+        "title": "2 Fast 2 Furious",
+        "_score": 4.3853254
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.158866
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 3.9779248
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 3.7342257
+      }
+    ],
+    "server_ms": 12.18786,
+    "wall_ms": 71.64765599736711,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chase",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 4.7340946
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.158866
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 3.9779248
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 3.7342257
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 3.7342257
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 3.7342257
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 3.6594958
+      }
+    ],
+    "server_ms": 12.45793,
+    "wall_ms": 61.79623400385026,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chase",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 9.11924
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 8.011182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 7.6626368
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 7.4994955
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 7.4994955
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 7.4994955
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 7.193202
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 7.193202
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 7.193202
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 7.0492506
+      }
+    ],
+    "server_ms": 11.71004,
+    "wall_ms": 62.40916100068716,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chases",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 6.607278
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 5.4762883
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 5.2176514
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.968709
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 4.7448225
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 584,
+        "title": "2 Fast 2 Furious",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 4.3525753
+      }
+    ],
+    "server_ms": 9.692754,
+    "wall_ms": 62.606940999103244,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chases",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 5.7788267
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 5.286747
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.968709
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 4.7448225
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 4.352575
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 4.352575
+      }
+    ],
+    "server_ms": 9.45147,
+    "wall_ms": 65.3440089954529,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chases",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 5.7788267
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 5.286747
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.968709
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 4.7448225
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 4.4759145
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 4.352575
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 4.352575
+      }
+    ],
+    "server_ms": 9.460998,
+    "wall_ms": 49.26296199846547,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chases",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 5.696849
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 4.6115727
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 4.458144
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 4.408818
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 584,
+        "title": "2 Fast 2 Furious",
+        "_score": 4.3853254
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.158866
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 3.9779248
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 3.7342257
+      }
+    ],
+    "server_ms": 11.27725,
+    "wall_ms": 57.230114995036274,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chases",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 4.7340946
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.158866
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 3.9779248
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 3.7342257
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 3.7342257
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 3.7342257
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 3.6594958
+      }
+    ],
+    "server_ms": 10.721522,
+    "wall_ms": 79.33591399341822,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "car chases",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 9.11924
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 8.011182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 7.6626368
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 7.4994955
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 7.4994955
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 7.4994955
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 7.193202
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 7.193202
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 7.193202
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 51497,
+        "title": "Fast Five",
+        "_score": 7.0492506
+      }
+    ],
+    "server_ms": 11.723321,
+    "wall_ms": 67.49836200469872,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "chase car",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 4.4535847
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 3.9626896
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9285,
+        "title": "Road Trip",
+        "_score": 3.8564212
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 3.7623167
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 763285,
+        "title": "Ambulance",
+        "_score": 3.2899218
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4660,
+        "title": "Adam-12",
+        "_score": 3.2367501
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 13387,
+        "title": "Transporter 3",
+        "_score": 3.1811728
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 3.171298
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 243954,
+        "title": "Motorheads",
+        "_score": 3.152691
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 136797,
+        "title": "Need for Speed",
+        "_score": 3.1293938
+      }
+    ],
+    "server_ms": 9.770888,
+    "wall_ms": 80.88537000003271,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "chase car",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 47964,
+        "title": "A Good Day to Die Hard",
+        "_score": 2.182494
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 13387,
+        "title": "Transporter 3",
+        "_score": 1.6849773
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 4108,
+        "title": "The Transporter",
+        "_score": 1.6318359
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 1.6318359
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 117251,
+        "title": "White House Down",
+        "_score": 1.6318359
+      }
+    ],
+    "server_ms": 8.245716,
+    "wall_ms": 87.17484599765157,
+    "rowcount": 5,
+    "results": null
+  },
+  {
+    "term": "chase car",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 47964,
+        "title": "A Good Day to Die Hard",
+        "_score": 137.82986
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 2501,
+        "title": "The Bourne Identity",
+        "_score": 132.25139
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 98566,
+        "title": "Teenage Mutant Ninja Turtles",
+        "_score": 117.93198
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 13387,
+        "title": "Transporter 3",
+        "_score": 106.41046
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 4108,
+        "title": "The Transporter",
+        "_score": 103.05444
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 103.05444
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 117251,
+        "title": "White House Down",
+        "_score": 103.05444
+      }
+    ],
+    "server_ms": 18.970871,
+    "wall_ms": 88.51010000216775,
+    "rowcount": 7,
+    "results": null
+  },
+  {
+    "term": "chase car",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 9679,
+        "title": "Gone in Sixty Seconds",
+        "_score": 5.696849
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1338,
+        "title": "Alarm for Cobra 11: The Motorway Police",
+        "_score": 4.6115727
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1991,
+        "title": "Death Proof",
+        "_score": 4.458144
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9654,
+        "title": "The Italian Job",
+        "_score": 4.408818
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 584,
+        "title": "2 Fast 2 Furious",
+        "_score": 4.3853254
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339403,
+        "title": "Baby Driver",
+        "_score": 4.158866
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1051,
+        "title": "The French Connection",
+        "_score": 3.9779248
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8195,
+        "title": "Ronin",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9615,
+        "title": "The Fast and the Furious: Tokyo Drift",
+        "_score": 3.8932328
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1059,
+        "title": "T. J. Hooker",
+        "_score": 3.7342257
+      }
+    ],
+    "server_ms": 8.143632,
+    "wall_ms": 63.79255299543729,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "chase car",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 47964,
+        "title": "A Good Day to Die Hard",
+        "_score": 2.0243053
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 4108,
+        "title": "The Transporter",
+        "_score": 1.6074283
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 13387,
+        "title": "Transporter 3",
+        "_score": 1.6074283
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 1.5494134
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 117251,
+        "title": "White House Down",
+        "_score": 1.5494134
+      }
+    ],
+    "server_ms": 7.514805,
+    "wall_ms": 60.24787599744741,
+    "rowcount": 5,
+    "results": null
+  },
+  {
+    "term": "chase car",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 2501,
+        "title": "The Bourne Identity",
+        "_score": 140.71394
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 47964,
+        "title": "A Good Day to Die Hard",
+        "_score": 140.71394
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 98566,
+        "title": "Teenage Mutant Ninja Turtles",
+        "_score": 120.78064
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 4108,
+        "title": "The Transporter",
+        "_score": 111.735886
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 13387,
+        "title": "Transporter 3",
+        "_score": 111.735886
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9335,
+        "title": "Transporter 2",
+        "_score": 107.70317
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 117251,
+        "title": "White House Down",
+        "_score": 107.70317
+      }
+    ],
+    "server_ms": 15.922016,
+    "wall_ms": 58.46034799469635,
+    "rowcount": 7,
+    "results": null
+  },
+  {
+    "term": "sunglasses",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.4594655
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8566923
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7860081
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.7187374
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.5934925
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.3747013
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1079552
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9610972
+      }
+    ],
+    "server_ms": 6.641715,
+    "wall_ms": 61.04558499646373,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglasses",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.4594655
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8566923
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7860081
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.7187374
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.5934925
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.3747013
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1079552
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9610972
+      }
+    ],
+    "server_ms": 7.901102,
+    "wall_ms": 61.444147999281995,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglasses",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.4594655
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8566923
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7860081
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.7187374
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.5934925
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.3747013
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1079552
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9610972
+      }
+    ],
+    "server_ms": 6.031079,
+    "wall_ms": 52.52844599453965,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglasses",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.375697
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8342528
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7542222
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.6785872
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.606995
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.355201
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.246703
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9739051
+      }
+    ],
+    "server_ms": 6.305621,
+    "wall_ms": 48.433303003548644,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglasses",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.375697
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8342528
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7542222
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.6785872
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.606995
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.355201
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.246703
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9739051
+      }
+    ],
+    "server_ms": 6.98629,
+    "wall_ms": 54.22670300322352,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglasses",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.375697
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8342528
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7542222
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.6785872
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.606995
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.355201
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.246703
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9739051
+      }
+    ],
+    "server_ms": 7.834183,
+    "wall_ms": 64.24726700061001,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglass",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [],
+    "server_ms": 5.304748,
+    "wall_ms": 54.816818999825045,
+    "rowcount": 0,
+    "results": null
+  },
+  {
+    "term": "sunglass",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [],
+    "server_ms": 5.259033,
+    "wall_ms": 52.135240999632515,
+    "rowcount": 0,
+    "results": null
+  },
+  {
+    "term": "sunglass",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.4594655
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8566923
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7860081
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.7187374
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.5934925
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.3747013
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.1899529
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1079552
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9610972
+      }
+    ],
+    "server_ms": 7.962344,
+    "wall_ms": 61.690710004768334,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglass",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.375697
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8342528
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7542222
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.6785872
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.606995
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.355201
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.246703
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9739051
+      }
+    ],
+    "server_ms": 6.603051,
+    "wall_ms": 51.3760829999228,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglass",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.375697
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8342528
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7542222
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.6785872
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.606995
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.355201
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.246703
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9739051
+      }
+    ],
+    "server_ms": 8.348581,
+    "wall_ms": 54.95458099903772,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "sunglass",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 8337,
+        "title": "They Live",
+        "_score": 5.375697
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 11104,
+        "title": "Chungking Express",
+        "_score": 2.8342528
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 41733,
+        "title": "Due Date",
+        "_score": 2.7542222
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38148,
+        "title": "Beck",
+        "_score": 2.6785872
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4619,
+        "title": "Blade: The Series",
+        "_score": 2.606995
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 36647,
+        "title": "Blade",
+        "_score": 2.355201
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 40245,
+        "title": "Death Valley",
+        "_score": 2.246703
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 168259,
+        "title": "Furious 7",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 36189,
+        "title": "Boris",
+        "_score": 2.1477613
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8009,
+        "title": "Highlander",
+        "_score": 1.9739051
+      }
+    ],
+    "server_ms": 8.566744,
+    "wall_ms": 66.26523699378595,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrator",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 6.2854986
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.7355776
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.7355776
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 5.2741413
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 5.1363974
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 5.005666
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 5.005666
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.881423
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.3109064
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1303970,
+        "title": "Mr. Robot",
+        "_score": 4.205408
+      }
+    ],
+    "server_ms": 8.462618,
+    "wall_ms": 63.13022499671206,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrator",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 6.285498
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.7355776
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.7355776
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 5.274141
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 5.1363974
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 5.0056653
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 5.0056653
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.8814225
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.3109064
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1303970,
+        "title": "Mr. Robot",
+        "_score": 4.2054076
+      }
+    ],
+    "server_ms": 8.87542,
+    "wall_ms": 46.86348699760856,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrator",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 9.608666
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 226706,
+        "title": "The Curious Case of Natalia Grace",
+        "_score": 9.41119
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1303970,
+        "title": "Mr. Robot",
+        "_score": 9.373518
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 152365,
+        "title": "The Girl Before",
+        "_score": 9.3547945
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 9.29907
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 64548,
+        "title": "Cheese in the Trap",
+        "_score": 9.047569
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 74447,
+        "title": "The Witness for the Prosecution",
+        "_score": 8.383543
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 71688,
+        "title": "The Iron Lady",
+        "_score": 8.150114
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 82516,
+        "title": "Unauthorized Living",
+        "_score": 8.150114
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 102434,
+        "title": "The Head",
+        "_score": 8.038208
+      }
+    ],
+    "server_ms": 9.932685,
+    "wall_ms": 51.79291799868224,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrator",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 5.741373
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.1793423
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.0690713
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 484247,
+        "title": "A Simple Favor",
+        "_score": 4.862041
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 4.671258
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 4.4948816
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 4.4948816
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 4.4948816
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.331341
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.0797343
+      }
+    ],
+    "server_ms": 8.950799,
+    "wall_ms": 84.5312669989653,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrator",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 5.741373
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.1793423
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.069072
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 484247,
+        "title": "A Simple Favor",
+        "_score": 4.862041
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 4.671258
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.331341
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.0797343
+      }
+    ],
+    "server_ms": 8.220279,
+    "wall_ms": 49.21987999841804,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrator",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 5.741373
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.1793423
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.069072
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 484247,
+        "title": "A Simple Favor",
+        "_score": 4.862041
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 4.671258
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.331341
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.0797343
+      }
+    ],
+    "server_ms": 7.642916,
+    "wall_ms": 63.5271890059812,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrators",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 226706,
+        "title": "The Curious Case of Natalia Grace",
+        "_score": 7.3807173
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 3.0582814
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 524,
+        "title": "Casino",
+        "_score": 3.0439322
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 503919,
+        "title": "The Lighthouse",
+        "_score": 3.0101793
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 74447,
+        "title": "The Witness for the Prosecution",
+        "_score": 2.9635668
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 2.7907112
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 2.7907112
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 484247,
+        "title": "A Simple Favor",
+        "_score": 2.7116308
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 473033,
+        "title": "Uncut Gems",
+        "_score": 2.6369085
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 111838,
+        "title": "The Woman in the House Across the Street from the Girl in the Window",
+        "_score": 2.6369085
+      }
+    ],
+    "server_ms": 7.929882,
+    "wall_ms": 52.55096600012621,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrators",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 226706,
+        "title": "The Curious Case of Natalia Grace",
+        "_score": 7.3807173
+      }
+    ],
+    "server_ms": 7.47372,
+    "wall_ms": 69.89619499654509,
+    "rowcount": 1,
+    "results": null
+  },
+  {
+    "term": "unreliable narrators",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 226706,
+        "title": "The Curious Case of Natalia Grace",
+        "_score": 7.3807173
+      }
+    ],
+    "server_ms": 7.867188,
+    "wall_ms": 55.40819500311045,
+    "rowcount": 1,
+    "results": null
+  },
+  {
+    "term": "unreliable narrators",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 5.741373
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.1793423
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.0690713
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 484247,
+        "title": "A Simple Favor",
+        "_score": 4.862041
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 4.671258
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 4.4948816
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 4.4948816
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 4.4948816
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.331341
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.0797343
+      }
+    ],
+    "server_ms": 9.475618,
+    "wall_ms": 79.98801799840294,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrators",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 5.741373
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.1793423
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.069072
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 484247,
+        "title": "A Simple Favor",
+        "_score": 4.862041
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 4.671258
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.331341
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.0797343
+      }
+    ],
+    "server_ms": 10.253462,
+    "wall_ms": 52.78845699649537,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "unreliable narrators",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 78191,
+        "title": "You",
+        "_score": 5.741373
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 295693,
+        "title": "The Boss Baby",
+        "_score": 5.1793423
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 802,
+        "title": "Lolita",
+        "_score": 5.069072
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 484247,
+        "title": "A Simple Favor",
+        "_score": 4.862041
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 550,
+        "title": "Fight Club",
+        "_score": 4.671258
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 629,
+        "title": "The Usual Suspects",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 381288,
+        "title": "Split",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1411972,
+        "title": "Money Heist",
+        "_score": 4.494882
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 568091,
+        "title": "Fractured",
+        "_score": 4.331341
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 411088,
+        "title": "The Invisible Guest",
+        "_score": 4.0797343
+      }
+    ],
+    "server_ms": 9.980853,
+    "wall_ms": 56.17159200483002,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "rich people",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 131305,
+        "title": "Celebrity",
+        "_score": 3.2526526
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 65057,
+        "title": "The Descendants",
+        "_score": 2.954321
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.900464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 119772,
+        "title": "The Devil Judge",
+        "_score": 2.8872986
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 930564,
+        "title": "Saltburn",
+        "_score": 2.886798
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 240993,
+        "title": "Ransom Canyon",
+        "_score": 2.8126874
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9740,
+        "title": "Hannibal",
+        "_score": 2.7647314
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 548,
+        "title": "Rashomon",
+        "_score": 2.7281957
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 447404,
+        "title": "Pokémon Detective Pikachu",
+        "_score": 2.7281957
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5863,
+        "title": "Samurai 7",
+        "_score": 2.7281957
+      }
+    ],
+    "server_ms": 8.72726,
+    "wall_ms": 54.907238998566754,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "rich people",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 111803,
+        "title": "The White Lotus",
+        "_score": 2.693686
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 210232,
+        "title": "The Watcher",
+        "_score": 2.659515
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.4714077
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 3595,
+        "title": "Ransom",
+        "_score": 2.3601203
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 66292,
+        "title": "Big Little Lies",
+        "_score": 2.3601203
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 96724,
+        "title": "Anna Karenina",
+        "_score": 2.3081522
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 930564,
+        "title": "Saltburn",
+        "_score": 2.2107923
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 745,
+        "title": "Spaced",
+        "_score": 1.9624579
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 94796,
+        "title": "Crash Landing on You",
+        "_score": 1.9624579
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 82782,
+        "title": "The Righteous Gemstones",
+        "_score": 1.8916299
+      }
+    ],
+    "server_ms": 7.594304,
+    "wall_ms": 59.88503999833483,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "rich people",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 111803,
+        "title": "The White Lotus",
+        "_score": 10.383889
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 210232,
+        "title": "The Watcher",
+        "_score": 10.252163
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 9.527029
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 3595,
+        "title": "Ransom",
+        "_score": 9.098026
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 66292,
+        "title": "Big Little Lies",
+        "_score": 9.098026
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 96724,
+        "title": "Anna Karenina",
+        "_score": 8.897696
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 930564,
+        "title": "Saltburn",
+        "_score": 8.522383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 745,
+        "title": "Spaced",
+        "_score": 7.565078
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 94796,
+        "title": "Crash Landing on You",
+        "_score": 7.565078
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 82782,
+        "title": "The Righteous Gemstones",
+        "_score": 7.2920437
+      }
+    ],
+    "server_ms": 11.980732,
+    "wall_ms": 60.298053998849355,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "rich people",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 131305,
+        "title": "Celebrity",
+        "_score": 3.053729
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 72710,
+        "title": "The Continental: From the World of John Wick",
+        "_score": 2.9158602
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 119772,
+        "title": "The Devil Judge",
+        "_score": 2.9102855
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 240993,
+        "title": "Ransom Canyon",
+        "_score": 2.8473296
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 65057,
+        "title": "The Descendants",
+        "_score": 2.7597754
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.7597754
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 548,
+        "title": "Rashomon",
+        "_score": 2.7206955
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 930564,
+        "title": "Saltburn",
+        "_score": 2.662076
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5863,
+        "title": "Samurai 7",
+        "_score": 2.6615105
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 135840,
+        "title": "Our Blues",
+        "_score": 2.6615105
+      }
+    ],
+    "server_ms": 7.898603,
+    "wall_ms": 65.13319400255568,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "rich people",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 210232,
+        "title": "The Watcher",
+        "_score": 2.5416179
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 111803,
+        "title": "The White Lotus",
+        "_score": 2.5046916
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.3671265
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 3595,
+        "title": "Ransom",
+        "_score": 2.2438858
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 66292,
+        "title": "Big Little Lies",
+        "_score": 2.2438858
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 96724,
+        "title": "Anna Karenina",
+        "_score": 2.1869557
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 930564,
+        "title": "Saltburn",
+        "_score": 2.0322716
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 94796,
+        "title": "Crash Landing on You",
+        "_score": 1.8980241
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 745,
+        "title": "Spaced",
+        "_score": 1.8179634
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 82782,
+        "title": "The Righteous Gemstones",
+        "_score": 1.8179634
+      }
+    ],
+    "server_ms": 12.665145,
+    "wall_ms": 54.54918400209863,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "rich people",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 210232,
+        "title": "The Watcher",
+        "_score": 2.5416179
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 111803,
+        "title": "The White Lotus",
+        "_score": 2.5046916
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.3671265
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 3595,
+        "title": "Ransom",
+        "_score": 2.2438858
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 66292,
+        "title": "Big Little Lies",
+        "_score": 2.2438858
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 96724,
+        "title": "Anna Karenina",
+        "_score": 2.1869557
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 930564,
+        "title": "Saltburn",
+        "_score": 2.0322716
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 94796,
+        "title": "Crash Landing on You",
+        "_score": 1.8980241
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 745,
+        "title": "Spaced",
+        "_score": 1.8179634
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 82782,
+        "title": "The Righteous Gemstones",
+        "_score": 1.8179634
+      }
+    ],
+    "server_ms": 7.067541,
+    "wall_ms": 53.61702499794774,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "wealthy",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 93,
+        "title": "Falcon Crest",
+        "_score": 3.5376954
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 220564,
+        "title": "The Perfect Couple",
+        "_score": 3.5114846
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2076,
+        "title": "Silver Spoons",
+        "_score": 3.2474828
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 241609,
+        "title": "Your Friends & Neighbors",
+        "_score": 3.0838401
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4406,
+        "title": "The Simple Life",
+        "_score": 3.0234482
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4589,
+        "title": "Arrested Development",
+        "_score": 2.994008
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 50042,
+        "title": "Below Deck",
+        "_score": 2.9768114
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5919,
+        "title": "Privileged",
+        "_score": 2.9653761
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 67084,
+        "title": "Cinderella and Four Knights",
+        "_score": 2.9653761
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.9496684
+      }
+    ],
+    "server_ms": 7.177786,
+    "wall_ms": 58.51967600028729,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "wealthy",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 93,
+        "title": "Falcon Crest",
+        "_score": 3.5376954
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 220564,
+        "title": "The Perfect Couple",
+        "_score": 3.5114846
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2076,
+        "title": "Silver Spoons",
+        "_score": 3.2474828
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 241609,
+        "title": "Your Friends & Neighbors",
+        "_score": 3.0838401
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4406,
+        "title": "The Simple Life",
+        "_score": 3.0234482
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4589,
+        "title": "Arrested Development",
+        "_score": 2.994008
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 50042,
+        "title": "Below Deck",
+        "_score": 2.9768114
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5919,
+        "title": "Privileged",
+        "_score": 2.9653761
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 67084,
+        "title": "Cinderella and Four Knights",
+        "_score": 2.9653761
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.9496684
+      }
+    ],
+    "server_ms": 6.81917,
+    "wall_ms": 74.70185299462173,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "wealthy",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 93,
+        "title": "Falcon Crest",
+        "_score": 3.5376954
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 220564,
+        "title": "The Perfect Couple",
+        "_score": 3.5114846
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2076,
+        "title": "Silver Spoons",
+        "_score": 3.2474828
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 241609,
+        "title": "Your Friends & Neighbors",
+        "_score": 3.0838401
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4406,
+        "title": "The Simple Life",
+        "_score": 3.0234482
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4589,
+        "title": "Arrested Development",
+        "_score": 2.994008
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 50042,
+        "title": "Below Deck",
+        "_score": 2.9768114
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5919,
+        "title": "Privileged",
+        "_score": 2.9653761
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 67084,
+        "title": "Cinderella and Four Knights",
+        "_score": 2.9653761
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.9496684
+      }
+    ],
+    "server_ms": 7.204487,
+    "wall_ms": 55.83378799929051,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "wealthy",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 93,
+        "title": "Falcon Crest",
+        "_score": 3.521503
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 220564,
+        "title": "The Perfect Couple",
+        "_score": 3.4934254
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2076,
+        "title": "Silver Spoons",
+        "_score": 3.22436
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 241609,
+        "title": "Your Friends & Neighbors",
+        "_score": 3.0630627
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4406,
+        "title": "The Simple Life",
+        "_score": 3.0079513
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4589,
+        "title": "Arrested Development",
+        "_score": 2.9971685
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.9668646
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5919,
+        "title": "Privileged",
+        "_score": 2.9417894
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 50042,
+        "title": "Below Deck",
+        "_score": 2.9417894
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 67084,
+        "title": "Cinderella and Four Knights",
+        "_score": 2.9417894
+      }
+    ],
+    "server_ms": 8.094738,
+    "wall_ms": 51.246101000288036,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "wealthy",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 93,
+        "title": "Falcon Crest",
+        "_score": 3.521503
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 220564,
+        "title": "The Perfect Couple",
+        "_score": 3.4934254
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2076,
+        "title": "Silver Spoons",
+        "_score": 3.22436
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 241609,
+        "title": "Your Friends & Neighbors",
+        "_score": 3.0630627
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4406,
+        "title": "The Simple Life",
+        "_score": 3.0079513
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4589,
+        "title": "Arrested Development",
+        "_score": 2.9971685
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 3769,
+        "title": "Dynasty",
+        "_score": 2.9668646
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5919,
+        "title": "Privileged",
+        "_score": 2.9417894
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 50042,
+        "title": "Below Deck",
+        "_score": 2.9417894
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 67084,
+        "title": "Cinderella and Four Knights",
+        "_score": 2.9417894
+      }
+    ],
+    "server_ms": 7.27782,
+    "wall_ms": 49.372850997315254,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "wealthy",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 220564,
+        "title": "The Perfect Couple",
+        "_score": 5.8942947
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9896,
+        "title": "Rat Race",
+        "_score": 4.7258816
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 6998,
+        "title": "Lark Rise to Candleford",
+        "_score": 3.6175604
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 93,
+        "title": "Falcon Crest",
+        "_score": 3.521503
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 10222,
+        "title": "The Real Housewives of Orange County",
+        "_score": 3.4753785
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 76177,
+        "title": "Trust",
+        "_score": 3.2580287
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2076,
+        "title": "Silver Spoons",
+        "_score": 3.22436
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 241609,
+        "title": "Your Friends & Neighbors",
+        "_score": 3.0630627
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4406,
+        "title": "The Simple Life",
+        "_score": 3.0079513
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4589,
+        "title": "Arrested Development",
+        "_score": 2.9971685
+      }
+    ],
+    "server_ms": 10.189007,
+    "wall_ms": 51.67198500566883,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "no anime",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 110309,
+        "title": "SK8 the Infinity",
+        "_score": 3.6521325
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 69293,
+        "title": "Little Witch Academia",
+        "_score": 2.981296
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 202284,
+        "title": "Ninja Kamui",
+        "_score": 2.902678
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42253,
+        "title": "K-ON!",
+        "_score": 2.8991427
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86034,
+        "title": "Arifureta: From Commonplace to World's Strongest",
+        "_score": 2.8213959
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 11279,
+        "title": "GANTZ",
+        "_score": 2.74771
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 73223,
+        "title": "Black Clover",
+        "_score": 2.74771
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 208730,
+        "title": "Romantic Killer",
+        "_score": 2.68085
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 67154,
+        "title": "Chivalry of a Failed Knight",
+        "_score": 2.677775
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 19239,
+        "title": "Future Boy Conan",
+        "_score": 2.6520774
+      }
+    ],
+    "server_ms": 8.272364,
+    "wall_ms": 51.99891799566103,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "no anime",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [],
+    "server_ms": 6.123245,
+    "wall_ms": 47.151207996648736,
+    "rowcount": 0,
+    "results": null
+  },
+  {
+    "term": "no anime",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [],
+    "server_ms": 5.475504,
+    "wall_ms": 52.703544999531005,
+    "rowcount": 0,
+    "results": null
+  },
+  {
+    "term": "no anime",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 1.7757181
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1878,
+        "title": "The Backyardigans",
+        "_score": 1.7446804
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214162,
+        "title": "Animal Control",
+        "_score": 1.7430302
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2675,
+        "title": "The Little Mermaid",
+        "_score": 1.6771395
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1992,
+        "title": "Star Trek",
+        "_score": 1.6565609
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 425,
+        "title": "Ice Age",
+        "_score": 1.6378506
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 953,
+        "title": "Madagascar",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 279767,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 10527,
+        "title": "Madagascar: Escape 2 Africa",
+        "_score": 1.6136346
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 234,
+        "title": "My Gym Partner's a Monkey",
+        "_score": 1.6136346
+      }
+    ],
+    "server_ms": 6.877495,
+    "wall_ms": 68.29389600170543,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "no anime",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 1.7757181
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1878,
+        "title": "The Backyardigans",
+        "_score": 1.7446804
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214162,
+        "title": "Animal Control",
+        "_score": 1.7430302
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2675,
+        "title": "The Little Mermaid",
+        "_score": 1.6771395
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1992,
+        "title": "Star Trek",
+        "_score": 1.6565609
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 425,
+        "title": "Ice Age",
+        "_score": 1.6378506
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 953,
+        "title": "Madagascar",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 279767,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 10527,
+        "title": "Madagascar: Escape 2 Africa",
+        "_score": 1.6136346
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 234,
+        "title": "My Gym Partner's a Monkey",
+        "_score": 1.6136346
+      }
+    ],
+    "server_ms": 7.831761,
+    "wall_ms": 55.77996600186452,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "no anime",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 3557,
+        "title": "Walking with Dinosaurs",
+        "_score": 5.6310706
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 5.624337
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 823219,
+        "title": "Flow",
+        "_score": 5.468044
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 507089,
+        "title": "Five Nights at Freddy's",
+        "_score": 4.799965
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 17609,
+        "title": "Antichrist",
+        "_score": 4.344465
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 97617,
+        "title": "The Misfit of Demon King Academy",
+        "_score": 4.035225
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 203805,
+        "title": "Dragon Age: Absolution",
+        "_score": 3.8185496
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 117303,
+        "title": "Lessons in Chemistry",
+        "_score": 3.7406986
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 314,
+        "title": "Catwoman",
+        "_score": 3.6994815
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 279444,
+        "title": "Doctors",
+        "_score": 3.6663737
+      }
+    ],
+    "server_ms": 9.466358,
+    "wall_ms": 58.96649899659678,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "anime",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 279767,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 2.61196
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 65292,
+        "title": "Ajin",
+        "_score": 2.6094
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 63087,
+        "title": "Snow White with the Red Hair",
+        "_score": 2.6004415
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1054116,
+        "title": "My Hero Academia: All Might Rising",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5863,
+        "title": "Samurai 7",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 230059,
+        "title": "A Sign of Affection",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 277698,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 139287,
+        "title": "More than a Married Couple, but Not Lovers",
+        "_score": 2.5827074
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 60572,
+        "title": "Pokémon",
+        "_score": 2.5797753
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42951,
+        "title": "Kaiji",
+        "_score": 2.57685
+      }
+    ],
+    "server_ms": 6.342626,
+    "wall_ms": 47.21162799978629,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "anime",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 279767,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 2.61196
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 65292,
+        "title": "Ajin",
+        "_score": 2.6094
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 63087,
+        "title": "Snow White with the Red Hair",
+        "_score": 2.6004415
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 1054116,
+        "title": "My Hero Academia: All Might Rising",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5863,
+        "title": "Samurai 7",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 230059,
+        "title": "A Sign of Affection",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 277698,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 2.5856464
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 139287,
+        "title": "More than a Married Couple, but Not Lovers",
+        "_score": 2.5827074
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 60572,
+        "title": "Pokémon",
+        "_score": 2.5797753
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42951,
+        "title": "Kaiji",
+        "_score": 2.57685
+      }
+    ],
+    "server_ms": 7.788417,
+    "wall_ms": 52.77920499793254,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "anime",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 203805,
+        "title": "Dragon Age: Absolution",
+        "_score": 5.0225964
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 11285,
+        "title": "The Mysterious Cities of Gold",
+        "_score": 3.3180528
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 255,
+        "title": "Hi Hi Puffy AmiYumi",
+        "_score": 3.0866122
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 38165,
+        "title": "ThunderCats",
+        "_score": 2.7945719
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 18785,
+        "title": "The Hangover",
+        "_score": 2.6361256
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 45243,
+        "title": "The Hangover Part II",
+        "_score": 2.6361256
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 109439,
+        "title": "The Hangover Part III",
+        "_score": 2.6361256
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 23629,
+        "title": "Sucker Punch",
+        "_score": 2.6287587
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 279767,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 2.61196
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 65292,
+        "title": "Ajin",
+        "_score": 2.6094
+      }
+    ],
+    "server_ms": 7.230019,
+    "wall_ms": 68.75837100233184,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "anime",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 1.7757181
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1878,
+        "title": "The Backyardigans",
+        "_score": 1.7446804
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214162,
+        "title": "Animal Control",
+        "_score": 1.7430302
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2675,
+        "title": "The Little Mermaid",
+        "_score": 1.6771395
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1992,
+        "title": "Star Trek",
+        "_score": 1.6565609
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 425,
+        "title": "Ice Age",
+        "_score": 1.6378506
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 953,
+        "title": "Madagascar",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 279767,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 10527,
+        "title": "Madagascar: Escape 2 Africa",
+        "_score": 1.6136346
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 234,
+        "title": "My Gym Partner's a Monkey",
+        "_score": 1.6136346
+      }
+    ],
+    "server_ms": 7.44036,
+    "wall_ms": 56.874387999414466,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "anime",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 1.7757181
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1878,
+        "title": "The Backyardigans",
+        "_score": 1.7446804
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214162,
+        "title": "Animal Control",
+        "_score": 1.7430302
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2675,
+        "title": "The Little Mermaid",
+        "_score": 1.6771395
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1992,
+        "title": "Star Trek",
+        "_score": 1.6565609
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 425,
+        "title": "Ice Age",
+        "_score": 1.6378506
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 953,
+        "title": "Madagascar",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 279767,
+        "title": "One Piece Log: Fish-Man Island Saga",
+        "_score": 1.6195583
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 10527,
+        "title": "Madagascar: Escape 2 Africa",
+        "_score": 1.6136346
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 234,
+        "title": "My Gym Partner's a Monkey",
+        "_score": 1.6136346
+      }
+    ],
+    "server_ms": 6.99248,
+    "wall_ms": 65.35765599983279,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "anime",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 3557,
+        "title": "Walking with Dinosaurs",
+        "_score": 5.6310706
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 5.624337
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 823219,
+        "title": "Flow",
+        "_score": 5.468044
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 507089,
+        "title": "Five Nights at Freddy's",
+        "_score": 4.799965
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 17609,
+        "title": "Antichrist",
+        "_score": 4.344465
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 97617,
+        "title": "The Misfit of Demon King Academy",
+        "_score": 4.035225
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 203805,
+        "title": "Dragon Age: Absolution",
+        "_score": 3.8185496
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 117303,
+        "title": "Lessons in Chemistry",
+        "_score": 3.7406986
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 314,
+        "title": "Catwoman",
+        "_score": 3.6994815
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 279444,
+        "title": "Doctors",
+        "_score": 3.6663737
+      }
+    ],
+    "server_ms": 9.546168,
+    "wall_ms": 58.708706994366366,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "not bleak",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 340837,
+        "title": "A Cure for Wellness",
+        "_score": 2.7663665
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8077,
+        "title": "Alien³",
+        "_score": 2.6455722
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 6479,
+        "title": "I Am Legend",
+        "_score": 2.589171
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 924,
+        "title": "Dawn of the Dead",
+        "_score": 2.529901
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 112163,
+        "title": "High-Rise Invasion",
+        "_score": 2.4834895
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 504,
+        "title": "Monster",
+        "_score": 2.4539042
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 2082,
+        "title": "Halloween",
+        "_score": 2.4539042
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9482,
+        "title": "Judge Dredd",
+        "_score": 2.4539042
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 29427,
+        "title": "The Crazies",
+        "_score": 2.4539042
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 37094,
+        "title": "Falling Down",
+        "_score": 2.4539042
+      }
+    ],
+    "server_ms": 8.157355,
+    "wall_ms": 57.05061899789143,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "not bleak",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [],
+    "server_ms": 4.829122,
+    "wall_ms": 58.273642003769055,
+    "rowcount": 0,
+    "results": null
+  },
+  {
+    "term": "not bleak",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [],
+    "server_ms": 5.331167,
+    "wall_ms": 51.14081899955636,
+    "rowcount": 0,
+    "results": null
+  },
+  {
+    "term": "not bleak",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238179,
+        "title": "Love Has Won: The Cult of Mother God",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 283363,
+        "title": "The Hateful Eight: Extended Version",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 72812,
+        "title": "Metástasis",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214088,
+        "title": "Woman of the Dead",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238648,
+        "title": "Children of Evil",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 242840,
+        "title": "Famagusta",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 257669,
+        "title": "Pill",
+        "_score": 1.9063383
+      }
+    ],
+    "server_ms": 8.265944,
+    "wall_ms": 46.83683400071459,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "not bleak",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238179,
+        "title": "Love Has Won: The Cult of Mother God",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 283363,
+        "title": "The Hateful Eight: Extended Version",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 72812,
+        "title": "Metástasis",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214088,
+        "title": "Woman of the Dead",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238648,
+        "title": "Children of Evil",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 242840,
+        "title": "Famagusta",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 257669,
+        "title": "Pill",
+        "_score": 1.9063383
+      }
+    ],
+    "server_ms": 8.367121,
+    "wall_ms": 54.7804560046643,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "not bleak",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 57756,
+        "title": "Getting On",
+        "_score": 4.4503403
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 674324,
+        "title": "The Banshees of Inisherin",
+        "_score": 3.9476852
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1438,
+        "title": "The Wire",
+        "_score": 3.4466274
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 46511,
+        "title": "Utopia",
+        "_score": 3.4466274
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 12573,
+        "title": "A Serious Man",
+        "_score": 3.2397032
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8321,
+        "title": "In Bruges",
+        "_score": 2.6173701
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4548,
+        "title": "One Foot in the Grave",
+        "_score": 2.6173701
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9107447
+      }
+    ],
+    "server_ms": 6.413227,
+    "wall_ms": 63.67558799684048,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "bleak",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238179,
+        "title": "Love Has Won: The Cult of Mother God",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 283363,
+        "title": "The Hateful Eight: Extended Version",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 72812,
+        "title": "Metástasis",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214088,
+        "title": "Woman of the Dead",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238648,
+        "title": "Children of Evil",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 242840,
+        "title": "Famagusta",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 257669,
+        "title": "Pill",
+        "_score": 1.9235239
+      }
+    ],
+    "server_ms": 8.646686,
+    "wall_ms": 57.92880799708655,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "bleak",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238179,
+        "title": "Love Has Won: The Cult of Mother God",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 283363,
+        "title": "The Hateful Eight: Extended Version",
+        "_score": 1.927397
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 72812,
+        "title": "Metástasis",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214088,
+        "title": "Woman of the Dead",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238648,
+        "title": "Children of Evil",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 242840,
+        "title": "Famagusta",
+        "_score": 1.9235239
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 257669,
+        "title": "Pill",
+        "_score": 1.9235239
+      }
+    ],
+    "server_ms": 7.178206,
+    "wall_ms": 52.46135199558921,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "bleak",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 57756,
+        "title": "Getting On",
+        "_score": 4.4935837
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 17609,
+        "title": "Antichrist",
+        "_score": 4.2412815
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 674324,
+        "title": "The Banshees of Inisherin",
+        "_score": 3.9932446
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 9539,
+        "title": "Martyrs",
+        "_score": 3.6809435
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1438,
+        "title": "The Wire",
+        "_score": 3.4695597
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 46511,
+        "title": "Utopia",
+        "_score": 3.4695597
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 12573,
+        "title": "A Serious Man",
+        "_score": 3.2783442
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 641,
+        "title": "Requiem for a Dream",
+        "_score": 3.1296449
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8321,
+        "title": "In Bruges",
+        "_score": 2.7162633
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4548,
+        "title": "One Foot in the Grave",
+        "_score": 2.6278071
+      }
+    ],
+    "server_ms": 10.149087,
+    "wall_ms": 58.51444300060393,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "bleak",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238179,
+        "title": "Love Has Won: The Cult of Mother God",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 283363,
+        "title": "The Hateful Eight: Extended Version",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 72812,
+        "title": "Metástasis",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214088,
+        "title": "Woman of the Dead",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238648,
+        "title": "Children of Evil",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 242840,
+        "title": "Famagusta",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 257669,
+        "title": "Pill",
+        "_score": 1.9063383
+      }
+    ],
+    "server_ms": 9.594999,
+    "wall_ms": 56.018187999143265,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "bleak",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238179,
+        "title": "Love Has Won: The Cult of Mother God",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 283363,
+        "title": "The Hateful Eight: Extended Version",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 72812,
+        "title": "Metástasis",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 214088,
+        "title": "Woman of the Dead",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 238648,
+        "title": "Children of Evil",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 242840,
+        "title": "Famagusta",
+        "_score": 1.9063383
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 257669,
+        "title": "Pill",
+        "_score": 1.9063383
+      }
+    ],
+    "server_ms": 7.918204,
+    "wall_ms": 66.76820899883751,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "bleak",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 57756,
+        "title": "Getting On",
+        "_score": 4.4503403
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 674324,
+        "title": "The Banshees of Inisherin",
+        "_score": 3.9476852
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1438,
+        "title": "The Wire",
+        "_score": 3.4466274
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 46511,
+        "title": "Utopia",
+        "_score": 3.4466274
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 12573,
+        "title": "A Serious Man",
+        "_score": 3.2397032
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8321,
+        "title": "In Bruges",
+        "_score": 2.6173701
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4548,
+        "title": "One Foot in the Grave",
+        "_score": 2.6173701
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 5921,
+        "title": "The Life & Times of Tim",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 75456,
+        "title": "Bancroft",
+        "_score": 1.9107447
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 86588,
+        "title": "Hightown",
+        "_score": 1.9107447
+      }
+    ],
+    "server_ms": 9.461232,
+    "wall_ms": 69.21690399758518,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "universe",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.652102
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.5006452
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.3993685
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.397939
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.3510585
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.3510585
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 60879,
+        "title": "Halo Legends",
+        "_score": 2.3510585
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.3046556
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 609681,
+        "title": "The Marvels",
+        "_score": 2.2600489
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 2.2600489
+      }
+    ],
+    "server_ms": 7.133353,
+    "wall_ms": 59.90020799799822,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "universe",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.652102
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.5006452
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.3993685
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.397939
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.3510585
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.3510585
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 60879,
+        "title": "Halo Legends",
+        "_score": 2.3510585
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.3046556
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 609681,
+        "title": "The Marvels",
+        "_score": 2.2600489
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 252317,
+        "title": "The Animatrix",
+        "_score": 2.2600489
+      }
+    ],
+    "server_ms": 7.652091,
+    "wall_ms": 56.93871699622832,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "universe",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "movie",
+        "tmdb_id": 299537,
+        "title": "Captain Marvel",
+        "_score": 5.877844
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 32609,
+        "title": "Into the Universe with Stephen Hawking",
+        "_score": 5.1515455
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 945961,
+        "title": "Alien: Romulus",
+        "_score": 4.8082395
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 479455,
+        "title": "Men in Black: International",
+        "_score": 4.6719885
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 58474,
+        "title": "Cosmos",
+        "_score": 4.6719885
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 59427,
+        "title": "Marvel's Avengers",
+        "_score": 4.5432463
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1818,
+        "title": "Lexx",
+        "_score": 4.218255
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 353491,
+        "title": "The Dark Tower",
+        "_score": 3.4552257
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 113178,
+        "title": "Alien Worlds",
+        "_score": 3.198854
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 346910,
+        "title": "The Predator",
+        "_score": 3.1055644
+      }
+    ],
+    "server_ms": 7.532231,
+    "wall_ms": 50.83773400110658,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "universe",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.2916164
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 32609,
+        "title": "Into the Universe with Stephen Hawking",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 299537,
+        "title": "Captain Marvel",
+        "_score": 2.1946554
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.0877137
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.084413
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.0566714
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 76148,
+        "title": "Derry Girls",
+        "_score": 2.0265386
+      }
+    ],
+    "server_ms": 7.343146,
+    "wall_ms": 63.603636001062114,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "universe",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.2916164
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 32609,
+        "title": "Into the Universe with Stephen Hawking",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 299537,
+        "title": "Captain Marvel",
+        "_score": 2.1946554
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.0877137
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.084413
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.0566714
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 76148,
+        "title": "Derry Girls",
+        "_score": 2.0265386
+      }
+    ],
+    "server_ms": 7.080865,
+    "wall_ms": 51.75008399965009,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "universe",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.2916164
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 32609,
+        "title": "Into the Universe with Stephen Hawking",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 299537,
+        "title": "Captain Marvel",
+        "_score": 2.1946554
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.0877137
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.084413
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.0566714
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 76148,
+        "title": "Derry Girls",
+        "_score": 2.0265386
+      }
+    ],
+    "server_ms": 9.068126,
+    "wall_ms": 75.7985309974174,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "university",
+    "analyzer": "standard",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 202851,
+        "title": "Big Boys",
+        "_score": 3.85849
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 157208,
+        "title": "Semantic Error",
+        "_score": 3.747861
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8065,
+        "title": "21",
+        "_score": 3.282834
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8923,
+        "title": "Green Street Hooligans",
+        "_score": 3.282834
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 20453,
+        "title": "3 Idiots",
+        "_score": 3.2514277
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4951,
+        "title": "Brideshead Revisited",
+        "_score": 3.2466283
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 79166,
+        "title": "Grand Blue Dreaming",
+        "_score": 3.2466283
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 84327,
+        "title": "SKY Castle",
+        "_score": 3.2390325
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 202318,
+        "title": "Crash Course in Romance",
+        "_score": 3.2267318
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 47711,
+        "title": "The Girl Named Feriha",
+        "_score": 3.2024083
+      }
+    ],
+    "server_ms": 7.323879,
+    "wall_ms": 72.56395799777238,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "university",
+    "analyzer": "standard",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 202851,
+        "title": "Big Boys",
+        "_score": 3.85849
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 157208,
+        "title": "Semantic Error",
+        "_score": 3.747861
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8065,
+        "title": "21",
+        "_score": 3.282834
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8923,
+        "title": "Green Street Hooligans",
+        "_score": 3.282834
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 20453,
+        "title": "3 Idiots",
+        "_score": 3.2514277
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4951,
+        "title": "Brideshead Revisited",
+        "_score": 3.2466283
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 79166,
+        "title": "Grand Blue Dreaming",
+        "_score": 3.2466283
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 84327,
+        "title": "SKY Castle",
+        "_score": 3.2390325
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 202318,
+        "title": "Crash Course in Romance",
+        "_score": 3.2267318
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 47711,
+        "title": "The Girl Named Feriha",
+        "_score": 3.2024083
+      }
+    ],
+    "server_ms": 7.767338,
+    "wall_ms": 59.1061000013724,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "university",
+    "analyzer": "standard",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 202851,
+        "title": "Big Boys",
+        "_score": 3.85849
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 157208,
+        "title": "Semantic Error",
+        "_score": 3.747861
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 2455,
+        "title": "Coach",
+        "_score": 3.6302574
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8065,
+        "title": "21",
+        "_score": 3.282834
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 8923,
+        "title": "Green Street Hooligans",
+        "_score": 3.282834
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 20453,
+        "title": "3 Idiots",
+        "_score": 3.2514277
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 205715,
+        "title": "Gen V",
+        "_score": 3.2510142
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 4951,
+        "title": "Brideshead Revisited",
+        "_score": 3.2466283
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 79166,
+        "title": "Grand Blue Dreaming",
+        "_score": 3.2466283
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 84327,
+        "title": "SKY Castle",
+        "_score": 3.2390325
+      }
+    ],
+    "server_ms": 6.393761,
+    "wall_ms": 61.7203369984054,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "university",
+    "analyzer": "english",
+    "mode": "best_fields",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.2916164
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 32609,
+        "title": "Into the Universe with Stephen Hawking",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 299537,
+        "title": "Captain Marvel",
+        "_score": 2.1946554
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.0877137
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.084413
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.0566714
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 76148,
+        "title": "Derry Girls",
+        "_score": 2.0265386
+      }
+    ],
+    "server_ms": 8.069074,
+    "wall_ms": 71.05695299833314,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "university",
+    "analyzer": "english",
+    "mode": "phrase",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.2916164
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 32609,
+        "title": "Into the Universe with Stephen Hawking",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 299537,
+        "title": "Captain Marvel",
+        "_score": 2.1946554
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.0877137
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.084413
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.0566714
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 76148,
+        "title": "Derry Girls",
+        "_score": 2.0265386
+      }
+    ],
+    "server_ms": 9.089207,
+    "wall_ms": 61.05496999953175,
+    "rowcount": 10,
+    "results": null
+  },
+  {
+    "term": "university",
+    "analyzer": "english",
+    "mode": "phrase_prefix",
+    "rows": [
+      {
+        "media_type": "show",
+        "tmdb_id": 37783,
+        "title": "Wonders of the Universe",
+        "_score": 2.2916164
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 32609,
+        "title": "Into the Universe with Stephen Hawking",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 114695,
+        "title": "Marvel Studios Legends",
+        "_score": 2.2181182
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 299537,
+        "title": "Captain Marvel",
+        "_score": 2.1946554
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1430,
+        "title": "Cosmos: A Personal Voyage",
+        "_score": 2.0877137
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 339964,
+        "title": "Valerian and the City of a Thousand Planets",
+        "_score": 2.084413
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 1848,
+        "title": "Winx Club",
+        "_score": 2.0566714
+      },
+      {
+        "media_type": "movie",
+        "tmdb_id": 76757,
+        "title": "Jupiter Ascending",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 42316,
+        "title": "Devon Ke Dev...Mahadev",
+        "_score": 2.0265386
+      },
+      {
+        "media_type": "show",
+        "tmdb_id": 76148,
+        "title": "Derry Girls",
+        "_score": 2.0265386
+      }
+    ],
+    "server_ms": 7.880405,
+    "wall_ms": 57.70969500008505,
+    "rowcount": 10,
+    "results": null
+  }
+]

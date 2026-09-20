@@ -1,6 +1,6 @@
 # PROTOTYPE: Crate search evidence comparison
 
-Prepared for [Scratch-table prototype of the evidence column in Crate](https://github.com/alp82/goodwatch-monorepo/issues/104). **Not executed. Production writes await the user's go-ahead.**
+Prepared for [Scratch-table prototype of the evidence column in Crate](https://github.com/alp82/goodwatch-monorepo/issues/104). **Production scratch writes approved by the user on 2026-09-20. Experiment executed; human quality review is pending.**
 
 Question: does combining tags, keywords and trope names into strong evidence, alongside description text, improve retrieval over D4+ while reducing query work?
 
@@ -33,8 +33,32 @@ Exercise the agreed examples: `car chases`, `sunglasses`, `unreliable narrator`,
 
 The full reviewed fixture set and quality floors belong to [Establish and review the search evaluation baseline](https://github.com/alp82/goodwatch-monorepo/issues/116), which remains open. Retrieval/timing probes can proceed before it finishes; no quality acceptance or ticket resolution may be claimed from unjudged results. Any comparison uses the same frozen fixture inputs, and new top-10 results are marked **needs review**.
 
-## Prepared assets and remaining work
+## Run and review
 
-`setup.sql` and `cleanup.sql` specify the proposed database mutations for review. They have not been validated against the cluster. Before executing, check schema names and existing scratch objects read-only; abort if the name is already in use rather than reusing or replacing it. Use parameterized, bounded inserts. After approval, build the loader and D4+ comparison adapter in this throwaway worktree, execute the experiment, and present the actual comparison for review.
+Open [review.html](review.html) directly in a browser. It embeds the measured comparisons and source evidence, needs no server, and lets you export your judgments. No judgments are prefilled.
 
-The source prototype is preserved on `prototype/jev-discovery-search`; this experiment is isolated on `prototype/crate-evidence-column`. No runtime routes have been changed.
+The throwaway runner lives in `goodwatch-webapp/scripts/prototype-crate-evidence/`. From `goodwatch-webapp`, with its normal Node dependencies and Python `requests`/`python-dotenv` available:
+
+```sh
+node_modules/.bin/esbuild scripts/prototype-crate-evidence/capture.ts --bundle --platform=node --format=esm --target=es2022 --packages=external --alias:~=./app --outfile=scripts/prototype-crate-evidence/capture.mjs
+node scripts/prototype-crate-evidence/capture.mjs scripts/prototype-crate-evidence/private/interpretations.json
+python scripts/prototype-crate-evidence/experiment.py --env /path/to/webapp/.env load
+python scripts/prototype-crate-evidence/experiment.py --env /path/to/webapp/.env probes
+python scripts/prototype-crate-evidence/experiment.py --env /path/to/webapp/.env compare
+python scripts/prototype-crate-evidence/report.py
+```
+
+The loader refuses to overwrite an existing scratch table. Do not rerun `load` while this experiment's table exists. Captured interpretations are reused on subsequent runs; remove the private capture only when a deliberate new interpretation is wanted. No Jev question wording was changed. The inherited prototype uses `jev-latest`; replay uses saved readings, not an assumption that this alias stays unchanged.
+
+The loader uses parameterized batches of 100 titles. `setup.sql` was executed as written. `cleanup.sql` remains pending until review and ticket closure. Raw catalog snapshots and repeated results stay in the ignored `private/` directory. The published sample manifest records the exact IDs and snapshot hash; interpretations, compact results, per-query timings, and analyzer probes accompany the review page.
+
+## Measurement boundaries
+
+- This is an adaptation of D4+ retrieval, not an end-to-end run of the existing page. It preserves interpretation, phrase selection, fallback thresholds, fingerprint weights, normalized weighted-sum ranking, and text blending. Fingerprint scores and display evidence are loaded from the frozen snapshot rather than repeatedly fetched in each timed query.
+- Attribute eligibility is determined from source catalog fields before timing and supplied to all variants as the same allowed IDs. Source baselines retain their original eligibility predicates. Timings exclude that precomputation, Jev, page rendering, and vector fill.
+- The original fallback has no SQL order and truncates a full-catalog trope search. Here fallback queries are limited to the frozen sample and ordered deterministically before applying the per-type cap. This prevents unrelated titles and nondeterministic truncation from influencing the sample comparison.
+- The baseline keeps phrase-prefix plus all-word queries and handwritten plural forms. Consolidated retrieval uses one all-word query over two evidence columns per media type, without the separate phrase bonus or keyword/trope fallback. Standard-versus-English isolates stemming within that consolidated design; baseline-versus-consolidated changes both evidence and retrieval shape.
+- Popularity and fixed sample size bias the experiment toward popular titles. The source tables have different size and shard layouts from the one-shard scratch table. These timings do not establish production cost or latency at full catalog scale.
+- Mood-gated requests have zero text candidates by design. The full product would use Qdrant fill; the experiment does not label an empty text panel as a failed search or manufacture a replacement ranking.
+
+The source prototype is preserved on `prototype/jev-discovery-search`; this experiment is isolated on `prototype/crate-evidence-column`. No runtime routes or production catalog data have been changed.
