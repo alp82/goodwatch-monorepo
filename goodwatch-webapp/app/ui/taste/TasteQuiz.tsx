@@ -151,7 +151,7 @@ export default function TasteQuiz({
 		})
 	}, [titleQueue.current, selectedMedia])
 
-	const hasRecommendationsUnlocked = true
+	const hasRecommendationsUnlocked = ratingsCount >= GUEST_LIMITS.FIRST_UNLOCK
 	const discovery = useInterestDiscovery()
 
 	// Fingerprint preview unlocks at 15 ratings

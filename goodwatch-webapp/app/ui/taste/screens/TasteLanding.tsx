@@ -32,7 +32,7 @@ export default function TasteLanding({}: TasteLandingProps) {
 					transition={{ delay: INITIAL_DELAY + 0.4 }}
 					className="text-2xl md:text-3xl lg:text-4xl text-gray-300 mb-12"
 				>
-					Explore suggestions now. Refine your taste whenever you like.
+					Rate just <strong>{GUEST_LIMITS.FIRST_UNLOCK}</strong> movies to see the magic
 				</motion.p>
 
 				<motion.div
@@ -55,7 +55,7 @@ export default function TasteLanding({}: TasteLandingProps) {
 					className="px-12 py-4 bg-amber-700 hover:bg-amber-600 text-white text-2xl font-semibold rounded-2xl shadow-lg transition-colors cursor-pointer"
 				>
 					<Link to="/taste" prefetch="render">
-						Explore Suggestions
+						Start Taste Quiz
 					</Link>
 				</motion.button>
 
