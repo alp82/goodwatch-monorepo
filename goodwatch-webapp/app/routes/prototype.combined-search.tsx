@@ -79,15 +79,17 @@ async function get<T>(q: string, kind: string, signal: AbortSignal): Promise<T> 
   return body
 }
 function Highlight({text,query}: {text:string;query:string}) {
-  const terms = new Set(words(query))
-  const last = words(query).at(-1) ?? ""
-  return <>{text.split(/([\p{L}\p{N}]+)/gu).map((part,i)=>{
-    const lower=part.toLocaleLowerCase()
-    if (terms.has(lower)) return <mark key={i} className="rounded bg-amber-300/20 text-amber-200 px-0.5">{part}</mark>
-    if (last.length>=2 && lower.startsWith(last)) return <span key={i}><mark className="rounded bg-amber-300/20 text-amber-200">{part.slice(0,last.length)}</mark>{part.slice(last.length)}</span>
-    return <span key={i}>{part}</span>
-  })}</>
+  const terms = [...new Set(words(query))].sort((a,b)=>b.length-a.length)
+  if (!terms.length) return <>{text}</>
+  // Tokens contain only letters/numbers, so they are safe regex alternatives.
+  // Match every query token anywhere in the title, preferring longer overlaps.
+  const pattern = new RegExp(`(${terms.join("|")})`, "giu")
+  return <>{text.split(pattern).map((part,i)=>i%2===1
+    ? <mark key={i} className="rounded bg-amber-300/20 text-amber-200">{part}</mark>
+    : <span key={i}>{part}</span>
+  )}</>
 }
+
 function Poster({path}: {path: string | null}) {
   return path ? <img className="w-12 h-16 shrink-0 rounded object-cover" width={48} height={64} src={`https://image.tmdb.org/t/p/w92${path}`} alt=""/> : <div className="w-12 h-16 rounded bg-slate-700 shrink-0"/>
 }

@@ -12,7 +12,7 @@ The user rejected separate result groups. Use one ranked list, boost exact title
 - Title and unchanged D4+ searches run together after the one-second debounce. No routing question is used.
 - Atomic result replacement after both sources settle. Old results and their original highlights remain during loading. Outdated query responses cannot replace the visible snapshot. A failed source yields partial results; if both fail, the prior snapshot remains with an error.
 - Reserved loading-status space, initial skeletons, fixed poster dimensions and minimum row heights reduce layout movement.
-- Whole matching title words highlighted in amber; final word prefixes highlighted only on the actual matching portion. Original-title matches expose the original name. Fingerprint reasons are blue chips.
+- All matching query fragments highlighted in amber anywhere within title words, including repeated internal and suffix matches; longer overlapping fragments take precedence. Original-title matches expose the original name. Fingerprint reasons are blue chips.
 
 ## Ranking ideas
 
