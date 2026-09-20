@@ -85,6 +85,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 						: `${candidates.length} titles to explore`
 	const select =
 		"min-w-0 rounded-md border border-gray-600 bg-gray-800 px-2 py-1.5 text-sm text-gray-100 focus-visible:outline focus-visible:outline-cyan-300"
+	if (!pool.length) return null
 	return (
 		<nav
 			aria-label="Explore titles"

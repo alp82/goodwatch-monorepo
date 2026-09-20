@@ -1134,12 +1134,7 @@ export function JourneyNavigation({
 }: { current: { tmdb_id: number; media_type: string; title: string } }) {
 	const j = useSearchJourney()!
 	const [expanded, setExpanded] = useState(false)
-	if (!j.batch || !j.q)
-		return (
-			<div className="px-4 py-2 text-xs text-gray-400">
-				No saved search sequence. Use the header to start a search.
-			</div>
-		)
+	if (!j.batch || !j.q || !j.sequence.length) return null
 	return (
 		<nav
 			aria-label="Search result navigation"

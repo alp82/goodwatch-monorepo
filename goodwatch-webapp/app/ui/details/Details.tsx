@@ -1,5 +1,8 @@
-import { JourneyDetailRail, useSearchJourney } from "~/ui/prototype/SearchJourney"
-import React from "react"
+import {
+	JourneyDetailRail,
+	useSearchJourney,
+} from "~/ui/prototype/SearchJourney"
+import React, { useState } from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/sections"
@@ -17,6 +20,7 @@ export interface DetailsProps {
 }
 
 export default function Details({ media, country }: DetailsProps) {
+	const [headerHeight, setHeaderHeight] = useState(112)
 	const journey = useSearchJourney()
 	const { details } = media
 	const { backdrop_path } = details
@@ -46,6 +50,7 @@ export default function Details({ media, country }: DetailsProps) {
 			)}
 
 			<DetailsHeader
+				onHeightChange={setHeaderHeight}
 				media={media}
 				country={country}
 				activeSections={activeSections}
@@ -53,6 +58,7 @@ export default function Details({ media, country }: DetailsProps) {
 			/>
 
 			<DetailsSideNav
+				headerHeight={headerHeight}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
@@ -72,7 +78,7 @@ export default function Details({ media, country }: DetailsProps) {
 								media={media}
 								country={country}
 								sectionProps={sectionProps}
-							navigateToSection={navigateToSection}
+								navigateToSection={navigateToSection}
 							/>
 						</div>
 					</div>
@@ -91,5 +97,9 @@ export default function Details({ media, country }: DetailsProps) {
 			</div>
 		</>
 	)
-	return journey?.active && journey.variant === "C" ? <div className="relative xl:ml-72">{content}</div> : content
+	return journey?.active && journey.variant === "C" ? (
+		<div className="relative xl:ml-72">{content}</div>
+	) : (
+		content
+	)
 }
