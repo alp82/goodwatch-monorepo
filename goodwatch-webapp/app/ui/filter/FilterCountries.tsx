@@ -1,6 +1,4 @@
-import { useFetcher } from "@remix-run/react"
-import React, { useEffect } from "react"
-import type { Country } from "~/server/countries.server"
+import { useCountries } from "~/routes/api.countries"
 import Select, { type SelectItem } from "~/ui/form/Select"
 
 export interface FilterCountriesProps {
@@ -15,17 +13,8 @@ export default function FilterCountries({
 	availableCountryCodes,
 	onChange,
 }: FilterCountriesProps) {
-	const countriesFetcher = useFetcher<Country[]>()
-	useEffect(() => {
-		countriesFetcher.submit(
-			{},
-			{
-				method: "get",
-				action: "/api/countries",
-			},
-		)
-	}, [])
-	const countries = countriesFetcher.data || []
+	const countriesQuery = useCountries()
+	const countries = countriesQuery.data || []
 
 	const selectItems = countries.map((country) => {
 		return {
@@ -44,7 +33,9 @@ export default function FilterCountries({
 		return a.label.localeCompare(b.key)
 	})
 
-	const selectedItem = selectItems.find((item) => item.key === selectedCountry)
+	const selectedItem = selectItems.find(
+		(item) => item.key === selectedCountry,
+	) || { key: selectedCountry, label: selectedCountry }
 
 	const handleSelect = (selectedItem: SelectItem) => {
 		const country = selectedItem.key
@@ -58,9 +49,22 @@ export default function FilterCountries({
 				selectItems={selectItems}
 				selectedItems={selectedItem}
 				withSearch={true}
-				isLoading={countriesFetcher.state !== "idle"}
+				isLoading={countriesQuery.isPending}
 				onSelect={handleSelect}
 			/>
+			{countriesQuery.isError && (
+				<p role="status" className="mt-2 text-sm text-gray-400">
+					Countries could not be loaded.{" "}
+					<button
+						type="button"
+						className="underline"
+						disabled={countriesQuery.isFetching}
+						onClick={() => countriesQuery.refetch()}
+					>
+						Try again
+					</button>
+				</p>
+			)}
 		</div>
 	)
 }

@@ -1,24 +1,35 @@
 import type {
 	StreamingProvider,
 	StreamingProviderResults,
-} from "~/routes/api.streaming-providers";
-import { cached } from "~/utils/cache";
-import { query } from "~/utils/crate";
-import { ignoredProviders } from "~/utils/streaming-links";
+} from "~/routes/api.streaming-providers"
+import { cached } from "~/utils/cache"
+import { query } from "~/utils/crate"
+import { ignoredProviders } from "~/utils/streaming-links"
 
 export type StreamingProviderParams = {
 	country: string
-};
+}
 
 export const getStreamingProviders = async (
 	params: StreamingProviderParams,
 ) => {
-	return await cached<StreamingProviderParams, StreamingProviderResults & {[key: string]: any}>({
+	const providers = await cached<
+		StreamingProviderParams,
+		StreamingProviderResults & { [key: string]: any }
+	>({
 		name: "streaming-providers",
 		target: _getStreamingProviders,
 		params,
 		ttlMinutes: 60 * 24,
 		//ttlMinutes: 0,
+	})
+	// Provider snapshots can differ in logo/name while sharing the same TMDB ID.
+	// Normalize after reading the cache so existing cached snapshots are safe too.
+	const seen = new Set<number>()
+	return providers.filter((provider) => {
+		if (seen.has(provider.id)) return false
+		seen.add(provider.id)
+		return true
 	})
 }
 
@@ -27,7 +38,7 @@ export async function _getStreamingProviders(
 ): Promise<StreamingProviderResults> {
 	const orderByFields = [
 		`order_by_country['${params.country}']`,
-		'order_default'
+		"order_default",
 	]
 
 	for (const orderByField of orderByFields) {
@@ -45,12 +56,17 @@ export async function _getStreamingProviders(
 			const result = await query<StreamingProvider>(sql)
 			return result
 		} catch (error) {
-			if (error instanceof Error && error.message.includes('ColumnUnknownException')) {
+			if (
+				error instanceof Error &&
+				error.message.includes("ColumnUnknownException")
+			) {
 				continue
 			}
 			throw error
 		}
 	}
 
-	throw new Error(`Failed to fetch streaming providers for country: ${params.country}`)
+	throw new Error(
+		`Failed to fetch streaming providers for country: ${params.country}`,
+	)
 }

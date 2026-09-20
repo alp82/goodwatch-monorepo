@@ -19,6 +19,7 @@ import useLocale from "~/utils/locale"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
+export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const pageMeta: PageMeta = {

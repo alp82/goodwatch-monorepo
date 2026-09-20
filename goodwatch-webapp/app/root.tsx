@@ -1,3 +1,4 @@
+export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"

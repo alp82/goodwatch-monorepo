@@ -48,3 +48,17 @@ The initial revised-route accessibility audit found an unsupported aria-expanded
 ## Verification of the single-results revision
 
 Browser checks passed: immediate navigation on input change from a real detail page; no additional history entry for query changes; one entry for filter changes; Back restores the prior query and filter; one results list in A/B/C even with header focused; retained results during debounce; input focus preserved; multiword query spaces preserved; shared service selector writes service ID 8 for Netflix; no horizontal mobile overflow or page errors in the main walkthrough. No new prototype TypeScript diagnostics.
+
+## Details failure investigation
+
+The streaming-provider endpoint returned 958 rows but only 949 provider IDs. DISTINCT included logos, so multiple snapshots of provider 110 (Infinity+) survived. The shared server function now deduplicates by provider ID after the cache read, preserving the first entry in provider order and correcting existing cached snapshots too. The endpoint now returns 949 rows with 949 unique IDs.
+
+The intermittent full-page failure was reproduced with Chromium reporting ERR_NETWORK_CHANGED on background requests. FilterCountries and MovieSeries used Remix fetchers; either request failing independently reached the root error boundary and removed the loaded title. A focused browser probe aborting only `/api/countries` or only `/api/movie/collection` reproduced the root error before the fix in both cases.
+
+FilterCountries now uses the existing countries query; MovieSeries uses a collection query keyed by collection ID and movie IDs. Both use abort signals, check response status, retain errors locally, and provide inline retry. Country selection remains visible during failure. After the fix, both failure probes kept the Heat heading, displayed the corresponding inline error, and recovered through Try again when requests were restored. These fixes also apply to normal detail pages and shared country controls. They do not alter the operating system/browser network connection or promise navigation during a total network outage.
+
+Repository TypeScript remains at 270 existing diagnostics, with no added diagnostics. No permanent automated tests were added, per repository instructions; browser probes are temporary files outside the repository.
+
+A longer navigation stress run then reproduced ERR_NETWORK_CHANGED on the main detail loader itself. Movie, show, and root/session loaders now share a client loader that retries transport TypeErrors at most twice (250ms, then 750ms), keeping the current page visible during retry. It delegates to the real Remix server loader; SSR remains unchanged. Aborted/superseded requests, server errors, and redirects are not retried. Browser fault injection confirmed: one interrupted root request recovered; two interrupted movie requests recovered; two interrupted show requests recovered; persistent interruption stopped after three total attempts; an HTTP 500 failed after one attempt.
+
+Final live stress walkthrough completed 37 Next/Previous transitions, including rapid double clicks, with zero root-error crashes and zero duplicate-key warnings. A real ERR_NETWORK_CHANGED occurred again during this run on both a collection request and a main movie loader; navigation recovered and continued. Cancelled requests from superseded double clicks remained cancelled.
