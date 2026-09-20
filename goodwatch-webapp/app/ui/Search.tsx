@@ -1,5 +1,5 @@
 import { ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { Link, useFetcher } from "@remix-run/react"
+import { Link, useFetcher, useLocation } from "@remix-run/react"
 import React from "react"
 import placeholder from "~/img/placeholder-poster.png"
 import type { MediaType, SearchResult } from "~/server/search.server"
@@ -14,6 +14,12 @@ export interface SearchAutocompleteItem extends AutocompleteItem {
 }
 
 export default function Search() {
+	const location = useLocation()
+	if (import.meta.env.DEV && location.pathname === "/prototype/search-journey") return <button id="prototype-search-header" type="button" aria-label="Open combined search" onClick={() => window.dispatchEvent(new Event("prototype-search-open"))} className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100">⌕ Search</button>
+	return <ExistingSearch />
+}
+
+function ExistingSearch() {
 	// TODO debounce
 	const fetcher = useFetcher<{ searchResults: SearchResult[] }>()
 	const [query, setQuery] = React.useState("")
