@@ -1,0 +1,11 @@
+{
+  "base_commit": "030e680de246bb8de0834609b0e4fe8fc969255a",
+  "source_branch": "prototype/connected-exploration",
+  "branch": "prototype/jev-discovery-search",
+  "sha256": {
+    "goodwatch-webapp/app/routes/prototype.jev-search.tsx": "5108776eafcc01935839f71fd5635d23132d930b168b05b0298171d047dd31fc",
+    "goodwatch-webapp/app/routes/prototype.jev-vector.tsx": "c233cd2cc34eeae58dbc2a3f558f871cb7a43933ed6997c3f1b9b01789c144e3",
+    "goodwatch-webapp/app/server/prototype-jev-search.server.ts": "3c9574db7828289b1e7ed9473764fdd3bfdb15c2736c46399d10a02360fecffa",
+    "goodwatch-webapp/app/server/prototype-jev-vector.server.ts": "009fcaeff41ff6ddf52f33ec0b9bc267c8a3757b486a1b9ddc3e7f5e8c01a3e8"
+  }
+}
