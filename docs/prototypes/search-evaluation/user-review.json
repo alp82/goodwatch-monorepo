@@ -7,6 +7,7 @@
   "user_statement": "yep the results are totally okay",
   "overall_relevance": "accepted",
   "individual_strong_acceptable_wrong_labels": "not individually supplied",
-  "minimum_quality_per_request": "not yet decided",
-  "known_contract_failures": "Remain failures: misspelled title lookup and discovery vote-floor violations. Relevance acceptance does not waive these requirements."
+  "minimum_quality_per_request": "No relevance regression on any baseline request; new results require separate review. Explicit constraints continue to apply.",
+  "known_contract_failures": "Remain failures: misspelled title lookup and discovery vote-floor violations. Relevance acceptance does not waive these requirements.",
+  "quality_floor_confirmation": "User replied “k” to the proposed no-regression quality floor on 2026-09-21."
 }

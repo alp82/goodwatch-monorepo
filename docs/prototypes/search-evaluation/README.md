@@ -1,10 +1,10 @@
-# Search evaluation baseline — throwaway, human review pending
+# Search evaluation baseline — accepted relevance reference
 
 Question: can a repeatable artifact make the accepted D4+ baseline reviewable, and what quality floor should each request require?
 
 Open `review.html` directly. It contains all 30 requests, the top 10 results, evidence where the module returns it, catalog metadata, known violations, timings, and pending relevance judgments. Grade each result strong / acceptable / wrong, then decide each request's minimum strong-or-acceptable count. Export before closing; nothing persists automatically. Import restores judgments for the same capture. Exported reviews belong to the user only when the user actually supplies those judgments.
 
-The fixtures are proposed, not yet approved in full. No user judgments or quality floors have been invented. There are 289 reviewable result slots: the misspelled lookup has no results and Spirited Away returns nine. Exact requested title identity is checked first; semantic exclusions still require review. Four correctly spelled title requests found the intended title first.
+On 2026-09-21 the user accepted the displayed baseline results overall, then confirmed no relevance regression on any baseline request, with new results reviewed separately. See `user-review.json`. Individual strong/acceptable/wrong labels were not supplied; blank controls do not override the recorded overall acceptance. Known constraint failures remain failures. There are 289 reviewable result slots: the misspelled lookup has no results and Spirited Away returns nine. Exact requested title identity is checked first; semantic exclusions still require review. Four correctly spelled title requests found the intended title first.
 
 ## Capture
 
