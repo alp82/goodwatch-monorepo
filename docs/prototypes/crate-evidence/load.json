@@ -1,24 +1,20 @@
 {
-  "created": {
-    "rows": [
-      {}
-    ],
-    "server_ms": 210.52615,
-    "wall_ms": 270.25454999966314,
-    "rowcount": 1,
-    "results": null
-  },
   "counts": [
     {
       "media_type": "movie",
-      "n": 2500
+      "n": 39146
     },
     {
       "media_type": "show",
-      "n": 2500
+      "n": 10854
     }
   ],
-  "loaded_at": "2026-09-20T05:29:06Z",
-  "trope_titles": 3700,
-  "bytes_evidence": 14680668
+  "sample_size": 50000,
+  "retained_original": 5000,
+  "min_votes": 1000,
+  "selection": "Original 5,000 retained; highest-voted remaining 45,000 with essence text, globally across movies and shows",
+  "loaded_at": "2026-09-20T05:57:10Z",
+  "trope_titles": 20842,
+  "posters": 49905,
+  "bytes_evidence": 74649679
 }

@@ -7,6 +7,7 @@ import json
 import re
 import statistics
 import time
+import shutil
 from pathlib import Path
 
 import requests
@@ -16,6 +17,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 PRIVATE = HERE / 'private'
 TABLE = 'doc.prototype_search_evidence_104_v1'
+MIN_VOTES = 2000
 
 
 def sql(statement, args=None, bulk=None):
@@ -89,6 +91,72 @@ def load():
     print(json.dumps(read('load.json')),flush=True)
 
 
+def expand():
+    """User-authorized expansion: retain the 5k snapshot, add 45k most-voted titles."""
+    archive = PRIVATE / 'initial-5000'
+    archive.mkdir(exist_ok=True)
+    for name in ('sample.json','load.json','comparison.json','probes.json'):
+        if not (archive/name).exists(): shutil.copy2(PRIVATE/name,archive/name)
+    initial = json.loads((archive/'sample.json').read_text())
+    assert len(initial)==5000
+    old_keys={(r['media_type'],r['tmdb_id']) for r in initial}
+    snapshot = PRIVATE/'sample-50000.json'
+    if snapshot.exists():
+        sample=json.loads(snapshot.read_text())
+    else:
+        candidates=[]
+        for media in ('movie','show'):
+            rows=sql(f'SELECT tmdb_id,goodwatch_overall_score_voting_count AS votes,poster_path FROM {media} WHERE essence_text IS NOT NULL AND goodwatch_overall_score_voting_count IS NOT NULL ORDER BY goodwatch_overall_score_voting_count DESC,tmdb_id ASC LIMIT 50000')['rows']
+            for r in rows:r['media_type']=media
+            candidates.extend(rows)
+        by_key={(r['media_type'],r['tmdb_id']):r for r in candidates}
+        selected=sorted((r for r in candidates if (r['media_type'],r['tmdb_id']) not in old_keys),key=lambda r:(-r['votes'],r['media_type'],r['tmdb_id']))[:45000]
+        assert len(selected)==45000
+        sample=initial
+        for r in sample:r['poster_path']=by_key[(r['media_type'],r['tmdb_id'])]['poster_path']
+        for media in ('movie','show'):
+            ids=[r['tmdb_id'] for r in selected if r['media_type']==media]
+            for start in range(0,len(ids),250):
+                batch=ids[start:start+250]
+                cols='tmdb_id,title,release_year,goodwatch_overall_score_voting_count AS votes,fingerprint_scores,essence_tags,keywords,essence_text,synopsis,poster_path'
+                found=sql(f'SELECT {cols} FROM {media} WHERE tmdb_id = ANY(?) LIMIT 250',[batch])['rows']
+                assert len(found)==len(batch)
+                tropes=sql('SELECT media_tmdb_id,collect_set(name) AS names FROM trope WHERE media_type=? AND media_tmdb_id = ANY(?) GROUP BY media_tmdb_id LIMIT 250',[media,batch])['rows']
+                names={t['media_tmdb_id']:sorted(t['names']) for t in tropes}
+                for row in found:
+                    assert isinstance(row['fingerprint_scores'],dict) and row['fingerprint_scores'], 'Missing fingerprint'
+                    row.update(media_type=media,trope_names=names.get(row['tmdb_id'],[]))
+                    row['strong_evidence']='\n'.join(dict.fromkeys(x for field in ('essence_tags','keywords','trope_names') for x in (row[field] or []) if x))
+                    row['text_evidence']='\n'.join(x for x in (row['essence_text'],row['synopsis']) if x)
+                    row['strong_evidence_standard']=row['strong_evidence'];row['text_evidence_standard']=row['text_evidence']
+                sample.extend(found)
+                if start%2500==0:print(f'Read {len(sample):,}/50,000 titles',flush=True)
+        assert len(sample)==50000 and len({(r['media_type'],r['tmdb_id']) for r in sample})==50000
+        save('sample-50000.json',sample)
+    columns=sql("SELECT column_name FROM information_schema.columns WHERE table_schema='doc' AND table_name=?",[TABLE.split('.')[1]])['rows']
+    if not any(r['column_name']=='poster_path' for r in columns):sql(f'ALTER TABLE {TABLE} ADD COLUMN poster_path TEXT')
+    existing={(r['media_type'],r['tmdb_id']) for r in sql(f'SELECT media_type,tmdb_id FROM {TABLE} LIMIT 50001')['rows']}
+    expected={(r['media_type'],r['tmdb_id']) for r in sample}
+    assert existing<=expected, 'Unexpected scratch rows; refusing to mix samples'
+    new=[r for r in sample if (r['media_type'],r['tmdb_id']) not in existing]
+    columns=list(sample[0])
+    statement=f"INSERT INTO {TABLE} ({','.join(columns)}) VALUES ({placeholders(columns)})"
+    for start in range(0,len(new),100):
+        batch=new[start:start+100]
+        result=sql(statement,bulk=[[r[c] for c in columns] for r in batch])
+        assert sum(r['rowcount'] for r in result['results'])==len(batch)
+        if start%5000==0:print(f'Inserted {len(existing)+start+len(batch):,}/50,000 scratch rows',flush=True)
+    for start in range(0,len(initial),100):
+        batch=sample[start:start+100]
+        sql(f'UPDATE {TABLE} SET poster_path=? WHERE media_type=? AND tmdb_id=?',bulk=[[r['poster_path'],r['media_type'],r['tmdb_id']] for r in batch])
+    sql(f'REFRESH TABLE {TABLE}')
+    counts=sql(f'SELECT media_type,count(*) AS n FROM {TABLE} GROUP BY media_type')['rows']
+    assert sum(r['n'] for r in counts)==50000
+    save('sample.json',sample)
+    save('load.json',{'counts':counts,'sample_size':50000,'retained_original':5000,'min_votes':min(r['votes'] for r in sample),'selection':'Original 5,000 retained; highest-voted remaining 45,000 with essence text, globally across movies and shows','loaded_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'trope_titles':sum(bool(r['trope_names']) for r in sample),'posters':sum(bool(r['poster_path']) for r in sample),'bytes_evidence':sum(len((r['strong_evidence']+r['text_evidence']).encode()) for r in sample)})
+    print(json.dumps(read('load.json')),flush=True)
+
+
 def forms(word):
     return list(dict.fromkeys(w for w in (word,re.sub('s$','',word),re.sub('es$','',word),word+'s') if len(w)>2))
 
@@ -101,7 +169,7 @@ def prepare(case, sample):
         if clause is None:
             allowed[media] = []
         else:
-            allowed[media] = [r['tmdb_id'] for r in sql(f'SELECT tmdb_id FROM {media} WHERE tmdb_id IN ({placeholders(ids)}) {clause} LIMIT 2500',ids)['rows']]
+            allowed[media] = [r['tmdb_id'] for r in sql(f'SELECT tmdb_id FROM {media} WHERE tmdb_id = ANY(?) {clause} LIMIT {len(ids)}',[ids])['rows']]
     return allowed
 
 
@@ -122,12 +190,12 @@ def retrieve(case, variant, allowed, sample_by_key):
             if baseline:
                 table = media
                 eligibility = 'fingerprint_scores IS NOT NULL' if variant=='original' else 'essence_text IS NOT NULL'
-                scope = f'goodwatch_overall_score_voting_count >= 2000 AND {eligibility} AND tmdb_id IN ({placeholders(ids)})'
-                scope_args = ids
+                scope = f'goodwatch_overall_score_voting_count >= {MIN_VOTES} AND {eligibility} AND tmdb_id = ANY(?)'
+                scope_args = [ids]
             else:
                 table = TABLE
-                scope = f'media_type=? AND tmdb_id IN ({placeholders(ids)})'
-                scope_args = [media,*ids]
+                scope = 'media_type=? AND tmdb_id = ANY(?)'
+                scope_args = [media,ids]
             statement = f"SELECT tmdb_id{',_score' if scored else ''} FROM {table} WHERE {scope} AND ({predicate}) {'ORDER BY _score DESC,tmdb_id ASC' if scored else 'ORDER BY tmdb_id ASC'} LIMIT 300"
             jobs.append((media,statement,[*scope_args,*args]))
         def execute(job):
@@ -148,11 +216,11 @@ def retrieve(case, variant, allowed, sample_by_key):
         words=phrase.split(' ')
         # Match original phrase-prefix + all-word shapes for the baseline.
         # Consolidated alternatives need only one all-term cross-field query.
-        if baseline:
+        if baseline or variant == 'english_phrase':
             def phrase_part():
-                return query_pool(f'match({fields}, ?) using phrase_prefix with (slop=1)', [' '.join(re.sub('s$','',w) for w in words)]) if len(words)>1 else []
+                return query_pool(f'match({fields}, ?) using phrase_prefix with (slop=1)', [' '.join(re.sub('s$','',w) for w in words) if baseline else phrase]) if len(words)>1 else []
             def word_part():
-                return query_pool(' AND '.join(f'match({fields}, ?)' for _ in words),[' '.join(forms(w)) for w in words])
+                return query_pool(' AND '.join(f'match({fields}, ?)' for _ in words),[' '.join(forms(w)) if baseline else w for w in words])
             with futures.ThreadPoolExecutor(max_workers=2) as executor:
                 p=executor.submit(phrase_part); w=executor.submit(word_part)
                 phrase_rows,word_rows=p.result(),w.result()
@@ -187,7 +255,7 @@ def retrieve(case, variant, allowed, sample_by_key):
             for media in ('movie','show'):
                 ids=allowed[media]
                 if not ids: continue
-                result=sql(f"SELECT DISTINCT media_tmdb_id FROM trope WHERE media_type=? AND media_tmdb_id IN ({placeholders(ids)}) AND "+' AND '.join('match(name, ?)' for _ in words)+' LIMIT 2500',[media,*ids,*[' '.join(forms(w)) for w in words]])
+                result=sql(f"SELECT DISTINCT media_tmdb_id FROM trope WHERE media_type=? AND media_tmdb_id = ANY(?) AND "+' AND '.join('match(name, ?)' for _ in words)+f' LIMIT {len(ids)}',[media,ids,*[' '.join(forms(w)) for w in words]])
                 logs.append({'media':'trope:'+media,'server_ms':result['server_ms'],'wall_ms':result['wall_ms'],'rows':len(result['rows'])})
                 # Original per-media fallback cap.
                 add([{'key':f"{media}:{r['media_tmdb_id']}"} for r in sorted(result['rows'],key=lambda r:r['media_tmdb_id'])[:300]],lambda _:0.8,'trope fallback')
@@ -200,20 +268,22 @@ def retrieve(case, variant, allowed, sample_by_key):
     top=[]
     for r in ranked[:10]:
         source=sample_by_key[r['key']]
-        top.append({**r,'title':source['title'],'year':source['release_year'],'strong_evidence':source['strong_evidence'],'text_evidence':source['text_evidence'],'judgment':'needs review'})
+        top.append({**r,'title':source['title'],'year':source['release_year'],'poster_path':source.get('poster_path'),'strong_evidence':source['strong_evidence'],'text_evidence':source['text_evidence'],'judgment':'needs review'})
     return {'variant':variant,'wall_ms':(time.perf_counter()-start)*1000,'server_sum_ms':sum(r['server_ms'] for r in logs),'query_count':len(logs),'queries':logs,'gated':gated,'searched':searched,'candidates':sorted(pool),'top10':top,'vector_fill':'not run; sample-only retrieval'}
 
 
 def compare():
+    global MIN_VOTES
+    MIN_VOTES = read('load.json').get('min_votes', 2000)
     sample=read('sample.json'); by_key={f"{r['media_type']}:{r['tmdb_id']}":r for r in sample}
     cases=read('interpretations.json'); output=[]
-    variants=['original','corrected','standard','english','english_boost2']
+    variants=['original','corrected','standard','english','english_boost2','english_phrase']
     for i,case in enumerate(cases):
         allowed=prepare(case,sample)
         runs=[]
         for repetition in range(6):
             # Rotate starting variant as well as reversing order to reduce ordering bias.
-            order=variants[repetition%5:]+variants[:repetition%5]
+            order=variants[repetition%len(variants):]+variants[:repetition%len(variants)]
             if repetition%2: order=list(reversed(order))
             for variant in order:
                 run=retrieve(case,variant,allowed,by_key)
@@ -239,7 +309,7 @@ def probes():
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(); parser.add_argument('--env',required=True); parser.add_argument('action',choices=['load','compare','probes'])
+    parser=argparse.ArgumentParser(); parser.add_argument('--env',required=True); parser.add_argument('action',choices=['load','expand','compare','probes'])
     opts=parser.parse_args(); env=dotenv_values(opts.env)
     URL=f"http://{env['CRATE_HOSTS'].split(',')[0]}:{env.get('CRATE_PORT','4200')}/_sql"
     AUTH=(env.get('CRATE_USER',''),env.get('CRATE_PASS',''))

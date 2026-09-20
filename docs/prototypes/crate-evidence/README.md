@@ -4,7 +4,7 @@ Prepared for [Scratch-table prototype of the evidence column in Crate](https://g
 
 Question: does combining tags, keywords and trope names into strong evidence, alongside description text, improve retrieval over D4+ while reducing query work?
 
-## Proposed production writes
+## Initial approved production writes (5,000-title run)
 
 - Create only `doc.prototype_search_evidence_104_v1`, using the accompanying `setup.sql`. One primary shard and no replicas; this disposable copy can be recreated.
 - Insert at most 5,000 distinct titles: up to 2,500 movies and 2,500 shows with essence text and at least 2,000 votes, ordered by `goodwatch_overall_score_voting_count DESC, tmdb_id ASC`. Record actual counts and reject missing fingerprint scores in the loader.
@@ -13,6 +13,18 @@ Question: does combining tags, keywords and trope names into strong evidence, al
 - Refresh the scratch table after loading. No automatic cleanup before human review; drop only this named table when the ticket closes, with `cleanup.sql`.
 
 No custom cluster analyzer is needed for this first experiment. Compare `standard` and built-in `english` over identical evidence first. A lighter custom analyzer is a possible later experiment, not part of this write proposal.
+
+## Expanded run requested by the user
+
+The user reviewed the initial results: combined evidence is much faster, but corrected D4+ seems more relevant and combined evidence more generic. Neither is perfect. They requested ten times as many titles, independent assistant judgments, and posters with a full-size overlay.
+
+There are only 48,410 titles with essence text and at least 2,000 votes (37,989 movies and 10,421 shows). The expanded sample retains all original 5,000 snapshots and adds the 45,000 highest-voted remaining titles with essence text, across both media types. The measured minimum vote count and media split are in `load.json`. Every variant uses the same expanded eligibility pool and vote floor. The only schema addition is `poster_path` on the scratch table; no custom analyzer or source-table change is involved.
+
+A sixth variant, **English with restored phrase bonus**, reintroduces the existing phrase-prefix search and +1 phrase bonus over the English evidence columns. It otherwise follows the consolidated design, so it still lacks the separate original keyword/trope fallback. This tests one explanation for generic ordering without a further schema change.
+
+The runner now passes sample IDs as an `ANY(?)` array for all variants instead of constructing one placeholder per ID. Old and new timings therefore differ in both sample size and ID binding; compare variants within the new run, not a 5k-to-50k latency ratio.
+
+Assistant assessments are explicitly marked as provisional evidence-based opinions. They never prefill the user judgment controls or become the user’s baseline labels.
 
 ## Comparison protocol
 
@@ -43,12 +55,13 @@ The throwaway runner lives in `goodwatch-webapp/scripts/prototype-crate-evidence
 node_modules/.bin/esbuild scripts/prototype-crate-evidence/capture.ts --bundle --platform=node --format=esm --target=es2022 --packages=external --alias:~=./app --outfile=scripts/prototype-crate-evidence/capture.mjs
 node scripts/prototype-crate-evidence/capture.mjs scripts/prototype-crate-evidence/private/interpretations.json
 python scripts/prototype-crate-evidence/experiment.py --env /path/to/webapp/.env load
+python scripts/prototype-crate-evidence/experiment.py --env /path/to/webapp/.env expand
 python scripts/prototype-crate-evidence/experiment.py --env /path/to/webapp/.env probes
 python scripts/prototype-crate-evidence/experiment.py --env /path/to/webapp/.env compare
 python scripts/prototype-crate-evidence/report.py
 ```
 
-The loader refuses to overwrite an existing scratch table. Do not rerun `load` while this experiment's table exists. Captured interpretations are reused on subsequent runs; remove the private capture only when a deliberate new interpretation is wanted. No Jev question wording was changed. The inherited prototype uses `jev-latest`; replay uses saved readings, not an assumption that this alias stays unchanged.
+For the existing 5,000-title table, run `expand` directly, without `load`. Expansion resumes missing inserts from its frozen snapshot and refuses unexpected rows. The initial loader refuses to overwrite an existing scratch table. Do not rerun `load` while this experiment's table exists. Captured interpretations are reused on subsequent runs; remove the private capture only when a deliberate new interpretation is wanted. No Jev question wording was changed. The inherited prototype uses `jev-latest`; replay uses saved readings, not an assumption that this alias stays unchanged.
 
 The loader uses parameterized batches of 100 titles. `setup.sql` was executed as written. `cleanup.sql` remains pending until review and ticket closure. Raw catalog snapshots and repeated results stay in the ignored `private/` directory. The published sample manifest records the exact IDs and snapshot hash; interpretations, compact results, per-query timings, and analyzer probes accompany the review page.
 
