@@ -80,3 +80,9 @@ Browser QA: Heat returned 100 results across five pages; pages 1 and 2 had no ov
 ## Empty bars and details navigation
 
 Empty search sequences render no navigation bar or loading placeholder. The taste ExploreBar also stays hidden while its title pool is empty. The details header reports its measured height through ResizeObserver; the desktop section navigation uses this height instead of a fixed top offset, so it follows the collapsed bar, expanded filters, and responsive header changes. Browser checks at 1800px: header bottom 202px / sidebar top 214px collapsed; 277px / 289px expanded. Empty search and taste fixtures rendered zero bars, and the old empty search message was absent.
+
+## Recovering results hidden by filters
+
+The user clarified that the apparent empty bar was caused by filters. A search batch with filtered-out titles now keeps the navigation visible and offers “N more results without filters”. The count is the difference within the current eligible snapshot (movie/show only for detail navigation), not a speculative catalog total. The same recovery link appears above search results whenever filters hide results, including zero matches. Clearing filters keeps the query and country, resets pagination, and pushes one history entry. On details it retains the current title. True empty/loading sequences remain hidden and the measured sidebar offset remains. Taste’s exploration bar offers the same recovery action for its filtered pool.
+
+Browser checks: 100 hidden Heat results recovered with no new search request; query/country preserved; one history entry; Back restored the restrictive year filter. The detail bar showed 91 hidden movie/show results and clearing kept `/movie/949` open. A separate taste fixture verified recovery from a filter excluding its title pool.

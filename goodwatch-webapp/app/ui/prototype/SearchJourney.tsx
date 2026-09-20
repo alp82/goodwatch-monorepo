@@ -429,6 +429,11 @@ function useController() {
 		batch,
 		rows,
 		pageRows,
+		hiddenResults: candidates.length - rows.length,
+		hiddenTitles:
+			candidates.filter((r) => r.type === "movie" || r.type === "show").length -
+			sequence.length,
+		clearFiltersHref: `${location.pathname}?${makeParams({ ...Object.fromEntries(refinements.filter((key) => key !== "country").map((key) => [key, null])), page: null })}`,
 		page,
 		pageCount,
 		sequence,
@@ -616,13 +621,28 @@ export function JourneyHeader() {
 		</div>
 	)
 }
+function HiddenResultsLink({ titlesOnly = false }: { titlesOnly?: boolean }) {
+	const j = useSearchJourney()!
+	const count = titlesOnly ? j.hiddenTitles : j.hiddenResults
+	if (!count || j.loading || j.batch?.q !== j.q) return null
+	return (
+		<Link
+			to={j.clearFiltersHref}
+			preventScrollReset
+			className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
+			onClick={() => j.setOpen(false)}
+		>
+			{count} more {count === 1 ? "result" : "results"} without filters
+		</Link>
+	)
+}
 function JourneyList({ compact = false }: { compact?: boolean }) {
 	const j = useSearchJourney()!
 	return (
 		<section aria-label="Search results" className="min-w-0">
 			<div
 				role="status"
-				className={`flex items-center gap-2 px-4 py-3 min-h-14 text-sm ${j.loading ? "text-cyan-200 bg-cyan-400/10" : "text-gray-400"}`}
+				className={`flex flex-wrap items-center gap-2 px-4 py-3 min-h-14 text-sm ${j.loading ? "text-cyan-200 bg-cyan-400/10" : "text-gray-400"}`}
 			>
 				{j.loading && (
 					<ArrowPathIcon
@@ -631,6 +651,7 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 					/>
 				)}
 				<span>{j.status}</span>
+				<HiddenResultsLink />
 				{j.batch?.errors.length ||
 				j.status.startsWith("Search is unavailable") ? (
 					<button onClick={j.retry} className="ml-2 underline text-cyan-300">
@@ -754,7 +775,9 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 			{!j.rows.length && !j.loading && (
 				<div className="p-6 text-gray-400">
 					{j.batch
-						? "No titles match these filters. Broaden your selection or change the request."
+						? j.hiddenResults
+							? "No titles match these filters. Use the link above to see the results without filters."
+							: "No results for this search. Try a different request."
 						: "Try Heat, a favorite actor, or a description such as ‘tense but not bleak’."}
 				</div>
 			)}
@@ -1134,7 +1157,7 @@ export function JourneyNavigation({
 }: { current: { tmdb_id: number; media_type: string; title: string } }) {
 	const j = useSearchJourney()!
 	const [expanded, setExpanded] = useState(false)
-	if (!j.batch || !j.q || !j.sequence.length) return null
+	if (!j.batch || !j.q || (!j.sequence.length && !j.hiddenTitles)) return null
 	return (
 		<nav
 			aria-label="Search result navigation"
@@ -1164,7 +1187,9 @@ export function JourneyNavigation({
 						<span className="text-xs text-gray-300">
 							{j.index >= 0
 								? `${j.index + 1} of ${j.sequence.length}`
-								: "Outside filters"}
+								: j.sequence.length
+									? "Outside filters"
+									: "No titles match these filters"}
 						</span>
 						{j.index >= 0 && j.index < j.sequence.length - 1 ? (
 							<Link
@@ -1178,6 +1203,7 @@ export function JourneyNavigation({
 							<span className="text-gray-500">Next →</span>
 						)}
 					</div>
+					<HiddenResultsLink titlesOnly />
 					<button
 						onClick={() => setExpanded((x) => !x)}
 						className="text-gray-300"

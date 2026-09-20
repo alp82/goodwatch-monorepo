@@ -131,6 +131,17 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 							</span>
 						)}
 					</div>
+					{pool.length > candidates.length && (
+						<button
+							type="button"
+							className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
+							onClick={() => update(defaultExploreFilters)}
+						>
+							{pool.length - candidates.length} more{" "}
+							{pool.length - candidates.length === 1 ? "result" : "results"}{" "}
+							without filters
+						</button>
+					)}
 					<button
 						type="button"
 						aria-expanded={expanded}
