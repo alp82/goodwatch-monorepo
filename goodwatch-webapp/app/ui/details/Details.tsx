@@ -1,3 +1,4 @@
+import { JourneyDetailRail, useSearchJourney } from "~/ui/prototype/SearchJourney"
 import React from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
@@ -16,6 +17,7 @@ export interface DetailsProps {
 }
 
 export default function Details({ media, country }: DetailsProps) {
+	const journey = useSearchJourney()
 	const { details } = media
 	const { backdrop_path } = details
 	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
@@ -27,8 +29,9 @@ export default function Details({ media, country }: DetailsProps) {
 		},
 	)
 
-	return (
+	const content = (
 		<>
+			<JourneyDetailRail />
 			{backdrop_path && (
 				<div
 					className="pointer-events-none absolute top-0 z-0 w-full h-full"
@@ -88,4 +91,5 @@ export default function Details({ media, country }: DetailsProps) {
 			</div>
 		</>
 	)
+	return journey?.active && journey.variant === "C" ? <div className="relative xl:ml-72">{content}</div> : content
 }

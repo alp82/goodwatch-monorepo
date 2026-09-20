@@ -1,3 +1,4 @@
+import { prototypeDetailShouldRevalidate } from "~/ui/prototype/search-navigation"
 import { redirect } from "@remix-run/node"
 import { canonicalTitleId } from "~/utils/title-identity"
 import type {
@@ -106,3 +107,6 @@ export default function DetailsMovie() {
 
 	return <Details media={media} country={country} />
 }
+
+// Prototype-only URL refinements do not change the currently loaded title.
+export const shouldRevalidate = prototypeDetailShouldRevalidate

@@ -1,3 +1,4 @@
+import { prototypeDetailShouldRevalidate } from "~/ui/prototype/search-navigation"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -103,3 +104,6 @@ export default function DetailsTV() {
 
 	return <Details media={media} country={country} />
 }
+
+// Prototype-only URL refinements do not change the currently loaded title.
+export const shouldRevalidate = prototypeDetailShouldRevalidate

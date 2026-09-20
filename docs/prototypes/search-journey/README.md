@@ -1,44 +1,42 @@
-# Header search, filters, and result navigation
+# Connected header search and real detail navigation
 
-Throwaway interaction prototype for [Prototype header search, filters, and navigation through results](https://github.com/alp82/goodwatch-monorepo/issues/111). Awaiting live user review; no interaction decision is resolved.
+Revised after the user rejected the disconnected sample demo. [Codebase investigation](architecture.md) records findings from three read-only subagents.
 
-Open the existing dev server at http://localhost:3003/prototype/search-journey?variant=A. This session mounted the prototype in the running checkout for review; its durable source is branch `prototype/search-journey`. To run a separate checkout, install the app dependencies and configure its usual environment, then `cd goodwatch-webapp && npm run dev`. Do not start a second server while the existing one is running.
+[Open the running prototype](http://localhost:3003/prototype/search-journey?variant=A). The existing server runs on port 3003; use it. Source is preserved on `prototype/search-journey`. For an independently configured checkout, the normal app command is `cd goodwatch-webapp && npm run dev`.
+
+This revision uses **the actual header location and expanding search input, live accepted combined search, and normal `/movie/...` and `/show/...` routes**. Movie/show loaders, complete details, fingerprint, ratings, streaming and action components remain real. Rating, Want to See, Mark as Seen and Skip have their normal library effects. Browser QA did not invoke account actions.
 
 ## Alternatives
 
-- **A — Quick search:** existing header opens a compact four-result overlay, expanding into the full list and optional filters. Search sequence navigation is separate from taste actions.
-- **B — Search workspace:** header focuses the full results surface. Persistent sidebar filters on desktop. Search sequence navigation lives inside the detail taste bar, alongside independent taste actions.
-- **C — Browse beside details:** wider search overlay; results stay beside the selected detail on desktop. Mobile uses a detail view and a return-to-results action. Navigation remains separate from taste actions.
+- **A — Compact header:** four suggestions below the real header; all-results view; search navigation below the real title metadata.
+- **B — Expanded header:** larger suggestions surface with refinement; results workspace with sidebar; search navigation in the existing ExploreBar position above title metadata.
+- **C — Search rail:** header suggestions plus a desktop list beside the full real detail page. On mobile, use the same real page and return/previous/next controls.
 
-The bottom switcher and left/right arrows change the URL variant. Arrow switching does not intercept form controls. Escape closes the overlay and returns focus to header search; the overlay traps Tab. Arrow Up/Down in the input selects a compact result and Enter opens it. Search also submits on Enter and commits after one second idle. Existing results remain until the simulated new response arrives.
+Use the bottom arrows or left/right keys outside form controls to switch. Header input supports one-second debounce, Enter, keyboard result selection, Escape and outside dismissal. Old results remain while the new query loads; title highlights stay tied to the displayed batch.
 
 ## Review walkthrough
 
-1. Open header search, enter Heat, inspect highlighted text and retained old results; dismiss and reopen. Compare compact A with the larger C surface and the B workspace.
-2. Open Her, move next, use browser Back/Forward, then return to the list. Query, filters, result order and scroll position should survive.
-3. Try country/service with Explore everything, Prefer my service, and Only on my service. Compare how each changes the sample list. These are alternatives, not settled availability policy.
-4. Toggle lesser-known and adult-flagged eligibility. Synthetic fixtures make the controls observable without depicting adult content. Try the low-vote title lookup shortcut; title lookup bypasses the discovery floor.
-5. On a movie detail, refine Titles to Shows. The current detail stays open with Outside filters and disabled sequence controls. Taste actions do not navigate.
-6. Compare search navigation inside the taste bar (B) and outside (A/C). Direct title visit, under prototype controls, removes search navigation without removing taste actions.
-7. Use Result state to try slow (4 seconds), empty, weak, partial-source failure and total failure. Retry returns to the normal scenario.
-8. Compare read-only interpretation with Try editing interpretation. Tone editing is deliberately a presentation-only control; adopting it needs an explicit contract compatible with locked D4+.
+1. Type Heat in the header. Open the movie from its suggestions. Confirm the complete normal detail page, then return to results.
+2. Move among actual movie/show results with Previous/Next, browser Back/Forward, and return links. Scroll the list before opening a title; returning restores that position. Reload restores the saved batch without another inference call.
+3. Compare navigation below title metadata (A), in the existing Taste navigation slot (B), and with a desktop result rail (C). All real rating and library actions remain unchanged.
+4. Change type, genre or year on results or from Refine on details. A currently open title stays open if excluded, with an Outside filters state. Search order is retained unless streaming preference is selected.
+5. Compare Explore everything, Prefer my services, and Only on my services. Choose country and services. These use the existing availability-evidence endpoint rather than illustrative offers. Prototype selections do not update account preferences.
+6. Open an unmarked movie/show URL directly: it retains the ordinary Taste exploration bar, without adopting a saved search.
 
-## State ownership proposal
+## Scope and constraints
 
-The URL owns committed query, explicit filters, variant and selected title. In-memory state owns displayed batch, result scroll positions, demo taste actions and interpretation UI. Browser history restores URL state; moving between detail titles does not mutate taste. Query edits begin a new sequence; filter changes retain the open detail and disable sequence navigation if it falls outside the selection. A reload resets memory state. This is a proposal to review, not a finalized production state-storage decision.
+The provider is shared by Header, results and real Details. The URL owns query, filters, variant and origin; a dedicated sessionStorage namespace retains recent search batches and per-URL scroll. Taste storage is untouched. Dev-only route gates and explicit origin markers limit the integration to the prototype journey.
 
-## Deliberate limits
+The accepted D4+ server and original combined prototype are unchanged. Refinements apply to returned results, not a new full-catalog query. Metadata comes from a bounded read-only Crate lookup. Adult-flagged rows are hidden when known; unknown classification remains eligible. Reliable matching identity is collapsed without merging by title alone.
 
-This is a sample-driven UI prototype, not live D4+ retrieval. Names, synopses, match reasons, votes and availability are illustrative; offers are not current availability claims. Arbitrary search descriptions reuse the sample list. Exact sample title matches move first. The accepted D4+ server and blended-search prototype remain unchanged. Matching titles are one blended list, with title-fragment highlights and sample fingerprint reasons.
+Removing the discovery vote floor, adult opt-in across retrieval sources, and editable inferred intent still need real retrieval contracts. The old simulated controls were removed. Do not interpret a filtered empty top-20 list as proof that the whole catalog lacks matches. Search result people are shown as known-for summaries, not linked to movie/show detail routes.
 
-Details are interactive previews within the prototype route, not the full production movie/show route. Taste actions are simulated, never sent to the user's library. Production integration must preserve the real scoring components, title loaders, guest/account flow, real availability freshness, reliable-identity deduplication, filter semantics across retrieval sources, and full navigation continuity. Only one streaming service can be selected in the demo; multi-service selection and the final set of advanced filters remain review questions. No production database writes or deployment occurred.
-
-Prototype route returns 404 in production. Header change is dev-only and limited to this route. Other routes retain existing Search behavior. Poster fixtures were downloaded from TMDB for local review; two unavailable posters use placeholders.
+No production deployment or database writes. This remains an interaction prototype awaiting live user review, not a resolved ticket or implementation ready to ship.
 
 ## Verification
 
-Manual browser automation with Playwright (Chrome DevTools MCP was not available): one-second debounce and retained results; focus and Escape; detail selection and Previous/Next; browser Back/Forward; exact scroll restoration (400 px before and after); lesser-known/adult fixtures; country/service filtering; excluded-current-title behavior; independent taste actions; direct visits; empty/weak/partial/failure states; desktop and 390 px mobile layout without horizontal overflow. No browser page errors in the completed walkthrough. Screenshots are adjacent.
+Browser QA used Playwright because Chrome DevTools MCP was unavailable. Confirmed actual header input; live Heat/Drive requests; full real movie detail and return; next/back/forward; filter preservation; exact 450px scroll restoration; reload without repeated search; retained old results during debounce; normal behavior for unmarked direct visits; desktop rail; and mobile header/detail layouts without horizontal overflow. Screenshots are adjacent. A real Game of Thrones show visit, variant changes without detail reloads, and retaining the show after a Movies-only refinement also passed. Real Want to See and Skip controls remained present; no library action was invoked. Final walkthrough reported no browser page errors.
 
-TypeScript: no errors in the new route. Repository typechecking remains failing (270 diagnostics in the first run), including the existing `useOutsideClick` RefObject mismatch in Search.tsx; the dev-only header wrapper did not change that existing code.
+UI-only URL changes originally caused unnecessary detail revalidation; the narrowly gated shouldRevalidate rule corrects that. Repository TypeScript still reports the same 270 pre-existing diagnostics, with none in the new prototype modules or revalidation helper. Existing detail-route serialization and Search ref typing diagnostics remain.
 
-Full Lighthouse performance/accessibility run failed with a DevTools CSS.stopRuleUsageTracking timeout. The accessibility-only retry scored 96/100; report in accessibility.json. Development-server performance is not a production benchmark.
+The initial revised-route accessibility audit found an unsupported aria-expanded attribute on the search input; it was removed. Final accessibility scored 94/100, recorded in accessibility.json; remaining findings concern the existing footer heading order and unnamed shell links. The full performance/accessibility run timed out at CSS.stopRuleUsageTracking, so no performance score is claimed. Dev-server performance is not a production benchmark.

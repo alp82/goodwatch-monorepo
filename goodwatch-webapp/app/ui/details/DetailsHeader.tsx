@@ -1,3 +1,4 @@
+import { JourneyNavigation, useSearchJourney } from "~/ui/prototype/SearchJourney"
 import ExploreBar from "~/ui/explore/ExploreBar"
 import type React from "react"
 import ShareButton from "~/ui/button/ShareButton"
@@ -28,6 +29,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	activeSections,
 	navigateToSection,
 }) => {
+	const journey = useSearchJourney()
 	const { details, mediaType } = media
 	const { genres, release_year, title, fingerprint } = details
 
@@ -50,7 +52,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 
 	return (
 		<div className="sticky top-16 z-40 bg-black/80 backdrop-blur-sm border-b border-white/15">
-			<ExploreBar current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} />
+			{journey?.active ? journey.variant === "B" ? <JourneyNavigation current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} /> : null : <ExploreBar current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} />}
 			<div className="relative m-auto px-4 py-3 w-full max-w-7xl">
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex flex-col gap-2 min-w-0">
@@ -149,6 +151,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 					</div>
 				)}
 			</div>
+			{journey?.active && journey.variant !== "B" && <JourneyNavigation current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }} />}
 			<DetailsInlineNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}

@@ -1,3 +1,4 @@
+import { SearchJourneyProvider } from "~/ui/prototype/SearchJourney"
 import { AccountTransfer } from "~/ui/onboarding/AccountTransfer"
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { Outlet, useLocation } from "@remix-run/react"
@@ -41,4 +42,6 @@ function App() {
 	)
 }
 
-export default App
+export default function AppWithPrototype() {
+	return import.meta.env.DEV ? <SearchJourneyProvider><App /></SearchJourneyProvider> : <App />
+}
