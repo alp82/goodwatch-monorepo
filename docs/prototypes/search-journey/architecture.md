@@ -4,7 +4,7 @@ The user rejected the first prototype because it replaced header search with a m
 
 ## Header and shell
 
-`root.tsx` supplies auth and QueryClient; `app.tsx` renders Header and Outlet as siblings. A shared controller belongs above both. Existing `ui/Search.tsx` uses a small actual search input that expands across the header on focus. Its suggestions sit immediately below the 64px header. The revised dev-only branch preserves that placement and input behavior. There is no document-event bridge or separate modal input.
+`root.tsx` supplies auth and QueryClient; `app.tsx` renders Header and Outlet as siblings. A shared controller belongs above both. Existing `ui/Search.tsx` uses a small actual search input that expands across the header on focus. The current dev-only branch keeps that input behavior but removes its dropdown results. Every text change immediately navigates to the search page with replace-history; only the page renders results. There is no document-event bridge or separate modal input.
 
 ## Real details and actions
 
@@ -27,3 +27,7 @@ The accepted retrieval hardcodes 2,000 discovery votes and the title endpoint ex
 `taste_exploration` belongs to Taste and is never overwritten. The prototype has a separate sessionStorage namespace containing recent query batches and URL-specific scroll positions. Header, results and detail navigation consume the same provider. Explicit `searchJourney=1` links identify the origin; a stale stored search cannot take over an ordinary detail visit.
 
 Inside this dev-only journey the controller owns scroll restoration. DiscoveryContinuity skips marked URLs and the existing root custom-scroll mechanism suspends Remix restoration. Other routes keep normal behavior. Results and filters survive Back/Forward, return links and reloads without repeating inference for the saved query.
+
+## Follow-up: one result surface and browser history
+
+Live feedback rejected duplicated overlapping results in every variant. Header dropdown rendering was removed. Query URL state now updates on each input change with replace-history, independently of the one-second retrieval debounce. Filter state continues to use push-history. C keeps the compact list treatment and its real-detail rail; the header never adds another list. A reuses FilterBarSection for an inline add-filter row; B reuses FilterBarSection, Select and Checkbox in its sidebar. Full Discover filter components remain bound to a different retrieval contract, so the prototype reuses their presentation primitives without implying unsupported catalog-wide filtering.

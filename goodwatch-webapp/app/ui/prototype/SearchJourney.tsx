@@ -7,7 +7,12 @@ import {
 	useState,
 	type ReactNode,
 } from "react"
-import { Link, useLocation, useNavigate } from "@remix-run/react"
+import {
+	Link,
+	useLocation,
+	useNavigate,
+	useNavigationType,
+} from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import {
 	MagnifyingGlassIcon,
@@ -24,6 +29,9 @@ import {
 } from "./search-model"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { useStreamingProviders } from "~/routes/api.streaming-providers"
+import FilterBarSection from "~/ui/filter/FilterBarSection"
+import Select from "~/ui/form/Select"
+import Checkbox from "~/ui/form/Checkbox"
 import placeholder from "~/img/placeholder-poster.png"
 
 const path = "/prototype/search-journey"
@@ -40,7 +48,7 @@ type Metadata = {
 }
 type Batch = { q: string; rows: Row[]; errors: string[]; metadata: Metadata[] }
 type Variant = "A" | "B" | "C"
-const names = { A: "Compact header", B: "Expanded header", C: "Search rail" }
+const names = { A: "Inline filters", B: "Filter sidebar", C: "Compact results" }
 const refinements = [
 	"type",
 	"genre",
@@ -65,6 +73,9 @@ function useController() {
 				: "A"
 	const q = params.get("q") ?? ""
 	const [draft, setDraft] = useState(q)
+	const [requested, setRequested] = useState(q)
+	const editing = useRef<string | null>(null)
+	const navigationType = useNavigationType()
 	const [open, setOpen] = useState(false)
 	const [focused, setFocused] = useState(-1)
 	const [ready, setReady] = useState(false)
@@ -88,11 +99,20 @@ function useController() {
 	}
 	const resultsHref = (changes: Record<string, string | null> = {}) =>
 		`${path}?${makeParams(changes)}`
-	const commit = (value: string) => {
-		const next = value.trim()
-		if (next === q) return
-		navigate(resultsHref({ q: next }), { preventScrollReset: false })
+	const changeQuery = (value: string) => {
+		editing.current = value
+		setDraft(value)
+		setFocused(-1)
+		navigate(resultsHref({ q: value }), {
+			replace: true,
+			preventScrollReset: location.pathname === path,
+		})
 	}
+	const commit = (value: string) => {
+		changeQuery(value)
+		setRequested(value)
+	}
+
 	useEffect(() => {
 		try {
 			const saved = JSON.parse(sessionStorage.getItem(storage) ?? "{}")
@@ -103,17 +123,30 @@ function useController() {
 		setReady(true)
 	}, [])
 	useEffect(() => {
-		setDraft(q)
+		if (
+			navigationType === "POP" ||
+			editing.current === null ||
+			editing.current === q
+		) {
+			setDraft(q)
+			editing.current = null
+		}
 		setFocused(-1)
-	}, [q])
+	}, [q, navigationType])
 	useEffect(() => {
-		if (!active || !ready || draft.trim() === q) return
-		const timer = setTimeout(() => commit(draft), 1000)
+		if (!active || !ready) return
+		const timer = setTimeout(() => setRequested(q), 1000)
 		return () => clearTimeout(timer)
-	}, [draft, q, active, ready])
+	}, [q, active, ready])
+
 	const search = useQuery({
-		queryKey: ["prototype-connected-search", q, revision],
-		enabled: active && ready && q.length >= 2 && !batches[q],
+		queryKey: ["prototype-connected-search", requested, revision],
+		enabled:
+			active &&
+			ready &&
+			requested === q &&
+			requested.trim().length >= 2 &&
+			!batches[requested],
 		retry: false,
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
@@ -328,7 +361,7 @@ function useController() {
 	const loading =
 		active &&
 		draft.trim().length >= 2 &&
-		(search.isFetching || draft.trim() !== q || !ready)
+		(search.isFetching || requested !== q || draft !== q || !ready)
 	const status = loading
 		? `Searching for “${draft}”…${batch ? ` Showing “${batch.q}” until ready.` : ""}`
 		: search.error
@@ -359,6 +392,7 @@ function useController() {
 		resultsHref,
 		detailHref,
 		commit,
+		changeQuery,
 		loading,
 		status,
 		watch,
@@ -479,15 +513,13 @@ export function JourneyHeader() {
 						ref={j.input}
 						type="search"
 						aria-label="Search titles, people, or descriptions"
-						aria-controls={j.open ? "journey-header-results" : undefined}
 						autoComplete="off"
 						placeholder={j.open ? "A title, a person, or a story…" : "Search…"}
 						className="w-full min-w-0 bg-transparent border-0 outline-none text-sm sm:text-base"
 						value={j.draft}
 						onFocus={() => j.setOpen(true)}
 						onChange={(e) => {
-							j.setDraft(e.target.value)
-							j.setFocused(-1)
+							j.changeQuery(e.target.value)
 						}}
 						onKeyDown={(e) => {
 							if (e.key === "Escape") {
@@ -496,10 +528,7 @@ export function JourneyHeader() {
 							}
 							if (e.key === "ArrowDown" || e.key === "ArrowUp") {
 								e.preventDefault()
-								const count = Math.min(
-									j.sequence.length,
-									j.variant === "A" ? 4 : 8,
-								)
+								const count = j.sequence.length
 								j.setFocused((n) =>
 									count
 										? (n + (e.key === "ArrowDown" ? 1 : -1) + count) % count
@@ -523,46 +552,15 @@ export function JourneyHeader() {
 					)}
 				</div>
 			</form>
-			{j.open && (
-				<div
-					id="journey-header-results"
-					className={`absolute top-full mt-1 right-0 left-0 z-20 max-h-[calc(100dvh-90px)] overflow-y-auto rounded-xl border border-gray-700 bg-gray-950 text-white shadow-2xl ${j.variant === "A" ? "lg:left-auto lg:w-[620px]" : "w-full"}`}
-				>
-					{j.variant === "B" ? (
-						<div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
-							<div className="p-4 border-b lg:border-r border-gray-700">
-								<details>
-									<summary className="cursor-pointer text-sm text-cyan-300">
-										Refine results
-									</summary>
-									<div className="mt-4">
-										<JourneyFilters />
-									</div>
-								</details>
-							</div>
-							<JourneyList compact />
-						</div>
-					) : (
-						<JourneyList compact />
-					)}
-					<Link
-						to={j.resultsHref({ q: j.batch?.q ?? j.q })}
-						onClick={() => j.setOpen(false)}
-						className="block border-t border-gray-700 p-4 text-center text-cyan-300 hover:bg-gray-800"
-					>
-						View all results and filters →
-					</Link>
-				</div>
-			)}
 		</div>
 	)
 }
 function JourneyList({ compact = false }: { compact?: boolean }) {
 	const j = useSearchJourney()!
-	const limit = compact ? (j.variant === "A" ? 4 : 8) : undefined
+	const limit = undefined
 	return (
 		<section
-			aria-label={compact ? "Header suggestions" : "Search results"}
+			aria-label="Search results"
 			aria-busy={j.loading}
 			className="min-w-0"
 		>
@@ -660,9 +658,26 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 		</section>
 	)
 }
-export function JourneyFilters() {
+type FilterKey = "type" | "genre" | "minYear" | "country" | "availability"
+const filterNames: Record<FilterKey, string> = {
+	type: "Titles",
+	genre: "Genre",
+	minYear: "Released since",
+	country: "Country",
+	availability: "Availability",
+}
+const filterColors = {
+	type: "amber",
+	genre: "purple",
+	minYear: "blue",
+	country: "sky",
+	availability: "green",
+} as const
+function FilterField({
+	field,
+	inline = false,
+}: { field: FilterKey; inline?: boolean }) {
 	const j = useSearchJourney()!
-	const { data: providers = [] } = useStreamingProviders()
 	const genres = [
 		...new Set(
 			j.batch?.rows.flatMap(
@@ -670,21 +685,63 @@ export function JourneyFilters() {
 			) ?? [],
 		),
 	].sort()
-	const select = (
-		label: string,
-		key: string,
-		options: [string, string][],
-		fallback = "",
-	) => (
-		<label className="flex flex-col gap-1 text-xs text-gray-400">
-			{label}
+	const options: Record<FilterKey, [string, string][]> = {
+		type: [
+			["all", "Movies & shows"],
+			["movie", "Movies"],
+			["show", "Shows"],
+		],
+		genre: [
+			["", "Any genre"],
+			...genres.map((g) => [g, g] as [string, string]),
+		],
+		minYear: [
+			["", "Any year"],
+			["1990", "1990"],
+			["2000", "2000"],
+			["2010", "2010"],
+			["2020", "2020"],
+		],
+		country: [
+			["DE", "Germany"],
+			["US", "United States"],
+			["GB", "United Kingdom"],
+			["FR", "France"],
+			["ES", "Spain"],
+			["TR", "Türkiye"],
+		],
+		availability: [
+			["all", "Explore everything"],
+			["prefer", "Prefer my services"],
+			["only", "Only on my services"],
+		],
+	}
+	const fallback =
+		field === "type" || field === "availability"
+			? "all"
+			: field === "country"
+				? "DE"
+				: ""
+	return (
+		<label
+			className={
+				inline
+					? "flex items-center gap-2 text-xs whitespace-nowrap"
+					: "flex flex-col gap-2 text-xs text-gray-300 w-full"
+			}
+		>
+			<span>{filterNames[field]}</span>
 			<select
-				aria-label={label}
-				className={control}
-				value={j.setting(key, fallback)}
-				onChange={(e) => j.update({ [key]: e.target.value })}
+				aria-label={filterNames[field]}
+				className={
+					inline
+						? "min-w-0 bg-gray-900/80 border border-white/15 rounded px-2 py-1.5 text-sm max-w-44"
+						: `${control} w-full`
+				}
+				value={j.setting(field, fallback)}
+				onChange={(e) => j.update({ [field]: e.target.value })}
 			>
-				{options.map(([v, l]) => (
+				{options[field].map(([v, l]) => (
 					<option key={v} value={v}>
 						{l}
 					</option>
@@ -692,123 +749,177 @@ export function JourneyFilters() {
 			</select>
 		</label>
 	)
+}
+function ServiceSelection() {
+	const j = useSearchJourney()!
+	const { data: providers = [] } = useStreamingProviders()
+	const items = providers.map((p) => ({
+		key: String(p.id),
+		label: p.name,
+		icon: p.logo_path
+			? `https://image.tmdb.org/t/p/w92${p.logo_path}`
+			: undefined,
+	}))
 	return (
-		<div className="space-y-4">
-			<div className="flex justify-between gap-2">
-				<strong className="text-sm">Refine results</strong>
+		<div className="space-y-3" role="group" aria-label="Streaming services">
+			<Select
+				selectItems={items}
+				selectedItems={items.filter((i) =>
+					j.serviceIds.includes(Number(i.key)),
+				)}
+				withMultiSelection
+				withSearch
+				onSelect={(items) =>
+					j.update({ services: items.map((i) => i.key).join(",") })
+				}
+			/>
+			<Checkbox
+				key={j.setting("paid")}
+				option={{ name: "search-include-paid", label: "Include rent and buy" }}
+				defaultChecked={j.setting("paid") === "1"}
+				onChange={(yes) => j.update({ paid: yes ? "1" : null })}
+			/>
+			{!j.serviceIds.length && (
+				<p className="text-xs text-amber-200">
+					Choose services to check availability.
+				</p>
+			)}
+			{j.watch.isError && (
+				<p className="text-xs text-amber-200">
+					Availability could not be checked; results remain visible.
+				</p>
+			)}
+		</div>
+	)
+}
+export function JourneyFilters({ inline = false }: { inline?: boolean }) {
+	const j = useSearchJourney()!
+	const [added, setAdded] = useState<FilterKey[]>([])
+	const [servicesOpen, setServicesOpen] = useState(false)
+	const all = Object.keys(filterNames) as FilterKey[]
+	const visible = all.filter(
+		(k) =>
+			k === "type" ||
+			added.includes(k) ||
+			(k === "country"
+				? j.setting(k, "DE") !== "DE"
+				: j.setting(k) && j.setting(k) !== "all"),
+	)
+	const reset = () =>
+		j.update(
+			Object.fromEntries(
+				refinements.filter((k) => k !== "country").map((k) => [k, null]),
+			),
+		)
+	if (inline)
+		return (
+			<div aria-label="Inline search filters" className="relative">
+				<div className="flex items-center gap-2 overflow-x-auto pb-2 whitespace-nowrap">
+					{visible.map((field) => (
+						<div key={field} className="shrink-0">
+							<FilterBarSection
+								color={filterColors[field]}
+								isCompact
+								isActive={false}
+							>
+								<div className="flex items-center gap-1 px-1 py-1">
+									<FilterField field={field} inline />
+									{field !== "type" && (
+										<button
+											aria-label={`Remove ${filterNames[field]} filter`}
+											className="p-1 text-gray-400 hover:text-white"
+											onClick={() => {
+												j.update({
+													[field]: null,
+													...(field === "availability"
+														? { services: null, paid: null }
+														: {}),
+												})
+												setAdded((a) => a.filter((k) => k !== field))
+											}}
+										>
+											<XMarkIcon className="w-4" />
+										</button>
+									)}
+								</div>
+							</FilterBarSection>
+						</div>
+					))}
+					{all.some((k) => !visible.includes(k)) && (
+						<select
+							aria-label="Add filter"
+							value=""
+							onChange={(e) =>
+								setAdded((a) => [...a, e.target.value as FilterKey])
+							}
+							className={`${control} shrink-0`}
+						>
+							<option value="">＋ Add filter</option>
+							{all
+								.filter((k) => !visible.includes(k))
+								.map((k) => (
+									<option key={k} value={k}>
+										{filterNames[k]}
+									</option>
+								))}
+						</select>
+					)}
+					{j.mode !== "all" && (
+						<button
+							className={`${control} shrink-0`}
+							onClick={() => setServicesOpen((x) => !x)}
+						>
+							Services ({j.serviceIds.length})
+						</button>
+					)}
+					{visible.length > 1 && (
+						<button
+							className="text-xs text-gray-400 px-2"
+							onClick={() => {
+								reset()
+								setAdded([])
+							}}
+						>
+							Reset
+						</button>
+					)}
+				</div>
+				{j.mode !== "all" && servicesOpen && (
+					<div className="max-w-sm border border-gray-700 rounded-lg bg-gray-950 p-4 mb-4">
+						<ServiceSelection />
+					</div>
+				)}
+			</div>
+		)
+	return (
+		<div aria-label="Search filter sidebar" className="space-y-3">
+			<div className="flex items-center justify-between">
+				<h2 className="font-semibold text-gray-100">Filters</h2>
 				<button
-					className="text-xs text-cyan-300"
-					onClick={() =>
-						j.update(
-							Object.fromEntries(
-								refinements
-									.filter((k) => k !== "country")
-									.map((k) => [k, null]),
-							),
-						)
-					}
+					className="text-xs text-gray-400 hover:text-white"
+					onClick={reset}
 				>
 					Reset
 				</button>
 			</div>
-			<p className="text-xs text-gray-400">
-				Refine the loaded results. Your original search order is preserved
-				unless you prefer streaming matches.
-			</p>
-			<div className="grid grid-cols-2 gap-3">
-				{select(
-					"Titles",
-					"type",
-					[
-						["all", "Movies & shows"],
-						["movie", "Movies"],
-						["show", "Shows"],
-					],
-					"all",
-				)}
-				{select("Genre", "genre", [
-					["", "Any genre"],
-					...genres.map((g) => [g, g] as [string, string]),
-				])}
-			</div>
-			{select("Released since", "minYear", [
-				["", "Any year"],
-				["1990", "1990"],
-				["2000", "2000"],
-				["2010", "2010"],
-				["2020", "2020"],
-			])}
-			{select(
-				"Country",
-				"country",
-				[
-					["DE", "Germany"],
-					["US", "United States"],
-					["GB", "United Kingdom"],
-					["FR", "France"],
-					["ES", "Spain"],
-					["TR", "Türkiye"],
-				],
-				"DE",
-			)}
-			{select(
-				"Availability",
-				"availability",
-				[
-					["all", "Explore everything"],
-					["prefer", "Prefer my services"],
-					["only", "Only on my services"],
-				],
-				"all",
-			)}
+			{all.map((field) => (
+				<FilterBarSection
+					key={field}
+					color={filterColors[field]}
+					isActive={false}
+				>
+					<FilterField field={field} />
+				</FilterBarSection>
+			))}
 			{j.mode !== "all" && (
-				<>
-					<label className="flex flex-col gap-1 text-xs text-gray-400">
-						Streaming services
-						<select
-							multiple
-							aria-label="Streaming services"
-							className={`${control} h-28`}
-							value={j.serviceIds.map(String)}
-							onChange={(e) =>
-								j.update({
-									services: Array.from(e.target.selectedOptions)
-										.map((o) => o.value)
-										.join(","),
-								})
-							}
-						>
-							{providers.map((p) => (
-								<option key={p.id} value={p.id}>
-									{p.name}
-								</option>
-							))}
-						</select>
-					</label>
-					<label className="flex gap-2 text-sm">
-						<input
-							type="checkbox"
-							checked={j.setting("paid") === "1"}
-							onChange={(e) =>
-								j.update({ paid: e.target.checked ? "1" : null })
-							}
-						/>
-						Include rent and buy offers
-					</label>
-					{!j.serviceIds.length && (
-						<p className="text-xs text-amber-200">
-							Choose at least one service to check availability.
-						</p>
-					)}
-					{j.watch.isError && (
-						<p className="text-xs text-amber-200">
-							Availability could not be checked; results remain visible.
-						</p>
-					)}
-				</>
+				<FilterBarSection color="green" isActive={false}>
+					<div className="w-full">
+						<ServiceSelection />
+					</div>
+				</FilterBarSection>
 			)}
-			<p className="text-xs text-gray-400">
-				These search preferences do not change your account settings.
+			<p className="text-xs text-gray-500">
+				Filters apply to these search results.
 			</p>
 		</div>
 	)
@@ -881,8 +992,8 @@ export function JourneyNavigation({
 					</p>
 				)}
 				{expanded && (
-					<div className="max-w-lg mt-4">
-						<JourneyFilters />
+					<div className="mt-4">
+						<JourneyFilters inline />
 					</div>
 				)}
 			</div>
@@ -900,15 +1011,16 @@ export function JourneyDetailRail() {
 			<Link to={j.resultsHref()} className="block p-4 text-cyan-300 text-sm">
 				← All search results
 			</Link>
-			<JourneyList />
+			<JourneyList compact />
 		</aside>
 	)
 }
 export function JourneyResultsPage() {
 	const j = useSearchJourney()!
-	const [filters, setFilters] = useState(false)
 	return (
-		<div className="mx-auto max-w-7xl p-4 sm:p-6 pb-36">
+		<div
+			className={`mx-auto ${j.variant === "C" ? "max-w-4xl" : "max-w-7xl"} p-4 sm:p-6 pb-36`}
+		>
 			<div className="flex flex-wrap justify-between items-start gap-3 mb-5">
 				<div>
 					<p className="text-xs uppercase tracking-widest text-amber-400">
@@ -942,40 +1054,23 @@ export function JourneyResultsPage() {
 			>
 				<aside
 					className={
-						j.variant === "B"
-							? "self-start border border-gray-700 rounded-xl p-4"
-							: "mb-4"
+						j.variant === "B" ? "self-start lg:sticky lg:top-20" : "mb-4"
 					}
 				>
-					{j.variant !== "B" && (
-						<button className={control} onClick={() => setFilters((x) => !x)}>
-							Filters {filters ? "−" : "+"}
-						</button>
-					)}
-					{(filters || j.variant === "B") && (
-						<div
-							className={
-								j.variant === "B"
-									? ""
-									: "mt-4 max-w-lg border border-gray-700 p-4 rounded-xl"
-							}
-						>
-							<JourneyFilters />
-						</div>
-					)}
+					<JourneyFilters inline={j.variant !== "B"} />
 				</aside>
 				<div className="min-w-0 rounded-xl border border-gray-700 bg-gray-950/30">
-					<JourneyList />
+					<JourneyList compact={j.variant === "C"} />
 				</div>
 			</div>
 			<details className="mt-8 text-xs text-gray-400">
 				<summary>Review scope and current state</summary>
 				<p className="mt-3">
-					A: compact header suggestions, separate search navigation below the
-					real detail header. B: expanded header suggestions and search in the
-					existing Taste navigation slot. C: compact header with a desktop rail
-					beside the real detail page. All use the same real search results and
-					detail routes.
+					Typing in the header moves directly to this page. Query edits replace
+					history; filter edits add history. A uses an inline add-filter row, B
+					the existing filter design in a sidebar, and C a compact list with a
+					rail on detail pages. All use the same real search results and detail
+					routes.
 				</p>
 				<p className="mt-3">
 					Genre, type, year and streaming refine the loaded list. D4+ still uses

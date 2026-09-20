@@ -6,22 +6,26 @@ Revised after the user rejected the disconnected sample demo. [Codebase investig
 
 This revision uses **the actual header location and expanding search input, live accepted combined search, and normal `/movie/...` and `/show/...` routes**. Movie/show loaders, complete details, fingerprint, ratings, streaming and action components remain real. Rating, Want to See, Mark as Seen and Skip have their normal library effects. Browser QA did not invoke account actions.
 
-## Alternatives
+## Current interaction
 
-- **A — Compact header:** four suggestions below the real header; all-results view; search navigation below the real title metadata.
-- **B — Expanded header:** larger suggestions surface with refinement; results workspace with sidebar; search navigation in the existing ExploreBar position above title metadata.
-- **C — Search rail:** header suggestions plus a desktop list beside the full real detail page. On mobile, use the same real page and return/previous/next controls.
+Updated after live feedback rejected overlapping duplicate results. The header has no result dropdown in any variant. Changing its text immediately moves to the search route and replaces the current history entry. It preserves focus and spaces during typing. Search requests remain debounced by one second; Enter requests immediately. Existing results stay visible during loading.
 
-Use the bottom arrows or left/right keys outside form controls to switch. Header input supports one-second debounce, Enter, keyboard result selection, Escape and outside dismissal. Old results remain while the new query loads; title highlights stay tied to the displayed batch.
+Filter changes push a history entry. Browser Back restores the previous query/filter combination; individual query edits do not create entries. Adding an empty optional filter field only exposes its control; selecting a filter value changes the URL and history.
+
+- **A — Inline filters:** one horizontally scrollable row, with add/remove controls for extra filters. Reuses FilterBarSection.
+- **B — Filter sidebar:** the existing colored FilterBarSection design, shared Select for streaming services and Checkbox for paid offers.
+- **C — Compact results:** the compact result presentation as the only list on search; its rail remains beside real details on desktop. Focusing the header does not duplicate it, and typing returns to search.
+
+The original real detail navigation placements remain available across the variants. The latest `single-search-*.png` screenshots supersede earlier search screenshots; `integrated-*.png` documents the prior real-detail integration.
 
 ## Review walkthrough
 
-1. Type Heat in the header. Open the movie from its suggestions. Confirm the complete normal detail page, then return to results.
-2. Move among actual movie/show results with Previous/Next, browser Back/Forward, and return links. Scroll the list before opening a title; returning restores that position. Reload restores the saved batch without another inference call.
-3. Compare navigation below title metadata (A), in the existing Taste navigation slot (B), and with a desktop result rail (C). All real rating and library actions remain unchanged.
-4. Change type, genre or year on results or from Refine on details. A currently open title stays open if excluded, with an Outside filters state. Search order is retained unless streaming preference is selected.
-5. Compare Explore everything, Prefer my services, and Only on my services. Choose country and services. These use the existing availability-evidence endpoint rather than illustrative offers. Prototype selections do not update account preferences.
-6. Open an unmarked movie/show URL directly: it retains the ordinary Taste exploration bar, without adopting a saved search.
+1. Open a real title, then edit the header text. It moves immediately to search with one list and no history entry for the edit.
+2. Continue typing, including spaces. URL/input stay synchronized and preserve focus; requests wait until typing stops.
+3. Change Titles or another filter. Back should undo the filter change, without stepping through each query edit.
+4. In A, add Genre or Released since to the single-line row, choose a value, and remove it. On narrow screens the row scrolls rather than expanding into a large box.
+5. In B, compare the familiar filter sidebar and shared service selector. Country/service filtering uses the existing fresh availability-evidence endpoint.
+6. Compare C's compact search list and real-detail rail. There is no duplicate header result surface in either location.
 
 ## Scope and constraints
 
@@ -39,4 +43,8 @@ Browser QA used Playwright because Chrome DevTools MCP was unavailable. Confirme
 
 UI-only URL changes originally caused unnecessary detail revalidation; the narrowly gated shouldRevalidate rule corrects that. Repository TypeScript still reports the same 270 pre-existing diagnostics, with none in the new prototype modules or revalidation helper. Existing detail-route serialization and Search ref typing diagnostics remain.
 
-The initial revised-route accessibility audit found an unsupported aria-expanded attribute on the search input; it was removed. Final accessibility scored 94/100, recorded in accessibility.json; remaining findings concern the existing footer heading order and unnamed shell links. The full performance/accessibility run timed out at CSS.stopRuleUsageTracking, so no performance score is claimed. Dev-server performance is not a production benchmark.
+The initial revised-route accessibility audit found an unsupported aria-expanded attribute on the search input; it was removed. Final accessibility scored 95/100, recorded in accessibility.json; remaining findings concern the existing footer heading order and unnamed shell links. The full performance/accessibility run timed out at CSS.stopRuleUsageTracking, so no performance score is claimed. Dev-server performance is not a production benchmark.
+
+## Verification of the single-results revision
+
+Browser checks passed: immediate navigation on input change from a real detail page; no additional history entry for query changes; one entry for filter changes; Back restores the prior query and filter; one results list in A/B/C even with header focused; retained results during debounce; input focus preserved; multiword query spaces preserved; shared service selector writes service ID 8 for Netflix; no horizontal mobile overflow or page errors in the main walkthrough. No new prototype TypeScript diagnostics.
