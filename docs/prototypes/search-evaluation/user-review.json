@@ -1,0 +1,12 @@
+{
+  "reviewer": "user",
+  "reviewed_on": "2026-09-21",
+  "baseline_capture": "2026-09-20T20:42:43.927344+00:00",
+  "baseline_commit": "77f0a4c",
+  "scope": "Overall relevance acceptance of the displayed baseline results, confirmed after explicitly asking whether the results including boxing, wrestling and competition shows for tense but not bleak were acceptable.",
+  "user_statement": "yep the results are totally okay",
+  "overall_relevance": "accepted",
+  "individual_strong_acceptable_wrong_labels": "not individually supplied",
+  "minimum_quality_per_request": "not yet decided",
+  "known_contract_failures": "Remain failures: misspelled title lookup and discovery vote-floor violations. Relevance acceptance does not waive these requirements."
+}
