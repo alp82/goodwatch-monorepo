@@ -8,6 +8,8 @@ Question: does combining tags, keywords and trope names into strong evidence, al
 
 Open the [iterative comparison](loop-review.html) for the 50,000-title, 41-request experiment, including full-size poster overlays, discarded variants, independent assessments, failures, and timing/cost evidence. The selected pipeline combines semantic candidate retrieval with compact Flash reranking that returns IDs only. Read the [selection and limitations](loop-findings.md), [measurements](loop-metrics.json), and [reproduction instructions](../../../goodwatch-webapp/scripts/prototype-crate-evidence/LOOP.md). The cheaper Lite reranker remains a close runner-up; the winner is a practical quality choice, not perfection or production approval.
 
+The temporary Crate table has been removed after preserving all results; the review works without it. Raw snapshots and model caches remain local. Fresh retrieval runs require restoring the approved scratch dataset first.
+
 The sections below preserve the earlier index-only experiment and its original review protocol. The user's later authorization and [autonomous loop protocol](loop-protocol.md) supersede waiting for human judgments between iterations. [The earlier six-way review](review.html) remains available for comparison.
 
 ## Initial approved production writes (5,000-title run)
@@ -69,7 +71,7 @@ python scripts/prototype-crate-evidence/report.py
 
 For the existing 5,000-title table, run `expand` directly, without `load`. Expansion resumes missing inserts from its frozen snapshot and refuses unexpected rows. The initial loader refuses to overwrite an existing scratch table. Do not rerun `load` while this experiment's table exists. Captured interpretations are reused on subsequent runs; remove the private capture only when a deliberate new interpretation is wanted. No Jev question wording was changed. The inherited prototype uses `jev-latest`; replay uses saved readings, not an assumption that this alias stays unchanged.
 
-The loader uses parameterized batches of 100 titles. `setup.sql` was executed as written. `cleanup.sql` remains pending until review and ticket closure. Raw catalog snapshots and repeated results stay in the ignored `private/` directory. The published sample manifest records the exact IDs and snapshot hash; interpretations, compact results, per-query timings, and analyzer probes accompany the review page.
+The loader uses parameterized batches of 100 titles. `setup.sql` was executed as written. `cleanup.sql` has now been executed for ticket closure; [the cleanup record](cleanup-result.json) verifies that only the named scratch table was removed. Raw catalog snapshots and repeated results stay in the ignored `private/` directory. The published sample manifest records the exact IDs and snapshot hash; interpretations, compact results, per-query timings, and analyzer probes accompany the review page.
 
 ## Measurement boundaries
 

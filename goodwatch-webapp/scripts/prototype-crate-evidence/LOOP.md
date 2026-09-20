@@ -2,6 +2,8 @@
 
 This is a disposable benchmark, not a production search implementation. The frozen sample contains 50,000 titles. Review artifacts live in [`docs/prototypes/crate-evidence/`](../../../docs/prototypes/crate-evidence/); raw inputs, model responses, caches, and intermediate rounds live in the ignored `private/` directory beside these scripts.
 
+The scratch table was dropped after the experiment was archived; see [`cleanup-result.json`](../../../docs/prototypes/crate-evidence/cleanup-result.json). The review and model-only replay remain usable with the preserved local artifacts. The fresh retrieval recipes below require restoring the frozen approved scratch dataset first.
+
 ## Final pipeline configuration
 
 The final candidate uses the unchanged D4+ Jev interpretation alongside a **Gemini 3.1 Flash Lite planner**, a 24-candidate union of semantic and existing retrieval sources, and **Gemini 3 Flash Preview ranking with packing v3 and IDs-only v3 output**. The IDs-only completion cap is **4096 tokens**, with explicit **minimal reasoning**; this is a shared allowance, not a claim that thinking is disabled. Returned reasons and scores are `null`; independent assistant assessments are separate from model output.

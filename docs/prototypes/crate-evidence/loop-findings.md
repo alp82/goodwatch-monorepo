@@ -71,3 +71,5 @@ The sample cannot establish content absence or a particular emotional ending whe
 - A completely underspecified companion request cannot establish taste. The planner now preserves that ambiguity rather than inventing a child-friendly constraint.
 
 The selected pipeline is a throwaway prototype. Its raw frozen snapshot and cache remain local, while compact results, independent assessments, measurements and the interactive review are preserved on the prototype branch. No production search route was changed.
+
+The approved scratch table was dropped and verified absent on closure; see [cleanup verification](cleanup-result.json). Opening the review and reading the saved results require no database connection.
