@@ -4,6 +4,8 @@ The user authorized assistant assessments to drive implementation, trials, and e
 
 ## Comparison boundary
 
+Following the user's review of request drift and higher costs, the original 13 requests remain the primary comparison. Additional requests are supplemental stress cases and must not replace that default view. Report model cost against the unchanged D4+ interpretation cost on these same 13 requests. An added planner or reranker is an architecture change, not an evidence-column optimization; its relevance gains do not establish an acceptable cost tradeoff. No overall winner has been established under the standing cheap-and-fast preference.
+
 Use the same frozen 50,000-title sample. Preserve the earlier variants and results. No source catalog writes or schema changes are needed for this loop. Candidate retrieval can read the existing scratch columns; request interpretation and evidence reranking can use inexpensive language-model calls when a measured quality gain justifies them.
 
 The 13 existing requests form the development set. Additional challenge requests are frozen before new results are inspected, in `loop-challenges.json`. A challenge consulted during iteration is no longer held-out validation. After a finalist emerges, test fresh requests and paraphrases not used to adjust its implementation. Do not hardcode query strings, expected title IDs, or film-specific exceptions into search code.

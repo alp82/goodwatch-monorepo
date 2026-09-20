@@ -1,16 +1,20 @@
 # PROTOTYPE: Crate search evidence comparison
 
-Prepared for [Scratch-table prototype of the evidence column in Crate](https://github.com/alp82/goodwatch-monorepo/issues/104). **Production scratch writes and subsequent autonomous assistant-led iteration were approved by the user on 2026-09-20. The experiment now has a selected quality winner.**
+Prepared for [Scratch-table prototype of the evidence column in Crate](https://github.com/alp82/goodwatch-monorepo/issues/104). **Production scratch writes and subsequent autonomous assistant-led iteration were approved by the user on 2026-09-20. No overall or practical winner has been accepted under the user’s cheap-and-fast preference.**
 
 Question: does combining tags, keywords and trope names into strong evidence, alongside description text, improve retrieval over D4+ while reducing query work?
 
 ## Latest result
 
-Open the [iterative comparison](loop-review.html) for the 50,000-title, 41-request experiment, including full-size poster overlays, discarded variants, independent assessments, failures, and timing/cost evidence. The selected pipeline combines semantic candidate retrieval with compact Flash reranking that returns IDs only. Read the [selection and limitations](loop-findings.md), [measurements](loop-metrics.json), and [reproduction instructions](../../../goodwatch-webapp/scripts/prototype-crate-evidence/LOOP.md). The cheaper Lite reranker remains a close runner-up; the winner is a practical quality choice, not perfection or production approval.
+Open the [iterative comparison](loop-review.html) for the **original 13 requests**, restored as the primary matched view. The earlier practical-winner claim is retracted: semantic planning plus Flash reranking is a **higher-cost quality experiment**, not an accepted replacement for the cheap controls. Compare recurring per-search cost and latency on those same 13 requests using [matched metrics](matched-comparison-metrics.json).
+
+On the same original 13 requests, mean projected model cost rises from **$0.000341 to $0.005594 per search (16.39×)**. Median reconstructed pipeline time is **1.11 seconds** for corrected D4+, **0.73 seconds** for English phrase, and **8.19 seconds** for the Flash experiment, whose frozen upstream timings predate later optimizations. Those are not the previously highlighted final-eight results.
+
+The assistant added 28 stress requests (8 challenge, 12 confirmation, 8 further validation). They remain supplemental and must not replace the original set or supply a different denominator for its cost comparison. In particular, previously highlighted final-eight timings and costs describe only those eight added requests. Read the [corrected findings and limitations](loop-findings.md), [historical measurements](loop-metrics.json), and [reproduction instructions](../../../goodwatch-webapp/scripts/prototype-crate-evidence/LOOP.md).
 
 The temporary Crate table has been removed after preserving all results; the review works without it. Raw snapshots and model caches remain local. Fresh retrieval runs require restoring the approved scratch dataset first.
 
-The sections below preserve the earlier index-only experiment and its original review protocol. The user's later authorization and [autonomous loop protocol](loop-protocol.md) supersede waiting for human judgments between iterations. [The earlier six-way review](review.html) remains available for comparison.
+The sections below preserve the earlier index-only experiment and its original review protocol. The user authorized assistant-led iteration under the [loop protocol](loop-protocol.md); that authorization did not establish acceptance of a substantially more expensive search pipeline. [The earlier six-way review](review.html) remains available for comparison.
 
 ## Initial approved production writes (5,000-title run)
 

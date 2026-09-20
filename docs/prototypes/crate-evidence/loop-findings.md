@@ -1,75 +1,63 @@
 # Search experiment iteration record
 
-The user authorized independent assistant assessments to drive this loop. Assessments are not user ratings or statistical validation. The frozen sample contains 50,000 titles, ten times the original sample; all strategies use the same catalog snapshot. The first 13 requests were development cases, eight additional requests became challenge evidence, and 12 separately frozen requests supplied confirmation evidence. After an operational reasoning-budget fix, eight further untouched requests tested the final configuration: 41 distinct requests altogether.
+**No overall or practical winner has been accepted under the user's cheap-and-fast preference.** The earlier claim that the Flash pipeline was a practical winner is retracted. It is a substantially more expensive quality experiment whose relevance gains do not establish an acceptable cost/latency tradeoff.
 
-## Selected winner
+## Primary comparison: the original 13 requests
 
-**Semantic candidate retrieval plus compact evidence reranking with Gemini 3 Flash Preview, returning IDs only with explicit minimal reasoning.** This is the practical quality winner for the experiment, not a claim that it dominates every request or every cost tradeoff.
+The original 13 requests remain the primary comparison and the default review view. Compare the original corrected D4+ and English phrase controls against new variants on those same requests. [Matched comparison metrics](matched-comparison-metrics.json) reports those costs and timings; do not substitute averages from a different request set.
 
-The final pipeline runs unchanged D4+ interpretation alongside a Gemini 3.1 Flash Lite semantic planner. It combines precise and broad semantic retrieval with the existing evidence sources, applies validated media/format and artifact checks across the entire union, and reranks up to 24 candidates from compact catalog evidence. Packing v3 removes duplicated tags. IDs-v3 uses explicit minimal reasoning and a 4096-token shared allowance, with exact candidate-ID validation. It does not generate user-facing content assurances.
+On those same 13 requests, the baseline mean model cost was **$0.000341 per search** and the Flash experiment mean was **$0.005594**: **16.39× higher**, or roughly **$0.34 versus $5.59 per 1,000 searches**. Median reconstructed pipeline times were **1.11 seconds** for corrected D4+, **0.73 seconds** for English phrase, and **8.19 seconds** for the Flash experiment. The Flash figure reuses frozen upstream timings from before later optimizations; it is not a fresh live end-to-end benchmark. These are materially worse cost/latency results, not a cheap-and-fast win.
 
-The decisive improvements are whole-request fit: older people committing a robbery rather than any heist, doctors at work rather than any dry comedy, a driver escaping pursuit rather than pursuing police, reintegration after prison rather than a prison story, and documentaries about making music rather than any musician title. The final eight requests made these distinctions concrete. The train request also removed the old control’s zombie-film leader.
+The assistant added **28 supplemental stress requests**: eight challenge requests, 12 confirmation requests, and eight further validation requests. They expose useful weaknesses, but they are assistant-curated rather than representative user traffic and do not replace the original 13. The first 33 requests had informed iteration before the last eight were evaluated. Assistant judgments are provisional evidence-based assessments, not user acceptance or statistical validation.
 
-The cheaper Lite reranker remains a credible runner-up, and sometimes wins individual requests. In particular, its political-comedy list is more directly governmental than Flash’s corporate-dynasty leader. Flash earns selection through the accumulated role, setting and conjunction advantages; its price premium is a judgment call, not statistical dominance. See the per-request independent assessments, including the losses.
+Independent review of the **original 13** found useful gains on wealthy dark comedy, indirect crime/narrator wording, and getaway-driver roles. Simple requests were often close to the baseline. Mood results remain uncertain: the expensive variant’s top five for “tense but not bleak” were *Who Wants to Be a Millionaire?*, *Chopped*, *Jake Paul vs. Mike Tyson*, *89*, and *Raiders*. That is not evidence of an across-the-board quality gain that justifies the cost premium. The baseline text branch is gated for mood-only requests, so its empty panel also makes coverage unequal; it is not a complete production-search comparison.
 
-## Final measurements
+Every variant uses the frozen 50,000-title snapshot. Historical retrieval, model outputs, failures, and assistant assessments are retained. None of the later ranking experiments changes production search.
 
-- The final configuration returned valid outputs for all **41 distinct requests**: 33 controlled replays and eight fresh final requests. This counts successful responses, not perfect relevance. Earlier versions’ failures remain recorded.
-- On the final eight: **5.24 seconds median projected pipeline time**, including captured Jev timing, and **2.33 seconds median reranker time**. One request took **19.03 seconds** in the projection, mainly waiting for the reranker. Startup and UI rendering are excluded.
-- The winner’s mean projected model cost on the final eight was **$0.00550 per search** (about $5.50 per 1,000); the median was $0.00543.
-- Same-pool Lite completed seven of eight; its provider error is separate from relevance judgment. Its successful-case median projection was 5.14 seconds, with a different denominator.
-- Most remaining latency came from the legacy eligibility/retrieval branch, which determined the upstream critical path in six of eight cases. The newer semantic retrieval stage was substantially shorter.
-- The complete recorded experiment cost **$1.245328**, including failed, superseded and diagnostic calls: $1.231159 OpenRouter and $0.014169 Jev. This is experiment spend, not per-search pricing.
+## What was measured
 
-These figures support a quality selection. They do not settle production timeout, fallback, caching or cost budgets; the observed 19-second tail makes those concrete follow-up decisions.
+The most developed expensive variant combines unchanged D4+ interpretation with a Gemini 3.1 Flash Lite planner, semantic and existing retrieval sources, and up to 24 candidates reranked by Gemini 3 Flash Preview. Packing v3 deduplicates evidence; IDs-v3 uses explicit minimal reasoning with a 4096-token shared allowance and validated output IDs. It produces no user-facing generated content assurances.
 
-## What the loop established
+This configuration produced valid outputs on 41 distinct requests: 33 controlled replays and the final eight fresh requests. That establishes completion for these observations, not perfect relevance, future reliability, or an accepted winner. Prior variants' failed calls remain part of the record and total spend.
 
-- Combining evidence fields makes the underlying text retrieval substantially faster, but does not by itself improve whole-request relevance.
-- A semantic planner helps with indirect wording, multilingual requests and conjunctions. Loose expansions confuse related activities; literal required phrases can also eliminate good candidates. Broader candidate recall and precise evidence ranking complement each other.
-- Evidence centrality matters. An incidental trope is not equivalent to a story being about that subject. Popularity and familiarity are not independent evidence of relevance.
-- Candidate sources must share validated media, format and artifact filters. Otherwise a correct filter in one retriever is bypassed when another source is merged.
-- Model input duplication was costly and distracting. Deduplicating tags and retaining compact evidence reduced two controlled inputs by about 70%, while also improving some rankings.
-- Model explanations frequently overstate exclusions or endings. The ranking-only finalist requests IDs, while the review presents catalog evidence and separate independent assistant assessments.
+Some supplemental cases improved central subject or role matching, including doctors working together and reintegration after prison. Other cases still favored the cheaper alternative or showed weak lower-ranked matches. These observations motivated research, but do not justify declaring a practical winner despite the user's cost preference.
 
-## Eliminations
+## Historical supplemental measurements: final eight only
 
-| Approach | Reason |
-| --- | --- |
-| Full evidence reranker | Eight of 13 failures; excessive latency and payload/output complexity. |
-| Compact Gemini 2.5 reranker | Five of 13 failures and weaker whole-request judgments. |
-| Loose planner/facet ranking alone | Car combat substituted for chases; incidental trope matches displaced central subjects. |
-| Strict canonical phrases alone | Good precision on simple phrases, but natural-language conjunctions could return no candidates. |
-| Existing search pool alone | Fast useful control, but insufficient recall for several indirect, multilingual and contextual requests. |
-| Verbose model reasons | Added latency and unsupported categorical assurances; independent assessments remain separate. |
-| IDs-only, 300-token cap | One of 21 requests exhausted the budget because provider reasoning consumed most tokens. Preserved as a failed variant. |
+These figures describe **the added final-eight set**, not the original 13 and not all 41:
 
-## Measurement boundaries
+- Flash IDs-v3: median projected pipeline time **5.24 seconds**, median reranker time **2.33 seconds**, and a **19.03-second** maximum projected pipeline time.
+- Mean projected model cost **$0.00550 per search**; median **$0.00543**. This includes upstream model work and is not just the reranker bill.
+- Same-pool Lite completed **seven of eight**; its successful-case median projection was **5.14 seconds**, with a different denominator. The failed provider call is retained.
+- The legacy eligibility/retrieval branch determined the reconstructed upstream critical path in six of those eight cases.
 
-Development and replay latency includes explicitly reconstructed upstream work from frozen calls. Cache hits retain original cold model latency and cost for comparisons; actual new spend is separate. Final confirmation uses fresh planning and retrieval, plus previously captured unchanged D4+ Jev stage timing. It is not a production end-to-end benchmark. Sample loading and indexing are recorded separately. Mood retrieval is an in-memory sample fingerprint path, not the production Qdrant fill.
+The complete recorded experiment spent **$1.245328**, including failures, superseded variants, and diagnostic calls: $1.231159 OpenRouter plus $0.014169 Jev. This small total experiment bill does **not** make the recurring per-search premium small. Use the matched original-13 comparison to assess that premium against the baseline.
 
-The added requests are assistant-curated stress cases, not a representative sample of real search traffic. Catalog descriptions and tags are evidence, not independently verified ground truth.
+## Useful findings, without a winner claim
 
-The sample cannot establish content absence or a particular emotional ending where the catalog lacks evidence. Tail results can still weaken conjunctions. Exact-title routing, availability, full-catalog behavior and production failure recovery are outside this experiment.
+- Consolidated evidence indexing reduces underlying text-query work but does not by itself establish better whole-request relevance.
+- Semantic planning helps indirect wording and conjunctions, but loose expansions can confuse related activities while overly literal required phrases eliminate good candidates.
+- Central subject evidence matters more than incidental trope mentions. Popularity is not evidence that a title meets the request.
+- Imported candidate sources need the same validated media/format and artifact checks as new retrieval.
+- Deduplicated compact packing reduced two controlled model inputs by about 70%. This is an operational improvement inside the costly model experiment, not proof that reranking is necessary.
+- Generated explanations often overstated content exclusions or endings. IDs-only output removes those model assurances from the product output; independent assessments still need to mark uncertainty.
+- Tiny completion caps are unreliable with dynamic provider reasoning. Earlier 300- and 900-token configurations failed; explicit minimal effort and a larger allowance completed the observed later runs.
+
+Earlier full-evidence reranking failed on eight of 13 development requests; compact Gemini 2.5 failed on five of 13. Those variants have demonstrated weaknesses. The existing cheap controls remain valid comparison options rather than being eliminated merely because a costly model sometimes ranks better.
+
+## Measurement and relevance limits
+
+Cold latency is a reconstructed critical path from captured model work and measured retrieval, not production end-to-end latency. Cache hits use original uncached inference metrics for comparison, while actual new spend is recorded separately. Startup, UI rendering, and full-product vector fill are excluded. Mood retrieval uses the local sample's fingerprints, not production Qdrant.
+
+Catalog descriptions and tags are evidence, not independently verified ground truth. Unknown content absence or endings cannot be certified. Remaining errors include prehistoric material for ancient civilizations, memory access or erasure for false memories, generic heists without the requested failure, and overly harsh mood-query tails. Underspecified viewing companions do not establish taste or child-friendly requirements.
+
+The approved scratch table was dropped and verified absent after preserving artifacts; see [cleanup verification](cleanup-result.json). The saved review requires no database access. Any future paid or database work is separate from this offline correction.
 
 ## Assets
 
-- [Interactive review](loop-review.html)
-- [Frozen protocol](loop-protocol.md)
-- [Reproduction instructions](../../../goodwatch-webapp/scripts/prototype-crate-evidence/LOOP.md)
-- [Measured results and component timings](loop-metrics.json)
+- [Primary interactive comparison](loop-review.html)
+- [Matched original-13 metrics](matched-comparison-metrics.json)
+- [Historical experiment measurements](loop-metrics.json)
 - [Spend ledger](spend-summary.json)
-- [Frozen sample checksum](loop-sample.json)
-
-## Remaining relevance limits
-
-- Ancient-civilization results still admit prehistoric/hominid material, which is adjacent rather than a direct match.
-- False memories can still become memory recording, access or erasure; these are not interchangeable.
-- Generic heist evidence does not establish that the plan goes wrong; lower ranks remain weaker.
-- The final robbery lists include a story about older women covering up an accidental killing rather than committing a robbery.
-- Some mood-query tails remain too harsh. Catalog tone scores do not prove an ending will feel hopeful.
-- A completely underspecified companion request cannot establish taste. The planner now preserves that ambiguity rather than inventing a child-friendly constraint.
-
-The selected pipeline is a throwaway prototype. Its raw frozen snapshot and cache remain local, while compact results, independent assessments, measurements and the interactive review are preserved on the prototype branch. No production search route was changed.
-
-The approved scratch table was dropped and verified absent on closure; see [cleanup verification](cleanup-result.json). Opening the review and reading the saved results require no database connection.
+- [Reproduction instructions](../../../goodwatch-webapp/scripts/prototype-crate-evidence/LOOP.md)
+- [Frozen protocol](loop-protocol.md) and [sample checksum](loop-sample.json)

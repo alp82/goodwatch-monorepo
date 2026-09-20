@@ -40,7 +40,67 @@ def compact(value):
     return value
 
 
-def consolidate(inputs, output_dir, reviews=(), statuses=(), controls=('corrected', 'english_phrase'), summary=None, winner=None):
+
+def original_comparison_round(path, rounds, cost_document=None):
+    """Restore the original ordered request/variant cohort without rerunning it."""
+    original = json.loads(Path(path).read_text(encoding='utf-8'))
+    if len(original) != 13:
+        raise ValueError('Expected the original 13-request comparison')
+    labels = {
+        'original': 'Original D4+ predicate', 'corrected': 'D4+ with corrected predicate',
+        'standard': 'Combined evidence · standard', 'english': 'Combined evidence · English stemming',
+        'english_boost2': 'English stemming · strong evidence ×2',
+        'english_phrase': 'English stemming · restored phrase bonus',
+    }
+    expensive_id = 'planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal'
+    final_cases = {case['request']: case for round_ in rounds for case in round_.get('cases', []) if expensive_id in case.get('results', {})}
+    costs_by_request = {case['request']: case for case in (cost_document or {}).get('cases', [])}
+    primary = {'name': 'Original 13 requests · primary comparison', 'kind': 'primary',
+        'default_variants': {'left': 'corrected', 'right': 'english'},
+        'variants': [{'id': key, 'label': label, 'status': 'active', 'reason': 'Original retrieval experiment: same frozen request interpretation, no extra model call for this retrieval variant.'} for key, label in labels.items()], 'cases': []}
+    primary['variants'].append({'id': expensive_id, 'label': 'Higher-cost experiment · Flash + extra planning', 'status': 'active', 'reason': 'Supplemental quality exploration only. Additional model cost and latency have not been accepted; this is not the chosen production approach.'})
+    for index, item in enumerate(original):
+        later = final_cases.get(item['request'])
+        case = {'id': later['id'] if later else f'original-{index+1}', 'request': item['request'], 'split': 'original request', 'results': {},
+            'interpretation': {key: item.get(key) for key in ['flags', 'weights', 'phrases', 'allowed_counts']}}
+        for key, old in item['summary'].items():
+            titles = copy.deepcopy(old['top10'])
+            for title in titles:
+                if title.get('text_evidence'):
+                    title['essence_text'] = title['text_evidence']
+                if title.get('strong_evidence'):
+                    title['matched_source_tags'] = title['strong_evidence']
+            case['results'][key] = {'top10': titles, 'wall_ms': old.get('median_wall_ms'), 'cost_usd': None,
+                'extra_model_cost_usd': 0, 'baseline_model_cost_usd': None,
+                'diagnostics': {'timing_kind': 'original_measured_retrieval_median', 'repeats': 5,
+                    'median_server_sum_ms': old.get('median_server_sum_ms'), 'candidate_count': old.get('candidates'),
+                    'query_count': old.get('query_count'), 'gated': old.get('gated'), 'searched': old.get('searched'),
+                    'timing_exclusions': 'Jev interpretation, precomputed eligibility filters and production vector fill excluded.',
+                    'cost_scope': 'No extra model calls for retrieval; original request-interpretation cost is shared and shown separately when available.',
+                    'source': str(path)}}
+        if later:
+            case['results'][expensive_id] = copy.deepcopy(later['results'][expensive_id])
+            case['results'][expensive_id]['diagnostics']['comparison_role'] = 'Higher-cost experiment; cost tradeoff not accepted'
+        costs = costs_by_request.get(item['request'])
+        if costs:
+            for key, run in case['results'].items():
+                run['baseline_model_cost_usd'] = costs.get('original_jev_cost_usd')
+                if key == expensive_id:
+                    run['extra_model_cost_usd'] = costs.get('incremental_model_cost_usd')
+                    run['cost_usd'] = costs.get('final_projected_model_cost_usd')
+                    run['model_cost_ratio'] = costs.get('cost_ratio')
+                else:
+                    baseline = costs.get('baseline_variants', {}).get(key, {})
+                    run['cost_usd'] = baseline.get('model_cost_usd', costs.get('original_jev_cost_usd'))
+                    run['reconstructed_total_ms'] = baseline.get('reconstructed_total_ms')
+        assessment = item.get('assistant_review')
+        if assessment:
+            case['assessment'] = assessment
+            case['assessments'] = [{'source': 'Original assistant assessment · original retrieval variants', **assessment}]
+        primary['cases'].append(case)
+    return primary
+
+def consolidate(inputs, output_dir, reviews=(), statuses=(), controls=('corrected', 'english_phrase'), summary=None, winner=None, original_comparison=None, cost_review=None):
     documents = [json.loads(Path(path).read_text(encoding='utf-8')) for path in inputs]
     rounds = [copy.deepcopy(r) for document in documents for r in document['rounds']]
     for round_number, path in reviews:
@@ -96,6 +156,19 @@ def consolidate(inputs, output_dir, reviews=(), statuses=(), controls=('correcte
         overall['winner_id'] = winner
     if summary is not None:
         overall['summary'] = summary
+    if original_comparison is not None:
+        for round_ in rounds:
+            round_['kind'] = 'supplemental'
+            for variant in round_.get('variants', []):
+                if variant.get('status') == 'winner':
+                    variant.update(status='active', reason='Historical quality-only candidate; additional cost/latency not accepted.')
+        cost_document = json.loads(Path(cost_review).read_text(encoding='utf-8')) if cost_review else None
+        rounds.append(original_comparison_round(original_comparison, rounds, cost_document))
+        overall['winner_id'] = None
+        overall['title'] = 'Original requests, original cost scope'
+        overall['original_comparison_source'] = str(original_comparison)
+        if cost_review:
+            overall['cost_review'] = json.loads(Path(cost_review).read_text(encoding='utf-8'))
     # Preserve measurements, source metadata and execution provenance per input.
     result = compact({
         'schema_version': 1, 'rounds': rounds, 'overall': overall,
@@ -106,7 +179,7 @@ def consolidate(inputs, output_dir, reviews=(), statuses=(), controls=('correcte
     title_sources = {}
     evidence_sets = {}
     source_fields = {'title', 'year', 'release_year', 'tmdb_id', 'media_type', 'poster_path', 'synopsis', 'essence_text', 'votes'}
-    evidence_fields = {'facet_evidence', 'fingerprint_evidence', 'centrality_evidence', 'avoid_evidence', 'hygiene_evidence', 'format_evidence'}
+    evidence_fields = {'facet_evidence', 'fingerprint_evidence', 'centrality_evidence', 'avoid_evidence', 'hygiene_evidence', 'format_evidence', 'matched_source_tags'}
     for round_ in result['rounds']:
         for case in round_.get('cases', []):
             for run in case.get('results', {}).values():
@@ -137,5 +210,7 @@ if __name__ == '__main__':
     parser.add_argument('--controls', nargs='*', default=['corrected', 'english_phrase'])
     parser.add_argument('--summary')
     parser.add_argument('--winner')
+    parser.add_argument('--original-comparison', type=Path)
+    parser.add_argument('--cost-review', type=Path)
     args = parser.parse_args()
-    print(consolidate(args.inputs, args.output_dir, args.review, args.variant_status, args.controls, args.summary, args.winner))
+    print(consolidate(args.inputs, args.output_dir, args.review, args.variant_status, args.controls, args.summary, args.winner, args.original_comparison, args.cost_review))

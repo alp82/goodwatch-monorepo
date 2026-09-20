@@ -1,0 +1,1354 @@
+{
+  "schema_version": 1,
+  "selection_status": "No accepted overall winner. The original 13 user requests are the primary comparison. The higher-cost experimental candidate costs 16.39 times as much on these matched requests; that tradeoff has not been justified or accepted.",
+  "request_matching": {
+    "source": "private/interpretations.json",
+    "original_request_count": 13,
+    "matched_exactly": 13,
+    "missing_original_requests": [],
+    "additional_requests_in_this_comparison": 0,
+    "matching_rule": "Exact unchanged request string; original order retained.",
+    "original_variants": [
+      "original",
+      "corrected",
+      "standard",
+      "english",
+      "english_boost2",
+      "english_phrase"
+    ],
+    "final_variant": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal"
+  },
+  "cost_basis": {
+    "original": "Captured actual Jev attributes USD + reading USD for each original request. All six original variants reuse these exact interpretations and have the same model cost.",
+    "final": "Same captured original Jev cost + original uncached Gemini3.1 planner cost + original uncached Gemini3 Flash IDs-v3-minimal reranker cost on that exact request. This is projected model cost per search, not new spend incurred by this offline audit.",
+    "excluded_from_both": "Database infrastructure, local compute, UI, and unavailable full-catalog vector-fill costs.",
+    "ratio": "Mean(final projected model cost on13)/mean(original Jev model cost on the same13). Per-request ratios are also shown separately."
+  },
+  "timing_basis": {
+    "baseline_retrieval_only": "Prior measured median retrieval time per request/variant from comparison.json; excludes Jev interpretation and eligibility preparation.",
+    "baseline_reconstructed_total": "max(captured attributes ms, captured reading ms) + prior retrieval median. This reconstruction excludes eligibility preparation and is not measured end-to-end latency.",
+    "final_reconstructed_total": "max(captured planner + measured new centrality/recall retrieval, captured parallel Jev + max(prior corrected retrieval, prior English-phrase retrieval)) + recorded uncached final reranker time. Reuses frozen upstream measurements; excludes unmeasured eligibility preparation, UI, and startup.",
+    "timing_comparison_warning": "Retrieval-only and reconstructed pipeline times must not be compared as though they share a basis. All final times here use original13 frozen upstream data, not later optimization/fresh-request timings.",
+    "statistic_unit": "13 request-level values. Original retrieval values are medians across prior benchmark repetitions; final reranker values are individual recorded calls.",
+    "gated_request_warning": "Tiny baseline retrieval times can mean the lexical branch was gated/skipped. No full-catalog vector fill was run. These are not claims of complete successful search at near-zero latency; per-case gated flags and candidate counts are preserved."
+  },
+  "summary": {
+    "original_jev_cost_usd": {
+      "n": 13,
+      "mean": 0.00034126615384615387,
+      "median": 0.000335076,
+      "minimum": 0.00031432800000000006,
+      "maximum": 0.00038320800000000006
+    },
+    "final_projected_model_cost_usd": {
+      "n": 13,
+      "mean": 0.005593616153846154,
+      "median": 0.005674826,
+      "minimum": 0.0043748780000000004,
+      "maximum": 0.006086858
+    },
+    "incremental_model_cost_usd": {
+      "n": 13,
+      "mean": 0.00525235,
+      "median": 0.00533975,
+      "minimum": 0.0040605500000000004,
+      "maximum": 0.0057565
+    },
+    "cost_ratio_mean_to_mean": 16.390773274187076,
+    "per_request_cost_ratio": {
+      "n": 13,
+      "mean": 16.43274091082053,
+      "median": 16.65998281137952,
+      "minimum": 13.918193733933979,
+      "maximum": 19.308779563121
+    },
+    "baseline_variants": {
+      "original": {
+        "retrieval_only_ms": {
+          "n": 13,
+          "mean": 831.1352458454517,
+          "median": 718.1286350023584,
+          "minimum": 0.0011200027074664831,
+          "maximum": 2684.233664003841
+        },
+        "reconstructed_total_ms": {
+          "n": 13,
+          "mean": 1251.2890919992979,
+          "median": 1133.0314559956896,
+          "minimum": 343.00112000270747,
+          "maximum": 3071.233664003841
+        },
+        "model_cost_usd": {
+          "n": 13,
+          "mean": 0.00034126615384615387,
+          "median": 0.000335076,
+          "minimum": 0.00031432800000000006,
+          "maximum": 0.00038320800000000006
+        },
+        "gated_requests": 2
+      },
+      "corrected": {
+        "retrieval_only_ms": {
+          "n": 13,
+          "mean": 750.2992209231777,
+          "median": 724.3735189986182,
+          "minimum": 0.0010799994925037026,
+          "maximum": 2317.208890999609
+        },
+        "reconstructed_total_ms": {
+          "n": 13,
+          "mean": 1170.453067077024,
+          "median": 1109.0051810017321,
+          "minimum": 343.0010799994925,
+          "maximum": 2704.208890999609
+        },
+        "model_cost_usd": {
+          "n": 13,
+          "mean": 0.00034126615384615387,
+          "median": 0.000335076,
+          "minimum": 0.00031432800000000006,
+          "maximum": 0.00038320800000000006
+        },
+        "gated_requests": 2
+      },
+      "standard": {
+        "retrieval_only_ms": {
+          "n": 13,
+          "mean": 290.3619597692831,
+          "median": 317.26359500316903,
+          "minimum": 0.0012000018614344299,
+          "maximum": 570.2559779965668
+        },
+        "reconstructed_total_ms": {
+          "n": 13,
+          "mean": 710.5158059231292,
+          "median": 635.0347459985642,
+          "minimum": 343.00125000224216,
+          "maximum": 1485.263595003169
+        },
+        "model_cost_usd": {
+          "n": 13,
+          "mean": 0.00034126615384615387,
+          "median": 0.000335076,
+          "minimum": 0.00031432800000000006,
+          "maximum": 0.00038320800000000006
+        },
+        "gated_requests": 2
+      },
+      "english": {
+        "retrieval_only_ms": {
+          "n": 13,
+          "mean": 254.90899561611093,
+          "median": 304.29437100247014,
+          "minimum": 0.0011900046956725419,
+          "maximum": 391.93420200172113
+        },
+        "reconstructed_total_ms": {
+          "n": 13,
+          "mean": 675.0628417699571,
+          "median": 646.0074640010134,
+          "minimum": 343.0012099990272,
+          "maximum": 1472.2943710024701
+        },
+        "model_cost_usd": {
+          "n": 13,
+          "mean": 0.00034126615384615387,
+          "median": 0.000335076,
+          "minimum": 0.00031432800000000006,
+          "maximum": 0.00038320800000000006
+        },
+        "gated_requests": 2
+      },
+      "english_boost2": {
+        "retrieval_only_ms": {
+          "n": 13,
+          "mean": 256.3069271519243,
+          "median": 281.87018699827604,
+          "minimum": 0.0011699958122335374,
+          "maximum": 458.9452580039506
+        },
+        "reconstructed_total_ms": {
+          "n": 13,
+          "mean": 676.4607733057704,
+          "median": 670.2494819939602,
+          "minimum": 343.00116999581223,
+          "maximum": 1460.22815400135
+        },
+        "model_cost_usd": {
+          "n": 13,
+          "mean": 0.00034126615384615387,
+          "median": 0.000335076,
+          "minimum": 0.00031432800000000006,
+          "maximum": 0.00038320800000000006
+        },
+        "gated_requests": 2
+      },
+      "english_phrase": {
+        "retrieval_only_ms": {
+          "n": 13,
+          "mean": 380.24378638454857,
+          "median": 372.8317170025548,
+          "minimum": 0.0011500014807097614,
+          "maximum": 793.1260420009494
+        },
+        "reconstructed_total_ms": {
+          "n": 13,
+          "mean": 800.3976325383948,
+          "median": 726.5096279968275,
+          "minimum": 343.0011500014807,
+          "maximum": 1540.8317170025548
+        },
+        "model_cost_usd": {
+          "n": 13,
+          "mean": 0.00034126615384615387,
+          "median": 0.000335076,
+          "minimum": 0.00031432800000000006,
+          "maximum": 0.00038320800000000006
+        },
+        "gated_requests": 2
+      }
+    },
+    "final_candidate": {
+      "new_branch_retrieval_only_ms": {
+        "n": 13,
+        "mean": 3206.147806305895,
+        "median": 3098.13766899606,
+        "minimum": 1321.6307549955673,
+        "maximum": 5383.781395990809
+      },
+      "reconstructed_total_ms": {
+        "n": 13,
+        "mean": 9342.525782458184,
+        "median": 8194.38089299365,
+        "minimum": 5284.240287008288,
+        "maximum": 25913.65693199623
+      },
+      "reranker_ms": {
+        "n": 13,
+        "mean": 4432.036559845214,
+        "median": 2719.240368998726,
+        "minimum": 1212.5536989988177,
+        "maximum": 21282.46527400188
+      },
+      "model_cost_components_mean_usd": {
+        "same_original_jev": 0.00034126615384615387,
+        "additional_planner": 0.001041673076923077,
+        "additional_reranker": 0.004210676923076923
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "original_jev_cost_usd": 0.00032314800000000004,
+      "final_projected_model_cost_usd": 0.005511648,
+      "incremental_model_cost_usd": 0.0051885,
+      "cost_ratio": 17.05611051283003,
+      "captured_parallel_jev_ms": 1168,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00013797,
+        "reading": 0.00018517800000000004
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00032314800000000004,
+        "additional_planner": 0.0009145,
+        "additional_reranker": 0.004274
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 715.3831879986683,
+          "reconstructed_total_ms": 1883.3831879986683,
+          "model_cost_usd": 0.00032314800000000004,
+          "gated": false,
+          "candidate_count": 92,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 653.3943429967621,
+          "reconstructed_total_ms": 1821.3943429967621,
+          "model_cost_usd": 0.00032314800000000004,
+          "gated": false,
+          "candidate_count": 92,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 317.26359500316903,
+          "reconstructed_total_ms": 1485.263595003169,
+          "model_cost_usd": 0.00032314800000000004,
+          "gated": false,
+          "candidate_count": 84,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 304.29437100247014,
+          "reconstructed_total_ms": 1472.2943710024701,
+          "model_cost_usd": 0.00032314800000000004,
+          "gated": false,
+          "candidate_count": 407,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 292.22815400135005,
+          "reconstructed_total_ms": 1460.22815400135,
+          "model_cost_usd": 0.00032314800000000004,
+          "gated": false,
+          "candidate_count": 407,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 372.8317170025548,
+          "reconstructed_total_ms": 1540.8317170025548,
+          "model_cost_usd": 0.00032314800000000004,
+          "gated": false,
+          "candidate_count": 455,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 2298.24689799716,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 5580.3450899984455,
+        "model_cost_usd": 0.005511648,
+        "components_ms": {
+          "captured_parallel_jev": 1168,
+          "captured_planner": 1212.7441150005325,
+          "measured_centrality": 1988.023683996289,
+          "measured_recall": 310.22321400087094,
+          "captured_parallel_baseline_retrieval": 653.3943429967621,
+          "reconstructed_parallel_upstream_critical_path": 3510.9910129976925,
+          "recorded_uncached_reranker": 2069.354077000753
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "original_jev_cost_usd": 0.000314412,
+      "final_projected_model_cost_usd": 0.006070912,
+      "incremental_model_cost_usd": 0.0057565,
+      "cost_ratio": 19.308779563121,
+      "captured_parallel_jev_ms": 468,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00012923400000000002,
+        "reading": 0.00018517800000000004
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.000314412,
+        "additional_planner": 0.0008605,
+        "additional_reranker": 0.004896
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 1796.111938994727,
+          "reconstructed_total_ms": 2264.111938994727,
+          "model_cost_usd": 0.000314412,
+          "gated": false,
+          "candidate_count": 142,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 1588.9428640002734,
+          "reconstructed_total_ms": 2056.9428640002734,
+          "model_cost_usd": 0.000314412,
+          "gated": false,
+          "candidate_count": 142,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 324.4474250022904,
+          "reconstructed_total_ms": 792.4474250022904,
+          "model_cost_usd": 0.000314412,
+          "gated": false,
+          "candidate_count": 142,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 295.01161899679573,
+          "reconstructed_total_ms": 763.0116189967957,
+          "model_cost_usd": 0.000314412,
+          "gated": false,
+          "candidate_count": 142,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 262.6257550000446,
+          "reconstructed_total_ms": 730.6257550000446,
+          "model_cost_usd": 0.000314412,
+          "gated": false,
+          "candidate_count": 142,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 291.4335149980616,
+          "reconstructed_total_ms": 759.4335149980616,
+          "model_cost_usd": 0.000314412,
+          "gated": false,
+          "candidate_count": 142,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 3214.075290998153,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 25913.65693199623,
+        "model_cost_usd": 0.006070912,
+        "components_ms": {
+          "captured_parallel_jev": 468,
+          "captured_planner": 1417.116366996197,
+          "measured_centrality": 2936.929399998917,
+          "measured_recall": 277.14589099923614,
+          "captured_parallel_baseline_retrieval": 1588.9428640002734,
+          "reconstructed_parallel_upstream_critical_path": 4631.19165799435,
+          "recorded_uncached_reranker": 21282.46527400188
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "original_jev_cost_usd": 0.00032373600000000003,
+      "final_projected_model_cost_usd": 0.005229486,
+      "incremental_model_cost_usd": 0.00490575,
+      "cost_ratio": 16.15355104158944,
+      "captured_parallel_jev_ms": 278,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00013847400000000003,
+        "reading": 0.00018526200000000003
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00032373600000000003,
+        "additional_planner": 0.00098975,
+        "additional_reranker": 0.003916
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 703.5407849980402,
+          "reconstructed_total_ms": 981.5407849980402,
+          "model_cost_usd": 0.00032373600000000003,
+          "gated": false,
+          "candidate_count": 55,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 724.3735189986182,
+          "reconstructed_total_ms": 1002.3735189986182,
+          "model_cost_usd": 0.00032373600000000003,
+          "gated": false,
+          "candidate_count": 55,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 330.5519700006698,
+          "reconstructed_total_ms": 608.5519700006698,
+          "model_cost_usd": 0.00032373600000000003,
+          "gated": false,
+          "candidate_count": 465,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 312.33434499881696,
+          "reconstructed_total_ms": 590.334344998817,
+          "model_cost_usd": 0.00032373600000000003,
+          "gated": false,
+          "candidate_count": 474,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 281.87018699827604,
+          "reconstructed_total_ms": 559.870186998276,
+          "model_cost_usd": 0.00032373600000000003,
+          "gated": false,
+          "candidate_count": 474,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 448.5096279968275,
+          "reconstructed_total_ms": 726.5096279968275,
+          "model_cost_usd": 0.00032373600000000003,
+          "gated": false,
+          "candidate_count": 487,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 1884.632886009058,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 5284.240287008288,
+        "model_cost_usd": 0.005229486,
+        "components_ms": {
+          "captured_parallel_jev": 278,
+          "captured_planner": 1493.503514000622,
+          "measured_centrality": 1624.7264040066511,
+          "measured_recall": 259.90648200240685,
+          "captured_parallel_baseline_retrieval": 724.3735189986182,
+          "reconstructed_parallel_upstream_critical_path": 3378.13640000968,
+          "recorded_uncached_reranker": 1906.1038869986078
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "original_jev_cost_usd": 0.000335076,
+      "final_projected_model_cost_usd": 0.005674826,
+      "incremental_model_cost_usd": 0.00533975,
+      "cost_ratio": 16.93593692177297,
+      "captured_parallel_jev_ms": 324,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.000149814,
+        "reading": 0.00018526200000000003
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.000335076,
+        "additional_planner": 0.00097975,
+        "additional_reranker": 0.00436
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 947.3991850027232,
+          "reconstructed_total_ms": 1271.3991850027232,
+          "model_cost_usd": 0.000335076,
+          "gated": false,
+          "candidate_count": 873,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 919.5497309992788,
+          "reconstructed_total_ms": 1243.5497309992788,
+          "model_cost_usd": 0.000335076,
+          "gated": false,
+          "candidate_count": 874,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 426.0360629996285,
+          "reconstructed_total_ms": 750.0360629996285,
+          "model_cost_usd": 0.000335076,
+          "gated": false,
+          "candidate_count": 1177,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 391.70406499761157,
+          "reconstructed_total_ms": 715.7040649976116,
+          "model_cost_usd": 0.000335076,
+          "gated": false,
+          "candidate_count": 1197,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 381.17600599798607,
+          "reconstructed_total_ms": 705.1760059979861,
+          "model_cost_usd": 0.000335076,
+          "gated": false,
+          "candidate_count": 1194,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 793.1260420009494,
+          "reconstructed_total_ms": 1117.1260420009494,
+          "model_cost_usd": 0.000335076,
+          "gated": false,
+          "candidate_count": 1455,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 1321.6307549955673,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 5619.290970993461,
+        "model_cost_usd": 0.005674826,
+        "components_ms": {
+          "captured_parallel_jev": 324,
+          "captured_planner": 1578.419846999168,
+          "measured_centrality": 1095.485842997732,
+          "measured_recall": 226.14491199783515,
+          "captured_parallel_baseline_retrieval": 919.5497309992788,
+          "reconstructed_parallel_upstream_critical_path": 2900.050601994735,
+          "recorded_uncached_reranker": 2719.240368998726
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "original_jev_cost_usd": 0.00031453800000000006,
+      "final_projected_model_cost_usd": 0.005609538,
+      "incremental_model_cost_usd": 0.005294999999999999,
+      "cost_ratio": 17.834213990042535,
+      "captured_parallel_jev_ms": 353,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00012927600000000003,
+        "reading": 0.00018526200000000003
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00031453800000000006,
+        "additional_planner": 0.000972,
+        "additional_reranker": 0.004323
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 0.001309999788645655,
+          "reconstructed_total_ms": 353.00130999978865,
+          "model_cost_usd": 0.00031453800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 0.0010900039342232049,
+          "reconstructed_total_ms": 353.0010900039342,
+          "model_cost_usd": 0.00031453800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 0.0012000018614344299,
+          "reconstructed_total_ms": 353.00120000186143,
+          "model_cost_usd": 0.00031453800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 0.0011900046956725419,
+          "reconstructed_total_ms": 353.0011900046957,
+          "model_cost_usd": 0.00031453800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 0.001219996192958206,
+          "reconstructed_total_ms": 353.00121999619296,
+          "model_cost_usd": 0.00031453800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 0.0011899974197149277,
+          "reconstructed_total_ms": 353.0011899974197,
+          "model_cost_usd": 0.00031453800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 5383.781395990809,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 8901.45901998767,
+        "model_cost_usd": 0.005609538,
+        "components_ms": {
+          "captured_parallel_jev": 353,
+          "captured_planner": 1440.001252994989,
+          "measured_centrality": 3089.0269879964762,
+          "measured_recall": 2294.7544079943327,
+          "captured_parallel_baseline_retrieval": 0.0011899974197149277,
+          "reconstructed_parallel_upstream_critical_path": 6823.782648985798,
+          "recorded_uncached_reranker": 2077.6763710018713
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "original_jev_cost_usd": 0.00032928000000000005,
+      "final_projected_model_cost_usd": 0.00552528,
+      "incremental_model_cost_usd": 0.005195999999999999,
+      "cost_ratio": 16.779883381924193,
+      "captured_parallel_jev_ms": 334,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00014397600000000003,
+        "reading": 0.000185304
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00032928000000000005,
+        "additional_planner": 0.0011045,
+        "additional_reranker": 0.0040915
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 295.61969399946975,
+          "reconstructed_total_ms": 629.6196939994697,
+          "model_cost_usd": 0.00032928000000000005,
+          "gated": false,
+          "candidate_count": 549,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 234.8253759992076,
+          "reconstructed_total_ms": 568.8253759992076,
+          "model_cost_usd": 0.00032928000000000005,
+          "gated": false,
+          "candidate_count": 549,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 188.29754299804335,
+          "reconstructed_total_ms": 522.2975429980434,
+          "model_cost_usd": 0.00032928000000000005,
+          "gated": false,
+          "candidate_count": 543,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 193.77230000100099,
+          "reconstructed_total_ms": 527.772300001001,
+          "model_cost_usd": 0.00032928000000000005,
+          "gated": false,
+          "candidate_count": 545,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 212.43055399827426,
+          "reconstructed_total_ms": 546.4305539982743,
+          "model_cost_usd": 0.00032928000000000005,
+          "gated": false,
+          "candidate_count": 544,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 237.40024399739923,
+          "reconstructed_total_ms": 571.4002439973992,
+          "model_cost_usd": 0.00032928000000000005,
+          "gated": false,
+          "candidate_count": 681,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 2054.0756909977063,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 6340.473552998446,
+        "model_cost_usd": 0.00552528,
+        "components_ms": {
+          "captured_parallel_jev": 334,
+          "captured_planner": 1643.1500350008719,
+          "measured_centrality": 1691.1227390010026,
+          "measured_recall": 362.95295199670363,
+          "captured_parallel_baseline_retrieval": 237.40024399739923,
+          "reconstructed_parallel_upstream_critical_path": 3697.225725998578,
+          "recorded_uncached_reranker": 2643.2478269998683
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "original_jev_cost_usd": 0.00031432800000000006,
+      "final_projected_model_cost_usd": 0.0043748780000000004,
+      "incremental_model_cost_usd": 0.0040605500000000004,
+      "cost_ratio": 13.918193733933979,
+      "captured_parallel_jev_ms": 343,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00012915000000000002,
+        "reading": 0.00018517800000000004
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00031432800000000006,
+        "additional_planner": 0.00080225,
+        "additional_reranker": 0.0032583
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 0.0011200027074664831,
+          "reconstructed_total_ms": 343.00112000270747,
+          "model_cost_usd": 0.00031432800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 0.0010799994925037026,
+          "reconstructed_total_ms": 343.0010799994925,
+          "model_cost_usd": 0.00031432800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 0.0012500022421590984,
+          "reconstructed_total_ms": 343.00125000224216,
+          "model_cost_usd": 0.00031432800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 0.001209999027196318,
+          "reconstructed_total_ms": 343.0012099990272,
+          "model_cost_usd": 0.00031432800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 0.0011699958122335374,
+          "reconstructed_total_ms": 343.00116999581223,
+          "model_cost_usd": 0.00031432800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 0.0011500014807097614,
+          "reconstructed_total_ms": 343.0011500014807,
+          "model_cost_usd": 0.00031432800000000006,
+          "gated": true,
+          "candidate_count": 0,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 4906.154701006017,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 8032.35324700654,
+        "model_cost_usd": 0.0043748780000000004,
+        "components_ms": {
+          "captured_parallel_jev": 343,
+          "captured_planner": 1913.6448470017058,
+          "measured_centrality": 2267.412550005247,
+          "measured_recall": 2638.74215100077,
+          "captured_parallel_baseline_retrieval": 0.0011500014807097614,
+          "reconstructed_parallel_upstream_critical_path": 6819.7995480077225,
+          "recorded_uncached_reranker": 1212.5536989988177
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "original_jev_cost_usd": 0.00035418600000000004,
+      "final_projected_model_cost_usd": 0.005485936,
+      "incremental_model_cost_usd": 0.00513175,
+      "cost_ratio": 15.488856137735539,
+      "captured_parallel_jev_ms": 377,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.000168294,
+        "reading": 0.00018589200000000003
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00035418600000000004,
+        "additional_planner": 0.00121775,
+        "additional_reranker": 0.003914
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 945.20573799673,
+          "reconstructed_total_ms": 1322.20573799673,
+          "model_cost_usd": 0.00035418600000000004,
+          "gated": false,
+          "candidate_count": 974,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 798.6751100033871,
+          "reconstructed_total_ms": 1175.675110003387,
+          "model_cost_usd": 0.00035418600000000004,
+          "gated": false,
+          "candidate_count": 974,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 477.7459299948532,
+          "reconstructed_total_ms": 854.7459299948532,
+          "model_cost_usd": 0.00035418600000000004,
+          "gated": false,
+          "candidate_count": 949,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 391.93420200172113,
+          "reconstructed_total_ms": 768.9342020017211,
+          "model_cost_usd": 0.00035418600000000004,
+          "gated": false,
+          "candidate_count": 991,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 458.9452580039506,
+          "reconstructed_total_ms": 835.9452580039506,
+          "model_cost_usd": 0.00035418600000000004,
+          "gated": false,
+          "candidate_count": 992,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 535.9639870002866,
+          "reconstructed_total_ms": 912.9639870002866,
+          "model_cost_usd": 0.00035418600000000004,
+          "gated": false,
+          "candidate_count": 1075,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 3884.0070629958063,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 9095.241349998105,
+        "model_cost_usd": 0.005485936,
+        "components_ms": {
+          "captured_parallel_jev": 377,
+          "captured_planner": 2047.1112450031796,
+          "measured_centrality": 3382.725096998911,
+          "measured_recall": 501.28196599689545,
+          "captured_parallel_baseline_retrieval": 798.6751100033871,
+          "reconstructed_parallel_upstream_critical_path": 5931.118307998986,
+          "recorded_uncached_reranker": 3164.123041999119
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "original_jev_cost_usd": 0.00036535800000000003,
+      "final_projected_model_cost_usd": 0.006086858,
+      "incremental_model_cost_usd": 0.0057215,
+      "cost_ratio": 16.65998281137952,
+      "captured_parallel_jev_ms": 325,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.000179802,
+        "reading": 0.00018555600000000002
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00036535800000000003,
+        "additional_planner": 0.001133,
+        "additional_reranker": 0.0045885
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 718.1286350023584,
+          "reconstructed_total_ms": 1043.1286350023584,
+          "model_cost_usd": 0.00036535800000000003,
+          "gated": false,
+          "candidate_count": 156,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 666.2565579972579,
+          "reconstructed_total_ms": 991.2565579972579,
+          "model_cost_usd": 0.00036535800000000003,
+          "gated": false,
+          "candidate_count": 156,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 310.0347459985642,
+          "reconstructed_total_ms": 635.0347459985642,
+          "model_cost_usd": 0.00036535800000000003,
+          "gated": false,
+          "candidate_count": 580,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 321.00746400101343,
+          "reconstructed_total_ms": 646.0074640010134,
+          "model_cost_usd": 0.00036535800000000003,
+          "gated": false,
+          "candidate_count": 600,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 345.2494819939602,
+          "reconstructed_total_ms": 670.2494819939602,
+          "model_cost_usd": 0.00036535800000000003,
+          "gated": false,
+          "candidate_count": 600,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 396.1335220010369,
+          "reconstructed_total_ms": 721.1335220010369,
+          "model_cost_usd": 0.00036535800000000003,
+          "gated": false,
+          "candidate_count": 606,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 4253.000290991622,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 9190.14850698295,
+        "model_cost_usd": 0.006086858,
+        "components_ms": {
+          "captured_parallel_jev": 325,
+          "captured_planner": 2058.765288995346,
+          "measured_centrality": 3523.337590995652,
+          "measured_recall": 729.6626999959699,
+          "captured_parallel_baseline_retrieval": 666.2565579972579,
+          "reconstructed_parallel_upstream_critical_path": 6311.765579986968,
+          "recorded_uncached_reranker": 2878.3829269959824
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "original_jev_cost_usd": 0.00038320800000000006,
+      "final_projected_model_cost_usd": 0.005800708,
+      "incremental_model_cost_usd": 0.0054175,
+      "cost_ratio": 15.137230955512408,
+      "captured_parallel_jev_ms": 404,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00019723200000000004,
+        "reading": 0.00018597600000000002
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00038320800000000006,
+        "additional_planner": 0.001221,
+        "additional_reranker": 0.0041965
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 283.61021599994274,
+          "reconstructed_total_ms": 687.6102159999427,
+          "model_cost_usd": 0.00038320800000000006,
+          "gated": false,
+          "candidate_count": 306,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 210.18126099806977,
+          "reconstructed_total_ms": 614.1812609980698,
+          "model_cost_usd": 0.00038320800000000006,
+          "gated": false,
+          "candidate_count": 306,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 187.2292309999466,
+          "reconstructed_total_ms": 591.2292309999466,
+          "model_cost_usd": 0.00038320800000000006,
+          "gated": false,
+          "candidate_count": 300,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 177.13116799859563,
+          "reconstructed_total_ms": 581.1311679985956,
+          "model_cost_usd": 0.00038320800000000006,
+          "gated": false,
+          "candidate_count": 300,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 182.57401300070342,
+          "reconstructed_total_ms": 586.5740130007034,
+          "model_cost_usd": 0.00038320800000000006,
+          "gated": false,
+          "candidate_count": 300,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 192.59378199785715,
+          "reconstructed_total_ms": 596.5937819978571,
+          "model_cost_usd": 0.00038320800000000006,
+          "gated": false,
+          "candidate_count": 310,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 3098.13766899606,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 8194.38089299365,
+        "model_cost_usd": 0.005800708,
+        "components_ms": {
+          "captured_parallel_jev": 404,
+          "captured_planner": 1950.1823829996283,
+          "measured_centrality": 2799.670688997139,
+          "measured_recall": 298.4669799989206,
+          "captured_parallel_baseline_retrieval": 210.18126099806977,
+          "reconstructed_parallel_upstream_critical_path": 5048.320051995688,
+          "recorded_uncached_reranker": 3146.0608409979613
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "original_jev_cost_usd": 0.00037737000000000003,
+      "final_projected_model_cost_usd": 0.00576462,
+      "incremental_model_cost_usd": 0.00538725,
+      "cost_ratio": 15.27577708879879,
+      "captured_parallel_jev_ms": 387,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00019160400000000003,
+        "reading": 0.00018576600000000002
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00037737000000000003,
+        "additional_planner": 0.00109375,
+        "additional_reranker": 0.0042935
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 2684.233664003841,
+          "reconstructed_total_ms": 3071.233664003841,
+          "model_cost_usd": 0.00037737000000000003,
+          "gated": false,
+          "candidate_count": 78,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 2317.208890999609,
+          "reconstructed_total_ms": 2704.208890999609,
+          "model_cost_usd": 0.00037737000000000003,
+          "gated": false,
+          "candidate_count": 78,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 570.2559779965668,
+          "reconstructed_total_ms": 957.2559779965668,
+          "model_cost_usd": 0.00037737000000000003,
+          "gated": false,
+          "candidate_count": 87,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 389.4799320041784,
+          "reconstructed_total_ms": 776.4799320041784,
+          "model_cost_usd": 0.00037737000000000003,
+          "gated": false,
+          "candidate_count": 88,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 390.721104995464,
+          "reconstructed_total_ms": 777.721104995464,
+          "model_cost_usd": 0.00037737000000000003,
+          "gated": false,
+          "candidate_count": 88,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 713.7792440043995,
+          "reconstructed_total_ms": 1100.7792440043995,
+          "model_cost_usd": 0.00037737000000000003,
+          "gated": false,
+          "candidate_count": 88,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 5030.9392850031145,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 9400.76505899924,
+        "model_cost_usd": 0.00576462,
+        "components_ms": {
+          "captured_parallel_jev": 387,
+          "captured_planner": 2090.8168379974086,
+          "measured_centrality": 4745.0833180046175,
+          "measured_recall": 285.855966998497,
+          "captured_parallel_baseline_retrieval": 2317.208890999609,
+          "reconstructed_parallel_upstream_critical_path": 7121.756123000523,
+          "recorded_uncached_reranker": 2279.008935998718
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "original_jev_cost_usd": 0.00036603000000000004,
+      "final_projected_model_cost_usd": 0.00575378,
+      "incremental_model_cost_usd": 0.00538775,
+      "cost_ratio": 15.719421905308305,
+      "captured_parallel_jev_ms": 394,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.000180222,
+        "reading": 0.00018580800000000003
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00036603000000000004,
+        "additional_planner": 0.00112225,
+        "additional_reranker": 0.0042655
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 889.4912659961847,
+          "reconstructed_total_ms": 1283.4912659961847,
+          "model_cost_usd": 0.00036603000000000004,
+          "gated": false,
+          "candidate_count": 105,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 838.4748680036864,
+          "reconstructed_total_ms": 1232.4748680036864,
+          "model_cost_usd": 0.00036603000000000004,
+          "gated": false,
+          "candidate_count": 105,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 411.07232499780366,
+          "reconstructed_total_ms": 805.0723249978037,
+          "model_cost_usd": 0.00036603000000000004,
+          "gated": false,
+          "candidate_count": 119,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 351.3047770029516,
+          "reconstructed_total_ms": 745.3047770029516,
+          "model_cost_usd": 0.00036603000000000004,
+          "gated": false,
+          "candidate_count": 441,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 345.04765599558596,
+          "reconstructed_total_ms": 739.047655995586,
+          "model_cost_usd": 0.00036603000000000004,
+          "gated": false,
+          "candidate_count": 439,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 718.1125060014892,
+          "reconstructed_total_ms": 1112.1125060014892,
+          "model_cost_usd": 0.00036603000000000004,
+          "gated": false,
+          "candidate_count": 489,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 2197.980880999239,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 12856.955076989834,
+        "model_cost_usd": 0.00575378,
+        "components_ms": {
+          "captured_parallel_jev": 394,
+          "captured_planner": 1543.9612639966072,
+          "measured_centrality": 1889.65192699834,
+          "measured_recall": 308.3289540008991,
+          "captured_parallel_baseline_retrieval": 838.4748680036864,
+          "reconstructed_parallel_upstream_critical_path": 3741.9421449958463,
+          "recorded_uncached_reranker": 9115.012931993988
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "original_jev_cost_usd": 0.00033579000000000004,
+      "final_projected_model_cost_usd": 0.00582854,
+      "incremental_model_cost_usd": 0.00549275,
+      "cost_ratio": 17.357693796718184,
+      "captured_parallel_jev_ms": 307,
+      "original_jev_stage_costs_usd": {
+        "attributes": 0.00015015000000000002,
+        "reading": 0.00018564000000000002
+      },
+      "final_model_cost_components_usd": {
+        "same_original_jev": 0.00033579000000000004,
+        "additional_planner": 0.00113075,
+        "additional_reranker": 0.004362
+      },
+      "baseline_variants": {
+        "original": {
+          "retrieval_only_ms": 826.0314559956896,
+          "reconstructed_total_ms": 1133.0314559956896,
+          "model_cost_usd": 0.00033579000000000004,
+          "gated": false,
+          "candidate_count": 294,
+          "vector_fill": "not_run_sample_only"
+        },
+        "corrected": {
+          "retrieval_only_ms": 802.0051810017321,
+          "reconstructed_total_ms": 1109.0051810017321,
+          "model_cost_usd": 0.00033579000000000004,
+          "gated": false,
+          "candidate_count": 294,
+          "vector_fill": "not_run_sample_only"
+        },
+        "standard": {
+          "retrieval_only_ms": 231.7682210050407,
+          "reconstructed_total_ms": 538.7682210050407,
+          "model_cost_usd": 0.00033579000000000004,
+          "gated": false,
+          "candidate_count": 74,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english": {
+          "retrieval_only_ms": 185.84030000056373,
+          "reconstructed_total_ms": 492.84030000056373,
+          "model_cost_usd": 0.00033579000000000004,
+          "gated": false,
+          "candidate_count": 83,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_boost2": {
+          "retrieval_only_ms": 179.11949299741536,
+          "reconstructed_total_ms": 486.11949299741536,
+          "model_cost_usd": 0.00033579000000000004,
+          "gated": false,
+          "candidate_count": 83,
+          "vector_fill": "not_run_sample_only"
+        },
+        "english_phrase": {
+          "retrieval_only_ms": 243.28269599936903,
+          "reconstructed_total_ms": 550.282695999369,
+          "model_cost_usd": 0.00033579000000000004,
+          "gated": false,
+          "candidate_count": 83,
+          "vector_fill": "not_run_sample_only"
+        }
+      },
+      "final_candidate": {
+        "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+        "retrieval_only_ms": 2153.258674996323,
+        "retrieval_only_scope": "new centrality+recall branch only; not all union sources",
+        "reconstructed_total_ms": 7043.525186003535,
+        "model_cost_usd": 0.00582854,
+        "components_ms": {
+          "captured_parallel_jev": 307,
+          "captured_planner": 1767.021415005729,
+          "measured_centrality": 1811.5207259979798,
+          "measured_recall": 341.7379489983432,
+          "captured_parallel_baseline_retrieval": 802.0051810017321,
+          "reconstructed_parallel_upstream_critical_path": 3920.280090002052,
+          "recorded_uncached_reranker": 3123.245096001483
+        },
+        "timing_provenance": "Final IDs-v3 reranker measurement plus frozen development upstream critical-path projection. Upstream retrieval predates later implementation-only optimization. Not a live full-pipeline measurement."
+      }
+    }
+  ],
+  "source_artifacts": [
+    "private/interpretations.json",
+    "private/comparison.json",
+    "private/loop-round6-minimal.json",
+    "private/loop-round3-final-raw/*.json"
+  ],
+  "operations": "Offline calculation only. No model calls, database access, changed inputs, or modified historical artifacts."
+}

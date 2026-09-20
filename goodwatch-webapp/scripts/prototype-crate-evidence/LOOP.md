@@ -1,14 +1,18 @@
 # Evidence-search experiment loop
 
-This is a disposable benchmark, not a production search implementation. The frozen sample contains 50,000 titles. Review artifacts live in [`docs/prototypes/crate-evidence/`](../../../docs/prototypes/crate-evidence/); raw inputs, model responses, caches, and intermediate rounds live in the ignored `private/` directory beside these scripts.
+This is a disposable benchmark, not a production search implementation. **There is no accepted overall or practical winner under the user’s cheap-and-fast preference.** The commands below reproduce the costly model experiment; they are not a deployment recommendation or an instruction to run more paid work. The frozen sample contains 50,000 titles. Review artifacts live in [`docs/prototypes/crate-evidence/`](../../../docs/prototypes/crate-evidence/); raw inputs, model responses, caches, and intermediate rounds live in the ignored `private/` directory beside these scripts.
 
 The scratch table was dropped after the experiment was archived; see [`cleanup-result.json`](../../../docs/prototypes/crate-evidence/cleanup-result.json). The review and model-only replay remain usable with the preserved local artifacts. The fresh retrieval recipes below require restoring the frozen approved scratch dataset first.
 
-## Final pipeline configuration
+The original 13 requests are the primary matched comparison. The 28 added assistant stress requests are supplemental; final-eight measurements must not be presented as original-13 results. See the [matched metrics](../../../docs/prototypes/crate-evidence/matched-comparison-metrics.json) and [corrected findings](../../../docs/prototypes/crate-evidence/loop-findings.md).
 
-The final candidate uses the unchanged D4+ Jev interpretation alongside a **Gemini 3.1 Flash Lite planner**, a 24-candidate union of semantic and existing retrieval sources, and **Gemini 3 Flash Preview ranking with packing v3 and IDs-only v3 output**. The IDs-only completion cap is **4096 tokens**, with explicit **minimal reasoning**; this is a shared allowance, not a claim that thinking is disabled. Returned reasons and scores are `null`; independent assistant assessments are separate from model output.
+The matched original-13 mean model cost is **16.39× the baseline** ($0.005594 versus $0.000341 per search). Treat any reproduction as investigation of that tradeoff, not an accepted optimization.
 
-**CLI defaults retain earlier experiments.** Always specify the model, packing, round, and IDs-only flags shown below. `model_pipeline.plan_request()` also retains its historical 2.5 Lite default; call it with `model="google/gemini-3.1-flash-lite"` when reproducing the final planner. The validation/confirmation runner selects this planner explicitly.
+## Archived higher-cost experiment configuration
+
+This archived quality experiment uses the unchanged D4+ Jev interpretation alongside a **Gemini 3.1 Flash Lite planner**, a 24-candidate union of semantic and existing retrieval sources, and **Gemini 3 Flash Preview ranking with packing v3 and IDs-only v3 output**. The IDs-only completion cap is **4096 tokens**, with explicit **minimal reasoning**; this is a shared allowance, not a claim that thinking is disabled. Returned reasons and scores are `null`; independent assistant assessments are separate from model output.
+
+**CLI defaults retain earlier experiments.** Always specify the model, packing, round, and IDs-only flags shown below. `model_pipeline.plan_request()` also retains its historical 2.5 Lite default; call it with `model="google/gemini-3.1-flash-lite"` when reproducing this experiment’s planner. The validation/confirmation runner selects this planner explicitly.
 
 Run commands from `goodwatch-webapp/`. Python needs the existing `requests` and `python-dotenv` dependencies; Node capture uses the normal webapp dependencies. `--env` points to the existing webapp dotenv containing Crate connection settings. OpenRouter reads `OPENROUTER_API_KEY` from the environment or `MODEL_PIPELINE_ENV`; the prototype also supports the existing local root dotenv fallback. Never publish these files or key values.
 
@@ -21,23 +25,23 @@ node_modules/.bin/esbuild scripts/prototype-crate-evidence/loop-capture.ts --bun
 node scripts/prototype-crate-evidence/loop-capture.mjs ../docs/prototypes/crate-evidence/loop-confirmation.json scripts/prototype-crate-evidence/private/loop-confirmation-interpretations.json
 ```
 
-### Reproduce the development configuration
+### Historical reproduction: original 13 requests
 
-Use a new output path to preserve frozen comparisons. This reuses the final 3.1 planner artifact and existing development Jev captures, performs current retrieval, and uses cached identical model calls when available.
+Use a new output path to preserve frozen comparisons. This reuses the captured 3.1 planner artifact and existing development Jev captures, performs current retrieval, and uses cached identical model calls when available.
 
 ```sh
 python scripts/prototype-crate-evidence/loop_runner.py --env /path/to/webapp/.env --round 3 --plans scripts/prototype-crate-evidence/private/model_pipeline/development13-plans-v7-model31-validated.json --rerank-model google/gemini-3-flash-preview --packing-version 3 --ids-only --minimal-reasoning --planned-only --limit 13 --output scripts/prototype-crate-evidence/private/reproduction-development.json
 ```
 
-### Run the frozen confirmation configuration
+### Historical reproduction: supplemental confirmation requests
 
 Keep confirmation requests fixed. Once a set informs tuning, it is no longer untouched validation.
 
 ```sh
-python scripts/prototype-crate-evidence/loop_runner.py --env /path/to/webapp/.env --round 3 --challenge --interpretations scripts/prototype-crate-evidence/private/loop-confirmation-interpretations.json --split confirmation --rerank-model google/gemini-3-flash-preview --packing-version 3 --ids-only --minimal-reasoning --planned-only --limit 12 --output scripts/prototype-crate-evidence/private/reproduction-confirmation.json
+python scripts/prototype-crate-evidence/loop_runner.py --env /path/to/webapp/.env --round 3 --challenge --interpretations scripts/prototype-crate-evidence/private/loop-confirmation-interpretations.json --split confirmation --workers 1 --rerank-model google/gemini-3-flash-preview --packing-version 3 --ids-only --minimal-reasoning --planned-only --limit 12 --output scripts/prototype-crate-evidence/private/reproduction-confirmation.json
 ```
 
-The additional fresh eight-request set uses `loop-final-validation.json` and `private/loop-final-validation-interpretations.json`; substitute that interpretation path and `--limit 8`, keeping a distinct output path.
+The supplemental final eight-request set used one worker as well (`--workers 1`) and uses `loop-final-validation.json` and `private/loop-final-validation-interpretations.json`; substitute that interpretation path and `--limit 8`, keeping a distinct output path.
 
 For a model-only comparison, `--replay-source` accepts existing round-3 report paths. It reuses saved plans and candidate pools, applies the shared validated media/format gate, and records any exclusions. Supply the same explicit model/packing/IDs/minimal-reasoning flags. A changed gate can change a historical pool: inspect recorded provenance rather than assuming the candidate set is identical. `--resume` skips successful cases; `--no-cache` deliberately incurs fresh model calls. Neither is an automatic retry policy.
 

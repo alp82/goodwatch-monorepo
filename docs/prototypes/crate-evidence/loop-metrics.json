@@ -2,13 +2,16 @@
   "schema_version": 1,
   "selection": {
     "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
-    "decision": "Practical quality winner selected by main-agent review; not a universal latency or price winner.",
+    "decision": "No accepted overall winner. Earlier selection during the expanded experiment is withdrawn. The higher-cost experimental candidate costs 16.39 times as much on the matched original 13 requests; that tradeoff has not been justified or accepted.",
     "planner": "google/gemini-3.1-flash-lite",
     "reranker": "google/gemini-3-flash-preview",
     "packing_version": 3,
     "output_mode": "IDs-only v3; no generated reasons or scores",
     "reasoning_effort": "minimal",
-    "max_completion_tokens": 4096
+    "max_completion_tokens": 4096,
+    "status": "no_accepted_winner",
+    "primary_comparison": "matched-comparison-metrics.json",
+    "historical_final_configuration_only": true
   },
   "scope": {
     "sample_titles": 50000,
