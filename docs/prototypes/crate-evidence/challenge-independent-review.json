@@ -1,0 +1,64 @@
+{
+  "reviewer": "Independent assistant; not user judgments",
+  "source": "/home/alp/dev/projects/goodwatch/goodwatch-crate-evidence-column/goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-challenge-round3.json",
+  "method": "All result lists compared; selected actual synopsis, essence and fingerprint evidence inspected. Model reasons treated as claims, not evidence. This is qualitative and not a title-by-title ground-truth benchmark. No final confirmation set inspected.",
+  "cases": [
+    {
+      "id": "54f28fa29638",
+      "request": "A gentle science-fiction film about making contact, without a war or a horror atmosphere.",
+      "preference": "planned_union_fast31",
+      "assessment": "Planned Jules explicitly describes a gentle alien bond and Earth to Echo a heartwarming alien encounter, adding supported options beyond shared Close Encounters. Baseline John Was Trying to Contact Aliens is explicitly a biographical documentary: alien subject matter does not make it science fiction.",
+      "next_experiment": "Require the requested genre as well as the shared alien-contact topic; do not conflate a real documentary with fiction."
+    },
+    {
+      "id": "c05b3f733463",
+      "request": "A tense legal thriller with clever courtroom arguments, not a serial-killer investigation.",
+      "preference": "tie; baseline stronger literal lead",
+      "assessment": "Planned adds Anatomy of a Murder with explicit trial verbal sparring, but #1 12 Angry Men explicitly begins after prosecution and defense rest and unfolds in the jury room. It fits legal argument and tension broadly, but not literally courtroom advocacy. Baseline Runaway Jury and Fracture have direct legal-thriller evidence. Planned broader classics are not automatically a better match.",
+      "next_experiment": "Keep related legal settings distinguishable: jury deliberation is an adjacent fit when courtroom arguments are requested."
+    },
+    {
+      "id": "717260825ed1",
+      "request": "A comedy about ordinary coworkers, not high school or teenagers.",
+      "preference": "planned_union_fast31, modest coverage gain",
+      "assessment": "The Office explicitly concerns mundane adult office life; Office Office and Aggretsuko broaden that workplace set. Baseline Jake and Amir explicitly features coworkers and is already a good leader. Uramichi is an adult workplace anime despite a children's-show setting; neither animation nor that setting violates the request.",
+      "next_experiment": "Judge the characters and central setting, not superficial children-related words."
+    },
+    {
+      "id": "0206e75fb053",
+      "request": "A fast-paced heist where the plan goes wrong, but keep the violence mild.",
+      "preference": "no clear winner; planned has one better-supported conjunction",
+      "assessment": "Planned Foolproof explicitly states that the game goes wrong when a heist plan is stolen and the friends are coerced; violence score 3 supports a provisional mildness preference. Most other reasons overclaim plan failure: Art of the Steal prose establishes theft and brother conflict, To Rob a Thief an amateur team, and Ocean's Eight a heist, but none of these supplied summaries establishes that the plan goes wrong. Baseline Now You See Me likewise offers twists, not proof of a failed plan.",
+      "next_experiment": "Validate each requested relationship, not merely heist plus fast-paced plus mildness. Keep unsupported plan-failure claims unknown."
+    },
+    {
+      "id": "134bc9d838cf",
+      "request": "A documentary series about the natural world; no true crime.",
+      "preference": "tie; controls already strong",
+      "assessment": "Both return explicitly described natural-world documentary series led by Planet Earth/Planet Earth II/Our Planet. Corrected and English controls already satisfy this request. Extra retrieval changes variety without demonstrating a quality improvement.",
+      "next_experiment": "Use this as a no-regression and efficiency case rather than a claimed planning win."
+    },
+    {
+      "id": "02d75f344631",
+      "request": "Un thriller de ciencia ficción sobre recuerdos falsos, sin terror.",
+      "preference": "planned coverage gain, but no acceptable clean winner",
+      "assessment": "Baseline and controls are empty for the Spanish request. Planned supplies relevant adjacent sci-fi memory titles, but its leader Eternal Sunshine is described by the model itself as a drama; source prose concerns erased memories and romance, not the requested thriller about false memories. OtherLife supports a sci-fi thriller about virtual mental imprisonment, but that is not automatically false autobiographical memories. Dr. Brain accesses memories of the dead; its synopsis/essence does not establish false memories and its unsettling atmosphere leaves the no-horror preference uncertain.",
+      "next_experiment": "Require the full Spanish conjunction and distinguish erasure, recording, access, virtual experience and false memories; do not upgrade adjacent semantics to exact fit."
+    },
+    {
+      "id": "b02a6546100d",
+      "request": "A story about a university professor, not space or the universe.",
+      "preference": "baseline_union_fast31 for precision; planned has useful additions",
+      "assessment": "Both lead with Puan and have direct professor evidence. Planned Lucky Hank is explicitly a college department chairman, a good added candidate. But planned Coach Carter explicitly concerns a high-school basketball coach, failing university professor. Baseline The Substitute must not be rejected just for its school setting: synopsis explicitly says its protagonist is a prestigious university professor taking a substitute role.",
+      "next_experiment": "Check the subject's occupation rather than general education themes or setting alone; do not equate teacher/coach with university professor."
+    },
+    {
+      "id": "ee4de4e1e371",
+      "request": "Something to watch with my parents: we all enjoy dark adult comedy, so it does not need to be family-friendly.",
+      "preference": "planned_union_fast31",
+      "assessment": "Planned provides explicit dark adult satire: Heathers essence says cynical subversive dark comedy and Strangelove says black comedy about nuclear brinkmanship. Baseline shares a valid Addams Family Values leader but remains a much narrower family/adventure-leaning pool. Family-friendly content is allowed, not required, so baseline entries are not categorically wrong; the improvement is honoring the explicit adult-comedy preference with greater depth.",
+      "next_experiment": "Preserve explicit stated tastes over co-viewing assumptions; do not turn not needing family-friendly into a ban on family titles."
+    }
+  ],
+  "overall": "No clean overall winner: broader planned retrieval helps several conjunction/context cases, but simpler baseline is competitive on already-covered requests and planned ranking/reasons still violate or overclaim explicit facets."
+}

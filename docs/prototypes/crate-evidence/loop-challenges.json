@@ -1,0 +1,10 @@
+[
+  {"id":"contact","request":"A gentle science-fiction film about making contact, without a war or a horror atmosphere."},
+  {"id":"courtroom","request":"A tense legal thriller with clever courtroom arguments, not a serial-killer investigation."},
+  {"id":"coworkers","request":"A comedy about ordinary coworkers, not high school or teenagers."},
+  {"id":"heist","request":"A fast-paced heist where the plan goes wrong, but keep the violence mild."},
+  {"id":"nature","request":"A documentary series about the natural world; no true crime."},
+  {"id":"memory_es","request":"Un thriller de ciencia ficción sobre recuerdos falsos, sin terror."},
+  {"id":"professor","request":"A story about a university professor, not space or the universe."},
+  {"id":"parents_adult","request":"Something to watch with my parents: we all enjoy dark adult comedy, so it does not need to be family-friendly."}
+]

@@ -1,8 +1,14 @@
 # PROTOTYPE: Crate search evidence comparison
 
-Prepared for [Scratch-table prototype of the evidence column in Crate](https://github.com/alp82/goodwatch-monorepo/issues/104). **Production scratch writes approved by the user on 2026-09-20. Experiment executed; human quality review is pending.**
+Prepared for [Scratch-table prototype of the evidence column in Crate](https://github.com/alp82/goodwatch-monorepo/issues/104). **Production scratch writes and subsequent autonomous assistant-led iteration were approved by the user on 2026-09-20. The experiment now has a selected quality winner.**
 
 Question: does combining tags, keywords and trope names into strong evidence, alongside description text, improve retrieval over D4+ while reducing query work?
+
+## Latest result
+
+Open the [iterative comparison](loop-review.html) for the 50,000-title, 41-request experiment, including full-size poster overlays, discarded variants, independent assessments, failures, and timing/cost evidence. The selected pipeline combines semantic candidate retrieval with compact Flash reranking that returns IDs only. Read the [selection and limitations](loop-findings.md), [measurements](loop-metrics.json), and [reproduction instructions](../../../goodwatch-webapp/scripts/prototype-crate-evidence/LOOP.md). The cheaper Lite reranker remains a close runner-up; the winner is a practical quality choice, not perfection or production approval.
+
+The sections below preserve the earlier index-only experiment and its original review protocol. The user's later authorization and [autonomous loop protocol](loop-protocol.md) supersede waiting for human judgments between iterations. [The earlier six-way review](review.html) remains available for comparison.
 
 ## Initial approved production writes (5,000-title run)
 

@@ -1,0 +1,99 @@
+{
+  "reviewer": "Independent assistant; not user judgments",
+  "source": "/home/alp/dev/projects/goodwatch/goodwatch-crate-evidence-column/goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-round3-final.json",
+  "method": "All result lists compared; selected actual synopsis, essence and fingerprint evidence inspected. Model reasons treated as claims, not evidence. This is qualitative and not a title-by-title ground-truth benchmark. No final confirmation set inspected.",
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "preference": "tie; baseline sufficient",
+      "assessment": "Both rerankers surface chase-centered leaders already available in the controls. Planned adds The Seven-Ups and Gone in Sixty Seconds, but the overlapping strong top results do not establish enough extra quality to justify planning latency.",
+      "next_experiment": "Do not count new titles as wins without request-specific evidence."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "preference": "baseline_union_fast31, provisional",
+      "assessment": "Baseline keeps plot-central Fiancés on the Bridge at #2. Planned places Men in Black, The Terminator and La Dolce Vita ahead of it; recognizable sunglasses or visual style do not establish greater centrality than a plot driven by the object. They Live leads both.",
+      "next_experiment": "Separate prominent prop evidence from incidental iconography; do not reward familiar titles merely for recognition."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "preference": "tie at the top; planned has broader candidates",
+      "assessment": "Both put Fight Club and The Usual Suspects first, and their essence explicitly supports unreliable narration. Planned expands options, but that is a coverage benefit rather than proof each replacement is better. Rejected pilot is absent from both reranked lists but remains in historical controls.",
+      "next_experiment": "Preserve the shared artifact hygiene; assess the middle ranks independently of popularity."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "preference": "planned_union_fast31, modest tail improvement",
+      "assessment": "Both have identical first five with explicitly supported wealth, dark comedy and dysfunction. Planned adds bourgeois satire with specific subject evidence instead of broader comedy such as Summer Heights High. The top-five tie limits the magnitude of the gain.",
+      "next_experiment": "Judge conjunction fidelity at lower ranks without inventing a popularity penalty."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "preference": "planned_union_fast31 for coverage",
+      "assessment": "Baseline-only and text controls are empty. Planned retrieves suspense/adventure plus competitive nonfiction. The request did not require fiction, so game shows are not automatically errors. Ending comfort still cannot be guaranteed from a low bleakness score.",
+      "next_experiment": "Keep inferred format preferences separate from explicit constraints."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "preference": "tie; baseline sufficient",
+      "assessment": "Both show coherent grounded crime series headed by Gomorrah, Spiral/Pitbull and Happy Valley. Planned broader retrieval offers alternatives, but this list does not establish a clear quality gain over the already strong corrected control and baseline reranker.",
+      "next_experiment": "Spend extra planning only if candidate coverage actually needs it."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "preference": "no relevance winner; planned adds uncalibrated coverage",
+      "assessment": "Planned replaces preschool-heavy earlier results with a generic popular list; baseline remains empty. The phrase with my parents gives no genres, tastes or content limits, so Forrest Gump or action epics cannot be declared independently more suitable. This is coverage, not validated personalization.",
+      "next_experiment": "Represent underspecification explicitly rather than claiming popularity establishes co-viewing suitability."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "preference": "planned_union_fast31 for ranking; explanations unverified",
+      "assessment": "Planned Reset has corpus hopefulness 7/bleakness 4, while baseline retains Duranga at bleakness 8/hopefulness 2. That supports a relative ranking improvement. Reset synopsis poses whether the loop can be closed and essence describes psychological toll; neither confirms the model claim of no miserable conclusion. Conan essence says satisfying standalone entry, not satisfying non-miserable resolution.",
+      "next_experiment": "Treat ending outcomes as unknown unless directly supported; mood scores are preferences, not ending facts."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "preference": "baseline_union_fast31, narrow",
+      "assessment": "Both eliminate Peep Show/Yellowbeard false subject matches and return a coherent rich-people conjunction. Baseline ranks Succession and White Lotus first, whose essence explicitly describes wealth and dysfunction; planned puts Gemstones and Bodies Bodies Bodies first and adds Silicon Valley. No clear added retrieval benefit; baseline is a strong simpler alternative.",
+      "next_experiment": "Do not infer a planning win from reordering an already relevant common pool."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "preference": "planned_union_fast31",
+      "assessment": "Planned Happy Valley and Mare of Easttown have explicit gritty crime, contemporary realism and grounded community/professional detail in essence. Baseline Winter and Poacher are also plausible, but planned provides a broader directly supported crime-drama set. The First 48 is not automatically excluded because the user did not require fiction.",
+      "next_experiment": "Preserve grounded subject coverage and avoid turning real into a true-crime-only restriction."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "preference": "planned_union_fast31",
+      "assessment": "He Loves Me… He Loves Me Not synopsis explicitly changes from one person's perspective to the other and reveals the truth, directly fitting the requested reversal. Rashomon explicitly gives conflicting accounts. Baseline Psycho reason claims a mid-film shift, but the supplied synopsis/essence establishes twists, not a deceptive narrator. Planned improves both centrality and leader placement.",
+      "next_experiment": "Do not equate any twist or narrative shift with a narrator feeding the viewer falsehoods."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "preference": "tie; baseline sufficient",
+      "assessment": "Both have identical first four: Baby Driver, Drive, The Driver and Wheelman. The controls already expose getaway-driver candidates, and reranking improves ordering. Additional planning does not show an independent material gain here.",
+      "next_experiment": "Compare cost and latency for an equivalent relevant prefix."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "preference": "tie; no clear planning gain",
+      "assessment": "Both lead with Moone Boy and Here We Go; the former has explicit warm/funny escapism evidence. Planned removes some generic family titles but retains Elf; the available prose does not verify the subjective not-cheesy requirement for either list. Mood and low-effort suitability should remain provisional.",
+      "next_experiment": "Avoid pretending that missing cheesy vocabulary demonstrates the absence of excessive sentimentality."
+    }
+  ],
+  "overall": "No clean overall winner: broader planned retrieval helps several conjunction/context cases, but simpler baseline is competitive on already-covered requests and planned ranking/reasons still violate or overclaim explicit facets."
+}

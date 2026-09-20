@@ -1,0 +1,53 @@
+{
+  "basis": "Independent assistant reading of provided candidate source evidence; not user ratings. Challenge is now development evidence if used for another iteration.",
+  "cases": [
+    {
+      "id": "54f28fa29638",
+      "preference": "planned_union_fast31",
+      "assessment": "The broader pool supports genuinely gentle contact stories: Jules, Contact and Starman have direct contact and warmth/hope evidence. Existing-pool reranking improves noisy controls but includes a short documentary rather than the implied narrative film. Gentleness remains a spectrum; Close Encounters has some tense scenes.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    },
+    {
+      "id": "c05b3f733463",
+      "preference": "planned_union_fast31",
+      "assessment": "Stronger concentration on legal argument: Anatomy of a Murder, A Few Good Men and Witness for the Prosecution have direct courtroom/verbal-sparring evidence. 12 Angry Men is jury deliberation rather than literal courtroom argument but closely serves the requested experience. Baseline reranking also provides valid legal thrillers.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    },
+    {
+      "id": "717260825ed1",
+      "preference": "planned_union_fast31",
+      "assessment": "The Office, Uramichi Oniisan and Aggretsuko have direct ordinary workplace evidence. Animation is not excluded; adult performers on children\u2019s TV are not teenage protagonists. Baseline has several acceptable coworker comedies too.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    },
+    {
+      "id": "0206e75fb053",
+      "preference": "no clear winner",
+      "assessment": "Both reranked lists provide light heists with low catalog violence scores. Planned adds Foolproof with explicit stolen-plan/coercion complications; other entries do not clearly establish that the plan goes wrong. Scores suggest mildness but are not authoritative content ratings.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    },
+    {
+      "id": "134bc9d838cf",
+      "preference": "tie",
+      "assessment": "Both finalists give strongly supported nature documentary series; the old controls are already excellent here. Extra planning has no convincing relevance benefit on this request.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    },
+    {
+      "id": "02d75f344631",
+      "preference": "planned coverage, failed leading match",
+      "assessment": "The planner recovers English-language concepts where controls have no text candidates. However Eternal Sunshine is explicitly a romance/psychological drama in supplied evidence, not the requested thriller, and should not lead. OtherLife and The Final Cut are better genre fits. Total Recall\u2019s grotesque violence and Dr. Brain\u2019s unsettling tone require caution under no horror.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    },
+    {
+      "id": "b02a6546100d",
+      "preference": "planned leads stronger, tail failure",
+      "assessment": "Puan, Lucky Hank and Aligarh directly concern university academics. Coach Carter in the tenth slot is a high-school basketball coach story and violates the requested subject. The baseline has stronger tail precision than first assumed: The Substitute explicitly concerns a university professor, so its school setting is not a disqualifier. Planned leads are stronger, but this is not overall dominance.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    },
+    {
+      "id": "ee4de4e1e371",
+      "preference": "planned_union_fast31",
+      "assessment": "The planned list correctly serves adult dark comedy with Dr. Strangelove, Wild Tales, Patriot and Review; it avoids the baseline\u2019s strong family-viewing bias. Addams Family Values and Heathers remain valid mature-toned comedies; adult does not necessarily require all characters to be adults.",
+      "next_experiment": "Test a stronger evidence reranker on identical pools; preserve genre conjunction and avoid unsupported negative claims."
+    }
+  ]
+}

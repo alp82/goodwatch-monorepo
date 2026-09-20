@@ -1,0 +1,1000 @@
+{
+  "reviewer": "Independent assistant; not user ratings",
+  "source": "/home/alp/dev/projects/goodwatch/goodwatch-crate-evidence-column/goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-confirmation-final.json",
+  "method": "Inspected all12 actual paired lists and selected underlying synopsis/essence/fingerprint evidence. Classification applies to returned top5, uses whole-request support and never treats model reasons as evidence. direct_support means the supplied corpus reasonably supports the requested intent, not verified universal absence of every excluded scene; weak_or_unverified means a central relation/facet is adjacent or lacks direct support; hard_subject_failure means source explicitly identifies a different required subject. No numerical relevance scale or statistical significance is claimed. Failed Flash restaurant has zero observed ranks and remains a separate failed request.",
+  "cases": [
+    {
+      "id": "b73f9ce2e43d",
+      "request": "A survival film about climbing a mountain, with no monsters or supernatural explanation.",
+      "split": "confirmation",
+      "preference": "tie",
+      "assessment": "Both strongly recover mountain climbing survival compared with corrected generic survival results. English control already has strong climbing coverage. Meru/Alpinist source emphasizes perilous ambition and endurance but less directly a survival ordeal; still plausible adjacent choices, not monster violations.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:11194",
+              "title": "Touching the Void",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:253412",
+              "title": "Everest",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "movie:24734",
+              "title": "K2",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:994441",
+              "title": "Summit Fever",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:318279",
+              "title": "Meru",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:11194",
+              "title": "Touching the Void",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:253412",
+              "title": "Everest",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "movie:318279",
+              "title": "Meru",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "movie:24734",
+              "title": "K2",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:682587",
+              "title": "The Alpinist",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "7e429b8e7953",
+      "request": "A funny series about people working in a restaurant.",
+      "split": "confirmation",
+      "preference": "lite on delivered result",
+      "assessment": "Flash returned no titles after an output-length failure. This is an availability failure, not five wrong recommendations or a successful empty answer. Lite retrieves explicitly funny restaurant workplaces including Kitchen Confidential, 2 Broke Girls and It's a Living. This shows useful candidate-pool coverage but does not prove Flash would have ranked it successfully.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "failed",
+          "error": "PipelineError: Incomplete output: length",
+          "top5": []
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:15123",
+              "title": "Kitchen Confidential",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:39340",
+              "title": "2 Broke Girls",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "show:10122",
+              "title": "It's a Living",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "show:32726",
+              "title": "Bob's Burgers",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "show:45997",
+              "title": "The Devil Is a Part-Timer!",
+              "classification": "direct_support"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "9e768eb13bb9",
+      "request": "A warm film about adult sisters reconnecting, but not a romantic comedy.",
+      "split": "confirmation",
+      "preference": "tie; subjective warmth tradeoff",
+      "assessment": "Both materially improve over unrelated control tails. Marvin's Room and Thank You, I'm Sorry directly describe estranged adult sisters reconnecting. Our Little Sister centers three adult sisters taking in a teenage half-sister, supporting sisterhood more than adult-sister reconnection. Illness and grief do not automatically invalidate warmth, but His Three Daughters warmth is less certain. Romantic subplots alone do not prove forbidden romantic-comedy genre.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:9819",
+              "title": "Marvin's Room",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:315846",
+              "title": "Our Little Sister",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:11931",
+              "title": "In Her Shoes",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:1211199",
+              "title": "Thank You, I'm Sorry",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:205015",
+              "title": "Four Sisters and a Wedding",
+              "classification": "direct_support"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:315846",
+              "title": "Our Little Sister",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 2,
+              "key": "movie:11931",
+              "title": "In Her Shoes",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "movie:1211199",
+              "title": "Thank You, I'm Sorry",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:9819",
+              "title": "Marvin's Room",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:1154762",
+              "title": "His Three Daughters",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "5616da92c7eb",
+      "request": "A thoughtful space exploration film with a sense of wonder, not constant battles.",
+      "split": "confirmation",
+      "preference": "lite, modest whole-intent preference",
+      "assessment": "Both recover thoughtful space exploration. Flash Last and First Men is philosophical future-humanity evolution rather than clearly a space-exploration story; lite instead promotes actual rover/Voyager exploration. Lite A Beautiful Planet is primarily Earth observation from orbit, also adjacent. Documentary format is allowed by this request. No need to penalize Flash merely for melancholy: user excluded battles, not sadness.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:157336",
+              "title": "Interstellar",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:566038",
+              "title": "Last and First Men",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:26873",
+              "title": "To the Stars by Hard Ways",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:830",
+              "title": "Forbidden Planet",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:436305",
+              "title": "The Farthest",
+              "classification": "direct_support"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:157336",
+              "title": "Interstellar",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:365997",
+              "title": "A Beautiful Planet",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:972545",
+              "title": "Good Night Oppy",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:436305",
+              "title": "The Farthest",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:18085",
+              "title": "Roving Mars",
+              "classification": "direct_support"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "1cf0fb38d823",
+      "request": "A clever con-artist story where I have to question what I am being told.",
+      "split": "confirmation",
+      "preference": "lite, narrow; spectator-deception still partly unverified",
+      "assessment": "Sharper directly supports a nonlinear narrative that keeps the viewer guessing. Both otherwise often establish con artists, schemes and lies without proving the audience must doubt narration. Lite Rafuchakkar source explicitly says an intricate mystery keeps viewers guessing, while Flash Los simuladores describes elaborate plans unfolding with precision. Neither all-scams list automatically satisfies spectator deception.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:717980",
+              "title": "Sharper",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:168672",
+              "title": "American Hustle",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "show:196412",
+              "title": "The Thief, His Wife and the Canoe",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "show:332",
+              "title": "Los simuladores",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 5,
+              "key": "show:3764",
+              "title": "Hustle",
+              "classification": "direct_support"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:717980",
+              "title": "Sharper",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:168672",
+              "title": "American Hustle",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:18079",
+              "title": "Nine Queens",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "show:196412",
+              "title": "The Thief, His Wife and the Canoe",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 5,
+              "key": "show:227934",
+              "title": "Rafuchakkar",
+              "classification": "direct_support"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "cc4145d28ca5",
+      "request": "An easygoing comedy for a tired evening, without humiliation or cringe humor.",
+      "split": "confirmation",
+      "preference": "tie; negative constraint provisional",
+      "assessment": "Both favor gentle/easygoing comedy with low cringe signals. Lite Lucy–Desi entry has wholesome-sitcom prose and cringe score3, which is not strong evidence of zero humiliation; its model reason overpromises absence. Flash corpus scores1–2 support a relative preference, not a guarantee no scene includes cringe. Source descriptions themselves may be noisy, so these are corpus-supported judgments.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:317120",
+              "title": "Cloudy with a Chance of Love",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:3523",
+              "title": "The Bill Cosby Show",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "movie:1010821",
+              "title": "Groot Takes a Bath",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:10808",
+              "title": "Dr. Dolittle 2",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:8745",
+              "title": "It Happened at the World's Fair",
+              "classification": "direct_support"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:317120",
+              "title": "Cloudy with a Chance of Love",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:1832",
+              "title": "The Lucy–Desi Comedy Hour",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "show:3523",
+              "title": "The Bill Cosby Show",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:1010821",
+              "title": "Groot Takes a Bath",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:10808",
+              "title": "Dr. Dolittle 2",
+              "classification": "direct_support"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "800bee20ddb3",
+      "request": "A thriller built around a driver escaping pursuit in a car.",
+      "split": "confirmation",
+      "preference": "flash",
+      "assessment": "Flash Collide explicitly centers a driver on the run across autobahns. Transporter3 explicitly describes a driver evading interception. Lite leads with Bullitt and French Connection, whose supplied source centers pursuing police detectives and celebrated chase sequences, not a driver escaping pursuit. Both tails contain generic chase matches; Flash is a substantial top-prefix improvement over both controls and lite here.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:195590",
+              "title": "Collide",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:4108",
+              "title": "The Transporter",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:9335",
+              "title": "Transporter 2",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "movie:13387",
+              "title": "Transporter 3",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:287948",
+              "title": "The Transporter Refueled",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:916",
+              "title": "Bullitt",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 2,
+              "key": "movie:1051",
+              "title": "The French Connection",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:4108",
+              "title": "The Transporter",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:195590",
+              "title": "Collide",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:9846",
+              "title": "To Live and Die in L.A.",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "3bb5a3cf6f10",
+      "request": "A viciously funny story about a wealthy family fighting over power.",
+      "split": "confirmation",
+      "preference": "tie; imperfect full conjunction",
+      "assessment": "Both have Gemstones directly linking wealthy family, power and dark comedy, and The Estate explicitly pits greedy relatives against one another for inheritance. Arrested Development/House of Flowers support wealthy dysfunctional families, but power-contest centrality is less directly stated. Flash Murder Party source emphasizes lighthearted mystery rather than vicious family power struggle; lite Kolpaçino centers a son under financial expectations. No clear whole-list winner.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:82782",
+              "title": "The Righteous Gemstones",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:4589",
+              "title": "Arrested Development",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:862734",
+              "title": "Murder Party",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "show:80169",
+              "title": "The House of Flowers",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 5,
+              "key": "movie:910858",
+              "title": "The Estate",
+              "classification": "direct_support"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:82782",
+              "title": "The Righteous Gemstones",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:4589",
+              "title": "Arrested Development",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 3,
+              "key": "movie:910858",
+              "title": "The Estate",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "show:80169",
+              "title": "The House of Flowers",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 5,
+              "key": "movie:75640",
+              "title": "Kolpaçino: Bomba",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "1d05af06915e",
+      "request": "A documentary about ancient civilizations, not fictional historical drama.",
+      "split": "confirmation",
+      "preference": "tie; both have a subject mismatch",
+      "assessment": "Both remove fictional historical drama and lead with directly supported Egypt/India documentary evidence. Unknown: Cave of Bones explicitly concerns prehuman hominid evolution and possible burial rituals, not ancient civilizations: a subject failure in both top5. Flash Cave of Forgotten Dreams concerns Paleolithic cave art, an adjacent cultural-history match rather than a clear civilization documentary. Lite Time Team is general archaeology. Flash tail Ancient Aliens is speculative documentary content; format alone does not make it sound historical evidence.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:753583",
+              "title": "Secrets of the Saqqara Tomb",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:1128717",
+              "title": "Unknown: The Lost Pyramid",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "show:19406",
+              "title": "The Story of India",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:1128720",
+              "title": "Unknown: Cave of Bones",
+              "classification": "hard_subject_failure"
+            },
+            {
+              "rank": 5,
+              "key": "movie:59490",
+              "title": "Cave of Forgotten Dreams",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:753583",
+              "title": "Secrets of the Saqqara Tomb",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "movie:1128717",
+              "title": "Unknown: The Lost Pyramid",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "show:19406",
+              "title": "The Story of India",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "show:2863",
+              "title": "Time Team",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 5,
+              "key": "movie:1128720",
+              "title": "Unknown: Cave of Bones",
+              "classification": "hard_subject_failure"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "70c26cda5720",
+      "request": "A realistic espionage series about betrayal, without gadgets or superheroes.",
+      "split": "confirmation",
+      "preference": "tie; lite slightly more explicit betrayal evidence",
+      "assessment": "Both lead with grounded espionage and avoid obvious superhero action. Lite Agent Hamilton explicitly has a double-agent/loyalty/betrayal narrative. Flash The Agency source supports realistic intelligence ethics but not central betrayal specifically. Old controls already have strong Bureau/Sandbaggers coverage. Absolute absence of gadgets is unverified; ordinary technology is not automatically the excluded gadget fantasy.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:62476",
+              "title": "The Bureau",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:11975",
+              "title": "The Sandbaggers",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "show:1407",
+              "title": "Homeland",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "show:95480",
+              "title": "Slow Horses",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 5,
+              "key": "show:1537",
+              "title": "The Agency",
+              "classification": "weak_or_unverified"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:11975",
+              "title": "The Sandbaggers",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:62476",
+              "title": "The Bureau",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "show:1407",
+              "title": "Homeland",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "show:95480",
+              "title": "Slow Horses",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 5,
+              "key": "show:97079",
+              "title": "Agent Hamilton",
+              "classification": "direct_support"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "8321aaeefbdc",
+      "request": "My parents and I love tense political dramas. Find us something to watch together.",
+      "split": "confirmation",
+      "preference": "flash, modest",
+      "assessment": "Flash first five explicitly describe tense political pressure/power struggles, respecting shared adult tastes rather than default family suitability. Lite is mostly strong too: The Swell explicitly concerns prime-minister evacuation decisions and must not be dismissed as merely a storm show. God's Not Dead source describes didactic faith affirmation and political debate, but gives weaker suspense evidence; ideology itself is not a relevance failure.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:13868",
+              "title": "To Play the King",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:114796",
+              "title": "Tandav",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "movie:95448",
+              "title": "The Minister",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:899524",
+              "title": "Golda",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "show:139280",
+              "title": "Queenmaker",
+              "classification": "direct_support"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:13868",
+              "title": "To Play the King",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:68590",
+              "title": "The Swell",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "movie:1024592",
+              "title": "God's Not Dead: In God We Trust",
+              "classification": "weak_or_unverified"
+            },
+            {
+              "rank": 4,
+              "key": "show:203857",
+              "title": "The Diplomat",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:95448",
+              "title": "The Minister",
+              "classification": "direct_support"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    },
+    {
+      "id": "5f9a8ef52221",
+      "request": "A suspenseful mystery that feels hopeful rather than cruel or despairing.",
+      "split": "confirmation",
+      "preference": "tie; lite gentler, Flash more suspenseful",
+      "assessment": "Both broaden the franchise-heavy English control with corpus-supported hope and mystery. Frequency explicitly has cathartic resolution, unlike earlier unsupported ending claims. Reset has humanistic premise and hopefulness7 but no confirmed ending. Lite emphasizes Father Matteo/Secret Royal Inspector gentle mystery; Flash emphasizes higher tension before gentler entries. The request permits both. No serial-killer exclusion was given, so Frequency/My Perfect Stranger are not automatic failures.",
+      "arms": {
+        "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "movie:10559",
+              "title": "Frequency",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:155441",
+              "title": "Reset",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "show:204589",
+              "title": "My Perfect Stranger",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "movie:546554",
+              "title": "Knives Out",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "show:130020",
+              "title": "Secret Royal Inspector & Joy",
+              "classification": "direct_support"
+            }
+          ]
+        },
+        "planned_union_google_gemini_3_1_flash_lite_packing3": {
+          "run_status": "success",
+          "error": null,
+          "top5": [
+            {
+              "rank": 1,
+              "key": "show:21220",
+              "title": "Father Matteo",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 2,
+              "key": "show:130020",
+              "title": "Secret Royal Inspector & Joy",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 3,
+              "key": "movie:10559",
+              "title": "Frequency",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 4,
+              "key": "show:204589",
+              "title": "My Perfect Stranger",
+              "classification": "direct_support"
+            },
+            {
+              "rank": 5,
+              "key": "movie:546554",
+              "title": "Knives Out",
+              "classification": "direct_support"
+            }
+          ]
+        }
+      },
+      "next_experiment": "No quality tuning to this confirmation set. Resolve the operational failure transparently and assess runtime recovery separately from frozen quality evidence."
+    }
+  ],
+  "totals": {
+    "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+      "requests": 12,
+      "successful_requests": 11,
+      "failed_requests": 1,
+      "observed_top5_classifications": {
+        "direct_support": 38,
+        "weak_or_unverified": 16,
+        "hard_subject_failure": 1
+      },
+      "classification_denominator": 55,
+      "successful_run_median_reconstructed_end_to_end_ms": 7402.361173000827,
+      "successful_run_mean_reported_cost_usd": 0.005628484545454546
+    },
+    "planned_union_google_gemini_3_1_flash_lite_packing3": {
+      "requests": 12,
+      "successful_requests": 12,
+      "failed_requests": 0,
+      "observed_top5_classifications": {
+        "direct_support": 40,
+        "weak_or_unverified": 19,
+        "hard_subject_failure": 1
+      },
+      "classification_denominator": 60,
+      "successful_run_median_reconstructed_end_to_end_ms": 5960.627502996358,
+      "successful_run_mean_reported_cost_usd": 0.003858413
+    }
+  },
+  "overall": {
+    "winner_id": null,
+    "architecture_verdict": "Semantic planning plus pooled candidates and reranking shows meaningful generalization over existing text-only controls: mountain survival, restaurant coverage demonstrated by lite, driver-role semantics, documentary format, political co-viewing and broader hopeful mysteries. This supports the architecture as a useful quality direction.",
+    "model_verdict": "Fresh confirmation does not establish decisive global relevance dominance of Flash IDs over cheaper lite. Flash has a concrete escaping-driver advantage and somewhat better political-drama prefix; lite is competitive elsewhere and successfully serves the restaurant request. Many differences are plausible preference tradeoffs. Flash IDs remains a defensible finalist on combined earlier and fresh evidence, but its 11/12 first-run delivery and shared conjunction errors prevent declaring an unconditional deployment winner from these results.",
+    "limitations": [
+      "Frozen Flash restaurant output-length failure is preserved, even if operational recovery is later successful.",
+      "Returned-rank classification denominators differ because one Flash request failed; do not compare raw direct-support counts as equal-denominator precision.",
+      "Some upstream timings/costs are reconstructed from frozen planning/control components; successful-run timing excludes the failed restaurant and must be labeled.",
+      "Positive outcomes do not validate generated explanations or all corpus metadata.",
+      "No quality changes were proposed or applied to fit these confirmation requests."
+    ]
+  }
+}

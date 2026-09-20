@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "selection": {
+    "variant_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+    "decision": "Practical quality winner selected by main-agent review; not a universal latency or price winner.",
+    "planner": "google/gemini-3.1-flash-lite",
+    "reranker": "google/gemini-3-flash-preview",
+    "packing_version": 3,
+    "output_mode": "IDs-only v3; no generated reasons or scores",
+    "reasoning_effort": "minimal",
+    "max_completion_tokens": 4096
+  },
+  "scope": {
+    "sample_titles": 50000,
+    "final_config_unique_requests": 41,
+    "composition": {
+      "frozen_pool_replay": 33,
+      "additional_fresh_validation": 8
+    },
+    "unchanged_input_stage": "D4+ Jev",
+    "no_production_generalization": true,
+    "note": "33 requests had already informed iteration; the last8 were fresh under the frozen configuration. Success means validated model output, not perfect relevance."
+  },
+  "final_config_reliability": {
+    "attempted_unique_requests": 41,
+    "successful": 41,
+    "failed": 0,
+    "automatic_retries": 0,
+    "historical_failures_preserved": true
+  },
+  "statistics_definition": {
+    "p95": "Empirical nearest-rank percentile: sorted_values[ceil(0.95*n)-1]. With n=8 or7, p95 equals the sample maximum.",
+    "means_and_medians": "Arithmetic mean and median are distinct fields; successful-case distributions exclude failures and always state n.",
+    "latency_units": "milliseconds",
+    "cost_units": "USD",
+    "latency_scope": "Cold critical-path projection uses captured Jev plus measured live planner/retrieval and original model inference latency. Actual harness wall excludes the captured Jev call and is not full product end-to-end latency.",
+    "cache_policy": "Original wall time and original cost are used for cold projections; actual new cache-hit spend is zero.",
+    "startup": "Sample loading and index building are separate from per-request measurements."
+  },
+  "final_fresh8": {
+    "winner": {
+      "attempted": 8,
+      "successful": 8,
+      "failed": 0,
+      "cold_rerank_latency_ms_successes": {
+        "n": 8,
+        "mean": 3946.172924000166,
+        "median": 2328.033433499513,
+        "p95_nearest_rank": 15198.930573002144,
+        "maximum": 15198.930573002144
+      },
+      "cold_projected_search_latency_ms_successes": {
+        "n": 8,
+        "mean": 7002.715559750301,
+        "median": 5239.638689495332,
+        "p95_nearest_rank": 19033.651595005067,
+        "maximum": 19033.651595005067
+      },
+      "projected_search_cost_usd_successes": {
+        "n": 8,
+        "mean": 0.00550252425,
+        "median": 0.005425172000000001,
+        "p95_nearest_rank": 0.00582472,
+        "maximum": 0.00582472
+      },
+      "actual_harness_wall_ms": {
+        "n": 8,
+        "mean": 6983.79344750083,
+        "median": 5339.203884999733,
+        "p95_nearest_rank": 18986.41071699967,
+        "maximum": 18986.41071699967
+      }
+    },
+    "cheap_alternative": {
+      "variant_id": "planned_union_google_gemini_3_1_flash_lite_packing3",
+      "attempted": 8,
+      "successful": 7,
+      "failed": 1,
+      "cold_rerank_latency_ms_successes": {
+        "n": 7,
+        "mean": 3073.8807600012346,
+        "median": 2054.1054570057895,
+        "p95_nearest_rank": 8019.910887000151,
+        "maximum": 8019.910887000151
+      },
+      "observed_reranker_attempt_wall_ms_including_failure": {
+        "n": 8,
+        "mean": 2898.3695495016946,
+        "median": 1978.022310002416,
+        "p95_nearest_rank": 8019.910887000151,
+        "maximum": 8019.910887000151
+      },
+      "cold_projected_search_latency_ms_successes": {
+        "n": 7,
+        "mean": 6065.002982430293,
+        "median": 5142.200211004005,
+        "p95_nearest_rank": 11514.460944994993,
+        "maximum": 11514.460944994993
+      },
+      "projected_search_cost_usd_successes": {
+        "n": 7,
+        "mean": 0.0036676034285714285,
+        "median": 0.003634244,
+        "p95_nearest_rank": 0.003839874,
+        "maximum": 0.003839874
+      },
+      "failure": {
+        "request_id": "1ec90db05dd8",
+        "error": "PipelineError: Incomplete output: error",
+        "observed_failed_model_wall_ms": 1669.7910760049126,
+        "reported_failed_model_cost_usd": 0,
+        "full_search_latency_ms": null,
+        "full_search_cost_usd": null,
+        "counted_as_zero_latency": false
+      }
+    },
+    "paired_successful_comparison": {
+      "n": 7,
+      "same_candidate_keys_and_order_all8": true,
+      "same_upstream_projection_all7_successful_pairs": true,
+      "same_upstream_projected_cost_all7_successful_pairs": true,
+      "winner_projected_latency_ms": {
+        "n": 7,
+        "mean": 7115.195209858365,
+        "median": 5029.532933992974,
+        "p95_nearest_rank": 19033.651595005067,
+        "maximum": 19033.651595005067
+      },
+      "lite_projected_latency_ms": {
+        "n": 7,
+        "mean": 6065.002982430293,
+        "median": 5142.200211004005,
+        "p95_nearest_rank": 11514.460944994993,
+        "maximum": 11514.460944994993
+      },
+      "winner_projected_cost_usd": {
+        "n": 7,
+        "mean": 0.0054564962857142855,
+        "median": 0.00539435,
+        "p95_nearest_rank": 0.0058245580000000005,
+        "maximum": 0.0058245580000000005
+      },
+      "lite_projected_cost_usd": {
+        "n": 7,
+        "mean": 0.0036676034285714285,
+        "median": 0.003634244,
+        "p95_nearest_rank": 0.003839874,
+        "maximum": 0.003839874
+      },
+      "note": "Reranking is the only changed stage; the cheaper alternative reuses winner-source upstream measurements. Independent8-vs7 medians above are not paired speed ratios."
+    },
+    "component_medians_ms": {
+      "captured_jev_ms": 402.0,
+      "eligibility_ms": 1328.8760484974773,
+      "corrected_retrieval_ms": 1097.65699500349,
+      "english_retrieval_ms": 748.640648998844,
+      "planner_ms": 1673.8765929985675,
+      "centrality_ms": 361.6746104999038,
+      "recall_ms": 97.72604099998716,
+      "rerank_ms": 2328.033433499513,
+      "projected_total_ms": 5239.638689495332,
+      "actual_case_wall_ms": 5339.203884999733,
+      "baseline_branch_ms": 3112.2938625015086,
+      "planned_branch_ms": 2247.6634080048825
+    },
+    "baseline_branch_dominates_cases": 6,
+    "dominance_denominator": 8,
+    "startup_ms": {
+      "sample_load_ms": 2854.4777819988667,
+      "sample_index_build_ms": 3018.706925002334
+    },
+    "projection_formula": "max(captured_jev + eligibility + max(corrected_retrieval, english_phrase_retrieval), planner + centrality + recall) + reranker",
+    "critical_path_note": "Baseline branch dominates6/8 upstream paths. Do not sum separate component medians to reconstruct a median total. One15.20s reranker observation drives the19.03s maximum."
+  },
+  "retrieval_optimization": {
+    "scope": "13 frozen development plans, centrality+recall only, no model/output cache, warmed sample indexes, alternate before/after order",
+    "workers": 1,
+    "frozen_plans": 13,
+    "exact_top60_candidate_ids_and_scores_parity": true,
+    "median_before_ms": 2018.224225997983,
+    "median_after_ms": 638.6476699990453,
+    "median_reduction_percent": 68.35596056314094,
+    "changes": [
+      "Share English-facet SQL results between centrality and broad recall within one request.",
+      "Cache normalized phrase forms without changing plural-match semantics."
+    ],
+    "mood_only_duplicate_scan_reuse": [
+      {
+        "request": "with my parents",
+        "exact_parity": true,
+        "before_ms": 3715.0807550060563,
+        "after_ms": 1945.106079998368,
+        "reused": true
+      },
+      {
+        "request": "tense but not bleak",
+        "exact_parity": true,
+        "before_ms": 5350.9160240064375,
+        "after_ms": 2290.030960000877,
+        "reused": true
+      }
+    ],
+    "notes": "No model calls or persistent result cache in the lexical comparison. Mood-only comparison verifies the two affected plans separately."
+  },
+  "experiment_spend": {
+    "ledger": "spend-summary.json",
+    "ledger_generated_at_utc": "2026-09-20T07:32:43.634221+00:00",
+    "unique_openrouter_attempts": 346,
+    "reported_openrouter_cost_usd": 1.23115935,
+    "reported_jev_cost_usd": 0.014168616,
+    "known_combined_cost_usd": 1.245327966,
+    "unknown_openrouter_cost_attempts": 0,
+    "scope": "All saved OpenRouter attempt artifacts, including failures, diagnostics, and superseded experiments, deduplicated by provider generation ID. Jev coverage is the four canonical loop capture sets: development13, challenge8, confirmation12, final_validation8. Other earlier experiments outside these canonical captures are excluded.",
+    "warning": "Actual saved usage includes failures, diagnostics and superseded calls. Never sum per-search projections as experiment spend."
+  },
+  "sources": {
+    "quality_reviews": [
+      "round6-independent-review.json",
+      "final-validation-independent-review.json"
+    ],
+    "public_results": "loop-results.json",
+    "private_measurements": [
+      "loop-round6-minimal.json",
+      "loop-final-validation-final.json",
+      "loop-final-validation-timing-breakdown.json",
+      "retrieval-optimization-check.json",
+      "retrieval-mood-reuse-check.json"
+    ]
+  }
+}
