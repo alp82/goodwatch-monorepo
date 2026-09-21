@@ -64,6 +64,17 @@ def title_variations(titles: list[str]) -> list[str]:
                 spelled = number_words(int(match[1])) + match[2]
                 if spelled not in result:
                     result.append(spelled)
+                # Year-like titles are read as years (1917 -> NineteenSeventeen).
+                # "Oh" forms (1905) and round hundreds are not generated.
+                number = int(match[1])
+                if 1100 <= number <= 1999 and number % 100 >= 10:
+                    as_year = (
+                        number_words(number // 100)
+                        + number_words(number % 100)
+                        + match[2]
+                    )
+                    if as_year not in result:
+                        result.append(as_year)
     return result
 
 

@@ -1,7 +1,7 @@
 summary: TMDB deleted flag propagation
 description: Internal shared module
 kind: script
-lock: ""
+lock: '!inline f/tmdb_api/deleted_propagation.script.lock'
 schema:
   type: object
   properties: {}
