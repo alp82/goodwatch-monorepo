@@ -549,6 +549,53 @@ class CrawlTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Series/HouseOfCardsUS", self.requests)
         self.assertIsNone(result.url)
 
+    HOUSE_OF_CARDS = article(
+        "House of Cards may refer to:",
+        '<ul><li><a href="/pmwiki/pmwiki.php/Series/HouseOfCardsUK">House of Cards (UK)</a></li>'
+        '<li><a href="/pmwiki/pmwiki.php/Series/HouseOfCardsUS">House of Cards (US)</a></li></ul>',
+    )
+
+    async def test_country_suffixed_page_is_not_dated_by_a_sentence_about_its_remake(self):
+        # Modelled on Series/HouseOfCardsUK: the only year belongs to the remake.
+        self.pages["Series/HouseOfCards"] = (200, self.HOUSE_OF_CARDS)
+        self.pages["Series/HouseOfCardsUK"] = (
+            200,
+            work(
+                "House of Cards is a British TV show (based on the novel of the same name) "
+                "about a scheming chief whip. This BBC series became very popular. "
+                "Three series were made: In 2013, Netflix released an American-set "
+                "original series based on the novel."
+            ),
+        )
+        result = await self.crawl("House of Cards", 2013, media="Series")
+        self.assertIn("Series/HouseOfCardsUK", self.requests)
+        self.assertIsNone(result.url)
+
+    async def test_country_suffixed_page_naming_a_remake_in_its_dated_sentence_is_rejected(self):
+        self.pages["Series/HouseOfCards"] = (200, self.HOUSE_OF_CARDS)
+        self.pages["Series/HouseOfCardsUK"] = (
+            200,
+            work("House of Cards was remade in 2013 as an American series by Netflix."),
+        )
+        result = await self.crawl("House of Cards", 2013, media="Series")
+        self.assertIsNone(result.url)
+
+    async def test_country_suffixed_remake_without_year_and_kind_in_one_sentence_stays_rejected(self):
+        # Modelled on Series/HouseOfCardsUS: the kind word describes the original,
+        # and the premiere sentence names neither the work nor its medium.
+        self.pages["Series/HouseOfCards"] = (200, self.HOUSE_OF_CARDS)
+        self.pages["Series/HouseOfCardsUS"] = (
+            200,
+            work(
+                "House of Cards is the U.S. remake of the UK series of the same name. "
+                "Developed by Beau Willimon and premiered on February 2013, it marked "
+                "the first step in Netflix's original programming."
+            ),
+        )
+        result = await self.crawl("House of Cards", 2013, media="Series")
+        self.assertIn("Series/HouseOfCardsUS", self.requests)
+        self.assertIsNone(result.url)
+
     async def test_country_suffix_is_not_followed_from_a_dated_work_page(self):
         self.pages["Series/TheOffice2005"] = (
             200,

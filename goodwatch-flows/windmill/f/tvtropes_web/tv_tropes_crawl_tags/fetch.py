@@ -201,6 +201,10 @@ SOURCE_WORK = r"(?:novel|novella|book|memoir|comic|graphic novel|short story|pla
 SHARED_FILM_PAGE = r"\b(?:film series|film duology|two films|both films|two[- ]part film|two parts|two volumes)\b"
 # Country qualifiers TV Tropes appends to remakes; deliberately a closed set.
 DISAMBIGUATION_SUFFIXES = {"US", "UK", "USA", "AU", "CA"}
+# On a country-suffixed page a dated sentence in these terms is about the
+# sibling production (HouseOfCardsUK: "In 2013, Netflix released an
+# American-set original series"), not the work the page defines.
+OTHER_PRODUCTION = r"\b(?:remake|remade|reboot|rebooted|[A-Z][a-z]+-set|(?:adaptation|version) of this|not to be confused)\b"
 
 
 def split_sentences(text):
@@ -290,6 +294,23 @@ async def identifies_work(page, entry, media_type, variations):
         # not identify a show. Prefer the kind word after the year; fall back to
         # the same sentence before it only when nothing follows ("the first
         # movie in the trilogy, released in 2002.").
+        # A country-suffixed page (HouseOfCardsUK) has a same-titled sibling,
+        # which its intro usually mentions. The year only counts in the
+        # sentence that defines this page's work: it names the title and does
+        # not speak of another production.
+        country_suffixed = any(
+            name[: len(v)].casefold() == v.casefold()
+            and name[len(v) :] in DISAMBIGUATION_SUFFIXES
+            for v in variations
+        )
+        if country_suffixed and (
+            not any(
+                len(v) >= 3 and v.casefold() in slug(dated).casefold()
+                for v in variations
+            )
+            or re.search(OTHER_PRODUCTION, dated)
+        ):
+            return False
         position = re.search(YEAR, dated).start()
         kind = re.search(KIND, dated[position:], re.I) or re.search(
             KIND, dated[:position], re.I
