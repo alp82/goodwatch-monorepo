@@ -1,5 +1,6 @@
 import React, { type ReactNode, useEffect } from "react"
 import FilterBarSection from "~/ui/filter/FilterBarSection"
+import FilterChip from "~/ui/filter/FilterChip"
 import type { ColorName } from "~/utils/color"
 
 interface SectionParams {
@@ -68,15 +69,33 @@ export default function EditableSection({
 
 	// rendering
 
+	// a chip while idle, the big box on its own line while editing
 	return (
-		<FilterBarSection
-			label={label}
-			color={color}
-			isActive={isEditing}
-			onClick={active ? onToggleEditing : undefined}
-			onRemove={handleRemoveAll}
-		>
-			{children(isEditing)}
-		</FilterBarSection>
+		<>
+			<FilterChip
+				label={label}
+				color={color}
+				isEditing={isEditing}
+				onEdit={onToggleEditing}
+				onRemove={handleRemoveAll}
+			>
+				{children(false)}
+			</FilterChip>
+			{isEditing && (
+				<div className="order-last basis-full flex">
+					<div className="flex min-w-[min(24rem,100%)] max-w-full">
+						<FilterBarSection
+							label={label}
+							color={color}
+							isActive={true}
+							onClick={onToggleEditing}
+							onRemove={handleRemoveAll}
+						>
+							{children(true)}
+						</FilterBarSection>
+					</div>
+				</div>
+			)}
+		</>
 	)
 }

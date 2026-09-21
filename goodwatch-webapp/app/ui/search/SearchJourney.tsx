@@ -1,5 +1,6 @@
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
 import {
+	Fragment,
 	createContext,
 	useContext,
 	useEffect,
@@ -25,9 +26,13 @@ import { useStreamingProviders } from "~/routes/api.streaming-providers";
 import { useGenres } from "~/routes/api.genres.all";
 import SectionGenre from "~/ui/filter/sections/SectionGenre";
 import SectionRelease from "~/ui/filter/sections/SectionRelease";
+import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
 import FilterCountries from "~/ui/filter/FilterCountries";
 import { Tag } from "~/ui/tags/Tag";
 import FilterBarSection from "~/ui/filter/FilterBarSection";
+import FilterChip from "~/ui/filter/FilterChip";
+import AddFilterMenu from "~/ui/filter/AddFilterMenu";
+import { discoverFilters } from "~/server/types/discover-types";
 import Select from "~/ui/form/Select";
 import Checkbox from "~/ui/form/Checkbox";
 import placeholder from "~/img/placeholder-poster.png";
@@ -709,18 +714,19 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 }
 type FilterKey = "type" | "genre" | "minYear" | "country" | "availability";
 const filterNames: Record<FilterKey, string> = {
-	type: "Titles",
+	type: discoverFilters.type.label,
 	genre: "Genre",
 	minYear: "Release year",
 	country: "Country",
 	availability: "Availability",
 };
+// Filters shared with Discover use the Discover colors.
 const filterColors = {
-	type: "amber",
-	genre: "purple",
-	minYear: "blue",
+	type: discoverFilters.type.color,
+	genre: discoverFilters.genre.color,
+	minYear: discoverFilters.release.color,
 	country: "sky",
-	availability: "green",
+	availability: discoverFilters.streaming.color,
 } as const;
 function FilterField({
 	field,
@@ -857,7 +863,6 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 	const all = Object.keys(filterNames) as FilterKey[];
 	const visible = all.filter(
 		(k) =>
-			k === "type" ||
 			added.includes(k) ||
 			(k === "minYear" && Boolean(j.setting("maxYear"))) ||
 			(k === "country"
@@ -877,6 +882,11 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 				...(field === "minYear" ? { maxYear: null } : {}),
 				...(field === "availability" ? { services: null, paid: null } : {}),
 			});
+			setAdded((a) => a.filter((k) => k !== field));
+			setEditing(null);
+		};
+		// Closing the editor keeps the chip only when the filter has a value.
+		const close = (field: FilterKey) => {
 			setAdded((a) => a.filter((k) => k !== field));
 			setEditing(null);
 		};
@@ -909,89 +919,24 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 						Include lesser-known titles
 					</label>
 				</div>
-				<div className="flex items-stretch gap-2 overflow-x-auto pb-2 whitespace-nowrap">
-					{visible.map((field) => (
-						<div key={field} className="shrink-0">
-							<FilterBarSection
-								color={filterColors[field]}
-								isCompact
-								isActive={editing === field}
-							>
-								{field === "type" ? (
-									<div className="p-1">
-										<FilterField field={field} inline />
-									</div>
-								) : (
-									<div className="flex items-center gap-1">
-										<button
-											type="button"
-											aria-expanded={editing === field}
-											className="flex items-center gap-2 p-1.5 text-sm"
-											onClick={() =>
-												setEditing(editing === field ? null : field)
-											}
-										>
-											<span className="font-semibold">
-												{filterNames[field]}
-											</span>
-											<Tag>{summaries[field]}</Tag>
-										</button>
-										<button
-											type="button"
-											aria-label={`Remove ${filterNames[field]} filter`}
-											className="p-1 text-gray-400 hover:text-white"
-											onClick={() => remove(field)}
-										>
-											<XMarkIcon className="w-4" />
-										</button>
-									</div>
-								)}
-							</FilterBarSection>
-						</div>
-					))}
-					{all.some((k) => !visible.includes(k)) && (
-						<select
-							aria-label="Add filter"
-							value=""
-							onChange={(e) => {
-								const field = e.target.value as FilterKey;
-								setAdded((a) => [...a, field]);
-								setEditing(field);
-							}}
-							className={`${control} shrink-0`}
-						>
-							<option value="">＋ Add filter</option>
-							{all
-								.filter((k) => !visible.includes(k))
-								.map((k) => (
-									<option key={k} value={k}>
-										{filterNames[k]}
-									</option>
-								))}
-						</select>
-					)}
-					{visible.length > 1 && (
-						<button
-							type="button"
-							className="text-xs text-gray-400 px-2"
-							onClick={() => {
-								reset();
-								setAdded([]);
-								setEditing(null);
-							}}
-						>
-							Reset
-						</button>
-					)}
-				</div>
-				{editing && (
-					<div
-						className="max-w-2xl mb-4"
-						role="region"
-						aria-label={`${filterNames[editing]} editor`}
-					>
-						{editing === "genre" ? (
+				<div className="flex flex-wrap items-stretch gap-1 mb-3 text-sm">
+					{visible.map((field) =>
+						field === "type" ? (
+							<SectionType
+								key={field}
+								value={
+									j.setting("type", "all") === "all"
+										? undefined
+										: (j.setting("type") as TitleType)
+								}
+								onChange={(type) => j.update({ type: type ?? null })}
+								editing={editing === "type"}
+								onEdit={() => setEditing("type")}
+								onClose={() => close("type")}
+							/>
+						) : field === "genre" ? (
 							<SectionGenre
+								key={field}
 								params={{
 									withGenres: genres
 										.filter((g) =>
@@ -1000,9 +945,9 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 										.map((g) => g.id)
 										.join(","),
 								}}
-								editing
+								editing={editing === "genre"}
 								onEdit={() => setEditing("genre")}
-								onClose={() => setEditing(null)}
+								onClose={() => close("genre")}
 								onChange={({ withGenres }) =>
 									j.update({
 										genre:
@@ -1015,16 +960,17 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 									})
 								}
 							/>
-						) : editing === "minYear" ? (
+						) : field === "minYear" ? (
 							<SectionRelease
+								key={field}
 								params={{
 									minYear: j.setting("minYear") || undefined,
 									maxYear: j.setting("maxYear") || undefined,
 								}}
-								editing
+								editing={editing === "minYear"}
 								initializeOnEdit={false}
 								onEdit={() => setEditing("minYear")}
-								onClose={() => setEditing(null)}
+								onClose={() => close("minYear")}
 								onChange={(years) =>
 									j.update({
 										minYear: years.minYear || null,
@@ -1033,23 +979,68 @@ export function JourneyFilters({ inline = false }: { inline?: boolean }) {
 								}
 							/>
 						) : (
-							<FilterBarSection
-								label={filterNames[editing]}
-								color={filterColors[editing]}
-								isActive
-								onClick={() => setEditing(null)}
-								onRemove={() => remove(editing)}
-							>
-								<div className="w-full max-w-sm space-y-3">
-									<FilterField field={editing} />
-									{editing === "availability" && j.mode !== "all" && (
-										<ServiceSelection />
-									)}
-								</div>
-							</FilterBarSection>
-						)}
-					</div>
-				)}
+							<Fragment key={field}>
+								<FilterChip
+									label={filterNames[field]}
+									color={filterColors[field]}
+									isEditing={editing === field}
+									onEdit={() =>
+										editing === field ? close(field) : setEditing(field)
+									}
+									onRemove={() => remove(field)}
+								>
+									<Tag>{summaries[field]}</Tag>
+								</FilterChip>
+								{editing === field && (
+									<div className="order-last basis-full flex">
+									<div className="flex min-w-[min(24rem,100%)] max-w-full">
+										<FilterBarSection
+											label={filterNames[field]}
+											color={filterColors[field]}
+											isActive
+											onClick={() => close(field)}
+											onRemove={() => remove(field)}
+										>
+											<div className="w-full max-w-sm space-y-3">
+												<FilterField field={field} />
+												{field === "availability" && j.mode !== "all" && (
+													<ServiceSelection />
+												)}
+											</div>
+										</FilterBarSection>
+									</div>
+									</div>
+								)}
+							</Fragment>
+						),
+					)}
+					<AddFilterMenu
+						options={all
+							.filter((k) => !visible.includes(k))
+							.map((k) => ({
+								key: k,
+								label: filterNames[k],
+								color: filterColors[k],
+							}))}
+						onSelect={(field) => {
+							setAdded((a) => [...a, field]);
+							setEditing(field);
+						}}
+					/>
+					{visible.length > 0 && (
+						<button
+							type="button"
+							className="text-xs text-gray-400 px-2 cursor-pointer hover:text-white"
+							onClick={() => {
+								reset();
+								setAdded([]);
+								setEditing(null);
+							}}
+						>
+							Reset
+						</button>
+					)}
+				</div>
 			</div>
 		);
 	}
