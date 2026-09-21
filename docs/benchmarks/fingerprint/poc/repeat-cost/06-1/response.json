@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789410096-SosmVPVWHGVBfkFTT8HG",
+  "object": "chat.completion",
+  "created": 1789410096,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n  \"benchmark_id\": \"movie:603\",\n  \"analysis\": {\n   \"fingerprint\": {\n\"scores\": {\n\"adrenaline\": 9,\n\"tension\": 8,\n\"scare\": 4,\n\"violence\": 7,\n\"romance\": 5,\n\"eroticism\": 2,\n\"wholesome\": 1,\n\"wonder\": 8,\n\"pathos\": 4,\n\"melancholy\": 3,\n\"uncanny\": 7,\n\"catharsis\": 6,\n\"nostalgia\": 6,\n\"situational_comedy\": 1,\n\"wit_wordplay\": 7,\n\"physical_comedy\": 2,\n\"cringe_humor\": 0,\n\"absurdist_humor\": 2,\n\"satire_parody\": 4,\n\"dark_humor\": 3,\n\"fantasy\": 3,\n\"futuristic\": 10,\n\"historical\": 0,\n\"contemporary_realism\": 1,\n\"crime\": 4,\n\"mystery\": 7,\n\"warfare\": 6,\n\"political\": 5,\n\"sports\": 0,\n\"biographical\": 0,\n\"coming_of_age\": 4,\n\"family_dynamics\": 2,\n\"psychological\": 8,\n\"showbiz\": 0,\n\"gaming\": 8,\n\"pop_culture\": 8,\n\"social_commentary\": 7,\n\"class_and_capitalism\": 4,\n\"technology_and_humanity\": 10,\n\"spiritual\": 6,\n\"narrative_structure\": 9,\n\"dialogue_quality\": 8,\n\"character_depth\": 7,\n\"slow_burn\": 2,\n\"fast_pace\": 9,\n\"intrigue\": 9,\n\"complexity\": 8,\n\"rewatchability\": 9,\n\"hopefulness\": 5,\n\"bleakness\": 6,\n\"ambiguity\": 6,\n\"novelty\": 10,\n\"homage_and_reference\": 6,\n\"non_linear_narrative\": 1,\n\"meta_narrative\": 5,\n\"surrealism\": 6,\n\"eccentricity\": 3,\n\"philosophical\": 9,\n\"educational\": 2,\n\"direction\": 9,\n\"acting\": 8,\n\"cinematography\": 10,\n\"editing\": 9,\n\"music_composition\": 9,\n\"world_immersion\": 10,\n\"spectacle\": 10,\n\"visual_stylization\": 10,\n\"pastiche\": 3,\n\"psychedelic\": 5,\n\"grotesque\": 1,\n\"camp_and_irony\": 2,\n\"dialogue_centrality\": 8,\n\"music_centrality\": 9,\n\"sound_centrality\": 9\n},\n\"highlight_keys\": [\n\"technology_and_humanity\",\n\"visual_stylization\",\n\"novelty\",\n\"cinematography\",\n\"philosophical\",\n\"adrenaline\",\n\"world_immersion\",\n\"spectacle\"\n]\n   },\n\"is_anime\": false,\n\"production_info\": {\n\"method\": \"Live-Action\",\n\"animation_style\": null\n   },\n\"content_advisories\": [\n\"Violence\",\n\"Strong Language\",\n\"Drug Use\"\n   ],\n\"social_suitability\": {\n\"solo_watch\": true,\n\"date_night\": true,\n\"group_party\": true,\n\"family\": false,\n\"partner\": true,\n\"friends\": true,\n\"kids\": false,\n\"teens\": true,\n\"adults\": true,\n\"intergenerational\": true,\n\"public_viewing_safe\": true\n   },\n\"viewing_context\": {\n\"is_thought_provoking\": true,\n\"is_pure_escapism\": false,\n\"is_background_friendly\": false,\n\"is_comfort_watch\": false,\n\"is_binge_friendly\": false,\n\"is_drop_in_friendly\": false\n   },\n\"essence_tags\": [\n\"Cyberpunk Action\",\n\"Philosophical Sci-Fi\",\n\"Groundbreaking Visual Effects\",\n\"Reality Simulation\",\n\"Martial Arts Choreography\",\n\"Dystopian Future\",\n\"Iconic Cultural Phenomenon\",\n\"High-Octane Suspense\",\n\"Metaphysical Mystery\"\n   ],\n\"essence_text\": \"A groundbreaking fusion of high-octane action and deep philosophical inquiry that redefined the visual language of science fiction. The film immerses viewers in a sleek, dystopian cyberpunk world where reality is questioned through stunning 'bullet time' cinematography and intricate martial arts choreography. Its narrative balances intense suspense with profound questions about consciousness, control, and the nature of existence. Anchored by memorable performances and an iconic electronic score, it remains a definitive experience for both thrill-seekers and thinkers.\"\n  }\n}\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7956,
+    "completion_tokens": 1150,
+    "total_tokens": 9106,
+    "cost": 0.00070478,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00070478,
+      "upstream_inference_prompt_cost": 0.00016428,
+      "upstream_inference_completions_cost": 0.0005405
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

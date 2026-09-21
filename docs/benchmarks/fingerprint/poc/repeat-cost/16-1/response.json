@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789410215-a83DVPhF66QnkP8Nc2mU",
+  "object": "chat.completion",
+  "created": 1789410215,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n  \"benchmark_id\": \"show:64230\",\n  \"analysis\": {\n   \"fingerprint\": {\n\"scores\": {\n\"adrenaline\": 7,\n\"tension\": 8,\n\"scare\": 5,\n\"violence\": 9,\n\"romance\": 5,\n\"eroticism\": 4,\n\"wholesome\": 1,\n\"wonder\": 4,\n\"pathos\": 5,\n\"melancholy\": 4,\n\"uncanny\": 8,\n\"catharsis\": 6,\n\"nostalgia\": 2,\n\"situational_comedy\": 6,\n\"wit_wordplay\": 7,\n\"physical_comedy\": 5,\n\"cringe_humor\": 4,\n\"absurdist_humor\": 9,\n\"satire_parody\": 8,\n\"dark_humor\": 9,\n\"fantasy\": 9,\n\"futuristic\": 2,\n\"historical\": 3,\n\"contemporary_realism\": 4,\n\"crime\": 6,\n\"mystery\": 5,\n\"warfare\": 3,\n\"political\": 5,\n\"sports\": 0,\n\"biographical\": 0,\n\"coming_of_age\": 2,\n\"family_dynamics\": 6,\n\"psychological\": 7,\n\"showbiz\": 0,\n\"gaming\": 0,\n\"pop_culture\": 3,\n\"social_commentary\": 8,\n\"class_and_capitalism\": 4,\n\"technology_and_humanity\": 3,\n\"spiritual\": 10,\n\"narrative_structure\": 7,\n\"dialogue_quality\": 8,\n\"character_depth\": 8,\n\"slow_burn\": 4,\n\"fast_pace\": 8,\n\"intrigue\": 8,\n\"complexity\": 7,\n\"rewatchability\": 8,\n\"hopefulness\": 3,\n\"bleakness\": 7,\n\"ambiguity\": 5,\n\"novelty\": 8,\n\"homage_and_reference\": 4,\n\"non_linear_narrative\": 2,\n\"meta_narrative\": 1,\n\"surrealism\": 9,\n\"eccentricity\": 9,\n\"philosophical\": 7,\n\"educational\": 0,\n\"direction\": 8,\n\"acting\": 8,\n\"cinematography\": 7,\n\"editing\": 7,\n\"music_composition\": 8,\n\"world_immersion\": 8,\n\"spectacle\": 7,\n\"visual_stylization\": 8,\n\"pastiche\": 2,\n\"psychedelic\": 5,\n\"grotesque\": 8,\n\"camp_and_irony\": 7,\n\"dialogue_centrality\": 8,\n\"music_centrality\": 7,\n\"sound_centrality\": 6\n},\n\"highlight_keys\": [\n\"spiritual\",\n\"dark_humor\",\n\"absurdist_humor\",\n\"violence\",\n\"surrealism\",\n\"eccentricity\",\n\"satire_parody\",\n\"social_commentary\"\n]\n},\n\"is_anime\": false,\n\"production_info\": {\n\"method\": \"Live-Action\",\n\"animation_style\": null\n},\n\"content_advisories\": [\n\"Violence\",\n\"Strong Language\",\n\"Drug Use\",\n\"Sexual Content\",\n\"Nudity\",\n\"Disturbing Imagery\"\n],\n\"social_suitability\": {\n\"solo_watch\": true,\n\"date_night\": false,\n\"group_party\": true,\n\"family\": false,\n\"partner\": true,\n\"friends\": true,\n\"kids\": false,\n\"teens\": false,\n\"adults\": true,\n\"intergenerational\": false,\n\"public_viewing_safe\": false\n},\n\"viewing_context\": {\n\"is_thought_provoking\": true,\n\"is_pure_escapism\": true,\n\"is_background_friendly\": false,\n\"is_comfort_watch\": false,\n\"is_binge_friendly\": true,\n\"is_drop_in_friendly\": false\n},\n\"essence_tags\": [\n\"Dark Religious Satire\",\n\"Gore-Filled Road Trip\",\n\"Surreal Supernatural Action\",\n\"Absurdist Black Comedy\",\n\"Graphic Violence & Gore\",\n\"Eccentric Character Ensemble\",\n\"Theological Crisis\",\n\"Neo-Western Fantasy\",\n\"Provocative Social Commentary\",\n\"High-Octane Pulp Fiction\"\n],\n\"essence_text\": \"Preacher is a visceral, blasphemous, and darkly hilarious odyssey that blends neo-western grit with surreal supernatural horror. The narrative follows an unhinged preacher on a literal road trip to find God, accompanied by a vampire bartender and a deadly sharpshooter, resulting in a chaotic mix of extreme violence and absurdist comedy. It serves as a savage satire of organized religion and American exceptionalism, featuring grotesque imagery and theological deconstruction that challenges the viewer's comfort zone. The show’s identity is defined by its eccentric characters, relentless pacing, and a unique tone that balances campy humor with genuinely disturbing moments.\"\n}\n}\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7998,
+    "completion_tokens": 1193,
+    "total_tokens": 9191,
+    "cost": 0.00073129,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00073129,
+      "upstream_inference_prompt_cost": 0.00017058,
+      "upstream_inference_completions_cost": 0.00056071
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

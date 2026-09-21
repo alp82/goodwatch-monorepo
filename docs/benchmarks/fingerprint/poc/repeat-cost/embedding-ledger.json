@@ -1,0 +1,21 @@
+{
+  "status": "completed",
+  "reservation_usd": "0.0032324",
+  "sample_count": 20,
+  "started_at": "2026-09-14T18:24:23Z",
+  "rate_usd_per_million_text_tokens": "0.20",
+  "pricing_source": "https://ai.google.dev/gemini-api/docs/pricing#gemini-embedding-2",
+  "http_status": 200,
+  "elapsed_seconds": 0.705,
+  "usage_metadata": {
+    "promptTokenCount": 1881,
+    "promptTokenDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 1881
+      }
+    ]
+  },
+  "valid_vectors": 20,
+  "dimensions": 768
+}

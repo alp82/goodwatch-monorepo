@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789415638-tCrVVblaTpqR2ri5wPIE",
+  "object": "chat.completion",
+  "created": 1789415638,
+  "model": "qwen/qwen3.7-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n    {\n      \"benchmark_id\": \"movie:545611\",\n      \"analysis\": {\n        \"fingerprint\": {\n          \"scores\": {\n            \"adrenaline\": 9,\n            \"tension\": 7,\n            \"scare\": 3,\n            \"violence\": 6,\n            \"romance\": 4,\n            \"eroticism\": 1,\n            \"wholesome\": 6,\n            \"wonder\": 8,\n            \"pathos\": 7,\n            \"melancholy\": 4,\n            \"uncanny\": 7,\n            \"catharsis\": 8,\n            \"nostalgia\": 2,\n            \"situational_comedy\": 5,\n            \"wit_wordplay\": 6,\n            \"physical_comedy\": 6,\n            \"cringe_humor\": 3,\n            \"absurdist_humor\": 9,\n            \"satire_parody\": 5,\n            \"dark_humor\": 5,\n            \"fantasy\": 9,\n            \"futuristic\": 5,\n            \"historical\": 0,\n            \"contemporary_realism\": 6,\n            \"crime\": 2,\n            \"mystery\": 3,\n            \"warfare\": 4,\n            \"political\": 1,\n            \"sports\": 0,\n            \"biographical\": 0,\n            \"coming_of_age\": 3,\n            \"family_dynamics\": 9,\n            \"psychological\": 7,\n            \"showbiz\": 0,\n            \"gaming\": 2,\n            \"pop_culture\": 7,\n            \"social_commentary\": 6,\n            \"class_and_capitalism\": 3,\n            \"technology_and_humanity\": 8,\n            \"spiritual\": 2,\n            \"narrative_structure\": 8,\n            \"dialogue_quality\": 7,\n            \"character_depth\": 8,\n            \"slow_burn\": 3,\n            \"fast_pace\": 9,\n            \"intrigue\": 8,\n            \"complexity\": 9,\n            \"rewatchability\": 8,\n            \"hopefulness\": 7,\n            \"bleakness\": 4,\n            \"ambiguity\": 6,\n            \"novelty\": 10,\n            \"homage_and_reference\": 6,\n            \"non_linear_narrative\": 7,\n            \"meta_narrative\": 5,\n            \"surrealism\": 9,\n            \"eccentricity\": 9,\n            \"philosophical\": 7,\n            \"educational\": 0,\n            \"direction\": 10,\n            \"acting\": 9,\n            \"cinematography\": 8,\n            \"editing\": 10,\n            \"music_composition\": 8,\n            \"world_immersion\": 9,\n            \"spectacle\": 9,\n            \"visual_stylization\": 9,\n            \"pastiche\": 6,\n            \"psychedelic\": 5,\n            \"grotesque\": 2,\n            \"camp_and_irony\": 7,\n            \"dialogue_centrality\": 6,\n            \"music_centrality\": 7,\n            \"sound_centrality\": 7\n          },\n          \"highlight_keys\": [\n            \"novelty\",\n            \"direction\",\n            \"editing\",\n            \"absurdist_humor\",\n            \"family_dynamics\",\n            \"surrealism\",\n            \"fast_pace\",\n            \"spectacle\"\n          ]\n        },\n        \"is_anime\": false,\n        \"production_info\": {\n          \"method\": \"Live-Action\",\n          \"animation_style\": null\n        },\n        \"content_advisories\": [\n          \"Violence\",\n          \"Strong Language\",\n          \"Disturbing Imagery\"\n        ],\n        \"social_suitability\": {\n          \"solo_watch\": true,\n          \"date_night\": true,\n          \"group_party\": true,\n          \"family\": false,\n          \"partner\": true,\n          \"friends\": true,\n          \"kids\": false,\n          \"teens\": true,\n          \"adults\": true,\n          \"intergenerational\": true,\n          \"public_viewing_safe\": true\n        },\n        \"viewing_context\": {\n          \"is_thought_provoking\": true,\n          \"is_pure_escapism\": false,\n          \"is_background_friendly\": false,\n          \"is_comfort_watch\": false,\n          \"is_binge_friendly\": false,\n          \"is_drop_in_friendly\": true\n        },\n        \"essence_tags\": [\n          \"Multiversal Absurdism\",\n          \"Emotional Family Drama\",\n          \"High-Octane Action Comedy\",\n          \"Visual Spectacle & Innovation\",\n          \"Existential Philosophy\",\n          \"Chaotic Editing Style\",\n          \"Heartfelt Optimism\",\n          \"Cult Pop Culture References\",\n          \"Surreal World-Building\"\n        ],\n        \"essence_text\": \"A kinetic and chaotic masterpiece that blends multiverse sci-fi with a deeply emotional story about family reconciliation. The film is defined by its relentless energy, inventive visual gags, and genre-bending action sequences that serve a poignant narrative core. It offers a sensory overload of absurdity and wonder, grounded by strong performances and a message of radical kindness. This is a high-concept, emotionally resonant experience that challenges perception while delivering pure entertainment.\"\n      }\n    }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7961,
+    "completion_tokens": 1281,
+    "total_tokens": 9242,
+    "cost": 0.00022104,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00022104,
+      "upstream_inference_prompt_cost": 5.451e-05,
+      "upstream_inference_completions_cost": 0.00016653
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

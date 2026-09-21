@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789410119-SEyMuKlNL0qhY15sOvIw",
+  "object": "chat.completion",
+  "created": 1789410119,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n   \"benchmark_id\": \"show:249042\",\n   \"analysis\": {\n   \"fingerprint\": {\n   \"scores\": {\n   \"adrenaline\": 5,\n   \"tension\": 10,\n   \"scare\": 3,\n   \"violence\": 6,\n   \"romance\": 1,\n   \"eroticism\": 0,\n   \"wholesome\": 0,\n   \"wonder\": 1,\n   \"pathos\": 8,\n   \"melancholy\": 7,\n   \"uncanny\": 4,\n   \"catharsis\": 6,\n   \"nostalgia\": 1,\n   \"situational_comedy\": 0,\n   \"wit_wordplay\": 3,\n   \"physical_comedy\": 0,\n   \"cringe_humor\": 2,\n   \"absurdist_humor\": 0,\n   \"satire_parody\": 4,\n   \"dark_humor\": 1,\n   \"fantasy\": 0,\n   \"futuristic\": 0,\n   \"historical\": 0,\n   \"contemporary_realism\": 10,\n   \"crime\": 9,\n   \"mystery\": 8,\n   \"warfare\": 0,\n   \"political\": 2,\n   \"sports\": 0,\n   \"biographical\": 0,\n   \"coming_of_age\": 9,\n   \"family_dynamics\": 10,\n   \"psychological\": 9,\n   \"showbiz\": 0,\n   \"gaming\": 0,\n   \"pop_culture\": 3,\n   \"social_commentary\": 8,\n   \"class_and_capitalism\": 4,\n   \"technology_and_humanity\": 5,\n   \"spiritual\": 1,\n   \"narrative_structure\": 9,\n   \"dialogue_quality\": 9,\n   \"character_depth\": 9,\n   \"slow_burn\": 7,\n   \"fast_pace\": 3,\n   \"intrigue\": 9,\n   \"complexity\": 7,\n   \"rewatchability\": 8,\n   \"hopefulness\": 2,\n   \"bleakness\": 8,\n   \"ambiguity\": 6,\n   \"novelty\": 8,\n   \"homage_and_reference\": 1,\n   \"non_linear_narrative\": 8,\n   \"meta_narrative\": 0,\n   \"surrealism\": 0,\n   \"eccentricity\": 1,\n   \"philosophical\": 6,\n   \"educational\": 2,\n   \"direction\": 10,\n   \"acting\": 10,\n   \"cinematography\": 9,\n   \"editing\": 8,\n   \"music_composition\": 7,\n   \"world_immersion\": 9,\n   \"spectacle\": 2,\n   \"visual_stylization\": 7,\n   \"pastiche\": 0,\n   \"psychedelic\": 0,\n   \"grotesque\": 3,\n   \"camp_and_irony\": 0,\n   \"dialogue_centrality\": 9,\n   \"music_centrality\": 5,\n   \"sound_centrality\": 7\n   },\n   \"highlight_keys\": [\n   \"tension\",\n   \"family_dynamics\",\n   \"contemporary_realism\",\n   \"acting\",\n   \"direction\",\n   \"psychological\",\n   \"coming_of_age\",\n   \"crime\"\n   ]\n   },\n   \"is_anime\": false,\n   \"production_info\": {\n   \"method\": \"Live-Action\",\n   \"animation_style\": null\n   },\n   \"content_advisories\": [\n   \"Violence\",\n   \"Strong Language\",\n   \"Disturbing Imagery\"\n   ],\n   \"social_suitability\": {\n   \"solo_watch\": true,\n   \"date_night\": false,\n   \"group_party\": false,\n   \"family\": false,\n   \"partner\": true,\n   \"friends\": true,\n   \"kids\": false,\n   \"teens\": false,\n   \"adults\": true,\n   \"intergenerational\": false,\n   \"public_viewing_safe\": false\n   },\n   \"viewing_context\": {\n   \"is_thought_provoking\": true,\n   \"is_pure_escapism\": false,\n   \"is_background_friendly\": false,\n   \"is_comfort_watch\": false,\n   \"is_binge_friendly\": true,\n   \"is_drop_in_friendly\": false\n   },\n   \"essence_tags\": [\n   \"Gritty Crime Drama\",\n   \"Psychological Thriller\",\n   \"Family Disintegration\",\n   \"Teen Murder Mystery\",\n   \"Social Realism\",\n   \"Intense Character Study\",\n   \"Non-Linear Narrative\",\n   \"Chilling Atmosphere\",\n   \"Masterful Acting Showcase\",\n   \"Societal Critique\"\n   ],\n   \"essence_text\": \"A harrowing and meticulously crafted exploration of a family shattered by an unthinkable crime. The series utilizes a tense, non-linear structure to dissect the psychological unraveling of a teenager accused of murder, alongside the devastating impact on his parents and investigators. Anchored by powerhouse performances and grounded in stark contemporary realism, it avoids sensationalism in favor of deep character study and social commentary. The atmosphere is suffocatingly heavy, creating a binge-worthy but emotionally draining experience that lingers long after the final episode.\"\n   }\n   }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7958,
+    "completion_tokens": 1275,
+    "total_tokens": 9233,
+    "cost": 0.00076383,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00076383,
+      "upstream_inference_prompt_cost": 0.00016458,
+      "upstream_inference_completions_cost": 0.00059925
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

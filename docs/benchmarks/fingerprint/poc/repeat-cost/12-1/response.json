@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789410169-JQuR5OhnFCvXXQpvqJEH",
+  "object": "chat.completion",
+  "created": 1789410169,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n  \"benchmark_id\": \"movie:1233066\",\n  \"analysis\": {\n   \"fingerprint\": {\n  \"scores\": {\n   \"adrenaline\": 5,\n   \"tension\": 4,\n   \"scare\": 1,\n   \"violence\": 3,\n   \"romance\": 3,\n   \"eroticism\": 1,\n   \"wholesome\": 7,\n   \"wonder\": 4,\n   \"pathos\": 2,\n   \"melancholy\": 1,\n   \"uncanny\": 2,\n   \"catharsis\": 3,\n   \"nostalgia\": 8,\n   \"situational_comedy\": 9,\n   \"wit_wordplay\": 7,\n   \"physical_comedy\": 8,\n   \"cringe_humor\": 6,\n   \"absurdist_humor\": 8,\n   \"satire_parody\": 9,\n   \"dark_humor\": 5,\n   \"fantasy\": 2,\n   \"futuristic\": 1,\n   \"historical\": 4,\n   \"contemporary_realism\": 2,\n   \"crime\": 3,\n   \"mystery\": 2,\n   \"warfare\": 1,\n   \"political\": 4,\n   \"sports\": 0,\n   \"biographical\": 0,\n   \"coming_of_age\": 1,\n   \"family_dynamics\": 5,\n   \"psychological\": 2,\n   \"showbiz\": 1,\n   \"gaming\": 0,\n   \"pop_culture\": 6,\n   \"social_commentary\": 7,\n   \"class_and_capitalism\": 3,\n   \"technology_and_humanity\": 1,\n   \"spiritual\": 4,\n   \"narrative_structure\": 6,\n   \"dialogue_quality\": 7,\n   \"character_depth\": 5,\n   \"slow_burn\": 2,\n   \"fast_pace\": 6,\n   \"intrigue\": 4,\n   \"complexity\": 3,\n   \"rewatchability\": 7,\n   \"hopefulness\": 7,\n   \"bleakness\": 1,\n   \"ambiguity\": 1,\n   \"novelty\": 2,\n   \"homage_and_reference\": 9,\n   \"non_linear_narrative\": 1,\n   \"meta_narrative\": 5,\n   \"surrealism\": 4,\n   \"eccentricity\": 7,\n   \"philosophical\": 2,\n   \"educational\": 1,\n   \"direction\": 6,\n   \"acting\": 7,\n   \"cinematography\": 6,\n   \"editing\": 6,\n   \"music_composition\": 7,\n   \"world_immersion\": 5,\n   \"spectacle\": 4,\n   \"visual_stylization\": 5,\n   \"pastiche\": 9,\n   \"psychedelic\": 2,\n   \"grotesque\": 3,\n   \"camp_and_irony\": 8,\n   \"dialogue_centrality\": 8,\n   \"music_centrality\": 6,\n   \"sound_centrality\": 5\n  },\n  \"highlight_keys\": [\n   \"situational_comedy\",\n   \"satire_parody\",\n   \"pastiche\",\n   \"homage_and_reference\",\n   \"nostalgia\",\n   \"camp_and_irony\",\n   \"wholesome\",\n   \"absurdist_humor\"\n  ]\n},\n\"is_anime\": false,\n\"production_info\": {\n  \"method\": \"Live-Action\",\n  \"animation_style\": null\n},\n\"content_advisories\": [\n  \"Violence\",\n  \"Strong Language\"\n],\n\"social_suitability\": {\n  \"solo_watch\": true,\n  \"date_night\": true,\n  \"group_party\": true,\n  \"family\": true,\n  \"partner\": true,\n  \"friends\": true,\n  \"kids\": true,\n  \"teens\": true,\n  \"adults\": true,\n  \"intergenerational\": true,\n  \"public_viewing_safe\": true\n},\n\"viewing_context\": {\n  \"is_thought_provoking\": false,\n  \"is_pure_escapism\": true,\n  \"is_background_friendly\": false,\n  \"is_comfort_watch\": true,\n  \"is_binge_friendly\": false,\n  \"is_drop_in_friendly\": false\n},\n\"essence_tags\": [\n  \"German Western Parody\",\n  \"Buddy Comedy\",\n  \"Nostalgic Sequel\",\n  \"Absurd Humor\",\n  \"Family Friendly Fun\",\n  \"Satirical Social Commentary\",\n  \"Slapstick Action\",\n  \"Cult Classic Revival\",\n  \"Light-hearted Adventure\"\n],\n\"essence_text\": \"This film is a joyous return to the absurd world of German western parody, blending slapstick humor with satirical commentary on colonial myths. It relies heavily on nostalgia and campy charm, offering a lighthearted adventure that prioritizes laughs over logical consistency. The dynamic between the main duo drives the narrative, creating a comfortable and entertaining experience for audiences seeking pure escapism. While not intellectually demanding, it succeeds as a fun, family-friendly revival of a beloved comedic franchise.\"\n}\n   }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7992,
+    "completion_tokens": 1259,
+    "total_tokens": 9251,
+    "cost": 0.00076141,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00076141,
+      "upstream_inference_prompt_cost": 0.00016968,
+      "upstream_inference_completions_cost": 0.00059173
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "model_label": "F",
+    "benchmark_id": "show:64230",
+    "source_artifact": "0009",
+    "text": "This series delivers a high-octane blend of dark fantasy and irreverent satire, following an unhinged preacher on a quest to confront God himself. The narrative is defined by its extreme graphic violence, absurd humor, and deep philosophical questioning of religious dogma. With a fast-paced structure and eccentric characters, it creates a unique atmosphere that is both disturbing and entertaining. It appeals strongly to adults who enjoy subversive storytelling and comic book aesthetics pushed to their grotesque limits."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:150540",
+    "source_artifact": "0011",
+    "text": "A visually inventive and emotionally resonant journey into the mind of a young girl navigating change. The film brilliantly personifies complex psychological concepts, making them accessible and deeply moving for audiences of all ages. It balances humor and heartbreak with a sophisticated narrative structure that rewards repeated viewing. Ultimately, it serves as a poignant reminder of the vital role sadness plays in our emotional growth and human connection."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "show:249042",
+    "source_artifact": "0025",
+    "text": "A gripping and emotionally heavy exploration of a tragic event that ripples through a community, focusing on the psychological unraveling of a teenager and the families involved. The series relies on sharp dialogue and nuanced performances to navigate the murky waters of truth, blame, and adolescent mental health. It is a tense, realistic drama that eschews easy answers in favor of a complex examination of modern societal pressures on youth. Viewers are drawn into an intimate, often uncomfortable study of how trauma fractures relationships."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "show:42009",
+    "source_artifact": "0030",
+    "text": "A chilling anthology that holds a mirror up to society's obsession with technology, revealing the dark underbelly of modern progress. Each episode serves as a cautionary tale, blending near-future realism with unsettling psychological twists that linger long after viewing. The series is defined by its bleak outlook and sharp social commentary, often leaving the audience in a state of profound unease rather than satisfaction. It demands full attention, rewarding viewers with intricate narratives that challenge their perceptions of reality, privacy, and human connection."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:550",
+    "source_artifact": "0039",
+    "text": "A visceral and provocative exploration of modern alienation, consumer culture, and fractured masculinity that culminates in a shocking psychological twist. The film’s sharp, witty dialogue and aggressive pacing create an intense, adrenaline-fueled atmosphere that is both entertaining and deeply unsettling. It serves as a biting satire of capitalism while simultaneously indulging in the very violence it critiques, leaving the audience with a lingering sense of ambiguity and philosophical dread. Its distinctive visual style and iconic performances have cemented its status as a definitive cult classic."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "movie:150540",
+    "source_artifact": "0045",
+    "text": "A visually inventive and emotionally resonant masterpiece that personifies the inner workings of a young girl's mind. The film brilliantly balances whimsical adventure with profound insights into grief, growing up, and the necessity of sadness. Its clever narrative structure allows for a deeply engaging experience that appeals to both children and adults, offering a cathartic journey through the complexities of human emotion. Ultimately, it is a touching, thought-provoking celebration of family dynamics and personal growth."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "movie:603",
+    "source_artifact": "0046",
+    "text": "A revolutionary sci-fi masterpiece that redefined the action genre with its groundbreaking 'bullet time' visuals and philosophical depth. The film immerses viewers in a stark, digital dystopia where reality is questioned and humanity fights for freedom against machine overlords. Driven by high-stakes tension and intricate world-building, it offers a thrilling yet intellectually stimulating experience that balances spectacular set pieces with existential inquiry. Its distinctive aesthetic and cultural impact make it a timeless, thought-provoking spectacle."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:1399",
+    "source_artifact": "0049",
+    "text": "A sprawling epic that masterfully blends high fantasy with gritty political realism, demanding total attention from its audience. The narrative is defined by its intricate web of alliances and betrayals, where moral certainty is rare and consequences are often brutal. Its world-building is immersive and visually stunning, supported by a legendary score that elevates every moment of tension or triumph. Viewers are drawn into a dark, unforgiving realm where beloved characters can meet sudden, shocking ends, creating an atmosphere of perpetual suspense and emotional weight."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:249042",
+    "source_artifact": "0058",
+    "text": "A harrowing and deeply realistic exploration of how a single violent act shatters the lives of a family and their community. The series relies on exceptional performances and tense, dialogue-driven scenes to build an atmosphere of suffocating dread and profound sadness. It transcends typical crime procedurals by focusing intensely on the psychological aftermath, moral ambiguity, and the fragility of adolescent identity. Viewers are left grappling with uncomfortable questions about nature, nurture, and the invisible pressures facing today's youth."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:1396",
+    "source_artifact": "0071",
+    "text": "A masterclass in tension and character development that chronicles the terrifying descent of a mild-mannered man into ruthless criminality. The series balances gritty realism with operatic stakes, creating an atmosphere of suffocating dread where every decision carries fatal consequences. It explores the fragility of family bonds and the corrosive nature of pride through performances that are as nuanced as they are explosive. This is not just a crime show, but a profound psychological tragedy that demands complete attention and rewards rewatching for its intricate narrative architecture."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:1233066",
+    "source_artifact": "0073",
+    "text": "This film serves as a raucous, slapstick-heavy parody of classic Western tropes, leaning heavily into the distinctive comedic style established by its predecessor. It is defined by exaggerated physical comedy, witty wordplay, and a campy sense of irony that appeals to fans of German cinema nostalgia. The narrative functions primarily as a vehicle for gags and character interactions rather than serious plot development, creating a lighthearted and escapist experience. With its broad humor and familiar archetypes, it offers a comforting return to a beloved comedic universe, prioritizing laughter over logical consistency or deep thematic exploration."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "show:42009",
+    "source_artifact": "0074",
+    "text": "A chilling anthology that serves as a dark mirror to our technological obsession and societal fragility. Each episode presents a self-contained nightmare where innovation leads to profound human cost, blending sci-fi speculation with psychological horror. The tone is relentlessly cynical and unsettling, exploring the uncanny valley between digital perfection and moral decay. It demands active intellectual engagement, leaving viewers with lingering anxiety about the future rather than simple entertainment."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "show:1396",
+    "source_artifact": "0078",
+    "text": "A masterfully constructed descent into moral decay that redefined the crime drama genre. The series offers a gripping, psychological character study of a man transforming from victim to monster, driven by fear and pride. With relentless tension and sharp, realistic dialogue, it immerses the viewer in a world where every choice carries devastating consequences. It is a bleak, intense, and intellectually stimulating experience that demands full attention."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "movie:545611",
+    "source_artifact": "0080",
+    "text": "A dizzying, genre-bending explosion of creativity that marries high-concept sci-fi with deeply grounded emotional stakes. The film thrives on its relentless energy and inventive visual humor, creating a chaotic tapestry of realities that ultimately serves as a poignant metaphor for generational trauma and familial love. It is an exhilarating ride that balances absurdity with profound pathos, leaving the viewer both intellectually stimulated and emotionally satisfied. This is a cinematic event defined by its fearless imagination and technical brilliance."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "movie:550",
+    "source_artifact": "0083",
+    "text": "A visually striking and psychologically complex deconstruction of modern masculinity and consumer culture. The film utilizes a brilliant, non-linear narrative structure to deliver shocking twists that recontextualize the entire viewing experience. Anchored by sharp dialogue and intense performances, it balances dark humor with visceral violence to create a deeply unsettling yet compelling atmosphere. This is a provocative, cynical, and highly rewatchable masterpiece that challenges the viewer's perception of reality."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:545611",
+    "source_artifact": "0084",
+    "text": "A frenetic, visually maximalist journey that blends high-concept sci-fi action with profound emotional intimacy. The film oscillates wildly between absurd comedy and heartbreaking family drama, using the multiverse as a metaphor for regret and connection. It is an experience defined by its chaotic energy, surreal imagery, and surprising philosophical depth regarding meaning in a meaningless universe. Ultimately, it delivers a powerful catharsis through its celebration of kindness and generational healing."
+  },
+  {
+    "model_label": "F",
+    "benchmark_id": "movie:603",
+    "source_artifact": "0088",
+    "text": "A landmark in science fiction cinema that seamlessly blends high-octane action with profound philosophical inquiry into the nature of reality. Its distinctive green-tinted visual style and revolutionary bullet-time effects create an immersive cyberpunk atmosphere that remains visually stunning decades later. The narrative balances intense physical stakes with cerebral dialogue, challenging viewers to question their own perceptions while delivering pure adrenaline-fueled entertainment. It stands as a definitive cultural touchstone, merging martial arts choreography with existential dread and technological anxiety."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "show:1399",
+    "source_artifact": "0092",
+    "text": "A sprawling epic of power, betrayal, and survival set against a backdrop of war and magic. The series is defined by its intricate political maneuvering and the brutal consequences of ambition, creating a world that feels historically grounded yet mythically vast. With massive production values and a legendary score, it offers an immersive experience where no character is safe and alliances are fleeting. It is a dark, compelling journey through the complexities of human nature and the heavy price of leadership."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "movie:1233066",
+    "source_artifact": "0095",
+    "text": "A vibrant and nostalgic parody of the classic Oskar-Friedrich western cartoons, this film delivers high-energy slapstick humor and visual gags tailored for family audiences. It faithfully recreates the charm of mid-20th-century animation with a modern live-action twist, celebrating the absurdity and campiness of its source material. The narrative is simple and lighthearted, focusing on physical comedy and satirical takes on genre tropes rather than deep thematic complexity. Ideally suited for groups seeking a fun, low-stakes, and visually entertaining experience that appeals to both children and adults familiar with the franchise."
+  },
+  {
+    "model_label": "D",
+    "benchmark_id": "show:64230",
+    "source_artifact": "0098",
+    "text": "A raucous and visually distinct blend of Southern Gothic and supernatural action that dares to drag the Almighty into a cross-country confrontation. The series thrives on its irreverent tone, balancing extreme graphic violence with biting religious satire and dark humor. It offers a chaotic, unpredictable ride through a world where divine power is messy and the heroes are deeply flawed outcasts. While lacking narrative subtlety, it delivers high-octane entertainment through sheer audacity and eccentric character dynamics."
+  }
+]

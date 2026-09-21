@@ -1,0 +1,13 @@
+{
+  "checked_at": "2026-09-14",
+  "model": "gemini-embedding-2",
+  "dimensions": 768,
+  "task_type": "RETRIEVAL_DOCUMENT",
+  "api": "Gemini Developer API synchronous batchEmbedContents",
+  "standard_text_input_usd_per_million_tokens": "0.20",
+  "async_batch_discount_applied": false,
+  "source": "https://ai.google.dev/gemini-api/docs/pricing#gemini-embedding-2",
+  "usage_reference": "https://ai.google.dev/api/embeddings",
+  "account_invoice_available": false,
+  "measurement_note": "Report returned token usage times standard rate separately from actual invoice charges; API usage is not an invoice."
+}

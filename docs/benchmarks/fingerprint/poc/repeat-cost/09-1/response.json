@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789415531-fBXA6uISrArjWb7sgxuT",
+  "object": "chat.completion",
+  "created": 1789415531,
+  "model": "qwen/qwen3.7-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n    {\n      \"benchmark_id\": \"show:42009\",\n      \"analysis\": {\n        \"fingerprint\": {\n          \"scores\": {\n            \"adrenaline\": 3,\n            \"tension\": 7,\n            \"scare\": 3,\n            \"violence\": 4,\n            \"romance\": 2,\n            \"eroticism\": 2,\n            \"wholesome\": 1,\n            \"wonder\": 4,\n            \"pathos\": 5,\n            \"melancholy\": 6,\n            \"uncanny\": 7,\n            \"catharsis\": 3,\n            \"nostalgia\": 3,\n            \"situational_comedy\": 0,\n            \"wit_wordplay\": 5,\n            \"physical_comedy\": 0,\n            \"cringe_humor\": 2,\n            \"absurdist_humor\": 2,\n            \"satire_parody\": 8,\n            \"dark_humor\": 6,\n            \"fantasy\": 0,\n            \"futuristic\": 7,\n            \"historical\": 0,\n            \"contemporary_realism\": 8,\n            \"crime\": 3,\n            \"mystery\": 4,\n            \"warfare\": 1,\n            \"political\": 5,\n            \"sports\": 0,\n            \"biographical\": 0,\n            \"coming_of_age\": 1,\n            \"family_dynamics\": 3,\n            \"psychological\": 8,\n            \"showbiz\": 1,\n            \"gaming\": 1,\n            \"pop_culture\": 4,\n            \"social_commentary\": 9,\n            \"class_and_capitalism\": 6,\n            \"technology_and_humanity\": 10,\n            \"spiritual\": 1,\n            \"narrative_structure\": 8,\n            \"dialogue_quality\": 7,\n            \"character_depth\": 6,\n            \"slow_burn\": 5,\n            \"fast_pace\": 4,\n            \"intrigue\": 8,\n            \"complexity\": 7,\n            \"rewatchability\": 7,\n            \"hopefulness\": 2,\n            \"bleakness\": 8,\n            \"ambiguity\": 6,\n            \"novelty\": 8,\n            \"homage_and_reference\": 3,\n            \"non_linear_narrative\": 3,\n            \"meta_narrative\": 4,\n            \"surrealism\": 4,\n            \"eccentricity\": 5,\n            \"philosophical\": 8,\n            \"educational\": 2,\n            \"direction\": 9,\n            \"acting\": 8,\n            \"cinematography\": 9,\n            \"editing\": 8,\n            \"music_composition\": 7,\n            \"world_immersion\": 8,\n            \"spectacle\": 4,\n            \"visual_stylization\": 8,\n            \"pastiche\": 2,\n            \"psychedelic\": 1,\n            \"grotesque\": 3,\n            \"camp_and_irony\": 4,\n            \"dialogue_centrality\": 7,\n            \"music_centrality\": 6,\n            \"sound_centrality\": 7\n          },\n          \"highlight_keys\": [\n            \"technology_and_humanity\",\n            \"social_commentary\",\n            \"bleakness\",\n            \"uncanny\",\n            \"psychological\",\n            \"satire_parody\",\n            \"direction\",\n            \"cinematography\"\n          ]\n        },\n        \"is_anime\": false,\n        \"production_info\": {\n          \"method\": \"Live-Action\",\n          \"animation_style\": null\n        },\n        \"content_advisories\": [\n          \"Violence\",\n          \"Sexual Content\",\n          \"Strong Language\",\n          \"Disturbing Imagery\"\n        ],\n        \"social_suitability\": {\n          \"solo_watch\": true,\n          \"date_night\": true,\n          \"group_party\": false,\n          \"family\": false,\n          \"partner\": true,\n          \"friends\": true,\n          \"kids\": false,\n          \"teens\": false,\n          \"adults\": true,\n          \"intergenerational\": false,\n          \"public_viewing_safe\": true\n        },\n        \"viewing_context\": {\n          \"is_thought_provoking\": true,\n          \"is_pure_escapism\": false,\n          \"is_background_friendly\": false,\n          \"is_comfort_watch\": false,\n          \"is_binge_friendly\": true,\n          \"is_drop_in_friendly\": true\n        },\n        \"essence_tags\": [\n          \"Tech-Noir Anthology\",\n          \"Dystopian Satire\",\n          \"Psychological Thriller\",\n          \"Modern Paranoia\",\n          \"Cynical & Bleak\",\n          \"Philosophical Horror\",\n          \"High Production Value\",\n          \"Social Critique\",\n          \"Unsettling Atmosphere\"\n        ],\n        \"essence_text\": \"A chilling anthology series that holds a dark mirror up to contemporary society, exploring the unintended consequences of new technologies on human nature. Each episode serves as a self-contained, high-quality thriller, blending psychological tension with biting social satire. The show is defined by its bleak outlook and unsettling atmosphere, often leaving viewers with a sense of dread rather than resolution. It is a masterclass in modern direction and cinematography, transforming mundane settings into sites of existential horror.\"\n      }\n    }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7945,
+    "completion_tokens": 1284,
+    "total_tokens": 9229,
+    "cost": 0.00022095,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00022095,
+      "upstream_inference_prompt_cost": 5.403e-05,
+      "upstream_inference_completions_cost": 0.00016692
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}
