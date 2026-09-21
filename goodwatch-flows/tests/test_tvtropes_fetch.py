@@ -85,8 +85,15 @@ class CrawlTests(unittest.IsolatedAsyncioTestCase):
         async def route(request):
             key = request.request.url.removeprefix(BASE)
             self.requests.append(key)
-            status, body = self.pages.get(key, (404, article("No work found")))
-            await request.fulfill(status=status, content_type="text/html", body=body)
+            status, body, *headers = self.pages.get(
+                key, (404, article("No work found"))
+            )
+            await request.fulfill(
+                status=status,
+                content_type="text/html",
+                body=body,
+                headers=headers[0] if headers else None,
+            )
 
         await self.context.route("**/*", route)
 
@@ -202,6 +209,42 @@ class CrawlTests(unittest.IsolatedAsyncioTestCase):
         result = await self.crawl("Citizen Kane", 1941)
         self.assertTrue(result.rate_limit_reached)
         self.assertFalse(result.tropes)
+
+    async def test_cloudflare_challenge_header_is_a_block(self):
+        self.pages["Film/Example2000"] = (
+            200,
+            work("Example is a 2000 film."),
+            {"cf-mitigated": "challenge"},
+        )
+        result = await self.crawl("Example", 2000)
+        self.assertTrue(result.rate_limit_reached)
+        self.assertFalse(result.tropes)
+
+    async def test_leading_empty_paragraphs_do_not_hide_the_introduction(self):
+        self.pages["Film/Example2000"] = (
+            200,
+            '<div id="main-article"><p></p><p> </p><p>\n</p><p></p>'
+            "<p>Example is a 2000 film.</p><h2>Tropes</h2><ul>" + TROPE + "</ul></div>",
+        )
+        result = await self.crawl("Example", 2000)
+        self.assertEqual(result.url, BASE + "Film/Example2000")
+        self.assertEqual(len(result.tropes), 1)
+
+    async def test_list_items_survive_dom_mutation_and_skip_linkless_items(self):
+        self.pages["Film/Example2000"] = (
+            200,
+            article(
+                "Example is a 2000 film.",
+                "<h2>Tropes</h2><ul><li>No link here</li>"
+                + TROPE
+                + '<li><a href="/pmwiki/pmwiki.php/Main/TheHero"> The Hero </a>: Saves.</li></ul>'
+                "<script>setInterval(() => { const ul = document.querySelector('ul');"
+                " ul.innerHTML = ul.innerHTML; }, 1)</script>",
+            ),
+        )
+        result = await self.crawl("Example", 2000)
+        self.assertEqual([t.name for t in result.tropes], ["Big Bad", "The Hero"])
+        self.assertIn(": Saves.", result.tropes[1].html)
 
     async def test_missing_subpage_is_failure_not_partial_success(self):
         self.pages["Film/CitizenKane1941"] = (
