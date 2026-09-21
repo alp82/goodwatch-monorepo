@@ -48,6 +48,16 @@ class SlugTests(unittest.TestCase):
                 self.assertIn(expected, title_variations([title]))
         self.assertEqual(title_variations(["", "東京"]), [])
 
+    def test_year_like_titles_also_get_the_year_reading(self):
+        self.assertIn("NineteenSeventeen", title_variations(["1917"]))
+        self.assertIn("OneThousandNineHundredSeventeen", title_variations(["1917"]))
+        self.assertIn("NineteenFortyOneTheMovie", title_variations(["1941 The Movie"]))
+        # Cardinal-only outside 1100-1999 and for x00/x0y (no "Oh" forms yet).
+        self.assertEqual(title_variations(["300"]), ["300", "ThreeHundred"])
+        self.assertEqual(len(title_variations(["2001"])), 2)
+        self.assertEqual(len(title_variations(["1900"])), 2)
+        self.assertEqual(len(title_variations(["1905"])), 2)
+
     def test_movie_disambiguation_uses_movie_collection(self):
         with patch.object(fetch.TvTropesMovieTags, "objects") as movies, patch.object(
             fetch.TvTropesTvTags, "objects"
