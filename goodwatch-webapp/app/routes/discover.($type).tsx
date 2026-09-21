@@ -6,7 +6,23 @@ import {
 	useNavigate,
 	useRouteError,
 } from "@remix-run/react"
+import {
+	type DehydratedState,
+	QueryClient,
+	dehydrate,
+} from "@tanstack/react-query"
 import React, { useState } from "react"
+import { queryKeyCast } from "~/routes/api.cast"
+import { queryKeyCountries } from "~/routes/api.countries"
+import { queryKeyCrew } from "~/routes/api.crew"
+import { queryKeyGenres } from "~/routes/api.genres.all"
+import { queryKeyStreamingProviders } from "~/routes/api.streaming-providers"
+import { getCast } from "~/server/cast.server"
+import { getCountries } from "~/server/countries.server"
+import { getCrew } from "~/server/crew.server"
+import { getGenresUnique } from "~/server/genres.server"
+import { getStreamingProviders } from "~/server/streaming-providers.server"
+import { prefetchUserSettings } from "~/server/user-settings.server"
 import {
 	type DiscoverParams,
 	type DiscoverResults,
@@ -16,9 +32,8 @@ import {
 import type { DiscoverFilterType } from "~/server/types/discover-types"
 import type { FilterMediaType } from "~/server/utils/query-db"
 import MovieTvGrid from "~/ui/explore/MovieTvGrid"
-import AddFilterBar from "~/ui/filter/AddFilterBar"
 import FilterBar from "~/ui/filter/FilterBar"
-import MediaTypeTabs from "~/ui/tabs/MediaTypeTabs"
+import type { TitleType } from "~/ui/filter/sections/SectionType"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
@@ -47,6 +62,7 @@ interface LoaderData {
 	initialResults: { pages: DiscoverResults[]; pageParams: [number] }
 	initialParams: Omit<DiscoverParams, "page">
 	mediaType: FilterMediaType
+	dehydratedState: DehydratedState
 }
 
 export const loader = async ({
@@ -85,8 +101,48 @@ export const loader = async ({
 		pagePromises.push(getDiscoverResults(discoverParamsWithPage))
 	}
 
+	// Prefetch what the active filter chips display, so they render via SSR
+	const queryClient = new QueryClient()
+	const withCast = urlParams.get("withCast") || ""
+	const withoutCast = urlParams.get("withoutCast") || ""
+	const withCrew = urlParams.get("withCrew") || ""
+	const withoutCrew = urlParams.get("withoutCrew") || ""
+	const hasStreaming =
+		urlParams.has("streamingPreset") || urlParams.has("withStreamingProviders")
+	const chipPromises = [
+		hasStreaming && prefetchUserSettings({ queryClient, request }),
+		(urlParams.has("withGenres") || urlParams.has("withoutGenres")) &&
+			queryClient.prefetchQuery({
+				queryKey: queryKeyGenres,
+				queryFn: () => getGenresUnique(),
+			}),
+		(withCast || withoutCast) &&
+			queryClient.prefetchQuery({
+				queryKey: [...queryKeyCast, "", withCast, withoutCast],
+				queryFn: () => getCast({ text: "", withCast, withoutCast }),
+			}),
+		(withCrew || withoutCrew) &&
+			queryClient.prefetchQuery({
+				queryKey: [...queryKeyCrew, "", withCrew, withoutCrew],
+				queryFn: () => getCrew({ text: "", withCrew, withoutCrew }),
+			}),
+		hasStreaming &&
+			queryClient.prefetchQuery({
+				queryKey: queryKeyStreamingProviders,
+				queryFn: () => getStreamingProviders({ country: baseParams.country }),
+			}),
+		hasStreaming &&
+			queryClient.prefetchQuery({
+				queryKey: queryKeyCountries,
+				queryFn: () => getCountries({}),
+			}),
+	]
+
 	// Wait for all pages to load
-	const results = await Promise.all(pagePromises)
+	const [results] = await Promise.all([
+		Promise.all(pagePromises),
+		Promise.all(chipPromises),
+	])
 
 	// Format initial data with all loaded pages
 	const initialResults = {
@@ -94,7 +150,12 @@ export const loader = async ({
 		pageParams: Array.from({ length: pagesToLoad }, (_, i) => i + 1),
 	}
 
-	return { initialResults, initialParams, mediaType }
+	return {
+		initialResults,
+		initialParams,
+		mediaType,
+		dehydratedState: dehydrate(queryClient),
+	}
 }
 
 export function ErrorBoundary() {
@@ -146,7 +207,7 @@ export default function Discover() {
 		},
 	]
 
-	const handleTabSelect = (tab: Tab<FilterMediaType>) => {
+	const handleTypeChange = (type: TitleType | undefined) => {
 		// Navigate to the correct route path instead of just updating query params
 		const newParams = new URLSearchParams(location.search)
 		// Remove the type from query params as it will be in the path
@@ -156,7 +217,8 @@ export default function Discover() {
 
 		const queryString = newParams.toString() ? `?${newParams.toString()}` : ""
 		// Use the actual URL path for media type selection
-		navigate(`/discover/${tab.key !== "all" ? tab.key : ""}${queryString}`)
+		const typePath = type === "movie" ? "/movies" : type === "show" ? "/show" : ""
+		navigate(`/discover${typePath}${queryString}`)
 	}
 
 	const handleSortBySelect = (tab: Tab<DiscoverSortBy>) => {
@@ -165,43 +227,21 @@ export default function Discover() {
 		})
 	}
 
-	const [isAddingFilter, setIsAddingFilter] = useState(false)
-	const toggleIsAddingFilter = () => setIsAddingFilter((prev) => !prev)
-
 	const [filterToEdit, setFilterToEdit] = useState<DiscoverFilterType | null>(
 		null,
 	)
 	const setSelectedFilter = (filterType: DiscoverFilterType | null) => {
-		setIsAddingFilter(false)
 		setFilterToEdit(filterType)
 	}
 	return (
 		<>
 			<div className="relative xl-h:sticky xl-h:top-16 w-full py-2 flex flex-col gap-2 flex-center justify-center bg-gray-950 z-40">
-				<AddFilterBar
-					params={currentParams}
-					isVisible={true}
-					onSelect={setSelectedFilter}
-				/>
 				<FilterBar
-					params={currentParams}
+					params={{ ...currentParams, type: mediaType }}
+					onTypeChange={handleTypeChange}
 					filterToEdit={filterToEdit}
-					isAddingFilter={isAddingFilter}
-					onAddToggle={toggleIsAddingFilter}
 					onEditToggle={setSelectedFilter}
 				/>
-			</div>
-			<div className="w-full bg-gray-950/35 pb-4">
-				<div className="max-w-7xl mx-auto px-4 flex flex-col gap-4">
-					<MediaTypeTabs selected={mediaType} onSelect={handleTabSelect} />
-					{/*<PrefetchPageLinks*/}
-					{/*	key="discover-type"*/}
-					{/*	page={constructUrl({*/}
-					{/*		...currentParams,*/}
-					{/*		type: params.type === "movie" ? "show" : "movie",*/}
-					{/*	})}*/}
-					{/*/>*/}
-				</div>
 			</div>
 			<div className="max-w-7xl mx-auto px-4 flex flex-col gap-4">
 				<div className="mt-2">

@@ -64,6 +64,7 @@ export const combinationTypeOptions: CombinationTypeOption[] = [
 ];
 
 export const DISCOVER_FILTER_TYPES = [
+	"type",
 	"watch",
 	"streaming",
 	"score",
@@ -86,6 +87,11 @@ export interface DiscoverFilterOption {
 
 export const discoverFilters: Record<DiscoverFilterType, DiscoverFilterOption> =
 	{
+		type: {
+			label: "Type",
+			color: "teal",
+			associatedParams: ["type"],
+		},
 		watch: {
 			label: "Watch",
 			color: "blue",

@@ -79,3 +79,20 @@ export async function _getGenresTV({}: GenresTVParams): Promise<GenresResults> {
 		`https://api.themoviedb.org/3/genre/tv/list?api_key=${process.env.TMDB_API_KEY}`,
 	).then((res) => res.json())
 }
+
+export const getGenresUnique = async () => {
+	const combinedGenres = await getGenresAll()
+
+	const duplicateGenres = Object.values(genreDuplicates).flat()
+	const genres = combinedGenres.reduce((genres, current) => {
+		if (
+			!genres.some((genre) => genre.id === current.id) &&
+			!duplicateGenres.includes(current.name)
+		) {
+			genres.push(current)
+		}
+		return genres
+	}, [] as Genre[])
+	genres.sort((a, b) => a.name.localeCompare(b.name))
+	return genres
+}

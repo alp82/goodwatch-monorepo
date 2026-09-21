@@ -38,7 +38,7 @@ export default function FilterBarSection({
 			onKeyDown={() => null}
 		>
 			{label && (
-				<div className="flex items-center justify-between text-xs">
+				<div className="flex items-center justify-between gap-4 text-xs">
 					<span className="text-sm font-extrabold">{label}</span>
 					{isActive && onClick && onRemove && (
 						<span className="flex gap-2">

@@ -1,6 +1,5 @@
-import WatchableList from "~/ui/discovery/WatchableList"
 import { AnimatePresence, motion } from "framer-motion"
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 import { useInView } from "react-intersection-observer"
 import { type GetDiscoverResult, useDiscover } from "~/routes/api.discover"
 import type { DiscoverParams, DiscoverResult } from "~/server/discover.server"
@@ -27,7 +26,6 @@ export default function MovieTvGrid({
 	initialData,
 	initialParams,
 }: MovieTvGridParams) {
-	const [watch, setWatch] = useState(false)
 	const discoverEnabled = !initialData
 	const discover = useDiscover({
 		initialData,
@@ -59,7 +57,6 @@ export default function MovieTvGrid({
 	// Load more data when scrolling to the bottom
 	useEffect(() => {
 		if (
-			!watch &&
 			inView &&
 			discover.hasNextPage &&
 			!discover.isFetchingNextPage
@@ -67,7 +64,6 @@ export default function MovieTvGrid({
 			discover.fetchNextPage()
 		}
 	}, [
-		watch,
 		inView,
 		discover.hasNextPage,
 		discover.isFetchingNextPage,
@@ -97,57 +93,43 @@ export default function MovieTvGrid({
 
 	return (
 		<>
-			<WatchableList titles={results} onWatchChange={setWatch}>
-				{(visibleTitles) => (
-					<div
-						ref={gridRef}
-						className={
-							"relative mt-4 grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5"
-						}
-					>
-						{!results.length && <EmptyResultsMessage />}
+			<div
+				ref={gridRef}
+				className={
+					"relative mt-4 grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5"
+				}
+			>
+				{!results.length && <EmptyResultsMessage />}
 
-						<AnimatePresence>
-							{visibleTitles.map((result: DiscoverResult, index) => {
-								const offset = Math.floor(seededRandomSin(index + 1) * 12) + 6
-								return (
-									<div key={`${result.media_type}-${result.tmdb_id}`}>
-										<motion.div
-											initial={{
-												y: `-${offset}%`,
-												opacity: 0,
-											}}
-											animate={{ y: "0", opacity: 1 }}
-											exit={{
-												y: `${offset}%`,
-												opacity: 0,
-											}}
-											transition={{ duration: 0.3, type: "tween" }}
-										>
-											<MovieTvCard
-												details={result as DiscoverResult}
-												mediaType={result.media_type}
-												prefetch={false}
-											/>
-										</motion.div>
-									</div>
-								)
-							})}
-						</AnimatePresence>
-					</div>
-				)}
-			</WatchableList>
+				<AnimatePresence initial={false}>
+					{results.map((result: DiscoverResult, index) => {
+						const offset = Math.floor(seededRandomSin(index + 1) * 12) + 6
+						return (
+							<div key={`${result.media_type}-${result.tmdb_id}`}>
+								<motion.div
+									initial={{
+										y: `-${offset}%`,
+										opacity: 0,
+									}}
+									animate={{ y: "0", opacity: 1 }}
+									exit={{
+										y: `${offset}%`,
+										opacity: 0,
+									}}
+									transition={{ duration: 0.3, type: "tween" }}
+								>
+									<MovieTvCard
+										details={result as DiscoverResult}
+										mediaType={result.media_type}
+										prefetch={false}
+									/>
+								</motion.div>
+							</div>
+						)
+					})}
+				</AnimatePresence>
+			</div>
 
-			{watch && discover.hasNextPage && (
-				<button
-					type="button"
-					className="my-4 underline text-sky-200"
-					disabled={discover.isFetchingNextPage}
-					onClick={() => discover.fetchNextPage()}
-				>
-					Check more titles
-				</button>
-			)}
 			{/* Sentinel Element & Loading Indicator for NEXT page */}
 			<LoadMoreIndicator ref={loadMoreRef}>
 				{discover.isFetchingNextPage && <Spinner size="large" />}
