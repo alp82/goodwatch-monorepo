@@ -10,8 +10,9 @@ if (!Array.isArray(raw)) throw new Error("Requests must be a JSON array")
 const requests = raw.map((entry: unknown, index: number) => {
 	if (typeof entry === "string" && entry.trim()) return { request: entry }
 	if (entry && typeof entry === "object" && "request" in entry && typeof entry.request === "string" && entry.request.trim()) {
-		if ("id" in entry && typeof entry.id !== "string") throw new Error(`Request ${index}: id must be a string`)
-		return { request: entry.request, ...("id" in entry ? { id: entry.id } : {}) }
+		if (!("id" in entry)) return { request: entry.request }
+		if (typeof entry.id !== "string") throw new Error(`Request ${index}: id must be a string`)
+		return { request: entry.request, id: entry.id }
 	}
 	throw new Error(`Request ${index}: expected a nonempty string or {id, request}`)
 })
