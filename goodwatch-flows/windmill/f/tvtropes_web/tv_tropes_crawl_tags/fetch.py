@@ -3,6 +3,7 @@
 
 import asyncio
 import re
+import time
 from datetime import datetime
 from playwright.async_api import async_playwright, BrowserContext
 from typing import Union
@@ -25,6 +26,19 @@ BROWSER_TIMEOUT = 180000
 # TV Tropes' Cloudflare rules challenge the default "HeadlessChrome" user agent.
 # Identify the crawler honestly so the site operator can contact or throttle us.
 CRAWLER_USER_AGENT = "GoodWatchBot/0.1 (+https://goodwatch.app; contact alportac@gmail.com)"
+# Minimum spacing between consecutive TV Tropes navigations within one process.
+REQUEST_DELAY_SECONDS = 4
+_last_navigation = None
+
+
+async def paced_goto(page, url):
+    global _last_navigation
+    if _last_navigation is not None:
+        await asyncio.sleep(
+            max(0, REQUEST_DELAY_SECONDS - (time.monotonic() - _last_navigation))
+        )
+    _last_navigation = time.monotonic()
+    return await page.goto(url)
 
 
 async def crawl_data(
@@ -90,7 +104,7 @@ async def crawl_rotten_tomatoes_page(
         visited.add(url)
         page = await browser.new_page()
         try:
-            response = await page.goto(url)
+            response = await paced_goto(page, url)
             if response is None:
                 raise RuntimeError(f"No response from {url}")
             if is_blocked(response):
@@ -278,7 +292,7 @@ async def crawl_page(
             continue
         sub_page = await browser.new_page()
         try:
-            response = await sub_page.goto(url)
+            response = await paced_goto(sub_page, url)
             if response and is_blocked(response):
                 return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=True)
             if not response or response.status != 200 or sub_page.url != url:

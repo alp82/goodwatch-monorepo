@@ -74,8 +74,32 @@ class SlugTests(unittest.TestCase):
         self.assertEqual(entry.tvtropes_url, BASE + "Film/Example")
 
 
+class PacingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_consecutive_navigations_are_spaced(self):
+        import time
+
+        starts = []
+
+        class Page:
+            async def goto(self, url):
+                starts.append(time.monotonic())
+                return url
+
+        with patch.object(fetch, "REQUEST_DELAY_SECONDS", 0.05), patch.object(
+            fetch, "_last_navigation", None
+        ):
+            for url in ("a", "b", "c"):
+                self.assertEqual(await fetch.paced_goto(Page(), url), url)
+
+        self.assertGreaterEqual(starts[1] - starts[0], 0.045)
+        self.assertGreaterEqual(starts[2] - starts[1], 0.045)
+
+
 class CrawlTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        delay = patch.object(fetch, "REQUEST_DELAY_SECONDS", 0)
+        delay.start()
+        self.addCleanup(delay.stop)
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch()
         self.context = await self.browser.new_context()
