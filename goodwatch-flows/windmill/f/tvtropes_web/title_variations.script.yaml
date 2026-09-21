@@ -1,0 +1,8 @@
+summary: TV Tropes title candidates
+description: Generate source-specific slugs without changing application slug rules
+lock: '!inline f/tvtropes_web/title_variations.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []

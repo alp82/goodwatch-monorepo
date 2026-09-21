@@ -6,6 +6,9 @@ import re
 from datetime import datetime
 from playwright.async_api import async_playwright, BrowserContext
 from typing import Union
+from urllib.parse import urljoin, urlparse
+
+from f.tvtropes_web.title_variations import title_variations, slug
 
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
@@ -17,7 +20,6 @@ from f.tvtropes_web.models import (
     Trope,
 )
 from f.utils.string import remove_prefix
-
 
 BROWSER_TIMEOUT = 180000
 
@@ -61,162 +63,230 @@ async def crawl_rotten_tomatoes_page(
     type: str,
     browser: BrowserContext,
 ) -> TvTropesCrawlResult:
-    main_url = "https://tvtropes.org/pmwiki/pmwiki.php"
-    base_url = f"{main_url}/{type}"
-
-    all_variations = (
-        [
-            f"{title}{next_entry.release_year}" if i % 2 == 0 else title
-            for title in next_entry.title_variations
-            for i in range(2)
-        ]
-        if next_entry.release_year
-        and is_ambiguous_title(next_entry.original_title, type)
-        else next_entry.title_variations
+    # A release year is required by the identity check. Do not spend requests on
+    # catalog records that cannot possibly be verified by this resolver.
+    if not next_entry.release_year:
+        return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=False)
+    # Regenerate from the raw title too: old Mongo records contain lossy slugs.
+    variations = title_variations(
+        [next_entry.original_title, *next_entry.title_variations]
     )
-    all_urls = [f"{base_url}/{title}" for title in all_variations]
-
-    for url in all_urls:
-        # url = "https://tvtropes.org/pmwiki/pmwiki.php/Series/KitchenNightmares"
-        print(f"trying url: {url}")
-        page = await browser.new_page()
-        response = await page.goto(url)
-        if response.status == 403:
-            return TvTropesCrawlResult(
-                url=None,
-                tropes=[],
-                rate_limit_reached=True,
-            )
-        elif response.status == 404:
-            # follow links in inexact title pages
-            # e.g. https://tvtropes.org/pmwiki/pmwiki.php/Film/FindingNemo
-            # do not follow language specific links (like "EsAnime/Bleach")
-            # e.g. https://tvtropes.org/pmwiki/pmwiki.php/Series/Bleach
-            try:
-                western_animation_link = page.locator(
-                    "#main-article a:text-matches('^WesternAnimation/', 'i')"
-                )
-                is_western_animation = await western_animation_link.is_visible()
-            except TimeoutError:
-                print(
-                    f"Timeout for {all_variations[0]} at {url} trying to locate ^WesternAnimation/"
-                )
-            try:
-                animation_link = page.locator(
-                    "#main-article a:text-matches('^Animation/', 'i')"
-                )
-                is_animation = await animation_link.is_visible()
-            except TimeoutError:
-                print(
-                    f"Timeout for {all_variations[0]} at {url} trying to locate ^Animation/"
-                )
-            try:
-                anime_link = page.locator(
-                    "#main-article a:text-matches('^Anime/', 'i')"
-                )
-                is_anime = await anime_link.is_visible()
-            except TimeoutError:
-                print(
-                    f"Timeout for {all_variations[0]} at {url} trying to locate ^Anime/"
-                )
-
-            if is_western_animation:
-                print(f"is animation: {url}")
-                correct_url = await western_animation_link.get_attribute("href")
-                full_correct_url = f"https://tvtropes.org{correct_url}"
-                response = await page.goto(full_correct_url)
-            elif is_anime:
-                print(f"is anime: {url}")
-                correct_url = await anime_link.get_attribute("href")
-                full_correct_url = f"https://tvtropes.org{correct_url}"
-                response = await page.goto(full_correct_url)
-            elif is_animation:
-                print(f"is animation: {url}")
-                correct_url = await animation_link.get_attribute("href")
-                full_correct_url = f"https://tvtropes.org{correct_url}"
-                response = await page.goto(full_correct_url)
-
-        elif response.status == 200:
-            # returns empty tropes list from summary pages
-            # e.g. https://tvtropes.org/pmwiki/pmwiki.php/Film/StarWars
-
-            # returns empty tropes list from inexact titles without Films
-            # e.g. https://tvtropes.org/pmwiki/pmwiki.php/Film/GranTurismo
-
-            # returns empty tropes list in multiple title pages
-            # e.g. https://tvtropes.org/pmwiki/pmwiki.php/Film/TheDark
-            break
-
-    if response.status != 200:
-        return TvTropesCrawlResult(
-            url=None,
-            tropes=[],
-            rate_limit_reached=False,
-        )
-
-    return await crawl_page(browser, page)
-
-
-async def crawl_page(browser, page) -> TvTropesCrawlResult:
-    # Locate the trope elements
-    # normal movie page: https://tvtropes.org/pmwiki/pmwiki.php/Film/AmericanBeauty
-    # normal tv page: https://tvtropes.org/pmwiki/pmwiki.php/Series/Jericho2006
-    # with spoilers: https://tvtropes.org/pmwiki/pmwiki.php/Film/DancerInTheDark
-    # with folders: https://tvtropes.org/pmwiki/pmwiki.php/Series/Loki2021
-    # movie with subpages: https://tvtropes.org/pmwiki/pmwiki.php/Film/TheAvengers2012
-    # tv with subpages: https://tvtropes.org/pmwiki/pmwiki.php/Series/BreakingBad
-    # subpages with unrelated links: https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/FamilyGuy
-    # long article (with a few false positives): https://tvtropes.org/pmwiki/pmwiki.php/Film/JamesBond
-
-    tropes_list_elements = page.locator(
-        "h2 ~ ul > li, " "h3 ~ ul > li, " ".folder > ul > li"
-    )
-
-    # Extract and format the scores
-    tropes = []
-    subpages_with_tropes = []
-    for trope_item in await tropes_list_elements.all():
-        trope_name_element = trope_item.locator("a")
-        if not await trope_name_element.count():
+    base = "https://tvtropes.org/pmwiki/pmwiki.php"
+    urls = []
+    for title in variations:
+        if next_entry.release_year:
+            urls.append(f"{base}/{type}/{title}{next_entry.release_year}")
+        urls.append(f"{base}/{type}/{title}")
+    visited = set()
+    while urls:
+        if len(visited) >= 60:
+            raise RuntimeError("TV Tropes candidate limit reached")
+        url = urls.pop(0)
+        if url in visited:
             continue
+        visited.add(url)
+        page = await browser.new_page()
+        try:
+            response = await page.goto(url)
+            if response is None:
+                raise RuntimeError(f"No response from {url}")
+            if response.status in (403, 429):
+                return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=True)
+            if response.status not in (200, 404):
+                raise RuntimeError(f"TV Tropes HTTP {response.status}: {url}")
+            if response.status == 200 and await identifies_work(
+                page, next_entry, type, variations
+            ):
+                result = await crawl_page(browser, page)
+                if result.tropes or result.rate_limit_reached:
+                    return result
+            # Disambiguation and inexact-title pages are navigation, never evidence.
+            # A year-adjacent link is only a candidate: the target must identify the work.
+            links = await page.locator("#main-article a[href]").evaluate_all(
+                "nodes => nodes.map(a => ({href:a.href, text:a.textContent, context:a.parentElement.textContent}))"
+            )
+            for link in links:
+                candidate = urljoin(page.url, link["href"])
+                namespace, name = page_identity(candidate)
+                if namespace not in allowed_namespaces(type):
+                    continue
+                stem = re.sub(r"(?:19|20)\d{2}$", "", name)
+                same_title = any(stem.casefold() == v.casefold() for v in variations)
+                year = str(next_entry.release_year or "")
+                # Non-year suffixes (TheOfficeUS, SpiderMan1) need a matching
+                # title stem and the expected year in the disambiguation entry.
+                contextual_match = (
+                    year
+                    and year in link["context"]
+                    and any(
+                        name.casefold().startswith(v.casefold()) for v in variations
+                    )
+                )
+                if (
+                    (same_title or contextual_match)
+                    and candidate not in visited
+                    and candidate not in urls
+                ):
+                    urls.insert(0, candidate)
+        finally:
+            await page.close()
+    return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=False)
 
-        trope_name_item = trope_name_element.first
-        trope_name = (await trope_name_item.text_content()).strip()
-        trope_url = await trope_name_item.get_attribute("href")
-        trope_html = (await trope_item.inner_html()).strip()
 
-        full_trope_url = f"https://tvtropes.org{trope_url}"
-        is_subpage_link = bool(re.search(r"Tropes [A-Z] to [A-Z]", trope_name))
-        if is_subpage_link:
-            if not subpages_with_tropes:
-                # reset tropes as links above the first
-                # subpage link are probably not tags
-                tropes = []
-            subpages_with_tropes.append(full_trope_url)
-        else:
+def page_identity(url):
+    parsed = urlparse(url)
+    prefix = "/pmwiki/pmwiki.php/"
+    if parsed.hostname not in (
+        "tvtropes.org",
+        "www.tvtropes.org",
+    ) or not parsed.path.startswith(prefix):
+        return "", ""
+    parts = parsed.path[len(prefix) :].split("/")
+    return tuple(parts) if len(parts) == 2 else ("", "")
+
+
+def allowed_namespaces(media_type):
+    return {media_type, "WesternAnimation", "Animation", "Anime"}
+
+
+async def identifies_work(page, entry, media_type, variations):
+    namespace, name = page_identity(page.url)
+    if namespace not in allowed_namespaces(media_type):
+        return False
+    # Use the opening work description, not a year mentioned in a trope/example.
+    paragraphs = await page.locator("#main-article > p").all_text_contents()
+    introduction = " ".join(paragraphs[:3])[:2500]
+    compact = slug(introduction).casefold()
+    matches_title = any(len(v) >= 3 and v.casefold() in compact for v in variations)
+    # Numeric titles cannot be fuzzy matched inside another number.
+    matches_title = matches_title or any(
+        v.isdigit() and re.search(r"(?<!\w)" + re.escape(v) + r"(?!\w)", introduction)
+        for v in variations
+    )
+    if not matches_title or not entry.release_year:
+        return False
+    # The first dated description must identify this release. A guessed near
+    # year, or a later sentence about a remake, is insufficient.
+    years = re.findall(r"\b(?:18|19|20)\d{2}\b", introduction)
+    if not years or years[0] != str(entry.release_year):
+        return False
+    # A shared film-series/volume page does not prove individual-title traits.
+    if media_type == "Film" and re.search(
+        r"\b(?:film series|film duology|two films|both films|two[- ]part film)\b",
+        introduction,
+        re.I,
+    ):
+        return False
+    # In shared animation namespaces, the first dated work description determines
+    # media type; a later sentence about a film adaptation must not identify a show.
+    dated_description = introduction[
+        re.search(r"\b(?:18|19|20)\d{2}\b", introduction).start() :
+    ]
+    dated_description = re.split(r"[.!?](?:\s|$)", dated_description, maxsplit=1)[0]
+    kind = re.search(
+        r"\b(film|movie|series|sitcom|television show|TV show|miniseries)\b",
+        dated_description,
+        re.I,
+    )
+    if not kind:
+        return False
+    return (kind[1].lower() in ("film", "movie")) == (media_type == "Film")
+
+
+async def crawl_page(
+    browser, page, *, is_subpage=False, visited=None, owner=None
+) -> TvTropesCrawlResult:
+    visited = set() if visited is None else visited
+    if owner is None:
+        _, name = page_identity(page.url)
+        stem = re.sub(r"(?:19|20)\d{2}$", "", name)
+        owner = {
+            (base + suffix).casefold()
+            for base in (name, stem)
+            for suffix in ("", "Film", "Series", "Anime", "TV")
+        }
+    if page.url in visited:
+        return TvTropesCrawlResult(url=page.url, tropes=[], rate_limit_reached=False)
+    if len(visited) >= 20:
+        raise RuntimeError("TV Tropes subpage limit reached; refusing a partial result")
+    visited.add(page.url)
+    selector = "#main-article h2 ~ ul > li, #main-article h3 ~ ul > li, #main-article .folder > ul > li"
+    if is_subpage:
+        selector += ", #main-article > ul > li"
+    tropes = []
+    for item in await page.locator(selector).all():
+        links = item.locator("a")
+        if not await links.count():
+            continue
+        link = links.first
+        url = urljoin(page.url, await link.get_attribute("href") or "")
+        namespace, _ = page_identity(url)
+        if namespace != "Main":
+            continue
+        name = (await link.text_content() or "").strip()
+        if name:
             tropes.append(
                 Trope(
-                    name=trope_name,
-                    url=full_trope_url,
-                    html=remove_prefix(text=trope_html, prefix=trope_name),
+                    name=name,
+                    url=url,
+                    html=remove_prefix(
+                        text=(await item.inner_html()).strip(), prefix=name
+                    ),
                 )
             )
-
-    for subpage_url in subpages_with_tropes:
+    # Subpage links may sit outside a heading/folder list (Citizen Kane).
+    links = await page.locator("#main-article a[href]").evaluate_all(
+        "nodes => nodes.map(a => ({href:a.href, text:a.textContent}))"
+    )
+    for link in links:
+        url = urljoin(page.url, link["href"])
+        namespace, name = page_identity(url)
+        if not re.search(r"^Tropes[A-Za-z0-9]+$", name) or not re.search(
+            r"Tropes", link["text"], re.I
+        ):
+            continue
+        # Explicitly exclude franchise/work links and off-site links.
+        if (
+            namespace.casefold() not in owner
+            or namespace
+            in {
+                "Main",
+                "Franchise",
+                "Film",
+                "Series",
+                "Anime",
+                "Animation",
+                "WesternAnimation",
+            }
+            or url in visited
+        ):
+            continue
         sub_page = await browser.new_page()
-        await sub_page.goto(subpage_url)
-        sub_result = await crawl_page(browser, sub_page)
-        tropes += sub_result.tropes
-
+        try:
+            response = await sub_page.goto(url)
+            if response and response.status in (403, 429):
+                return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=True)
+            if not response or response.status != 200 or sub_page.url != url:
+                raise RuntimeError(f"TV Tropes subpage failed: {url}")
+            sub_result = await crawl_page(
+                browser, sub_page, is_subpage=True, visited=visited, owner=owner
+            )
+            if sub_result.rate_limit_reached:
+                return sub_result
+            if not sub_result.tropes:
+                raise RuntimeError(f"TV Tropes subpage has no tropes: {url}")
+            tropes.extend(sub_result.tropes)
+        finally:
+            await sub_page.close()
+    # Duplicate names can occur across folders; keep all distinct passages.
+    unique = {(t.name, t.url, t.html): t for t in tropes}
     return TvTropesCrawlResult(
-        url=page.url,
-        tropes=tropes,
-        rate_limit_reached=False,
+        url=page.url, tropes=list(unique.values()), rate_limit_reached=False
     )
 
 
 def is_ambiguous_title(original_title: str, type: str) -> bool:
-    if type == "m":
+    if type in ("m", "Film"):
         count_with_same_title = TvTropesMovieTags.objects(
             original_title=original_title
         ).count()
@@ -254,6 +324,7 @@ def store_result(
 
     else:
         next_entry.error_message = None
+        next_entry.failed_at = None
         next_entry.updated_at = datetime.utcnow()
         print(f"saving {len(result.tropes or [])} tags for {next_entry.original_title}")
 
@@ -277,7 +348,13 @@ async def tvtropes_crawl_tags(next_entry: Union[TvTropesMovieTags, TvTropesTvTag
         context = await browser.new_context()
         context.set_default_timeout(BROWSER_TIMEOUT)
         try:
-            (crawl_result, _) = await crawl_data(next_entry, context)
+            crawl_result, _ = await crawl_data(next_entry, context)
+        except Exception as error:
+            next_entry.failed_at = datetime.utcnow()
+            next_entry.error_message = str(error)
+            next_entry.is_selected = False
+            next_entry.save()
+            raise
         finally:
             await context.close()
             await browser.close()
@@ -304,6 +381,7 @@ def main(next_id: dict):
         movie_model=TvTropesMovieTags,
         tv_model=TvTropesTvTags,
     )
-    result = asyncio.run(tvtropes_crawl_tags(next_entry))
-    close_mongodb()
-    return result
+    try:
+        return asyncio.run(tvtropes_crawl_tags(next_entry))
+    finally:
+        close_mongodb()

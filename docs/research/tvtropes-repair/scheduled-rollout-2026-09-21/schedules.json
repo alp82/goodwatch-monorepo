@@ -1,0 +1,44 @@
+[
+  {
+    "workspace_id": "goodwatch",
+    "path": "f/sync/copy/tvtropes",
+    "edited_by": "Alp",
+    "edited_at": "2025-07-01T23:26:17.103314Z",
+    "schedule": "0 0 3/6 * * *",
+    "timezone": "Europe/Berlin",
+    "enabled": true,
+    "script_path": "f/sync/copy/tvtropes",
+    "is_flow": false,
+    "summary": null,
+    "extra_perms": {},
+    "is_draft": false
+  },
+  {
+    "workspace_id": "goodwatch",
+    "path": "f/tvtropes_web/tvtropes_crawl_tags",
+    "edited_by": "Alp",
+    "edited_at": "2024-02-12T08:03:57.242127Z",
+    "schedule": "16/20 * * * * *",
+    "timezone": "Europe/Berlin",
+    "enabled": true,
+    "script_path": "f/tvtropes_web/tvtropes_crawl_tags",
+    "is_flow": true,
+    "summary": null,
+    "extra_perms": {},
+    "is_draft": false
+  },
+  {
+    "workspace_id": "goodwatch",
+    "path": "f/tvtropes_web/tvtropes_init_ratings",
+    "edited_by": "Alp",
+    "edited_at": "2023-10-09T22:23:53.508450Z",
+    "schedule": "0 0 2 * * *",
+    "timezone": "Europe/Berlin",
+    "enabled": true,
+    "script_path": "f/tvtropes_web/tvtropes_init_ratings",
+    "is_flow": true,
+    "summary": null,
+    "extra_perms": {},
+    "is_draft": false
+  }
+]

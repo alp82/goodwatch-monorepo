@@ -1,0 +1,33 @@
+{
+  "captured_at": "2026-09-21T07:08:38.995448+00:00",
+  "archive_commit": "881305b5e0e3932e03c6ee5f014ea16499c7a3f7",
+  "deployments": [
+    {
+      "path": "f/tvtropes_web/title_variations",
+      "before_hash": null,
+      "after_hash": "4ac10ba83c6986f3",
+      "content_sha256": "649b9a1064e7d19c25ef9977b76a2a4448d481b87d4b34c5f438c020b1abe6db",
+      "created_at": "2026-09-21T07:06:01.100112Z",
+      "lock_ready": true,
+      "lock_error_logs": null
+    },
+    {
+      "path": "f/tvtropes_web/tvtropes_init_tags/main",
+      "before_hash": "7ca93e7e718b16ba",
+      "after_hash": "5fa3102fb1d8531f",
+      "content_sha256": "3f98d4800df1427601b049a8895299e0c706fe3614849c5308bd26f698b913f1",
+      "created_at": "2026-09-21T07:06:15.920262Z",
+      "lock_ready": true,
+      "lock_error_logs": null
+    },
+    {
+      "path": "f/tvtropes_web/tv_tropes_crawl_tags/fetch",
+      "before_hash": "0caa331a69d161db",
+      "after_hash": "3f78e2ee47145eea",
+      "content_sha256": "716a0048af584fa3bef997f26c01661f073484ed2c10ed91b3359ea0196920e0",
+      "created_at": "2026-09-21T07:06:16.268032Z",
+      "lock_ready": true,
+      "lock_error_logs": null
+    }
+  ]
+}
