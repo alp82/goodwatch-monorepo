@@ -28,6 +28,20 @@ def blocked_status(requests):
     return "source_access_blocked" if 403 in statuses else "rate_limited"
 
 
+# Outcomes that a resumed run does not attempt again.
+COMPLETED_STATUSES = ("recovered", "unresolved", "identified_no_tropes")
+
+
+def result_status(result, requests):
+    if result.rate_limit_reached:
+        return blocked_status(requests)
+    if result.tropes:
+        return "recovered"
+    # The work's page was identified but trope extraction found nothing: an
+    # extraction gap, distinct from "no page identifies this work".
+    return "identified_no_tropes" if result.url else "unresolved"
+
+
 class EvidenceContext:
     def __init__(self, context, directory, delay, limit):
         self.context, self.directory, self.delay, self.limit = (
@@ -125,7 +139,7 @@ async def run(args):
     completed = {
         (r["media_type"], r["tmdb_id"])
         for r in records
-        if r["status"] in ("recovered", "unresolved")
+        if r["status"] in COMPLETED_STATUSES
     }
     started = time.monotonic()
     started_at = datetime.now(timezone.utc).isoformat()
@@ -174,10 +188,8 @@ async def run(args):
                     )
                     record.update(
                         result=result.model_dump(),
-                        status=(
-                            blocked_status(evidence.requests[first_request:])
-                            if result.rate_limit_reached
-                            else "recovered" if result.tropes else "unresolved"
+                        status=result_status(
+                            result, evidence.requests[first_request:]
                         ),
                     )
                     if result.rate_limit_reached:
@@ -218,6 +230,9 @@ async def run(args):
         "attempted": len(latest),
         "recovered": sum(r["status"] == "recovered" for r in latest.values()),
         "unresolved": sum(r["status"] == "unresolved" for r in latest.values()),
+        "identified_no_tropes": sum(
+            r["status"] == "identified_no_tropes" for r in latest.values()
+        ),
         "failed": sum(
             r["status"] in ("failed", "rate_limited", "source_access_blocked")
             for r in latest.values()
