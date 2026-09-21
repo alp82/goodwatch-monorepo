@@ -1,0 +1,2217 @@
+{
+  "method": "Original _getUserData function transpiled from source; same node-crate driver, connection and five parallel SQL queries. Scoped variants append title predicates. No auth/HTTP/browser time included.",
+  "rounds": [
+    {
+      "round": 0,
+      "variant": "full",
+      "fetchMs": 120.311708,
+      "stringifyMs": 2.3799610000000087,
+      "bytes": 159882,
+      "gzipBytes": 28829,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 44.915556,
+          "dbMs": 3.615706,
+          "rows": 36
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 52.321417000000004,
+          "dbMs": 4.843828,
+          "rows": 353
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 52.100477999999995,
+          "dbMs": 3.468153,
+          "rows": 137
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 88.26551,
+          "dbMs": 8.717578,
+          "rows": 975
+        },
+        {
+          "table": "user_score",
+          "wallMs": 116.61654300000001,
+          "dbMs": 13.818162,
+          "rows": 1002
+        }
+      ]
+    },
+    {
+      "round": 0,
+      "variant": "one",
+      "fetchMs": 52.88581400000001,
+      "stringifyMs": 0.017549999999999955,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 27.621358000000015,
+          "dbMs": 1.680517,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.320244000000002,
+          "dbMs": 2.359107,
+          "rows": 1
+        },
+        {
+          "table": "user_score",
+          "wallMs": 29.867147999999986,
+          "dbMs": 3.842096,
+          "rows": 0
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 30.509095000000002,
+          "dbMs": 3.83725,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 52.492425999999995,
+          "dbMs": 1.689321,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 0,
+      "variant": "batch_or",
+      "fetchMs": 101.635245,
+      "stringifyMs": 0.10142000000001872,
+      "bytes": 3538,
+      "gzipBytes": 754,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 71.25791800000002,
+          "dbMs": 44.511925,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 72.424914,
+          "dbMs": 45.61491,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 82.45270400000001,
+          "dbMs": 56.598454,
+          "rows": 23
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 84.62530499999997,
+          "dbMs": 58.507664,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 101.375246,
+          "dbMs": 74.5294,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 0,
+      "variant": "batch_in",
+      "fetchMs": 34.04439100000002,
+      "stringifyMs": 0.18936899999999923,
+      "bytes": 3538,
+      "gzipBytes": 741,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 29.769047999999998,
+          "dbMs": 5.389956,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 30.67062500000003,
+          "dbMs": 6.825515,
+          "rows": 24
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 30.553736000000015,
+          "dbMs": 6.642473,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 31.460211000000015,
+          "dbMs": 7.136343,
+          "rows": 23
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 33.65716200000003,
+          "dbMs": 10.024465,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "round": 0,
+      "variant": "counts",
+      "fetchMs": 33.883331999999996,
+      "stringifyMs": 0.002460000000041873,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 32.34217800000005,
+          "dbMs": 3.933702,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 33.41455400000001,
+          "dbMs": 3.870881,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 33.41222299999998,
+          "dbMs": 3.909612,
+          "rows": 1
+        },
+        {
+          "table": "user_score",
+          "wallMs": 33.65200200000004,
+          "dbMs": 4.120433,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 33.57706300000001,
+          "dbMs": 4.063872,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "variant": "counts",
+      "fetchMs": 29.21061100000003,
+      "stringifyMs": 0.002720000000010714,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 28.912091999999973,
+          "dbMs": 3.841621,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.90719200000001,
+          "dbMs": 3.905615,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.91875200000004,
+          "dbMs": 3.772792,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 29.01994099999996,
+          "dbMs": 4.000217,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 29.08381099999997,
+          "dbMs": 3.945503,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "variant": "batch_in",
+      "fetchMs": 32.142957999999965,
+      "stringifyMs": 0.062409999999999854,
+      "bytes": 3538,
+      "gzipBytes": 751,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 27.730007,
+          "dbMs": 5.156433,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.746173,
+          "dbMs": 6.416587,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 29.86641800000001,
+          "dbMs": 7.145741,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 29.927378000000033,
+          "dbMs": 7.270766,
+          "rows": 23
+        },
+        {
+          "table": "user_score",
+          "wallMs": 32.05042899999995,
+          "dbMs": 8.724226,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "variant": "batch_or",
+      "fetchMs": 90.46707000000004,
+      "stringifyMs": 0.08176000000003114,
+      "bytes": 3538,
+      "gzipBytes": 745,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 72.82124200000004,
+          "dbMs": 49.759155,
+          "rows": 24
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 74.56880600000005,
+          "dbMs": 44.605984,
+          "rows": 3
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 86.95867499999997,
+          "dbMs": 63.723824,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 86.97627500000004,
+          "dbMs": 57.47919,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 90.23607199999992,
+          "dbMs": 64.90845,
+          "rows": 23
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "variant": "one",
+      "fetchMs": 23.74246299999993,
+      "stringifyMs": 0.02192000000002281,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 21.675881000000004,
+          "dbMs": 1.616847,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 22.035570000000007,
+          "dbMs": 1.844438,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 21.808331000000067,
+          "dbMs": 2.217025,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 22.513477999999964,
+          "dbMs": 3.599363,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 23.39003500000001,
+          "dbMs": 1.28919,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "variant": "full",
+      "fetchMs": 112.69919000000004,
+      "stringifyMs": 1.8603630000000067,
+      "bytes": 159882,
+      "gzipBytes": 28816,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 32.37388800000008,
+          "dbMs": 4.107095,
+          "rows": 36
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 32.60601699999995,
+          "dbMs": 4.440934,
+          "rows": 137
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 34.68901800000003,
+          "dbMs": 6.873444,
+          "rows": 353
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 43.01835499999993,
+          "dbMs": 8.454718,
+          "rows": 975
+        },
+        {
+          "table": "user_score",
+          "wallMs": 111.66635399999996,
+          "dbMs": 10.451133,
+          "rows": 1002
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "variant": "full",
+      "fetchMs": 96.74654499999997,
+      "stringifyMs": 1.8737729999999146,
+      "bytes": 159882,
+      "gzipBytes": 28868,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 35.50466499999993,
+          "dbMs": 4.24708,
+          "rows": 36
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 35.76439400000004,
+          "dbMs": 5.061545,
+          "rows": 137
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 38.097623999999996,
+          "dbMs": 6.588083,
+          "rows": 353
+        },
+        {
+          "table": "user_score",
+          "wallMs": 46.40964100000008,
+          "dbMs": 8.596108,
+          "rows": 1002
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 95.88906799999995,
+          "dbMs": 12.203792,
+          "rows": 975
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "variant": "one",
+      "fetchMs": 23.882042999999953,
+      "stringifyMs": 0.022399999999947795,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 22.131019000000038,
+          "dbMs": 1.666954,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 22.639207000000056,
+          "dbMs": 3.678858,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 22.814306999999985,
+          "dbMs": 3.722882,
+          "rows": 0
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 22.697227999999996,
+          "dbMs": 3.815354,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 23.735682999999995,
+          "dbMs": 3.855922,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "variant": "batch_or",
+      "fetchMs": 88.13103000000001,
+      "stringifyMs": 0.07229999999992742,
+      "bytes": 3538,
+      "gzipBytes": 740,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 65.28676300000006,
+          "dbMs": 41.60072,
+          "rows": 23
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 74.24760700000002,
+          "dbMs": 48.849785,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 82.96619099999998,
+          "dbMs": 58.844727,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 83.21309999999994,
+          "dbMs": 60.393097,
+          "rows": 24
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 87.92824099999996,
+          "dbMs": 65.73925,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "variant": "batch_in",
+      "fetchMs": 30.859384999999975,
+      "stringifyMs": 0.08539900000005218,
+      "bytes": 3538,
+      "gzipBytes": 745,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 26.476871999999958,
+          "dbMs": 5.585765,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 27.731836999999928,
+          "dbMs": 7.312368,
+          "rows": 24
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.422473999999966,
+          "dbMs": 7.145692,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.569594000000052,
+          "dbMs": 7.389203,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 30.49265600000001,
+          "dbMs": 9.517609,
+          "rows": 23
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "variant": "counts",
+      "fetchMs": 35.37164500000006,
+      "stringifyMs": 0.005300000000033833,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 35.19309599999997,
+          "dbMs": 3.890265,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 35.154956000000084,
+          "dbMs": 3.295698,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 35.21005600000001,
+          "dbMs": 3.601041,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 35.21890599999995,
+          "dbMs": 3.492073,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 35.22062600000004,
+          "dbMs": 3.60521,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "variant": "counts",
+      "fetchMs": 25.963704000000007,
+      "stringifyMs": 0.005070000000046093,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 25.605525000000057,
+          "dbMs": 3.539728,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 25.680144999999925,
+          "dbMs": 3.53671,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 25.718915000000038,
+          "dbMs": 3.591204,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 25.793544999999995,
+          "dbMs": 3.733955,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 25.847755000000006,
+          "dbMs": 4.30567,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "variant": "batch_in",
+      "fetchMs": 30.60772499999996,
+      "stringifyMs": 0.09793000000001939,
+      "bytes": 3538,
+      "gzipBytes": 757,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 28.826403000000028,
+          "dbMs": 8.300477,
+          "rows": 24
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 28.867872000000034,
+          "dbMs": 5.181962,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 30.205106,
+          "dbMs": 6.722709,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 30.31330600000001,
+          "dbMs": 6.84365,
+          "rows": 23
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 30.39872600000001,
+          "dbMs": 7.570529,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "variant": "batch_or",
+      "fetchMs": 104.15005499999995,
+      "stringifyMs": 0.08148899999991954,
+      "bytes": 3538,
+      "gzipBytes": 749,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 64.53457700000001,
+          "dbMs": 41.977394,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 69.03028800000004,
+          "dbMs": 42.27176,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 82.06529499999988,
+          "dbMs": 54.20075,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 82.497973,
+          "dbMs": 59.951416,
+          "rows": 24
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 103.74777600000016,
+          "dbMs": 73.97092,
+          "rows": 23
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "variant": "one",
+      "fetchMs": 28.22029500000008,
+      "stringifyMs": 0.019800000000032014,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 24.962738000000172,
+          "dbMs": 1.707726,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 27.13273900000013,
+          "dbMs": 3.293376,
+          "rows": 0
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 27.19017900000017,
+          "dbMs": 3.483912,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 27.974046000000044,
+          "dbMs": 3.668066,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.062376000000086,
+          "dbMs": 3.814261,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "variant": "full",
+      "fetchMs": 100.88655799999992,
+      "stringifyMs": 2.082331999999951,
+      "bytes": 159882,
+      "gzipBytes": 28825,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 29.278940000000148,
+          "dbMs": 3.611198,
+          "rows": 36
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 29.51957900000002,
+          "dbMs": 4.432334,
+          "rows": 353
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 30.7567939999999,
+          "dbMs": 5.348133,
+          "rows": 137
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 62.28586500000006,
+          "dbMs": 7.252414,
+          "rows": 975
+        },
+        {
+          "table": "user_score",
+          "wallMs": 99.20881499999996,
+          "dbMs": 14.304196,
+          "rows": 1002
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "variant": "full",
+      "fetchMs": 115.57648799999993,
+      "stringifyMs": 2.0602920000001177,
+      "bytes": 159882,
+      "gzipBytes": 28753,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 26.5871709999999,
+          "dbMs": 2.892726,
+          "rows": 36
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 27.99871599999983,
+          "dbMs": 3.793277,
+          "rows": 137
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 30.70319399999994,
+          "dbMs": 5.957557,
+          "rows": 353
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 38.90177100000005,
+          "dbMs": 10.500576,
+          "rows": 975
+        },
+        {
+          "table": "user_score",
+          "wallMs": 114.27182400000015,
+          "dbMs": 12.808776,
+          "rows": 1002
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "variant": "one",
+      "fetchMs": 26.572102000000086,
+      "stringifyMs": 0.026439999999865904,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_skipped",
+          "wallMs": 24.25558100000012,
+          "dbMs": 0.965965,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 24.57412000000022,
+          "dbMs": 3.392502,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 24.448020000000042,
+          "dbMs": 2.470218,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 25.307996999999887,
+          "dbMs": 3.331799,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 26.362502000000177,
+          "dbMs": 3.176374,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "variant": "batch_or",
+      "fetchMs": 103.38230700000008,
+      "stringifyMs": 0.06775000000016007,
+      "bytes": 3538,
+      "gzipBytes": 749,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 78.39044899999999,
+          "dbMs": 41.71368,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 81.309978,
+          "dbMs": 45.51411,
+          "rows": 24
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 85.16848200000004,
+          "dbMs": 49.304115,
+          "rows": 23
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 94.81188199999997,
+          "dbMs": 56.073254,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 103.07780899999989,
+          "dbMs": 68.44262,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "variant": "batch_in",
+      "fetchMs": 31.413092000000006,
+      "stringifyMs": 0.06353899999999157,
+      "bytes": 3538,
+      "gzipBytes": 750,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 27.711586000000125,
+          "dbMs": 4.884255,
+          "rows": 3
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.75376200000005,
+          "dbMs": 5.925535,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 28.75954200000001,
+          "dbMs": 6.59159,
+          "rows": 23
+        },
+        {
+          "table": "user_score",
+          "wallMs": 30.328916000000163,
+          "dbMs": 8.175302,
+          "rows": 24
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 30.758714000000055,
+          "dbMs": 8.430614,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "variant": "counts",
+      "fetchMs": 24.73204899999996,
+      "stringifyMs": 0.0019800000000032014,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 24.497249999999894,
+          "dbMs": 3.790206,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 24.509180000000015,
+          "dbMs": 3.868467,
+          "rows": 1
+        },
+        {
+          "table": "user_score",
+          "wallMs": 24.655128999999988,
+          "dbMs": 4.511421,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 24.57818999999995,
+          "dbMs": 3.89922,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 24.598819999999932,
+          "dbMs": 4.412689,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "variant": "counts",
+      "fetchMs": 34.44687900000008,
+      "stringifyMs": 0.008410000000139917,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 30.565174999999954,
+          "dbMs": 3.928126,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 33.12112400000001,
+          "dbMs": 7.596933,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 33.26625399999989,
+          "dbMs": 7.381304,
+          "rows": 1
+        },
+        {
+          "table": "user_score",
+          "wallMs": 34.29738900000007,
+          "dbMs": 3.52091,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 33.89931200000001,
+          "dbMs": 3.499057,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "variant": "batch_in",
+      "fetchMs": 33.74796300000003,
+      "stringifyMs": 0.11679900000012822,
+      "bytes": 3538,
+      "gzipBytes": 746,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.28506500000003,
+          "dbMs": 6.378506,
+          "rows": 3
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 30.173226000000113,
+          "dbMs": 4.438974,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 30.329116000000113,
+          "dbMs": 8.287296,
+          "rows": 23
+        },
+        {
+          "table": "user_score",
+          "wallMs": 31.701921000000084,
+          "dbMs": 9.851835,
+          "rows": 24
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 33.238713999999845,
+          "dbMs": 8.20872,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "variant": "batch_or",
+      "fetchMs": 86.88689499999987,
+      "stringifyMs": 0.0918899999999212,
+      "bytes": 3538,
+      "gzipBytes": 751,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 66.91664700000001,
+          "dbMs": 44.07804,
+          "rows": 23
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 70.18896299999983,
+          "dbMs": 47.333923,
+          "rows": 3
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 80.81346000000008,
+          "dbMs": 58.30486,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 83.66284799999994,
+          "dbMs": 60.63342,
+          "rows": 24
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 86.57744600000001,
+          "dbMs": 63.501328,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "variant": "one",
+      "fetchMs": 30.137287000000015,
+      "stringifyMs": 0.011430000000018481,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 28.748921999999993,
+          "dbMs": 2.977115,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.99060099999997,
+          "dbMs": 2.859998,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 29.033971000000065,
+          "dbMs": 3.568263,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 29.169081000000006,
+          "dbMs": 3.623914,
+          "rows": 0
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 29.99985700000002,
+          "dbMs": 4.656833,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "variant": "full",
+      "fetchMs": 83.9576770000001,
+      "stringifyMs": 2.049441999999999,
+      "bytes": 159882,
+      "gzipBytes": 28783,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 33.717713,
+          "dbMs": 3.965418,
+          "rows": 36
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 34.088330999999926,
+          "dbMs": 3.820666,
+          "rows": 137
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 41.08524200000011,
+          "dbMs": 5.281653,
+          "rows": 353
+        },
+        {
+          "table": "user_score",
+          "wallMs": 59.197427999999945,
+          "dbMs": 8.373494,
+          "rows": 1002
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 82.27861499999995,
+          "dbMs": 9.348957,
+          "rows": 975
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "variant": "full",
+      "fetchMs": 96.83991499999979,
+      "stringifyMs": 2.002332000000024,
+      "bytes": 159882,
+      "gzipBytes": 28856,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 24.659200000000055,
+          "dbMs": 3.663233,
+          "rows": 36
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 26.83292000000006,
+          "dbMs": 6.381329,
+          "rows": 353
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.14907500000004,
+          "dbMs": 3.834332,
+          "rows": 137
+        },
+        {
+          "table": "user_score",
+          "wallMs": 36.312411999999995,
+          "dbMs": 9.458214,
+          "rows": 1002
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 95.6051500000001,
+          "dbMs": 9.49334,
+          "rows": 975
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "variant": "one",
+      "fetchMs": 29.092460999999957,
+      "stringifyMs": 0.020630000000210202,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.110955000000104,
+          "dbMs": 2.070266,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 28.133855999999923,
+          "dbMs": 1.853594,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 28.17582500000003,
+          "dbMs": 2.121385,
+          "rows": 0
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.847273000000087,
+          "dbMs": 3.532397,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 29.075421000000006,
+          "dbMs": 3.379777,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "variant": "batch_or",
+      "fetchMs": 73.23940100000004,
+      "stringifyMs": 0.14023900000006506,
+      "bytes": 3538,
+      "gzipBytes": 749,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 61.160989999999856,
+          "dbMs": 41.741802,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 61.79300699999999,
+          "dbMs": 41.952576,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 69.75707499999999,
+          "dbMs": 49.389957,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 69.97831399999995,
+          "dbMs": 50.73934,
+          "rows": 24
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 72.94916200000011,
+          "dbMs": 52.449566,
+          "rows": 23
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "variant": "batch_in",
+      "fetchMs": 32.17765899999972,
+      "stringifyMs": 0.1250199999999495,
+      "bytes": 3538,
+      "gzipBytes": 741,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 31.259412999999995,
+          "dbMs": 6.092835,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 31.374931999999944,
+          "dbMs": 6.475026,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 31.555521999999883,
+          "dbMs": 7.280248,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 31.72765100000015,
+          "dbMs": 7.510773,
+          "rows": 23
+        },
+        {
+          "table": "user_score",
+          "wallMs": 32.02019999999993,
+          "dbMs": 7.878058,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "variant": "counts",
+      "fetchMs": 32.37850800000024,
+      "stringifyMs": 0.005009999999856518,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 31.461741000000075,
+          "dbMs": 4.224197,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 31.27686199999971,
+          "dbMs": 3.100519,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 32.043908999999985,
+          "dbMs": 3.995541,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 32.04552899999999,
+          "dbMs": 3.938589,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 32.17124899999999,
+          "dbMs": 4.031933,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "variant": "counts",
+      "fetchMs": 31.3948419999997,
+      "stringifyMs": 0.006879999999910069,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 30.83859399999983,
+          "dbMs": 3.420881,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 31.039322999999968,
+          "dbMs": 3.273779,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 31.100622999999814,
+          "dbMs": 3.896948,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 31.226052000000436,
+          "dbMs": 3.909857,
+          "rows": 1
+        },
+        {
+          "table": "user_score",
+          "wallMs": 31.37579199999982,
+          "dbMs": 4.161563,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "variant": "batch_in",
+      "fetchMs": 31.451620999999705,
+      "stringifyMs": 0.08797999999978856,
+      "bytes": 3538,
+      "gzipBytes": 747,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 30.065337,
+          "dbMs": 5.093827,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 30.41961500000025,
+          "dbMs": 6.715772,
+          "rows": 24
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 30.948523000000023,
+          "dbMs": 6.346381,
+          "rows": 23
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 31.043343000000277,
+          "dbMs": 7.536409,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 31.020442999999887,
+          "dbMs": 6.946638,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "variant": "batch_or",
+      "fetchMs": 90.0492919999997,
+      "stringifyMs": 0.07660000000032596,
+      "bytes": 3538,
+      "gzipBytes": 747,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 62.738924000000225,
+          "dbMs": 40.472004,
+          "rows": 23
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 75.65296100000023,
+          "dbMs": 52.3371,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 77.54504299999962,
+          "dbMs": 55.158985,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 78.6450689999997,
+          "dbMs": 55.57629,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 89.91485300000022,
+          "dbMs": 66.54795,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "variant": "one",
+      "fetchMs": 23.611593000000084,
+      "stringifyMs": 0.011369999999715219,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_skipped",
+          "wallMs": 22.3637590000003,
+          "dbMs": 2.788582,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 22.443389000000025,
+          "dbMs": 2.787582,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 22.452528000000257,
+          "dbMs": 2.952048,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 23.56917300000032,
+          "dbMs": 3.394262,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 23.476693999999952,
+          "dbMs": 3.454851,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "variant": "full",
+      "fetchMs": 74.31814700000041,
+      "stringifyMs": 1.9280320000002575,
+      "bytes": 159882,
+      "gzipBytes": 28812,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 33.52686300000005,
+          "dbMs": 3.341481,
+          "rows": 36
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 36.74233000000004,
+          "dbMs": 5.537817,
+          "rows": 137
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 38.97184100000004,
+          "dbMs": 7.618477,
+          "rows": 975
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 39.79888700000038,
+          "dbMs": 6.117042,
+          "rows": 353
+        },
+        {
+          "table": "user_score",
+          "wallMs": 72.9289319999998,
+          "dbMs": 22.74463,
+          "rows": 1002
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "variant": "full",
+      "fetchMs": 154.80242700000008,
+      "stringifyMs": 1.8891130000001795,
+      "bytes": 159882,
+      "gzipBytes": 28865,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 26.037713000000167,
+          "dbMs": 3.847115,
+          "rows": 36
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 31.164722999999867,
+          "dbMs": 4.591702,
+          "rows": 353
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 31.26263199999994,
+          "dbMs": 4.640598,
+          "rows": 137
+        },
+        {
+          "table": "user_score",
+          "wallMs": 92.43786200000022,
+          "dbMs": 7.987496,
+          "rows": 1002
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 153.76137199999994,
+          "dbMs": 9.324432,
+          "rows": 975
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "variant": "one",
+      "fetchMs": 28.96460100000013,
+      "stringifyMs": 0.012360000000171567,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 25.4622760000002,
+          "dbMs": 1.580839,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 27.869125999999596,
+          "dbMs": 2.057572,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.067684999999983,
+          "dbMs": 3.352316,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.106214999999793,
+          "dbMs": 3.519598,
+          "rows": 0
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 28.748532999999952,
+          "dbMs": 4.420887,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "variant": "batch_or",
+      "fetchMs": 88.75801799999999,
+      "stringifyMs": 0.06048000000009779,
+      "bytes": 3538,
+      "gzipBytes": 744,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 73.44864000000007,
+          "dbMs": 45.279133,
+          "rows": 23
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 83.22403099999974,
+          "dbMs": 53.873817,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 86.90812499999993,
+          "dbMs": 64.965324,
+          "rows": 24
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 87.43149199999971,
+          "dbMs": 58.385757,
+          "rows": 3
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 88.61574800000017,
+          "dbMs": 67.596016,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "variant": "batch_in",
+      "fetchMs": 30.271276999999827,
+      "stringifyMs": 0.06955900000002657,
+      "bytes": 3538,
+      "gzipBytes": 757,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 27.932786000000306,
+          "dbMs": 4.770499,
+          "rows": 3
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.006576000000223,
+          "dbMs": 5.958058,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 28.950552000000243,
+          "dbMs": 6.646752,
+          "rows": 23
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.947291999999834,
+          "dbMs": 6.857646,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 30.18357700000024,
+          "dbMs": 7.333118,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "variant": "counts",
+      "fetchMs": 28.38961399999971,
+      "stringifyMs": 0.0015900000003057357,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 25.240096999999878,
+          "dbMs": 4.293025,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 26.16927399999986,
+          "dbMs": 4.377243,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 27.121419999999944,
+          "dbMs": 2.991883,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 27.177288999999746,
+          "dbMs": 3.912704,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 28.238284999999905,
+          "dbMs": 3.706399,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "variant": "counts",
+      "fetchMs": 29.377489999999852,
+      "stringifyMs": 0.0044500000003608875,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_watch_history",
+          "wallMs": 28.463842999999997,
+          "dbMs": 3.915932,
+          "rows": 1
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 28.56540300000006,
+          "dbMs": 4.075719,
+          "rows": 1
+        },
+        {
+          "table": "user_score",
+          "wallMs": 28.69743299999982,
+          "dbMs": 4.313646,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.662733000000117,
+          "dbMs": 4.217345,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 29.32923000000028,
+          "dbMs": 4.652114,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "variant": "batch_in",
+      "fetchMs": 36.73512000000028,
+      "stringifyMs": 0.09572900000011941,
+      "bytes": 3538,
+      "gzipBytes": 751,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 31.591321000000335,
+          "dbMs": 5.030575,
+          "rows": 3
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 32.254537999999684,
+          "dbMs": 6.162791,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 32.356378000000404,
+          "dbMs": 6.864224,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 35.14969699999983,
+          "dbMs": 8.903617,
+          "rows": 23
+        },
+        {
+          "table": "user_score",
+          "wallMs": 36.6235999999999,
+          "dbMs": 10.406339,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "variant": "batch_or",
+      "fetchMs": 143.60925399999996,
+      "stringifyMs": 0.06532000000015614,
+      "bytes": 3538,
+      "gzipBytes": 754,
+      "queries": [
+        {
+          "table": "user_skipped",
+          "wallMs": 92.93476099999998,
+          "dbMs": 65.59676,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 93.1586900000002,
+          "dbMs": 68.136505,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 93.15536999999995,
+          "dbMs": 66.72111,
+          "rows": 23
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 109.50616299999956,
+          "dbMs": 83.32995,
+          "rows": 3
+        },
+        {
+          "table": "user_score",
+          "wallMs": 143.49943399999984,
+          "dbMs": 118.95289,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "variant": "one",
+      "fetchMs": 28.431564000000435,
+      "stringifyMs": 0.05274999999983265,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.01362599999993,
+          "dbMs": 2.203502,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 28.15921500000013,
+          "dbMs": 2.833315,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 28.201485000000048,
+          "dbMs": 3.193283,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 28.367725000000064,
+          "dbMs": 3.32846,
+          "rows": 0
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.29200400000036,
+          "dbMs": 3.489352,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "variant": "full",
+      "fetchMs": 55.11633500000016,
+      "stringifyMs": 1.859773000000132,
+      "bytes": 159882,
+      "gzipBytes": 28815,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 24.187410999999884,
+          "dbMs": 3.178567,
+          "rows": 36
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 24.36550999999963,
+          "dbMs": 3.709576,
+          "rows": 137
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 32.323668,
+          "dbMs": 6.012679,
+          "rows": 353
+        },
+        {
+          "table": "user_score",
+          "wallMs": 53.70716100000027,
+          "dbMs": 7.624829,
+          "rows": 1002
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 53.8528110000002,
+          "dbMs": 9.763983,
+          "rows": 975
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "variant": "full",
+      "fetchMs": 105.04425100000026,
+      "stringifyMs": 1.953762000000097,
+      "bytes": 159882,
+      "gzipBytes": 28807,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 26.679881000000023,
+          "dbMs": 3.213098,
+          "rows": 36
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 28.626902999999857,
+          "dbMs": 4.205583,
+          "rows": 137
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 28.83842199999981,
+          "dbMs": 4.683085,
+          "rows": 353
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 36.09324300000026,
+          "dbMs": 6.073286,
+          "rows": 975
+        },
+        {
+          "table": "user_score",
+          "wallMs": 103.896166,
+          "dbMs": 7.315806,
+          "rows": 1002
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "variant": "one",
+      "fetchMs": 29.734068000000207,
+      "stringifyMs": 0.020309999999881256,
+      "bytes": 123,
+      "gzipBytes": 124,
+      "queries": [
+        {
+          "table": "user_score",
+          "wallMs": 27.67534700000033,
+          "dbMs": 1.220314,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 27.437387999999828,
+          "dbMs": 1.647849,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 28.295704000000114,
+          "dbMs": 2.784601,
+          "rows": 0
+        },
+        {
+          "table": "user_favorite",
+          "wallMs": 28.295313999999962,
+          "dbMs": 3.085678,
+          "rows": 0
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 29.256489999999758,
+          "dbMs": 2.978518,
+          "rows": 0
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "variant": "batch_or",
+      "fetchMs": 95.54170999999997,
+      "stringifyMs": 0.05952000000024782,
+      "bytes": 3538,
+      "gzipBytes": 747,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 65.7095919999997,
+          "dbMs": 45.866646,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 72.17362600000024,
+          "dbMs": 50.99175,
+          "rows": 23
+        },
+        {
+          "table": "user_score",
+          "wallMs": 72.77170299999989,
+          "dbMs": 52.080093,
+          "rows": 24
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 92.253514,
+          "dbMs": 71.20602,
+          "rows": 0
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 95.37874999999985,
+          "dbMs": 75.22861,
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "variant": "batch_in",
+      "fetchMs": 28.98024200000009,
+      "stringifyMs": 0.05245000000013533,
+      "bytes": 3538,
+      "gzipBytes": 746,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 25.611485000000357,
+          "dbMs": 4.062144,
+          "rows": 3
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 26.6962010000002,
+          "dbMs": 5.410228,
+          "rows": 3
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 26.733390999999756,
+          "dbMs": 5.72371,
+          "rows": 23
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 26.741261000000122,
+          "dbMs": 5.606027,
+          "rows": 0
+        },
+        {
+          "table": "user_score",
+          "wallMs": 28.92437199999995,
+          "dbMs": 7.818262,
+          "rows": 24
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "variant": "counts",
+      "fetchMs": 36.88073899999972,
+      "stringifyMs": 0.0034299999997529085,
+      "bytes": 102,
+      "gzipBytes": 100,
+      "queries": [
+        {
+          "table": "user_favorite",
+          "wallMs": 36.58789100000013,
+          "dbMs": 3.086421,
+          "rows": 1
+        },
+        {
+          "table": "user_score",
+          "wallMs": 36.79264999999987,
+          "dbMs": 3.340443,
+          "rows": 1
+        },
+        {
+          "table": "user_wishlist",
+          "wallMs": 36.78209000000015,
+          "dbMs": 3.439698,
+          "rows": 1
+        },
+        {
+          "table": "user_skipped",
+          "wallMs": 36.77385000000004,
+          "dbMs": 3.419988,
+          "rows": 1
+        },
+        {
+          "table": "user_watch_history",
+          "wallMs": 36.80780000000004,
+          "dbMs": 3.452154,
+          "rows": 1
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "scores": 1002,
+    "wishlist": 353,
+    "watched": 975,
+    "favorites": 36,
+    "skipped": 137
+  },
+  "uniqueTitles": 1386,
+  "batchTitleCount": 24,
+  "batchSelection": "First 12 rated movies and 12 rated shows in lexicographic media-key order; synthetic populated batch, not a captured viewport.",
+  "reviewCount": 0,
+  "reviewBytes": 0
+}

@@ -8,7 +8,7 @@ Implementation and deployment runbook, 2026-09-09.
 
 The repository implementation replaces application Postgres with CrateDB for priority demand, queue ownership, and immediate crawl publication. Current DNA/vector publication uses CrateDB and Qdrant. Windmill's bundled Postgres is excluded.
 
-Production cutover is in progress. The replacement Windmill scripts and flow are deployed, the final complete movie/show flow passed, and the priority schedule has resumed against CrateDB. The queue import passed snapshot verification; comparison with the full raw backup subsequently found and reconciled 139 additional demand hidden by a corrupt source index. The frontend passed local browser/impression checks; commit `7da7486` is building in Coolify. Application Postgres services remain running, and Windmill's bundled Postgres remains untouched.
+Application cutover is verified. Frontend commit `7da7486` is deployed in Coolify, and real production impression requests increment CrateDB exactly once despite duplicate submission. The priority schedule has resumed; its first normal movie/show crawl passed CrateDB/Qdrant publication and acknowledgment. Backend commit `5a24c90` passed the Windmill deployment workflow. The queue import passed snapshot verification; comparison with the full raw backup subsequently found and reconciled 139 additional demand hidden by a corrupt source index. Legacy Windmill entries and application Postgres credentials are retired. The user removed all five Coolify `POSTGRES_*` settings; redeployment `nuwkec7ggbvbln10conbnd0q` of `5a24c90` finished at 20:58:39 UTC. Application Postgres, Patroni, HAProxy, PgBouncer, and pgAdmin were stopped by 21:00:29 UTC. Only the Postgres backup cron entry was suspended. The 48-hour observation window runs from 2026-09-09 21:01:10 UTC through 2026-09-11 21:01:10 UTC, subject to completed daily jobs and health review. Data, configurations, and rollback backups are retained. Windmill's bundled Postgres remains untouched.
 
 Initial inspection, before the cutover, confirmed:
 
@@ -40,13 +40,15 @@ Retention reconciliation found no missing current favorites, scores, skipped tit
 
 ### Full backup recovery verification
 
+Supplemental protected backups now also preserve cluster roles/tablespaces (`application-postgres-globals.sql`, five roles and no custom tablespaces) and the administrative `postgres` database (`administrative-postgres-database.dump`, containing PgBouncer's authentication function and no user tables). Both dumps completed successfully; the administrative archive listing validated. The globals file contains sensitive role definitions and must remain private.
+
 The protected directory contains `application-postgres-backup-manifest.json`, the original custom-format dump and checksum, archive listing, restore logs, and `application-postgres-restore-with-three-source-exceptions.list`. No application database data, schema, credentials, or services were changed during backup. Ownership and ACLs were intentionally omitted; cluster roles and service configuration are outside this logical database backup.
 
 An exact-schema restore exposed existing source data that violates three declared UNIQUE constraints: `priority_queue_movie_tmdb_id_key`, `priority_queue_tv_tmdb_id_key`, and `user_settings_user_id_key_key`. The restore manifest excludes exactly these three constraints and preserves every raw row, including duplicates. Using that manifest, `pg_restore --exit-on-error` succeeded and all 25 restored table counts matched the read-only source inventory. The unmodified dump still contains the original constraint definitions. Do not claim an exact-schema restore or silently deduplicate the archive; use the explicit restore manifest for raw recovery, then reconcile duplicates deliberately before recreating these constraints.
 
 **Queue discrepancy reconciled:** the raw backup revealed that the corrupt TV unique index hid a second row for show `215001`. The frozen snapshot contains demand 0 for that show, but the raw rows contain priorities 0 and 139. A comparison of all 1,193,671 unique queue keys found exactly this one demand discrepancy and no missing keys: raw total show priority is 1,798,817 versus snapshot 1,798,678, while movie totals agree. An explicitly journaled full-primary-key `_seq_no`/`_primary_term` conditional update added the missing 139 to the live CrateDB row, changing demand from 0 to 139 and preserving acknowledgment, claimed demand, leases, cooldown, and timestamps. Read-back verified the correction; re-running the helper performed no additional write. The original snapshot and Postgres remain unchanged. Evidence is in protected `application-postgres-queue-full-delta-verification.json`, `application-postgres-queue-retention-discrepancy.json`, and `queue-demand-reconciliation-show-215001.jsonl`.
 
-Validation used isolated PostgreSQL 16.15 with vector 0.8.6 and vectorscale 0.9.0; the source was PostgreSQL 16.10 with vector 0.7.4 and vectorscale 0.3.0. The restore image additionally initializes its bundled TimescaleDB extensions. The disposable container `goodwatch-retirement-restore-20260909` has no network or published ports and is stopped with restored data retained for inspection. This verifies logical data recovery, not identical server/extension versions. No old application Postgres service has been stopped.
+Validation used isolated PostgreSQL 16.15 with vector 0.8.6 and vectorscale 0.9.0; the source was PostgreSQL 16.10 with vector 0.7.4 and vectorscale 0.3.0. The restore image additionally initializes its bundled TimescaleDB extensions. The disposable container `goodwatch-retirement-restore-20260909` has no network or published ports and is stopped with restored data retained for inspection. This verifies logical data recovery, not identical server/extension versions. This backup validation preceded the reversible service shutdown recorded above.
 
 ## Inventory
 
@@ -59,7 +61,7 @@ Validation used isolated PostgreSQL 16.15 with vector 0.8.6 and vectorscale 0.9.
 | Deprecated standalone pipelines | Old `combine_data`, `genome`, Postgres vector/recommendation experiments | Archived outside sync and remotely in Windmill; see [retired inventory](../goodwatch-flows/retired/README.md). |
 | Historical migration/setup | User migration, Postgres DDL, old connector | Archived for reconciliation/reference. |
 | Removed webapp dependencies | `app/utils/postgres.ts`, direct `pg`/`@types/pg`, example Postgres variables | No current webapp Postgres connection. |
-| Still operational until cutover | Live application credentials/resources, `goodwatch-db` pgAdmin/backup tooling | Retire after verification and final backup. |
+| Retired application infrastructure | Application credentials/resources, Patroni/Postgres, HAProxy/PgBouncer, `goodwatch-db` pgAdmin/backup cron | Credentials removed; services stopped and exact backup cron suspended. Storage/configuration retained during observation. |
 
 Absence of a schedule does not rule out manual/API invocation. Confirm external triggers, recent jobs, and database clients before deleting deployed entries.
 
@@ -131,7 +133,7 @@ During the 2026-09-09 export, source validation found duplicate movie ID `284054
 
 ## Rollback and final removal
 
-The [live infrastructure inventory and reversible stop procedure](postgres-decommission-inventory.md) identifies native Patroni/Postgres services, HAProxy/PgBouncer, pgAdmin and its volume, the exact backup cron entry, and the private CrateDB listeners to preserve. **etcd is shared with APISIX and must stay running.** No production service stop has occurred; the observation window starts only after actual disconnection and must cover at least 24 hours plus completion of daily jobs.
+The [live infrastructure inventory and reversible stop procedure](postgres-decommission-inventory.md) identifies native Patroni/Postgres services, HAProxy/PgBouncer, pgAdmin and its volume, the exact backup cron entry, and the private CrateDB listeners to preserve. **etcd is shared with APISIX and must stay running.** The reversible shutdown completed at 2026-09-09 21:00:29 UTC. A persistent read-only monitor on `.10` checks every five minutes through 2026-09-11 21:01:10 UTC. Final removal requires reviewing that evidence and completion of daily jobs; the monitor never deletes storage.
 
 Before accepting new demand, rollback can restore the saved deployed versions and old schedule while preserving the untouched Postgres queues. After accepting new CrateDB demand, pause the new system first and reconcile outstanding demand plus success timestamps before returning to the old queue; restoring the original snapshot alone would lose new activity. Do not run old and new consumers concurrently.
 
@@ -139,7 +141,7 @@ Repository archival does not archive deployed Windmill entries: the deployment u
 
 Application `POSTGRES_*` variables/resources and deployment credentials, including ignored local resource files, remain to be removed separately. Keep `CRATE_*`, CrateDB's wire protocol, and Windmill's internal `DATABASE_URL`/Postgres service.
 
-Take a final restorable database backup; disable application access to the old Postgres service. Observe through the longest relevant schedule interval and investigate any remaining clients or failed jobs. Only then retire its service/proxy, pgAdmin if unused elsewhere, Postgres backup/cron/monitoring jobs, and eventually its volumes. Leave CrateDB backups and Windmill's database untouched.
+The final backup and reversible service stop are complete. Observe through the window above and investigate remaining consumers or failed jobs. After review, permanently disable/remove the old units, identify obsolete proxy/monitoring configuration, and remove only the retained Postgres-specific storage and pgAdmin volume when rollback retention is no longer needed. Leave CrateDB backups and Windmill's database untouched.
 
 ## Validation
 
@@ -149,6 +151,12 @@ The original 56 Python tests passed, including five real-database integration ch
 TEST_CRATE_URL=http://127.0.0.1:4200 python -m unittest discover -s goodwatch-flows/tests -v
 ```
 
-Use a local test instance only: integration tests create/drop test tables. The webapp production build passed, including the public-origin correction. Typecheck reports the same 292 pre-existing diagnostics as the unchanged baseline and adds none. A real local browser visit generated a successful 12-poster impression request; direct duplicate submissions were verified against live CrateDB counters. Browser scrolling/deduplication was not verified because Orca's scroll did not move the page. The final complete movie/show flow passed publication and acknowledgment; deployed frontend verification remains a cutover check.
+Use a local test instance only: integration tests create/drop test tables. The webapp production build passed, including the public-origin correction. Typecheck reports the same 292 pre-existing diagnostics as the unchanged baseline and adds none. A real local browser visit generated a successful 12-poster impression request; direct duplicate submissions were verified against live CrateDB counters. Browser scrolling/deduplication was not verified because Orca's scroll did not move the page. The final complete movie/show flow and the first normal scheduled crawl passed publication and acknowledgment. The deployed frontend passed a real browser check (three visible posters, HTTP 204, no captured browser errors) and direct duplicate-request validation against live CrateDB counters.
 
 Reference behavior: [CrateDB concurrency](https://cratedb.com/docs/crate/reference/en/latest/general/occ.html), [bulk per-row results](https://cratedb.com/docs/python/en/latest/by-example/client.html), [Windmill OpenFlow](https://www.windmill.dev/docs/openflow).
+
+## Verification after infrastructure shutdown
+
+Scheduled crawl `01a087f4-c3ca-179c-d395-60fc45b332b7` completed successfully with two acknowledgments; its publisher and acknowledgment steps both started after shutdown. Production poster impressions returned HTTP 204 twice for the same visitor at 21:09 UTC; movie 11 demand increased 3→4 and show 1399 increased 127→128, confirming duplicate suppression with old Postgres unavailable. Initial monitor samples confirmed frontend, all three Crate nodes, Qdrant, private Redis connectivity, preserved workers/etcd, and absence of the old listeners. This is initial verification, not a completed observation window.
+
+The Redis bootstrap hosts now use private addresses, but `CLUSTER SLOTS` still advertises public endpoints. Update the advertised topology or client address mapping and verify actual client connections before tightening Redis UFW rules. No Redis configuration or firewall rules were changed during the shutdown.
