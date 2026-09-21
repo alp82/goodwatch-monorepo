@@ -19,9 +19,9 @@ def initialize_documents():
     imdb_movie_collection = db["imdb_movie_rating"]
     imdb_tv_collection = db["imdb_tv_rating"]
 
-    total_movies = tmdb_movie_collection.count_documents({"imdb_id": {"$ne": None}})
+    total_movies = tmdb_movie_collection.count_documents({"imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
     total_tv = tmdb_tv_collection.count_documents(
-        {"external_ids.imdb_id": {"$ne": None}}
+        {"external_ids.imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}}
     )
 
     print(f"Total movie objects with IMDB ID: {total_movies}")
@@ -36,7 +36,7 @@ def initialize_documents():
         print(f"Processing movies {start} to {end}")
 
         tmdb_movie_cursor = (
-            tmdb_movie_collection.find({"imdb_id": {"$ne": None}})
+            tmdb_movie_collection.find({"imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
             .skip(start)
             .limit(BATCH_SIZE)
         )
@@ -51,7 +51,7 @@ def initialize_documents():
         print(f"Processing tv shows {start} to {end}")
 
         tmdb_tv_cursor = (
-            tmdb_tv_collection.find({"external_ids.imdb_id": {"$ne": None}})
+            tmdb_tv_collection.find({"external_ids.imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
             .skip(start)
             .limit(BATCH_SIZE)
         )

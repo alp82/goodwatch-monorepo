@@ -468,6 +468,9 @@ class BaseTmdbDetails(Document):
     failed_at = DateTimeField()
     error_message = StringField()
     is_selected = BooleanField(default=False)
+    # Set when TMDB permanently removed the title; a missing field means not deleted.
+    tmdb_deleted = BooleanField(default=False)
+    tmdb_deleted_at = DateTimeField()
 
     meta = {
         "abstract": True,
@@ -478,6 +481,8 @@ class BaseTmdbDetails(Document):
             "updated_at",
             "is_selected",
             ("updated_at", "tmdb_id"),
+            # Partial: the sync looks up every flagged title on each run.
+            {"fields": ["tmdb_deleted"], "partialFilterExpression": {"tmdb_deleted": True}},
         ],
     }
 

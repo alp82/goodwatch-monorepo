@@ -474,6 +474,11 @@ def is_premium(entry):
     return released is not None and cutoff <= released <= today
 
 
+def is_tmdb_deleted(entry):
+    model = TmdbMovieDetails if isinstance(entry, DnaMovie) else TmdbTvDetails
+    return model.objects(tmdb_id=entry.tmdb_id, tmdb_deleted=True).first() is not None
+
+
 def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
     if not next_entries:
         return []
@@ -484,6 +489,11 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
     api_key = wmill.get_variable("u/Alp/OPENROUTER_API_KEY")
     results = []
     for index, entry in enumerate(next_entries):
+        if is_tmdb_deleted(entry):
+            # No LLM spend for titles deleted on TMDB; release the entry untouched.
+            print(f"skipping {entry.original_title} (id: {entry.tmdb_id}): deleted on TMDB")
+            entry.update(set__is_selected=False)
+            continue
         model = PRIMARY_MODEL if is_premium(entry) else FALLBACK_MODEL
         media_type = "Movie" if isinstance(entry, DnaMovie) else "Show"
         messages = [

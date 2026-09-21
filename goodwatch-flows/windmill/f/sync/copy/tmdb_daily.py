@@ -5,6 +5,7 @@ from f.db.mongodb import (
     init_mongodb,
     close_mongodb,
 )
+from f.sync.copy.deleted_titles import flagged_among
 from f.sync.models.crate_models import Movie, Show
 
 BATCH_SIZE = 50000
@@ -38,9 +39,19 @@ def copy_media(
         # Insert batch of media
         print(f"\nBatch from {start} to {start + len(tmdb_details_batch)} TMDB daily entries")
 
+        # A stale dump row must not recreate a title that was deleted on TMDB.
+        flagged_ids = {
+            "movie": flagged_among(mongo_db.tmdb_movie_details, [
+                doc["tmdb_id"] for doc in tmdb_details_batch if doc["type"] == "movie"]),
+            "show": flagged_among(mongo_db.tmdb_tv_details, [
+                doc["tmdb_id"] for doc in tmdb_details_batch if doc["type"] != "movie"]),
+        }
+
         for tmdb_details in tmdb_details_batch:
             tmdb_id = tmdb_details["tmdb_id"]
             media_type = "movie" if tmdb_details["type"] == "movie" else "show"
+            if tmdb_id in flagged_ids[media_type]:
+                continue
 
             original_title = tmdb_details.get("original_title")
             if not original_title:

@@ -7,6 +7,7 @@ import wmill
 
 from f.data_source.models import MediaType
 from f.db.mongodb import init_mongodb, close_mongodb
+from f.tmdb_api.deleted_propagation import propagate_tmdb_deleted
 
 BATCH_SIZE = 50000
 
@@ -18,8 +19,15 @@ def initialize_documents():
     tmdb_movie_collection = db["tmdb_movie_details"]
     tmdb_tv_collection = db["tmdb_tv_details"]
 
+    # Dump rows are never purged, so only a row seen after the deletion restores a title.
+    deleted_at_by_type = {
+        MediaType.MOVIE.value: flagged_deleted_at(tmdb_movie_collection),
+        MediaType.TV.value: flagged_deleted_at(tmdb_tv_collection),
+    }
+
     movie_operations = []
     tv_operations = []
+    restored_ids = {MediaType.MOVIE.value: [], MediaType.TV.value: []}
     for tmdb_dump in tmdb_daily_dump_collection.find():
         if canonical_title_id(tmdb_dump.get("type"), tmdb_dump["tmdb_id"]) != tmdb_dump["tmdb_id"]:
             continue
@@ -30,6 +38,14 @@ def initialize_documents():
             "adult": tmdb_dump.get("adult"),
             "video": tmdb_dump.get("video"),
         }
+        deleted_at = deleted_at_by_type.get(tmdb_dump.get("type"), {}).get(
+            int(tmdb_dump["tmdb_id"])
+        )
+        if deleted_at and tmdb_dump.get("updated_at") and tmdb_dump["updated_at"] > deleted_at:
+            # Listed in a newer dump again: unflag, the fetch queue picks it up by its old selected_at.
+            update_fields["tmdb_deleted"] = False
+            update_fields["tmdb_deleted_at"] = None
+            restored_ids[tmdb_dump.get("type")].append(int(tmdb_dump["tmdb_id"]))
 
         operation = UpdateOne(
             {
@@ -66,11 +82,24 @@ def initialize_documents():
             label_plural="tv series",
         )
 
+    # After the details are unflagged, so a failure here never leaves sources ahead of them.
+    for media_type, tmdb_ids in restored_ids.items():
+        propagate_tmdb_deleted(media_type, tmdb_ids, False)
+
     return {
         "count_new_movies": movie_upserts.get("count_new_documents"),
         "count_new_tv": tv_upserts.get("count_new_documents"),
         "upserted_movie_ids": movie_upserts.get("upserted_ids"),
         "upserted_tv_ids": tv_upserts.get("upserted_ids"),
+    }
+
+
+def flagged_deleted_at(collection: Collection) -> dict:
+    return {
+        int(doc["tmdb_id"]): doc.get("tmdb_deleted_at")
+        for doc in collection.find(
+            {"tmdb_deleted": True}, {"tmdb_id": 1, "tmdb_deleted_at": 1}
+        )
     }
 
 

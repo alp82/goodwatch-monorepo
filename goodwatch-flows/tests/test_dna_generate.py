@@ -97,6 +97,13 @@ class OpenRouterGenerationTest(unittest.TestCase):
                         fetch.generate_dna([title])
                         self.assertEqual(self.post.call_args.kwargs['json']['model'], expected)
 
+    def test_title_deleted_on_tmdb_is_skipped_without_request(self):
+        movie = self.title(is_selected=True)
+        TmdbMovieDetails(tmdb_id=603, tmdb_deleted=True).save()
+        self.assertEqual(fetch.generate_dna([movie]), [])
+        self.post.assert_not_called()
+        self.assertFalse(DnaMovie.objects.get(id=movie.id).is_selected)
+
     def test_invalid_dna_gets_one_full_response_repair(self):
         movie = self.title()
         self.post.side_effect = [response({'choices': [{'message': {'content': '{"unknown": true}'}}], 'usage': {'cost': 0.002}}), self.success()]

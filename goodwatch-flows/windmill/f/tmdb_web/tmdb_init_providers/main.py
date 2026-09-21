@@ -152,6 +152,7 @@ def initialize_documents() -> dict:
             db[f"tmdb_{media_type}_details"]
             .find(
                 {
+                    "tmdb_deleted": {"$ne": True},
                     "watch_providers.results": {
                         "$exists": True,
                         "$ne": {},

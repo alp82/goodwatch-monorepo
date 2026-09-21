@@ -15,6 +15,7 @@ from f.db.mongodb import (
 )
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
+from f.sync.copy.deleted_titles import delete_titles_from_qdrant, find_flagged_tmdb_ids, flagged_among
 from f.sync.copy.tmdb_streaming import publication_lease
 from f.sync.copy.qdrant_retry import (
     REQUEST_TIMEOUT_SECONDS, upsert_with_retry,
@@ -422,6 +423,8 @@ def copy_to_qdrant(
 
     last_tmdb_id: Optional[int] = None
     processed = 0
+    # Titles deleted on TMDB: collected over the whole run, removed once at the end.
+    flagged_ids: set = set()
 
     # Prefer compound hint if we filter by updated_at
     base_selector = {"updated_at": updated, **sel} if recent_only else sel
@@ -442,6 +445,9 @@ def copy_to_qdrant(
         processed += len(ids)
         print(f"\n{media_type} ids fetched: {processed} (last_tmdb_id={last_tmdb_id})")
 
+        batch_flagged_ids = flagged_among(c_details, ids)
+        flagged_ids |= batch_flagged_ids
+
         # fetch maps by id
         details_map = _fetch_map_by_ids(c_details, ids)
         imdb_map = _fetch_map_by_ids(c_imdb, ids)
@@ -457,7 +463,7 @@ def copy_to_qdrant(
 
         for tmdb_id in ids:
             d = details_map.get(tmdb_id)
-            if not d:
+            if not d or tmdb_id in batch_flagged_ids:
                 # we still might have scores or providers, but no details: skip creating new points
                 continue
 
@@ -521,8 +527,14 @@ def copy_to_qdrant(
                     )
                 total_upserts += len(points)
 
+    # Every flagged title is checked, not only the ones this run iterated over.
+    flagged_ids |= set(find_flagged_tmdb_ids(c_details, sel))
+    deleted_titles = delete_titles_from_qdrant(
+        qc.client, MEDIA_COLLECTION, media_type, flagged_ids, QdrantMediaPoint.make_point_id,
+    )
+
     return {"upserts": total_upserts, "payload_updates": total_payload_updates,
-            "publication": publication_stats}
+            "publication": publication_stats, "deleted_titles": deleted_titles}
 
 
 # ---- Entrypoint for Windmill ----------------------------------------------

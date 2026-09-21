@@ -15,6 +15,7 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy.deleted_titles import flagged_among
 from f.sync.models.crate_models import (
     Movie,
     Show,
@@ -365,7 +366,11 @@ def copy_media(
                 last_tmdb_id = tmdb_ids[-1]
         if not tmdb_ids:
             break
+        # Titles deleted on TMDB are removed by the details sync; never republish them.
+        flagged_ids = flagged_among(mongo_details, tmdb_ids)
         for tmdb_id in tmdb_ids:
+            if tmdb_id in flagged_ids:
+                continue
             unresolved = mongo_db.provider_identity_unresolved.find_one({
                 "media": "movie" if is_movie else "tv", "tmdb_id": tmdb_id,
                 "status": {"$in": ["unresolved", "resolved_alias"]},

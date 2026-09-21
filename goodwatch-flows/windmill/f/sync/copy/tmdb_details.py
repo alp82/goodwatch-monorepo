@@ -11,6 +11,11 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy.deleted_titles import (
+    NOT_DELETED_FILTER,
+    delete_titles_from_crate,
+    find_flagged_tmdb_ids,
+)
 from f.sync.models.crate_models import (
     Movie,
     Show,
@@ -102,7 +107,13 @@ def copy_media(
     updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
     if not recent_only:
         updated_at_filter = {}
-    total_entry_count = mongo_collection.count_documents(query_selector | updated_at_filter)
+    # Titles deleted on TMDB are removed from CrateDB instead of upserted. Every flagged
+    # title is checked, not only the recent window, so a missed run or a racing publisher heals.
+    flagged_ids = find_flagged_tmdb_ids(mongo_collection, query_selector)
+    deleted_titles = delete_titles_from_crate(connector, media_type, flagged_ids)
+
+    copy_filter = query_selector | updated_at_filter | NOT_DELETED_FILTER
+    total_entry_count = mongo_collection.count_documents(copy_filter)
     print(f"Total {media_type} entries: {total_entry_count}")
 
     start = 0
@@ -123,7 +134,7 @@ def copy_media(
         tmdb_details_batch = list(
             #mongo_collection.find({"tmdb_id": 217} | updated_at_filter, projection)
             #mongo_collection.find({"tmdb_id": {"$lt": 1000}} | updated_at_filter, projection)
-            mongo_collection.find(query_selector | updated_at_filter, projection)
+            mongo_collection.find(copy_filter, projection)
                 .sort("tmdb_id", 1)
                 .skip(start)
                 .limit(BATCH_SIZE)
@@ -539,6 +550,7 @@ def copy_media(
 
         start += BATCH_SIZE
 
+    entity_counts["deleted_titles"] = deleted_titles
     return entity_counts
 
 

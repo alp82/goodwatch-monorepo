@@ -11,6 +11,7 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy.deleted_titles import flagged_among
 from f.sync.models.crate_models import (
     Movie,
     Show,
@@ -182,11 +183,15 @@ def copy_media(
             )
         )
         tmdb_details_map = {doc["tmdb_id"]: doc for doc in tmdb_details_for_tmdb_ids}
+        # Do not re-insert rating rows for titles deleted on TMDB.
+        flagged_ids = flagged_among(mongo_details, tmdb_ids)
         imdb_map = {doc["tmdb_id"]: doc for doc in imdb_batch}
         meta_map = {doc["tmdb_id"]: doc for doc in meta_batch}
         rotten_map = {doc["tmdb_id"]: doc for doc in rotten_batch}
 
         for tmdb_id in tmdb_ids:
+            if tmdb_id in flagged_ids:
+                continue
             tmdb_details = tmdb_details_map.get(tmdb_id, {})
             imdb_rating = imdb_map.get(tmdb_id, {})
             meta_rating = meta_map.get(tmdb_id, {})

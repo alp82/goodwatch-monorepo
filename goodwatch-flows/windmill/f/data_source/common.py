@@ -149,6 +149,13 @@ def get_document_for_id(
 # helper methods to fetch next entries in queue
 
 
+def not_deleted_filter(model: Document) -> Q:
+    # Details models and the source models keyed by a TMDB title carry "tmdb_deleted"; a missing value counts as not deleted.
+    if "tmdb_deleted" in model._fields:
+        return Q(tmdb_deleted__ne=True)
+    return Q()
+
+
 def completeness_queue(
     movie_model: Document, tv_model: Document, count: int, buffer_minutes: int
 ) -> list[Document]:
@@ -158,22 +165,28 @@ def completeness_queue(
     )
     movies_no_fetch = list(
         movie_model.objects(
-            Q(selected_at=None)
-            | (
-                Q(is_selected=True)
-                & Q(selected_at__lt=buffer_time_for_selected_entries)
+            (
+                Q(selected_at=None)
+                | (
+                    Q(is_selected=True)
+                    & Q(selected_at__lt=buffer_time_for_selected_entries)
+                )
             )
+            & not_deleted_filter(movie_model)
         )
         .order_by("-popularity")
         .limit(count)
     )
     tvs_no_fetch = list(
         tv_model.objects(
-            Q(selected_at=None)
-            | (
-                Q(is_selected=True)
-                & Q(selected_at__lt=buffer_time_for_selected_entries)
+            (
+                Q(selected_at=None)
+                | (
+                    Q(is_selected=True)
+                    & Q(selected_at__lt=buffer_time_for_selected_entries)
+                )
             )
+            & not_deleted_filter(tv_model)
         )
         .order_by("-popularity")
         .limit(count)
@@ -181,10 +194,12 @@ def completeness_queue(
 
     # Get the top n entries with the oldest "selected_at"
     movies_old_fetch = list(
-        movie_model.objects(selected_at__ne=None).order_by("selected_at").limit(count)
+        movie_model.objects(Q(selected_at__ne=None) & not_deleted_filter(movie_model))
+        .order_by("selected_at").limit(count)
     )
     tvs_old_fetch = list(
-        tv_model.objects(selected_at__ne=None).order_by("selected_at").limit(count)
+        tv_model.objects(Q(selected_at__ne=None) & not_deleted_filter(tv_model))
+        .order_by("selected_at").limit(count)
     )
 
     # Compare and return
@@ -205,10 +220,12 @@ def priority_queue(
 ) -> list[Document]:
     # Get the top n entries with the oldest "selected_at" and a higher popularity
     popular_movies_old_fetch = list(
-        movie_model.objects(popularity__gte=10).order_by("selected_at").limit(count)
+        movie_model.objects(Q(popularity__gte=10) & not_deleted_filter(movie_model))
+        .order_by("selected_at").limit(count)
     )
     popular_tvs_old_fetch = list(
-        tv_model.objects(popularity__gte=10).order_by("selected_at").limit(count)
+        tv_model.objects(Q(popularity__gte=10) & not_deleted_filter(tv_model))
+        .order_by("selected_at").limit(count)
     )
 
     # Compare and return

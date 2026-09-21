@@ -11,6 +11,7 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy.deleted_titles import flagged_among
 from f.sync.models.crate_models import (
     Movie,
     Show,
@@ -131,6 +132,8 @@ def copy_media(
         print(f"\nBatch from {start} to {start + len(tropes_batch)} {media_type} Tropes")
 
         tmdb_ids = [doc["tmdb_id"] for doc in tropes_batch]
+        # Do not re-insert derived rows for titles deleted on TMDB.
+        flagged_ids = flagged_among(mongo_details, tmdb_ids)
         tmdb_details_by_id = fetch_documents_in_batch(
             tmdb_ids, 
             mongo_details,
@@ -140,7 +143,7 @@ def copy_media(
             tmdb_id = tropes_entry["tmdb_id"]
             tmdb_details = tmdb_details_by_id[tmdb_id]
 
-            if not tmdb_details:
+            if not tmdb_details or tmdb_id in flagged_ids:
                 continue
      
             tropes = tropes_entry.get("tropes", [])

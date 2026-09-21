@@ -71,6 +71,8 @@ class BaseTmdbProviders(Document):
     failed_at = DateTimeField()
     error_message = StringField()
     is_selected = BooleanField(default=False)
+    # Copied from the TMDB details flag when TMDB permanently removed the title; missing means not deleted.
+    tmdb_deleted = BooleanField(default=False)
 
     country_code = StringField()
     streaming_links = EmbeddedDocumentListField(StreamingLinkDoc)
