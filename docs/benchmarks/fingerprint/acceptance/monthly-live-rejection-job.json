@@ -1,0 +1,54 @@
+{
+  "type": "CompletedJob",
+  "id": "01a0a06a-548b-b728-41a8-8bd1c9f8d086",
+  "created_at": "2026-09-14T14:55:18.146541Z",
+  "started_at": "2026-09-14T14:55:18.174743Z",
+  "completed_at": "2026-09-14T14:55:19.394330Z",
+  "duration_ms": 1213,
+  "success": true,
+  "script_path": "f/dna/acceptance/check",
+  "args": {},
+  "result": {
+    "request": {
+      "model": "qwen/qwen3.8-flash",
+      "attempts": 1,
+      "provider": "alibaba",
+      "max_tokens": 1
+    },
+    "key_before": {
+      "limit": 1,
+      "usage": 0.045829924,
+      "limit_reset": "daily",
+      "usage_monthly": 0.045829924
+    },
+    "checked_utc": "2026-09-14T14:55:19.259568+00:00",
+    "http_status": 403,
+    "pause_value": "monthly",
+    "started_utc": "2026-09-14T14:55:19.057261+00:00",
+    "pause_ttl_ms": 1415080740,
+    "response_body": {
+      "error": {
+        "code": 403,
+        "message": "API key budget limit exceeded (monthly limit). Contact your org admin."
+      }
+    },
+    "recognized_budget_error": true
+  },
+  "result_columns": null,
+  "logs": "job=01a0a06a-548b-b728-41a8-8bd1c9f8d086 tag=python3 worker=wk-default-41a0443101de-wiJq1 hostname=41a0443101de isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+  "deleted": false,
+  "canceled": false,
+  "job_kind": "preview",
+  "is_flow_step": false,
+  "language": "python3",
+  "is_skipped": false,
+  "visible_to_owner": true,
+  "mem_peak": 45880,
+  "tag": "python3",
+  "is_retry": false,
+  "resolved": false,
+  "trigger_kind": "webhook",
+  "raw_code": "import json\nfrom datetime import datetime,timezone\nimport requests,wmill\nfrom f.dna.generate.spend_pause import SpendPause,PAUSE_KEY\n\ndef main():\n pause=SpendPause()\n assert not pause.is_active(), 'Existing pause: inspect before running the live check'\n key=wmill.get_variable('u/Alp/OPENROUTER_API_KEY')\n headers={'Authorization':'Bearer '+key}\n before=requests.get('https://openrouter.ai/api/v1/key',headers=headers,timeout=20)\n before.raise_for_status()\n key_state=before.json()['data']\n assert key_state.get('limit')==1 and key_state.get('limit_reset')=='daily', 'Daily key limit changed unexpectedly'\n started=datetime.now(timezone.utc)\n response=requests.post('https://openrouter.ai/api/v1/chat/completions',headers=headers,json={\n  'model':'qwen/qwen3.8-flash','messages':[{'role':'user','content':'Reply OK.'}],\n  'provider':{'only':['alibaba'],'allow_fallbacks':False,'require_parameters':True},\n  'reasoning':{'enabled':False},'max_tokens':1,\n },timeout=(10,30),allow_redirects=False)\n sanitized=response.text.replace(key,'<REDACTED>')\n try:body=json.loads(sanitized)\n except ValueError:body={'raw_text':sanitized}\n recognized=pause.for_budget_error(response)\n now=datetime.now(timezone.utc)\n return {'started_utc':started.isoformat(),'checked_utc':now.isoformat(),\n  'http_status':response.status_code,'response_body':body,\n  'key_before':{k:key_state.get(k) for k in ['limit','limit_reset','usage','usage_monthly']},\n  'recognized_budget_error':recognized,'pause_value':pause.redis.get(PAUSE_KEY),\n  'pause_ttl_ms':pause.redis.pttl(PAUSE_KEY),\n  'request':{'model':'qwen/qwen3.8-flash','max_tokens':1,'provider':'alibaba','attempts':1}}\n",
+  "raw_lock": "# py: 3.11\nannotated-types==0.7.0\nanyio==4.12.0\ncertifi==2025.11.12\ncharset-normalizer==3.4.4\ndnspython==2.8.0\nh11==0.16.0\nhttpcore==1.0.9\nhttpx==0.28.1\nidna==3.11\nmongoengine==0.29.1\npydantic==2.12.5\npydantic-core==2.41.5\npymongo==4.15.5\nredis==3.5.3\nredis-py-cluster==2.1.3\nrequests==2.32.5\ntyping-extensions==4.15.0\ntyping-inspection==0.4.2\nurllib3==2.5.0\nwmill==1.589.1\n",
+  "worker": "wk-default-41a0443101de-wiJq1"
+}

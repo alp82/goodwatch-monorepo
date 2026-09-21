@@ -1,0 +1,558 @@
+[
+  {
+    "id": "01a0a00d-a8ed-543e-53fe-36c6a64276a6",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark",
+    "script_hash": null,
+    "duration_ms": 26933,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 4,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a00d-a90f-c750-9fd0-6855d47d06d8",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a00d-ade8-2f89-7ea9-8fa57e2a68a2",
+          "type": "Success",
+          "skipped": false,
+          "flow_jobs": [
+            "01a0a00d-ade8-2f89-7ea9-8fa57e2a68a2"
+          ],
+          "flow_jobs_success": [
+            true
+          ],
+          "flow_jobs_duration": {
+            "started_at": [
+              "2026-09-14T13:14:06.196522Z"
+            ],
+            "duration_ms": [
+              21737
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "job": "01a0a00e-0303-7bff-ae85-1b697fb992fc",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "vectors",
+          "job": "01a0a00e-038f-ad95-569d-676cd89ecfbe",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00d-a90f-c750-9fd0-6855d47d06d8",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 1200,
+    "result": [
+      [
+        {
+          "id": "68471cdd1f87b65f3388b42a",
+          "type": "movie",
+          "tmdb_id": 603
+        }
+      ]
+    ],
+    "logs": "job=01a0a00d-a90f-c750-9fd0-6855d47d06d8 tag=python3 worker=wk-default-5a13c6df3030-F9Ldo hostname=5a13c6df3030 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00d-ade8-2f89-7ea9-8fa57e2a68a2",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0",
+    "script_hash": null,
+    "duration_ms": 21737,
+    "result": [
+      {
+        "id": "68471cdd1f87b65f3388b42a",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 0,
+              "scare": 3,
+              "acting": 8,
+              "gaming": 2,
+              "pathos": 2,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 9,
+              "fantasy": 0,
+              "mystery": 7,
+              "novelty": 9,
+              "romance": 4,
+              "showbiz": 0,
+              "tension": 8,
+              "uncanny": 6,
+              "warfare": 6,
+              "intrigue": 9,
+              "pastiche": 3,
+              "violence": 7,
+              "ambiguity": 6,
+              "bleakness": 5,
+              "catharsis": 5,
+              "direction": 9,
+              "eroticism": 1,
+              "fast_pace": 8,
+              "grotesque": 2,
+              "nostalgia": 8,
+              "political": 3,
+              "slow_burn": 2,
+              "spectacle": 9,
+              "spiritual": 6,
+              "wholesome": 1,
+              "adrenaline": 9,
+              "complexity": 8,
+              "dark_humor": 2,
+              "futuristic": 10,
+              "historical": 0,
+              "melancholy": 2,
+              "surrealism": 5,
+              "educational": 2,
+              "hopefulness": 6,
+              "pop_culture": 9,
+              "psychedelic": 4,
+              "biographical": 0,
+              "cringe_humor": 0,
+              "eccentricity": 4,
+              "wit_wordplay": 5,
+              "coming_of_age": 3,
+              "philosophical": 9,
+              "psychological": 8,
+              "satire_parody": 0,
+              "camp_and_irony": 2,
+              "cinematography": 10,
+              "meta_narrative": 7,
+              "rewatchability": 9,
+              "absurdist_humor": 0,
+              "character_depth": 7,
+              "family_dynamics": 1,
+              "physical_comedy": 0,
+              "world_immersion": 10,
+              "dialogue_quality": 8,
+              "music_centrality": 9,
+              "sound_centrality": 8,
+              "music_composition": 9,
+              "social_commentary": 7,
+              "situational_comedy": 0,
+              "visual_stylization": 10,
+              "dialogue_centrality": 8,
+              "narrative_structure": 9,
+              "class_and_capitalism": 2,
+              "contemporary_realism": 1,
+              "homage_and_reference": 6,
+              "non_linear_narrative": 0,
+              "technology_and_humanity": 10
+            },
+            "highlight_keys": [
+              "technology_and_humanity",
+              "philosophical",
+              "visual_stylization",
+              "cinematography",
+              "action_core_scores_placeholder_check",
+              "world_immersion",
+              "novelty",
+              "pop_culture"
+            ]
+          },
+          "essence_tags": [
+            "Cyberpunk Action",
+            "Philosophial Sci-Fi",
+            "Groundbreaking Visual Effects",
+            "Reality vs. Illusion",
+            "Stylish Martial Arts",
+            "Dystopian Future",
+            "Cultural Phenomenon",
+            "High-Octane Thriller",
+            "Existential Dread",
+            "Iconic Soundtrack"
+          ],
+          "essence_text": "A groundbreaking cyberpunk thriller that redefined visual effects and action choreography while posing profound questions about reality and consciousness. The film blends high-octane martial arts sequences with dense philosophical dialogue, creating a unique atmosphere of stylish dystopian tension. Its iconic green-tinted aesthetic and synthesized soundtrack immerse the viewer in a world where technology has enslaved humanity. It remains a cultural touchstone for its exploration of free will, simulation theory, and the nature of existence.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": false,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "c",
+          "job": "01a0a00d-ae0a-c28c-7273-44209de43cce",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00d-ae0a-c28c-7273-44209de43cce",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0/c",
+    "script_hash": null,
+    "duration_ms": 21670,
+    "result": [
+      {
+        "id": "68471cdd1f87b65f3388b42a",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 0,
+              "scare": 3,
+              "acting": 8,
+              "gaming": 2,
+              "pathos": 2,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 9,
+              "fantasy": 0,
+              "mystery": 7,
+              "novelty": 9,
+              "romance": 4,
+              "showbiz": 0,
+              "tension": 8,
+              "uncanny": 6,
+              "warfare": 6,
+              "intrigue": 9,
+              "pastiche": 3,
+              "violence": 7,
+              "ambiguity": 6,
+              "bleakness": 5,
+              "catharsis": 5,
+              "direction": 9,
+              "eroticism": 1,
+              "fast_pace": 8,
+              "grotesque": 2,
+              "nostalgia": 8,
+              "political": 3,
+              "slow_burn": 2,
+              "spectacle": 9,
+              "spiritual": 6,
+              "wholesome": 1,
+              "adrenaline": 9,
+              "complexity": 8,
+              "dark_humor": 2,
+              "futuristic": 10,
+              "historical": 0,
+              "melancholy": 2,
+              "surrealism": 5,
+              "educational": 2,
+              "hopefulness": 6,
+              "pop_culture": 9,
+              "psychedelic": 4,
+              "biographical": 0,
+              "cringe_humor": 0,
+              "eccentricity": 4,
+              "wit_wordplay": 5,
+              "coming_of_age": 3,
+              "philosophical": 9,
+              "psychological": 8,
+              "satire_parody": 0,
+              "camp_and_irony": 2,
+              "cinematography": 10,
+              "meta_narrative": 7,
+              "rewatchability": 9,
+              "absurdist_humor": 0,
+              "character_depth": 7,
+              "family_dynamics": 1,
+              "physical_comedy": 0,
+              "world_immersion": 10,
+              "dialogue_quality": 8,
+              "music_centrality": 9,
+              "sound_centrality": 8,
+              "music_composition": 9,
+              "social_commentary": 7,
+              "situational_comedy": 0,
+              "visual_stylization": 10,
+              "dialogue_centrality": 8,
+              "narrative_structure": 9,
+              "class_and_capitalism": 2,
+              "contemporary_realism": 1,
+              "homage_and_reference": 6,
+              "non_linear_narrative": 0,
+              "technology_and_humanity": 10
+            },
+            "highlight_keys": [
+              "technology_and_humanity",
+              "philosophical",
+              "visual_stylization",
+              "cinematography",
+              "action_core_scores_placeholder_check",
+              "world_immersion",
+              "novelty",
+              "pop_culture"
+            ]
+          },
+          "essence_tags": [
+            "Cyberpunk Action",
+            "Philosophial Sci-Fi",
+            "Groundbreaking Visual Effects",
+            "Reality vs. Illusion",
+            "Stylish Martial Arts",
+            "Dystopian Future",
+            "Cultural Phenomenon",
+            "High-Octane Thriller",
+            "Existential Dread",
+            "Iconic Soundtrack"
+          ],
+          "essence_text": "A groundbreaking cyberpunk thriller that redefined visual effects and action choreography while posing profound questions about reality and consciousness. The film blends high-octane martial arts sequences with dense philosophical dialogue, creating a unique atmosphere of stylish dystopian tension. Its iconic green-tinted aesthetic and synthesized soundtrack immerse the viewer in a world where technology has enslaved humanity. It remains a cultural touchstone for its exploration of free will, simulation theory, and the nature of existence.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": false,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a00d-ae0a-c28c-7273-44209de43cce tag=python3 worker=wk-default-2f4bb8b4f321-Ngr5d hostname=2f4bb8b4f321 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nACCEPTANCE_RESERVATION {\"model\": \"qwen/qwen3.8-flash\", \"usd\": 0.009492839999999999, \"input_byte_bound\": 28213}\nACCEPTANCE_USAGE {\"model\": \"qwen/qwen3.8-flash\", \"id\": \"gen-1789391647-SkMtzwNVwa5dHWLjj8wH\", \"provider\": \"Alibaba\", \"usage\": {\"prompt_tokens\": 4530, \"completion_tokens\": 1123, \"total_tokens\": 5653, \"cost\": 0.00120731, \"is_byok\": false, \"prompt_tokens_details\": {\"cached_tokens\": 0, \"cache_write_tokens\": 0, \"audio_tokens\": 0, \"video_tokens\": 0}, \"cost_details\": {\"upstream_inference_cost\": 0.00120731, \"upstream_inference_prompt_cost\": 0.0006795, \"upstream_inference_completions_cost\": 0.00052781}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"image_tokens\": 0, \"audio_tokens\": 0}}}\nOpenRouter qwen/qwen3.8-flash usage.cost=0.00120731\nACCEPTANCE_ACCOUNTED_USD 0.0012073099999999996",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00e-0303-7bff-ae85-1b697fb992fc",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/d",
+    "script_hash": null,
+    "duration_ms": 87,
+    "result": [
+      {
+        "id": "68471cdd1f87b65f3388b42a",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 0,
+              "scare": 3,
+              "acting": 8,
+              "gaming": 2,
+              "pathos": 2,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 9,
+              "fantasy": 0,
+              "mystery": 7,
+              "novelty": 9,
+              "romance": 4,
+              "showbiz": 0,
+              "tension": 8,
+              "uncanny": 6,
+              "warfare": 6,
+              "intrigue": 9,
+              "pastiche": 3,
+              "violence": 7,
+              "ambiguity": 6,
+              "bleakness": 5,
+              "catharsis": 5,
+              "direction": 9,
+              "eroticism": 1,
+              "fast_pace": 8,
+              "grotesque": 2,
+              "nostalgia": 8,
+              "political": 3,
+              "slow_burn": 2,
+              "spectacle": 9,
+              "spiritual": 6,
+              "wholesome": 1,
+              "adrenaline": 9,
+              "complexity": 8,
+              "dark_humor": 2,
+              "futuristic": 10,
+              "historical": 0,
+              "melancholy": 2,
+              "surrealism": 5,
+              "educational": 2,
+              "hopefulness": 6,
+              "pop_culture": 9,
+              "psychedelic": 4,
+              "biographical": 0,
+              "cringe_humor": 0,
+              "eccentricity": 4,
+              "wit_wordplay": 5,
+              "coming_of_age": 3,
+              "philosophical": 9,
+              "psychological": 8,
+              "satire_parody": 0,
+              "camp_and_irony": 2,
+              "cinematography": 10,
+              "meta_narrative": 7,
+              "rewatchability": 9,
+              "absurdist_humor": 0,
+              "character_depth": 7,
+              "family_dynamics": 1,
+              "physical_comedy": 0,
+              "world_immersion": 10,
+              "dialogue_quality": 8,
+              "music_centrality": 9,
+              "sound_centrality": 8,
+              "music_composition": 9,
+              "social_commentary": 7,
+              "situational_comedy": 0,
+              "visual_stylization": 10,
+              "dialogue_centrality": 8,
+              "narrative_structure": 9,
+              "class_and_capitalism": 2,
+              "contemporary_realism": 1,
+              "homage_and_reference": 6,
+              "non_linear_narrative": 0,
+              "technology_and_humanity": 10
+            },
+            "highlight_keys": [
+              "technology_and_humanity",
+              "philosophical",
+              "visual_stylization",
+              "cinematography",
+              "action_core_scores_placeholder_check",
+              "world_immersion",
+              "novelty",
+              "pop_culture"
+            ]
+          },
+          "essence_tags": [
+            "Cyberpunk Action",
+            "Philosophial Sci-Fi",
+            "Groundbreaking Visual Effects",
+            "Reality vs. Illusion",
+            "Stylish Martial Arts",
+            "Dystopian Future",
+            "Cultural Phenomenon",
+            "High-Octane Thriller",
+            "Existential Dread",
+            "Iconic Soundtrack"
+          ],
+          "essence_text": "A groundbreaking cyberpunk thriller that redefined visual effects and action choreography while posing profound questions about reality and consciousness. The film blends high-octane martial arts sequences with dense philosophical dialogue, creating a unique atmosphere of stylish dystopian tension. Its iconic green-tinted aesthetic and synthesized soundtrack immerse the viewer in a world where technology has enslaved humanity. It remains a cultural touchstone for its exploration of free will, simulation theory, and the nature of existence.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": false,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a00e-0303-7bff-ae85-1b697fb992fc tag=python3 worker=wk-default-2f4bb8b4f321-Ngr5d hostname=2f4bb8b4f321 isolation=none\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00e-038f-ad95-569d-676cd89ecfbe",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/vectors",
+    "script_hash": "d7d1a5ead6496c07",
+    "duration_ms": 3683,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "job=01a0a00e-038f-ad95-569d-676cd89ecfbe tag=python3 worker=wk-default-2f4bb8b4f321-Ngr5d hostname=2f4bb8b4f321 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, cachetools==6.2.2, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, google-auth==2.43.0, google-genai==1.53.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pyasn1==0.6.1, pyasn1-modules==0.4.2, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, requests==2.32.5, rsa==4.9.1, tenacity==9.1.2, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, websockets==15.0.1, wmill==1.589.1\n\n\nCopying some packages from cache to job_dir...\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nSuccessfully generated 1 embeddings.\nInitializing mongodb...\nSuccessfully initialized mongodb\nsaving DNA for The Matrix (1999)\n[9.0, 8.0, 3.0, 7.0, 4.0, 1.0, 1.0, 8.0, 2.0, 2.0, 6.0, 5.0, 8.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 10.0, 0.0, 1.0, 0.0, 7.0, 6.0, 3.0, 0.0, 0.0, 3.0, 1.0, 8.0, 0.0, 2.0, 9.0, 7.0, 2.0, 10.0, 6.0, 9.0, 8.0, 7.0, 2.0, 8.0, 9.0, 8.0, 9.0, 6.0, 5.0, 6.0, 9.0, 6.0, 0.0, 7.0, 5.0, 4.0, 9.0, 2.0, 9.0, 8.0, 10.0, 9.0, 9.0, 10.0, 9.0, 10.0, 3.0, 4.0, 2.0, 2.0, 8.0, 9.0, 8.0]",
+    "flow_status": null
+  }
+]

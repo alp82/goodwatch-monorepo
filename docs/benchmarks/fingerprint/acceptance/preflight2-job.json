@@ -1,0 +1,34 @@
+{
+  "type": "CompletedJob",
+  "id": "01a0a00c-2ad8-e890-376b-501f782c2fd6",
+  "created_at": "2026-09-14T13:12:27.095923Z",
+  "started_at": "2026-09-14T13:12:27.122609Z",
+  "completed_at": "2026-09-14T13:12:29.221980Z",
+  "duration_ms": 2099,
+  "success": false,
+  "script_path": "f/dna/acceptance/check",
+  "args": {},
+  "result": {
+    "error": {
+      "name": "ExecutionErr",
+      "message": "exit code for \"python run\": 1, last log lines:\n501f782c2fd6/f/dna/acceptance/check.py\", line 9, in <module>\n    from f.dna.generate.spend_pause import SpendPause,PAUSE_KEY\n  File \"/tmp/windmill/wk-default-c5ff51d9d556-A7DLu/01a0a00c-2ad8-e890-376b-501f782c2fd6/tmp/f/dna/generate/spend_pause.py\", line 6, in <module>\n    from f.db.redis import RedisConnector\n  File \"/tmp/windmill/wk-default-c5ff51d9d556-A7DLu/01a0a00c-2ad8-e890-376b-501f782c2fd6/tmp/f/db/redis.py\", line 1, in <module>\n    from rediscluster import RedisCluster # pin: redis-py-cluster\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nModuleNotFoundError: No module named 'rediscluster'",
+      "exit_code": 1
+    }
+  },
+  "result_columns": null,
+  "logs": "job=01a0a00c-2ad8-e890-376b-501f782c2fd6 tag=python3 worker=wk-default-c5ff51d9d556-A7DLu hostname=c5ff51d9d556 isolation=none\n\nresolving dependencies...\ncontent of requirements:\nmongoengine\npydantic\nredis\nrequests\nwmill\n\nenv deps from local cache: annotated-types==0.8.0, anyio==4.15.1, certifi==2026.7.22, charset-normalizer==3.5.1, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.19, mongoengine==0.29.3, pydantic==2.13.5, pydantic-core==2.46.5, pymongo==4.18.1, requests==2.34.2, typing-extensions==4.16.0, typing-inspection==0.4.4, urllib3==2.7.0, wmill==1.811.1\n\n\n--- UV PIP INSTALL ---\n\nTo be installed: \n\nredis==8.1.0 \n\nStarting installation... (20 tasks in parallel) \n\n[1/1]    +  redis==8.1.0 |  in 936ms\nenv set in 940ms\n\n--- PYTHON (3.12) CODE EXECUTION ---\n\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/tmp/windmill/wk-default-c5ff51d9d556-A7DLu/01a0a00c-2ad8-e890-376b-501f782c2fd6/wrapper.py\", line 10, in <module>\n    from f.dna.acceptance import check as inner_script\n  File \"/tmp/windmill/wk-default-c5ff51d9d556-A7DLu/01a0a00c-2ad8-e890-376b-501f782c2fd6/f/dna/acceptance/check.py\", line 9, in <module>\n    from f.dna.generate.spend_pause import SpendPause,PAUSE_KEY\n  File \"/tmp/windmill/wk-default-c5ff51d9d556-A7DLu/01a0a00c-2ad8-e890-376b-501f782c2fd6/tmp/f/dna/generate/spend_pause.py\", line 6, in <module>\n    from f.db.redis import RedisConnector\n  File \"/tmp/windmill/wk-default-c5ff51d9d556-A7DLu/01a0a00c-2ad8-e890-376b-501f782c2fd6/tmp/f/db/redis.py\", line 1, in <module>\n    from rediscluster import RedisCluster # pin: redis-py-cluster\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nModuleNotFoundError: No module named 'rediscluster'",
+  "deleted": false,
+  "canceled": false,
+  "job_kind": "preview",
+  "is_flow_step": false,
+  "language": "python3",
+  "is_skipped": false,
+  "visible_to_owner": true,
+  "mem_peak": 42896,
+  "tag": "python3",
+  "is_retry": false,
+  "resolved": false,
+  "trigger_kind": "webhook",
+  "raw_code": "#requirements:\n#pydantic\n#requests\n#wmill\n#mongoengine\n#redis\nfrom f.db.mongodb import init_mongodb, close_mongodb\nfrom f.dna.models import DnaMovie,DnaTv\nfrom f.dna.generate.spend_pause import SpendPause,PAUSE_KEY\nimport wmill,requests\n\ndef main():\n init_mongodb()\n output=[]\n for cls,ids in [(DnaMovie,[603,550,545611,1233066,150540]),(DnaTv,[1396,1399,249042,42009,64230])]:\n  for e in cls.objects(tmdb_id__in=ids):\n   output.append({'id':str(e.id),'type':'movie' if cls==DnaMovie else 'tv','tmdb_id':e.tmdb_id,'title':e.original_title,'popularity':e.popularity,'overview':e.overview,'release_year':e.release_year,'is_selected':e.is_selected,'selected_at':str(e.selected_at),'llm_model_name':e.llm_model_name,'dna':e.dna,'vector_essence_length':len(e.vector_essence_text or []),'vector_fingerprint_length':len(e.vector_fingerprint or [])})\n close_mongodb()\n pause=SpendPause(); active=pause.is_active()\n key=wmill.get_variable('u/Alp/OPENROUTER_API_KEY')\n r=requests.get('https://openrouter.ai/api/v1/key',headers={'Authorization':'Bearer '+key},timeout=20);r.raise_for_status();k=r.json()['data']\n return {'titles':output,'pause_active':active,'pause_ttl':pause.redis.ttl(PAUSE_KEY),'key':{k1:k.get(k1) for k1 in ['limit','limit_reset','limit_remaining','usage','usage_daily','usage_monthly']}}\n",
+  "worker": "wk-default-c5ff51d9d556-A7DLu"
+}

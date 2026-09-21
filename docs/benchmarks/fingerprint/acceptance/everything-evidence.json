@@ -1,0 +1,555 @@
+[
+  {
+    "id": "01a0a00e-d65a-8e25-6e83-f7e47e57bde6",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark",
+    "script_hash": null,
+    "duration_ms": 28340,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 4,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a00e-d674-96ac-87de-0cd011089af5",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a00e-db87-3cb7-e975-66ced3734cd9",
+          "type": "Success",
+          "skipped": false,
+          "flow_jobs": [
+            "01a0a00e-db87-3cb7-e975-66ced3734cd9"
+          ],
+          "flow_jobs_success": [
+            true
+          ],
+          "flow_jobs_duration": {
+            "started_at": [
+              "2026-09-14T13:15:23.414645Z"
+            ],
+            "duration_ms": [
+              23326
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "job": "01a0a00f-36d1-6c8a-838c-0f8f6e940c2e",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "vectors",
+          "job": "01a0a00f-374d-f3d1-94ca-83d7e173fa51",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00e-d674-96ac-87de-0cd011089af5",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 1252,
+    "result": [
+      [
+        {
+          "id": "6849875909c1e22f7560bc88",
+          "type": "movie",
+          "tmdb_id": 545611
+        }
+      ]
+    ],
+    "logs": "job=01a0a00e-d674-96ac-87de-0cd011089af5 tag=python3 worker=wk-default-d18e365e6886-bAfOl hostname=d18e365e6886 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00e-db87-3cb7-e975-66ced3734cd9",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0",
+    "script_hash": null,
+    "duration_ms": 23326,
+    "result": [
+      {
+        "id": "6849875909c1e22f7560bc88",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 2,
+              "scare": 2,
+              "acting": 10,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 10,
+              "editing": 10,
+              "fantasy": 9,
+              "mystery": 3,
+              "novelty": 10,
+              "romance": 5,
+              "showbiz": 0,
+              "tension": 7,
+              "uncanny": 6,
+              "warfare": 3,
+              "intrigue": 8,
+              "pastiche": 8,
+              "violence": 6,
+              "ambiguity": 4,
+              "bleakness": 3,
+              "catharsis": 9,
+              "direction": 10,
+              "eroticism": 1,
+              "fast_pace": 9,
+              "grotesque": 3,
+              "nostalgia": 3,
+              "political": 2,
+              "slow_burn": 3,
+              "spectacle": 10,
+              "spiritual": 7,
+              "wholesome": 9,
+              "adrenaline": 8,
+              "complexity": 9,
+              "dark_humor": 7,
+              "futuristic": 4,
+              "historical": 2,
+              "melancholy": 4,
+              "surrealism": 9,
+              "educational": 1,
+              "hopefulness": 9,
+              "pop_culture": 7,
+              "psychedelic": 8,
+              "biographical": 0,
+              "cringe_humor": 5,
+              "eccentricity": 10,
+              "wit_wordplay": 8,
+              "coming_of_age": 8,
+              "philosophical": 8,
+              "psychological": 8,
+              "satire_parody": 6,
+              "camp_and_irony": 9,
+              "cinematography": 9,
+              "meta_narrative": 8,
+              "rewatchability": 9,
+              "absurdist_humor": 10,
+              "character_depth": 9,
+              "family_dynamics": 10,
+              "physical_comedy": 9,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 8,
+              "sound_centrality": 7,
+              "music_composition": 9,
+              "social_commentary": 8,
+              "situational_comedy": 7,
+              "visual_stylization": 10,
+              "dialogue_centrality": 8,
+              "narrative_structure": 9,
+              "class_and_capitalism": 4,
+              "contemporary_realism": 5,
+              "homage_and_reference": 8,
+              "non_linear_narrative": 7,
+              "technology_and_humanity": 6
+            },
+            "highlight_keys": [
+              "absurdist_humor",
+              "family_dynamics",
+              "visual_stylization",
+              "novelty",
+              "editing",
+              "wonder",
+              "catharsis",
+              "eccentricity"
+            ]
+          },
+          "essence_tags": [
+            "Maximalist Multiverse Action",
+            "Absurdist Family Drama",
+            "Emotional Catharsis",
+            "Visual Spectacle",
+            "Existential Nihilism vs. Optimism",
+            "Immigrant Experience",
+            "Creative Editing Masterclass",
+            "Heartwarming Chaos",
+            "Genre-Bending Satire"
+          ],
+          "essence_text": "A frenetic, maximalist explosion of color and chaos that seamlessly blends kung-fu action with absurdist comedy and profound family drama. The film uses the multiverse not just as a plot device, but as a visual metaphor for the infinite possibilities of regret and hope in an immigrant's life. Its editing is a character in itself, creating a rhythmic, dizzying experience that mirrors the protagonist's mental state. Ultimately, it transforms from a bizarre sci-fi romp into a deeply moving testament to kindness and connection, leaving the viewer emotionally exhausted yet profoundly uplifted.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": true,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "c",
+          "job": "01a0a00e-dba7-87d3-87ca-9e4251dd5618",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00e-dba7-87d3-87ca-9e4251dd5618",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0/c",
+    "script_hash": null,
+    "duration_ms": 23264,
+    "result": [
+      {
+        "id": "6849875909c1e22f7560bc88",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 2,
+              "scare": 2,
+              "acting": 10,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 10,
+              "editing": 10,
+              "fantasy": 9,
+              "mystery": 3,
+              "novelty": 10,
+              "romance": 5,
+              "showbiz": 0,
+              "tension": 7,
+              "uncanny": 6,
+              "warfare": 3,
+              "intrigue": 8,
+              "pastiche": 8,
+              "violence": 6,
+              "ambiguity": 4,
+              "bleakness": 3,
+              "catharsis": 9,
+              "direction": 10,
+              "eroticism": 1,
+              "fast_pace": 9,
+              "grotesque": 3,
+              "nostalgia": 3,
+              "political": 2,
+              "slow_burn": 3,
+              "spectacle": 10,
+              "spiritual": 7,
+              "wholesome": 9,
+              "adrenaline": 8,
+              "complexity": 9,
+              "dark_humor": 7,
+              "futuristic": 4,
+              "historical": 2,
+              "melancholy": 4,
+              "surrealism": 9,
+              "educational": 1,
+              "hopefulness": 9,
+              "pop_culture": 7,
+              "psychedelic": 8,
+              "biographical": 0,
+              "cringe_humor": 5,
+              "eccentricity": 10,
+              "wit_wordplay": 8,
+              "coming_of_age": 8,
+              "philosophical": 8,
+              "psychological": 8,
+              "satire_parody": 6,
+              "camp_and_irony": 9,
+              "cinematography": 9,
+              "meta_narrative": 8,
+              "rewatchability": 9,
+              "absurdist_humor": 10,
+              "character_depth": 9,
+              "family_dynamics": 10,
+              "physical_comedy": 9,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 8,
+              "sound_centrality": 7,
+              "music_composition": 9,
+              "social_commentary": 8,
+              "situational_comedy": 7,
+              "visual_stylization": 10,
+              "dialogue_centrality": 8,
+              "narrative_structure": 9,
+              "class_and_capitalism": 4,
+              "contemporary_realism": 5,
+              "homage_and_reference": 8,
+              "non_linear_narrative": 7,
+              "technology_and_humanity": 6
+            },
+            "highlight_keys": [
+              "absurdist_humor",
+              "family_dynamics",
+              "visual_stylization",
+              "novelty",
+              "editing",
+              "wonder",
+              "catharsis",
+              "eccentricity"
+            ]
+          },
+          "essence_tags": [
+            "Maximalist Multiverse Action",
+            "Absurdist Family Drama",
+            "Emotional Catharsis",
+            "Visual Spectacle",
+            "Existential Nihilism vs. Optimism",
+            "Immigrant Experience",
+            "Creative Editing Masterclass",
+            "Heartwarming Chaos",
+            "Genre-Bending Satire"
+          ],
+          "essence_text": "A frenetic, maximalist explosion of color and chaos that seamlessly blends kung-fu action with absurdist comedy and profound family drama. The film uses the multiverse not just as a plot device, but as a visual metaphor for the infinite possibilities of regret and hope in an immigrant's life. Its editing is a character in itself, creating a rhythmic, dizzying experience that mirrors the protagonist's mental state. Ultimately, it transforms from a bizarre sci-fi romp into a deeply moving testament to kindness and connection, leaving the viewer emotionally exhausted yet profoundly uplifted.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": true,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a00e-dba7-87d3-87ca-9e4251dd5618 tag=python3 worker=wk-default-2f4bb8b4f321-Ngr5d hostname=2f4bb8b4f321 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nACCEPTANCE_RESERVATION {\"model\": \"qwen/qwen3.8-flash\", \"usd\": 0.00949704, \"input_byte_bound\": 28234}\nACCEPTANCE_USAGE {\"model\": \"qwen/qwen3.8-flash\", \"id\": \"gen-1789391724-7GPGSiSce550lJLQFheF\", \"provider\": \"Alibaba\", \"usage\": {\"prompt_tokens\": 4532, \"completion_tokens\": 1265, \"total_tokens\": 5797, \"cost\": 0.000691182, \"is_byok\": false, \"prompt_tokens_details\": {\"cached_tokens\": 4352, \"cache_write_tokens\": 0, \"audio_tokens\": 0, \"video_tokens\": 0}, \"cost_details\": {\"upstream_inference_cost\": 0.000691182, \"upstream_inference_prompt_cost\": 9.6632e-05, \"upstream_inference_completions_cost\": 0.00059455}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"image_tokens\": 0, \"audio_tokens\": 0}}}\nOpenRouter qwen/qwen3.8-flash usage.cost=0.000691182\nACCEPTANCE_ACCOUNTED_USD 0.0006911820000000003",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00f-36d1-6c8a-838c-0f8f6e940c2e",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/d",
+    "script_hash": null,
+    "duration_ms": 74,
+    "result": [
+      {
+        "id": "6849875909c1e22f7560bc88",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 2,
+              "scare": 2,
+              "acting": 10,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 10,
+              "editing": 10,
+              "fantasy": 9,
+              "mystery": 3,
+              "novelty": 10,
+              "romance": 5,
+              "showbiz": 0,
+              "tension": 7,
+              "uncanny": 6,
+              "warfare": 3,
+              "intrigue": 8,
+              "pastiche": 8,
+              "violence": 6,
+              "ambiguity": 4,
+              "bleakness": 3,
+              "catharsis": 9,
+              "direction": 10,
+              "eroticism": 1,
+              "fast_pace": 9,
+              "grotesque": 3,
+              "nostalgia": 3,
+              "political": 2,
+              "slow_burn": 3,
+              "spectacle": 10,
+              "spiritual": 7,
+              "wholesome": 9,
+              "adrenaline": 8,
+              "complexity": 9,
+              "dark_humor": 7,
+              "futuristic": 4,
+              "historical": 2,
+              "melancholy": 4,
+              "surrealism": 9,
+              "educational": 1,
+              "hopefulness": 9,
+              "pop_culture": 7,
+              "psychedelic": 8,
+              "biographical": 0,
+              "cringe_humor": 5,
+              "eccentricity": 10,
+              "wit_wordplay": 8,
+              "coming_of_age": 8,
+              "philosophical": 8,
+              "psychological": 8,
+              "satire_parody": 6,
+              "camp_and_irony": 9,
+              "cinematography": 9,
+              "meta_narrative": 8,
+              "rewatchability": 9,
+              "absurdist_humor": 10,
+              "character_depth": 9,
+              "family_dynamics": 10,
+              "physical_comedy": 9,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 8,
+              "sound_centrality": 7,
+              "music_composition": 9,
+              "social_commentary": 8,
+              "situational_comedy": 7,
+              "visual_stylization": 10,
+              "dialogue_centrality": 8,
+              "narrative_structure": 9,
+              "class_and_capitalism": 4,
+              "contemporary_realism": 5,
+              "homage_and_reference": 8,
+              "non_linear_narrative": 7,
+              "technology_and_humanity": 6
+            },
+            "highlight_keys": [
+              "absurdist_humor",
+              "family_dynamics",
+              "visual_stylization",
+              "novelty",
+              "editing",
+              "wonder",
+              "catharsis",
+              "eccentricity"
+            ]
+          },
+          "essence_tags": [
+            "Maximalist Multiverse Action",
+            "Absurdist Family Drama",
+            "Emotional Catharsis",
+            "Visual Spectacle",
+            "Existential Nihilism vs. Optimism",
+            "Immigrant Experience",
+            "Creative Editing Masterclass",
+            "Heartwarming Chaos",
+            "Genre-Bending Satire"
+          ],
+          "essence_text": "A frenetic, maximalist explosion of color and chaos that seamlessly blends kung-fu action with absurdist comedy and profound family drama. The film uses the multiverse not just as a plot device, but as a visual metaphor for the infinite possibilities of regret and hope in an immigrant's life. Its editing is a character in itself, creating a rhythmic, dizzying experience that mirrors the protagonist's mental state. Ultimately, it transforms from a bizarre sci-fi romp into a deeply moving testament to kindness and connection, leaving the viewer emotionally exhausted yet profoundly uplifted.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": true,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a00f-36d1-6c8a-838c-0f8f6e940c2e tag=python3 worker=wk-default-f2f4cd808ea9-byElp hostname=f2f4cd808ea9 isolation=none\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00f-374d-f3d1-94ca-83d7e173fa51",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/vectors",
+    "script_hash": "d7d1a5ead6496c07",
+    "duration_ms": 3484,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "job=01a0a00f-374d-f3d1-94ca-83d7e173fa51 tag=python3 worker=wk-default-2f4bb8b4f321-Ngr5d hostname=2f4bb8b4f321 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, cachetools==6.2.2, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, google-auth==2.43.0, google-genai==1.53.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pyasn1==0.6.1, pyasn1-modules==0.4.2, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, requests==2.32.5, rsa==4.9.1, tenacity==9.1.2, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, websockets==15.0.1, wmill==1.589.1\n\n\nCopying some packages from cache to job_dir...\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nSuccessfully generated 1 embeddings.\nInitializing mongodb...\nSuccessfully initialized mongodb\nsaving DNA for Everything Everywhere All at Once (2022)\n[8.0, 7.0, 2.0, 6.0, 5.0, 1.0, 9.0, 10.0, 9.0, 4.0, 6.0, 9.0, 3.0, 7.0, 8.0, 9.0, 5.0, 10.0, 6.0, 7.0, 9.0, 4.0, 2.0, 5.0, 2.0, 3.0, 3.0, 2.0, 0.0, 0.0, 8.0, 10.0, 8.0, 0.0, 0.0, 7.0, 8.0, 4.0, 6.0, 7.0, 9.0, 8.0, 9.0, 3.0, 9.0, 8.0, 9.0, 9.0, 9.0, 3.0, 4.0, 10.0, 8.0, 7.0, 8.0, 9.0, 10.0, 8.0, 1.0, 10.0, 10.0, 9.0, 10.0, 9.0, 9.0, 10.0, 10.0, 8.0, 8.0, 3.0, 9.0, 8.0, 8.0, 7.0]",
+    "flow_status": null
+  }
+]

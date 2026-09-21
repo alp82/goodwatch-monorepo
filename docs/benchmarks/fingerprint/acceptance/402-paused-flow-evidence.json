@@ -1,0 +1,143 @@
+[
+  {
+    "id": "01a0a012-fca4-b87b-9e00-90bd5871606f",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate_dna",
+    "script_hash": "0000000000000073",
+    "duration_ms": 4836,
+    "result": {
+      "embeddings_count": 0
+    },
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 3,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a012-fcba-8326-187d-5fa1a34547a2",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a013-0162-0f6b-6c88-90493622be8f",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "c",
+          "job": "01a0a013-04f3-b4aa-8f2a-590159228d02",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a012-fcba-8326-187d-5fa1a34547a2",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/next",
+    "script_hash": "0999f83718c4c69c",
+    "duration_ms": 1138,
+    "result": {
+      "ids": {
+        "tv_ids": [],
+        "movie_ids": []
+      },
+      "tmdb_ids": {
+        "tv_ids": [],
+        "movie_ids": []
+      }
+    },
+    "logs": "job=01a0a012-fcba-8326-187d-5fa1a34547a2 tag=python3 worker=wk-default-6ff53ddc8c5b-GY9NA hostname=6ff53ddc8c5b isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a013-0162-0f6b-6c88-90493622be8f",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/crawl_all_by_id",
+    "script_hash": "00000000000000a5",
+    "duration_ms": 847,
+    "result": [],
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 3,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a013-0194-116b-e9f2-873293bdde4b",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "00000000-0000-0000-0000-000000000000",
+          "type": "Success",
+          "skipped": false,
+          "flow_jobs": [],
+          "flow_jobs_success": [],
+          "flow_jobs_duration": {
+            "started_at": [],
+            "duration_ms": []
+          }
+        },
+        {
+          "id": "d",
+          "job": "01a0a013-0443-b0be-161b-9dfb6c5d3c90",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a013-0194-116b-e9f2-873293bdde4b",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 614,
+    "result": [],
+    "logs": "job=01a0a013-0194-116b-e9f2-873293bdde4b tag=python3 worker=wk-default-a783bd7cee0b-sVs1m hostname=a783bd7cee0b isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a013-0443-b0be-161b-9dfb6c5d3c90",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/crawl_all_by_id/d",
+    "script_hash": "00000000000000ad",
+    "duration_ms": 90,
+    "result": [],
+    "logs": "job=01a0a013-0443-b0be-161b-9dfb6c5d3c90 tag=python3 worker=wk-default-d90a911198c0-lM4Oy hostname=d90a911198c0 isolation=none\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a013-04f3-b4aa-8f2a-590159228d02",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/vectors",
+    "script_hash": "d7d1a5ead6496c07",
+    "duration_ms": 2666,
+    "result": {
+      "embeddings_count": 0
+    },
+    "logs": "job=01a0a013-04f3-b4aa-8f2a-590159228d02 tag=python3 worker=wk-default-f2f4cd808ea9-byElp hostname=f2f4cd808ea9 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, cachetools==6.2.2, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, google-auth==2.43.0, google-genai==1.53.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pyasn1==0.6.1, pyasn1-modules==0.4.2, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, requests==2.32.5, rsa==4.9.1, tenacity==9.1.2, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, websockets==15.0.1, wmill==1.589.1\n\n\nCopying some packages from cache to job_dir...\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  }
+]
