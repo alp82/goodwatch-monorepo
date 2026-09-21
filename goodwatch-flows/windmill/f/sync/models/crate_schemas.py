@@ -497,7 +497,7 @@ SCHEMAS = {
         "shards": 6,
     },
     "streaming_evidence": {
-        "columns": {"media_tmdb_id": "INTEGER", "media_type": "TEXT", "country_code": "TEXT", "payload": "TEXT INDEX OFF"},
+        "columns": {"media_tmdb_id": "INTEGER", "media_type": "TEXT", "country_code": "TEXT", "payload": "TEXT INDEX OFF STORAGE WITH (columnstore = false)"},
         "primary_key": ["media_tmdb_id", "media_type", "country_code"],
         "shards": 6,
     },

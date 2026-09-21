@@ -162,7 +162,7 @@ class SelectionTests(unittest.TestCase):
                         **DELETED_TITLE_HELPERS,
                         "CrateConnector": object, "Movie": object, "Show": object,
                         "get_db": lambda: db, "datetime": datetime, "timedelta": timedelta,
-                        "HOURS_TO_FETCH": 48, "BATCH_SIZE": 100, "defaultdict": defaultdict,
+                        "HOURS_TO_FETCH": 48, "SCHEDULED_LEASE_WAIT_SECONDS": 0, "BATCH_SIZE": 100, "defaultdict": defaultdict,
                         "tmdb_details_projection": {}, "Any": Any,
                         "publication_lease": lambda *args: nullcontext(lambda: None),
                     }
