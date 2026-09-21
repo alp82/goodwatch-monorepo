@@ -10,9 +10,14 @@ export async function action({ request }: ActionFunctionArgs) {
 	});
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers });
+	// Coolify terminates TLS; remix-serve sees HTTP. Match the configured public
+	// origin, as in poster impressions, without trusting caller-supplied proxies.
+	const expectedOrigin = process.env.APP_ORIGIN || (
+		process.env.NODE_ENV === "production" ? "https://goodwatch.app" : "http://localhost:3003"
+	);
 	if (
 		request.headers.get("Origin") &&
-		request.headers.get("Origin") !== new URL(request.url).origin
+		request.headers.get("Origin") !== expectedOrigin
 	)
 		return json({ error: "Invalid origin" }, { status: 403, headers });
 	try {
