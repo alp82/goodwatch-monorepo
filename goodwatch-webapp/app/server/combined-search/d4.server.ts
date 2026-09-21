@@ -10,9 +10,16 @@ import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta";
 import { MEDIA_COLLECTION, parsePointId } from "~/utils/qdrant";
 import { VALID_FINGERPRINT_KEYS } from "../utils/fingerprint";
 import { searchQuery as query } from "./catalog.server";
+import {
+	type SearchFilters,
+	toCrateSql,
+	toQdrantMust,
+} from "./search-filters";
 export interface Eligibility {
 	includeAdult: boolean;
 	lesserKnown: boolean;
+	// Chip filters, validated by the route. ANDed with the flags; a chip type overrides a media flag.
+	filters?: SearchFilters;
 }
 const RESULTS = 100;
 const FLAG_THRESHOLD = 0.6;
@@ -483,6 +490,7 @@ const qdrantFilter = (flags: FlagJudgment[], eligibility: Eligibility) => {
 	const must: unknown[] = eligibility.lesserKnown
 		? []
 		: [{ key: "goodwatch_overall_score_voting_count", range: { gte: 2000 } }];
+	must.push(...toQdrantMust(eligibility.filters));
 	const must_not: unknown[] = eligibility.includeAdult
 		? []
 		: [{ key: "adult", match: { value: true } }];
@@ -492,6 +500,7 @@ const qdrantFilter = (flags: FlagJudgment[], eligibility: Eligibility) => {
 		const wanted = judgment.decision === "required";
 		const soft = f.id.startsWith("suitability_") || f.id.startsWith("context_");
 		if (!wanted && soft) continue;
+		if (f.media && eligibility.filters?.type) continue;
 		const condition = f.media
 			? { key: "media_type", match: { value: f.media } }
 			: { key: f.qdrant?.key, match: { value: f.qdrant?.value } };
@@ -843,7 +852,11 @@ const wordForms = (word: string) =>
 		]),
 	].filter((form) => form.length > 2);
 
-const flagSql = (flags: FlagJudgment[], table: "movie" | "show") => {
+const flagSql = (
+	flags: FlagJudgment[],
+	table: "movie" | "show",
+	chipType: boolean,
+) => {
 	const clauses: string[] = [];
 	for (const judgment of flags) {
 		if (!judgment.decision) continue;
@@ -852,6 +865,7 @@ const flagSql = (flags: FlagJudgment[], table: "movie" | "show") => {
 		const soft = f.id.startsWith("suitability_") || f.id.startsWith("context_");
 		if (!wanted && soft) continue;
 		if (f.media) {
+			if (chipType) continue;
 			if ((f.media === table) !== wanted) return null;
 			continue;
 		}
@@ -932,14 +946,19 @@ const runPhraseVariant = async (
 		(
 			await Promise.all(
 				(["movie", "show"] as const).map(async (table) => {
-					const filter = flagSql(attributes.flags, table);
+					const filter = flagSql(
+						attributes.flags,
+						table,
+						Boolean(eligibility.filters?.type),
+					);
 					const clause = where(table);
-					if (filter === null || !clause) return [];
+					const chips = toCrateSql(eligibility.filters, table);
+					if (filter === null || !clause || !chips) return [];
 					const rows = await query<Record<string, unknown>>(
 						`SELECT tmdb_id, essence_tags${fpColumns ? `, ${fpColumns}` : ""}${scored ? ", _score" : ""} FROM ${table}
-						 WHERE ${eligibility.lesserKnown ? "true" : "goodwatch_overall_score_voting_count >= 2000"} AND ${eligibility.includeAdult ? "true" : "NOT coalesce(adult, false)"} AND essence_text IS NOT NULL
+						 WHERE ${eligibility.lesserKnown ? "true" : "goodwatch_overall_score_voting_count >= 2000"} AND ${eligibility.includeAdult ? "true" : "NOT coalesce(adult, false)"} AND essence_text IS NOT NULL${chips.sql}
 						 AND ${clause.sql}${filter}${scored ? " ORDER BY _score DESC" : ""} LIMIT ${TEXT_POOL}`,
-						clause.params,
+						[...chips.params, ...clause.params],
 					);
 					return rows.map((row) => ({
 						key: `${table}:${row.tmdb_id}`,

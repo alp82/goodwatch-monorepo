@@ -2,6 +2,7 @@ import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch } from "~/server/combined-search/search.server";
+import { parseSearchFilters } from "~/server/combined-search/search-filters";
 
 export async function action({ request }: ActionFunctionArgs) {
 	let headers = new Headers({
@@ -46,6 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				{ error: "Enter between 2 and 4096 bytes of search text" },
 				{ status: 400, headers },
 			);
+		const filters = parseSearchFilters(body.filters);
 		const { user, headers: authHeaders } = await getAuthFromRequest({
 			request,
 		});
@@ -65,6 +67,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				{
 					includeAdult: false,
 					lesserKnown: body.lesserKnown === true,
+					filters,
 				},
 				{ accountId: user?.id || null, networkIdentity },
 				request.signal,

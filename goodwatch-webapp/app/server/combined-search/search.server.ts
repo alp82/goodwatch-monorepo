@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { fetch } from "undici";
 import { blend, type Title, type Row } from "~/ui/search/search-model";
 import {
@@ -7,6 +8,7 @@ import {
 	type Eligibility,
 	type Result,
 } from "./d4.server";
+import { toCrateSql } from "./search-filters";
 import {
 	eligible,
 	metadataFor,
@@ -33,11 +35,56 @@ export interface SearchBatch {
 	chargedNano: number;
 	historyRecorded: boolean;
 }
-async function titles(
+// Title lookups depend only on the text and the adult policy, never on filter chips,
+// so filter-only refetches reuse them. Search text is private: entries stay in this
+// process, keyed by a digest, and are never written to a shared store or logged.
+const TITLE_TTL_MS = 10 * 60 * 1000;
+const TITLE_ENTRIES = 200;
+const titleCache = new Map<string, { at: number; value: Title[] }>();
+const titleFlights = new Map<string, Promise<Title[]>>();
+function titles(
 	q: string,
 	policy: Eligibility,
 	signal: AbortSignal,
 ): Promise<Title[]> {
+	const key = createHash("sha256")
+		.update(`${policy.includeAdult ? 1 : 0}:${q.trim().toLowerCase()}`)
+		.digest("hex");
+	const hit = titleCache.get(key);
+	if (hit && Date.now() - hit.at < TITLE_TTL_MS) {
+		// Refresh recency so eviction drops the least recently used entry.
+		titleCache.delete(key);
+		titleCache.set(key, hit);
+		return Promise.resolve(hit.value);
+	}
+	if (hit) titleCache.delete(key);
+	let flight = titleFlights.get(key);
+	if (!flight) {
+		// The shared lookup ignores caller signals: one caller leaving must not fail
+		// the others. Only successes are kept; failures are retried by the next call.
+		flight = lookupTitles(q, policy).then((value) => {
+			titleCache.set(key, { at: Date.now(), value });
+			while (titleCache.size > TITLE_ENTRIES)
+				titleCache.delete(titleCache.keys().next().value as string);
+			return value;
+		});
+		flight.then(
+			() => titleFlights.delete(key),
+			() => titleFlights.delete(key),
+		);
+		titleFlights.set(key, flight);
+	}
+	const shared = flight;
+	return new Promise<Title[]>((resolve, reject) => {
+		const leave = () => reject(new Error("Search interrupted"));
+		if (signal.aborted) return leave();
+		signal.addEventListener("abort", leave, { once: true });
+		shared
+			.then(resolve, reject)
+			.finally(() => signal.removeEventListener("abort", leave));
+	});
+}
+async function lookupTitles(q: string, policy: Eligibility): Promise<Title[]> {
 	const page = async (n: number) => {
 		const params = new URLSearchParams({
 			api_key: process.env.TMDB_API_KEY || "",
@@ -48,7 +95,7 @@ async function titles(
 		});
 		const response = await fetch(
 			`https://api.themoviedb.org/3/search/multi?${params}`,
-			{ signal: AbortSignal.any([signal, AbortSignal.timeout(8000)]) },
+			{ signal: AbortSignal.timeout(8000) },
 		);
 		if (!response.ok) throw new Error("Title lookup unavailable");
 		return response.json() as Promise<{
@@ -100,8 +147,10 @@ async function titles(
 }
 async function literal(q: string, policy: Eligibility): Promise<Result[]> {
 	const groups = await Promise.all(
-		(["movie", "show"] as const).map((type) =>
-			searchQuery<{
+		(["movie", "show"] as const).map((type) => {
+			const chips = toCrateSql(policy.filters, type);
+			if (!chips) return Promise.resolve([]);
+			return searchQuery<{
 				tmdb_id: number;
 				title: string;
 				release_year: number;
@@ -109,10 +158,10 @@ async function literal(q: string, policy: Eligibility): Promise<Result[]> {
 				genres: string[];
 				_score: number;
 			}>(
-				`SELECT tmdb_id,title,release_year,poster_path,genres,_score FROM ${type} WHERE essence_text IS NOT NULL AND ${policy.lesserKnown ? "true" : "goodwatch_overall_score_voting_count >= 2000"} AND ${policy.includeAdult ? "true" : "NOT coalesce(adult,false)"} AND match((essence_text 2.0, synopsis), ?) ORDER BY _score DESC LIMIT 100`,
-				[q],
-			).then((rows) => rows.map((r) => ({ ...r, media_type: type }))),
-		),
+				`SELECT tmdb_id,title,release_year,poster_path,genres,_score FROM ${type} WHERE essence_text IS NOT NULL AND ${policy.lesserKnown ? "true" : "goodwatch_overall_score_voting_count >= 2000"} AND ${policy.includeAdult ? "true" : "NOT coalesce(adult,false)"}${chips.sql} AND match((essence_text 2.0, synopsis), ?) ORDER BY _score DESC LIMIT 100`,
+				[...chips.params, q],
+			).then((rows) => rows.map((r) => ({ ...r, media_type: type })));
+		}),
 	);
 	return groups
 		.flat()
