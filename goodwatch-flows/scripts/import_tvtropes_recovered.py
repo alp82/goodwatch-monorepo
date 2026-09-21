@@ -17,7 +17,11 @@ makes it pick the rows up.
 
 Documents are never created: tvtropes_init_tags upserts one document per TMDB
 title, so a missing document means the identity is wrong and it is skipped.
-Documents that already hold tropes or a source url are never replaced.
+Documents that already hold tropes are never replaced. A document with no
+tropes but a stale tvtropes_url is importable; the dry run reports the previous
+url (url-replaced / url-same) and the rollback record restores it exactly.
+--apply requires --expect-count N and aborts before the first write unless
+exactly N identities would be imported.
 """
 
 import argparse
@@ -287,25 +291,37 @@ def plan(key, record, manifest, deny, store):
         return "skip", f"{len(docs)} Mongo documents for this identity", docs
     if docs[0].get("tropes"):
         return "skip", "Mongo document already has tropes", docs
-    if docs[0].get("tvtropes_url"):
-        return "skip", "Mongo document already has a source url", docs
     return "import", "", docs
 
 
-def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=print):
+def url_state(doc, new_url):
+    previous = doc.get("tvtropes_url")
+    if not previous:
+        return "no-previous-url"
+    return "url-same" if previous == new_url else "url-replaced"
+
+
+def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=print, expect_count=None):
     deny = set(deny) | BUILTIN_DENY
     candidates = recovered(load_latest(run_dirs))
     if not apply:
         store = ReadOnlyStore(store)
-    totals = {"import": 0, "skip": 0}
+    totals = {"import": 0, "skip": 0, "url-replaced": 0, "url-same": 0, "no-previous-url": 0}
     skips = []
     rollback = {"created_at": datetime.now(timezone.utc).isoformat(), "entries": []}
+    plans = []
     for key in sorted(set(candidates) | set(manifest)):
         record = candidates.get(key)
         if record is None:
-            action, reason, docs = "skip", "in allow-file but not recovered in the runs", []
+            plans.append((key, record, "skip", "in allow-file but not recovered in the runs", []))
         else:
-            action, reason, docs = plan(key, record, manifest, deny, store)
+            plans.append((key, record, *plan(key, record, manifest, deny, store)))
+    planned = sum(1 for p in plans if p[2] == "import")
+    if apply and planned != expect_count:
+        raise SystemExit(
+            f"aborted before any write: {planned} identities would be imported, --expect-count is {expect_count}"
+        )
+    for key, record, action, reason, docs in plans:
         title = (record or manifest[key]).get("title")
         label = f"{key[0]}:{key[1]} {title!r}"
         state = summarize(docs[0]) if docs else "no document read"
@@ -332,7 +348,9 @@ def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=p
             guard = {
                 "_id": doc["_id"],
                 "tmdb_id": key[1],
-                "tvtropes_url": {"$in": [None, ""]},
+                # null matches absent too; the exact previous url and updated_at must still be there
+                "tvtropes_url": doc.get("tvtropes_url"),
+                "updated_at": doc.get("updated_at"),
                 "$or": [{"tropes": {"$exists": False}}, {"tropes": None}, {"tropes": []}],
             }
             if store.update(key[0], guard, written, UNSET_FIELDS) != 1:
@@ -341,8 +359,13 @@ def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=p
                 action, reason = "skip", "document changed between read and write"
         if action == "import":
             totals["import"] += 1
+            urls = url_state(docs[0], record["result"]["url"])
+            totals[urls] += 1
             verb = "imported" if apply else "would-import"
-            out(f"{verb:12} {label} <- {record['result']['url']} ({len(record['result']['tropes'])} tropes) | {state}")
+            out(
+                f"{verb:12} {label} <- {record['result']['url']} ({len(record['result']['tropes'])} tropes) "
+                f"| {urls} previous_url={docs[0].get('tvtropes_url')!r} | {state}"
+            )
         else:
             totals["skip"] += 1
             skips.append((key, reason))
@@ -351,6 +374,10 @@ def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=p
     out(f"mode: {'APPLY' if apply else 'DRY RUN (no writes)'}")
     out(f"candidates: {len(candidates)} recovered, allow-file: {len(manifest)}")
     out(f"{'imported' if apply else 'would-import'}: {totals['import']}  skipped: {totals['skip']}")
+    out(
+        f"  url-replaced: {totals['url-replaced']}  url-same: {totals['url-same']}  "
+        f"no-previous-url: {totals['no-previous-url']}"
+    )
     for key, reason in skips:
         out(f"  skipped {key[0]}:{key[1]}: {reason}")
     if apply:
@@ -416,6 +443,7 @@ def main(argv=None):
         return 0
     parser.add_argument("--allow-file", type=Path)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--expect-count", type=int, help="required with --apply: exact number of identities to import")
     parser.add_argument("--rollback", type=Path)
     parser.add_argument("--rollback-out", type=Path, help="where --apply writes its rollback record")
     args = parser.parse_args(argv)
@@ -430,13 +458,16 @@ def main(argv=None):
         parser.error("run directories and --allow-file are required")
     rollback_path = None
     if args.apply:
+        if args.expect_count is None:
+            parser.error("--apply requires --expect-count N")
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         rollback_path = args.rollback_out or Path(f"tvtropes-import-rollback-{stamp}.json")
         if rollback_path.exists():
             parser.error(f"{rollback_path} exists; rollback records are never overwritten")
     client, db = connect()
     try:
-        run_import(args.run_dirs, load_manifest(args.allow_file), args.deny, MongoStore(db), args.apply, rollback_path)
+        run_import(args.run_dirs, load_manifest(args.allow_file), args.deny, MongoStore(db), args.apply, rollback_path,
+                   expect_count=args.expect_count)
     finally:
         client.close()
     return 0
