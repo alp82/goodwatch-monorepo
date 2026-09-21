@@ -1,0 +1,19 @@
+{
+  "id": "01a0c2c7-0ec0-9c02-dca6-1b7126219942",
+  "script_hash": "0caa331a69d161db",
+  "script_path": "f/tvtropes_web/tv_tropes_crawl_tags/fetch",
+  "schedule_path": "f/tvtropes_web/tvtropes_crawl_tags",
+  "started_at": "2026-09-21T07:04:34.469778Z",
+  "duration_ms": 3002,
+  "success": false,
+  "is_skipped": false,
+  "result": {
+    "error": {
+      "name": "Exception",
+      "stack": "  File \"/tmp/windmill/wk-default-d90a911198c0-5G44E/01a0c2c7-0ec0-9c02-dca6-1b7126219942/f/tvtropes_web/tv_tropes_crawl_tags/fetch.py\", line 307, in main\n    result = asyncio.run(tvtropes_crawl_tags(next_entry))\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/py_runtime/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/asyncio/runners.py\", line 190, in run\n    return runner.run(main)\n           ^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/py_runtime/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/asyncio/runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/py_runtime/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/asyncio/base_events.py\", line 654, in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-d90a911198c0-5G44E/01a0c2c7-0ec0-9c02-dca6-1b7126219942/f/tvtropes_web/tv_tropes_crawl_tags/fetch.py\", line 286, in tvtropes_crawl_tags\n    raise Exception(\n",
+      "message": "Rate limit reached for Se nos arm\u00f3 la gorda, retrying.",
+      "step_id": "c"
+    }
+  },
+  "logs": "job=01a0c2c7-0ec0-9c02-dca6-1b7126219942 tag=python3 worker=wk-default-d90a911198c0-5G44E hostname=d90a911198c0 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, greenlet==3.5.5, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, playwright==1.62.0, pydantic==2.12.5, pydantic-core==2.41.5, pyee==13.0.1, pymongo==4.15.5, typing-extensions==4.16.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nFetch semantic tags from TV Tropes pages\nnext entry is: Se nos arm\u00f3 la gorda (popularity: 1.1234)\ntrying url: https://tvtropes.org/pmwiki/pmwiki.php/Film/ChubbyGotGuts\ncould not fetch tags for Se nos arm\u00f3 la gorda: Rate Limit reached"
+}

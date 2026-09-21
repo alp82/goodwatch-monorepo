@@ -1,0 +1,25 @@
+{
+  "id": "01a0bc1c-d02d-920a-f5cb-8a966f1e75dd",
+  "script_hash": "000000000000001b",
+  "script_path": "f/tvtropes_web/tvtropes_init_ratings",
+  "schedule_path": "f/tvtropes_web/tvtropes_init_ratings",
+  "started_at": "2026-09-21T00:00:00.017454Z",
+  "duration_ms": 7502020,
+  "success": false,
+  "is_skipped": false,
+  "result": {
+    "error": {
+      "name": "NetworkTimeout",
+      "extra": {
+        "errors": [],
+        "details": [],
+        "_message": "10.0.0.17:28017: timed out (configured timeouts: socketTimeoutMS: 240000.0ms, connectTimeoutMS: 60000.0ms)",
+        "_error_labels": "set()"
+      },
+      "stack": "  File \"/tmp/windmill/wk-default-6ff53ddc8c5b-orzzE/01a0c143-2d5b-9435-6d78-5f8fa0d95092/f/tvtropes_web/tvtropes_init_tags/main.py\", line 180, in main\n    return tvtropes_init_details()\n           ^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-6ff53ddc8c5b-orzzE/01a0c143-2d5b-9435-6d78-5f8fa0d95092/f/tvtropes_web/tvtropes_init_tags/main.py\", line 174, in tvtropes_init_details\n    docs = initialize_documents()\n           ^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-6ff53ddc8c5b-orzzE/01a0c143-2d5b-9435-6d78-5f8fa0d95092/f/tvtropes_web/tvtropes_init_tags/main.py\", line 52, in initialize_documents\n    for tmdb_movie in tmdb_movie_cursor:\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/cursor.py\", line 1289, in __next__\n    return self.next()\n           ^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/cursor.py\", line 1265, in next\n    if len(self._data) or self._refresh():\n                          ^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/cursor.py\", line 1213, in _refresh\n    self._send_message(q)\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/cursor.py\", line 1108, in _send_message\n    response = client._run_operation(\n               ^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/_csot.py\", line 125, in csot_wrapper\n    return func(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/mongo_client.py\", line 1938, in _run_operation\n    return self._retryable_read(\n           ^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/mongo_client.py\", line 2047, in _retryable_read\n    return self._retry_internal(\n           ^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/_csot.py\", line 125, in csot_wrapper\n    return func(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/mongo_client.py\", line 2014, in _retry_internal\n    ).run()\n      ^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/mongo_client.py\", line 2765, in run\n    return self._read() if self._is_read else self._write()\n           ^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/mongo_client.py\", line 2926, in _read\n    return self._func(self._session, self._server, conn, read_pref)  # type: ignore\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/mongo_client.py\", line 1929, in _cmd\n    return server.run_operation(\n           ^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/helpers.py\", line 47, in inner\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/server.py\", line 208, in run_operation\n    reply = conn.receive_message(request_id)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/pool.py\", line 469, in receive_message\n    self._raise_connection_failure(error)\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/synchronous/pool.py\", line 643, in _raise_connection_failure\n    _raise_connection_failure(self.address, error, timeout_details=details)\n\n  File \"/tmp/windmill/cache/python_3_11/pymongo==4.15.5/pymongo/pool_shared.py\", line 142, in _raise_connection_failure\n    raise NetworkTimeout(msg) from error\n",
+      "message": "10.0.0.17:28017: timed out (configured timeouts: socketTimeoutMS: 240000.0ms, connectTimeoutMS: 60000.0ms)",
+      "step_id": "a"
+    }
+  },
+  "logs": "Flow job completed with error\n"
+}

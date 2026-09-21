@@ -1,0 +1,24 @@
+{
+  "id": "01a0c2ca-2219-44d5-9d4e-043107b6cd98",
+  "script_hash": null,
+  "script_path": null,
+  "schedule_path": null,
+  "started_at": "2026-09-21T07:07:03.151369Z",
+  "duration_ms": 1788,
+  "success": true,
+  "is_skipped": false,
+  "result": {
+    "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ChubbyGotGuts",
+    "status": 403,
+    "requests": 1,
+    "page_title": "Just a moment...",
+    "source_sha256": "2d3f4d9065a9bff2dd713cbfa56e82b0203105301f1e65e14d4237d7992069a6",
+    "database_writes": 0,
+    "helper_candidates": [
+      "12AngryMen",
+      "TwelveAngryMen"
+    ],
+    "managed_challenge": true
+  },
+  "logs": "job=01a0c2ca-2219-44d5-9d4e-043107b6cd98 tag=python3 worker=wk-default-2f4bb8b4f321-GfOWB hostname=2f4bb8b4f321 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, greenlet==3.5.5, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, playwright==1.62.0, pydantic==2.12.5, pydantic-core==2.41.5, pyee==13.0.1, pymongo==4.15.5, typing-extensions==4.16.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n"
+}

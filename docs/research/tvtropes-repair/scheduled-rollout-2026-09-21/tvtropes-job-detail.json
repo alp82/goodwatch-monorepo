@@ -1,0 +1,15 @@
+{
+  "id": "01a0c17a-21a9-8521-651d-307ba8a4b342",
+  "script_hash": "20358c5eae3d5afd",
+  "script_path": "f/sync/copy/tvtropes",
+  "schedule_path": "f/sync/copy/tvtropes",
+  "started_at": "2026-09-21T07:00:00.011521Z",
+  "duration_ms": 1523,
+  "success": true,
+  "is_skipped": false,
+  "result": {
+    "shows": {},
+    "movies": {}
+  },
+  "logs": "job=01a0c17a-21a9-8521-651d-307ba8a4b342 tag=python3 worker=wk-default-45c078dda957-sKJ8E hostname=45c078dda957 isolation=none\n\nenv deps from local cache: annotated-types==0.8.0, anyio==4.15.1, certifi==2026.7.22, crate==2.2.1, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.19, mongoengine==0.29.3, orjson==3.12.0, pydantic==2.13.5, pydantic-core==2.46.5, pymongo==4.18.0, typing-extensions==4.16.0, typing-inspection==0.4.4, urllib3==2.7.0, verlib2==26.2, wmill==1.808.0\n\n\n--- PYTHON (3.12) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nSuccessfully connected to CrateDB.\nProcessing all movies...\nTotal movie Tropes: 0\nProcessing all shows...\nTotal show Tropes: 0\nDisconnected from CrateDB."
+}

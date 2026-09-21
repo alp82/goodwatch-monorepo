@@ -6,8 +6,7 @@ import wmill
 
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_daily.models import DumpType
-from f.utils.string import to_pascal_case
-
+from f.tvtropes_web.title_variations import title_variations
 
 BATCH_SIZE = 10000
 
@@ -20,9 +19,7 @@ def initialize_documents():
     tvtropes_movie_collection = db["tv_tropes_movie_tags"]
     tvtropes_tv_collection = db["tv_tropes_tv_tags"]
 
-    total_movies = tmdb_movie_collection.count_documents(
-        {"title": {"$ne": None}}
-    )
+    total_movies = tmdb_movie_collection.count_documents({"title": {"$ne": None}})
     total_tv = tmdb_tv_collection.count_documents({"title": {"$ne": None}})
 
     print(f"Total movie objects with titles: {total_movies}")
@@ -52,7 +49,7 @@ def initialize_documents():
         for tmdb_movie in tmdb_movie_cursor:
             operation = build_operation(tmdb_entry=tmdb_movie, type=DumpType.MOVIES)
             movie_operations.append(operation)
-        
+
         upserts = store_copies(
             movie_operations,
             collection=tvtropes_movie_collection,
@@ -97,7 +94,11 @@ def build_operation(tmdb_entry: dict, type: DumpType):
     date_now = datetime.utcnow()
 
     title_variations = get_title_variations(tmdb_entry=tmdb_entry, type=type)
-    release_date = tmdb_entry.get("release_date") if type == DumpType.MOVIES else tmdb_entry.get("first_air_date")
+    release_date = (
+        tmdb_entry.get("release_date")
+        if type == DumpType.MOVIES
+        else tmdb_entry.get("first_air_date")
+    )
 
     update_fields = {
         "original_title": tmdb_entry.get("original_title"),
@@ -118,22 +119,15 @@ def build_operation(tmdb_entry: dict, type: DumpType):
 
 
 def get_title_variations(tmdb_entry: dict, type: DumpType):
-    titles = []
-    if title := tmdb_entry.get("title"):
-        titles.append(to_pascal_case(title))
-
-    for alternative_title in tmdb_entry.get("alternative_titles", []):
-        if (
-            (title := alternative_title.get("title"))
-            and alternative_title.get("iso_3166_1") in ["US"]
-            and alternative_title.get("type")
-            in ["English title", "Short Title", "modern title"]
-        ):
-            pascal_cased_title = to_pascal_case(title)
-            if pascal_cased_title not in titles:
-                titles.append(pascal_cased_title)
-
-    return titles
+    titles = [tmdb_entry.get("title"), tmdb_entry.get("original_title")]
+    for alternative in tmdb_entry.get("alternative_titles", []):
+        if alternative.get("iso_3166_1") == "US" and alternative.get("type") in [
+            "English title",
+            "Short Title",
+            "modern title",
+        ]:
+            titles.append(alternative.get("title"))
+    return title_variations(titles)
 
 
 def store_copies(
@@ -155,7 +149,7 @@ def store_copies(
             criteria = op._filter
             found_docs = collection.find(criteria)
             for doc in found_docs:
-                upserted_ids.append(doc['_id'])
+                upserted_ids.append(doc["_id"])
 
     if count_new_documents:
         print(
