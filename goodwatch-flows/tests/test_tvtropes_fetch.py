@@ -499,6 +499,56 @@ class CrawlTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.url, BASE + "Film/LeonTheProfessional")
         self.assertTrue(result.tropes)
 
+    async def test_trilogy_page_never_identifies_an_individual_film(self):
+        # Modelled on Film/TheGodfather: the page defines itself as the set.
+        self.pages["Film/TheGodfather"] = (
+            200,
+            work(
+                "The Godfather is a trilogy of American crime films directed by"
+                " Francis Ford Coppola, based on the 1969 novel by Mario Puzo."
+                " The first movie came out in 1972, followed by The Godfather Part II"
+                " in 1974 and The Godfather Part III in 1990."
+            ),
+        )
+        for title, year in (
+            ("The Godfather", 1972),
+            ("The Godfather Part II", 1974),
+            ("The Godfather Part III", 1990),
+        ):
+            self.assertFalse(
+                (await self.crawl(title, year, ["TheGodfather"])).tropes, (title, year)
+            )
+
+    async def test_pages_defined_as_a_set_of_films_are_rejected(self):
+        for definition in (
+            "Example is a tetralogy of science fiction films.",
+            "Example is a science fiction duology.",
+            "Example is a series of films about a heist crew.",
+            "Example is a media franchise.",
+            "Example is a saga of four films.",
+            "Example consists of 3 movies.",
+            "Example is a two-part fantasy epic.",
+        ):
+            self.pages["Film/Example"] = (
+                200,
+                work(definition + " The first film was released in 2003."),
+            )
+            self.assertFalse((await self.crawl("Example", 2003)).tropes, definition)
+
+    async def test_single_film_that_is_part_of_a_set_is_accepted(self):
+        for intro in (
+            "Example is a 2003 film, the third in the Sample trilogy.",
+            # Back to the Future phrasing.
+            "Example is a 1985 science fiction comedy film. It's the first film in a trilogy.",
+            # Film/SpiderMan1 phrasing: the possessive is not a defining verb.
+            "Example is the first movie in Sam Raimi's Example Trilogy, released in 2002.",
+            "Example is a 2008 superhero film that launched a franchise.",
+            "Example is a 2001 film, the first of three films adapting the novel.",
+        ):
+            self.pages["Film/Example"] = (200, work(intro))
+            year = int(fetch.re.search(fetch.YEAR, intro).group())
+            self.assertTrue((await self.crawl("Example", year)).tropes, intro)
+
     async def test_two_volume_page_is_rejected_explicitly(self):
         # Modelled on Film/KillBill: a kind word is present, so the rejection
         # cannot depend on "Vol." cutting the dated sentence short.
