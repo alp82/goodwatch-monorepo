@@ -1,0 +1,10 @@
+{
+  "base": "61c0356",
+  "base_error_count": 266,
+  "branch_error_count": 264,
+  "new_diagnostics": {},
+  "removed_diagnostics": {
+    "app/ui/Search.tsx: error TS2322: Type 'RefObject<HTMLElement>' is not assignable to type 'LegacyRef<HTMLDivElement> | undefined'.": 1,
+    "app/ui/filter/sections/SectionGenre.tsx: error TS2741: Property 'mode' is missing in type '{ children: Element; key: number; index: number; amount: number; }' but required in type 'OneOrMoreItemsParams'.": 1
+  }
+}

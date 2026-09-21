@@ -1,0 +1,59 @@
+{
+  "scope": "Ad hoc mocked-provider probes in a separate disposable local PostgreSQL database. No real provider calls or automated test files.",
+  "observations": [
+    {
+      "probe": "Ready then cache hit",
+      "first": "ready",
+      "cached": "cached",
+      "initialCalls": 2,
+      "extraCalls": 0,
+      "cachedCharge": 0
+    },
+    {
+      "probe": "Translation disabled",
+      "mode": "native-vector-only",
+      "translatorCalls": 0,
+      "chargedNano": 0
+    },
+    {
+      "probe": "Translation plus Jev shares visitor allowance",
+      "mode": "translated",
+      "jev": "ready",
+      "translatorCalls": 1,
+      "admissionDelta": 1,
+      "translationCharge": 18000
+    },
+    {
+      "probe": "Successful translation cache",
+      "mode": "translated",
+      "newCalls": 0,
+      "chargedNano": 0
+    },
+    {
+      "probe": "Disabled flag never returns cached translation",
+      "mode": "native-vector-only",
+      "newCalls": 0
+    },
+    {
+      "probe": "Concurrent duplicate miss",
+      "outcomes": [
+        "ready",
+        "cached"
+      ],
+      "calls": 2
+    },
+    {
+      "probe": "Budget denial and cache bypass",
+      "denied": "budget",
+      "cached": "cached",
+      "newCalls": 0
+    },
+    {
+      "probe": "Deadline under Remix fetch shim",
+      "outcome": "deadline",
+      "elapsedMs": 1505,
+      "chargedNano": 5505024,
+      "processSurvived": true
+    }
+  ]
+}

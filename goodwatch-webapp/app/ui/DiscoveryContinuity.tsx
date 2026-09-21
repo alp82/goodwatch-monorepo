@@ -32,6 +32,7 @@ export function DiscoveryContinuity() {
 	useEffect(() => {
 		const entering = previousPath.current !== location.pathname
 		previousPath.current = location.pathname
+		if (new URLSearchParams(location.search).get("searchJourney") === "1") return
 		if (!isDiscovery(location.pathname)) return
 		const url = location.pathname + location.search
 		const stored = read()

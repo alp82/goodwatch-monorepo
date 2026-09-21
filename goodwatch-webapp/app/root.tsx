@@ -1,3 +1,4 @@
+import { redactSearchTelemetry } from "~/utils/search-telemetry"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
@@ -170,6 +171,8 @@ const PostHogInit = () => {
 		posthog.init("phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq", {
 			// api_host: 'https://eu.i.posthog.com',
 			api_host: "https://a.goodwatch.app",
+			before_send: redactSearchTelemetry,
+			session_recording: { blockSelector: ".search-private", maskTextSelector: ".search-private" },
 			persistence: consentGiven === "yes" ? "localStorage+cookie" : "memory",
 			person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
 		})
@@ -327,6 +330,7 @@ function Root() {
 								<script
 									dangerouslySetInnerHTML={{
 										__html: `
+window['ga-disable-G-5NK4EX51SM'] = ['localhost', '127.0.0.1'].includes(location.hostname);
 window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag('js', new Date());

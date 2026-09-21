@@ -1,0 +1,245 @@
+{
+  "scope": "Offline exact state/question payload comparison against the preserved accepted prototype; no provider calls. Versioned model is separately pinned in runtime.",
+  "comparisons": [
+    {
+      "id": "core-01",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-02",
+      "equal": true,
+      "counts": [
+        25,
+        148
+      ]
+    },
+    {
+      "id": "core-03",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-04",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-05",
+      "equal": true,
+      "counts": [
+        25,
+        148
+      ]
+    },
+    {
+      "id": "core-06",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-07",
+      "equal": true,
+      "counts": [
+        25,
+        148
+      ]
+    },
+    {
+      "id": "core-08",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-09",
+      "equal": true,
+      "counts": [
+        25,
+        148
+      ]
+    },
+    {
+      "id": "core-10",
+      "equal": true,
+      "counts": [
+        27,
+        148
+      ]
+    },
+    {
+      "id": "core-11",
+      "equal": true,
+      "counts": [
+        26,
+        148
+      ]
+    },
+    {
+      "id": "core-12",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-13",
+      "equal": true,
+      "counts": [
+        30,
+        148
+      ]
+    },
+    {
+      "id": "core-14",
+      "equal": true,
+      "counts": [
+        32,
+        148
+      ]
+    },
+    {
+      "id": "core-15",
+      "equal": true,
+      "counts": [
+        35,
+        148
+      ]
+    },
+    {
+      "id": "core-16",
+      "equal": true,
+      "counts": [
+        34,
+        148
+      ]
+    },
+    {
+      "id": "core-17",
+      "equal": true,
+      "counts": [
+        32,
+        148
+      ]
+    },
+    {
+      "id": "core-18",
+      "equal": true,
+      "counts": [
+        27,
+        148
+      ]
+    },
+    {
+      "id": "core-19",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-20",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-21",
+      "equal": true,
+      "counts": [
+        23,
+        148
+      ]
+    },
+    {
+      "id": "core-22",
+      "equal": true,
+      "counts": [
+        25,
+        148
+      ]
+    },
+    {
+      "id": "core-23",
+      "equal": true,
+      "counts": [
+        27,
+        148
+      ]
+    },
+    {
+      "id": "core-24",
+      "equal": true,
+      "counts": [
+        27,
+        148
+      ]
+    },
+    {
+      "id": "core-25",
+      "equal": true,
+      "counts": [
+        27,
+        148
+      ]
+    },
+    {
+      "id": "core-26",
+      "equal": true,
+      "counts": [
+        35,
+        148
+      ]
+    },
+    {
+      "id": "core-27",
+      "equal": true,
+      "counts": [
+        35,
+        148
+      ]
+    },
+    {
+      "id": "core-28",
+      "equal": true,
+      "counts": [
+        34,
+        148
+      ]
+    },
+    {
+      "id": "core-29",
+      "equal": true,
+      "counts": [
+        33,
+        148
+      ]
+    },
+    {
+      "id": "core-30",
+      "equal": true,
+      "counts": [
+        27,
+        148
+      ]
+    }
+  ]
+}

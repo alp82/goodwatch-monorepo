@@ -7,7 +7,7 @@ import {
 } from "@headlessui/react"
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
 import React, { Fragment } from "react"
-import { useLocation } from "react-router"
+import { useLocation } from "@remix-run/react"
 
 import {
 	ArrowTopRightOnSquareIcon,

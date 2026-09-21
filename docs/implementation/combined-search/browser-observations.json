@@ -1,0 +1,38 @@
+[
+  {
+    "check": "observe requests",
+    "observation": "Script ran on page and returned:\n```json\n{\"ready\":true}\n```"
+  },
+  {
+    "check": "shareable initial query",
+    "observation": "Script ran on page and returned:\n```json\n{\"url\":\"http://localhost:3003/search?q=Heat&country=DE\",\"status\":\"Searching for \u201cHeat\u201d\u2026\",\"rows\":0,\"input\":\"Heat\"}\n```"
+  },
+  {
+    "check": "debounce and retained clickable results",
+    "observation": "Script ran on page and returned:\n```json\n{\"callsWithin600ms\":0,\"historyDelta\":0,\"url\":\"http://localhost:3003/search?q=The+Matrix&country=DE&searchJourney=1\",\"oldRows\":20,\"status\":\"Searching for \u201cThe Matrix\u201d\u2026 Showing \u201cHeat\u201d until ready.\"}\n```\nPage navigated to http://localhost:3003/search?q=The+Matrix&country=DE&searchJourney=1."
+  },
+  {
+    "check": "atomic settled replacement",
+    "observation": "Script ran on page and returned:\n```json\n{\"calls\":1,\"status\":\"100 results in this search for \u201cThe Matrix\u201d \u00b7 Showing basic search results.Retry\",\"first\":\"The Matrix1999 \u00b7 movieExact title\",\"rows\":20,\"highlights\":[\"The\",\"Matrix\",\"The\",\"Matrix\",\"The\"]}\n```"
+  },
+  {
+    "check": "Enter bypasses idle delay",
+    "observation": "Script ran on page and returned:\n```json\n{\"startedRequestsBeforeIdleDelay\":1,\"status\":\"18 results in this search for \u201cInception\u201d \u00b7 Showing basic search results.Retry\",\"url\":\"http://localhost:3003/search?q=Inception&country=DE&searchJourney=1\"}\n```\nPage navigated to http://localhost:3003/search?q=Inception&country=DE&searchJourney=1."
+  },
+  {
+    "check": "return Heat and settle",
+    "observation": "Script ran on page and returned:\n```json\n{\"rows\":20,\"status\":\"100 results in this search for \u201cHeat\u201d\"}\n```\nPage navigated to http://localhost:3003/search?q=Heat&country=DE&searchJourney=1."
+  },
+  {
+    "check": "pagination pushes history without search request",
+    "observation": "Script ran on page and returned:\n```json\n{\"calls\":0,\"historyDelta\":1,\"url\":\"http://localhost:3003/search?q=Heat&country=DE&searchJourney=1&page=2\",\"rows\":20}\n```\nPage navigated to http://localhost:3003/search?q=Heat&country=DE&searchJourney=1&page=2."
+  },
+  {
+    "check": "open real detail from scrolled results",
+    "observation": "Error: Execution context was destroyed, most likely because of a navigation."
+  },
+  {
+    "check": "return link restores page and scroll",
+    "observation": "Script ran on page and returned:\n```json\n{\"missingNavigation\":true}\n```"
+  }
+]

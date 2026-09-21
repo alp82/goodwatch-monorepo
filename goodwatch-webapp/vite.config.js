@@ -34,6 +34,7 @@ export default defineConfig(({ mode }) => ({
 			},
 		}),
 		sentryVitePlugin({
+			disable: process.env.SENTRY_DISABLE_AUTO_UPLOAD === "true",
 			org: "goodwatch",
 			project: "webapp",
 		}),
