@@ -12,7 +12,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
+from f.sync.copy import deleted_titles
 from f.sync.copy.qdrant_retry import REQUEST_TIMEOUT_SECONDS, upsert_with_retry
+
+# The sync functions are executed from their AST; give them the real delete-on-sync helpers.
+DELETED_TITLE_HELPERS = {name: getattr(deleted_titles, name) for name in deleted_titles.__dict__ if not name.startswith("_")}
 
 ROOT = Path(__file__).parents[1] / "windmill" / "f"
 SYNC_NAMES = ("tmdb_details", "all_ratings", "tmdb_streaming", "tvtropes", "dna_data")
@@ -154,6 +158,8 @@ class SelectionTests(unittest.TestCase):
                     connector = MagicMock()
                     connector.select.return_value = []
                     namespace = {
+                    **DELETED_TITLE_HELPERS,
+                        **DELETED_TITLE_HELPERS,
                         "CrateConnector": object, "Movie": object, "Show": object,
                         "get_db": lambda: db, "datetime": datetime, "timedelta": timedelta,
                         "HOURS_TO_FETCH": 48, "BATCH_SIZE": 100, "defaultdict": defaultdict,
@@ -205,20 +211,25 @@ class VectorKeysetTests(unittest.TestCase):
                 cursor.hint.return_value = cursor
                 cursor.__iter__.return_value = iter([])
                 namespace = {
+                    **DELETED_TITLE_HELPERS,
                     "QdrantConnector": object, "get_db": MagicMock(),
                     "TmdbMovieDetails": SimpleNamespace(_get_collection=lambda: collection),
                     "TmdbTvDetails": MagicMock(), "datetime": datetime, "timedelta": timedelta,
                     "HOURS_TO_FETCH": 48, "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
                     "Optional": Optional, "List": List, "Tuple": Tuple, "Dict": Dict, "Any": Any,
+                    "MEDIA_COLLECTION": "media", "QdrantMediaPoint": MagicMock(),
                 }
                 exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), namespace)
                 result = namespace["copy_to_qdrant"](
                     MagicMock(), "movie", {"tmdb_id": {"$in": [11]}},
                     recent_only=recent_only, strict_writes=True,
                 )
-                selector = collection.find.call_args.args[0]
+                # The first find drives the run; the last one looks up every flagged title.
+                selector = collection.find.call_args_list[0].args[0]
                 self.assertEqual(selector["tmdb_id"], {"$in": [11]})
                 self.assertEqual("updated_at" in selector, recent_only)
+                self.assertEqual(collection.find.call_args.args[0],
+                                 {"tmdb_id": {"$in": [11]}, "tmdb_deleted": True})
                 # Without a date predicate, forcing the date-first index scans its
                 # full key range and sorts it even for a single requested title.
                 expected = [("updated_at", 1), ("tmdb_id", 1)] if recent_only else [("tmdb_id", 1)]
@@ -239,6 +250,7 @@ class VectorPublicationTests(unittest.TestCase):
                 qc.client.upsert.return_value.status = "completed" if status == "scheduled" else status
                 fetch_ids = MagicMock(side_effect=[([42], 42), ([], 42)])
                 namespace = {
+                    **DELETED_TITLE_HELPERS,
                     "QdrantConnector": object, "CrateConnector": lambda: crate, "get_db": lambda: db,
                     "ExitStack": ExitStack,
                     "upsert_with_retry": lambda *args, **kwargs: upsert_with_retry(*args, **kwargs, sleep=lambda seconds: None), "publication_lease": lambda *args: nullcontext(lambda: None),
@@ -285,6 +297,7 @@ class VectorSerializationTests(unittest.TestCase):
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
                      and node.name in ("copy_to_qdrant", "_published_streaming")]
         self.namespace = {
+            **DELETED_TITLE_HELPERS,
             "QdrantConnector": object, "CrateConnector": lambda: self.crate,
             "get_db": lambda: self.db, "TmdbMovieDetails": MagicMock(), "TmdbTvDetails": MagicMock(),
             "datetime": datetime, "timedelta": timedelta, "HOURS_TO_FETCH": 48,

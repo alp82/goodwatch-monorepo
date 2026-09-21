@@ -1,4 +1,5 @@
 import asyncio
+import re
 from datetime import datetime
 from typing import Union
 
@@ -8,6 +9,7 @@ import wmill
 
 from f.data_source.common import get_documents_for_ids
 from f.db.mongodb import init_mongodb, close_mongodb
+from f.tmdb_api.deleted_propagation import propagate_tmdb_deleted
 from f.tmdb_api.provider_evidence import capture_provider_check, snapshot_id
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
@@ -15,6 +17,78 @@ from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 BATCH_SIZE = 30
 BUFFER_SELECTED_AT_MINUTES = 10
 TMDB_API_KEY = wmill.get_variable("u/Alp/TMDB_API_KEY")
+
+
+TMDB_STATUS_RESOURCE_NOT_FOUND = 34
+REQUEST_TIMEOUT_SECONDS = 30
+# The job fails when more than this share of the batch failed, so outages stay visible.
+MAX_FAILED_BATCH_RATIO = 0.5
+# A rejected api key fails every title, so a single 401 marks the batch as broken.
+SYSTEMIC_HTTP_STATUS_CODES = (401,)
+ERROR_MESSAGE_MAX_LENGTH = 200
+
+
+def redact_secrets(message: str) -> str:
+    # requests puts the full url, including the api key, into its error messages.
+    message = re.sub(r"api_key=[^&\s'\")]+", "api_key=REDACTED", str(message))
+    if TMDB_API_KEY:
+        message = message.replace(str(TMDB_API_KEY), "REDACTED")
+    return message
+
+
+def describe_error(error: BaseException) -> dict:
+    # Never str() an HTTPError: report the status and TMDB's own error body instead.
+    description = {"error": type(error).__name__}
+    response = getattr(error, "response", None)
+    if isinstance(error, requests.HTTPError) and response is not None:
+        description["http_status"] = response.status_code
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+        if isinstance(body, dict):
+            description["tmdb_status_code"] = body.get("status_code")
+            message = redact_secrets(body.get("status_message") or "")
+            description["message"] = message[:ERROR_MESSAGE_MAX_LENGTH]
+    else:
+        description["message"] = redact_secrets(error)[:ERROR_MESSAGE_MAX_LENGTH]
+    return description
+
+
+class FailedEntry:
+    def __init__(self, next_entry, error: BaseException):
+        self.next_entry = next_entry
+        self.description = {
+            "media_type": "movie" if isinstance(next_entry, TmdbMovieDetails) else "tv",
+            "tmdb_id": next_entry.tmdb_id,
+        } | describe_error(error)
+
+
+async def isolate_failure(next_entry, coroutine):
+    # One broken title must not lose the rest of the batch.
+    try:
+        return await coroutine
+    except Exception as error:
+        failed_entry = FailedEntry(next_entry, error)
+        print(f"failed entry: {failed_entry.description}")
+        try:
+            # Release the title: with is_selected=False it leaves the popularity-ordered
+            # retry pool and waits behind older selected_at entries instead of looping.
+            next_entry.update(set__is_selected=False)
+        except Exception as release_error:
+            print(f"could not release {next_entry.tmdb_id}: {redact_secrets(release_error)}")
+        return failed_entry
+
+
+def is_tmdb_deleted_response(response) -> bool:
+    # Only a 404 carrying TMDB's own "resource not found" code means the title is gone.
+    if response is None or response.status_code != 404:
+        return False
+    try:
+        body = response.json()
+    except ValueError:
+        return False
+    return isinstance(body, dict) and body.get("status_code") == TMDB_STATUS_RESOURCE_NOT_FOUND
 
 
 async def fetch_api_data(
@@ -26,6 +100,23 @@ async def fetch_api_data(
         elif isinstance(next_entry, TmdbTvDetails):
             return fetch_tv_data(next_entry)
         raise TypeError("Unexpected TMDB media model")
+    except requests.HTTPError as e:
+        if is_tmdb_deleted_response(e.response):
+            # Title was removed from TMDB; flag it and release it so it doesn't fail the batch.
+            # updated_at is bumped so the downstream sync picks the deletion up.
+            now = datetime.utcnow()
+            next_entry.update(
+                set__watch_providers_attempted_at=now,
+                set__watch_providers_error="tmdb_not_found",
+                set__tmdb_deleted=True,
+                set__tmdb_deleted_at=now,
+                set__updated_at=now,
+                set__is_selected=False,
+            )
+            print(f"skipping {next_entry.original_title} (id: {next_entry.tmdb_id}): deleted on TMDB")
+            return None
+        next_entry.update(set__watch_providers_attempted_at=datetime.utcnow(), set__watch_providers_error="provider_request_failed")
+        raise
     except Exception:
         next_entry.update(set__watch_providers_attempted_at=datetime.utcnow(), set__watch_providers_error="provider_request_failed")
         raise
@@ -37,7 +128,7 @@ def fetch_movie_data(next_entry: TmdbMovieDetails) -> tuple[dict, TmdbMovieDetai
         f"?api_key={TMDB_API_KEY}"
         f"&append_to_response=alternative_titles,credits,images,keywords,recommendations,release_dates,similar,translations,videos,watch/providers"
     )
-    response = requests.get(url)
+    response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
     response.raise_for_status()
     return response.json(), next_entry
 
@@ -48,7 +139,7 @@ def fetch_tv_data(next_entry: TmdbTvDetails) -> tuple[dict, TmdbTvDetails]:
         f"?api_key={TMDB_API_KEY}"
         f"&append_to_response=aggregate_credits,alternative_titles,content_ratings,external_ids,images,keywords,recommendations,similar,translations,videos,watch/providers"
     )
-    response = requests.get(url)
+    response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
     response.raise_for_status()
     return response.json(), next_entry
 
@@ -103,6 +194,10 @@ async def convert_and_save_details(
         next_entry.watch_providers_check = proof | {"payload_hash": snapshot_id(next_entry.watch_providers.to_mongo().to_dict())}
     next_entry.updated_at = datetime.utcnow()
     next_entry.is_selected = False
+    # A title that comes back on TMDB is restored.
+    was_deleted = next_entry.tmdb_deleted is True
+    next_entry.tmdb_deleted = False
+    next_entry.tmdb_deleted_at = None
     try:
         next_entry.save()
         print(
@@ -110,8 +205,12 @@ async def convert_and_save_details(
         )
     except Exception as e:
         print(f"error for {next_entry.title} (id: {next_entry.tmdb_id})")
-        print(e)
+        print(redact_secrets(e))
         raise e
+
+    if was_deleted:
+        media_type = "movie" if isinstance(next_entry, TmdbMovieDetails) else "tv"
+        propagate_tmdb_deleted(media_type, [next_entry.tmdb_id], False)
 
     return converted_details
 
@@ -221,17 +320,67 @@ async def tmdb_fetch_details_from_api(
         )
 
     list_of_details = await asyncio.gather(
-        *[fetch_api_data(next_entry) for next_entry in next_entries]
+        *[
+            isolate_failure(next_entry, fetch_api_data(next_entry))
+            for next_entry in next_entries
+        ]
     )
+    failed_entries = [result for result in list_of_details if isinstance(result, FailedEntry)]
+    # A None result means the title was flagged as deleted on TMDB.
+    deleted_tmdb_ids = {"movie_ids": [], "tv_ids": []}
+    for next_entry, result in zip(next_entries, list_of_details):
+        if result is None:
+            key = "movie_ids" if isinstance(next_entry, TmdbMovieDetails) else "tv_ids"
+            deleted_tmdb_ids[key].append(next_entry.tmdb_id)
+    propagate_tmdb_deleted("movie", deleted_tmdb_ids["movie_ids"], True)
+    propagate_tmdb_deleted("tv", deleted_tmdb_ids["tv_ids"], True)
+    list_of_details = [
+        result
+        for result in list_of_details
+        if result is not None and not isinstance(result, FailedEntry)
+    ]
     converted_details = await asyncio.gather(
         *[
-            convert_and_save_details(next_entry, details)
+            isolate_failure(next_entry, convert_and_save_details(next_entry, details))
             for details, next_entry in list_of_details
         ]
     )
+    failed_entries += [result for result in converted_details if isinstance(result, FailedEntry)]
+    converted_details = [
+        result for result in converted_details if not isinstance(result, FailedEntry)
+    ]
+
+    count_deleted = sum(len(ids) for ids in deleted_tmdb_ids.values())
+    count_failed = len(failed_entries)
+    count_not_deleted = len(next_entries) - count_deleted
+    systemic_statuses = sorted(
+        {
+            failed_entry.description["http_status"]
+            for failed_entry in failed_entries
+            if failed_entry.description.get("http_status") in SYSTEMIC_HTTP_STATUS_CODES
+        }
+    )
+    if count_failed and (
+        systemic_statuses
+        or count_failed == count_not_deleted
+        or count_failed > len(next_entries) * MAX_FAILED_BATCH_RATIO
+    ):
+        # Raised only now, after the good titles are saved and deleted ones propagated.
+        errors = sorted({str(failed_entry.description) for failed_entry in failed_entries})[:3]
+        raise RuntimeError(
+            redact_secrets(
+                f"tmdb details batch failed: {count_failed} failed, {len(converted_details)} saved, "
+                f"{count_deleted} deleted of {len(next_entries)} titles"
+                f" (systemic http status: {systemic_statuses}); sample errors: {errors}"
+            )
+        )
 
     return {
-        "count_new_entries": len(list_of_details),
+        "count_new_entries": len(converted_details),
+        "count_failed_entries": count_failed,
+        "failed_entries": [failed_entry.description for failed_entry in failed_entries],
+        "count_deleted_entries": sum(len(ids) for ids in deleted_tmdb_ids.values()),
+        "deleted_tmdb_ids": deleted_tmdb_ids,
         "entries": [
             {
                 "tmdb_id": details.get("tmdb_id"),

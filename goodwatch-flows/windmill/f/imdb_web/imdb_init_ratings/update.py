@@ -64,6 +64,8 @@ def main(next_ids: dict):
         movie_model=TmdbMovieDetails,
         tv_model=TmdbTvDetails,
     )
+    # Titles deleted on TMDB must not seed new work.
+    next_entries = [entry for entry in next_entries if not entry.tmdb_deleted]
     docs = initialize_documents(next_entries)
     close_mongodb()
 

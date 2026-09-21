@@ -23,6 +23,8 @@ def eligibility(now: datetime | None = None) -> dict:
     return {
         "$and": [
             {"country_identity_error": None},
+            # Titles deleted on TMDB are never crawled; a missing flag counts as not deleted.
+            {"tmdb_deleted": {"$ne": True}},
             {
                 "$or": [
                     {"next_fetch_at": {"$lte": now}},
@@ -62,6 +64,7 @@ def claim(
         # Bypass its freshness deadline, never an active claim or failure backoff.
         selector = {"$and": [
             {"country_identity_error": None},
+            {"tmdb_deleted": {"$ne": True}},
             {"$or": [{"lease_expires_at": None}, {"lease_expires_at": {"$lte": now}}]},
             {"$or": [{"mapping_refresh_after": None}, {"mapping_refresh_after": {"$lte": now}}]},
             {"$or": [{"consecutive_failures": None}, {"consecutive_failures": 0},

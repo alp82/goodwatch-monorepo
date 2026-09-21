@@ -36,6 +36,8 @@ class BaseImdbRating(Document):
     failed_at = DateTimeField()
     error_message = StringField()
     is_selected = BooleanField(default=False)
+    # Copied from the TMDB details flag when TMDB permanently removed the title; missing means not deleted.
+    tmdb_deleted = BooleanField(default=False)
 
     user_score_original = FloatField()
     user_score_normalized_percent = FloatField()

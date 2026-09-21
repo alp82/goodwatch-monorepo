@@ -1,0 +1,8 @@
+summary: TMDB deleted flag propagation
+description: Internal shared module
+kind: script
+lock: ""
+schema:
+  type: object
+  properties: {}
+  required: []

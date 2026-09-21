@@ -8,7 +8,10 @@ from f.priority.queue import CANDIDATE_PAGE_SIZE, candidate_ids, claim, release
 
 def mongo_id(mongo_db, media_type, tmdb_id):
     collection = "tmdb_movie_details" if media_type == "movie" else "tmdb_tv_details"
-    document = mongo_db[collection].find_one({"tmdb_id": int(tmdb_id)}, {"_id": 1})
+    # Titles deleted on TMDB are never crawled; a missing flag counts as not deleted.
+    document = mongo_db[collection].find_one(
+        {"tmdb_id": int(tmdb_id), "tmdb_deleted": {"$ne": True}}, {"_id": 1}
+    )
     return str(document["_id"]) if document else None
 
 

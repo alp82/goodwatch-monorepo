@@ -64,6 +64,8 @@ def main(next_ids: dict) -> dict:
             for entry in entries
         ):
             raise ValueError("Expected movie/tv details documents")
+        # Titles deleted on TMDB must not seed new work.
+        entries = [entry for entry in entries if not entry.tmdb_deleted]
         return initialize_documents(
             cast(list[Union[TmdbMovieDetails, TmdbTvDetails]], entries)
         )

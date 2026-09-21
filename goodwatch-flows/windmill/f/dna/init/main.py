@@ -21,12 +21,14 @@ def initialize_documents():
     filter_query_movies = {
         "original_title": {"$ne": None},
         "release_date": {"$ne": None},
-        "overview": {"$ne": None}
+        "overview": {"$ne": None},
+        "tmdb_deleted": {"$ne": True},
     }
     filter_query_tv = {
         "original_title": {"$ne": None},
         "first_air_date": {"$ne": None},
-        "overview": {"$ne": None}
+        "overview": {"$ne": None},
+        "tmdb_deleted": {"$ne": True},
     }
 
     total_movies = details_movie_collection.count_documents(filter_query_movies)

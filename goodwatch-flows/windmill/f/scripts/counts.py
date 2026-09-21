@@ -11,10 +11,13 @@ from f.tvtropes_web.models import TvTropesMovieTags, TvTropesTvTags
 
 
 def count_tmdb_details():
-    count_movies_total = TmdbMovieDetails.objects().count()
-    count_tv_total = TmdbTvDetails.objects().count()
-    count_movies = TmdbMovieDetails.objects(title__ne=None).count()
-    count_tv = TmdbTvDetails.objects(title__ne=None).count()
+    # Titles deleted on TMDB are reported separately and excluded from the totals.
+    count_movies_total = TmdbMovieDetails.objects(tmdb_deleted__ne=True).count()
+    count_tv_total = TmdbTvDetails.objects(tmdb_deleted__ne=True).count()
+    count_movies = TmdbMovieDetails.objects(title__ne=None, tmdb_deleted__ne=True).count()
+    count_tv = TmdbTvDetails.objects(title__ne=None, tmdb_deleted__ne=True).count()
+    count_movies_deleted = TmdbMovieDetails.objects(tmdb_deleted=True).count()
+    count_tv_deleted = TmdbTvDetails.objects(tmdb_deleted=True).count()
 
     return {
         "total": {
@@ -24,6 +27,10 @@ def count_tmdb_details():
         "with_details": {
             "movie": count_movies,
             "tv": count_tv,
+        },
+        "deleted": {
+            "movie": count_movies_deleted,
+            "tv": count_tv_deleted,
         },
     }
 

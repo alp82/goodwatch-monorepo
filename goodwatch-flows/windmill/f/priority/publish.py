@@ -70,6 +70,8 @@ def main(next_ids: dict):
                 results[media_type][name] = result
                 if name == "details":
                     count = result.get("movies" if media_type == "movie" else "shows", {}).get("rows_upserted", 0)
+                    # Titles deleted on TMDB are removed instead of published.
+                    count += result.get("deleted_titles", {}).get("titles_flagged", 0)
                     if count != len(ids):
                         raise RuntimeError(f"Published {count} of {len(ids)} requested {media_type} details")
             # Rebuild vector payloads after all source crawlers finish. Titles without

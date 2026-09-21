@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict
 ROOT = Path(__file__).parents[1] / "windmill" / "f"
 sys.path.insert(0, str(ROOT.parent))
 from f.tmdb_web.provider_identity import provider_name_from_url
+from f.sync.copy.deleted_titles import flagged_among
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.sync.models.crate_models import StreamingEvidence
 from test_provider_identity import clickout_url
@@ -86,7 +87,8 @@ def load_copy(db: Any) -> Callable[..., dict]:
                      BaseModel=BaseModel, CrateConnector=Crate,
                      Movie=Record, Show=Record, StreamingAvailability=Record, StreamingEvidence=StreamingEvidence, build_evidence=build_evidence, quarantine_evidence=quarantine_evidence,
                      SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability", "streaming_evidence")},
-                     get_db=lambda: db, provider_name_from_url=provider_name_from_url)
+                     get_db=lambda: db, provider_name_from_url=provider_name_from_url,
+                     flagged_among=flagged_among)
     model_tree = ast.parse((ROOT / "sync" / "models" / "crate_models.py").read_text())
     model = next(node for node in model_tree.body if isinstance(node, ast.ClassDef) and node.name == "StreamingAvailability")
     namespace["MediaType"] = str
