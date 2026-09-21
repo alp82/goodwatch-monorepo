@@ -6,9 +6,11 @@ real detail navigation use a bounded session snapshot of up to 100 results.
 Search edits replace history; filter and page changes push history. Pagination
 and detail navigation reuse the snapshot rather than repeating paid inference.
 
-The implementation includes the persistent PostgreSQL runtime from the accepted
-runtime handoff. The Jev SDK uses an explicit Undici transport to avoid the
-Remix fetch-shim abort failure observed during deadline verification.
+The search runtime uses the existing Redis cluster for fast cache reads and
+short-lived rate/concurrency coordination. Crate retains encrypted interpretations,
+search history, and append-only spending estimates/adjustments. Qdrant retrieval
+is unchanged. The user explicitly replaced the earlier PostgreSQL/strict-cap
+approach with this existing-stack design and accepted small concurrency overruns.
 
 ## Final user amendments
 
@@ -29,38 +31,51 @@ integrated relevance/rollout criterion has passed.
 
 ## Runtime configuration
 
-Use Node 20 or later and the committed npm lockfile. Apply these migrations,
-in order, to a dedicated PostgreSQL database (not CrateDB):
+Use Node 20 or later and the committed npm lockfile. Apply the additive, repeatable
+`goodwatch-webapp/migrations/20260921_search_crate.sql` to the existing CrateDB.
+There is no PostgreSQL dependency, migration, or `SEARCH_DATABASE_URL` requirement.
 
-1. `goodwatch-webapp/migrations/20260921_search_runtime.sql`
-2. `goodwatch-webapp/migrations/20260921_search_stages.sql`
-
-Required for paid interpretation/history: `SEARCH_DATABASE_URL`,
-`SEARCH_STORAGE_KEY` (64 hexadecimal characters representing 32 bytes), and
-`TYPESAFE_API_KEY`. Existing catalog/provider settings are `CRATE_HOSTS`,
-`CRATE_PORT`, `CRATE_USER`, `CRATE_PASS`, `TMDB_API_KEY`, `QDRANT_URL`, and
-`QDRANT_API_KEY`.
+Configure `TYPESAFE_API_KEY` and a stable `SEARCH_STORAGE_KEY` (64 hexadecimal
+characters representing 32 bytes). The latter protects retained text and cache
+identities and must survive redeploys. Reuse existing `CRATE_*`, `REDIS_*`,
+`TMDB_API_KEY`, `QDRANT_URL`, and `QDRANT_API_KEY` settings.
 
 `SEARCH_TRANSLATION_ENABLED` defaults to off. Enabling it also requires
-`OPENROUTER_API_KEY`. The pinned nano translation stage shares persistent
-budget and admission accounting with Jev. The offline language detector has
-limited coverage; translation is not a new ranking strategy.
+`OPENROUTER_API_KEY`. Translation shares spending/admission accounting with Jev.
+Only configure `SEARCH_TRUSTED_IP_HEADER` for a header overwritten by trusted
+ingress that supplies one valid IP; otherwise guests share a conservative scope.
 
-Only configure `SEARCH_TRUSTED_IP_HEADER` when trusted ingress overwrites that
-header and supplies a single valid IP. Otherwise guest requests deliberately
-share the conservative unverified-ingress scope. Missing runtime configuration
-fails closed to basic search and does not authorize paid calls. Storage failure
-can prevent history recording; it is not silently treated as durable success.
+Each paid attempt appends a conservative estimate before dispatch. Known usage
+appends one adjustment under a deterministic primary key; repeated settlement
+cannot double-charge. Unknown billing retains its estimate until evidence-based
+reconciliation. No spending row is updated/deleted by runtime code. Settlements
+use the original estimate's UTC budget window, including across midnight.
 
-No environment secrets, local database, production migrations or production
-provider configuration are delivered by this code merge. Rollout still needs
-provisioning, trusted-ingress verification, and runtime/quality acceptance.
+The $1/day and $5/month checks are practical cutoffs, not atomic hard limits:
+simultaneous checks and Crate's search-index refresh delay can admit work beyond
+the threshold. Redis limits rate/concurrency but is not the authoritative spending
+ledger. Loss of Redis does not erase interpretations or spending history; missing
+coordination/storage prevents new paid calls, while readable cached interpretations
+remain usable. Cache data has a one-day Redis TTL and indefinite Crate retention.
+
+Crate primary-key claims also prevent a duplicate paid request if Redis loses a
+lease. Abandoned pending/unknown interpretations stay blocked rather than being
+automatically retried/refunded. Tables are created explicitly during release, not
+by web requests. The migration does not change catalog or vector tables.
 
 ## Evidence and limitations
 
+- [Current Crate/Redis probes](crate-redis-probes.json) use disposable real CrateDB
+  5.10.9 and Redis 7.2.4 with mocked providers. They cover durable reuse after cache
+  loss, duplicate suppression, immutable/idempotent accounting, cutoff and accepted
+  concurrent overrun, rate/concurrency limits, translation admission reuse,
+  guest/account separation, storage failure, and timeout reconciliation.
+- Earlier PostgreSQL captures below are historical evidence, not validation of
+  the replacement storage adapter.
+
 - [Exact question parity](payload-parity.json): all 30 fixtures match the
   accepted state/question payloads; no provider calls in this comparison.
-- [Runtime probes](runtime-probes.json): disposable local PostgreSQL and mocked
+- Historical [PostgreSQL runtime probes](runtime-probes.json): disposable local PostgreSQL and mocked
   providers exercise cache reuse, duplicate work, budget denial, translation
   flag changes, admission composition, and deadline handling.
 - [Composed baseline](baseline.json): 30 actual production-action calls with

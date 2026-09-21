@@ -1,0 +1,95 @@
+{
+  "scope": "Disposable local CrateDB 5.10.9 and Redis 7.2.4; real storage adapter, mocked paid providers; no production writes or paid calls.",
+  "observations": [
+    {
+      "probe": "Ready then cache",
+      "first": "ready",
+      "cached": "cached",
+      "calls": 2
+    },
+    {
+      "probe": "Cache loss does not lose Crate interpretation",
+      "outcome": "cached"
+    },
+    {
+      "probe": "Concurrent identical requests",
+      "outcomes": {
+        "ready": 1,
+        "busy": 31
+      },
+      "calls": 2
+    },
+    {
+      "probe": "Append-only estimates and adjustments",
+      "cost": 168000,
+      "records": 4
+    },
+    {
+      "probe": "Repeated finish is idempotent",
+      "cost": 168000,
+      "records": 4
+    },
+    {
+      "probe": "Translation disabled",
+      "calls": 0,
+      "mode": "native-vector-only"
+    },
+    {
+      "probe": "Translation and Jev compose",
+      "translationCalls": 1,
+      "outcome": "ready"
+    },
+    {
+      "probe": "One visitor admission for two translated stages",
+      "count": 2
+    },
+    {
+      "probe": "Encrypted independent guest/account history",
+      "rows": 2
+    },
+    {
+      "probe": "Budget cutoff leaves cached interpretation usable",
+      "reason": "budget",
+      "cached": "cached"
+    },
+    {
+      "probe": "Redis unavailable",
+      "cached": true,
+      "uncached": "storage",
+      "paidCalls": 0
+    },
+    {
+      "probe": "Crate unavailable",
+      "outcome": "storage"
+    },
+    {
+      "probe": "Monthly cutoff independent of day",
+      "outcome": "budget"
+    },
+    {
+      "probe": "Accepted concurrent budget overrun",
+      "admitted": 2,
+      "overrunNano": 5505024
+    },
+    {
+      "probe": "Visitor rate limit",
+      "allowed": 20,
+      "rejected": 21
+    },
+    {
+      "probe": "Temporary concurrency limit",
+      "allowed": 16,
+      "rejected": 17
+    },
+    {
+      "probe": "Timeout keeps estimate and blocks duplicate retry",
+      "outcome": "deadline",
+      "next": "unknown",
+      "elapsedMs": 1534
+    },
+    {
+      "probe": "Unknown reconciliation appends once",
+      "idempotent": true
+    }
+  ]
+}
