@@ -199,6 +199,26 @@ KIND = r"\b(film|movie|series|sitcom|television show|TV show|miniseries)\b"
 # A year directly qualifying one of these dates the source, not this release.
 SOURCE_WORK = r"(?:novel|novella|book|memoir|comic|graphic novel|short story|play|manga|musical|video game)"
 SHARED_FILM_PAGE = r"\b(?:film series|film duology|two films|both films|two[- ]part film|two parts|two volumes)\b"
+# A page whose subject IS a set of films ("The Godfather is a trilogy of
+# American crime films"). The set noun must be the predicate of the defining
+# verb: a comma, a preposition, a relative clause or a film/movie noun in
+# between means the subject is one film that merely belongs to a set ("a 2003
+# film, the third in the Y trilogy", "the first film in a trilogy", "a film
+# that launched a franchise"). A possessive is not a verb: "the first movie in
+# Sam Raimi's Spider-Man Trilogy" (Film/SpiderMan1) is one film.
+COUNT = r"(?:\d{1,2}|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
+FILM_SET = (
+    r"(?:trilogy|tetralogy|duology|franchise|two[- ]part(?:er)?"
+    r"|(?:film|movie) series"
+    r"|(?:series|saga|set|pair|trio|quartet) of (?:" + COUNT + r" )?(?:[\w'’-]+ ){0,3}?(?:films|movies)"
+    r"|" + COUNT + r" (?:[\w'’-]+ ){0,3}?(?:films|movies))"
+)
+DEFINED_AS_FILM_SET = (
+    r"(?:\b(?:is|are|was|were|refers to|consists? of|comprises?|spans?)|\bit['’]s)\s+"
+    r"(?:(?!(?:in|of|from|to|by|that|which|who|and|or|film|movie|films|movies)\b)[\w'’-]+\s+){0,6}?"
+    + FILM_SET
+    + r"\b"
+)
 # Country qualifiers TV Tropes appends to remakes; deliberately a closed set.
 DISAMBIGUATION_SUFFIXES = {"US", "UK", "USA", "AU", "CA"}
 # On a country-suffixed page a dated sentence in these terms is about the
@@ -276,6 +296,7 @@ async def identifies_work(page, entry, media_type, variations):
     # ("the two films are otherwise unrelated") is incidental.
     if media_type == "Film" and any(
         re.search(SHARED_FILM_PAGE, sentence, re.I)
+        or re.search(DEFINED_AS_FILM_SET, sentence, re.I)
         for sentence in (sentences[0], dated)
     ):
         return False
