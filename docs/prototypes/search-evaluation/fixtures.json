@@ -1,0 +1,315 @@
+[
+  {
+    "id": "core-01",
+    "query": "Inception",
+    "kind": "title",
+    "intent": "Find Inception (2010).",
+    "explicit_exclusions": [],
+    "expected_first": "movie:27205",
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-02",
+    "query": "Breaking Bad",
+    "kind": "title",
+    "intent": "Find Breaking Bad.",
+    "explicit_exclusions": [],
+    "expected_first": "show:1396",
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-03",
+    "query": "The Matrix",
+    "kind": "title",
+    "intent": "Find The Matrix (1999).",
+    "explicit_exclusions": [],
+    "expected_first": "movie:603",
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-04",
+    "query": "Incepton",
+    "kind": "title",
+    "intent": "Misspelled Inception.",
+    "explicit_exclusions": [],
+    "expected_first": "movie:27205",
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-05",
+    "query": "Spirited Away",
+    "kind": "title",
+    "intent": "Find Spirited Away.",
+    "explicit_exclusions": [],
+    "expected_first": "movie:129",
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-06",
+    "query": "tense but not bleak",
+    "kind": "description",
+    "intent": "Tension without a bleak tone.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-07",
+    "query": "car chases",
+    "kind": "description",
+    "intent": "Car chases central to the viewing experience.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-08",
+    "query": "sunglasses",
+    "kind": "description",
+    "intent": "Sunglasses as a notable concrete visual element.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-09",
+    "query": "unreliable narrator",
+    "kind": "description",
+    "intent": "Narration whose trustworthiness is undermined.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-10",
+    "query": "dark comedy about rich people",
+    "kind": "description",
+    "intent": "Wealth and wealthy people central to dark comedy.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-11",
+    "query": "no anime, gritty crime show",
+    "kind": "description",
+    "intent": "Gritty crime television, excluding anime.",
+    "explicit_exclusions": [
+      "anime",
+      "movie"
+    ],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-12",
+    "query": "with my parents",
+    "kind": "description",
+    "intent": "Intergenerational viewing; no implicit content exclusions.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-13",
+    "query": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+    "kind": "description",
+    "intent": "Suspense and uncertainty without a miserable emotional finish.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-14",
+    "query": "Rich people being absolutely awful to each other, preferably funny.",
+    "kind": "description",
+    "intent": "Wealthy people behaving badly; comedy preferred.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-15",
+    "query": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+    "kind": "description",
+    "intent": "Grounded gritty crime television.",
+    "explicit_exclusions": [
+      "animation",
+      "magical detective",
+      "movie"
+    ],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-16",
+    "query": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+    "kind": "description",
+    "intent": "A revealed unreliable narrator.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-17",
+    "query": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+    "kind": "description",
+    "intent": "Getaway-driver car chases preferred over superhero destruction.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-18",
+    "query": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+    "kind": "description",
+    "intent": "Low-effort warm comedy avoiding excessive sentimentality.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-19",
+    "query": "cozy",
+    "kind": "description",
+    "intent": "Comforting mood.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-20",
+    "query": "bleak",
+    "kind": "description",
+    "intent": "Bleak mood.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-21",
+    "query": "funny",
+    "kind": "description",
+    "intent": "Comedy or a strongly humorous experience.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-22",
+    "query": "time loop",
+    "kind": "description",
+    "intent": "Repeated time as a central narrative mechanism.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-23",
+    "query": "slow atmospheric science fiction",
+    "kind": "description",
+    "intent": "Slow-paced atmospheric science fiction.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-24",
+    "query": "a hopeful space adventure without horror",
+    "kind": "description",
+    "intent": "Hopeful space adventure.",
+    "explicit_exclusions": [
+      "horror"
+    ],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-25",
+    "query": "something short to watch after work",
+    "kind": "description",
+    "intent": "Short low-commitment viewing after work; no exact runtime assumed.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-26",
+    "query": "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.",
+    "kind": "description",
+    "intent": "German equivalent of suspense without a miserable finish.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-27",
+    "query": "Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.",
+    "kind": "description",
+    "intent": "Spanish grounded gritty crime television.",
+    "explicit_exclusions": [
+      "animation",
+      "magical detective",
+      "movie"
+    ],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-28",
+    "query": "Des gens riches qui se comportent horriblement entre eux, de préférence quelque chose de drôle.",
+    "kind": "description",
+    "intent": "French wealthy people behaving badly, comedy preferred.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-29",
+    "query": "Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum.",
+    "kind": "description",
+    "intent": "Turkish low-effort warm comedy, not overly sentimental.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  },
+  {
+    "id": "core-30",
+    "query": "spannend aber nicht düster",
+    "kind": "description",
+    "intent": "German tension without bleakness.",
+    "explicit_exclusions": [],
+    "expected_first": null,
+    "minimum_acceptable": null,
+    "fixture_status": "proposed for user review"
+  }
+]
