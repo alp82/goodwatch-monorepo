@@ -1,0 +1,2801 @@
+{
+  "created_at": "2026-09-21T10:56:08.760048+00:00",
+  "entries": [
+    {
+      "media_type": "movie",
+      "tmdb_id": 15,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a65d5"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CitizenKane",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-06T05:56:46.832Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-09T21:39:23.554Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CitizenKane",
+      "written_tropes_sha256": "9695cbd87ee042f109587526f02539f64e0a4984534a09a02ae96897563d59a0",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.193Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 62,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a65e8"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-06T04:50:32.656Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwoThousandOneASpaceOdyssey",
+      "written_tropes_sha256": "91f4e9bd4c0657e8beab77e523fa1ca24b96e539d6add9d07a29a3543bbfb40b",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.326Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 65,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a65eb"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T05:22:04.648Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EightMile",
+      "written_tropes_sha256": "a8a262fb610b0eda2a6f7d273089814cea92557fff5b104e9885adc8ed0cd077",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.433Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 101,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a660d"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T18:02:24.164Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-17T05:29:34.855Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheProfessional",
+      "written_tropes_sha256": "814ab420faba77e8a3a30f39f7856e166b5f962a515ec4c0d48f58861bdc243f",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.473Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 105,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a6611"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/BackToTheFuture",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-05T09:18:52.456Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/BackToTheFuture1985",
+      "written_tropes_sha256": "371c31023237423f05018a5df704a6f3865a46276f2d30f2ccbd3097b8796e42",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.531Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 111,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a6617"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Scarface",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T19:10:53.129Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Scarface1983",
+      "written_tropes_sha256": "ce1e9fc5056a51756712c0c724456a828965e0c39a51b473aca0581ba4a63609",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.632Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 170,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a664e"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T02:46:03.935Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-06-09T14:59:05.125Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwentyEightDaysLater",
+      "written_tropes_sha256": "7f9401034aae8d15391500441b2607a7a60c065db4d4058496d5f552c16798f3",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.704Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 194,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a6664"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T06:17:32.578Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Amelie",
+      "written_tropes_sha256": "24e9a562248b32d1eb983a5f9699173c35238f5d2354eee6c5c9cd36a7f0b3a4",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.763Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 252,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a669a"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T15:44:59.014Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-16T20:38:18.405Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/WillyWonkaAndTheChocolateFactory",
+      "written_tropes_sha256": "155dc8e3b4299ae5686d63b891f287546983b979be70279ef1360fadf3d5a13e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.806Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 268,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a66a8"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Batman",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T17:04:43.249Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-03-28T22:45:46.339Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Batman1989",
+      "written_tropes_sha256": "29ff4f1492b26d5ce70cb995e89a985df52565489e510966b820e8178c2ee9cc",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.874Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 389,
+      "_id": {
+        "$oid": "65247ba50b2d4511fe3a66fd"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-09T19:17:12.837Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwelveAngryMen",
+      "written_tropes_sha256": "0528fada0bfa3befc57ea001f94146db696ba1faf490f82fd9762ec8f9c71302",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:11.962Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 470,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a673c"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-14T03:05:44.331Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-15T07:41:05.326Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwentyOneGrams",
+      "written_tropes_sha256": "d60248bee977a0031dcfff121a8e6ecaed64b543711337b9505dc563c08e1d9c",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.006Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 496,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a674d"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T19:16:44.073Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Borat",
+      "written_tropes_sha256": "bc52a11a3625b53dc8579048f6f8d4858db6a467825b52b0c0c125a05a5d4358",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.041Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 557,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a677c"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/SpiderMan",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T00:55:16.144Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/SpiderMan1",
+      "written_tropes_sha256": "ba532675bd88b27bf9302f6edb2d09870e4a711ff7d7cc84b0bb7544cf6ceb19",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.095Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 670,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a67e6"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Oldboy",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T15:30:32.991Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Oldboy2003",
+      "written_tropes_sha256": "19e0fce20844109ee9f04eb80732fa0387869838f9605d57d0328e5c87fd82c9",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.179Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 787,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a683c"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T14:17:16.505Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/MrAndMrsSmith2005",
+      "written_tropes_sha256": "c173961387ca80fd807f0fc61df5908df01340e6eb6aabc06a9c2dd964ff2c65",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.234Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 861,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a6886"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TotalRecall",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T20:31:55.871Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TotalRecall1990",
+      "written_tropes_sha256": "b5e1bdd945b49459e672383482098996ddcfa84c69541a14a3b9510bfd7bb6ec",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.278Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 866,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a688b"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/FindingNeverland",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-14T01:58:23.965Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-06-18T18:10:53.575Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/FindingNeverland",
+      "written_tropes_sha256": "e4667d762d6f2fdc7d3a30cbadf91af81d3cef9ebe7e3065c886b9fd2683c9cb",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.339Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 935,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a68ce"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T12:50:04.564Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/DrStrangelove",
+      "written_tropes_sha256": "8afa77ad3569100d7b3160314d43e57d5c6b5192aa2ff2811a42281d91a1254a",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.378Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1089,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a690e"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PointBreak",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T01:48:44.329Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PointBreak1991",
+      "written_tropes_sha256": "3827cec59b771bec5a7a60458a03f7f8ac3be508809ddb1b48581a209e618b93",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.459Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1487,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a699a"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Hellboy",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T20:28:57.280Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-26T15:35:51.759Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Hellboy2004",
+      "written_tropes_sha256": "95e8ddee9dce597a9c79479969dbc3ac4391c316e34de2be306e3ccf234972dc",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.501Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1562,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a69c1"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-05T11:33:51.279Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwentyEightWeeksLater",
+      "written_tropes_sha256": "8007edb26a269cdef1a080937bf969705c1aa71b3fb046e54833b7802ceab527",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.562Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1824,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a6a7a"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-06T15:45:32.429Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/FiftyFirstDates",
+      "written_tropes_sha256": "908396bbe835bcfbcdb3e23f3cfe770ac4da5b83cd5bca8a5d60ad7b440543fd",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.600Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1900,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a6abd"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T14:13:26.536Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-24T07:52:31.892Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Traffic2000",
+      "written_tropes_sha256": "050029ee328225d13470cd8d5aacba756220fe81d84506c5944d6064dfe98d33",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.643Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 2024,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a6b2b"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ThePatriot",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-18T13:48:11.746Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ThePatriot2000",
+      "written_tropes_sha256": "3c1ce07c711ad1a0f417e79587aded44106ecf65bd6c453daeadc4351944a64b",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.681Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 2123,
+      "_id": {
+        "$oid": "65247ba60b2d4511fe3a6b7f"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T04:07:15.867Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-07T02:39:55.668Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/MeMyselfAndIrene",
+      "written_tropes_sha256": "ed82336c08a99a77553a578a831f470a3ed481edf8ddd38758ff266ca88a9f19",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.738Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 4348,
+      "_id": {
+        "$oid": "65247ba80b2d4511fe3a6f57"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T13:16:36.859Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PrideAndPrejudice2005",
+      "written_tropes_sha256": "fef369591f004d7840b8e273e0096f176377be2617584062f1352d562c7a16f7",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.789Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 4513,
+      "_id": {
+        "$oid": "65247ba80b2d4511fe3a6faf"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T02:59:17.744Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-06-24T13:51:34.062Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ThirtyDaysOfNight",
+      "written_tropes_sha256": "a607b63b7c1252da21cb12cc9056143c696890b8b80ae70e62b4953b6a04a494",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.830Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 4951,
+      "_id": {
+        "$oid": "65247ba80b2d4511fe3a708d"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T19:13:06.549Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TenThingsIHateAboutYou",
+      "written_tropes_sha256": "ba189438d6265cbc3eb6a6f235e93840427b2137c6b3753809285fcda6a1d6c1",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.870Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 5548,
+      "_id": {
+        "$oid": "65247ba90b2d4511fe3a717a"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/RoboCop",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T17:51:45.613Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-09-09T16:32:17.140Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/RoboCop1987",
+      "written_tropes_sha256": "37756c952939ddb908e113127667f38cbb0f07c32ff8a62c787784a3e7dcee84",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.910Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 7551,
+      "_id": {
+        "$oid": "65247baa0b2d4511fe3a744a"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T04:07:07.059Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/DejaVu2006",
+      "written_tropes_sha256": "d609138c079546070ca36f9545cbab8a3535110702c5296e30c069137b9f1f4e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:12.990Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 8065,
+      "_id": {
+        "$oid": "65247bab0b2d4511fe3a7493"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-06T06:07:21.191Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwentyOne2008",
+      "written_tropes_sha256": "2f100adfdca8ac6df28313733b082979be9ab86eb049418acee191c72151a221",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.040Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 8587,
+      "_id": {
+        "$oid": "65247bab0b2d4511fe3a755d"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLionKing",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-02T22:19:06.950Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLionKing1994",
+      "written_tropes_sha256": "629aea99b5fd03a7973c4e9e07951b2188cfedf3cb14c95cf536a1232f7d6685",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.073Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 9426,
+      "_id": {
+        "$oid": "65247bad0b2d4511fe3a7739"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheFly",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T23:26:10.694Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheFly1986",
+      "written_tropes_sha256": "701d87d81e74882d0c299c1c47013d2ea53bbb6cf27c43f6c74fd8ae09bca542",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.198Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 9473,
+      "_id": {
+        "$oid": "65247bad0b2d4511fe3a7765"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-06T06:08:24.212Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/SouthParkBiggerLongerAndUncut",
+      "written_tropes_sha256": "4f38b907551ca0e15336d0c72811de6d29fa6e896848437a345a8f3524ead13e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.271Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 9654,
+      "_id": {
+        "$oid": "65247bad0b2d4511fe3a780d"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheItalianJob",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-06T06:24:05.290Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheItalianJob2003",
+      "written_tropes_sha256": "379fe9df1999a2e733bdf257a3c1f4397784dc411313a77f566110a942abb450",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.336Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 9919,
+      "_id": {
+        "$oid": "65247bae0b2d4511fe3a78ea"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/HowToLoseAGuyIn10Days",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-06T06:05:13.704Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-11-15T00:47:57.040Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/HowToLoseAGuyIn10Days",
+      "written_tropes_sha256": "2ce669f15b63395faf3b4cdf14a62faf94d80740f6d31133799d3f05ace397c3",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.378Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 10591,
+      "_id": {
+        "$oid": "65247bb00b2d4511fe3a7b4e"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheGirlNextDoor",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T15:06:24.828Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGirlNextDoor2004",
+      "written_tropes_sha256": "3549aa5920ad272c545d8c66d4801da04f3e8e06ee74e343acda775076057c76",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.411Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 11544,
+      "_id": {
+        "$oid": "65247bb40b2d4511fe3a7ea5"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T12:37:36.977Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-03-26T06:37:15.907Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/LiloAndStitch2002",
+      "written_tropes_sha256": "fe099eca1e4d5dddd1450acf9565f69c4b5fdfd65766c84a52e522346dbc7bc3",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.449Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 11774,
+      "_id": {
+        "$oid": "65247bb50b2d4511fe3a7f5b"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T04:22:52.948Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-08T14:25:23.970Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ASeriesOfUnfortunateEvents2004",
+      "written_tropes_sha256": "36eed9c10f85b5340cf94d30e03e0eeba574c14127c9c93dbadcbc5873579ffa",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.538Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 11970,
+      "_id": {
+        "$oid": "65247bb60b2d4511fe3a800c"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Hercules",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-09T17:55:38.978Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Hercules1997",
+      "written_tropes_sha256": "74dd94eb7675cbc60cc764c86e90fec7ec1eb6daac8cca2c37e19639b7de7202",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.594Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 13804,
+      "_id": {
+        "$oid": "65247bbc0b2d4511fe3a84c6"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-03T04:59:03.305Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/FastAndFurious2009",
+      "written_tropes_sha256": "f47bd1736f07965ff5755e65f6151c882c3bcd7ad0f5324aeab3646388d0f11a",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.697Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 14161,
+      "_id": {
+        "$oid": "65247bbd0b2d4511fe3a85c4"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T13:18:27.127Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-04-05T16:09:45.953Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwoThousandTwelve",
+      "written_tropes_sha256": "ffa1deb22e83f85f9dac5a99dc6c7913ca90ffd81f337f90545098a999982940",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.735Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 16996,
+      "_id": {
+        "$oid": "65247bca0b2d4511fe3a8d1c"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T23:28:41.252Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-02-17T07:20:47.680Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/SeventeenAgain2009",
+      "written_tropes_sha256": "24cd605aec9d33beac5ef5029614f284ffb4b76a62172c2a34de5cc3d607882e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.789Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 18823,
+      "_id": {
+        "$oid": "65247bd40b2d4511fe3a9182"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ClashOfTheTitans",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T16:43:07.535Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ClashOfTheTitans2010",
+      "written_tropes_sha256": "ed6107a28d8dfbe0fc853e3c029448df97bfba0c81ba2125ff57e7d4164c52a0",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.826Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 19913,
+      "_id": {
+        "$oid": "65247bd90b2d4511fe3a93f6"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T12:30:13.213Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/FiveHundredDaysOfSummer",
+      "written_tropes_sha256": "0423d664b5f8e69da2f5f196756f3d9ca74a59e2b27585a8c696744e1689021a",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.872Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 20453,
+      "_id": {
+        "$oid": "65247bdb0b2d4511fe3a9538"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T07:45:04.410Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-11-28T14:46:19.771Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/ThreeIdiots",
+      "written_tropes_sha256": "1744a1f1ce833f21dcba0f09763034ec192fe608b4dcee68282ab33a76748272",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.916Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 32657,
+      "_id": {
+        "$oid": "65247c3e0b2d4511fe3ab50d"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T09:48:44.698Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-09T05:47:53.477Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PercyJacksonAndTheOlympians",
+      "written_tropes_sha256": "c9aec555ac152675b610ed122b155b2e6397b2346a78f257cf05510b25be66bb",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:13.973Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 36557,
+      "_id": {
+        "$oid": "65247c600b2d4511fe3abd4f"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/CasinoRoyale",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-09T01:11:54.792Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CasinoRoyale2006",
+      "written_tropes_sha256": "c0734f50fd163b1d1e7e366dc5d4c99f71c5dd5ad74c7cd986427bc554207665",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.022Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 39514,
+      "_id": {
+        "$oid": "65247c860b2d4511fe3ac689"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Red",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T02:24:45.256Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-06T20:36:51.319Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Red2010",
+      "written_tropes_sha256": "6f05fb8005a0e4277e24c104e46ff9848a104a0c4d6db585f43dee873f66e4dc",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.094Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 43347,
+      "_id": {
+        "$oid": "65247c860b2d4511fe3ad165"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T19:29:25.568Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/LoveAndOtherDrugs",
+      "written_tropes_sha256": "8b567469ff367850542b5b40b131cd67868297dc51c895cc0cb7021727b998e1",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.143Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 49046,
+      "_id": {
+        "$oid": "65247c870b2d4511fe3ae163"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AllQuietOnTheWesternFront",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-10T01:28:14.694Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AllQuietOnTheWesternFront2022",
+      "written_tropes_sha256": "70a08563e24a5b3f4dd2a2500136c679e6de6ee33f3677a6b6cdd35fb623e2b9",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.183Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 60304,
+      "_id": {
+        "$oid": "65247c880b2d4511fe3afccf"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T17:43:09.173Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/HanselAndGretelWitchHunters",
+      "written_tropes_sha256": "0268724f59038ce3b446ba65382ef8802b25f9e15ec5623ea6ce0c858f321f2c",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.227Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 64635,
+      "_id": {
+        "$oid": "65247c880b2d4511fe3b06df"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TotalRecall",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T23:51:33.150Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TotalRecall2012",
+      "written_tropes_sha256": "f1a236053e14b15cf3d8f608a00e58b93daad0f63b029dc2a99b01148569af98",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.288Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 64682,
+      "_id": {
+        "$oid": "65247c880b2d4511fe3b0704"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGreatGatsby",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T00:59:32.460Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-09T03:11:47.543Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGreatGatsby2013",
+      "written_tropes_sha256": "e68e557080b7f17f1cc0f466bae9f62e34f63e55c487fd917714d9f52e0c8324",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.323Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 64688,
+      "_id": {
+        "$oid": "65247c890b2d4511fe3b070b"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T06:00:25.012Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwentyOneJumpStreet2012",
+      "written_tropes_sha256": "cbc77b8ebb05674379b59c51524b0eae36a18f59e4c503dd753d87e9e875e6d2",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.373Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 65754,
+      "_id": {
+        "$oid": "65247c890b2d4511fe3b09b3"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGirlWithTheDragonTattoo",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T09:38:03.521Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGirlWithTheDragonTattoo2011",
+      "written_tropes_sha256": "106c8a8d510daa20ba4a3969740fb864f5db7e5f1867f708f42faa71947f4a53",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.423Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 75612,
+      "_id": {
+        "$oid": "65247c8a0b2d4511fe3b2031"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Oblivion",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T20:53:36.745Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Oblivion2013",
+      "written_tropes_sha256": "4310e0eb6466d058838c2402bbf851a34e74420509862268098165e8d25a4620",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.471Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 76203,
+      "_id": {
+        "$oid": "65247c8a0b2d4511fe3b218c"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T18:52:00.574Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwelveYearsASlave",
+      "written_tropes_sha256": "95d06183e948bb68ee1da515f4f7378e2f7c97aacc8542de55eceee5578e991f",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.526Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 77338,
+      "_id": {
+        "$oid": "65247c8a0b2d4511fe3b2406"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-05T13:16:11.780Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Intouchables",
+      "written_tropes_sha256": "0bf4956427f746318aa9dbcaacdcdddde5933504f3a6558c1f9d25f76b388d4e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.567Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 82695,
+      "_id": {
+        "$oid": "65247c8b0b2d4511fe3b319d"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-05T03:21:26.798Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/LesMiserables2012",
+      "written_tropes_sha256": "6fa3a2b7efe06314f2dc6163b58cc99a6f85274ddefc355eea60017542f8fbc8",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.604Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 97020,
+      "_id": {
+        "$oid": "65247c8c0b2d4511fe3b49fc"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/RoboCop",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T07:52:21.213Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/RoboCop2014",
+      "written_tropes_sha256": "18b86a60fa591f57473db9f1e3da5883e783656fc68eb7993835520f66a4e0fd",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.654Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 109421,
+      "_id": {
+        "$oid": "65247c8d0b2d4511fe3b5d88"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/SideEffects",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-25T18:46:38.848Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/SideEffects",
+      "written_tropes_sha256": "af2f1411155aacea98c4c7c6241f916551d4fe11e98e5ab66a44dcce71c964ea",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.699Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 134374,
+      "_id": {
+        "$oid": "65247c8f0b2d4511fe3b8215"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T17:45:31.085Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-08T13:41:34.518Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PainAndGain2013",
+      "written_tropes_sha256": "f2f6a169b97f3040e1bc9790b1fb8c21bc386fb67f6dd69094396a8b19b18c4a",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.742Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 141052,
+      "_id": {
+        "$oid": "65247c8f0b2d4511fe3b8a57"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/JusticeLeague",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-11T18:35:15.366Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/JusticeLeague2017",
+      "written_tropes_sha256": "8e87e6ad4bfcf88bf8020972197d93be6a7f31754210b3a1bf3ae0b4afff5d5d",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.813Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 195589,
+      "_id": {
+        "$oid": "65247c920b2d4511fe3bc946"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Neighbors",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T08:32:03.001Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Neighbors2014",
+      "written_tropes_sha256": "6548019d006903a770d962a9c02d8c8776178af94aa07debf7100bd281f0a626",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.886Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 302946,
+      "_id": {
+        "$oid": "65247c9a0b2d4511fe3c619a"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheAccountant",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T19:17:44.421Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-07T16:28:34.923Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheAccountant2016",
+      "written_tropes_sha256": "d1bda009889d9ecce7420cc516a1c5b2e03d0b89fdc5b4393b9102b50e91cf4f",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.929Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 332562,
+      "_id": {
+        "$oid": "65247c9c0b2d4511fe3c86f6"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AStarIsBorn",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T22:56:25.179Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AStarIsBorn2018",
+      "written_tropes_sha256": "5a0595fc62a49d0e24bdf41a8b4e4c41c877ec71ac5c07692bea7981b31f2d58",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:14.992Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 333371,
+      "_id": {
+        "$oid": "65247c9c0b2d4511fe3c8807"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-06T05:56:33.138Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TenCloverfieldLane",
+      "written_tropes_sha256": "d70107f9003d8b071cd13d520eabbb25527cc6a668574c4562e76345b56fbd82",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.042Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 333484,
+      "_id": {
+        "$oid": "65247c9c0b2d4511fe3c8831"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheMagnificentSeven",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T17:43:03.504Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheMagnificentSeven2016",
+      "written_tropes_sha256": "e8ad9ea2e97601f0ed46d4a7aa1ba569f93e2c3f41c71490fe887cba7670f046",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.110Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 335983,
+      "_id": {
+        "$oid": "65247c9c0b2d4511fe3c8bc9"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Venom",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-06T12:30:52.435Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Venom2018",
+      "written_tropes_sha256": "3cc187ac400f56c7ef4ea19e589e397e7119b2585858d97ef0da03c21519bedb",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.176Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 338970,
+      "_id": {
+        "$oid": "65247c9d0b2d4511fe3c902e"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TombRaider",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T17:17:43.412Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TombRaider2018",
+      "written_tropes_sha256": "fb0fd55d0c358a3a048c4317404b3a63bdd646767b33d657b8a9ce6f65a12089",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.246Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 346364,
+      "_id": {
+        "$oid": "65247c9d0b2d4511fe3c9a31"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/It",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-02T22:27:52.387Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/It2017",
+      "written_tropes_sha256": "7e0813d009cd8feb6d31e217c4514da39f7bfb593f03ce7d5f0508449748c7f7",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.298Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 373571,
+      "_id": {
+        "$oid": "65247c9f0b2d4511fe3cc14f"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/GodzillaKingOfTheMonsters",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T12:16:38.957Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-21T22:10:17.790Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/GodzillaKingOfTheMonsters2019",
+      "written_tropes_sha256": "4d256351bbaf7b82dc59aedcfd3c67c9db45096de64e841a9b9afe38dfb95421",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.353Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 376867,
+      "_id": {
+        "$oid": "65247ca00b2d4511fe3cc588"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Moonlight",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T15:34:12.039Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Moonlight2016",
+      "written_tropes_sha256": "bef955d62c0a5eaf64b7948a86ea7874595e5ae9b5af6b20c1d1839eda476cdf",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.575Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 381283,
+      "_id": {
+        "$oid": "65247ca00b2d4511fe3ccbfa"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Mother",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T23:58:57.615Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-02-27T10:06:15.771Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Mother2017",
+      "written_tropes_sha256": "49e3d2be012b88a0ed64a6260e76f1b27f42106bfae5c2ee224832fdb9ba0d23",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.617Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 414906,
+      "_id": {
+        "$oid": "65247ca20b2d4511fe3cf935"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Batman",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-08T22:39:31.555Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheBatman2022",
+      "written_tropes_sha256": "40d92de8ad6a995429f1ca8df9700786dea24e08ca866216b5609a1b11897eba",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.684Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 420818,
+      "_id": {
+        "$oid": "65247ca20b2d4511fe3d017a"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLionKing",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-02T22:57:41.774Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-10T04:06:22.284Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLionKing2019",
+      "written_tropes_sha256": "0c6689380671a44975883e07f49ff95dec571eef30c1c7f6f5d283a5b723033e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.787Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 427641,
+      "_id": {
+        "$oid": "65247ca40b2d4511fe3d0a4b"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Rampage",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T12:55:33.487Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-01-03T16:44:13.457Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Rampage2018",
+      "written_tropes_sha256": "12b833502d75e975288af81d076f2e13afa29f8ccfddd612b4f1546aaaee4a0e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.839Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 438631,
+      "_id": {
+        "$oid": "65247ca40b2d4511fe3d1950"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Dune",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-06T20:09:12.011Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Dune2021",
+      "written_tropes_sha256": "dc1444cbcf8889a684806a96e052c47dae87f9dad79ea0275f2d923cb9091503",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:15.904Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 447404,
+      "_id": {
+        "$oid": "65247ca40b2d4511fe3d245d"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T18:27:02.327Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-09-10T10:37:02.798Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PokemonDetectivePikachu",
+      "written_tropes_sha256": "9f2465ae75f5117f8b88723ca182b1eaf3a048f2a5845f88084aa4049d6012f8",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.003Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 460465,
+      "_id": {
+        "$oid": "65247ca60b2d4511fe3d3576"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/MortalKombat",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T13:25:24.666Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/MortalKombat2021",
+      "written_tropes_sha256": "84addf8c1440549fb0b263f5c0f621c46505ca005557972993b8ae18603662ed",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.074Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 493529,
+      "_id": {
+        "$oid": "65247ca80b2d4511fe3d5d95"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-02T22:10:21.860Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/DungeonsAndDragonsHonorAmongThieves",
+      "written_tropes_sha256": "e96f2324a2c1b8860dabd9b8fddff82b627284311b0a32b8fa50ff9be1238a3a",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.136Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 496243,
+      "_id": {
+        "$oid": "65247ca80b2d4511fe3d6111"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Parasite",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T12:31:04.457Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-11-13T04:21:42.003Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Parasite2019",
+      "written_tropes_sha256": "9f538dc85800cf514ee992f5ade7546330345d93fcdae013de469e23f89fac6d",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.238Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 504608,
+      "_id": {
+        "$oid": "65247ca80b2d4511fe3d6b3b"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/RocketMan",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-13T20:29:29.974Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-08T18:59:25.963Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Rocketman2019",
+      "written_tropes_sha256": "a457c52a159e38a78ab773c836299466ecb56cd0658055e5b8522558ddfd0ac3",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.308Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 505026,
+      "_id": {
+        "$oid": "65247ca80b2d4511fe3d6bb8"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/DeathOnTheNile",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T16:13:35.788Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/DeathOnTheNile2022",
+      "written_tropes_sha256": "bc21fb52ec6e875538483225b7b64f0b65d2fb8c471339caea0eabe97034d484",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.381Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 509967,
+      "_id": {
+        "$oid": "65247ca90b2d4511fe3d714f"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-06T06:26:51.842Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-11-26T12:07:24.624Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/SixUnderground",
+      "written_tropes_sha256": "e22911bfe0d10c2ef88f7256399fdcfe14e0bf3924413229644635d5f3ad1ab0",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.443Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 725201,
+      "_id": {
+        "$oid": "65247cb40b2d4511fe3e3599"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGrayMan",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T14:34:44.608Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGrayMan2022",
+      "written_tropes_sha256": "4881e48c4a104016bda250a1bc2390ee28524d5287592329a3acf33e3037cc7e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.486Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 746036,
+      "_id": {
+        "$oid": "65247cb50b2d4511fe3e43df"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-18T14:56:53.391Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheFallGuy2024",
+      "written_tropes_sha256": "d8ef452daf2af02ad144ebf64c5939044f8ad8eb8b94e973a4ba70161d8fb389",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.548Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 776503,
+      "_id": {
+        "$oid": "65247cb60b2d4511fe3e58d4"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Coda",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-08T17:47:52.542Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CODA2021",
+      "written_tropes_sha256": "e31b8612c511abb54dc407a9cc2e3977d83ba30cceccc02a9e9117bc8ea850c3",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.624Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 929590,
+      "_id": {
+        "$oid": "65247cbb0b2d4511fe3ebcf0"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CivilWar",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-04T03:45:24.963Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-12-29T05:01:01.280Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CivilWar2024",
+      "written_tropes_sha256": "b4b3c67710b8576c6e08d7527774a4f11612a017258ce4fd79453e38a0d7ea9e",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.665Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1138194,
+      "_id": {
+        "$oid": "65247cc20b2d4511fe3f42bf"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-08-01T15:48:45.049Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Heretic2024",
+      "written_tropes_sha256": "82728a5ab02590408646609e59f68f978a0b6272cd5433131f3aaf19d39c2600",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.739Z"
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 1226578,
+      "_id": {
+        "$oid": "659814aeee2b7d16796eddbb"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Longlegs",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T02:52:32.581Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Longlegs",
+      "written_tropes_sha256": "0ebb2cd941e140ad2e8f42e497ab43d1d70a74e69f6bdea10fb629f3cca5808b",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.794Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 1044,
+      "_id": {
+        "$oid": "65247cc50b2d4511fe3f6ef1"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/PlanetEarth",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-11T11:25:40.914Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/PlanetEarth",
+      "written_tropes_sha256": "bc90e6aefd544fa121727352ae95d5040298376b76483cf0a6728a05d100317c",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.861Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 4613,
+      "_id": {
+        "$oid": "65247cc90b2d4511fe3f7985"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/BandOfBrothers2001",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-09T07:15:23.559Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/BandOfBrothers2001",
+      "written_tropes_sha256": "2825431d93356670894095882c991c03d072b65ff68a04a65a1d688672fe4e7f",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:16.902Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 66788,
+      "_id": {
+        "$oid": "65247ce10b2d4511fe3fe29c"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-09T16:27:30.856Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2025-11-14T02:09:33.420Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/ThirteenReasonsWhy",
+      "written_tropes_sha256": "ef32b446b29e31741dfdca73c411b9e64095e1d14e8f2cce1251dd48c07fdf71",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:17.005Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 67178,
+      "_id": {
+        "$oid": "65247ce10b2d4511fe3fe39a"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-09T16:50:02.892Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/ThePunisher2017",
+      "written_tropes_sha256": "74bb462c517c20b917ef831e71bd46173fc3d756480d401edb4b5493c5484104",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:17.118Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 71912,
+      "_id": {
+        "$oid": "65247ce10b2d4511fe3fee88"
+      },
+      "previous": {
+        "tvtropes_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheWitcher",
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-09T15:13:40.083Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheWitcher2019",
+      "written_tropes_sha256": "7bac217a9ff3c3702ac35631c758f00203d19748d12f6c390a80298bdfb4eb49",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:17.200Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 126308,
+      "_id": {
+        "$oid": "65247ce70b2d4511fe406094"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T05:53:47.639Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/Shogun2024",
+      "written_tropes_sha256": "6ed785aba17287d1e79f670547d60105a75ab56222189c400dac0ce284dc6c05",
+      "written_updated_at": {
+        "$date": "2026-09-21T10:56:17.285Z"
+      }
+    }
+  ]
+}
