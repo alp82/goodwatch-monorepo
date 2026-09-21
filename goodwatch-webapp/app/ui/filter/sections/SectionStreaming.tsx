@@ -130,9 +130,6 @@ export default function SectionStreaming({
 
 	// data retrieval
 
-	const streamingProvidersResult = useStreamingProviders()
-	const streamingProviders = streamingProvidersResult?.data || []
-
 	const userStreamingProviders = useUserStreamingProviders()
 	let streamingProviderIds: string[] = []
 	if (selectedTab === "mine") {
@@ -157,6 +154,13 @@ export default function SectionStreaming({
 	} else {
 		country = localCountry
 	}
+	// Only the providers of the shown country, plus the selected ones.
+	const streamingProvidersResult = useStreamingProviders({
+		country: country || undefined,
+		include: streamingProviderIds.filter(Boolean),
+	})
+	const streamingProviders = streamingProvidersResult?.data || []
+
 	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`
 
 	// autocomplete data
