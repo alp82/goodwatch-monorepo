@@ -1,0 +1,30 @@
+[
+  {
+    "captured_at": "2026-09-12T05:28:33.640116+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.737976433,
+      "limit_reset": null,
+      "usage": 0.262023567,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:28:35.704334+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.736815493,
+      "limit_reset": null,
+      "usage": 0.263184507,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  }
+]

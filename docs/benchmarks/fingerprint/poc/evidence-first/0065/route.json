@@ -1,0 +1,59 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/x-ai/grok-4.6/endpoints",
+  "captured_at": "2026-09-12T05:30:27.611793+00:00",
+  "route": {
+    "name": "xAI | x-ai/grok-4.6-20260810",
+    "model_id": "x-ai/grok-4.6",
+    "model_name": "SpaceXAI: Grok 4.6",
+    "context_length": 500000,
+    "pricing": {
+      "prompt": "0.000002",
+      "completion": "0.000006",
+      "web_search": "0.005",
+      "input_cache_read": "0.0000005",
+      "discount": 0,
+      "overrides": [
+        {
+          "min_prompt_tokens": 200000,
+          "prompt": "0.000004",
+          "completion": "0.000012",
+          "input_cache_read": "0.000001"
+        }
+      ]
+    },
+    "provider_name": "xAI",
+    "tag": "xai",
+    "quantization": "unknown",
+    "max_completion_tokens": 450000,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "structured_outputs",
+      "response_format",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "seed",
+      "logprobs",
+      "top_logprobs",
+      "tools",
+      "tool_choice",
+      "reasoning_effort"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": true,
+      "function": true
+    },
+    "status": 0,
+    "uptime_last_30m": 99.75045057535006,
+    "uptime_last_5m": 99.83164983164983,
+    "uptime_last_1d": 99.6319827591283,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

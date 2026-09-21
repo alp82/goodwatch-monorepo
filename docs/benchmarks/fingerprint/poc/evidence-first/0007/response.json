@@ -1,0 +1,9 @@
+{
+  "http_status": 404,
+  "raw": "{\"error\": {\"message\": \"0 endpoints out of 1 requested are available matching your guardrail restrictions and data policy. We removed them for the following reasons (an endpoint may have matched multiple reasons):\\nPaid model training violation (account settings): 1 endpoint excluded; configurable at https://openrouter.ai/settings/privacy\", \"code\": 404, \"metadata\": {\"input_endpoint_count\": 1, \"ineligibility_reasons\": [{\"reason\": \"paid-model-training-violation-by-account\", \"endpoint_count\": 1, \"configure_url\": \"https://openrouter.ai/settings/privacy\"}], \"routing_funnel\": [{\"step\": \"Initial Endpoints\", \"endpoint_count\": 1}], \"failed_routing_step\": \"Filter by Guardrails\"}}}",
+  "elapsed_seconds": 0.09980572501081042,
+  "headers": {
+    "Date": "Sat, 12 Sep 2026 05:01:01 GMT"
+  },
+  "captured_at": "2026-09-12T05:01:01.129118+00:00"
+}

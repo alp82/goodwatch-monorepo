@@ -1,0 +1,58 @@
+[
+  {
+    "captured_at": "2026-09-12T05:25:58.569174+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.772815477,
+      "limit_reset": null,
+      "usage": 0.227184523,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:26:00.637779+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.772815477,
+      "limit_reset": null,
+      "usage": 0.227184523,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:26:02.714658+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.772815477,
+      "limit_reset": null,
+      "usage": 0.227184523,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:26:04.789681+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.772107577,
+      "limit_reset": null,
+      "usage": 0.227892423,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  }
+]

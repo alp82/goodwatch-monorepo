@@ -1,0 +1,1395 @@
+{
+  "benchmark_id": "show:249042",
+  "metadata": {
+    "original_title": "Adolescence",
+    "release_year": 2025,
+    "media_type": "show",
+    "overview": "When a 13-year-old is accused of the murder of a classmate, his family, therapist and the detective in charge are all left asking: what really happened?"
+  },
+  "candidates": [
+    {
+      "label": "A",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 4,
+                      "tension": 9,
+                      "scare": 3,
+                      "violence": 6,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 1,
+                      "wonder": 1,
+                      "pathos": 8,
+                      "melancholy": 7,
+                      "uncanny": 2,
+                      "catharsis": 6,
+                      "nostalgia": 1,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 3,
+                      "physical_comedy": 0,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 0,
+                      "satire_parody": 1,
+                      "dark_humor": 2,
+                      "fantasy": 0,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 10,
+                      "crime": 9,
+                      "mystery": 8,
+                      "warfare": 0,
+                      "political": 4,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 7,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 1,
+                      "pop_culture": 5,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 8,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 8,
+                      "fast_pace": 4,
+                      "intrigue": 9,
+                      "complexity": 7,
+                      "rewatchability": 7,
+                      "hopefulness": 3,
+                      "bleakness": 8,
+                      "ambiguity": 7,
+                      "novelty": 8,
+                      "homage_and_reference": 1,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 0,
+                      "surrealism": 0,
+                      "eccentricity": 2,
+                      "philosophical": 6,
+                      "educational": 3,
+                      "direction": 10,
+                      "acting": 10,
+                      "cinematography": 9,
+                      "editing": 8,
+                      "music_composition": 6,
+                      "world_immersion": 9,
+                      "spectacle": 3,
+                      "visual_stylization": 7,
+                      "pastiche": 1,
+                      "psychedelic": 0,
+                      "grotesque": 2,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 4,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "tension",
+                      "psychological",
+                      "family_dynamics",
+                      "social_commentary",
+                      "acting",
+                      "direction",
+                      "contemporary_realism",
+                      "crime"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "One-take crime drama",
+                    "Youth and masculinity crisis",
+                    "Family under interrogation",
+                    "Real-time procedural intensity",
+                    "Online radicalization subtext",
+                    "Intimate chamber performances",
+                    "Bleak social realism",
+                    "Moral ambiguity of childhood",
+                    "Police and therapy dual gaze"
+                  ],
+                  "essence_text": "A claustrophobic, real-time study of a family and a justice system trying to understand an unthinkable accusation. Single-take episodes lock you inside rooms where every glance, silence, and outburst lands with documentary force. The series is less a whodunit than a how-did-we-get-here, tracing online culture, boyhood, and parental blind spots without easy answers. Performances feel lived-in and raw, turning procedural beats into emotional endurance. It leaves a lingering unease about what we fail to see in children until it is too late."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 5,
+                      "tension": 9,
+                      "scare": 5,
+                      "violence": 5,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 1,
+                      "wonder": 1,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 6,
+                      "catharsis": 5,
+                      "nostalgia": 2,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 4,
+                      "physical_comedy": 0,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 0,
+                      "satire_parody": 3,
+                      "dark_humor": 2,
+                      "fantasy": 0,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 9,
+                      "crime": 8,
+                      "mystery": 7,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 7,
+                      "family_dynamics": 9,
+                      "psychological": 10,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 4,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 9,
+                      "character_depth": 10,
+                      "slow_burn": 8,
+                      "fast_pace": 3,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 9,
+                      "hopefulness": 2,
+                      "bleakness": 9,
+                      "ambiguity": 8,
+                      "novelty": 9,
+                      "homage_and_reference": 1,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 2,
+                      "surrealism": 2,
+                      "eccentricity": 3,
+                      "philosophical": 7,
+                      "educational": 5,
+                      "direction": 10,
+                      "acting": 10,
+                      "cinematography": 9,
+                      "editing": 9,
+                      "music_composition": 5,
+                      "world_immersion": 9,
+                      "spectacle": 2,
+                      "visual_stylization": 7,
+                      "pastiche": 0,
+                      "psychedelic": 0,
+                      "grotesque": 3,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 10,
+                      "music_centrality": 3,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "psychological",
+                      "character_depth",
+                      "dialogue_centrality",
+                      "direction",
+                      "tension",
+                      "family_dynamics",
+                      "contemporary_realism",
+                      "bleakness"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": false,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Psychological Drama",
+                    "Single-Take Realism",
+                    "Family Under Pressure",
+                    "Social Media & Adolescence",
+                    "Crisis of Masculinity",
+                    "Unflinching Social Commentary",
+                    "Devastating Performances",
+                    "Slow-Burn Investigation",
+                    "Intimate Chamber Piece",
+                    "Hopeless Bleakness"
+                  ],
+                  "essence_text": "A gut-wrenching psychological drama that immerses you in the suffocating aftermath of a tragic event through its audacious single-take filmmaking. Every episode operates like a pressure cooker, where dialogue carries the unbearable weight of a family—and a society—grappling with unthinkable accusations and systemic failures. The series is an unflinching, often devastating exploration of fractured family dynamics and the terrifying interiority of adolescence in the digital age. It is not comfortable viewing; it is a masterclass in controlled tension that leaves a lingering melancholy and demands serious reflection."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "D",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 8,
+                      "scare": 1,
+                      "violence": 4,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 2,
+                      "wonder": 1,
+                      "pathos": 7,
+                      "melancholy": 6,
+                      "uncanny": 2,
+                      "catharsis": 5,
+                      "nostalgia": 3,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 2,
+                      "physical_comedy": 0,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 0,
+                      "satire_parody": 0,
+                      "dark_humor": 1,
+                      "fantasy": 0,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 9,
+                      "crime": 8,
+                      "mystery": 7,
+                      "warfare": 0,
+                      "political": 2,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 8,
+                      "family_dynamics": 8,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 2,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 6,
+                      "spiritual": 1,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 7,
+                      "fast_pace": 4,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 6,
+                      "hopefulness": 3,
+                      "bleakness": 6,
+                      "ambiguity": 6,
+                      "novelty": 6,
+                      "homage_and_reference": 1,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 0,
+                      "surrealism": 0,
+                      "eccentricity": 1,
+                      "philosophical": 6,
+                      "educational": 2,
+                      "direction": 8,
+                      "acting": 9,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 5,
+                      "world_immersion": 7,
+                      "spectacle": 1,
+                      "visual_stylization": 3,
+                      "pastiche": 0,
+                      "psychedelic": 0,
+                      "grotesque": 1,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 3,
+                      "sound_centrality": 5
+                    },
+                    "highlight_keys": [
+                      "psychological",
+                      "contemporary_realism",
+                      "character_depth",
+                      "social_commentary",
+                      "coming_of_age",
+                      "family_dynamics",
+                      "tension",
+                      "crime"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Psychological Thriller",
+                    "Social Realism Drama",
+                    "Juvenile Crime Investigation",
+                    "Family Trajectory Study",
+                    "Teenage Alienation Theme",
+                    "Emotional Intensity",
+                    "Moral Ambiguity",
+                    "Character-Driven Narrative",
+                    "Contemporary Social Issue"
+                  ],
+                  "essence_text": "A gripping and emotionally heavy exploration of a tragic event that ripples through a community, focusing on the psychological unraveling of a teenager and the families involved. The series relies on sharp dialogue and nuanced performances to navigate the murky waters of truth, blame, and adolescent mental health. It is a tense, realistic drama that eschews easy answers in favor of a complex examination of modern societal pressures on youth. Viewers are drawn into an intimate, often uncomfortable study of how trauma fractures relationships."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "E",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 2,
+                      "tension": 9,
+                      "scare": 3,
+                      "violence": 5,
+                      "romance": 0,
+                      "eroticism": 0,
+                      "wholesome": 0,
+                      "wonder": 0,
+                      "pathos": 7,
+                      "melancholy": 6,
+                      "uncanny": 4,
+                      "catharsis": 5,
+                      "nostalgia": 1,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 3,
+                      "physical_comedy": 0,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 0,
+                      "satire_parody": 0,
+                      "dark_humor": 0,
+                      "fantasy": 0,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 9,
+                      "crime": 9,
+                      "mystery": 9,
+                      "warfare": 0,
+                      "political": 1,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 7,
+                      "family_dynamics": 8,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 0,
+                      "social_commentary": 6,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 3,
+                      "spiritual": 0,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 7,
+                      "fast_pace": 5,
+                      "intrigue": 9,
+                      "complexity": 7,
+                      "rewatchability": 7,
+                      "hopefulness": 3,
+                      "bleakness": 7,
+                      "ambiguity": 8,
+                      "novelty": 5,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 6,
+                      "meta_narrative": 0,
+                      "surrealism": 0,
+                      "eccentricity": 0,
+                      "philosophical": 5,
+                      "educational": 0,
+                      "direction": 8,
+                      "acting": 9,
+                      "cinematography": 7,
+                      "editing": 8,
+                      "music_composition": 6,
+                      "world_immersion": 8,
+                      "spectacle": 2,
+                      "visual_stylization": 4,
+                      "pastiche": 0,
+                      "psychedelic": 0,
+                      "grotesque": 2,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 4,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "tension",
+                      "psychological",
+                      "mystery",
+                      "crime",
+                      "character_depth",
+                      "ambiguity",
+                      "dialogue_centrality",
+                      "coming_of_age"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Gripping Psychological Crime Drama",
+                    "Intense Moral Ambiguity",
+                    "Family Crisis Narrative",
+                    "Youth-Oriented Mystery",
+                    "Dense Dialogue-Driven",
+                    "Social Realism",
+                    "Slow-Burn Tension",
+                    "Existential Dread",
+                    "Intimate Character Study",
+                    "Compelling Investigation"
+                  ],
+                  "essence_text": "A tense, dialogue-heavy psychological crime drama that dissects a modern tragedy through the eyes of a fractured family and the systems surrounding them. The show thrives on its suffocating ambiguity and the weight of moral questioning, demanding active engagement from the viewer. Its strength lies in the raw, nuanced performances and the slow-burn unraveling of a terrifying truth, making it a deeply unsettling yet compelling experience. This is a sobering, thought-provoking exploration of youth, violence, and the complex nature of guilt."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "F",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 9,
+                      "scare": 2,
+                      "violence": 6,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 1,
+                      "wonder": 2,
+                      "pathos": 8,
+                      "melancholy": 7,
+                      "uncanny": 5,
+                      "catharsis": 6,
+                      "nostalgia": 2,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 4,
+                      "physical_comedy": 0,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 0,
+                      "satire_parody": 3,
+                      "dark_humor": 1,
+                      "fantasy": 0,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 10,
+                      "crime": 9,
+                      "mystery": 8,
+                      "warfare": 0,
+                      "political": 2,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 9,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 1,
+                      "pop_culture": 2,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 5,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 9,
+                      "character_depth": 9,
+                      "slow_burn": 8,
+                      "fast_pace": 3,
+                      "intrigue": 9,
+                      "complexity": 7,
+                      "rewatchability": 6,
+                      "hopefulness": 3,
+                      "bleakness": 8,
+                      "ambiguity": 4,
+                      "novelty": 7,
+                      "homage_and_reference": 1,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 0,
+                      "surrealism": 1,
+                      "eccentricity": 2,
+                      "philosophical": 6,
+                      "educational": 3,
+                      "direction": 9,
+                      "acting": 10,
+                      "cinematography": 8,
+                      "editing": 9,
+                      "music_composition": 6,
+                      "world_immersion": 9,
+                      "spectacle": 2,
+                      "visual_stylization": 4,
+                      "pastiche": 0,
+                      "psychedelic": 0,
+                      "grotesque": 2,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 4,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "acting",
+                      "tension",
+                      "coming_of_age",
+                      "family_dynamics",
+                      "crime",
+                      "psychological",
+                      "contemporary_realism",
+                      "narrative_structure"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery",
+                    "Suicide Themes"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Gritty Crime Drama",
+                    "Intense Family Trauma",
+                    "Coming-of-Age Mystery",
+                    "Psychological Thriller",
+                    "Realistic Police Procedural",
+                    "Emotionally Devastating",
+                    "Social Commentary on Youth",
+                    "Masterclass in Acting",
+                    "Bleak & Tense Atmosphere",
+                    "Slow-Burn Suspense"
+                  ],
+                  "essence_text": "A harrowing and deeply realistic exploration of how a single violent act shatters the lives of a family and their community. The series relies on exceptional performances and tense, dialogue-driven scenes to build an atmosphere of suffocating dread and profound sadness. It transcends typical crime procedurals by focusing intensely on the psychological aftermath, moral ambiguity, and the fragility of adolescent identity. Viewers are left grappling with uncomfortable questions about nature, nurture, and the invisible pressures facing today's youth."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "G",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 4,
+                      "tension": 9,
+                      "scare": 2,
+                      "violence": 6,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 1,
+                      "wonder": 0,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 2,
+                      "catharsis": 7,
+                      "nostalgia": 1,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 2,
+                      "physical_comedy": 0,
+                      "cringe_humor": 4,
+                      "absurdist_humor": 0,
+                      "satire_parody": 3,
+                      "dark_humor": 2,
+                      "fantasy": 0,
+                      "futuristic": 1,
+                      "historical": 0,
+                      "contemporary_realism": 10,
+                      "crime": 9,
+                      "mystery": 8,
+                      "warfare": 0,
+                      "political": 1,
+                      "sports": 1,
+                      "biographical": 0,
+                      "coming_of_age": 8,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 1,
+                      "pop_culture": 3,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 7,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 9,
+                      "character_depth": 9,
+                      "slow_burn": 6,
+                      "fast_pace": 5,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 7,
+                      "hopefulness": 2,
+                      "bleakness": 9,
+                      "ambiguity": 7,
+                      "novelty": 8,
+                      "homage_and_reference": 0,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 0,
+                      "surrealism": 0,
+                      "eccentricity": 1,
+                      "philosophical": 7,
+                      "educational": 2,
+                      "direction": 10,
+                      "acting": 10,
+                      "cinematography": 9,
+                      "editing": 9,
+                      "music_composition": 7,
+                      "world_immersion": 9,
+                      "spectacle": 2,
+                      "visual_stylization": 5,
+                      "pastiche": 0,
+                      "psychedelic": 0,
+                      "grotesque": 3,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 5,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "contemporary_realism",
+                      "tension",
+                      "psychological",
+                      "family_dynamics",
+                      "crime",
+                      "social_commentary",
+                      "acting",
+                      "direction"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Raw Contemporary Crime Drama",
+                    "Psychological Family Portrait",
+                    "Adolescent Alienation",
+                    "Social Media and Masculinity",
+                    "Unflinching Realism",
+                    "Procedural Mystery",
+                    "Single-Take Visual Intensity",
+                    "Emotionally Devastating",
+                    "Outstanding Ensemble Acting"
+                  ],
+                  "essence_text": "A harrowing, intensely realistic drama that turns a shocking crime into an examination of adolescence, family love, and the social forces shaping young masculinity. Its sustained visual momentum creates an unusually immediate experience, making conversations feel as suspenseful as confrontations. The performances are intimate and devastating, especially as parents and investigators struggle to understand what they failed to see. This is deeply thought-provoking television, built for focused viewing rather than comfort or casual background watching."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "H",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 6,
+                      "tension": 9,
+                      "scare": 4,
+                      "violence": 7,
+                      "romance": 1,
+                      "eroticism": 2,
+                      "wholesome": 1,
+                      "wonder": 2,
+                      "pathos": 8,
+                      "melancholy": 7,
+                      "uncanny": 5,
+                      "catharsis": 6,
+                      "nostalgia": 3,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 3,
+                      "physical_comedy": 1,
+                      "cringe_humor": 4,
+                      "absurdist_humor": 2,
+                      "satire_parody": 5,
+                      "dark_humor": 6,
+                      "fantasy": 0,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 9,
+                      "crime": 9,
+                      "mystery": 9,
+                      "warfare": 0,
+                      "political": 3,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 5,
+                      "family_dynamics": 7,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 0,
+                      "social_commentary": 6,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 2,
+                      "spiritual": 2,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 7,
+                      "character_depth": 9,
+                      "slow_burn": 8,
+                      "fast_pace": 5,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 7,
+                      "hopefulness": 2,
+                      "bleakness": 8,
+                      "ambiguity": 9,
+                      "novelty": 6,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 1,
+                      "surrealism": 3,
+                      "eccentricity": 4,
+                      "philosophical": 7,
+                      "educational": 3,
+                      "direction": 8,
+                      "acting": 8,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 7,
+                      "spectacle": 4,
+                      "visual_stylization": 5,
+                      "pastiche": 2,
+                      "psychedelic": 1,
+                      "grotesque": 5,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 5,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "tension",
+                      "psychological",
+                      "crime",
+                      "mystery",
+                      "intrigue",
+                      "ambiguity",
+                      "pathos",
+                      "character_depth"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Suicide Themes",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": false,
+                    "friends": false,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Psychological Crime Drama",
+                    "Legal Mystery",
+                    "Coming-of-Age Tragedy",
+                    "Family Under Pressure",
+                    "Unreliable Narrative",
+                    "Dark Atmosphere",
+                    "Teenage Murder Mystery",
+                    "Character Study",
+                    "Slow-Burn Tension",
+                    "Ethical Dilemma"
+                  ],
+                  "essence_text": "A gripping psychological crime drama that immerses viewers in the suffocating tension of a family unraveling under the weight of a horrific accusation. The show’s deliberate pacing and rich character development force audiences to confront uncomfortable questions about truth, guilt, and the fragility of innocence. With a bleak yet compelling atmosphere, it lingers on the psychological toll of trauma and the moral ambiguities of justice. The ambiguous narrative keeps viewers guessing, making it a haunting and thought-provoking experience that lingers long after the credits roll."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "I",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 9,
+                      "scare": 2,
+                      "violence": 4,
+                      "romance": 1,
+                      "eroticism": 1,
+                      "wholesome": 4,
+                      "wonder": 2,
+                      "pathos": 7,
+                      "melancholy": 6,
+                      "uncanny": 2,
+                      "catharsis": 5,
+                      "nostalgia": 1,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 3,
+                      "physical_comedy": 1,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 1,
+                      "satire_parody": 2,
+                      "dark_humor": 3,
+                      "fantasy": 1,
+                      "futuristic": 1,
+                      "historical": 1,
+                      "contemporary_realism": 9,
+                      "crime": 7,
+                      "mystery": 8,
+                      "warfare": 1,
+                      "political": 1,
+                      "sports": 1,
+                      "biographical": 1,
+                      "coming_of_age": 8,
+                      "family_dynamics": 8,
+                      "psychological": 8,
+                      "showbiz": 1,
+                      "gaming": 1,
+                      "pop_culture": 1,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 3,
+                      "technology_and_humanity": 5,
+                      "spiritual": 1,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 8,
+                      "character_depth": 8,
+                      "slow_burn": 7,
+                      "fast_pace": 4,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 7,
+                      "hopefulness": 3,
+                      "bleakness": 5,
+                      "ambiguity": 6,
+                      "novelty": 4,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 1,
+                      "surrealism": 1,
+                      "eccentricity": 2,
+                      "philosophical": 6,
+                      "educational": 2,
+                      "direction": 8,
+                      "acting": 9,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 7,
+                      "spectacle": 3,
+                      "visual_stylization": 4,
+                      "pastiche": 1,
+                      "psychedelic": 1,
+                      "grotesque": 2,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 5,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "tension",
+                      "mystery",
+                      "contemporary_realism",
+                      "coming_of_age",
+                      "family_dynamics",
+                      "psychological",
+                      "narrative_structure",
+                      "social_commentary"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Psychological Crime Drama",
+                    "Coming-of-Age Mystery",
+                    "Intense Family Dynamics",
+                    "Social Commentary",
+                    "Thought-Provoking",
+                    "Atmospheric",
+                    "Character-Driven",
+                    "Tense",
+                    "Gritty Realism",
+                    "Mystery Unfold"
+                  ],
+                  "essence_text": "A tense and atmospheric psychological crime drama that uses the coming-of-age framework to explore the complexities of family dynamics and social pressures. The series is character-driven and thought-provoking, unraveling a central mystery with gritty realism. It balances intense moments with a lingering sense of ambiguity, offering a compelling look at the consequences of accusation and the strain on a family unit. This is a binge-worthy, immersive experience that rewards patience and reflection."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "J",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "K",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "L",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "M",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:249042",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 9,
+                      "scare": 5,
+                      "violence": 7,
+                      "romance": 1,
+                      "eroticism": 1,
+                      "wholesome": 1,
+                      "wonder": 1,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 5,
+                      "catharsis": 7,
+                      "nostalgia": 1,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 3,
+                      "physical_comedy": 0,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 0,
+                      "satire_parody": 2,
+                      "dark_humor": 2,
+                      "fantasy": 0,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 10,
+                      "crime": 9,
+                      "mystery": 8,
+                      "warfare": 0,
+                      "political": 3,
+                      "sports": 0,
+                      "biographical": 1,
+                      "coming_of_age": 8,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 7,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 9,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 9,
+                      "character_depth": 10,
+                      "slow_burn": 8,
+                      "fast_pace": 4,
+                      "intrigue": 9,
+                      "complexity": 7,
+                      "rewatchability": 6,
+                      "hopefulness": 2,
+                      "bleakness": 9,
+                      "ambiguity": 6,
+                      "novelty": 9,
+                      "homage_and_reference": 1,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 0,
+                      "surrealism": 0,
+                      "eccentricity": 1,
+                      "philosophical": 5,
+                      "educational": 2,
+                      "direction": 10,
+                      "acting": 10,
+                      "cinematography": 8,
+                      "editing": 9,
+                      "music_composition": 6,
+                      "world_immersion": 8,
+                      "spectacle": 2,
+                      "visual_stylization": 5,
+                      "pastiche": 0,
+                      "psychedelic": 0,
+                      "grotesque": 4,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 4,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "character_depth",
+                      "tension",
+                      "pathos",
+                      "contemporary_realism",
+                      "social_commentary",
+                      "technology_and_humanity",
+                      "bleakness",
+                      "acting"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Gut-Wrenching Crime Drama",
+                    "Unflinching Family Tragedy",
+                    "Social Media Anxiety",
+                    "Masterclass in Acting",
+                    "Single-Take Realism",
+                    "Youth Radicalization",
+                    "Parenthood Nightmare",
+                    "Moral Ambiguity",
+                    "Deeply Unsettling"
+                  ],
+                  "essence_text": "A harrowing and masterfully crafted crime drama that dissects a family's worst nightmare with painful, slow-burn realism. The series immerses you in the raw, unglamorous aftermath of a child accused of murder, exploring the ripple effects on parents, siblings, and a community. Its famously long, unbroken takes create an unbearable intimacy, forcing you to sit with the discomfort and moral ambiguity. Anchored by staggering performances, it's a bleak but vital examination of modern youth, the internet, and the limits of parental love. Watching it is a deeply emotional and thought-provoking experience that lingers long after the credits roll."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    }
+  ]
+}

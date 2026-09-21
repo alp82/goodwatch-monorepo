@@ -1,0 +1,738 @@
+{
+  "type": "object",
+  "properties": {
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "benchmark_id": {
+            "type": "string"
+          },
+          "analysis": {
+            "type": "object",
+            "properties": {
+              "fingerprint": {
+                "type": "object",
+                "properties": {
+                  "scores": {
+                    "type": "object",
+                    "properties": {
+                      "adrenaline": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "tension": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "scare": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "violence": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "romance": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "eroticism": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "wholesome": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "wonder": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "pathos": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "melancholy": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "uncanny": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "catharsis": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "nostalgia": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "situational_comedy": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "wit_wordplay": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "physical_comedy": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "cringe_humor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "absurdist_humor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "satire_parody": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "dark_humor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "fantasy": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "futuristic": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "historical": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "contemporary_realism": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "crime": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "mystery": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "warfare": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "political": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "sports": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "biographical": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "coming_of_age": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "family_dynamics": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "psychological": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "showbiz": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "gaming": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "pop_culture": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "social_commentary": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "class_and_capitalism": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "technology_and_humanity": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "spiritual": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "narrative_structure": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "dialogue_quality": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "character_depth": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "slow_burn": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "fast_pace": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "intrigue": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "complexity": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "rewatchability": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "hopefulness": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "bleakness": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "ambiguity": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "novelty": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "homage_and_reference": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "non_linear_narrative": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "meta_narrative": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "surrealism": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "eccentricity": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "philosophical": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "educational": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "direction": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "acting": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "cinematography": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "editing": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "music_composition": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "world_immersion": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "spectacle": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "visual_stylization": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "pastiche": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "psychedelic": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "grotesque": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "camp_and_irony": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "dialogue_centrality": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "music_centrality": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "sound_centrality": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10
+                      }
+                    },
+                    "required": [
+                      "adrenaline",
+                      "tension",
+                      "scare",
+                      "violence",
+                      "romance",
+                      "eroticism",
+                      "wholesome",
+                      "wonder",
+                      "pathos",
+                      "melancholy",
+                      "uncanny",
+                      "catharsis",
+                      "nostalgia",
+                      "situational_comedy",
+                      "wit_wordplay",
+                      "physical_comedy",
+                      "cringe_humor",
+                      "absurdist_humor",
+                      "satire_parody",
+                      "dark_humor",
+                      "fantasy",
+                      "futuristic",
+                      "historical",
+                      "contemporary_realism",
+                      "crime",
+                      "mystery",
+                      "warfare",
+                      "political",
+                      "sports",
+                      "biographical",
+                      "coming_of_age",
+                      "family_dynamics",
+                      "psychological",
+                      "showbiz",
+                      "gaming",
+                      "pop_culture",
+                      "social_commentary",
+                      "class_and_capitalism",
+                      "technology_and_humanity",
+                      "spiritual",
+                      "narrative_structure",
+                      "dialogue_quality",
+                      "character_depth",
+                      "slow_burn",
+                      "fast_pace",
+                      "intrigue",
+                      "complexity",
+                      "rewatchability",
+                      "hopefulness",
+                      "bleakness",
+                      "ambiguity",
+                      "novelty",
+                      "homage_and_reference",
+                      "non_linear_narrative",
+                      "meta_narrative",
+                      "surrealism",
+                      "eccentricity",
+                      "philosophical",
+                      "educational",
+                      "direction",
+                      "acting",
+                      "cinematography",
+                      "editing",
+                      "music_composition",
+                      "world_immersion",
+                      "spectacle",
+                      "visual_stylization",
+                      "pastiche",
+                      "psychedelic",
+                      "grotesque",
+                      "camp_and_irony",
+                      "dialogue_centrality",
+                      "music_centrality",
+                      "sound_centrality"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "highlight_keys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "adrenaline",
+                        "tension",
+                        "scare",
+                        "violence",
+                        "romance",
+                        "eroticism",
+                        "wholesome",
+                        "wonder",
+                        "pathos",
+                        "melancholy",
+                        "uncanny",
+                        "catharsis",
+                        "nostalgia",
+                        "situational_comedy",
+                        "wit_wordplay",
+                        "physical_comedy",
+                        "cringe_humor",
+                        "absurdist_humor",
+                        "satire_parody",
+                        "dark_humor",
+                        "fantasy",
+                        "futuristic",
+                        "historical",
+                        "contemporary_realism",
+                        "crime",
+                        "mystery",
+                        "warfare",
+                        "political",
+                        "sports",
+                        "biographical",
+                        "coming_of_age",
+                        "family_dynamics",
+                        "psychological",
+                        "showbiz",
+                        "gaming",
+                        "pop_culture",
+                        "social_commentary",
+                        "class_and_capitalism",
+                        "technology_and_humanity",
+                        "spiritual",
+                        "narrative_structure",
+                        "dialogue_quality",
+                        "character_depth",
+                        "slow_burn",
+                        "fast_pace",
+                        "intrigue",
+                        "complexity",
+                        "rewatchability",
+                        "hopefulness",
+                        "bleakness",
+                        "ambiguity",
+                        "novelty",
+                        "homage_and_reference",
+                        "non_linear_narrative",
+                        "meta_narrative",
+                        "surrealism",
+                        "eccentricity",
+                        "philosophical",
+                        "educational",
+                        "direction",
+                        "acting",
+                        "cinematography",
+                        "editing",
+                        "music_composition",
+                        "world_immersion",
+                        "spectacle",
+                        "visual_stylization",
+                        "pastiche",
+                        "psychedelic",
+                        "grotesque",
+                        "camp_and_irony",
+                        "dialogue_centrality",
+                        "music_centrality",
+                        "sound_centrality"
+                      ]
+                    },
+                    "minItems": 4,
+                    "maxItems": 8
+                  }
+                },
+                "required": [
+                  "scores",
+                  "highlight_keys"
+                ],
+                "additionalProperties": false
+              },
+              "is_anime": {
+                "type": "boolean"
+              },
+              "production_info": {
+                "type": "object",
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "Live-Action",
+                      "Animation",
+                      "Mixed-Media"
+                    ]
+                  },
+                  "animation_style": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "2D Traditional",
+                          "3D CGI",
+                          "Stop-Motion",
+                          "Rotoscoping",
+                          "Anime",
+                          "Other"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "method",
+                  "animation_style"
+                ],
+                "additionalProperties": false
+              },
+              "content_advisories": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Suicide Themes",
+                    "Disturbing Imagery"
+                  ]
+                }
+              },
+              "social_suitability": {
+                "type": "object",
+                "properties": {
+                  "solo_watch": {
+                    "type": "boolean"
+                  },
+                  "date_night": {
+                    "type": "boolean"
+                  },
+                  "group_party": {
+                    "type": "boolean"
+                  },
+                  "family": {
+                    "type": "boolean"
+                  },
+                  "partner": {
+                    "type": "boolean"
+                  },
+                  "friends": {
+                    "type": "boolean"
+                  },
+                  "kids": {
+                    "type": "boolean"
+                  },
+                  "teens": {
+                    "type": "boolean"
+                  },
+                  "adults": {
+                    "type": "boolean"
+                  },
+                  "intergenerational": {
+                    "type": "boolean"
+                  },
+                  "public_viewing_safe": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "solo_watch",
+                  "date_night",
+                  "group_party",
+                  "family",
+                  "partner",
+                  "friends",
+                  "kids",
+                  "teens",
+                  "adults",
+                  "intergenerational",
+                  "public_viewing_safe"
+                ],
+                "additionalProperties": false
+              },
+              "viewing_context": {
+                "type": "object",
+                "properties": {
+                  "is_thought_provoking": {
+                    "type": "boolean"
+                  },
+                  "is_pure_escapism": {
+                    "type": "boolean"
+                  },
+                  "is_background_friendly": {
+                    "type": "boolean"
+                  },
+                  "is_comfort_watch": {
+                    "type": "boolean"
+                  },
+                  "is_binge_friendly": {
+                    "type": "boolean"
+                  },
+                  "is_drop_in_friendly": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "is_thought_provoking",
+                  "is_pure_escapism",
+                  "is_background_friendly",
+                  "is_comfort_watch",
+                  "is_binge_friendly",
+                  "is_drop_in_friendly"
+                ],
+                "additionalProperties": false
+              },
+              "essence_tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 8,
+                "maxItems": 10
+              },
+              "essence_text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fingerprint",
+              "is_anime",
+              "production_info",
+              "content_advisories",
+              "social_suitability",
+              "viewing_context",
+              "essence_tags",
+              "essence_text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "benchmark_id",
+          "analysis"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "results"
+  ],
+  "additionalProperties": false
+}

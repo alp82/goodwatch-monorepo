@@ -1,0 +1,1399 @@
+{
+  "benchmark_id": "movie:603",
+  "metadata": {
+    "original_title": "The Matrix",
+    "release_year": 1999,
+    "media_type": "movie",
+    "overview": "Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth."
+  },
+  "candidates": [
+    {
+      "label": "A",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 8,
+                      "scare": 3,
+                      "violence": 8,
+                      "romance": 3,
+                      "eroticism": 2,
+                      "wholesome": 1,
+                      "wonder": 8,
+                      "pathos": 4,
+                      "melancholy": 3,
+                      "uncanny": 6,
+                      "catharsis": 7,
+                      "nostalgia": 5,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 2,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 2,
+                      "satire_parody": 3,
+                      "dark_humor": 3,
+                      "fantasy": 2,
+                      "futuristic": 10,
+                      "historical": 0,
+                      "contemporary_realism": 2,
+                      "crime": 2,
+                      "mystery": 7,
+                      "warfare": 5,
+                      "political": 5,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 4,
+                      "family_dynamics": 2,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 3,
+                      "pop_culture": 4,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 10,
+                      "spiritual": 6,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 6,
+                      "slow_burn": 5,
+                      "fast_pace": 7,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 9,
+                      "hopefulness": 6,
+                      "bleakness": 6,
+                      "ambiguity": 6,
+                      "novelty": 10,
+                      "homage_and_reference": 6,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 4,
+                      "surrealism": 5,
+                      "eccentricity": 4,
+                      "philosophical": 9,
+                      "educational": 1,
+                      "direction": 10,
+                      "acting": 8,
+                      "cinematography": 10,
+                      "editing": 9,
+                      "music_composition": 8,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 10,
+                      "pastiche": 3,
+                      "psychedelic": 4,
+                      "grotesque": 4,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 7,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "novelty",
+                      "technology_and_humanity",
+                      "spectacle",
+                      "visual_stylization",
+                      "philosophical",
+                      "world_immersion",
+                      "adrenaline",
+                      "futuristic"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Action Philosophy",
+                    "Bullet-Time Visual Revolution",
+                    "Simulated Reality Awakening",
+                    "Leather-and-Sunglasses Aesthetic",
+                    "Mind-Bending Sci-Fi",
+                    "Chosen One Mythos",
+                    "Techno-Dystopian Insurgency",
+                    "Iconic Fight Choreography",
+                    "Existential Questioning"
+                  ],
+                  "essence_text": "A sleek, electrifying plunge into a world where code, kung fu, and metaphysics collide at impossible speed. The film’s cool, rain-slicked surfaces and freeze-frame gunplay make spectacle feel like revelation, inviting you to question what is real while your pulse races. Dense ideas about control, identity, and machines sit inside leather coats and green digital rain rather than lectures. It is both a comfort-watch for its iconic riffs and a thought-engine that still rewires how you look at screens. Watching it is less following a plot than waking up inside a stylish, relentless dream of resistance."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 9,
+                      "scare": 3,
+                      "violence": 8,
+                      "romance": 5,
+                      "eroticism": 3,
+                      "wholesome": 3,
+                      "wonder": 9,
+                      "pathos": 5,
+                      "melancholy": 4,
+                      "uncanny": 8,
+                      "catharsis": 6,
+                      "nostalgia": 6,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 4,
+                      "physical_comedy": 3,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 1,
+                      "satire_parody": 5,
+                      "dark_humor": 2,
+                      "fantasy": 3,
+                      "futuristic": 10,
+                      "historical": 0,
+                      "contemporary_realism": 2,
+                      "crime": 2,
+                      "mystery": 7,
+                      "warfare": 4,
+                      "political": 6,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 8,
+                      "family_dynamics": 3,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 8,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 7,
+                      "technology_and_humanity": 10,
+                      "spiritual": 8,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 7,
+                      "slow_burn": 4,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 9,
+                      "hopefulness": 7,
+                      "bleakness": 5,
+                      "ambiguity": 6,
+                      "novelty": 10,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 5,
+                      "surrealism": 6,
+                      "eccentricity": 5,
+                      "philosophical": 9,
+                      "educational": 3,
+                      "direction": 10,
+                      "acting": 7,
+                      "cinematography": 10,
+                      "editing": 10,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 9,
+                      "visual_stylization": 10,
+                      "pastiche": 4,
+                      "psychedelic": 3,
+                      "grotesque": 2,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 7,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "technology_and_humanity",
+                      "novelty",
+                      "cinematography",
+                      "futuristic",
+                      "visual_stylization",
+                      "philosophical",
+                      "direction",
+                      "world_immersion"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Philosophy",
+                    "Mind-Bending Action",
+                    "Bullet-Time Bullet Ballet",
+                    "Reality-Bending Tech Thriller",
+                    "Dystopian Awakening",
+                    "Iconic Visual Revolution",
+                    "Hero's Journey Subversion",
+                    "Neo-Androgynous Style",
+                    "Cult Classic Defined",
+                    "Speculative Future"
+                  ],
+                  "essence_text": "A mind-bending cyberpunk odyssey that fuses high-octane action with deep philosophical inquiry, leaving audiences to question the very fabric of their perceived reality. Its revolutionary use of 'bullet-time' and sleek, iconic visual stylization created a watershed moment in action cinema and pop culture. The film operates as both a pulse-pounding thrill ride and a thought-provoking allegory about free will, control, and the nature of existence. A defining text of late-90s cinema whose spectacle and ideas remain electrifying, frequently rewatchable, and endlessly referenced."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "D",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 8,
+                      "scare": 4,
+                      "violence": 7,
+                      "romance": 2,
+                      "eroticism": 1,
+                      "wholesome": 3,
+                      "wonder": 8,
+                      "pathos": 5,
+                      "melancholy": 4,
+                      "uncanny": 7,
+                      "catharsis": 6,
+                      "nostalgia": 8,
+                      "situational_comedy": 2,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 3,
+                      "cringe_humor": 1,
+                      "absurdist_humor": 2,
+                      "satire_parody": 4,
+                      "dark_humor": 3,
+                      "fantasy": 6,
+                      "futuristic": 9,
+                      "historical": 0,
+                      "contemporary_realism": 2,
+                      "crime": 3,
+                      "mystery": 6,
+                      "warfare": 7,
+                      "political": 5,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 7,
+                      "family_dynamics": 3,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 1,
+                      "pop_culture": 9,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 10,
+                      "spiritual": 6,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 7,
+                      "character_depth": 7,
+                      "slow_burn": 5,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 7,
+                      "rewatchability": 9,
+                      "hopefulness": 6,
+                      "bleakness": 5,
+                      "ambiguity": 6,
+                      "novelty": 10,
+                      "homage_and_reference": 8,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 5,
+                      "surrealism": 7,
+                      "eccentricity": 4,
+                      "philosophical": 9,
+                      "educational": 2,
+                      "direction": 9,
+                      "acting": 7,
+                      "cinematography": 10,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 10,
+                      "pastiche": 6,
+                      "psychedelic": 3,
+                      "grotesque": 2,
+                      "camp_and_irony": 3,
+                      "dialogue_centrality": 6,
+                      "music_centrality": 8,
+                      "sound_centrality": 9
+                    },
+                    "highlight_keys": [
+                      "novelty",
+                      "technology_and_humanity",
+                      "visual_stylization",
+                      "cinematography",
+                      "spectacle",
+                      "world_immersion",
+                      "philosophical",
+                      "sound_centrality"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Action Thriller",
+                    "Philosophical Sci-Fi",
+                    "Groundbreaking Visual Effects",
+                    "Existential Mystery",
+                    "High-Octane Choreography",
+                    "Digital Dystopia",
+                    "Mind-Bending Reality",
+                    "Cult Classic Status",
+                    "Stylized Aesthetic"
+                  ],
+                  "essence_text": "A revolutionary sci-fi masterpiece that redefined the action genre with its groundbreaking 'bullet time' visuals and philosophical depth. The film immerses viewers in a stark, digital dystopia where reality is questioned and humanity fights for freedom against machine overlords. Driven by high-stakes tension and intricate world-building, it offers a thrilling yet intellectually stimulating experience that balances spectacular set pieces with existential inquiry. Its distinctive aesthetic and cultural impact make it a timeless, thought-provoking spectacle."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "E",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 8,
+                      "scare": 5,
+                      "violence": 8,
+                      "romance": 4,
+                      "eroticism": 2,
+                      "wholesome": 1,
+                      "wonder": 8,
+                      "pathos": 3,
+                      "melancholy": 3,
+                      "uncanny": 9,
+                      "catharsis": 7,
+                      "nostalgia": 2,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 5,
+                      "physical_comedy": 1,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 2,
+                      "satire_parody": 3,
+                      "dark_humor": 1,
+                      "fantasy": 6,
+                      "futuristic": 10,
+                      "historical": 0,
+                      "contemporary_realism": 1,
+                      "crime": 3,
+                      "mystery": 7,
+                      "warfare": 4,
+                      "political": 7,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 4,
+                      "family_dynamics": 1,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 4,
+                      "pop_culture": 8,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 10,
+                      "spiritual": 8,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 7,
+                      "slow_burn": 5,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 10,
+                      "hopefulness": 5,
+                      "bleakness": 5,
+                      "ambiguity": 6,
+                      "novelty": 10,
+                      "homage_and_reference": 6,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 7,
+                      "surrealism": 8,
+                      "eccentricity": 6,
+                      "philosophical": 9,
+                      "educational": 1,
+                      "direction": 10,
+                      "acting": 9,
+                      "cinematography": 10,
+                      "editing": 10,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 10,
+                      "pastiche": 5,
+                      "psychedelic": 4,
+                      "grotesque": 3,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 9,
+                      "sound_centrality": 9
+                    },
+                    "highlight_keys": [
+                      "technology_and_humanity",
+                      "novelty",
+                      "visual_stylization",
+                      "philosophical",
+                      "adrenaline",
+                      "world_immersion",
+                      "uncanny",
+                      "spectacle"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Dystopia",
+                    "Philosophical Action",
+                    "Mind-Bending Sci-Fi",
+                    "Revolutionary Visuals",
+                    "Action-Hero Mythos",
+                    "Technology vs Humanity",
+                    "Existential Quest",
+                    "Groundbreaking Stylization",
+                    "Surreal World-Building",
+                    "Pop Culture Phenomenon"
+                  ],
+                  "essence_text": "A landmark sci-fi action film that redefined the genre with its blend of high-octane martial arts, bullet-time visual effects, and profound philosophical questions about reality and identity. Its world is a stunning, cyberpunk dystopia that immerses the viewer in a reality-bending narrative. The film's signature style and thematic depth, exploring the intersection of technology and humanity, create a thought-provoking yet exhilarating experience. It remains a deeply rewatchable cultural touchstone that feels both futuristic and timeless."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "F",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 8,
+                      "scare": 4,
+                      "violence": 7,
+                      "romance": 5,
+                      "eroticism": 2,
+                      "wholesome": 1,
+                      "wonder": 8,
+                      "pathos": 4,
+                      "melancholy": 3,
+                      "uncanny": 7,
+                      "catharsis": 6,
+                      "nostalgia": 8,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 2,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 2,
+                      "satire_parody": 4,
+                      "dark_humor": 3,
+                      "fantasy": 3,
+                      "futuristic": 10,
+                      "historical": 0,
+                      "contemporary_realism": 2,
+                      "crime": 5,
+                      "mystery": 7,
+                      "warfare": 6,
+                      "political": 6,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 4,
+                      "family_dynamics": 2,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 6,
+                      "pop_culture": 8,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 10,
+                      "spiritual": 7,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 7,
+                      "slow_burn": 3,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 7,
+                      "rewatchability": 9,
+                      "hopefulness": 6,
+                      "bleakness": 5,
+                      "ambiguity": 6,
+                      "novelty": 9,
+                      "homage_and_reference": 6,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 4,
+                      "surrealism": 6,
+                      "eccentricity": 3,
+                      "philosophical": 9,
+                      "educational": 2,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 10,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 10,
+                      "pastiche": 3,
+                      "psychedelic": 4,
+                      "grotesque": 2,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 8,
+                      "sound_centrality": 9
+                    },
+                    "highlight_keys": [
+                      "technology_and_humanity",
+                      "visual_stylization",
+                      "cinematography",
+                      "spectacle",
+                      "philosophical",
+                      "world_immersion",
+                      "futuristic",
+                      "adrenaline"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Action",
+                    "Philosophical Sci-Fi",
+                    "Groundbreaking Visual Effects",
+                    "Reality vs. Simulation",
+                    "Iconic Cultural Milestone",
+                    "High-Octane Martial Arts",
+                    "Techno-Thriller",
+                    "Mind-Bending Narrative",
+                    "Stylish Dystopia"
+                  ],
+                  "essence_text": "A landmark in science fiction cinema that seamlessly blends high-octane action with profound philosophical inquiry into the nature of reality. Its distinctive green-tinted visual style and revolutionary bullet-time effects create an immersive cyberpunk atmosphere that remains visually stunning decades later. The narrative balances intense physical stakes with cerebral dialogue, challenging viewers to question their own perceptions while delivering pure adrenaline-fueled entertainment. It stands as a definitive cultural touchstone, merging martial arts choreography with existential dread and technological anxiety."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "G",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 8,
+                      "scare": 3,
+                      "violence": 7,
+                      "romance": 5,
+                      "eroticism": 2,
+                      "wholesome": 3,
+                      "wonder": 9,
+                      "pathos": 6,
+                      "melancholy": 5,
+                      "uncanny": 8,
+                      "catharsis": 8,
+                      "nostalgia": 4,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 4,
+                      "physical_comedy": 1,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 1,
+                      "satire_parody": 5,
+                      "dark_humor": 3,
+                      "fantasy": 1,
+                      "futuristic": 10,
+                      "historical": 0,
+                      "contemporary_realism": 2,
+                      "crime": 1,
+                      "mystery": 8,
+                      "warfare": 8,
+                      "political": 7,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 5,
+                      "family_dynamics": 1,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 3,
+                      "pop_culture": 4,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 6,
+                      "technology_and_humanity": 10,
+                      "spiritual": 7,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 7,
+                      "character_depth": 7,
+                      "slow_burn": 4,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 7,
+                      "rewatchability": 9,
+                      "hopefulness": 7,
+                      "bleakness": 6,
+                      "ambiguity": 6,
+                      "novelty": 9,
+                      "homage_and_reference": 8,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 2,
+                      "surrealism": 7,
+                      "eccentricity": 6,
+                      "philosophical": 9,
+                      "educational": 2,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 9,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 9,
+                      "spectacle": 10,
+                      "visual_stylization": 9,
+                      "pastiche": 7,
+                      "psychedelic": 3,
+                      "grotesque": 3,
+                      "camp_and_irony": 3,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 8,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "futuristic",
+                      "technology_and_humanity",
+                      "spectacle",
+                      "adrenaline",
+                      "philosophical",
+                      "psychological",
+                      "novelty",
+                      "intrigue"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Reality-Bending",
+                    "Philosophical Science Fiction",
+                    "Groundbreaking Action Choreography",
+                    "Technological Dystopia",
+                    "Hero's Awakening",
+                    "Simulated-Reality Mystery",
+                    "Revolutionary Insurgency",
+                    "Stylized Visual World-Building",
+                    "Iconic Electronic Soundtrack"
+                  ],
+                  "essence_text": "A sleek, reality-bending cyberpunk thriller that turns questions of free will and perception into an exhilarating action experience. Its meticulously choreographed combat, inventive visual effects, and industrial electronic soundscape create a world that feels both coolly controlled and deeply uncanny. Beneath the spectacle is a philosophical tale of awakening, identity, and resistance against systems that define what people believe to be real. The film balances accessible momentum with ideas that invite repeated viewing and discussion."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "H",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 10,
+                      "scare": 7,
+                      "violence": 8,
+                      "romance": 3,
+                      "eroticism": 4,
+                      "wholesome": 2,
+                      "wonder": 7,
+                      "pathos": 5,
+                      "melancholy": 3,
+                      "uncanny": 9,
+                      "catharsis": 6,
+                      "nostalgia": 5,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 2,
+                      "cringe_humor": 1,
+                      "absurdist_humor": 3,
+                      "satire_parody": 6,
+                      "dark_humor": 2,
+                      "fantasy": 6,
+                      "futuristic": 10,
+                      "historical": 0,
+                      "contemporary_realism": 0,
+                      "crime": 3,
+                      "mystery": 4,
+                      "warfare": 8,
+                      "political": 5,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 1,
+                      "family_dynamics": 0,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 6,
+                      "pop_culture": 5,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 7,
+                      "technology_and_humanity": 10,
+                      "spiritual": 8,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 8,
+                      "slow_burn": 6,
+                      "fast_pace": 9,
+                      "intrigue": 10,
+                      "complexity": 9,
+                      "rewatchability": 10,
+                      "hopefulness": 3,
+                      "bleakness": 7,
+                      "ambiguity": 8,
+                      "novelty": 10,
+                      "homage_and_reference": 7,
+                      "non_linear_narrative": 5,
+                      "meta_narrative": 6,
+                      "surrealism": 9,
+                      "eccentricity": 7,
+                      "philosophical": 9,
+                      "educational": 2,
+                      "direction": 10,
+                      "acting": 9,
+                      "cinematography": 10,
+                      "editing": 9,
+                      "music_composition": 8,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 10,
+                      "pastiche": 6,
+                      "psychedelic": 8,
+                      "grotesque": 3,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 7,
+                      "sound_centrality": 9
+                    },
+                    "highlight_keys": [
+                      "novelty",
+                      "intrigue",
+                      "visual_stylization",
+                      "cinematography",
+                      "futuristic",
+                      "technology_and_humanity",
+                      "philosophical",
+                      "surrealism"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Sci-Fi",
+                    "Reality-Bending Thriller",
+                    "Philosophical Action",
+                    "Visually Revolutionary",
+                    "Dystopian Conspiracy",
+                    "Mind-Bending Narrative",
+                    "Techno-Paranoia",
+                    "Iconic Fight Choreography",
+                    "Postmodern Classic",
+                    "Neo-Noir Aesthetic"
+                  ],
+                  "essence_text": "A landmark in cinematic innovation, this film redefined action and visual storytelling with its groundbreaking bullet-time sequences and cyberpunk aesthetic. Its cerebral narrative challenges perceptions of reality, blending philosophical inquiry with high-stakes sci-fi thrills. The world-building is immersive, the action set pieces are iconic, and the themes of control, freedom, and human identity remain profoundly resonant. A masterclass in spectacle and substance, it demands engagement and rewards deep analysis long after the credits roll."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "I",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 7,
+                      "scare": 5,
+                      "violence": 6,
+                      "romance": 1,
+                      "eroticism": 1,
+                      "wholesome": 1,
+                      "wonder": 8,
+                      "pathos": 5,
+                      "melancholy": 3,
+                      "uncanny": 4,
+                      "catharsis": 8,
+                      "nostalgia": 6,
+                      "situational_comedy": 2,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 3,
+                      "cringe_humor": 1,
+                      "absurdist_humor": 2,
+                      "satire_parody": 4,
+                      "dark_humor": 2,
+                      "fantasy": 1,
+                      "futuristic": 10,
+                      "historical": 1,
+                      "contemporary_realism": 1,
+                      "crime": 2,
+                      "mystery": 3,
+                      "warfare": 5,
+                      "political": 6,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 0,
+                      "family_dynamics": 2,
+                      "psychological": 7,
+                      "showbiz": 0,
+                      "gaming": 3,
+                      "pop_culture": 9,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 9,
+                      "spiritual": 5,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 6,
+                      "character_depth": 7,
+                      "slow_burn": 2,
+                      "fast_pace": 8,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 9,
+                      "hopefulness": 6,
+                      "bleakness": 6,
+                      "ambiguity": 6,
+                      "novelty": 10,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 8,
+                      "surrealism": 5,
+                      "eccentricity": 3,
+                      "philosophical": 8,
+                      "educational": 0,
+                      "direction": 9,
+                      "acting": 7,
+                      "cinematography": 8,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 9,
+                      "spectacle": 8,
+                      "visual_stylization": 8,
+                      "pastiche": 4,
+                      "psychedelic": 3,
+                      "grotesque": 2,
+                      "camp_and_irony": 5,
+                      "dialogue_centrality": 4,
+                      "music_centrality": 5,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "futuristic",
+                      "novelty",
+                      "meta_narrative",
+                      "social_commentary",
+                      "world_immersion",
+                      "spectacle",
+                      "direction",
+                      "sound_centrality"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Drug Use",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": true,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Groundbreaking Sci-Fi",
+                    "Philosophical Action",
+                    "Cyberpunk Aesthetic",
+                    "Reality-Bending Narrative",
+                    "Cultural Milestone",
+                    "Iconic Soundtrack",
+                    "World-Building Masterpiece",
+                    "High-Octane Action",
+                    "Intellectual Sci-Fi",
+                    "Visual Innovation"
+                  ],
+                  "essence_text": "A landmark of cinematic innovation that fuses high-octane action with deep philosophical inquiry into the nature of reality. Its groundbreaking visual effects and cyberpunk world-building create a spectacle that is as intellectually stimulating as it is visually thrilling. The film's exploration of simulation, freedom, and human potential remains resonant, making it a timeless binge-watch that rewards both surface-level excitement and deeper contemplation."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "J",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "K",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "L",
+      "status": "transport_error",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "transport_error"
+        },
+        {
+          "attempt": 2,
+          "status": "transport_error"
+        }
+      ]
+    },
+    {
+      "label": "M",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:603",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 7,
+                      "scare": 4,
+                      "violence": 7,
+                      "romance": 5,
+                      "eroticism": 2,
+                      "wholesome": 2,
+                      "wonder": 8,
+                      "pathos": 5,
+                      "melancholy": 4,
+                      "uncanny": 7,
+                      "catharsis": 8,
+                      "nostalgia": 6,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 3,
+                      "cringe_humor": 1,
+                      "absurdist_humor": 1,
+                      "satire_parody": 3,
+                      "dark_humor": 3,
+                      "fantasy": 6,
+                      "futuristic": 10,
+                      "historical": 0,
+                      "contemporary_realism": 3,
+                      "crime": 3,
+                      "mystery": 7,
+                      "warfare": 5,
+                      "political": 5,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 6,
+                      "family_dynamics": 1,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 2,
+                      "pop_culture": 8,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 10,
+                      "spiritual": 7,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 7,
+                      "slow_burn": 4,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 10,
+                      "hopefulness": 6,
+                      "bleakness": 6,
+                      "ambiguity": 7,
+                      "novelty": 10,
+                      "homage_and_reference": 6,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 4,
+                      "surrealism": 5,
+                      "eccentricity": 4,
+                      "philosophical": 9,
+                      "educational": 3,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 9,
+                      "editing": 9,
+                      "music_composition": 8,
+                      "world_immersion": 10,
+                      "spectacle": 9,
+                      "visual_stylization": 10,
+                      "pastiche": 4,
+                      "psychedelic": 3,
+                      "grotesque": 4,
+                      "camp_and_irony": 3,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 8,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "technology_and_humanity",
+                      "futuristic",
+                      "novelty",
+                      "visual_stylization",
+                      "world_immersion",
+                      "philosophical",
+                      "rewatchability",
+                      "spectacle"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Cyberpunk Sci-Fi",
+                    "Reality-Bending Action",
+                    "Philosophical Blockbuster",
+                    "Bullet-Time Innovation",
+                    "Chosen One Narrative",
+                    "Simulated Reality",
+                    "Kung Fu & Gunplay",
+                    "Hacker Counterculture",
+                    "Iconic 90s Cinema",
+                    "Techno-Dystopia"
+                  ],
+                  "essence_text": "A seismic, reality-bending blockbuster that fused Hong Kong action, cyberpunk cool, and heady philosophy into a generation-defining experience. Its revolutionary visual language and kinetic set pieces deliver a rush of wonder and adrenaline, while its central question about the nature of reality lingers long after the credits roll. The film's dense mythology and iconic imagery reward endless rewatching, revealing new layers each time. Simultaneously a thrilling escape and a provocative meditation on technology's grip on humanity, it remains a towering achievement of mainstream science fiction."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/z-ai/glm-5.3-flash/endpoints",
+  "captured_at": "2026-09-12T04:58:41.313068+00:00",
+  "route": {
+    "name": "DeepInfra | z-ai/glm-5.3-flash-20260826",
+    "model_id": "z-ai/glm-5.3-flash",
+    "model_name": "Z.ai: GLM 5.3 Flash",
+    "context_length": 1048576,
+    "pricing": {
+      "prompt": "0.000000075",
+      "completion": "0.00000025",
+      "input_cache_read": "0.000000015",
+      "discount": 0.5
+    },
+    "provider_name": "DeepInfra",
+    "tag": "deepinfra/fp4",
+    "quantization": "fp4",
+    "max_completion_tokens": 131072,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "stop",
+      "frequency_penalty",
+      "presence_penalty",
+      "repetition_penalty",
+      "top_k",
+      "seed",
+      "min_p",
+      "response_format",
+      "logit_bias",
+      "structured_outputs",
+      "tools",
+      "tool_choice",
+      "reasoning_effort"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": true,
+      "function": true
+    },
+    "status": 0,
+    "uptime_last_30m": null,
+    "uptime_last_5m": null,
+    "uptime_last_1d": 97.32874101596437,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

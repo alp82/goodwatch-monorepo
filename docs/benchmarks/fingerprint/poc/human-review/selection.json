@@ -1,0 +1,30 @@
+{
+  "selected_by": "owner",
+  "selected_on": "2026-09-12",
+  "owner_instruction": "okay, lets pick F first and D as fallback. great results",
+  "primary": {
+    "label": "F",
+    "model": "qwen/qwen3.8-flash",
+    "provider": "alibaba",
+    "output_mode": "strict schema",
+    "reasoning": {
+      "enabled": false
+    }
+  },
+  "fallback": {
+    "label": "D",
+    "model": "qwen/qwen3.7-flash",
+    "provider": "alibaba",
+    "output_mode": "JSON object with local validation",
+    "reasoning": {
+      "enabled": false
+    }
+  },
+  "scope": "Owner-selected primary and fallback for the fingerprint strategy; production implementation and exact fallback triggers remain separate.",
+  "pending_validation": [
+    "Independent Astra/Fable first-pass reviews",
+    "Ten-title repeat runs for F and D under unchanged configurations, after independent review",
+    "Embedding-stage cost measurement for up to twenty valid first-pass essence descriptions"
+  ],
+  "production_changed": false
+}

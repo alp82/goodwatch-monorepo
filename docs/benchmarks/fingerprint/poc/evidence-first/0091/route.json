@@ -1,0 +1,54 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/xiaomi/mimo-v2.5/endpoints",
+  "captured_at": "2026-09-12T05:43:35.215974+00:00",
+  "route": {
+    "name": "DeepInfra | xiaomi/mimo-v2.5-20260422",
+    "model_id": "xiaomi/mimo-v2.5",
+    "model_name": "Xiaomi: MiMo-V2.5",
+    "context_length": 262144,
+    "pricing": {
+      "prompt": "0.000000133",
+      "completion": "0.000000266",
+      "input_cache_read": "0.00000000266",
+      "discount": 0.05
+    },
+    "provider_name": "DeepInfra",
+    "tag": "deepinfra/fp8",
+    "quantization": "fp8",
+    "max_completion_tokens": 131072,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "stop",
+      "frequency_penalty",
+      "presence_penalty",
+      "repetition_penalty",
+      "top_k",
+      "seed",
+      "min_p",
+      "response_format",
+      "structured_outputs",
+      "tools",
+      "tool_choice",
+      "logit_bias"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": true,
+      "function": false
+    },
+    "status": 0,
+    "uptime_last_30m": 99.8598317981578,
+    "uptime_last_5m": 100,
+    "uptime_last_1d": 99.2462114361566,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

@@ -1,0 +1,100 @@
+[
+  {
+    "captured_at": "2026-09-12T05:21:26.900587+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.841027357,
+      "limit_reset": null,
+      "usage": 0.158972643,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:21:28.966063+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.841027357,
+      "limit_reset": null,
+      "usage": 0.158972643,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:21:31.025048+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.841027357,
+      "limit_reset": null,
+      "usage": 0.158972643,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:21:33.087784+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.841027357,
+      "limit_reset": null,
+      "usage": 0.158972643,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:21:35.158246+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.841027357,
+      "limit_reset": null,
+      "usage": 0.158972643,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:21:37.227114+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.841027357,
+      "limit_reset": null,
+      "usage": 0.158972643,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  },
+  {
+    "captured_at": "2026-09-12T05:21:39.307973+00:00",
+    "metadata": {
+      "limit": 9,
+      "limit_remaining": 8.840318117,
+      "limit_reset": null,
+      "usage": 0.159681883,
+      "byok_usage": 0,
+      "include_byok_in_limit": false,
+      "is_management_key": false,
+      "is_provisioning_key": false,
+      "expires_at": null
+    }
+  }
+]

@@ -1,0 +1,1421 @@
+{
+  "benchmark_id": "show:64230",
+  "metadata": {
+    "original_title": "Preacher",
+    "release_year": 2016,
+    "media_type": "show",
+    "overview": "A preacher sets out on a mission to make the almighty himself confess his sin of abandoning the world. With his best friend Cassidy, an alcoholic Irish vampire, his love Tulip, a red blooded gun towing Texan, and the power of genesis, an unholy child born from an angel and a devil, Jesse gives up everything to set the world straight with its creator."
+  },
+  "candidates": [
+    {
+      "label": "A",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 7,
+                      "tension": 7,
+                      "scare": 5,
+                      "violence": 9,
+                      "romance": 5,
+                      "eroticism": 5,
+                      "wholesome": 1,
+                      "wonder": 6,
+                      "pathos": 6,
+                      "melancholy": 4,
+                      "uncanny": 6,
+                      "catharsis": 5,
+                      "nostalgia": 2,
+                      "situational_comedy": 4,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 5,
+                      "cringe_humor": 4,
+                      "absurdist_humor": 8,
+                      "satire_parody": 7,
+                      "dark_humor": 9,
+                      "fantasy": 8,
+                      "futuristic": 1,
+                      "historical": 2,
+                      "contemporary_realism": 6,
+                      "crime": 4,
+                      "mystery": 5,
+                      "warfare": 2,
+                      "political": 3,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 2,
+                      "family_dynamics": 5,
+                      "psychological": 6,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 4,
+                      "technology_and_humanity": 2,
+                      "spiritual": 9,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 7,
+                      "character_depth": 7,
+                      "slow_burn": 5,
+                      "fast_pace": 7,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 7,
+                      "hopefulness": 4,
+                      "bleakness": 7,
+                      "ambiguity": 6,
+                      "novelty": 7,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 4,
+                      "surrealism": 7,
+                      "eccentricity": 8,
+                      "philosophical": 7,
+                      "educational": 1,
+                      "direction": 7,
+                      "acting": 8,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 8,
+                      "spectacle": 7,
+                      "visual_stylization": 6,
+                      "pastiche": 4,
+                      "psychedelic": 3,
+                      "grotesque": 8,
+                      "camp_and_irony": 6,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 5,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "spiritual",
+                      "dark_humor",
+                      "violence",
+                      "eccentricity",
+                      "grotesque",
+                      "absurdist_humor",
+                      "intrigue",
+                      "social_commentary"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Irreverent supernatural pulp",
+                    "Theological road odyssey",
+                    "Vampire buddy dynamite",
+                    "Graphic comic-book bloodshed",
+                    "Absurdist dark satire",
+                    "Preacher with Genesis",
+                    "Heaven-and-Hell farce",
+                    "Gun-toting Texas trio",
+                    "Grotesque cosmic quest",
+                    "Antihero faith crisis"
+                  ],
+                  "essence_text": "Watching Preacher is a lurid, blasphemous carnival of faith, friendship, and exploding viscera that never quite lets you settle. The tone ricochets between cowboy swagger, vampire hangover comedy, and genuine cosmic dread as Jesse hunts God with a possessed Word. It feels like a graphic novel that refused to be tamed: loud, mean, oddly tender toward its damaged trio, and constantly daring you to laugh at the unholy. The series rewards bingeing for its escalating weirdness and pulpy set pieces more than quiet comfort. You leave buzzing, slightly soiled, and still arguing with the sky."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 7,
+                      "tension": 6,
+                      "scare": 3,
+                      "violence": 8,
+                      "romance": 5,
+                      "eroticism": 5,
+                      "wholesome": 2,
+                      "wonder": 6,
+                      "pathos": 7,
+                      "melancholy": 5,
+                      "uncanny": 7,
+                      "catharsis": 5,
+                      "nostalgia": 3,
+                      "situational_comedy": 4,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 5,
+                      "cringe_humor": 4,
+                      "absurdist_humor": 8,
+                      "satire_parody": 7,
+                      "dark_humor": 9,
+                      "fantasy": 7,
+                      "futuristic": 1,
+                      "historical": 1,
+                      "contemporary_realism": 3,
+                      "crime": 4,
+                      "mystery": 3,
+                      "warfare": 2,
+                      "political": 4,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 3,
+                      "family_dynamics": 5,
+                      "psychological": 5,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 3,
+                      "technology_and_humanity": 4,
+                      "spiritual": 9,
+                      "narrative_structure": 5,
+                      "dialogue_quality": 7,
+                      "character_depth": 7,
+                      "slow_burn": 5,
+                      "fast_pace": 6,
+                      "intrigue": 6,
+                      "complexity": 6,
+                      "rewatchability": 5,
+                      "hopefulness": 3,
+                      "bleakness": 6,
+                      "ambiguity": 5,
+                      "novelty": 7,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 3,
+                      "surrealism": 7,
+                      "eccentricity": 9,
+                      "philosophical": 7,
+                      "educational": 1,
+                      "direction": 7,
+                      "acting": 8,
+                      "cinematography": 7,
+                      "editing": 6,
+                      "music_composition": 6,
+                      "world_immersion": 7,
+                      "spectacle": 6,
+                      "visual_stylization": 7,
+                      "pastiche": 5,
+                      "psychedelic": 4,
+                      "grotesque": 7,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 5,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "dark_humor",
+                      "eccentricity",
+                      "spiritual",
+                      "violence",
+                      "absurdist_humor",
+                      "social_commentary",
+                      "acting",
+                      "grotesque"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Irreverent Supernatural Western",
+                    "Vulgar Theological Satire",
+                    "Gore-Packed Action",
+                    "Morally Ambiguous Antiheroes",
+                    "Darkly Comic & Absurd",
+                    "Vampire Buddy Shenanigans",
+                    "Blasphemous Road Trip",
+                    "Stylized & Grotesque Imagery",
+                    "Faith & Absurdity Collide"
+                  ],
+                  "essence_text": "A relentlessly profane and visually audacious supernatural odyssey that treats sacred and depraved subject matter with equal irreverence. The series thrives on its unhinged eccentricity, balancing hyper-violent spectacle with sharp, darkly comedic writing about faith, vengeance, and divine apathy. Its morally compromised trio—broken preacher, hedonistic vampire, and rage-fueled lover—anchor a story that weaponizes blasphemy into genuinely affecting character drama. Expect grotesque imagery, gut-punch violence, and a tone that swings wildly from grotesque horror to pitch-black humor without warning."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "D",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 7,
+                      "tension": 5,
+                      "scare": 3,
+                      "violence": 8,
+                      "romance": 4,
+                      "eroticism": 6,
+                      "wholesome": 1,
+                      "wonder": 5,
+                      "pathos": 3,
+                      "melancholy": 2,
+                      "uncanny": 6,
+                      "catharsis": 4,
+                      "nostalgia": 2,
+                      "situational_comedy": 5,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 4,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 7,
+                      "satire_parody": 7,
+                      "dark_humor": 9,
+                      "fantasy": 8,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 4,
+                      "crime": 5,
+                      "mystery": 6,
+                      "warfare": 1,
+                      "political": 6,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 2,
+                      "family_dynamics": 4,
+                      "psychological": 5,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 3,
+                      "technology_and_humanity": 2,
+                      "spiritual": 9,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 7,
+                      "character_depth": 6,
+                      "slow_burn": 3,
+                      "fast_pace": 6,
+                      "intrigue": 6,
+                      "complexity": 6,
+                      "rewatchability": 5,
+                      "hopefulness": 3,
+                      "bleakness": 5,
+                      "ambiguity": 4,
+                      "novelty": 7,
+                      "homage_and_reference": 3,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 2,
+                      "surrealism": 6,
+                      "eccentricity": 8,
+                      "philosophical": 6,
+                      "educational": 0,
+                      "direction": 6,
+                      "acting": 7,
+                      "cinematography": 6,
+                      "editing": 6,
+                      "music_composition": 6,
+                      "world_immersion": 7,
+                      "spectacle": 6,
+                      "visual_stylization": 7,
+                      "pastiche": 2,
+                      "psychedelic": 3,
+                      "grotesque": 6,
+                      "camp_and_irony": 6,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 5,
+                      "sound_centrality": 5
+                    },
+                    "highlight_keys": [
+                      "dark_humor",
+                      "spiritual",
+                      "violence",
+                      "eccentricity",
+                      "satire_parody",
+                      "fantasy",
+                      "social_commentary",
+                      "absurdist_humor"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Dark Comedy Western",
+                    "Religious Satire",
+                    "Supernatural Action",
+                    "Gritty & Graphic",
+                    "Unholy Road Trip",
+                    "Irreverent Humor",
+                    "Anti-Hero Journey",
+                    "Bizarre Fantasy Elements",
+                    "Visceral Violence"
+                  ],
+                  "essence_text": "A raucous and visually distinct blend of Southern Gothic and supernatural action that dares to drag the Almighty into a cross-country confrontation. The series thrives on its irreverent tone, balancing extreme graphic violence with biting religious satire and dark humor. It offers a chaotic, unpredictable ride through a world where divine power is messy and the heroes are deeply flawed outcasts. While lacking narrative subtlety, it delivers high-octane entertainment through sheer audacity and eccentric character dynamics."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "E",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 7,
+                      "scare": 4,
+                      "violence": 9,
+                      "romance": 6,
+                      "eroticism": 7,
+                      "wholesome": 2,
+                      "wonder": 3,
+                      "pathos": 6,
+                      "melancholy": 4,
+                      "uncanny": 7,
+                      "catharsis": 5,
+                      "nostalgia": 2,
+                      "situational_comedy": 6,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 5,
+                      "cringe_humor": 6,
+                      "absurdist_humor": 9,
+                      "satire_parody": 9,
+                      "dark_humor": 9,
+                      "fantasy": 7,
+                      "futuristic": 2,
+                      "historical": 2,
+                      "contemporary_realism": 2,
+                      "crime": 5,
+                      "mystery": 3,
+                      "warfare": 1,
+                      "political": 3,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 3,
+                      "family_dynamics": 5,
+                      "psychological": 7,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 3,
+                      "technology_and_humanity": 2,
+                      "spiritual": 8,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 9,
+                      "character_depth": 8,
+                      "slow_burn": 4,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 8,
+                      "hopefulness": 4,
+                      "bleakness": 5,
+                      "ambiguity": 4,
+                      "novelty": 9,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 6,
+                      "meta_narrative": 4,
+                      "surrealism": 10,
+                      "eccentricity": 10,
+                      "philosophical": 6,
+                      "educational": 0,
+                      "direction": 9,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 8,
+                      "music_composition": 8,
+                      "world_immersion": 9,
+                      "spectacle": 9,
+                      "visual_stylization": 10,
+                      "pastiche": 7,
+                      "psychedelic": 6,
+                      "grotesque": 9,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 6,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "surrealism",
+                      "eccentricity",
+                      "visual_stylization",
+                      "dark_humor",
+                      "absurdist_humor",
+                      "satire_parody",
+                      "social_commentary",
+                      "violence"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Surreal Dark Comedy",
+                    "Bloody & Violent",
+                    "Irreverent Satire",
+                    "Anti-Religious Fantasy",
+                    "Gothic Americana",
+                    "Character-Driven Chaos",
+                    "Graphic & Grotesque",
+                    "Bizarre World-Building",
+                    "Philosophical Absurdism",
+                    "Cult TV Masterpiece"
+                  ],
+                  "essence_text": "A gloriously chaotic and irreverent odyssey that blends extreme violence with surreal, pitch-black humor. The show's visual style is a bold, stylized blend of gothic Americana and comic-book flair, creating a world that feels both familiar and utterly unhinged. Anchored by a trio of deeply flawed, charismatic anti-heroes, it tackles heavy themes of faith, morality, and free will with a cynical, satirical edge. The narrative is a relentless, binge-worthy rollercoaster that is as thought-provoking as it is viscerally entertaining, though its graphic content and grotesque imagery make it strictly for adult audiences."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "F",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 7,
+                      "tension": 8,
+                      "scare": 5,
+                      "violence": 9,
+                      "romance": 6,
+                      "eroticism": 5,
+                      "wholesome": 1,
+                      "wonder": 6,
+                      "pathos": 5,
+                      "melancholy": 4,
+                      "uncanny": 7,
+                      "catharsis": 4,
+                      "nostalgia": 2,
+                      "situational_comedy": 4,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 5,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 8,
+                      "satire_parody": 8,
+                      "dark_humor": 9,
+                      "fantasy": 8,
+                      "futuristic": 2,
+                      "historical": 1,
+                      "contemporary_realism": 3,
+                      "crime": 6,
+                      "mystery": 5,
+                      "warfare": 3,
+                      "political": 4,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 2,
+                      "family_dynamics": 5,
+                      "psychological": 6,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 1,
+                      "spiritual": 9,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 8,
+                      "character_depth": 7,
+                      "slow_burn": 3,
+                      "fast_pace": 8,
+                      "intrigue": 8,
+                      "complexity": 6,
+                      "rewatchability": 7,
+                      "hopefulness": 3,
+                      "bleakness": 6,
+                      "ambiguity": 5,
+                      "novelty": 7,
+                      "homage_and_reference": 4,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 3,
+                      "surrealism": 7,
+                      "eccentricity": 8,
+                      "philosophical": 6,
+                      "educational": 0,
+                      "direction": 7,
+                      "acting": 8,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 7,
+                      "world_immersion": 7,
+                      "spectacle": 7,
+                      "visual_stylization": 7,
+                      "pastiche": 3,
+                      "psychedelic": 5,
+                      "grotesque": 6,
+                      "camp_and_irony": 6,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 6,
+                      "sound_centrality": 5
+                    },
+                    "highlight_keys": [
+                      "spiritual",
+                      "dark_humor",
+                      "violence",
+                      "absurdist_humor",
+                      "satire_parody",
+                      "eccentricity",
+                      "fast_pace",
+                      "dialogue_quality"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Sexual Content",
+                    "Disturbing Imagery",
+                    "Drug Use"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Dark Fantasy Satire",
+                    "Religious Absurdism",
+                    "Graphic Violence & Gore",
+                    "Irreverent Humor",
+                    "Supernatural Road Trip",
+                    "Anti-Hero Journey",
+                    "Stylized Action",
+                    "Provocative Social Commentary",
+                    "Comic Book Adaptation",
+                    "Buddy Dynamic"
+                  ],
+                  "essence_text": "This series delivers a high-octane blend of dark fantasy and irreverent satire, following an unhinged preacher on a quest to confront God himself. The narrative is defined by its extreme graphic violence, absurd humor, and deep philosophical questioning of religious dogma. With a fast-paced structure and eccentric characters, it creates a unique atmosphere that is both disturbing and entertaining. It appeals strongly to adults who enjoy subversive storytelling and comic book aesthetics pushed to their grotesque limits."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "G",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 7,
+                      "scare": 5,
+                      "violence": 9,
+                      "romance": 7,
+                      "eroticism": 5,
+                      "wholesome": 2,
+                      "wonder": 4,
+                      "pathos": 6,
+                      "melancholy": 5,
+                      "uncanny": 7,
+                      "catharsis": 6,
+                      "nostalgia": 2,
+                      "situational_comedy": 5,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 5,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 8,
+                      "satire_parody": 9,
+                      "dark_humor": 9,
+                      "fantasy": 8,
+                      "futuristic": 0,
+                      "historical": 3,
+                      "contemporary_realism": 4,
+                      "crime": 5,
+                      "mystery": 7,
+                      "warfare": 3,
+                      "political": 4,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 2,
+                      "family_dynamics": 5,
+                      "psychological": 6,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 1,
+                      "spiritual": 9,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 8,
+                      "character_depth": 8,
+                      "slow_burn": 4,
+                      "fast_pace": 7,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 7,
+                      "hopefulness": 3,
+                      "bleakness": 7,
+                      "ambiguity": 6,
+                      "novelty": 8,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 4,
+                      "surrealism": 8,
+                      "eccentricity": 9,
+                      "philosophical": 7,
+                      "educational": 0,
+                      "direction": 7,
+                      "acting": 8,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 8,
+                      "world_immersion": 8,
+                      "spectacle": 7,
+                      "visual_stylization": 8,
+                      "pastiche": 5,
+                      "psychedelic": 3,
+                      "grotesque": 8,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 7,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "violence",
+                      "dark_humor",
+                      "satire_parody",
+                      "spiritual",
+                      "eccentricity",
+                      "absurdist_humor",
+                      "character_depth",
+                      "fantasy"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Sexual Content",
+                    "Drug Use",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Ultraviolent Supernatural Western",
+                    "Blasphemous Religious Satire",
+                    "Darkly Comic Antihero Drama",
+                    "Occult Road Adventure",
+                    "Found-Family Dysfunction",
+                    "Vampiric Outlaw Companionship",
+                    "Surreal Apocalyptic Mystery",
+                    "Morally Chaotic Romance",
+                    "Grotesque Comic-Book Aesthetic"
+                  ],
+                  "essence_text": "A gleefully blasphemous supernatural road saga that collides Western grit, occult mythology, and outrageous dark comedy. Its experience is driven by brutal set pieces, eccentric characters, sharp banter, and a deliberately irreverent challenge to religious authority and cosmic justice. Beneath the gore and absurdity, the central trio gives the series an unexpectedly emotional core built from loyalty, betrayal, desire, and dysfunctional friendship. The tone is volatile and knowingly comic, shifting from explosive pulp spectacle to melancholy reflections on faith, abandonment, and moral responsibility."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "H",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 9,
+                      "scare": 7,
+                      "violence": 9,
+                      "romance": 5,
+                      "eroticism": 6,
+                      "wholesome": 1,
+                      "wonder": 3,
+                      "pathos": 6,
+                      "melancholy": 4,
+                      "uncanny": 8,
+                      "catharsis": 7,
+                      "nostalgia": 2,
+                      "situational_comedy": 6,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 5,
+                      "cringe_humor": 8,
+                      "absurdist_humor": 9,
+                      "satire_parody": 9,
+                      "dark_humor": 10,
+                      "fantasy": 9,
+                      "futuristic": 1,
+                      "historical": 2,
+                      "contemporary_realism": 0,
+                      "crime": 7,
+                      "mystery": 6,
+                      "warfare": 5,
+                      "political": 6,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 3,
+                      "family_dynamics": 2,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 7,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 6,
+                      "technology_and_humanity": 2,
+                      "spiritual": 9,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 5,
+                      "fast_pace": 8,
+                      "intrigue": 9,
+                      "complexity": 8,
+                      "rewatchability": 9,
+                      "hopefulness": 1,
+                      "bleakness": 8,
+                      "ambiguity": 7,
+                      "novelty": 9,
+                      "homage_and_reference": 8,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 3,
+                      "surrealism": 9,
+                      "eccentricity": 10,
+                      "philosophical": 8,
+                      "educational": 0,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 8,
+                      "music_composition": 7,
+                      "world_immersion": 9,
+                      "spectacle": 8,
+                      "visual_stylization": 9,
+                      "pastiche": 8,
+                      "psychedelic": 6,
+                      "grotesque": 9,
+                      "camp_and_irony": 10,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 6,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "eccentricity",
+                      "dark_humor",
+                      "absurdist_humor",
+                      "novelty",
+                      "grotesque",
+                      "camp_and_irony",
+                      "intrigue",
+                      "social_commentary"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Suicide Themes",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Brutal Dark Fantasy",
+                    "Religious Satire",
+                    "Southern Gothic Horror",
+                    "Unapologetic Absurdism",
+                    "Antiheroic Vigilantism",
+                    "Grotesque Body Horror",
+                    "Campy Irony",
+                    "Visually Stylized",
+                    "Cynical Social Commentary",
+                    "Alcoholism & Vampirism"
+                  ],
+                  "essence_text": "A relentless, unhinged odyssey that weaponizes dark humor, grotesque imagery, and religious satire into a visceral critique of faith and power. Its eccentric characters—each more deranged than the last—navigate a world where the divine is absent, the grotesque is celebrated, and morality is a joke. The show’s campy irony and absurdist flourishes make its bleakness bearable, while its sharp dialogue and stylized violence ensure every episode crackles with energy. A cult masterpiece that thrives on provocation, leaving viewers both exhilarated and unsettled."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "I",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 6,
+                      "tension": 7,
+                      "scare": 5,
+                      "violence": 10,
+                      "romance": 3,
+                      "eroticism": 4,
+                      "wholesome": 1,
+                      "wonder": 5,
+                      "pathos": 6,
+                      "melancholy": 7,
+                      "uncanny": 4,
+                      "catharsis": 5,
+                      "nostalgia": 0,
+                      "situational_comedy": 8,
+                      "wit_wordplay": 5,
+                      "physical_comedy": 6,
+                      "cringe_humor": 5,
+                      "absurdist_humor": 8,
+                      "satire_parody": 9,
+                      "dark_humor": 9,
+                      "fantasy": 8,
+                      "futuristic": 2,
+                      "historical": 0,
+                      "contemporary_realism": 0,
+                      "crime": 5,
+                      "mystery": 2,
+                      "warfare": 6,
+                      "political": 8,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 3,
+                      "family_dynamics": 6,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 8,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 6,
+                      "spiritual": 9,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 7,
+                      "character_depth": 8,
+                      "slow_burn": 4,
+                      "fast_pace": 6,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 5,
+                      "hopefulness": 3,
+                      "bleakness": 8,
+                      "ambiguity": 5,
+                      "novelty": 8,
+                      "homage_and_reference": 4,
+                      "non_linear_narrative": 6,
+                      "meta_narrative": 7,
+                      "surrealism": 9,
+                      "eccentricity": 9,
+                      "philosophical": 7,
+                      "educational": 1,
+                      "direction": 8,
+                      "acting": 8,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 8,
+                      "spectacle": 7,
+                      "visual_stylization": 9,
+                      "pastiche": 3,
+                      "psychedelic": 6,
+                      "grotesque": 7,
+                      "camp_and_irony": 9,
+                      "dialogue_centrality": 6,
+                      "music_centrality": 6,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "violence",
+                      "camp_and_irony",
+                      "surrealism",
+                      "absurdist_humor",
+                      "political",
+                      "social_commentary",
+                      "meta_narrative",
+                      "eccentricity"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Suicide Themes",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Dark Satire",
+                    "Supernatural Action",
+                    "Philosophical Horror",
+                    "Visually Stylized",
+                    "Anti-Hero Journey",
+                    "Found Family Dysfunction",
+                    "Religious Blasphemy",
+                    "Cult Classic Aesthetic",
+                    "Genre-Bending Chaos",
+                    "Blasphemous Humor"
+                  ],
+                  "essence_text": "Preacher is a visceral, high-octane plunge into religious blasphemy and supernatural chaos, where dark satire and absurdist humor fuel a grotesque road trip. The series thrives on its eccentricity, blending extreme violence with surreal visuals to explore profound themes of faith, power, and abandonment. While its complex, meta-narrative structure and shifting tones may challenge casual viewers, its committed performances and stylized world-building create a uniquely compelling, if bleak, viewing experience for those seeking something defiantly off-kilter."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "J",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "K",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "L",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "M",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:64230",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 8,
+                      "scare": 6,
+                      "violence": 9,
+                      "romance": 6,
+                      "eroticism": 5,
+                      "wholesome": 2,
+                      "wonder": 6,
+                      "pathos": 6,
+                      "melancholy": 6,
+                      "uncanny": 7,
+                      "catharsis": 6,
+                      "nostalgia": 3,
+                      "situational_comedy": 3,
+                      "wit_wordplay": 8,
+                      "physical_comedy": 6,
+                      "cringe_humor": 5,
+                      "absurdist_humor": 9,
+                      "satire_parody": 7,
+                      "dark_humor": 9,
+                      "fantasy": 9,
+                      "futuristic": 1,
+                      "historical": 2,
+                      "contemporary_realism": 3,
+                      "crime": 7,
+                      "mystery": 6,
+                      "warfare": 3,
+                      "political": 3,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 2,
+                      "family_dynamics": 4,
+                      "psychological": 6,
+                      "showbiz": 2,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 5,
+                      "class_and_capitalism": 3,
+                      "technology_and_humanity": 2,
+                      "spiritual": 9,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 8,
+                      "character_depth": 8,
+                      "slow_burn": 5,
+                      "fast_pace": 7,
+                      "intrigue": 8,
+                      "complexity": 8,
+                      "rewatchability": 6,
+                      "hopefulness": 3,
+                      "bleakness": 7,
+                      "ambiguity": 6,
+                      "novelty": 8,
+                      "homage_and_reference": 6,
+                      "non_linear_narrative": 5,
+                      "meta_narrative": 4,
+                      "surrealism": 8,
+                      "eccentricity": 9,
+                      "philosophical": 6,
+                      "educational": 1,
+                      "direction": 8,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 7,
+                      "spectacle": 7,
+                      "visual_stylization": 8,
+                      "pastiche": 5,
+                      "psychedelic": 5,
+                      "grotesque": 8,
+                      "camp_and_irony": 7,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 6,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "violence",
+                      "dark_humor",
+                      "absurdist_humor",
+                      "spiritual",
+                      "fantasy",
+                      "eccentricity",
+                      "grotesque",
+                      "surrealism"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Blasphemous Dark Comedy",
+                    "Supernatural Southern Gothic",
+                    "Extreme Graphic Violence",
+                    "Absurdist Religious Satire",
+                    "Profane and Irreverent",
+                    "Eccentric Character Ensemble",
+                    "Hellish Visual Style",
+                    "Genre-Bending Wild West Fusion",
+                    "Cult Comic Adaptation"
+                  ],
+                  "essence_text": "A gleefully profane and chaotic descent into a world where faith, violence, and the supernatural collide with reckless abandon. The show's defining trait is its audacious blend of extreme dark humor, shocking brutality, and heartfelt camaraderie among a cast of deeply flawed misfits. It offers a visceral, often uncomfortable, but always unpredictable ride that challenges religious dogma while embracing the grotesque and the absurd. This is not for the faint of heart, but for those who appreciate a bold, unapologetic vision that revels in its own madness."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    }
+  ]
+}
