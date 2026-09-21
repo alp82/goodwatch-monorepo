@@ -1,0 +1,50 @@
+[
+  {
+    "id": "confirm_mountain",
+    "request": "A survival film about climbing a mountain, with no monsters or supernatural explanation."
+  },
+  {
+    "id": "confirm_restaurant",
+    "request": "A funny series about people working in a restaurant."
+  },
+  {
+    "id": "confirm_sisters",
+    "request": "A warm film about adult sisters reconnecting, but not a romantic comedy."
+  },
+  {
+    "id": "confirm_space",
+    "request": "A thoughtful space exploration film with a sense of wonder, not constant battles."
+  },
+  {
+    "id": "confirm_conartist",
+    "request": "A clever con-artist story where I have to question what I am being told."
+  },
+  {
+    "id": "confirm_lowstress",
+    "request": "An easygoing comedy for a tired evening, without humiliation or cringe humor."
+  },
+  {
+    "id": "confirm_chase",
+    "request": "A thriller built around a driver escaping pursuit in a car."
+  },
+  {
+    "id": "confirm_wealth",
+    "request": "A viciously funny story about a wealthy family fighting over power."
+  },
+  {
+    "id": "confirm_historydoc",
+    "request": "A documentary about ancient civilizations, not fictional historical drama."
+  },
+  {
+    "id": "confirm_spy",
+    "request": "A realistic espionage series about betrayal, without gadgets or superheroes."
+  },
+  {
+    "id": "confirm_parents_context",
+    "request": "My parents and I love tense political dramas. Find us something to watch together."
+  },
+  {
+    "id": "confirm_optimistic",
+    "request": "A suspenseful mystery that feels hopeful rather than cruel or despairing."
+  }
+]

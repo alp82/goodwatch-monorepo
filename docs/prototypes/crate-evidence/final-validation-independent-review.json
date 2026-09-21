@@ -1,0 +1,125 @@
+{
+  "reviewer": "Independent assistant; not user judgments",
+  "source": "/home/alp/dev/projects/goodwatch/goodwatch-crate-evidence-column/goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-final-validation-final.json",
+  "method": "Read all8 actual paired lists and selected underlying synopsis/essence. Compared complete request conjunctions, not title popularity or model assurances. These eight were first inspected after frozen outputs existed; no quality tuning requested. Failures are availability observations, not relevance ratings.",
+  "cases": [
+    {
+      "id": "f33844e6bf12",
+      "request": "A funny film about older people pulling off a robbery.",
+      "split": "confirmation",
+      "preference": "tie",
+      "assessment": "Both directly recover older robbers with Hunting Elephants and Going in Style, unlike largely generic robbery controls. Shared #4 Bad Grandmas synopsis describes accidental killing and body disposal, not robbery, so the entire top5 is not a verified conjunction. The Crew only says retired mobsters plan a crime, not specifically robbery. Flash tail Retirement Home/Thursday Murder Club/Thelma drifts toward elderly protagonists without enough robbery support. Lite returns a shorter list; neither arm is flawless.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    },
+    {
+      "id": "e0b4a21244ce",
+      "request": "A tense film set mostly on a train, without zombies.",
+      "split": "confirmation",
+      "preference": "flash",
+      "assessment": "Flash first five have explicit train-centered peril: bomb, hijack, runaway locomotive, onboard fighting. Lite has similarly strong leaders but puts Strangers on a Train #4: supplied synopsis only says the strangers meet on a train and plan murders, not that the film is mostly set there. This is the same centrality-vs-mention weakness seen earlier. Both remove explicit zombie films that old controls ranked first.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    },
+    {
+      "id": "0a18fc525237",
+      "request": "A series about doctors at work, with dry humor rather than slapstick.",
+      "split": "confirmation",
+      "preference": "tie; lite more concise",
+      "assessment": "Both recover medical workplace shows where old controls mostly matched dry humor alone. House/This Is Going to Hurt/Monroe have direct hospital practice plus sharp/dark wit evidence. Lite returns four focused shows; Flash includes Hekimoğlu and Doctor Doctor whose source supports diagnostic dialogue/wit but dry-versus-slapstick is less explicit. Neither absence of the word slapstick nor familiarity proves no slapstick scenes.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    },
+    {
+      "id": "6a68e089581d",
+      "request": "A documentary about making music, not a fictional musician biopic.",
+      "split": "confirmation",
+      "preference": "flash, modest documentary-form precision",
+      "assessment": "Flash top5 all have source-identified documentary/process evidence: Pink Floyd recording, Sound City studio creation, Metallica album work, Avicii production and Artifact recording. Lite top4 also strong, but #5 Coke Studio is explicitly a live studio performance series; music performance alone does not establish the requested documentary. Flash does not falsely exclude nonfiction musician biography when it contains making-music evidence—the user excluded fictional biopics.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    },
+    {
+      "id": "f0504a308ff7",
+      "request": "A hopeful drama about rebuilding life after leaving prison.",
+      "split": "confirmation",
+      "preference": "flash, modest reintegration precision",
+      "assessment": "Both lead with UnPrisoned and Palmer, explicitly hopeful post-prison rebuilding. Flash also has Outside In and Bottom of the9th explicitly about reintegration, though the latter's optimism is less clear. Lite #4 We're No Angels explicitly concerns escaped convicts helping a family at Christmas; redemption is supported, but lawful release and rebuilding civilian life are not. Flash still has bleak relapse-oriented tail candidates, so its advantage is concentrated in the prefix.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    },
+    {
+      "id": "1ec90db05dd8",
+      "request": "A science-fiction story about communicating with aliens, with a peaceful mood.",
+      "split": "confirmation",
+      "preference": "flash delivered result; paired quality comparison unavailable",
+      "assessment": "Flash directly improves alien-communication coverage with Contact, Close Encounters and Arrival, plus hopeful diplomacy in Star Trek. Cocoon is a peaceful encounter but communicating is less central in supplied prose. Tail Cosmos: A Personal Voyage is documentary science rather than science-fiction, and Babylon5/Enterprise cannot be assumed uniformly peaceful. Lite returned no result after a provider error; do not call its empty output a relevance judgment or infer how it would have ranked the same pool.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    },
+    {
+      "id": "aa23d46aea84",
+      "request": "A crime thriller about a getaway driver, not a racing competition.",
+      "split": "confirmation",
+      "preference": "tie",
+      "assessment": "Both top5 explicitly center getaway drivers and exclude racing-competition framing. Flash and lite differ only in plausible emphasis: Bring Him to Me moral dilemma versus Wheelman betrayal. English control already has strong driver candidates, while corrected has more generic crime tail. Flash's roughly19second projected total on this request is a real runtime outlier despite good relevance.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    },
+    {
+      "id": "d44ffa7b6d69",
+      "request": "A darkly funny series about political ambition, aimed at adults.",
+      "split": "confirmation",
+      "preference": "lite",
+      "assessment": "Lite leads with The Thick of It, whose source explicitly describes government maneuvering and biting satire. Flash puts Succession first; its supplied synopsis/essence centers media-corporation succession, wealthy-family dysfunction and ambition, not specifically political ambition. This is a weaker adjacent-power match, not a categorical claim the series has no politics. Both have Stonehouse and government-ambition dramas; dry/dark comedy in FinalCut/ToPlayKing is less explicit in prose. Lite wins the literal prefix.",
+      "next_experiment": "No further tuning on this validation set. Retain this counterexample and runtime record when assessing future independent traffic."
+    }
+  ],
+  "metrics": {
+    "final8": {
+      "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal": {
+        "requests": 8,
+        "successful_requests": 8,
+        "failed_requests": 0,
+        "successful_only_median_reconstructed_end_to_end_ms": 5239.638689495332,
+        "successful_only_mean_reported_cost_usd": 0.00550252425,
+        "successful_only_max_reconstructed_end_to_end_ms": 19033.651595005067
+      },
+      "planned_union_google_gemini_3_1_flash_lite_packing3": {
+        "requests": 8,
+        "successful_requests": 7,
+        "failed_requests": 1,
+        "successful_only_median_reconstructed_end_to_end_ms": 5142.200211004005,
+        "successful_only_mean_reported_cost_usd": 0.0036676034285714285,
+        "successful_only_max_reconstructed_end_to_end_ms": 11514.460944994993
+      }
+    },
+    "all41_unique_requests_under_final_runtime": {
+      "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal": {
+        "requests": 41,
+        "successful_requests": 41,
+        "failed_requests": 0,
+        "successful_only_median_reconstructed_end_to_end_ms": 6498.215926001023,
+        "successful_only_mean_reported_cost_usd": 0.005158711365853659,
+        "successful_only_max_reconstructed_end_to_end_ms": 25913.65693199623
+      },
+      "planned_union_google_gemini_3_1_flash_lite_packing3": {
+        "requests": 41,
+        "successful_requests": 40,
+        "failed_requests": 1,
+        "successful_only_median_reconstructed_end_to_end_ms": 6377.573275996838,
+        "successful_only_mean_reported_cost_usd": 0.0038620099,
+        "successful_only_max_reconstructed_end_to_end_ms": 11514.460944994993
+      }
+    }
+  },
+  "overall": {
+    "recommended_default_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal",
+    "cheaper_alternative_id": "planned_union_google_gemini_3_1_flash_lite_packing3",
+    "architecture_verdict": "Clear practical improvement over existing text controls on several previously unseen semantic conjunctions: older robbers, train setting without zombies, medical workplace plus humor, documentary music-making, post-prison rebuilding and alien communication. Preserve existing controls as evidence and fallback reference, not as a claim that complete production search was benchmarked.",
+    "model_verdict": "Choose Flash minimal IDs as the practical quality-first default among tested variants, with lite the cheaper alternative. Across earlier rounds and final8, Flash more often preserves central roles/settings and documentary/reintegration conjunctions; the escaping-driver, getaway-role, train-setting and music-format examples give concrete reasons to pay a modest absolute premium. Final8 alone is mixed: three qualitative prefix advantages for Flash, three ties, one clear lite political-prefix win and one failed lite request with no paired quality observation. This is a useful relative winner, not statistical dominance or perfect recommendations.",
+    "runtime_verdict": "Final-runtime Flash succeeds on41/41unique requests across the33replay and8fresh validation; lite succeeds40/41with one provider error. Earlier Flash failures under prior settings remain real and must stay in the report. Successful-only medians and costs are in metrics, with unequal denominators labeled. The final8 getaway Flash outlier is about19seconds, so median latency is not a complete operational guarantee.",
+    "scope_and_limitations": [
+      "The architecture/model selection is qualitative and based on41requests, not broad user-ground-truth proof.",
+      "Only final20requests were fresh relative to the preceding quality iterations; first12then operationally replayed. Do not call all41fresh confirmation.",
+      "Old full-production vector fill and eligibility parity were not fully benchmarked; controls represent the frozen tested components.",
+      "Generated explanations are omitted intentionally; source descriptions and independent assistant assessments remain available.",
+      "Known tail errors remain: accidental crime vs robbery, corporate vs political ambition, science documentary vs fiction, general past/hominids vs ancient civilizations, memory access vs false memories.",
+      "Timings combine measured selected inference with frozen upstream projections; show component provenance and the19second outlier.",
+      "No further quality changes are justified solely to erase these observed validation misses."
+    ]
+  }
+}

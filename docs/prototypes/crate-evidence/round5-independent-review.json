@@ -1,0 +1,207 @@
+{
+  "reviewer": "Independent assistant; not user judgments",
+  "source": "/home/alp/dev/projects/goodwatch/goodwatch-crate-evidence-column/goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-round5-final.json",
+  "method": "Compared actual all21 final IDs-v2 top-five prefixes and tails with gated Flash-reasons and historical lite-v3. Reused prior source checks and inspected new suspect tails. Source annotations are evidence, not verified ground truth.",
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Car-chase failure is repaired: ten coherent chase titles. Top-five relevance comparable to the reason-producing Flash and lite, without needing generated justifications.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Keeps central-object leaders They Live, Dream a Little Dream 2 and Fiancés, adds When the Cat Comes at #4. This preserves the key v3 centrality improvement; tail still includes incidental prop/style matches.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Same strong unreliable-narrator core as Flash reasons and lite. Reordering does not establish a material quality loss; prior pilot remains excluded from the reranker pool.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Same strong five-title wealthy-dark-comedy prefix as Flash reasons, with coherent satire tail. Avoids lite Bedlam conjunction error.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Leans toward competition and sports at the top but retains fiction in the list. The request leaves format open, so this is a preference difference rather than a clear violation; weaker diversity in the first four than Flash reasons.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Coherent gritty non-anime crime throughout; comparable to both other arms. Lite remains an efficient adequate alternative for this easy-to-cover request.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Generic popular cross-generational choices remain unvalidated for a highly underspecified request. Removing generated universal-suitability claims is useful; it does not turn these titles into objectively personalized recommendations.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Preserves Reset/Conan leaders and avoids promising verified emotional endings. Tail adds Escape Room films: source describes deadly survival games, hopefulness 3/4 and scare 6/7. These are uncertain fits for not finishing miserable; no ranking-quality guarantee follows from IDs-only output.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Same directly supported wealthy-dysfunction first five as Flash reasons. No meaningful quality loss observed; tail retains broader tech/political satire.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Same grounded crime core with order changes. Evidence explicitly supports realism and crime; IDs-only retains the useful planned-pool gain over narrower controls.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Improves the first five relative to Flash reasons by moving Gone Girl up and F for Fake/Frailty ahead of Psycho. Mid-narrative/deceptive-storyteller evidence varies, and Psycho plus generic surreal tail titles remain adjacent rather than proved exact matches.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Preserves five getaway-focused leaders and excludes lite Taxi 3 role mismatch. Stronger-model benefit survives removing output prose.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "split": "development",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Preserves warm/funny leaders Moone Boy, Here We Go, Mary Tyler Moore and Starstruck. Not-cheesy remains subjective, but no clear quality loss versus reasons observed.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "54f28fa29638",
+      "request": "A gentle science-fiction film about making contact, without a war or a horror atmosphere.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Known documentary removed by shared gate; top five now directly fit gentle alien-contact fiction. This fix belongs to common candidate filtering, not model intelligence. New #10 The Day the Earth Stood Still has an explicit threat of destruction in synopsis, so gentle fit is weaker than peaceful-contact overlap suggests.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "c05b3f733463",
+      "request": "A tense legal thriller with clever courtroom arguments, not a serial-killer investigation.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Preserves actual courtroom/legal-strategy leaders and removes jury-room-only 12 Angry Men. Essentially comparable quality to Flash reasons; both v3 models improved over v2 leader.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "717260825ed1",
+      "request": "A comedy about ordinary coworkers, not high school or teenagers.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Preserves the same adult workplace first five as Flash reasons. Tail remains workplace-related; no obvious school/teen false positives.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "0206e75fb053",
+      "request": "A fast-paced heist where the plan goes wrong, but keep the violence mild.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Keeps Foolproof first, retaining a direct plan-goes-wrong match. Remaining top-five titles mostly establish heists and pace without proving plan failure; generic successful/uncertain heists remain in tail. IDs-only avoids invented assurances but not these relevance gaps.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "134bc9d838cf",
+      "request": "A documentary series about the natural world; no true crime.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Nature documentary list remains strong and comparable to all arms/old controls. No demonstrated need for a stronger model specifically on this request.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "02d75f344631",
+      "request": "Un thriller de ciencia ficción sobre recuerdos falsos, sin terror.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Keeps Total Recall first but moves the second directly supported adaptation to #8 below memory-recording/access/VR titles. New #10 36 Hours is explicitly a WWII deception thriller, not science fiction. This is a real tail regression versus Flash reasons and the whole-conjunction problem is unresolved.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "b02a6546100d",
+      "request": "A story about a university professor, not space or the universe.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Preserves five explicitly academic/university subjects and no Coach Carter. Both lite-v3 and Flash reasons also pass this aspect; improvement cannot be uniquely attributed to IDs mode.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    },
+    {
+      "id": "ee4de4e1e371",
+      "request": "Something to watch with my parents: we all enjoy dark adult comedy, so it does not need to be family-friendly.",
+      "split": "challenge",
+      "preference": "Flash IDs-v2 as efficiency finalist; remaining relevance caveats",
+      "assessment": "Preserves the same supported dark adult comedy first five as Flash reasons. Tail differences are plausible preferences, not demonstrated regressions.",
+      "next_experiment": "Freeze current configuration and compare against the cheaper lite arm on untouched confirmation cases; no further tuning to these requests."
+    }
+  ],
+  "metrics": {
+    "planned_union_google_gemini_3_flash_preview_packing3_ids_v2": {
+      "requests": 21,
+      "failures": 0,
+      "median_reconstructed_end_to_end_ms": 6227.675912996347,
+      "mean_reported_cost_usd": 0.00459466980952381
+    },
+    "planned_union_google_gemini_3_flash_preview_packing3": {
+      "requests": 21,
+      "failures": 0,
+      "median_reconstructed_end_to_end_ms": 8286.14156399999,
+      "mean_reported_cost_usd": 0.0066438198095238096
+    },
+    "planned_union_google_gemini_3_1_flash_lite_packing3": {
+      "requests": 21,
+      "failures": 0,
+      "median_reconstructed_end_to_end_ms": 6492.45875399356,
+      "mean_reported_cost_usd": 0.003928867428571428
+    }
+  },
+  "overall": {
+    "winner_id": null,
+    "finalist_id": "planned_union_google_gemini_3_flash_preview_packing3_ids_v2",
+    "assessment": "Freeze IDs-v2 as the quality/efficiency finalist for fresh confirmation. It preserves the important strong-model ranking gains and succeeds on21/21 in this run, with roughly25% lower reconstructed median time and31% lower mean reported cost than gated Flash-reasons. Versus historical lite, cost is about17% higher with slightly lower median total time, while retaining improvements on getaway subject role and failed-heist leader. These aggregate tradeoffs do not require per-request dominance. Remaining conjunction errors prevent a claim of flawless search, and fresh confirmation is still required before declaring an overall winner.",
+    "limitations": [
+      "Earlier IDs-v1 car length failure remains a real failed attempt, not erased by this successful revised-cap run.",
+      "Most upstream time and cost are reused projections; current replay latency is not a fresh complete production search measurement.",
+      "Contact pool changed24→23 via shared validated format gate; historical lite contact result is not an identically gated comparator.",
+      "Unknown format is retained; a gate is not proof that every retained title satisfies sci-fi or other genre semantics.",
+      "Final confirmation outputs not inspected during this review."
+    ]
+  }
+}

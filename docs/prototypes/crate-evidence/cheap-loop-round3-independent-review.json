@@ -1,0 +1,137 @@
+{
+  "reviewer": "Independent assistant",
+  "input": "private/cheap-loop/round3.json (corrected OOV final)",
+  "overall": {
+    "winner_id": null,
+    "assessment": "No global winner. Fixed routing repairs implementation-induced sunglasses loss but still regresses rich-long. Extra recall supplies new scoped candidates and some good titles, while worsening wealth subject precision and adding preparation cost. Larger pools do not resolve phrase sense and subject relations. Local preparation audit invalidates claims that all candidates meet50ms overhead.",
+    "surviving_mechanisms": [
+      "Concrete prose centrality",
+      "Clause boundary repair",
+      "Bounded anti-compensation for mood"
+    ],
+    "rejected_defaults": [
+      "r3_route_fixed universal routing",
+      "r3_recall_anti universal expanded recall",
+      "r3_recall200_anti universal expanded recall"
+    ]
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "preference": "corrected ≈ fixed route",
+      "outcome": "tie",
+      "assessment": "All five arms preserve strong chase-centered top3. No gain beyond corrected, no need for extra recall cost on this evidence.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "preference": "r3_route_fixed / r3_recall_route",
+      "outcome": "better_or_tie",
+      "assessment": "Fixed route repairs the round2 normalization regression: They Live/Fiancés/Dream a Little Dream2 are direct plot-central glasses. Recall anti #3Khrustalyov has supplied prose about Stalinist paranoia with no central sunglasses; larger pool plus anti ranking dilutes the known good leaders.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "preference": "fixed route / anti",
+      "outcome": "better_or_tie",
+      "assessment": "Both retain explicit UsualSuspects/FightClub and avoid rejected1999pilot. Route SpiderForest versus anti MrRobot is not a demonstrated decisive quality difference. Recall adds no useful top3 change.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "preference": "original english_phrase",
+      "outcome": "worse",
+      "assessment": "All new arms retain generic dark sketch WonderShowzen #1 without wealthy-subject centrality. Recall adds AmericanPsycho at #3, potentially good wealthy satire, but does not repair the leading conjunction failure. Original phrase remains stronger overall fit.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "preference": "new recall candidates only; no comparable control",
+      "outcome": "scope_change",
+      "assessment": "Recall fills a previously gated text-path empty. Carry-On supports suspense; Millionaire is genuinely tense game-show competition and not explicitly prohibited, but may miss an implied fiction preference. Non-Stop source premise is ambiguous. This is additional recall scope, not proof of beating production vector fill or satisfying nonbleak endings.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "preference": "r3_anti_control ≈ corrected",
+      "outcome": "tie_or_better",
+      "assessment": "Anti top3 Suburræterna/Gomorrah/Spiral remain directly grittycrime; recall adds HappyValley with supported realism. Fixed route Spotless/Suburræterna/Bhaukaal also broadly fit. Source-backed positive intent restored; no universal gain over corrected established.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "preference": "new recall candidates only; no comparable control",
+      "outcome": "scope_change",
+      "assessment": "Route A SuddenCaseChristmas/Mysteriet/AdventureTime short emphasize family comfort. Request specifies watching with parents, not content about parents or preschoolers. None is automatically forbidden, but recall200 Bear/HeyDuggee overgeneralizes family-safe demographics. No production baseline available, and broad intergenerational suitability remains subjective.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "preference": "r3_anti_control / r3_route_fixed",
+      "outcome": "better_with_uncertainty",
+      "assessment": "NowYouSeeMe maintains the strongest direct mystery-plus-popcorn tone. Recall WieIsDeMol explicitly hidden-saboteur guessing and suspense, so reality format is not a hard failure; whether user sought narrative fiction is unknown. Sleuth ending remains unverified. Avoid asserting no misery from genre alone.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "preference": "r3_anti_control / original english",
+      "outcome": "worse_for_route_or_recall",
+      "assessment": "Fixed route reintroduces Snake #1, primarily rich extortion victims rather than rich people mutually awful. Recall anti replaces #3Gemstones (explicit wealthy dysfunctional family dark comedy) with MrFreedom (jingoism/ColdWar superhero satire), clear subject regression. Broader candidate recall cannot compensate for missing relation semantics.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "preference": "original english",
+      "outcome": "worse",
+      "assessment": "Every new arm retains AmericasMostWanted/Vengeance/TenDays at top3 and FlexxCop high; text about producing a crime show and comic wealthy antics is less direct than originalEnglish policework/realism. More recall produces no repair.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "preference": "no demonstrated winner",
+      "outcome": "mixed",
+      "assessment": "Recall changes leaders to Bandersnatch/MulhollandDrive/Prisoner: interactive reality ambiguity and psychological control are not by themselves evidence that a storyteller has fed the viewer lies. Fixed route also overuses surreal/twist proxies. General deeper semantics remain unresolved; reject familiarity as proof.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "preference": "round1 centrality / corrected",
+      "outcome": "mixed",
+      "assessment": "Refuge/HitRun/Ranam remain actual getaway-driver plots, not arbitrary mistakes. Chase-specific centrality weaker than BabyDriver displaced below them; expanding recall leaves this issue unchanged. No clear advantage over strong original or round1 top3.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "preference": "original corrected / round2 field boundaries",
+      "outcome": "mixed",
+      "assessment": "Fixed arms Elf/MaryTylerMoore/CrocodileDundee have supported warmth-comedy but uncertain cheesiness. Recall shifts to HappyDays/Cosby/AllThat; broad nostalgic comfort and sketch comedy do not establish superior warm, uncheesy fit over direct HereWeGo/MooneBoy/FeverPitch. No quality gain sufficient to pay preprocessing overhead.",
+      "next_experiment": "Judge native retrieval mechanisms and bounded evidence preservation without request-specific routing.",
+      "evidence_basis": "Corrected OOV round3 actual top3/top5 source evidence; fixed controls and prior rounds."
+    }
+  ]
+}

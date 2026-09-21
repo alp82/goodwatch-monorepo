@@ -1,0 +1,94 @@
+{
+  "detector_version": 1,
+  "rows_scanned": 50000,
+  "sample_sha256": "642c9d89ac6e18bfb1d94ee9c71b2737f31aeb14f29133c4da8f0b4b3b1e34f8",
+  "model_calls": 0,
+  "db_calls": 0,
+  "flags": [
+    {
+      "key": "movie:1296427",
+      "title": "T2 3-D: Battle Across Time",
+      "year": 1996,
+      "reasons": [
+        {
+          "kind": "attraction_identity",
+          "scope": "Separate from ordinary film/series results unless attraction experiences are requested; not evidence of nonrelease.",
+          "identity_spans": [
+            "Designed as an immersive theme park attraction, it prioritizes visceral thrills and an intense, fast-paced encounter with iconic characters and a dystopian future."
+          ],
+          "corroborating_spans": [
+            "Designed as an immersive theme park attraction, it prioritizes visceral thrills and an intense, fast-paced encounter with iconic characters and a dystopian future."
+          ]
+        }
+      ],
+      "essence_text": "This exhilarating 3D experience thrusts audiences directly into the heart of the Terminator universe, delivering a relentless barrage of futuristic action and groundbreaking visual spectacle. Designed as an immersive theme park attraction, it prioritizes visceral thrills and an intense, fast-paced encounter with iconic characters and a dystopian future. The short film is a high-octane celebration of its blockbuster origins, offering pure escapism through its loud sound design and impressive special effects. It's a non-stop adrenaline rush for fans seeking an immediate, impactful sci-fi adventure.",
+      "synopsis": "Three freedom fighters attack a large corporation to prevent a future apocalypse."
+    },
+    {
+      "key": "movie:1286710",
+      "title": "Fast & Furious: Supercharged",
+      "year": 2015,
+      "reasons": [
+        {
+          "kind": "attraction_identity",
+          "scope": "Separate from ordinary film/series results unless attraction experiences are requested; not evidence of nonrelease.",
+          "identity_spans": [
+            "In this all new ride at Universal Studios Hollywood, join the all-star cast from the hit movies on an exhilarating high-speed chase that exceeds 120 miles per hour and catapults you into the high-stakes underworld of fast cars and international crime cartels."
+          ],
+          "corroborating_spans": [
+            "With cutting-edge special effects and immersive 3D-HD imagery, the experience delivers adrenaline-pumping action.",
+            "You'll be engulfed in a world of cutting-edge, hyper-realistic special effects, including 3D-HD imagery projected onto the world's most expansive 360-degree screens!"
+          ]
+        }
+      ],
+      "essence_text": "This hyper-realistic thrill ride plunges viewers into the high-stakes world of fast cars and international crime. With cutting-edge special effects and immersive 3D-HD imagery, the experience delivers adrenaline-pumping action. It offers a spectacle of speed and visual grandeur, designed to fully engage the senses in a simulated reality.",
+      "synopsis": "In this all new ride at Universal Studios Hollywood, join the all-star cast from the hit movies on an exhilarating high-speed chase that exceeds 120 miles per hour and catapults you into the high-stakes underworld of fast cars and international crime cartels. You'll be engulfed in a world of cutting-edge, hyper-realistic special effects, including 3D-HD imagery projected onto the world's most expansive 360-degree screens!"
+    },
+    {
+      "key": "movie:1114081",
+      "title": "Back To The Future: The Ride",
+      "year": 1991,
+      "reasons": [
+        {
+          "kind": "attraction_identity",
+          "scope": "Separate from ordinary film/series results unless attraction experiences are requested; not evidence of nonrelease.",
+          "identity_spans": [
+            "This thrilling ride combines state-of-the-art simulation technology with the beloved Back to the Future franchise."
+          ],
+          "corroborating_spans": [
+            "This thrilling ride combines state-of-the-art simulation technology with the beloved Back to the Future franchise.",
+            "Sitting in a flying DeLorean, the audience gets rocked when traveling through several times."
+          ]
+        }
+      ],
+      "essence_text": "Buckle up for a high-speed journey through time in a DeLorean! This thrilling ride combines state-of-the-art simulation technology with the beloved Back to the Future franchise. The immersive experience delivers a potent dose of adrenaline and wonder. While the story is simple, the visual spectacle and breakneck pace create a memorable and nostalgic adventure.",
+      "synopsis": "Sitting in a flying DeLorean, the audience gets rocked when traveling through several times."
+    },
+    {
+      "key": "movie:185789",
+      "title": "Mulholland Dr.",
+      "year": 1999,
+      "reasons": [
+        {
+          "kind": "standalone_nonreleased_pilot",
+          "scope": "Exclude from ordinary released-title results; retain audit evidence.",
+          "identity_spans": [
+            "\"This is the original TV pilot version of Mulholland Drive (2001), which was rejected by ABC and failed to become a series."
+          ],
+          "corroborating_spans": [
+            "\"This is the original TV pilot version of Mulholland Drive (2001), which was rejected by ABC and failed to become a series.",
+            "David Lynch considers this version of the project embarrassing and did not released it to the public."
+          ]
+        }
+      ],
+      "essence_text": "A dark and twisting neo-noir mystery set against the backdrop of Hollywood. This psychological thriller unravels a dreamlike narrative with an unreliable narrator, pulling the viewer into a world of intrigue and paranoia. Expect to be captivated by its intense atmosphere, surreal imagery, and complex plot. The film's ambiguity and dream logic demand careful attention, rewarding multiple viewings.",
+      "synopsis": "\"This is the original TV pilot version of Mulholland Drive (2001), which was rejected by ABC and failed to become a series. David Lynch considers this version of the project embarrassing and did not released it to the public. However, a VHS copy from the time of its release did find its way online. The existing pilot was reworked with new footage to create the feature film two years later.\""
+    }
+  ],
+  "limitations": [
+    "Conservative high-precision prose patterns are intentionally incomplete.",
+    "Attraction flags describe identity and ordinary-search scope, not work quality or availability.",
+    "Tags, venue alone, ride adaptations/settings and historical pilot mentions do not trigger exclusion.",
+    "No flag means unknown/keep, not certified ordinary format."
+  ]
+}

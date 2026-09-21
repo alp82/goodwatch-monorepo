@@ -1,0 +1,348 @@
+{
+  "reviewer": "Independent assistant; not user judgments",
+  "source": "/home/alp/dev/projects/goodwatch/goodwatch-crate-evidence-column/goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-round6-minimal.json",
+  "method": "Compared actual all33 top-five prefixes against prior IDs-v2, checked tails on12confirmation and inspected newly returned restaurant source evidence. This is an operational-configuration replay of already judged pools, not33new held-out requests.",
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Car-chase failure is repaired: ten coherent chase titles. Top-five relevance comparable to the reason-producing Flash and lite, without needing generated justifications.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": false,
+      "assessment": "Top3 central-sunglasses leaders unchanged. Men in Black/Johnny Bravo replace When the Cat Comes in the rest of top5, a shift toward iconic styling over plot centrality; not a material loss of the primary gain.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Same strong unreliable-narrator core as Flash reasons and lite. Reordering does not establish a material quality loss; prior pilot remains excluded from the reranker pool.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Same strong five-title wealthy-dark-comedy prefix as Flash reasons, with coherent satire tail. Avoids lite Bedlam conjunction error.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Leans toward competition and sports at the top but retains fiction in the list. The request leaves format open, so this is a preference difference rather than a clear violation; weaker diversity in the first four than Flash reasons.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Coherent gritty non-anime crime throughout; comparable to both other arms. Lite remains an efficient adequate alternative for this easy-to-cover request.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Generic popular cross-generational choices remain unvalidated for a highly underspecified request. Removing generated universal-suitability claims is useful; it does not turn these titles into objectively personalized recommendations.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Preserves Reset/Conan leaders and avoids promising verified emotional endings. Tail adds Escape Room films: source describes deadly survival games, hopefulness 3/4 and scare 6/7. These are uncertain fits for not finishing miserable; no ranking-quality guarantee follows from IDs-only output.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Same directly supported wealthy-dysfunction first five as Flash reasons. No meaningful quality loss observed; tail retains broader tech/political satire.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Same grounded crime core with order changes. Evidence explicitly supports realism and crime; IDs-only retains the useful planned-pool gain over narrower controls.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Improves the first five relative to Flash reasons by moving Gone Girl up and F for Fake/Frailty ahead of Psycho. Mid-narrative/deceptive-storyteller evidence varies, and Psycho plus generic surreal tail titles remain adjacent rather than proved exact matches.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Preserves five getaway-focused leaders and excludes lite Taxi 3 role mismatch. Stronger-model benefit survives removing output prose.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "split": "development",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Preserves warm/funny leaders Moone Boy, Here We Go, Mary Tyler Moore and Starstruck. Not-cheesy remains subjective, but no clear quality loss versus reasons observed.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "54f28fa29638",
+      "request": "A gentle science-fiction film about making contact, without a war or a horror atmosphere.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": false,
+      "assessment": "Jules and Close Encounters exchange ranks; same five directly supported gentle-contact candidates. Gate removal of documentary preserved.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "c05b3f733463",
+      "request": "A tense legal thriller with clever courtroom arguments, not a serial-killer investigation.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Preserves actual courtroom/legal-strategy leaders and removes jury-room-only 12 Angry Men. Essentially comparable quality to Flash reasons; both v3 models improved over v2 leader.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "717260825ed1",
+      "request": "A comedy about ordinary coworkers, not high school or teenagers.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Preserves the same adult workplace first five as Flash reasons. Tail remains workplace-related; no obvious school/teen false positives.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "0206e75fb053",
+      "request": "A fast-paced heist where the plan goes wrong, but keep the violence mild.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Keeps Foolproof first, retaining a direct plan-goes-wrong match. Remaining top-five titles mostly establish heists and pace without proving plan failure; generic successful/uncertain heists remain in tail. IDs-only avoids invented assurances but not these relevance gaps.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "134bc9d838cf",
+      "request": "A documentary series about the natural world; no true crime.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Nature documentary list remains strong and comparable to all arms/old controls. No demonstrated need for a stronger model specifically on this request.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "02d75f344631",
+      "request": "Un thriller de ciencia ficción sobre recuerdos falsos, sin terror.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Keeps Total Recall first but moves the second directly supported adaptation to #8 below memory-recording/access/VR titles. New #10 36 Hours is explicitly a WWII deception thriller, not science fiction. This is a real tail regression versus Flash reasons and the whole-conjunction problem is unresolved.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "b02a6546100d",
+      "request": "A story about a university professor, not space or the universe.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": false,
+      "assessment": "Top5 retains explicit university subjects; Footnote gives way to I Can Quit Whenever I Want, whose synopsis explicitly has three college professors. Comparable relevance.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "ee4de4e1e371",
+      "request": "Something to watch with my parents: we all enjoy dark adult comedy, so it does not need to be family-friendly.",
+      "split": "challenge",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Preserves the same supported dark adult comedy first five as Flash reasons. Tail differences are plausible preferences, not demonstrated regressions.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "b73f9ce2e43d",
+      "request": "A survival film about climbing a mountain, with no monsters or supernatural explanation.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both strongly recover mountain climbing survival compared with corrected generic survival results. English control already has strong climbing coverage. Meru/Alpinist source emphasizes perilous ambition and endurance but less directly a survival ordeal; still plausible adjacent choices, not monster violations.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "7e429b8e7953",
+      "request": "A funny series about people working in a restaurant.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": false,
+      "assessment": "Previously failed request now succeeds without a retry under revised runtime configuration. All five leaders have explicit restaurant-workplace comedy support, including Happy's Place restaurant inheritance and business premise. This recovers the architecture's expected candidate benefit and ties lite's strong top5. Tail #9 The Forbidden Marriage is a concrete mismatch: source describes a fraudulent psychic and Joseon royal romance, no restaurant workplace. Freddie is a weaker chef-protagonist/family sitcom rather than restaurant-centered comedy. Original900-budget failure remains recorded; do not replace it with this success.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "9e768eb13bb9",
+      "request": "A warm film about adult sisters reconnecting, but not a romantic comedy.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both materially improve over unrelated control tails. Marvin's Room and Thank You, I'm Sorry directly describe estranged adult sisters reconnecting. Our Little Sister centers three adult sisters taking in a teenage half-sister, supporting sisterhood more than adult-sister reconnection. Illness and grief do not automatically invalidate warmth, but His Three Daughters warmth is less certain. Romantic subplots alone do not prove forbidden romantic-comedy genre.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "5616da92c7eb",
+      "request": "A thoughtful space exploration film with a sense of wonder, not constant battles.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both recover thoughtful space exploration. Flash Last and First Men is philosophical future-humanity evolution rather than clearly a space-exploration story; lite instead promotes actual rover/Voyager exploration. Lite A Beautiful Planet is primarily Earth observation from orbit, also adjacent. Documentary format is allowed by this request. No need to penalize Flash merely for melancholy: user excluded battles, not sadness.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "1cf0fb38d823",
+      "request": "A clever con-artist story where I have to question what I am being told.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Sharper directly supports a nonlinear narrative that keeps the viewer guessing. Both otherwise often establish con artists, schemes and lies without proving the audience must doubt narration. Lite Rafuchakkar source explicitly says an intricate mystery keeps viewers guessing, while Flash Los simuladores describes elaborate plans unfolding with precision. Neither all-scams list automatically satisfies spectator deception.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "cc4145d28ca5",
+      "request": "An easygoing comedy for a tired evening, without humiliation or cringe humor.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both favor gentle/easygoing comedy with low cringe signals. Lite Lucy–Desi entry has wholesome-sitcom prose and cringe score3, which is not strong evidence of zero humiliation; its model reason overpromises absence. Flash corpus scores1–2 support a relative preference, not a guarantee no scene includes cringe. Source descriptions themselves may be noisy, so these are corpus-supported judgments.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "800bee20ddb3",
+      "request": "A thriller built around a driver escaping pursuit in a car.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Flash Collide explicitly centers a driver on the run across autobahns. Transporter3 explicitly describes a driver evading interception. Lite leads with Bullitt and French Connection, whose supplied source centers pursuing police detectives and celebrated chase sequences, not a driver escaping pursuit. Both tails contain generic chase matches; Flash is a substantial top-prefix improvement over both controls and lite here.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "3bb5a3cf6f10",
+      "request": "A viciously funny story about a wealthy family fighting over power.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both have Gemstones directly linking wealthy family, power and dark comedy, and The Estate explicitly pits greedy relatives against one another for inheritance. Arrested Development/House of Flowers support wealthy dysfunctional families, but power-contest centrality is less directly stated. Flash Murder Party source emphasizes lighthearted mystery rather than vicious family power struggle; lite Kolpaçino centers a son under financial expectations. No clear whole-list winner.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "1d05af06915e",
+      "request": "A documentary about ancient civilizations, not fictional historical drama.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both remove fictional historical drama and lead with directly supported Egypt/India documentary evidence. Unknown: Cave of Bones explicitly concerns prehuman hominid evolution and possible burial rituals, not ancient civilizations: a subject failure in both top5. Flash Cave of Forgotten Dreams concerns Paleolithic cave art, an adjacent cultural-history match rather than a clear civilization documentary. Lite Time Team is general archaeology. Flash tail Ancient Aliens is speculative documentary content; format alone does not make it sound historical evidence.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "70c26cda5720",
+      "request": "A realistic espionage series about betrayal, without gadgets or superheroes.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both lead with grounded espionage and avoid obvious superhero action. Lite Agent Hamilton explicitly has a double-agent/loyalty/betrayal narrative. Flash The Agency source supports realistic intelligence ethics but not central betrayal specifically. Old controls already have strong Bureau/Sandbaggers coverage. Absolute absence of gadgets is unverified; ordinary technology is not automatically the excluded gadget fantasy.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "8321aaeefbdc",
+      "request": "My parents and I love tense political dramas. Find us something to watch together.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Flash first five explicitly describe tense political pressure/power struggles, respecting shared adult tastes rather than default family suitability. Lite is mostly strong too: The Swell explicitly concerns prime-minister evacuation decisions and must not be dismissed as merely a storm show. God's Not Dead source describes didactic faith affirmation and political debate, but gives weaker suspense evidence; ideology itself is not a relevance failure.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    },
+    {
+      "id": "5f9a8ef52221",
+      "request": "A suspenseful mystery that feels hopeful rather than cruel or despairing.",
+      "split": "confirmation",
+      "preference": "Comparable ranking to prior IDs-v2; assess Flash/Lite tradeoff across full suite",
+      "top5_identical_to_prior_ids_v2": true,
+      "assessment": "Top5 unchanged from independently assessed prior IDs-v2. Both broaden the franchise-heavy English control with corpus-supported hope and mystery. Frequency explicitly has cathartic resolution, unlike earlier unsupported ending claims. Reset has humanistic premise and hopefulness7 but no confirmed ending. Lite emphasizes Father Matteo/Secret Royal Inspector gentle mystery; Flash emphasizes higher tension before gentler entries. The request permits both. No serial-killer exclusion was given, so Frequency/My Perfect Stranger are not automatic failures.",
+      "next_experiment": "Evaluate the already frozen additional fresh8; no request-specific quality tuning."
+    }
+  ],
+  "metrics": {
+    "all33": {
+      "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal": {
+        "failures": 0,
+        "requests": 33,
+        "median_reconstructed_end_to_end_ms": 6920.457269997161,
+        "mean_reported_cost_usd": 0.005075362787878788
+      },
+      "planned_union_google_gemini_3_1_flash_lite_packing3": {
+        "failures": 0,
+        "requests": 33,
+        "median_reconstructed_end_to_end_ms": 6458.584410000185,
+        "mean_reported_cost_usd": 0.003903247636363636
+      }
+    },
+    "confirmation12": {
+      "planned_union_google_gemini_3_flash_preview_packing3_ids_v3_minimal": {
+        "failures": 0,
+        "requests": 12,
+        "median_reconstructed_end_to_end_ms": 6631.987311500532,
+        "mean_reported_cost_usd": 0.004571688
+      },
+      "planned_union_google_gemini_3_1_flash_lite_packing3": {
+        "failures": 0,
+        "requests": 12,
+        "median_reconstructed_end_to_end_ms": 5960.627502996358,
+        "mean_reported_cost_usd": 0.003858413
+      }
+    }
+  },
+  "overall": {
+    "winner_id": null,
+    "assessment": "Runtime revision recovers restaurant delivery and yields33/33successful outputs while preserving29/33exact top-five prefixes; the other changes are three small ranking shifts plus the recovered failed case. Architecture quality gains remain. Flash now has a defensible modest premium for observed constraint-role gains, not broad dominance over lite. Across33, median reconstructed total6.92s versus lite6.46s (+7%); average cost$0.00508 versus$0.00390 (+30%). On fresh12 replayed here, Flash6.63s/$0.00457 versus lite5.96s/$0.00386, with both12/12successful. Final additional8 should settle a practical model choice; perfection of every tail is not required.",
+    "remaining_concrete_failures": [
+      "Recovered restaurant list adds The Forbidden Marriage at#9 despite royal-psychic romance source, not restaurant work.",
+      "Shared ancient-civilizations/hominid-evolution mismatch remains.",
+      "False-memory/access-memory and heist-plan-failure gaps remain in earlier challenge tails."
+    ],
+    "provenance": [
+      "Original restaurant output-length failure remains in earlier confirmation evidence.",
+      "Lower failure rate under changed runtime settings is an observed recovery, not proof no future failures.",
+      "This review did not inspect additional8final-validation requests or outputs."
+    ]
+  }
+}

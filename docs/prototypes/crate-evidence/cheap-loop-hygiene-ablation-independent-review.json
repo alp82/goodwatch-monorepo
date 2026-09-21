@@ -1,0 +1,151 @@
+{
+  "reviewer": "Independent assistant",
+  "input": "private/cheap-loop/shortlist-hygiene.json",
+  "overall": {
+    "decision": "Keep conservative identity cleanup as a separate successful scope mechanism, not a global ranking winner.",
+    "assessment": "55 changed rankings limited to6 car arms and49 narrator arms; the11 other requests remain unchanged. Reviewed source-supported replacements repair artifact identity without broad adaptation false positives. Whole-catalog conservative detector audit remains prerequisite.",
+    "limits": [
+      "Original controls must remain available unmodified; cleaned output is a new variant.",
+      "Attraction/pilot-specific requests are outside this ordinary-result scope; no claim that attraction films have no value.",
+      "Submillisecond-to-low-millisecond filter cost does not include retrieval or underlying ranking preparation.",
+      "No claim of resolving wealth relations, mood/endings or other semantic gaps."
+    ]
+  },
+  "cases": [
+    {
+      "request": "car chases",
+      "changed_variants": [
+        "english_rrf60_full",
+        "native_best_fields_rrf60_full",
+        "native_prose_boost_rrf60_full",
+        "english_native_combined",
+        "native_prose_boost_native_combined",
+        "native_best_fields_native_combined"
+      ],
+      "outcome": "better_scope",
+      "assessment": "Removing explicitly identified Universal ride repairs ordinary-title scope. Native prose/best now Gone in Sixty Seconds/Riding Bean/Black Cadillac: all source-supported car action/chases. English combined retains directly relevant Cobra11/Gone/DeathRace. Removal is a hygiene gain, not proof of superior ranking to corrected."
+    },
+    {
+      "request": "sunglasses",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "unreliable narrator",
+      "changed_variants": [
+        "english_rrf60_full",
+        "english_fields2_128",
+        "english_route3_128",
+        "english_anti_128",
+        "english_fields2_full",
+        "english_route3_full",
+        "english_anti_full",
+        "native_best_fields_rrf60_full",
+        "native_best_fields_fields2_64",
+        "native_best_fields_route3_64",
+        "native_best_fields_anti_64",
+        "native_best_fields_fields2_128",
+        "native_best_fields_route3_128",
+        "native_best_fields_anti_128",
+        "native_best_fields_fields2_full",
+        "native_best_fields_route3_full",
+        "native_best_fields_anti_full",
+        "native_phrase_rrf60_full",
+        "native_phrase_fields2_64",
+        "native_phrase_route3_64",
+        "native_phrase_anti_64",
+        "native_phrase_fields2_128",
+        "native_phrase_route3_128",
+        "native_phrase_anti_128",
+        "native_phrase_fields2_full",
+        "native_phrase_route3_full",
+        "native_phrase_anti_full",
+        "native_prose_boost_rrf60_full",
+        "native_prose_boost_fields2_64",
+        "native_prose_boost_route3_64",
+        "native_prose_boost_anti_64",
+        "native_prose_boost_fields2_128",
+        "native_prose_boost_route3_128",
+        "native_prose_boost_anti_128",
+        "native_prose_boost_fields2_full",
+        "native_prose_boost_route3_full",
+        "native_prose_boost_anti_full",
+        "english_phrase_rrf60_full",
+        "english_phrase_fields2_128",
+        "english_phrase_route3_128",
+        "english_phrase_anti_128",
+        "english_phrase_fields2_full",
+        "english_phrase_route3_full",
+        "english_phrase_anti_full",
+        "english_native_combined",
+        "native_prose_boost_native_combined",
+        "native_best_fields_native_combined",
+        "native_phrase_native_combined",
+        "english_phrase_native_combined"
+      ],
+      "outcome": "better_scope",
+      "assessment": "Removing standalone nonreleased1999pilot gives native prose/best/phrase FightClub/UsualSuspects/Ultrasound; Ultrasound explicitly unreliable narrator. Nativephrase fields2 now SpiderForest#3. English and stockphrase retain Mosaic#3. Relevant replacements support a cleanup gain without reranking or familiarity preference."
+    },
+    {
+      "request": "dark comedy about rich people",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "tense but not bleak",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "no anime, gritty crime show",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "with my parents",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    },
+    {
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "changed_variants": [],
+      "outcome": "unchanged",
+      "assessment": "All rankings unchanged; no quality gain or regression claimed."
+    }
+  ]
+}

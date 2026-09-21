@@ -1,0 +1,131 @@
+{
+  "reviewer": "Independent assistant",
+  "input": "goodwatch-webapp/scripts/prototype-crate-evidence/private/cheap-loop/wordnet-round1.json",
+  "overall": {
+    "winner_id": null,
+    "decision": "discard current dictionary expansion as default",
+    "assessment": "12/13 top5 unchanged; the only changed top5 adds a wrong-sense eating-monster result to an already weak indirect-narrator raw-recall baseline. No demonstrated quality gain. Dictionary startup and per-request recall scoring materially exceed a tiny reranking budget; these are offline timings, not native SQL. This rejects this measured first-sense expansion, not every possible dictionary method.",
+    "startup_ms": 6459.288691999973,
+    "median_scoring_ms": 78.89298699592473,
+    "max_scoring_ms": 1095.3890370001318
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 69.40291399951093
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 1.2161380000179633
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 27.455169998575002
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 291.42747999867424
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 23.269037003046833
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 473.8116290027392
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 18.468246998963878
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 205.57983499747934
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 73.16277700010687
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 80.27934499841649
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "preference": "unexpanded raw recall",
+      "outcome": "worse",
+      "assessment": "Jeepers Creepers3 enters #2 through feeding→eating. Its source is explicitly a flesh-eating monster and feeding cycle, not a narrator misleading the audience. Baseline raw recall is already poor, so this is no repair and not a comparison against original English.",
+      "new_top200_count": 43,
+      "local_scoring_ms": 1095.3890370001318
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 0,
+      "local_scoring_ms": 98.84075000445591
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "preference": "tie with unexpanded raw recall",
+      "outcome": "tie",
+      "assessment": "Top5 unchanged by expansion. No top5 quality gain demonstrated; new lower-pool candidates are not automatically relevant.",
+      "new_top200_count": 5,
+      "local_scoring_ms": 78.89298699592473
+    }
+  ]
+}

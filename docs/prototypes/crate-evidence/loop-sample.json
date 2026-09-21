@@ -1,0 +1,11 @@
+{
+  "file": "private/sample.json",
+  "sha256": "642c9d89ac6e18bfb1d94ee9c71b2737f31aeb14f29133c4da8f0b4b3b1e34f8",
+  "bytes": 362325105,
+  "titles": 50000,
+  "movies": 39146,
+  "shows": 10854,
+  "original_5000_retained": true,
+  "raw_snapshot_committed": false,
+  "scope": "Frozen local copy of approved scratch-sample source data; source catalog unchanged."
+}

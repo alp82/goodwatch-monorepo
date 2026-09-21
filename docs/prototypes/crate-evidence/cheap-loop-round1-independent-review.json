@@ -1,0 +1,128 @@
+{
+  "reviewer": "Independent assistant",
+  "round": "cheap round1",
+  "overall": {
+    "winner_id": null,
+    "assessment": "No global winner. Centrality helps concrete object/driver requests but materially regresses wealthy-people conjunction and some crime intent against strongest cheap controls. D4/fusion are not universal fallbacks. Two gated cases remain unavailable; local timings alone do not establish SQL speed.",
+    "next_experiment": "General clause-scoped negation plus evidence-aware conjunction and bounded anchoring; preserve control strengths without request/title-specific switches."
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "preference": "corrected ≈ c_centrality",
+      "outcome": "tie",
+      "assessment": "Centrality top3 all explicitly center chases; it mostly recovers the already strong corrected list. D4/fusion promote the Universal Studios ride Fast & Furious: Supercharged (synopsis explicitly calls it a ride), a catalog mismatch. Phrase-list Black Lagoon is supported as action but supplied prose centers pirate mercenaries rather than car chases.",
+      "next_experiment": "Keep source centrality while preventing D4/anchor dominance from promoting ride records.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "preference": "c_centrality",
+      "outcome": "better",
+      "assessment": "They Live and Fiancés on the Bridge retain directly plot-important sunglasses. Dream a Little Dream 2 explicitly revolves around magical sunglasses, stronger centrality at #3 than Dead or Alive: Final, whose supplied plot is cyberpunk rebels. D4/fusion even drop They Live from top3.",
+      "next_experiment": "Centrality is useful for concrete objects; preserve unfamiliar directly supported titles.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "preference": "english / b_anchor_fusion",
+      "outcome": "mixed",
+      "assessment": "Fight Club and The Usual Suspects have explicit unreliable narrator support. Centrality puts Mulholland Dr. 1999 at #3: its synopsis identifies an unreleased rejected TV pilot. The original corrected also has this flaw, so reproducing it is no improvement. English/fusion place supported shifting-perspective Mosaic at #3.",
+      "next_experiment": "Use general source-supported catalog hygiene, not a title blacklist.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "preference": "english_phrase",
+      "outcome": "worse",
+      "assessment": "Wonder Showzen remains #1 for all centrality/coverage variants: supplied description establishes abrasive dark sketch comedy, not rich people as central subject. Coup! at #3 is supported by wealthy-family estate/class revolt, but does not repair #1. Original phrase White Lotus/Saltburn offer stronger conjunction support; raw D4/fusion remain generic dark comedy.",
+      "next_experiment": "Require distributed support for the subject and tone rather than one exact broad phrase.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "preference": "unavailable",
+      "outcome": "unevaluable",
+      "assessment": "All six controls and all candidates are gated empty. No production vector-fill evidence is present.",
+      "next_experiment": "Keep explicit unavailable; never count as quality or speed success.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "preference": "corrected",
+      "outcome": "tie_or_uncertain",
+      "assessment": "New top3 are not hard exclusions: Gabriel Fernandez is a crime documentary, which the request did not prohibit; Gomorrah and German Crime Story explicitly support gritty crime. Corrected has a more consistently crime-drama-focused opening. Surface negation incorrectly swallows positive gritty crime after the comma, so this cannot validate the intended lexical mechanism.",
+      "next_experiment": "Repair general clause boundaries; do not invent a fiction-only constraint.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "preference": "unavailable",
+      "outcome": "unevaluable",
+      "assessment": "Parents request is gated empty throughout; no suitability comparison is possible from these text candidates.",
+      "next_experiment": "Retain unknown, not an invented family-friendly outcome.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "preference": "no demonstrated winner",
+      "outcome": "mixed",
+      "assessment": "Caught explicitly supports suspense and twists but its ending remains unknown. New #2 Beasts Clawing at Straws explicitly has bleak atmosphere and unease, conflicting with the requested experience. New #3 Spider in the Web supports guessing but not a reassuring outcome. Earlier controls also contain bleak results; change alone is not improvement.",
+      "next_experiment": "Use existing negative evidence conservatively; never infer ending guarantees from missing text.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "preference": "english / b_anchor_fusion",
+      "outcome": "worse",
+      "assessment": "The Snake centers extortion of wealthy victims; Cartouche is a thief stealing from the rich and giving to the poor, not rich people mutually mistreating one another. Dirty Sexy Money is a direct wealth/blackmail/affairs fit, but at #3. English and fusion keep Saltburn/Gemstones/Favourite nearer the front. Centrality and coverage fail the relation despite matching rich people.",
+      "next_experiment": "Preserve useful combined anchors; measure relation/conjunction rather than phrase occurrence alone.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "preference": "english / a_d4 / b_anchor_fusion",
+      "outcome": "worse",
+      "assessment": "Centrality top3 Ten Days in the Valley / Americas Most Wanted / Vengeance Unlimited have some crime support, but first is scored by an incidental crime-show mention about its producer. English/D4/fusion put directly realistic police work in 24 Hours in Police Custody and Hidden high. Flex x Cop at #4 emphasizes wealthy comic antics, a weaker grubby-real fit. Documentary is allowed, not an error.",
+      "next_experiment": "Disambiguate descriptions of a show-within-the-show and retain realism evidence.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "preference": "english with uncertainty",
+      "outcome": "mixed",
+      "assessment": "New top3 shift toward psychological/meta titles but do not prove a lying narrator: Twin Peaks supplied source emphasizes visions and tragic prequel, The Rehearsal staged simulations. Coverage removes Words on Bathroom Walls from #4, whose halfway-through-senior-year phrase is wrong-sense support. Moving generic ambiguity above more directly supported narrative deception is not established progress.",
+      "next_experiment": "Keep exact-phrase disambiguation; seek narrator-specific source evidence, not any twist.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "preference": "c_centrality",
+      "outcome": "better_or_tie",
+      "assessment": "Motorway/Baby Driver/Hit & Run all directly support skilled getaway driving and chases. Coverage instead puts The Refuge and Ranam high: both explicitly involve getaway drivers, so unfamiliarity is not a failure, but their supplied text supports chase centrality less than Baby Driver. D4 inserts pirate-mercenary Black Lagoon at #1, regression.",
+      "next_experiment": "Centrality improves conjunction over D4; do not overreward getaway noun presence without chase support.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "preference": "corrected / c_centrality",
+      "outcome": "tie",
+      "assessment": "Here We Go and Moone Boy explicitly support warmth and comedy. Three Wise Men and a Baby adds warm holiday reconciliation; whether that feels painfully cheesy remains subjective, not a hard mismatch. Corrected already has direct warmth-comedy leaders. Fusion promoting Captain Kangaroo is a less direct adult comedy fit, though children content was not excluded.",
+      "next_experiment": "Record subjective uncertainty and avoid blanket family/children filtering.",
+      "evidence_basis": "Actual round1 top3/top5 synopsis and essence; original six lists; no generated ranking reason treated as truth."
+    }
+  ]
+}

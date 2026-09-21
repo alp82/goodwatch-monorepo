@@ -1,0 +1,15 @@
+{
+  "reviewer": "user",
+  "sample_size": 5000,
+  "status": "initial judgment, not final acceptance",
+  "observations": [
+    "Great that combined is much faster.",
+    "Results of D4+ corrected seem to be more relevant and combined evidence a bit more generic.",
+    "None is perfect, so there is still room for experimentation."
+  ],
+  "requested_changes": [
+    "Increase the amount of titles tenfold.",
+    "Assistant should judge as well.",
+    "Show posters with a full-size overlay on click."
+  ]
+}
