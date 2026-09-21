@@ -1,7 +1,7 @@
 summary: Availability evidence helpers
 description: Internal shared module
 kind: script
-lock: ""
+lock: '!inline f/tmdb_api/provider_evidence.script.lock'
 schema:
   type: object
   properties: {}

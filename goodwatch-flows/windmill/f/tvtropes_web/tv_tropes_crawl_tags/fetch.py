@@ -3,6 +3,7 @@
 
 import asyncio
 import re
+import time
 from datetime import datetime
 from playwright.async_api import async_playwright, BrowserContext
 from typing import Union
@@ -22,6 +23,22 @@ from f.tvtropes_web.models import (
 from f.utils.string import remove_prefix
 
 BROWSER_TIMEOUT = 180000
+# TV Tropes' Cloudflare rules challenge the default "HeadlessChrome" user agent.
+# Identify the crawler honestly so the site operator can contact or throttle us.
+CRAWLER_USER_AGENT = "GoodWatchBot/0.1 (+https://goodwatch.app; contact alportac@gmail.com)"
+# Minimum spacing between consecutive TV Tropes navigations within one process.
+REQUEST_DELAY_SECONDS = 4
+_last_navigation = None
+
+
+async def paced_goto(page, url):
+    global _last_navigation
+    if _last_navigation is not None:
+        await asyncio.sleep(
+            max(0, REQUEST_DELAY_SECONDS - (time.monotonic() - _last_navigation))
+        )
+    _last_navigation = time.monotonic()
+    return await page.goto(url)
 
 
 async def crawl_data(
@@ -87,10 +104,10 @@ async def crawl_rotten_tomatoes_page(
         visited.add(url)
         page = await browser.new_page()
         try:
-            response = await page.goto(url)
+            response = await paced_goto(page, url)
             if response is None:
                 raise RuntimeError(f"No response from {url}")
-            if response.status in (403, 429):
+            if is_blocked(response):
                 return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=True)
             if response.status not in (200, 404):
                 raise RuntimeError(f"TV Tropes HTTP {response.status}: {url}")
@@ -133,6 +150,14 @@ async def crawl_rotten_tomatoes_page(
     return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=False)
 
 
+def is_blocked(response):
+    # Cloudflare challenges are not always served as 403/429.
+    return (
+        response.status in (403, 429)
+        or response.headers.get("cf-mitigated") == "challenge"
+    )
+
+
 def page_identity(url):
     parsed = urlparse(url)
     prefix = "/pmwiki/pmwiki.php/"
@@ -155,6 +180,8 @@ async def identifies_work(page, entry, media_type, variations):
         return False
     # Use the opening work description, not a year mentioned in a trope/example.
     paragraphs = await page.locator("#main-article > p").all_text_contents()
+    # Live pages open with empty spacer paragraphs; skip them.
+    paragraphs = [text for text in paragraphs if text.strip()]
     introduction = " ".join(paragraphs[:3])[:2500]
     compact = slug(introduction).casefold()
     matches_title = any(len(v) >= 3 and v.casefold() in compact for v in variations)
@@ -214,24 +241,26 @@ async def crawl_page(
     if is_subpage:
         selector += ", #main-article > ul > li"
     tropes = []
-    for item in await page.locator(selector).all():
-        links = item.locator("a")
-        if not await links.count():
-            continue
-        link = links.first
-        url = urljoin(page.url, await link.get_attribute("href") or "")
+    # Read every item in one call: live page scripts mutate the DOM, which
+    # invalidates per-item locators between awaits.
+    items = await page.locator(selector).evaluate_all(
+        """nodes => nodes.map(li => {
+            const a = li.querySelector('a');
+            return a && {href: a.getAttribute('href') || '', name: a.textContent || '', html: li.innerHTML};
+        }).filter(Boolean)"""
+    )
+    for item in items:
+        url = urljoin(page.url, item["href"])
         namespace, _ = page_identity(url)
         if namespace != "Main":
             continue
-        name = (await link.text_content() or "").strip()
+        name = item["name"].strip()
         if name:
             tropes.append(
                 Trope(
                     name=name,
                     url=url,
-                    html=remove_prefix(
-                        text=(await item.inner_html()).strip(), prefix=name
-                    ),
+                    html=remove_prefix(text=item["html"].strip(), prefix=name),
                 )
             )
     # Subpage links may sit outside a heading/folder list (Citizen Kane).
@@ -263,8 +292,8 @@ async def crawl_page(
             continue
         sub_page = await browser.new_page()
         try:
-            response = await sub_page.goto(url)
-            if response and response.status in (403, 429):
+            response = await paced_goto(sub_page, url)
+            if response and is_blocked(response):
                 return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=True)
             if not response or response.status != 200 or sub_page.url != url:
                 raise RuntimeError(f"TV Tropes subpage failed: {url}")
@@ -345,7 +374,7 @@ async def tvtropes_crawl_tags(next_entry: Union[TvTropesMovieTags, TvTropesTvTag
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        context = await browser.new_context()
+        context = await browser.new_context(user_agent=CRAWLER_USER_AGENT)
         context.set_default_timeout(BROWSER_TIMEOUT)
         try:
             crawl_result, _ = await crawl_data(next_entry, context)
