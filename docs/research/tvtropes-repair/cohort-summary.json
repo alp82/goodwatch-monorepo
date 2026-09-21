@@ -1,0 +1,17 @@
+{
+  "counts": {
+    "movie": {
+      "total": 1371,
+      "missing": 166
+    },
+    "show": {
+      "total": 131,
+      "missing": 20
+    }
+  },
+  "cohort": 186,
+  "already_present_in_mongo": 0,
+  "suspicious_existing": 45,
+  "confirmed_mismatches": 0,
+  "changes": 0
+}

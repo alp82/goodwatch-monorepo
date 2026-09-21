@@ -1,0 +1,22 @@
+{
+  "started_at": "2026-09-21T10:07:32.192263+00:00",
+  "manifest_sha256": "42ddd2b3075848ad184fa958efbb60c2007929197776bb71961044a6dd352d2b",
+  "code_sha256": {
+    "scripts/recover_tvtropes.py": "0d26918f0bfeaa4acd01b593655594e42881ff01243dca12c94c0dbcdf3e758f",
+    "windmill/f/tvtropes_web/tv_tropes_crawl_tags/fetch.py": "2f64099607cd51b45d290b11832e2b6f28b8f0971fe2b113e425efa704703545",
+    "windmill/f/tvtropes_web/title_variations.py": "649b9a1064e7d19c25ef9977b76a2a4448d481b87d4b34c5f438c020b1abe6db"
+  },
+  "cohort": 186,
+  "attempted": 186,
+  "recovered": 56,
+  "unresolved": 130,
+  "failed": 0,
+  "unattempted": 0,
+  "requests_this_run": 17,
+  "request_budget": 345,
+  "minimum_request_spacing_seconds": 6.0,
+  "elapsed_seconds_this_run": 96.745,
+  "stop_reason": null,
+  "production_writes": 0,
+  "demonstrated_search_improvement": null
+}

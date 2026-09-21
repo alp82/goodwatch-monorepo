@@ -1,0 +1,19 @@
+{
+  "manifest_sha256": "42ddd2b3075848ad184fa958efbb60c2007929197776bb71961044a6dd352d2b",
+  "code_sha256": {
+    "scripts/recover_tvtropes.py": "54df36b4418a1fd3948deb20179ec0d68b5ee434e471910cfea5740a3d9f3189",
+    "windmill/f/tvtropes_web/tv_tropes_crawl_tags/fetch.py": "716a0048af584fa3bef997f26c01661f073484ed2c10ed91b3359ea0196920e0",
+    "windmill/f/tvtropes_web/title_variations.py": "649b9a1064e7d19c25ef9977b76a2a4448d481b87d4b34c5f438c020b1abe6db"
+  },
+  "cohort": 186,
+  "attempted": 2,
+  "recovered": 0,
+  "unresolved": 1,
+  "failed": 1,
+  "unattempted": 184,
+  "requests_this_run": 1,
+  "elapsed_seconds_this_run": 0.395,
+  "stop_reason": "HTTP 403/429: stopped without retrying or bypassing the block",
+  "production_writes": 0,
+  "demonstrated_search_improvement": null
+}

@@ -1,0 +1,31 @@
+{
+ "started": true,
+ "success": true,
+ "completed": true,
+ "result": {
+  "worker": null,
+  "results": [
+   {
+    "case": "default-headless",
+    "title": "Just a moment...",
+    "cf_ray": "a3e761e789ccd22f-FRA",
+    "status": 403,
+    "sent_ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+    "twikilinks": 0,
+    "cf_mitigated": "challenge"
+   },
+   {
+    "case": "honest-ua",
+    "title": "Breaking Bad (Series) - TV Tropes",
+    "cf_ray": "a3e762115df3e570-FRA",
+    "status": 200,
+    "sent_ua": "GoodWatchBot/0.1 (+https://goodwatch.app; contact alportac@gmail.com)",
+    "twikilinks": 35,
+    "cf_mitigated": null
+   }
+  ],
+  "requests": 2,
+  "database_writes": 0
+ },
+ "job_id": "01a0c2e2-5ad4-5238-752d-e5ab700132fd"
+}

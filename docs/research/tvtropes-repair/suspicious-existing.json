@@ -1,0 +1,1386 @@
+[
+  {
+    "tmdb_id": 238,
+    "title": "The Godfather",
+    "original_title": "The Godfather",
+    "release_year": 1972,
+    "votes": 22198126,
+    "before_trope_count": 501,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+    "source_trope_count": 501,
+    "source_release_year": 1972,
+    "title_variations": [
+      "TheGodfather"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        238
+      ],
+      [
+        "movie",
+        240
+      ],
+      [
+        "movie",
+        242
+      ]
+    ],
+    "source_updated_at": "2025-10-25 13:13:10.614000",
+    "source_failed_at": "2026-09-20 18:54:32.329000"
+  },
+  {
+    "tmdb_id": 240,
+    "title": "The Godfather Part II",
+    "original_title": "The Godfather Part II",
+    "release_year": 1974,
+    "votes": 15013404,
+    "before_trope_count": 501,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+    "source_trope_count": 501,
+    "source_release_year": 1974,
+    "title_variations": [
+      "TheGodfatherPartII",
+      "TheGodfatherPartIi"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        238
+      ],
+      [
+        "movie",
+        240
+      ],
+      [
+        "movie",
+        242
+      ]
+    ],
+    "source_updated_at": "2025-10-04 11:57:55.250000",
+    "source_failed_at": "2025-12-23 09:08:53.082000"
+  },
+  {
+    "tmdb_id": 1726,
+    "title": "Iron Man",
+    "original_title": "Iron Man",
+    "release_year": 2008,
+    "votes": 12027447,
+    "before_trope_count": 149,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/IronMan",
+    "source_trope_count": 149,
+    "source_release_year": 2008,
+    "title_variations": [
+      "IronMan"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        1726
+      ]
+    ],
+    "source_updated_at": "2025-11-11 19:25:11.011000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 18785,
+    "title": "The Hangover",
+    "original_title": "The Hangover",
+    "release_year": 2009,
+    "votes": 937588,
+    "before_trope_count": 191,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+    "source_trope_count": 191,
+    "source_release_year": 2009,
+    "title_variations": [
+      "TheHangover"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        18785
+      ],
+      [
+        "movie",
+        45243
+      ],
+      [
+        "movie",
+        109439
+      ]
+    ],
+    "source_updated_at": "2025-11-08 16:14:34.791000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 8681,
+    "title": "Taken",
+    "original_title": "Taken",
+    "release_year": 2008,
+    "votes": 679759,
+    "before_trope_count": 278,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+    "source_trope_count": 278,
+    "source_release_year": 2008,
+    "title_variations": [
+      "Taken"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        8681
+      ],
+      [
+        "movie",
+        82675
+      ],
+      [
+        "movie",
+        260346
+      ]
+    ],
+    "source_updated_at": "2025-10-04 12:39:58.786000",
+    "source_failed_at": "2025-12-10 15:54:43.462000"
+  },
+  {
+    "tmdb_id": 45243,
+    "title": "The Hangover Part II",
+    "original_title": "The Hangover Part II",
+    "release_year": 2011,
+    "votes": 583963,
+    "before_trope_count": 191,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+    "source_trope_count": 191,
+    "source_release_year": 2011,
+    "title_variations": [
+      "TheHangoverPartII",
+      "TheHangoverPartIi"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        18785
+      ],
+      [
+        "movie",
+        45243
+      ],
+      [
+        "movie",
+        109439
+      ]
+    ],
+    "source_updated_at": "2025-10-04 10:23:24.118000",
+    "source_failed_at": "2025-12-02 15:18:15.723000"
+  },
+  {
+    "tmdb_id": 920,
+    "title": "Cars",
+    "original_title": "Cars",
+    "release_year": 2006,
+    "votes": 542881,
+    "before_trope_count": 61,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Cars",
+    "source_trope_count": 61,
+    "source_release_year": 2006,
+    "title_variations": [
+      "Cars"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        920
+      ]
+    ],
+    "source_updated_at": "2025-10-26 07:50:35.828000",
+    "source_failed_at": "2026-02-19 07:45:15.382000"
+  },
+  {
+    "tmdb_id": 1091,
+    "title": "The Thing",
+    "original_title": "The Thing",
+    "release_year": 1982,
+    "votes": 528594,
+    "before_trope_count": 10,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheThing",
+    "source_trope_count": 10,
+    "source_release_year": 1982,
+    "title_variations": [
+      "TheThing"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        1091
+      ]
+    ],
+    "source_updated_at": "2025-10-04 13:22:32.594000",
+    "source_failed_at": "2025-12-24 05:14:46.426000"
+  },
+  {
+    "tmdb_id": 564,
+    "title": "The Mummy",
+    "original_title": "The Mummy",
+    "release_year": 1999,
+    "votes": 506665,
+    "before_trope_count": 21,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheMummy",
+    "source_trope_count": 21,
+    "source_release_year": 1999,
+    "title_variations": [
+      "TheMummy"
+    ],
+    "suspicion": [
+      "non-individual-work namespace",
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        564
+      ],
+      [
+        "movie",
+        282035
+      ]
+    ],
+    "source_updated_at": "2025-10-04 11:09:05.662000",
+    "source_failed_at": "2026-01-10 04:08:03.170000"
+  },
+  {
+    "tmdb_id": 124905,
+    "title": "Godzilla",
+    "original_title": "Godzilla",
+    "release_year": 2014,
+    "votes": 471552,
+    "before_trope_count": 424,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Godzilla",
+    "source_trope_count": 424,
+    "source_release_year": 2014,
+    "title_variations": [
+      "Godzilla"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        124905
+      ],
+      [
+        "movie",
+        929
+      ]
+    ],
+    "source_updated_at": "2025-10-26 06:29:19.138000",
+    "source_failed_at": "2026-01-09 09:08:15.691000"
+  },
+  {
+    "tmdb_id": 1640,
+    "title": "Crash",
+    "original_title": "Crash",
+    "release_year": 2005,
+    "votes": 464774,
+    "before_trope_count": 52,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Crash2004",
+    "source_trope_count": 52,
+    "source_release_year": 2005,
+    "title_variations": [
+      "Crash"
+    ],
+    "suspicion": [
+      "URL year differs from catalog year"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        1640
+      ]
+    ],
+    "source_updated_at": "2025-10-26 12:30:33.372000",
+    "source_failed_at": "2026-02-24 14:56:59.483000"
+  },
+  {
+    "tmdb_id": 242,
+    "title": "The Godfather Part III",
+    "original_title": "The Godfather Part III",
+    "release_year": 1990,
+    "votes": 458650,
+    "before_trope_count": 501,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+    "source_trope_count": 501,
+    "source_release_year": 1990,
+    "title_variations": [
+      "TheGodfatherPartIII",
+      "TheGodfatherPartIii"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        238
+      ],
+      [
+        "movie",
+        240
+      ],
+      [
+        "movie",
+        242
+      ]
+    ],
+    "source_updated_at": "2025-10-04 13:27:53.848000",
+    "source_failed_at": "2026-01-14 18:07:50.953000"
+  },
+  {
+    "tmdb_id": 1488912,
+    "title": "Arcane",
+    "original_title": "Arcane",
+    "release_year": null,
+    "votes": 424000,
+    "before_trope_count": 166,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Arcane",
+    "source_trope_count": 166,
+    "source_release_year": null,
+    "title_variations": [
+      "Arcane"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        1488912
+      ],
+      [
+        "show",
+        94605
+      ]
+    ],
+    "source_updated_at": "2025-10-26 09:42:32.166000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 447273,
+    "title": "Snow White",
+    "original_title": "Snow White",
+    "release_year": 2025,
+    "votes": 395586,
+    "before_trope_count": 26,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/SnowWhite",
+    "source_trope_count": 26,
+    "source_release_year": 2025,
+    "title_variations": [
+      "SnowWhite"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        447273
+      ]
+    ],
+    "source_updated_at": "2025-10-14 19:13:05.211000",
+    "source_failed_at": "2026-03-29 03:48:56.344000"
+  },
+  {
+    "tmdb_id": 2059,
+    "title": "National Treasure",
+    "original_title": "National Treasure",
+    "release_year": 2004,
+    "votes": 381614,
+    "before_trope_count": 119,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/NationalTreasure",
+    "source_trope_count": 119,
+    "source_release_year": 2004,
+    "title_variations": [
+      "NationalTreasure"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        2059
+      ],
+      [
+        "movie",
+        6637
+      ]
+    ],
+    "source_updated_at": "2025-11-09 05:30:45.786000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 109439,
+    "title": "The Hangover Part III",
+    "original_title": "The Hangover Part III",
+    "release_year": 2013,
+    "votes": 368842,
+    "before_trope_count": 191,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+    "source_trope_count": 191,
+    "source_release_year": 2013,
+    "title_variations": [
+      "TheHangoverPartIII",
+      "TheHangoverPartIii"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        18785
+      ],
+      [
+        "movie",
+        45243
+      ],
+      [
+        "movie",
+        109439
+      ]
+    ],
+    "source_updated_at": "2025-10-26 08:06:26.750000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 8077,
+    "title": "Alien³",
+    "original_title": "Alien³",
+    "release_year": 1992,
+    "votes": 356140,
+    "before_trope_count": 220,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Alien",
+    "source_trope_count": 220,
+    "source_release_year": 1992,
+    "title_variations": [
+      "Alien3",
+      "Alien"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        8077
+      ]
+    ],
+    "source_updated_at": "2025-10-05 04:45:06.897000",
+    "source_failed_at": "2025-12-21 09:06:29.990000"
+  },
+  {
+    "tmdb_id": 948,
+    "title": "Halloween",
+    "original_title": "Halloween",
+    "release_year": 1978,
+    "votes": 342968,
+    "before_trope_count": 108,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Halloween",
+    "source_trope_count": 108,
+    "source_release_year": 1978,
+    "title_variations": [
+      "Halloween"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        948
+      ]
+    ],
+    "source_updated_at": "2025-11-05 08:07:14.033000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 4108,
+    "title": "The Transporter",
+    "original_title": "The Transporter",
+    "release_year": 2002,
+    "votes": 342833,
+    "before_trope_count": 185,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheTransporter",
+    "source_trope_count": 185,
+    "source_release_year": 2002,
+    "title_variations": [
+      "TheTransporter"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        4108
+      ],
+      [
+        "movie",
+        9335
+      ]
+    ],
+    "source_updated_at": "2025-10-04 23:44:58.982000",
+    "source_failed_at": "2026-06-17 06:26:42.301000"
+  },
+  {
+    "tmdb_id": 82675,
+    "title": "Taken 2",
+    "original_title": "Taken 2",
+    "release_year": 2012,
+    "votes": 342785,
+    "before_trope_count": 278,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+    "source_trope_count": 278,
+    "source_release_year": 2012,
+    "title_variations": [
+      "Taken2"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        8681
+      ],
+      [
+        "movie",
+        82675
+      ],
+      [
+        "movie",
+        260346
+      ]
+    ],
+    "source_updated_at": "2025-10-04 14:50:00.364000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 816,
+    "title": "Austin Powers: International Man of Mystery",
+    "original_title": "Austin Powers: International Man of Mystery",
+    "release_year": 1997,
+    "votes": 275742,
+    "before_trope_count": 454,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+    "source_trope_count": 454,
+    "source_release_year": 1997,
+    "title_variations": [
+      "AustinPowersInternationalManOfMystery",
+      "AustinPowers"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        816
+      ],
+      [
+        "movie",
+        817
+      ],
+      [
+        "movie",
+        818
+      ]
+    ],
+    "source_updated_at": "2025-10-13 11:19:21.386000",
+    "source_failed_at": "2026-04-11 01:31:28.750000"
+  },
+  {
+    "tmdb_id": 6637,
+    "title": "National Treasure: Book of Secrets",
+    "original_title": "National Treasure: Book of Secrets",
+    "release_year": 2007,
+    "votes": 271272,
+    "before_trope_count": 119,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/NationalTreasure",
+    "source_trope_count": 119,
+    "source_release_year": 2007,
+    "title_variations": [
+      "NationalTreasureBookOfSecrets",
+      "NationalTreasure"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        2059
+      ],
+      [
+        "movie",
+        6637
+      ]
+    ],
+    "source_updated_at": "2025-10-26 09:37:09.161000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 431,
+    "title": "Cube",
+    "original_title": "Cube",
+    "release_year": 1998,
+    "votes": 265024,
+    "before_trope_count": 125,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheCube",
+    "source_trope_count": 125,
+    "source_release_year": 1998,
+    "title_variations": [
+      "Cube"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        431
+      ]
+    ],
+    "source_updated_at": "2025-10-13 08:23:10.431000",
+    "source_failed_at": "2025-11-24 17:25:48.695000"
+  },
+  {
+    "tmdb_id": 817,
+    "title": "Austin Powers: The Spy Who Shagged Me",
+    "original_title": "Austin Powers: The Spy Who Shagged Me",
+    "release_year": 1999,
+    "votes": 264516,
+    "before_trope_count": 454,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+    "source_trope_count": 454,
+    "source_release_year": 1999,
+    "title_variations": [
+      "AustinPowersTheSpyWhoShaggedMe",
+      "AustinPowers"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        816
+      ],
+      [
+        "movie",
+        817
+      ],
+      [
+        "movie",
+        818
+      ]
+    ],
+    "source_updated_at": "2025-11-08 22:20:09.239000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 1062722,
+    "title": "Frankenstein",
+    "original_title": "Frankenstein",
+    "release_year": 2025,
+    "votes": 263000,
+    "before_trope_count": 128,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Frankenstein",
+    "source_trope_count": 128,
+    "source_release_year": 2025,
+    "title_variations": [
+      "Frankenstein"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        1062722
+      ]
+    ],
+    "source_updated_at": "2025-10-10 08:52:04.247000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 17578,
+    "title": "The Adventures of Tintin",
+    "original_title": "The Adventures of Tintin",
+    "release_year": 2011,
+    "votes": 259620,
+    "before_trope_count": 170,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/Tintin",
+    "source_trope_count": 170,
+    "source_release_year": 2011,
+    "title_variations": [
+      "TheAdventuresOfTintin"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        17578
+      ]
+    ],
+    "source_updated_at": "2025-10-05 01:50:03.401000",
+    "source_failed_at": "2025-11-14 18:21:22.349000"
+  },
+  {
+    "tmdb_id": 764,
+    "title": "The Evil Dead",
+    "original_title": "The Evil Dead",
+    "release_year": 1981,
+    "votes": 254153,
+    "before_trope_count": 143,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead",
+    "source_trope_count": 143,
+    "source_release_year": 1981,
+    "title_variations": [
+      "TheEvilDead"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        764
+      ],
+      [
+        "movie",
+        109428
+      ]
+    ],
+    "source_updated_at": "2025-10-04 13:55:22.607000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 869,
+    "title": "Planet of the Apes",
+    "original_title": "Planet of the Apes",
+    "release_year": 2001,
+    "votes": 245189,
+    "before_trope_count": 62,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes",
+    "source_trope_count": 62,
+    "source_release_year": 2001,
+    "title_variations": [
+      "PlanetOfTheApes"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        869
+      ],
+      [
+        "movie",
+        871
+      ]
+    ],
+    "source_updated_at": "2025-10-04 20:25:49.503000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 260346,
+    "title": "Taken 3",
+    "original_title": "Taken 3",
+    "release_year": 2014,
+    "votes": 241523,
+    "before_trope_count": 278,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+    "source_trope_count": 278,
+    "source_release_year": 2014,
+    "title_variations": [
+      "Taken3"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        8681
+      ],
+      [
+        "movie",
+        82675
+      ],
+      [
+        "movie",
+        260346
+      ]
+    ],
+    "source_updated_at": "2025-10-02 23:17:33.440000",
+    "source_failed_at": "2026-09-10 07:10:58.041000"
+  },
+  {
+    "tmdb_id": 818,
+    "title": "Austin Powers in Goldmember",
+    "original_title": "Austin Powers in Goldmember",
+    "release_year": 2002,
+    "votes": 237281,
+    "before_trope_count": 454,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+    "source_trope_count": 454,
+    "source_release_year": 2002,
+    "title_variations": [
+      "AustinPowersInGoldmember"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        816
+      ],
+      [
+        "movie",
+        817
+      ],
+      [
+        "movie",
+        818
+      ]
+    ],
+    "source_updated_at": "2025-11-12 22:23:36.172000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 9335,
+    "title": "Transporter 2",
+    "original_title": "Transporter 2",
+    "release_year": 2005,
+    "votes": 228713,
+    "before_trope_count": 185,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheTransporter",
+    "source_trope_count": 185,
+    "source_release_year": 2005,
+    "title_variations": [
+      "Transporter2"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        4108
+      ],
+      [
+        "movie",
+        9335
+      ]
+    ],
+    "source_updated_at": "2025-10-04 20:58:29.325000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 282035,
+    "title": "The Mummy",
+    "original_title": "The Mummy",
+    "release_year": 2017,
+    "votes": 228555,
+    "before_trope_count": 21,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheMummy",
+    "source_trope_count": 21,
+    "source_release_year": 2017,
+    "title_variations": [
+      "TheMummy"
+    ],
+    "suspicion": [
+      "non-individual-work namespace",
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        564
+      ],
+      [
+        "movie",
+        282035
+      ]
+    ],
+    "source_updated_at": "2025-10-04 20:22:53.520000",
+    "source_failed_at": "2026-03-14 22:20:42.052000"
+  },
+  {
+    "tmdb_id": 929,
+    "title": "Godzilla",
+    "original_title": "Godzilla",
+    "release_year": 1998,
+    "votes": 216149,
+    "before_trope_count": 424,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Godzilla",
+    "source_trope_count": 424,
+    "source_release_year": 1998,
+    "title_variations": [
+      "Godzilla"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        124905
+      ],
+      [
+        "movie",
+        929
+      ]
+    ],
+    "source_updated_at": "2025-10-26 08:02:12.637000",
+    "source_failed_at": "2026-02-28 23:57:53.514000"
+  },
+  {
+    "tmdb_id": 109428,
+    "title": "Evil Dead",
+    "original_title": "Evil Dead",
+    "release_year": 2013,
+    "votes": 215745,
+    "before_trope_count": 143,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead",
+    "source_trope_count": 143,
+    "source_release_year": 2013,
+    "title_variations": [
+      "EvilDead"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        764
+      ],
+      [
+        "movie",
+        109428
+      ]
+    ],
+    "source_updated_at": "2025-10-04 17:49:31.437000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 871,
+    "title": "Planet of the Apes",
+    "original_title": "Planet of the Apes",
+    "release_year": 1968,
+    "votes": 213782,
+    "before_trope_count": 61,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes",
+    "source_trope_count": 61,
+    "source_release_year": 1968,
+    "title_variations": [
+      "PlanetOfTheApes"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        869
+      ],
+      [
+        "movie",
+        871
+      ]
+    ],
+    "source_updated_at": "2025-11-09 19:13:51.595000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 417859,
+    "title": "Puss in Boots",
+    "original_title": "Puss in Boots",
+    "release_year": 2011,
+    "votes": 213259,
+    "before_trope_count": 185,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PussInBoots",
+    "source_trope_count": 185,
+    "source_release_year": 2011,
+    "title_variations": [
+      "PussInBoots"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        417859
+      ]
+    ],
+    "source_updated_at": "2025-10-04 14:45:19.985000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 3176,
+    "title": "Battle Royale",
+    "original_title": "バトル・ロワイアル",
+    "release_year": 2000,
+    "votes": 209529,
+    "before_trope_count": 189,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/BattleRoyale",
+    "source_trope_count": 189,
+    "source_release_year": 2000,
+    "title_variations": [
+      "BattleRoyale"
+    ],
+    "suspicion": [
+      "non-individual-work namespace"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        3176
+      ]
+    ],
+    "source_updated_at": "2025-10-05 01:40:45.880000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 12230,
+    "title": "One Hundred and One Dalmatians",
+    "original_title": "One Hundred and One Dalmatians",
+    "release_year": 1961,
+    "votes": 201498,
+    "before_trope_count": 121,
+    "media_type": "movie",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/OneHundredAndOneDalmatians1996",
+    "source_trope_count": 121,
+    "source_release_year": 1961,
+    "title_variations": [
+      "OneHundredAndOneDalmatians"
+    ],
+    "suspicion": [
+      "URL year differs from catalog year"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        12230
+      ]
+    ],
+    "source_updated_at": "2025-10-04 13:24:15.320000",
+    "source_failed_at": "2025-11-13 20:14:53.440000"
+  },
+  {
+    "tmdb_id": 94605,
+    "title": "Arcane",
+    "original_title": "Arcane",
+    "release_year": 2021,
+    "votes": 439446,
+    "before_trope_count": 166,
+    "media_type": "show",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Arcane",
+    "source_trope_count": 166,
+    "source_release_year": 2021,
+    "title_variations": [
+      "Arcane"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "movie",
+        1488912
+      ],
+      [
+        "show",
+        94605
+      ]
+    ],
+    "source_updated_at": "2025-11-05 22:29:23.941000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 246,
+    "title": "Avatar: The Last Airbender",
+    "original_title": "Avatar: The Last Airbender",
+    "release_year": 2005,
+    "votes": 436505,
+    "before_trope_count": 76,
+    "media_type": "show",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/AvatarTheLastAirbender2024",
+    "source_trope_count": 76,
+    "source_release_year": 2005,
+    "title_variations": [
+      "AvatarTheLastAirbender",
+      "Avatar"
+    ],
+    "suspicion": [
+      "URL year differs from catalog year"
+    ],
+    "shared_by": [
+      [
+        "show",
+        246
+      ]
+    ],
+    "source_updated_at": "2025-10-26 05:25:48.405000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 37854,
+    "title": "One Piece",
+    "original_title": "ワンピース",
+    "release_year": 1999,
+    "votes": 348031,
+    "before_trope_count": 114,
+    "media_type": "show",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/OnePiece2023",
+    "source_trope_count": 114,
+    "source_release_year": 1999,
+    "title_variations": [
+      "OnePiece"
+    ],
+    "suspicion": [
+      "URL year differs from catalog year"
+    ],
+    "shared_by": [
+      [
+        "show",
+        37854
+      ]
+    ],
+    "source_updated_at": "2025-11-07 08:51:55.082000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 46296,
+    "title": "Spartacus",
+    "original_title": "Spartacus",
+    "release_year": 2010,
+    "votes": 296727,
+    "before_trope_count": 639,
+    "media_type": "show",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+    "source_trope_count": 639,
+    "source_release_year": 2010,
+    "title_variations": [
+      "Spartacus"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "show",
+        46296
+      ],
+      [
+        "show",
+        278353
+      ],
+      [
+        "show",
+        243520
+      ],
+      [
+        "show",
+        281095
+      ]
+    ],
+    "source_updated_at": "2025-11-07 10:35:46.488000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 278353,
+    "title": "Spartacus: Gods of the Arena",
+    "original_title": "Spartacus: Gods of the Arena",
+    "release_year": 2011,
+    "votes": 294002,
+    "before_trope_count": 630,
+    "media_type": "show",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+    "source_trope_count": 637,
+    "source_release_year": 2011,
+    "title_variations": [
+      "SpartacusGodsOfTheArena",
+      "Spartacus"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "show",
+        46296
+      ],
+      [
+        "show",
+        278353
+      ],
+      [
+        "show",
+        243520
+      ],
+      [
+        "show",
+        281095
+      ]
+    ],
+    "source_updated_at": "2025-09-06 14:45:22.036000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 243520,
+    "title": "Spartacus: Gods of the Arena",
+    "original_title": "Spartacus: Gods of the Arena",
+    "release_year": 2011,
+    "votes": 294000,
+    "before_trope_count": 630,
+    "media_type": "show",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+    "source_trope_count": 630,
+    "source_release_year": 2011,
+    "title_variations": [
+      "SpartacusGodsOfTheArena",
+      "Spartacus"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "show",
+        46296
+      ],
+      [
+        "show",
+        278353
+      ],
+      [
+        "show",
+        243520
+      ],
+      [
+        "show",
+        281095
+      ]
+    ],
+    "source_updated_at": "2025-08-09 15:00:05.120000",
+    "source_failed_at": null
+  },
+  {
+    "tmdb_id": 281095,
+    "title": "Spartacus: Gods of the Arena",
+    "original_title": "Spartacus: Gods of the Arena",
+    "release_year": 2011,
+    "votes": 293001,
+    "before_trope_count": 637,
+    "media_type": "show",
+    "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+    "source_trope_count": 637,
+    "source_release_year": 2011,
+    "title_variations": [
+      "SpartacusGodsOfTheArena",
+      "Spartacus"
+    ],
+    "suspicion": [
+      "source URL shared by multiple catalog identities"
+    ],
+    "shared_by": [
+      [
+        "show",
+        46296
+      ],
+      [
+        "show",
+        278353
+      ],
+      [
+        "show",
+        243520
+      ],
+      [
+        "show",
+        281095
+      ]
+    ],
+    "source_updated_at": "2025-10-18 07:55:47.330000",
+    "source_failed_at": null
+  }
+]
