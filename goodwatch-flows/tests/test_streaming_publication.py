@@ -1,5 +1,6 @@
 """Publication boundary tests using Mongo collections and a recording Crate adapter."""
 import ast
+import time
 from collections import defaultdict
 from contextlib import contextmanager
 from uuid import uuid4
@@ -83,7 +84,7 @@ def load_copy(db: Any) -> Callable[..., dict]:
     body = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.Assign, ast.ClassDef))]
     namespace = dict(defaultdict=defaultdict, datetime=datetime, timedelta=timedelta,
                      Optional=Optional, Any=Any, Callable=Callable, Iterator=Iterator,
-                     contextmanager=contextmanager, uuid4=uuid4, DuplicateKeyError=DuplicateKeyError,
+                     contextmanager=contextmanager, uuid4=uuid4, DuplicateKeyError=DuplicateKeyError, time=time,
                      BaseModel=BaseModel, CrateConnector=Crate,
                      Movie=Record, Show=Record, StreamingAvailability=Record, StreamingEvidence=StreamingEvidence, build_evidence=build_evidence, quarantine_evidence=quarantine_evidence,
                      SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability", "streaming_evidence")},
@@ -562,6 +563,16 @@ class StreamingPublicationTests(unittest.TestCase):
             self.publish(crate)
         self.assertEqual(crate.rows, [availability()])
         self.assertEqual(crate.media, {})
+
+    def test_waiting_lease_acquires_after_other_publisher_releases(self) -> None:
+        leases = self.db.streaming_publication_leases
+        leases.insert_one({"_id": "movie:122", "token": "other", "expires_at": datetime.utcnow() + timedelta(minutes=15)})
+        publication_lease = load_copy(self.db).__globals__["publication_lease"]
+        with patch("time.sleep", side_effect=lambda seconds: leases.delete_one({"_id": "movie:122"})) as sleep:
+            with publication_lease(self.db, "movie", 122, 30) as check_owned:
+                check_owned()
+        sleep.assert_called_once()
+        self.assertEqual(leases.count_documents({}), 0)
 
     def test_replaced_lease_prevents_writes_and_preserves_new_owner(self) -> None:
         self.db.tmdb_tv_providers.insert_one({"tmdb_id": 42, "country_code": "US", "updated_at": self.now, "streaming_links": []})

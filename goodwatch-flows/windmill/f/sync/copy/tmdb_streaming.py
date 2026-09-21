@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -28,6 +29,9 @@ from f.tmdb_web.provider_identity import provider_name_from_url
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
+LEASE_POLL_SECONDS = 2
+# Longer than a targeted publish of one title, far below the 15-minute lease.
+SCHEDULED_LEASE_WAIT_SECONDS = 120
 HOURS_TO_FETCH = 24*2
 
 
@@ -104,22 +108,29 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
     return total_result
 
 @contextmanager
-def publication_lease(db: Any, media_type: str, tmdb_id: int) -> Iterator[Callable[[], None]]:
+def publication_lease(db: Any, media_type: str, tmdb_id: int, wait_seconds: float = 0) -> Iterator[Callable[[], None]]:
     """Serialize scheduled/targeted streaming snapshots, independently of demand."""
     if db.provider_identity_maintenance.find_one({"_id": "repair", "active": True}):
         raise RuntimeError("Provider identity maintenance in progress")
     collection = db.streaming_publication_leases
     identity = f"{media_type}:{tmdb_id}"
     token = str(uuid4())
-    now = datetime.utcnow()
-    try:
-        collection.update_one(
-            {"_id": identity, "expires_at": {"$lte": now}},
-            {"$set": {"token": token, "expires_at": now + timedelta(minutes=15)}},
-            upsert=True,
-        )
-    except DuplicateKeyError as error:
-        raise RuntimeError(f"Streaming publication busy for {identity}") from error
+    # Targeted publishers hold a title for seconds. A scheduled full run waits
+    # them out instead of aborting every remaining title.
+    deadline = time.monotonic() + wait_seconds
+    while True:
+        now = datetime.utcnow()
+        try:
+            collection.update_one(
+                {"_id": identity, "expires_at": {"$lte": now}},
+                {"$set": {"token": token, "expires_at": now + timedelta(minutes=15)}},
+                upsert=True,
+            )
+            break
+        except DuplicateKeyError as error:
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"Streaming publication busy for {identity}") from error
+            time.sleep(LEASE_POLL_SECONDS)
 
     def check_owned() -> None:
         if db.provider_identity_maintenance.find_one({"_id": "repair", "active": True}):
@@ -259,12 +270,13 @@ def refresh_unmapped_country(provider: dict, media_type: str) -> dict:
 def publication_snapshot(
     db: Any, connector: CrateConnector, tmdb_id: int, media_type: str,
     details_collection: Any, providers_collection: Any, service_ids: dict,
+    lease_wait_seconds: float = 0,
 ) -> Iterator[tuple]:
     """Retry unresolved countries once, without holding a write lease during HTTP."""
     refresh_outcomes = {}
     deferred = set()
     while True:
-        with publication_lease(db, media_type, tmdb_id) as check_owned:
+        with publication_lease(db, media_type, tmdb_id, lease_wait_seconds) as check_owned:
             details = fetch_documents_in_batch([tmdb_id], details_collection).get(tmdb_id, {})
             providers = fetch_all_documents_in_batch([tmdb_id], providers_collection).get(tmdb_id, [])
             check_owned()
@@ -331,6 +343,7 @@ def copy_media(
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     publication = {"status": "success", "titles": {}}
     targeted_ids = query_selector.get("tmdb_id", {}).get("$in") if not recent_only else None
+    lease_wait_seconds = 0 if targeted_ids is not None else SCHEDULED_LEASE_WAIT_SECONDS
     start = 0
     last_tmdb_id: int | None = None
     while True:
@@ -380,7 +393,7 @@ def copy_media(
                 # snapshot. Freeze the entire published title, including API
                 # contributions, until its identity is authoritatively resolved.
                 # Invalidate evidence even while legacy offers remain frozen.
-                with publication_lease(mongo_db, media_type, tmdb_id) as check_owned:
+                with publication_lease(mongo_db, media_type, tmdb_id, lease_wait_seconds) as check_owned:
                     check_owned()
                     connector.run("REFRESH TABLE streaming_evidence")
                     previous = connector.select("SELECT * FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?", ([tmdb_id], media_type))
@@ -399,6 +412,7 @@ def copy_media(
                 continue
             with publication_snapshot(
                 mongo_db, connector, tmdb_id, media_type, mongo_details, mongo_providers, service_ids,
+                lease_wait_seconds,
             ) as snapshot:
                 check_owned, existing, providers, rows, verified, api_results, refresh_outcomes, details = snapshot
                 unverified = [
