@@ -95,6 +95,7 @@ async def crawl_rotten_tomatoes_page(
             urls.append(f"{base}/{type}/{title}{next_entry.release_year}")
         urls.append(f"{base}/{type}/{title}")
     visited = set()
+    identified_url = None
     while urls:
         if len(visited) >= 60:
             raise RuntimeError("TV Tropes candidate limit reached")
@@ -117,6 +118,18 @@ async def crawl_rotten_tomatoes_page(
                 result = await crawl_page(browser, page)
                 if result.tropes or result.rate_limit_reached:
                     return result
+                # Keep looking, but report the identified page if nothing better
+                # turns up so that "identified, no tropes" is visible.
+                identified_url = identified_url or result.url
+            # A disambiguation page describes no dated work of its own. Only
+            # there may a closed set of country suffixes (TheOfficeUS) be
+            # followed; the target must still pass identifies_work in full.
+            is_disambiguation = (
+                response.status == 200
+                and page_identity(page.url)[1].casefold()
+                in {v.casefold() for v in variations}
+                and not re.search(YEAR, await introduction_of(page))
+            )
             # Disambiguation and inexact-title pages are navigation, never evidence.
             # A year-adjacent link is only a candidate: the target must identify the work.
             links = await page.locator("#main-article a[href]").evaluate_all(
@@ -139,15 +152,22 @@ async def crawl_rotten_tomatoes_page(
                         name.casefold().startswith(v.casefold()) for v in variations
                     )
                 )
+                qualified = is_disambiguation and any(
+                    name[: len(v)].casefold() == v.casefold()
+                    and name[len(v) :] in DISAMBIGUATION_SUFFIXES
+                    for v in variations
+                )
                 if (
-                    (same_title or contextual_match)
+                    (same_title or contextual_match or qualified)
                     and candidate not in visited
                     and candidate not in urls
                 ):
                     urls.insert(0, candidate)
         finally:
             await page.close()
-    return TvTropesCrawlResult(url=None, tropes=[], rate_limit_reached=False)
+    return TvTropesCrawlResult(
+        url=identified_url, tropes=[], rate_limit_reached=False
+    )
 
 
 def is_blocked(response):
@@ -174,15 +194,57 @@ def allowed_namespaces(media_type):
     return {media_type, "WesternAnimation", "Animation", "Anime"}
 
 
-async def identifies_work(page, entry, media_type, variations):
-    namespace, name = page_identity(page.url)
-    if namespace not in allowed_namespaces(media_type):
-        return False
+YEAR = r"\b(?:18|19|20)\d{2}\b"
+KIND = r"\b(film|movie|series|sitcom|television show|TV show|miniseries)\b"
+# A year directly qualifying one of these dates the source, not this release.
+SOURCE_WORK = r"(?:novel|novella|book|memoir|comic|graphic novel|short story|play|manga|musical|video game)"
+SHARED_FILM_PAGE = r"\b(?:film series|film duology|two films|both films|two[- ]part film|two parts|two volumes)\b"
+# Country qualifiers TV Tropes appends to remakes; deliberately a closed set.
+DISAMBIGUATION_SUFFIXES = {"US", "UK", "USA", "AU", "CA"}
+
+
+def split_sentences(text):
+    # "Vol. 1" and similar abbreviations do not end a sentence.
+    return re.split(
+        r"(?<!\bVol\.)(?<!\bNo\.)(?<!\bPt\.)(?<!\bvs\.)(?<=[.!?])\s+", text
+    )
+
+
+async def introduction_of(page):
     # Use the opening work description, not a year mentioned in a trope/example.
     paragraphs = await page.locator("#main-article > p").all_text_contents()
     # Live pages open with empty spacer paragraphs; skip them.
     paragraphs = [text for text in paragraphs if text.strip()]
-    introduction = " ".join(paragraphs[:3])[:2500]
+    return " ".join(paragraphs[:3])[:2500]
+
+
+def year_suffixed_name(name, entry, variations):
+    """TV Tropes appends a release year only to tell same-titled works apart,
+    so an exact `<title variation><catalog year>` page name dates the work."""
+    stem = re.sub(r"(?:19|20)\d{2}$", "", name)
+    return (
+        bool(entry.release_year)
+        and name == stem + str(entry.release_year)
+        and any(stem.casefold() == v.casefold() for v in variations)
+    )
+
+
+async def identifies_work(page, entry, media_type, variations):
+    # Always judged on the final URL, after redirects.
+    namespace, name = page_identity(page.url)
+    if namespace not in allowed_namespaces(media_type):
+        return False
+    introduction = await introduction_of(page)
+    year_in_name = year_suffixed_name(name, entry, variations)
+    # The same title under another year is, by the wiki's own naming, another
+    # work, even when its intro opens with "not to be confused with the 2006 film".
+    stem = re.sub(r"(?:19|20)\d{2}$", "", name)
+    if (
+        stem != name
+        and not year_in_name
+        and any(stem.casefold() == v.casefold() for v in variations)
+    ):
+        return False
     compact = slug(introduction).casefold()
     matches_title = any(len(v) >= 3 and v.casefold() in compact for v in variations)
     # Numeric titles cannot be fuzzy matched inside another number.
@@ -190,34 +252,57 @@ async def identifies_work(page, entry, media_type, variations):
         v.isdigit() and re.search(r"(?<!\w)" + re.escape(v) + r"(?!\w)", introduction)
         for v in variations
     )
-    if not matches_title or not entry.release_year:
+    if not entry.release_year:
         return False
-    # The first dated description must identify this release. A guessed near
-    # year, or a later sentence about a remake, is insufficient.
-    years = re.findall(r"\b(?:18|19|20)\d{2}\b", introduction)
-    if not years or years[0] != str(entry.release_year):
+    # A year-suffixed page name states the title itself (It, 21 Jump Street).
+    if not matches_title and not year_in_name:
         return False
+    text = introduction
+    # A title such as "2001: A Space Odyssey" or "1917" is not a release year.
+    if re.search(YEAR, entry.original_title or ""):
+        text = text.replace(entry.original_title, " ")
+    # "the 1853 memoir ... and its 2013 film adaptation": skip the source's year.
+    text = re.sub(
+        YEAR + r"(?=(?:\s+[\w'’-]+){0,3}\s+" + SOURCE_WORK + r"\b)", " ", text
+    )
+    sentences = split_sentences(text)
+    dated = next((s for s in sentences if re.search(YEAR, s)), "")
     # A shared film-series/volume page does not prove individual-title traits.
-    if media_type == "Film" and re.search(
-        r"\b(?:film series|film duology|two films|both films|two[- ]part film)\b",
-        introduction,
-        re.I,
+    # Such pages say so in their definition or dated sentence; a later aside
+    # ("the two films are otherwise unrelated") is incidental.
+    if media_type == "Film" and any(
+        re.search(SHARED_FILM_PAGE, sentence, re.I)
+        for sentence in (sentences[0], dated)
     ):
         return False
-    # In shared animation namespaces, the first dated work description determines
-    # media type; a later sentence about a film adaptation must not identify a show.
-    dated_description = introduction[
-        re.search(r"\b(?:18|19|20)\d{2}\b", introduction).start() :
-    ]
-    dated_description = re.split(r"[.!?](?:\s|$)", dated_description, maxsplit=1)[0]
-    kind = re.search(
-        r"\b(film|movie|series|sitcom|television show|TV show|miniseries)\b",
-        dated_description,
-        re.I,
-    )
+    if year_in_name:
+        # The page name supplies title and year; the introduction must still
+        # describe the right medium.
+        kind = re.search(KIND, introduction, re.I)
+    else:
+        # The first dated description must identify this release. A guessed near
+        # year, or a later sentence about a remake, is insufficient.
+        years = re.findall(YEAR, text)
+        if not years or years[0] != str(entry.release_year):
+            return False
+        # In shared animation namespaces, the first dated work description
+        # determines media type; a later sentence about a film adaptation must
+        # not identify a show. Prefer the kind word after the year; fall back to
+        # the same sentence before it only when nothing follows ("the first
+        # movie in the trilogy, released in 2002.").
+        position = re.search(YEAR, dated).start()
+        kind = re.search(KIND, dated[position:], re.I) or re.search(
+            KIND, dated[:position], re.I
+        )
     if not kind:
         return False
     return (kind[1].lower() in ("film", "movie")) == (media_type == "Film")
+
+
+ITEMS_SCRIPT = """nodes => nodes.map(li => {
+    const a = li.querySelector('a');
+    return a && {href: a.getAttribute('href') || '', name: a.textContent || '', html: li.innerHTML};
+}).filter(Boolean)"""
 
 
 async def crawl_page(
@@ -243,12 +328,18 @@ async def crawl_page(
     tropes = []
     # Read every item in one call: live page scripts mutate the DOM, which
     # invalidates per-item locators between awaits.
-    items = await page.locator(selector).evaluate_all(
-        """nodes => nodes.map(li => {
-            const a = li.querySelector('a');
-            return a && {href: a.getAttribute('href') || '', name: a.textContent || '', html: li.innerHTML};
-        }).filter(Boolean)"""
-    )
+    items = await page.locator(selector).evaluate_all(ITEMS_SCRIPT)
+    # Heading-less work pages (Band of Brothers) list tropes at the top level.
+    # Identity is already established and items stay filtered to Main/ links;
+    # this applies only when the primary selectors find no trope at all.
+    if not is_subpage and not any(
+        page_identity(urljoin(page.url, item["href"]))[0] == "Main"
+        and item["name"].strip()
+        for item in items
+    ):
+        items = await page.locator("#main-article > ul > li").evaluate_all(
+            ITEMS_SCRIPT
+        )
     for item in items:
         url = urljoin(page.url, item["href"])
         namespace, _ = page_identity(url)

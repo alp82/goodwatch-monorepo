@@ -332,6 +332,269 @@ class CrawlTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result.tropes), 1)
         self.assertNotIn("OtherWork/TropesAToF", self.requests)
 
+    # --- identity gaps (unresolved-analysis-2026-09-21) ---
+
+    async def test_year_suffixed_page_name_is_year_evidence(self):
+        self.pages["Film/TheBatman2022"] = (
+            200,
+            work("The Batman is a detective superhero film based on the comics."),
+        )
+        result = await self.crawl("The Batman", 2022)
+        self.assertEqual(result.url, BASE + "Film/TheBatman2022")
+
+    async def test_year_suffixed_name_beats_a_source_or_credit_year(self):
+        self.pages["Film/Venom2018"] = (
+            200,
+            work("Venom is a Superhero Horror movie from the makers of Iron Man (2008)."),
+        )
+        self.assertTrue((await self.crawl("Venom", 2018)).tropes)
+
+    async def test_year_suffixed_name_covers_short_and_unnamed_titles(self):
+        self.pages["Film/It2017"] = (
+            200,
+            work("It (a.k.a. It: Chapter One) is a 2017 supernatural horror film."),
+        )
+        self.pages["Film/TwentyOneJumpStreet2012"] = (
+            200,
+            work("The 2012 loose film adaptation of the late 1980s series stars two cops."),
+        )
+        self.assertTrue((await self.crawl("It", 2017)).tropes)
+        self.assertTrue((await self.crawl("21 Jump Street", 2012)).tropes)
+
+    async def test_year_suffix_applies_to_the_final_url_after_redirects(self):
+        # The requested name carried the year, the page that answered does not.
+        # (No fulfilled 3xx here: Chromium follows those past the route handler.)
+        self.pages["Film/ExampleSaga"] = (200, work("Example is an adventure film."))
+        page = await self.context.new_page()
+        await page.goto(BASE + "Film/ExampleSaga")
+        entry = TvTropesMovieTags(original_title="Example", release_year=2000)
+        self.assertFalse(
+            await fetch.identifies_work(page, entry, "Film", ["Example", "ExampleSaga"])
+        )
+        await page.close()
+
+    async def test_same_name_with_a_different_year_suffix_is_rejected(self):
+        self.pages["Film/Dune2021"] = (
+            200,
+            article(
+                "Choose",
+                '<a href="/pmwiki/pmwiki.php/Film/Dune1984">Dune</a>'
+                '<a href="/pmwiki/pmwiki.php/Film/Dune2020">Dune</a>',
+            ),
+        )
+        self.pages["Film/Dune1984"] = (200, work("Dune is a Science Fiction film."))
+        self.pages["Film/Dune2020"] = (200, work("Dune is a Science Fiction film."))
+        result = await self.crawl("Dune", 2021)
+        self.assertIn("Film/Dune1984", self.requests)
+        self.assertIn("Film/Dune2020", self.requests)
+        self.assertFalse(result.tropes)
+
+    async def test_other_year_suffix_is_rejected_even_when_intro_names_our_year(self):
+        # Modelled on WesternAnimation/TheIllusionist2010, which was accepted
+        # for the 2006 film because its intro mentions that film first.
+        self.pages["Film/TheIllusionist2006"] = (
+            404,
+            article("", '<a href="' + BASE + 'WesternAnimation/TheIllusionist2010">x</a>'),
+        )
+        self.pages["WesternAnimation/TheIllusionist2010"] = (
+            200,
+            work(
+                "Not to be confused with the 2006 film of the same name,"
+                " The Illusionist is a 2010 animated film."
+            ),
+        )
+        result = await self.crawl("The Illusionist", 2006)
+        self.assertIn("WesternAnimation/TheIllusionist2010", self.requests)
+        self.assertIsNone(result.url)
+
+    async def test_year_suffixed_name_in_a_disallowed_namespace_is_rejected(self):
+        page = await self.context.new_page()
+        entry = TvTropesMovieTags(original_title="Dune", release_year=2021)
+        for name in ("Franchise/Dune2021", "Series/Dune2021", "Film/Dune2021"):
+            self.pages[name] = (200, work("Dune is a Science Fiction film."))
+            await page.goto(BASE + name)
+            self.assertEqual(
+                await fetch.identifies_work(page, entry, "Film", ["Dune"]),
+                name.startswith("Film/"),
+            )
+        await page.close()
+
+    async def test_year_suffixed_name_still_needs_a_consistent_kind_word(self):
+        self.pages["Film/Frozen2013"] = (
+            200,
+            work("Frozen is Disney's 53rd entry in its animated canon line-up."),
+        )
+        self.pages["Film/TheWitcher2019"] = (
+            200,
+            work("The Witcher is a Netflix-produced Dark Fantasy series."),
+        )
+        self.assertFalse((await self.crawl("Frozen", 2013)).tropes)
+        self.assertFalse((await self.crawl("The Witcher", 2019)).tropes)
+        self.pages["Series/TheWitcher2019"] = self.pages["Film/TheWitcher2019"]
+        self.assertTrue((await self.crawl("The Witcher", 2019, media="Series")).tropes)
+
+    async def test_non_year_suffix_is_not_year_evidence(self):
+        self.pages["Film/SpiderMan"] = (
+            200,
+            article("Choose", '<a href="/pmwiki/pmwiki.php/Film/SpiderMan1">2002 film</a>'),
+        )
+        self.pages["Film/SpiderMan1"] = (200, work("Spider-Man is a superhero film."))
+        self.assertFalse((await self.crawl("Spider-Man", 2002)).tropes)
+
+    async def test_kind_word_before_the_year_in_the_same_sentence(self):
+        self.pages["Film/SpiderMan1"] = (
+            200,
+            work("Spider-Man is the first movie in a trilogy, released in 2002. It stars a teenager."),
+        )
+        self.assertTrue((await self.crawl("Spider-Man", 2002, ["SpiderMan1"])).tropes)
+
+    async def test_kind_after_the_year_still_wins_over_kind_before_it(self):
+        self.pages["Film/Example"] = (
+            404,
+            article("", '<a href="' + BASE + 'WesternAnimation/Example">x</a>'),
+        )
+        self.pages["WesternAnimation/Example"] = (
+            200,
+            work("Example, not the film, is a 2000 animated series."),
+        )
+        self.assertFalse((await self.crawl("Example", 2000)).tropes)
+
+    async def test_title_is_not_read_as_a_year(self):
+        self.pages["Film/TwoThousandOneASpaceOdyssey"] = (
+            200,
+            work("2001: A Space Odyssey is a 1968 Science Fiction film."),
+        )
+        self.assertTrue((await self.crawl("2001: A Space Odyssey", 1968)).tropes)
+        self.assertFalse((await self.crawl("2001: A Space Odyssey", 1969)).tropes)
+
+    async def test_source_work_year_is_skipped_but_release_year_stays_exact(self):
+        self.pages["Film/TwelveYearsASlave"] = (
+            200,
+            work(
+                "12 Years a Slave refers both to the 1853 memoir by Solomon Northup"
+                " and its 2013 film adaptation."
+            ),
+        )
+        self.assertTrue((await self.crawl("12 Years a Slave", 2013)).tropes)
+        self.assertFalse((await self.crawl("12 Years a Slave", 2014)).tropes)
+        # 300: the year after the source year is a festival premiere, not the release.
+        self.pages["Film/ThreeHundred"] = (
+            200,
+            work(
+                "300 is a film based on the 1998 comic miniseries. It premiered in"
+                " late 2006 before a wider release in early 2007."
+            ),
+        )
+        self.assertFalse((await self.crawl("300", 2007)).tropes)
+
+    async def test_incidental_two_films_remark_does_not_make_a_shared_page(self):
+        self.pages["Film/LeonTheProfessional"] = (
+            200,
+            work(
+                "L&eacute;on: The Professional is a 1994 action thriller film by Luc Besson."
+                " It grew out of an earlier character, though the two films are otherwise unrelated."
+            ),
+        )
+        result = await self.crawl("Léon: The Professional", 1994)
+        self.assertEqual(result.url, BASE + "Film/LeonTheProfessional")
+        self.assertTrue(result.tropes)
+
+    async def test_two_volume_page_is_rejected_explicitly(self):
+        # Modelled on Film/KillBill: a kind word is present, so the rejection
+        # cannot depend on "Vol." cutting the dated sentence short.
+        self.pages["Film/KillBill"] = (
+            200,
+            work(
+                "Kill Bill is a revenge saga by Quentin Tarantino."
+                " Miramax split it into two parts (Vol. 1, released in 2003 as a film,"
+                " and Vol. 2, released in 2004)."
+            ),
+        )
+        self.assertFalse((await self.crawl("Kill Bill: Vol. 1", 2003)).tropes)
+        self.pages["Film/KillBill2003"] = self.pages["Film/KillBill"]
+        self.assertFalse((await self.crawl("Kill Bill: Vol. 1", 2003)).tropes)
+
+    async def test_disambiguation_follows_closed_country_suffixes_only(self):
+        self.pages["Series/TheOffice"] = (
+            200,
+            article(
+                "The Office is actually the name of both a British sitcom and its American remake:",
+                '<ul><li><a href="/pmwiki/pmwiki.php/Series/TheOfficeUK">The Office (UK)</a></li>'
+                '<li><a href="/pmwiki/pmwiki.php/Series/TheOfficeUS">The Office (US)</a></li>'
+                '<li><a href="/pmwiki/pmwiki.php/Series/TheOfficeParty">The Office Party</a></li>'
+                '<li><a href="/pmwiki/pmwiki.php/Series/TheOfficeIndia">The Office (India)</a></li></ul>',
+            ),
+        )
+        self.pages["Series/TheOfficeUK"] = (200, work("The Office is a 2001 British sitcom."))
+        self.pages["Series/TheOfficeUS"] = (200, work("The Office is a 2005 American sitcom."))
+        self.pages["Series/TheOfficeParty"] = (200, work("The Office is a 2005 sitcom."))
+        self.pages["Series/TheOfficeIndia"] = (200, work("The Office is a 2005 sitcom."))
+        result = await self.crawl("The Office", 2005, media="Series")
+        self.assertEqual(result.url, BASE + "Series/TheOfficeUS")
+        self.assertNotIn("Series/TheOfficeParty", self.requests)
+        self.assertNotIn("Series/TheOfficeIndia", self.requests)
+
+    async def test_country_suffixed_target_must_still_identify_the_work(self):
+        self.pages["Series/HouseOfCards"] = (
+            200,
+            article(
+                "House of Cards may refer to:",
+                '<ul><li><a href="/pmwiki/pmwiki.php/Series/HouseOfCardsUK">House of Cards (UK)</a></li>'
+                '<li><a href="/pmwiki/pmwiki.php/Series/HouseOfCardsUS">House of Cards (US)</a></li></ul>',
+            ),
+        )
+        self.pages["Series/HouseOfCardsUK"] = (200, work("House of Cards is a 1990 BBC series."))
+        self.pages["Series/HouseOfCardsUS"] = (200, work("House of Cards is a political series."))
+        result = await self.crawl("House of Cards", 2013, media="Series")
+        self.assertIn("Series/HouseOfCardsUS", self.requests)
+        self.assertIsNone(result.url)
+
+    async def test_country_suffix_is_not_followed_from_a_dated_work_page(self):
+        self.pages["Series/TheOffice2005"] = (
+            200,
+            article(
+                "The Office is a 2001 sitcom.",
+                '<a href="/pmwiki/pmwiki.php/Series/TheOfficeUS">The Office (US)</a>',
+            ),
+        )
+        await self.crawl("The Office", 2005, media="Series")
+        self.assertNotIn("Series/TheOfficeUS", self.requests)
+
+    async def test_headingless_work_page_falls_back_to_top_level_list(self):
+        self.pages["Series/BandOfBrothers2001"] = (
+            200,
+            article(
+                "Band of Brothers is a 2001 American war miniseries.",
+                "<ul>" + TROPE + '<li><a href="' + BASE + 'Film/Other">Other</a></li></ul>',
+            ),
+        )
+        result = await self.crawl("Band of Brothers", 2001, media="Series")
+        self.assertEqual([t.name for t in result.tropes], ["Big Bad"])
+
+    async def test_fallback_is_unused_when_primary_selectors_find_tropes(self):
+        self.pages["Film/Example2000"] = (
+            200,
+            article(
+                "Example is a 2000 film.",
+                '<ul><li><a href="/pmwiki/pmwiki.php/Main/Navigation">Nav</a></li></ul>'
+                "<h2>Tropes</h2><ul>" + TROPE + "</ul>",
+            ),
+        )
+        result = await self.crawl("Example", 2000)
+        self.assertEqual([t.name for t in result.tropes], ["Big Bad"])
+
+    async def test_identified_page_without_tropes_reports_its_url(self):
+        self.pages["Film/Example2000"] = (200, article("Example is a 2000 film."))
+        result = await self.crawl("Example", 2000)
+        self.assertEqual(result.url, BASE + "Film/Example2000")
+        self.assertFalse(result.tropes)
+
+    async def test_http_200_alone_is_never_identity(self):
+        self.pages["Film/Example2000"] = (200, work("A page about something else."))
+        self.pages["Film/Example"] = (200, work("Example is a great film."))
+        result = await self.crawl("Example", 2000)
+        self.assertIsNone(result.url)
+
     async def test_missing_release_year_does_not_spend_requests(self):
         result = await self.crawl("Stranger Things", None)
         self.assertFalse(result.tropes)
