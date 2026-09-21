@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/sections"
@@ -16,6 +16,7 @@ export interface DetailsProps {
 }
 
 export default function Details({ media, country }: DetailsProps) {
+	const [headerHeight, setHeaderHeight] = useState(112)
 	const { details } = media
 	const { backdrop_path } = details
 	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
@@ -27,7 +28,7 @@ export default function Details({ media, country }: DetailsProps) {
 		},
 	)
 
-	return (
+	const content = (
 		<>
 			{backdrop_path && (
 				<div
@@ -43,6 +44,7 @@ export default function Details({ media, country }: DetailsProps) {
 			)}
 
 			<DetailsHeader
+				onHeightChange={setHeaderHeight}
 				media={media}
 				country={country}
 				activeSections={activeSections}
@@ -50,6 +52,7 @@ export default function Details({ media, country }: DetailsProps) {
 			/>
 
 			<DetailsSideNav
+				headerHeight={headerHeight}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
@@ -69,7 +72,7 @@ export default function Details({ media, country }: DetailsProps) {
 								media={media}
 								country={country}
 								sectionProps={sectionProps}
-							navigateToSection={navigateToSection}
+								navigateToSection={navigateToSection}
 							/>
 						</div>
 					</div>
@@ -88,4 +91,5 @@ export default function Details({ media, country }: DetailsProps) {
 			</div>
 		</>
 	)
+	return content
 }

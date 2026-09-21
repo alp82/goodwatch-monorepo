@@ -1,3 +1,4 @@
+import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -103,3 +104,6 @@ export default function DetailsTV() {
 
 	return <Details media={media} country={country} />
 }
+
+// Search refinements do not change the currently loaded title.
+export const shouldRevalidate = searchDetailShouldRevalidate

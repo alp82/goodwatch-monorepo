@@ -85,6 +85,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 						: `${candidates.length} titles to explore`
 	const select =
 		"min-w-0 rounded-md border border-gray-600 bg-gray-800 px-2 py-1.5 text-sm text-gray-100 focus-visible:outline focus-visible:outline-cyan-300"
+	if (!pool.length) return null
 	return (
 		<nav
 			aria-label="Explore titles"
@@ -93,6 +94,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 			<div className="mx-auto max-w-7xl px-4 py-3 text-sm">
 				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
 					<Link
+						prefetch="render"
 						to="/taste/quiz?resume=1"
 						preventScrollReset
 						className="font-semibold text-cyan-300 hover:text-cyan-200"
@@ -102,6 +104,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 					<div className="flex items-center gap-3 sm:gap-4">
 						{previous ? (
 							<Link
+								prefetch="render"
 								to={detailsHref(previous)}
 								aria-label={`← Previous: ${previous.title}`}
 								className="text-cyan-300 hover:text-cyan-200"
@@ -118,6 +121,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 						</span>
 						{next ? (
 							<Link
+								prefetch="render"
 								to={detailsHref(next)}
 								aria-label={`${index < 0 ? "Start exploring" : "Next"} →: ${next.title}`}
 								className="text-cyan-300 hover:text-cyan-200"
@@ -130,6 +134,17 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 							</span>
 						)}
 					</div>
+					{pool.length > candidates.length && (
+						<button
+							type="button"
+							className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
+							onClick={() => update(defaultExploreFilters)}
+						>
+							{pool.length - candidates.length} more{" "}
+							{pool.length - candidates.length === 1 ? "result" : "results"}{" "}
+							without filters
+						</button>
+					)}
 					<button
 						type="button"
 						aria-expanded={expanded}
