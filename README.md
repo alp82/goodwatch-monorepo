@@ -2,6 +2,10 @@
 
 GoodWatch is alive and running. Check it out: https://goodwatch.app/
 
+## Roadmap
+
+The [living roadmap](https://github.com/alp82/goodwatch-monorepo/issues/52) organizes the backlog and guides evolving priorities, using periodic research and results to reassess the current focus.
+
 ## GoodWatch Community
 
 Join our Discord to be part of the wonderful community and learn more about the project: https://discord.gg/TVAcrfQzcA
@@ -132,4 +136,3 @@ docker builder prune
 
 #### Relocate docker root directory
 https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-docker-root-directory
-
