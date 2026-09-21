@@ -1,0 +1,102 @@
+{
+  "status": "passed_offline_integrity_audit",
+  "fallback_repair": {
+    "root_cause": "D4 normalization lower bound shadowed the minimum result-count parameter. Renamed to score_min.",
+    "history_preserved": "native-preconjunction-v2-supplemental-prefallbackfix.json",
+    "repaired_requests": [
+      "A tense legal thriller with clever courtroom arguments, not a serial-killer investigation.",
+      "A funny film about older people pulling off a robbery."
+    ],
+    "other_cases_unchanged": 26,
+    "repaired_top10_lengths": [
+      10,
+      10
+    ],
+    "policy": "Joint candidates retain priority; unchanged English candidates supplement to requested10. This mechanism is correct but priority causes a documented quality regression."
+  },
+  "artifacts": {
+    "native-round1.json": {
+      "cases": 13,
+      "runs": 260,
+      "errors": 0,
+      "sha256": "a41e59ed9b0f510e858233c9edac3a1ccea78760b606791aea32161844cee6e4"
+    },
+    "native-english-phrase-control.json": {
+      "cases": 13,
+      "runs": 52,
+      "errors": 0,
+      "sha256": "6f9b0835f0e225870a6aebdf5a3ea41ad350de996c6120a7d5e7297bfa6d0cce"
+    },
+    "native-jev-control.json": {
+      "cases": 13,
+      "runs": 13,
+      "errors": 0,
+      "sha256": "cffdbf0ad792d18c1324e5cdd8cfc06f7ad75337f01a949e9f63a7bd4e8153cb"
+    },
+    "native-jev-revised.json": {
+      "cases": 13,
+      "runs": 13,
+      "errors": 0,
+      "sha256": "860ed32cff602303abfd536dfd100b72c63095d7862045acb7be3d3bde53f9ce"
+    },
+    "native-jev-candidates-only.json": {
+      "cases": 13,
+      "runs": 13,
+      "errors": 0,
+      "sha256": "9191e6f17828c7136739fca5046072920bbf1ff1fa73711fdb7c33d8c362b5d8"
+    },
+    "native-preconjunction-v2-screen.json": {
+      "cases": 13,
+      "runs": 13,
+      "errors": 0,
+      "sha256": "cb24c107703e5db4d7da64aef7c2b1ffa23b57d0b014f4c29406be282b1108e9"
+    },
+    "native-preconjunction-v2-benchmark.json": {
+      "cases": 2,
+      "runs": 48,
+      "errors": 0,
+      "sha256": "de2708998efb5c465d1b53f98d143e41f501ca5fb7c4b1d64ad1b8830d5b90e3"
+    },
+    "native-supplemental-controls.json": {
+      "cases": 28,
+      "runs": 56,
+      "errors": 0,
+      "sha256": "a19668f2fc8ec02331931802c561f819267a5cf273fa3edc765715af1b8d7787"
+    },
+    "native-preconjunction-v2-supplemental.json": {
+      "cases": 28,
+      "runs": 28,
+      "errors": 0,
+      "sha256": "37a4e59d549ca898372054bd8e87cb29a9696f43b22577570f2bbdf523c7f777"
+    }
+  },
+  "publication_secret_scan": {
+    "scanned_files": 92,
+    "matched_actual_secret_values": 0,
+    "private_files_tracked": 0,
+    "scope": "Tracked and publishable untracked prototype docs/scripts checked against configured credential values; private artifacts ignored. Not a repository-wide historical secret audit.",
+    "configured_nonempty_credential_keys_checked": 8
+  },
+  "recommendation": {
+    "accepted_winner": null,
+    "decision": "Stop the practical cheap-ranking loop with no accepted overall winner.",
+    "reason": "Original13 scoped gains remain valid, but supplemental conjunction and normalization refinements introduce material regressions. No further evidence-backed cheap routing change is established; additional coefficient or query-specific tuning would not justify acceptance.",
+    "retained_findings": [
+      "Pre-cap conjunction avoids independently truncated phrase pools and improved wealthy-subject conjunction on original13.",
+      "Two activated original requests reduced SQL query count4to2 versusEnglish with matched5-repeat lower medians.",
+      "Bounded preprocessing and independently validated source-identity hygiene remain separate findings."
+    ],
+    "future_hypothesis": "An explicit corpus-wide same-field full-concept evidence criterion could be researched, but not asserted to solve this cohort. Dropping generic media words alone cannot fix Arrival ranking or older-robber relations.",
+    "mechanical_fix_under_review": "Completed normalization-only analyzer-parity ablation recovered Arrival but produced material regressions, including a slasher for driver pursuit. The implementation mismatch is real; a universally improved route is not established."
+  },
+  "cleanup": {
+    "record": "cheap-loop-cleanup-result.json",
+    "status": "dropped_and_verified_absent",
+    "table": "doc.prototype_search_evidence_104_v1",
+    "historical_record_preserved": "cleanup-result.json",
+    "private_artifacts_retained": true,
+    "database_calls": 3,
+    "provider_calls": 0
+  },
+  "offline_integrity_checks_external_calls": 0
+}

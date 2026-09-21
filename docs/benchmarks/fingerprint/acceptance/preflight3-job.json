@@ -1,0 +1,34 @@
+{
+  "type": "CompletedJob",
+  "id": "01a0a00c-5d6e-a872-850e-22c0334454ce",
+  "created_at": "2026-09-14T13:12:40.042291Z",
+  "started_at": "2026-09-14T13:12:40.069340Z",
+  "completed_at": "2026-09-14T13:12:41.115389Z",
+  "duration_ms": 1046,
+  "success": false,
+  "script_path": "f/dna/acceptance/check",
+  "args": {},
+  "result": {
+    "error": {
+      "name": "ExecutionErr",
+      "message": "exit code for \"python run\": 1, last log lines:\nluster==2.1.3/rediscluster/exceptions.py\", line 3, in <module>\n    from redis.exceptions import (\n  File \"/tmp/windmill/cache/python_3_12/redis==3.5.3/redis/__init__.py\", line 1, in <module>\n    from redis.client import Redis, StrictRedis\n  File \"/tmp/windmill/cache/python_3_12/redis==3.5.3/redis/client.py\", line 12, in <module>\n    from redis.connection import (ConnectionPool, UnixDomainSocketConnection,\n  File \"/tmp/windmill/cache/python_3_12/redis==3.5.3/redis/connection.py\", line 2, in <module>\n    from distutils.version import StrictVersion\nModuleNotFoundError: No module named 'distutils'",
+      "exit_code": 1
+    }
+  },
+  "result_columns": null,
+  "logs": "job=01a0a00c-5d6e-a872-850e-22c0334454ce tag=python3 worker=wk-default-41a0443101de-wiJq1 hostname=41a0443101de isolation=none\n\nresolving dependencies...\ncontent of requirements:\nmongoengine\npydantic\nredis-py-cluster\nrequests\nwmill\n\nenv deps from local cache: annotated-types==0.8.0, anyio==4.15.1, certifi==2026.7.22, charset-normalizer==3.5.1, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.19, mongoengine==0.29.3, pydantic==2.13.5, pydantic-core==2.46.5, pymongo==4.18.1, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.34.2, typing-extensions==4.16.0, typing-inspection==0.4.4, urllib3==2.7.0, wmill==1.811.1\n\n\n--- PYTHON (3.12) CODE EXECUTION ---\n\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/tmp/windmill/wk-default-41a0443101de-wiJq1/01a0a00c-5d6e-a872-850e-22c0334454ce/wrapper.py\", line 10, in <module>\n    from f.dna.acceptance import check as inner_script\n  File \"/tmp/windmill/wk-default-41a0443101de-wiJq1/01a0a00c-5d6e-a872-850e-22c0334454ce/f/dna/acceptance/check.py\", line 9, in <module>\n    from f.dna.generate.spend_pause import SpendPause,PAUSE_KEY\n  File \"/tmp/windmill/wk-default-41a0443101de-wiJq1/01a0a00c-5d6e-a872-850e-22c0334454ce/tmp/f/dna/generate/spend_pause.py\", line 6, in <module>\n    from f.db.redis import RedisConnector\n  File \"/tmp/windmill/wk-default-41a0443101de-wiJq1/01a0a00c-5d6e-a872-850e-22c0334454ce/tmp/f/db/redis.py\", line 1, in <module>\n    from rediscluster import RedisCluster # pin: redis-py-cluster\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/windmill/cache/python_3_12/redis-py-cluster==2.1.3/rediscluster/__init__.py\", line 7, in <module>\n    from rediscluster.client import RedisCluster\n  File \"/tmp/windmill/cache/python_3_12/redis-py-cluster==2.1.3/rediscluster/client.py\", line 12, in <module>\n    from .connection import (\n  File \"/tmp/windmill/cache/python_3_12/redis-py-cluster==2.1.3/rediscluster/connection.py\", line 14, in <module>\n    from .nodemanager import NodeManager\n  File \"/tmp/windmill/cache/python_3_12/redis-py-cluster==2.1.3/rediscluster/nodemanager.py\", line 11, in <module>\n    from .exceptions import RedisClusterException, RedisClusterConfigError\n  File \"/tmp/windmill/cache/python_3_12/redis-py-cluster==2.1.3/rediscluster/exceptions.py\", line 3, in <module>\n    from redis.exceptions import (\n  File \"/tmp/windmill/cache/python_3_12/redis==3.5.3/redis/__init__.py\", line 1, in <module>\n    from redis.client import Redis, StrictRedis\n  File \"/tmp/windmill/cache/python_3_12/redis==3.5.3/redis/client.py\", line 12, in <module>\n    from redis.connection import (ConnectionPool, UnixDomainSocketConnection,\n  File \"/tmp/windmill/cache/python_3_12/redis==3.5.3/redis/connection.py\", line 2, in <module>\n    from distutils.version import StrictVersion\nModuleNotFoundError: No module named 'distutils'",
+  "deleted": false,
+  "canceled": false,
+  "job_kind": "preview",
+  "is_flow_step": false,
+  "language": "python3",
+  "is_skipped": false,
+  "visible_to_owner": true,
+  "mem_peak": 45188,
+  "tag": "python3",
+  "is_retry": false,
+  "resolved": false,
+  "trigger_kind": "webhook",
+  "raw_code": "#requirements:\n#pydantic\n#requests\n#wmill\n#mongoengine\n#redis-py-cluster\nfrom f.db.mongodb import init_mongodb, close_mongodb\nfrom f.dna.models import DnaMovie,DnaTv\nfrom f.dna.generate.spend_pause import SpendPause,PAUSE_KEY\nimport wmill,requests\n\ndef main():\n init_mongodb()\n output=[]\n for cls,ids in [(DnaMovie,[603,550,545611,1233066,150540]),(DnaTv,[1396,1399,249042,42009,64230])]:\n  for e in cls.objects(tmdb_id__in=ids):\n   output.append({'id':str(e.id),'type':'movie' if cls==DnaMovie else 'tv','tmdb_id':e.tmdb_id,'title':e.original_title,'popularity':e.popularity,'overview':e.overview,'release_year':e.release_year,'is_selected':e.is_selected,'selected_at':str(e.selected_at),'llm_model_name':e.llm_model_name,'dna':e.dna,'vector_essence_length':len(e.vector_essence_text or []),'vector_fingerprint_length':len(e.vector_fingerprint or [])})\n close_mongodb()\n pause=SpendPause(); active=pause.is_active()\n key=wmill.get_variable('u/Alp/OPENROUTER_API_KEY')\n r=requests.get('https://openrouter.ai/api/v1/key',headers={'Authorization':'Bearer '+key},timeout=20);r.raise_for_status();k=r.json()['data']\n return {'titles':output,'pause_active':active,'pause_ttl':pause.redis.ttl(PAUSE_KEY),'key':{k1:k.get(k1) for k1 in ['limit','limit_reset','limit_remaining','usage','usage_daily','usage_monthly']}}\n",
+  "worker": "wk-default-41a0443101de-wiJq1"
+}

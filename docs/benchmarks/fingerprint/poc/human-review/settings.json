@@ -1,0 +1,26 @@
+{
+  "review_source": "completed-review.original.json",
+  "active_candidate_labels": [
+    "A",
+    "B",
+    "D",
+    "E",
+    "F"
+  ],
+  "screened_out_of_human_review": {
+    "H": "Owner Matrix verdict: not impressed; multiple implausible traits.",
+    "M": "Owner Matrix verdict: not impressed; multiple implausible traits.",
+    "G": "Owner approved screening after Matrix and Fight Club: recurring inflated traits, weaker overall judgments than retained candidates.",
+    "I": "Screened from remaining human review after owner requested another cut: latest five verdicts are overall ok, not so good, okay, good/okay, and not that good, now spanning movies and shows."
+  },
+  "unavailable": [
+    "C",
+    "J",
+    "K",
+    "L"
+  ],
+  "watchlist": {
+    "B": "Retained: latest show verdicts looks good and very strong outweigh the earlier single weak movie result."
+  },
+  "human_review_status": "Complete for all ten titles across the five retained candidates; prior screened-candidate reviews preserved."
+}

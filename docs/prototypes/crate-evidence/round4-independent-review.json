@@ -1,0 +1,247 @@
+{
+  "reviewer": "Independent assistant; not user judgments",
+  "source": "/home/alp/dev/projects/goodwatch/goodwatch-crate-evidence-column/goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-round4.json",
+  "method": "Compared all 21 top-five prefixes and tails across fixed same-pool packing-v3 arms and prior v2. Selected source synopsis/essence inspected for concrete contradictions. Reasons are model claims, not independent evidence. Qualitative preferences are not precision-at-k scores.",
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "split": "development",
+      "preference": "tie",
+      "assessment": "Both top fives strongly cover car chases; changes from v2 are reorderings, not demonstrated semantic improvements. Both tails remain chase-oriented. Lite is cheaper here.",
+      "top5": "Both top fives strongly cover car chases; changes from v2 are reorderings, not demonstrated semantic improvements.",
+      "tail": "Both tails remain chase-oriented. Lite is cheaper here.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "split": "development",
+      "preference": "tie; lite shorter and cheaper",
+      "assessment": "Both v3 arms improve central-object leaders over v2: They Live, magical sunglasses and Fiancés. Flash puts Fiancés #3 versus lite #4. Lite returns five focused titles. Flash fills ten with progressively incidental/style evidence; extra results are not automatically added value.",
+      "top5": "Both v3 arms improve central-object leaders over v2: They Live, magical sunglasses and Fiancés. Flash puts Fiancés #3 versus lite #4.",
+      "tail": "Lite returns five focused titles. Flash fills ten with progressively incidental/style evidence; extra results are not automatically added value.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "split": "development",
+      "preference": "tie",
+      "assessment": "Both top fives contain explicit unreliable-narrator evidence, with the same first four; no clear quality gain from the stronger model. Both tails are plausible; two Girl on the Train adaptations in Flash are distinct records, not a duplicate-id error.",
+      "top5": "Both top fives contain explicit unreliable-narrator evidence, with the same first four; no clear quality gain from the stronger model.",
+      "tail": "Both tails are plausible; two Girl on the Train adaptations in Flash are distinct records, not a duplicate-id error.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "split": "development",
+      "preference": "flash",
+      "assessment": "Shared wealth/dark-comedy leaders remain strong; v2 already had essentially the same strong prefix. Lite introduces Bedlam at #8, whose source describes dark disturbing asylum horror and wealthy spectators, not comedy. Flash avoids this conjunction failure.",
+      "top5": "Shared wealth/dark-comedy leaders remain strong; v2 already had essentially the same strong prefix.",
+      "tail": "Lite introduces Bedlam at #8, whose source describes dark disturbing asylum horror and wealthy spectators, not comedy. Flash avoids this conjunction failure.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "split": "development",
+      "preference": "flash for balanced coverage",
+      "assessment": "Lite concentrates on game shows and sports. These do satisfy open-format tension and are not errors, but Flash also keeps low-bleakness adventure/survival/comedy candidates, a useful broader interpretation of the underspecified request. No valid claim that fiction is required. Flash resembles v2 diversity more than the narrowed lite list.",
+      "top5": "Lite concentrates on game shows and sports. These do satisfy open-format tension and are not errors, but Flash also keeps low-bleakness adventure/survival/comedy candidates, a useful broader interpretation of the underspecified request.",
+      "tail": "No valid claim that fiction is required. Flash resembles v2 diversity more than the narrowed lite list.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "split": "development",
+      "preference": "tie",
+      "assessment": "Both top fives strongly satisfy gritty non-anime crime; source support was already strong in v2. Both tails are coherent crime series. Lite has the efficiency advantage without a clear quality penalty here.",
+      "top5": "Both top fives strongly satisfy gritty non-anime crime; source support was already strong in v2.",
+      "tail": "Both tails are coherent crime series. Lite has the efficiency advantage without a clear quality penalty here.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "split": "development",
+      "preference": "no relevance winner",
+      "assessment": "With my parents supplies no taste or content boundaries. Both return popular cross-generational choices, which cannot be validated as personalized matches. Flash names prison violence and death-row themes rather than asserting universal suitability; that is more calibrated wording, not proof of ranking superiority.",
+      "top5": "With my parents supplies no taste or content boundaries. Both return popular cross-generational choices, which cannot be validated as personalized matches.",
+      "tail": "Flash names prison violence and death-row themes rather than asserting universal suitability; that is more calibrated wording, not proof of ranking superiority.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "split": "development",
+      "preference": "flash for explanation calibration; ranking close",
+      "assessment": "Flash retains Reset and Conan but describes low bleakness and puzzle tension rather than asserting a verified happy ending. Lite still says Reset avoids a bleak conclusion without source support. Flash tail expands to ten including moderate-bleakness entries. Reduced ending overclaim is useful, but mood scores do not verify final emotional impact.",
+      "top5": "Flash retains Reset and Conan but describes low bleakness and puzzle tension rather than asserting a verified happy ending. Lite still says Reset avoids a bleak conclusion without source support.",
+      "tail": "Flash tail expands to ten including moderate-bleakness entries. Reduced ending overclaim is useful, but mood scores do not verify final emotional impact.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "split": "development",
+      "preference": "tie",
+      "assessment": "Both have an evidence-supported wealthy-dysfunction top five, better ordered around Succession than v2. Both tails broaden to tech/social satire. Flash returns more candidates; no decisive quality gain over lite established.",
+      "top5": "Both have an evidence-supported wealthy-dysfunction top five, better ordered around Succession than v2.",
+      "tail": "Both tails broaden to tech/social satire. Flash returns more candidates; no decisive quality gain over lite established.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "split": "development",
+      "preference": "tie",
+      "assessment": "Both deliver grounded crime drama with explicit realism, led by Mare of Easttown; differences are mainly order. Both preserve procedural and documentary options without incorrectly treating real as documentary-only.",
+      "top5": "Both deliver grounded crime drama with explicit realism, led by Mare of Easttown; differences are mainly order.",
+      "tail": "Both preserve procedural and documentary options without incorrectly treating real as documentary-only.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "split": "development",
+      "preference": "flash, narrow and imperfect",
+      "assessment": "Both keep explicitly supported mid-story perspective reversal first. Flash follows with Caligari/Gone Girl; lite promotes Vertigo and Ludo ahead of several stronger narrator matches. Flash still includes Psycho at #5 on a reason about changing protagonists, which does not establish a deceptive storyteller. Neither is a clean whole-conjunction solution.",
+      "top5": "Both keep explicitly supported mid-story perspective reversal first. Flash follows with Caligari/Gone Girl; lite promotes Vertigo and Ludo ahead of several stronger narrator matches.",
+      "tail": "Flash still includes Psycho at #5 on a reason about changing protagonists, which does not establish a deceptive storyteller. Neither is a clean whole-conjunction solution.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "split": "development",
+      "preference": "flash",
+      "assessment": "Flash top five centers The Driver, Drive, Baby Driver, Wheelman and Motorway. Lite promotes Taxi 3 to #3 and calls it a grounded getaway-driver narrative; source says a taxi driver helps police catch thieves and describes over-the-top gags. This is a substantive lite regression from v2. Flash tail is broadly coherent; incidental chase titles still deserve weaker relevance than getaway protagonists.",
+      "top5": "Flash top five centers The Driver, Drive, Baby Driver, Wheelman and Motorway. Lite promotes Taxi 3 to #3 and calls it a grounded getaway-driver narrative; source says a taxi driver helps police catch thieves and describes over-the-top gags. This is a substantive lite regression from v2.",
+      "tail": "Flash tail is broadly coherent; incidental chase titles still deserve weaker relevance than getaway protagonists.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "split": "development",
+      "preference": "tie; flash wording more cautious",
+      "assessment": "Both have warm, witty leaders with direct support and remove v2 Elf. Not-cheesy remains subjective and is not verified by absence of a word. Flash acknowledges uncertainty for Fever Pitch/The Terminal instead of claiming complete fit. This improves calibration, not guaranteed ranking correctness.",
+      "top5": "Both have warm, witty leaders with direct support and remove v2 Elf. Not-cheesy remains subjective and is not verified by absence of a word.",
+      "tail": "Flash acknowledges uncertainty for Fever Pitch/The Terminal instead of claiming complete fit. This improves calibration, not guaranteed ranking correctness.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "54f28fa29638",
+      "request": "A gentle science-fiction film about making contact, without a war or a horror atmosphere.",
+      "split": "challenge",
+      "preference": "flash",
+      "assessment": "Flash first five are gentle alien-contact fiction. Lite places the explicitly biographical documentary John Was Trying to Contact Aliens #2, violating the science-fiction requirement. Flash still includes that documentary at #10, so it demotes rather than eliminates the error. Both can improve on broader coverage, but v2 had a cleaner five-item list.",
+      "top5": "Flash first five are gentle alien-contact fiction. Lite places the explicitly biographical documentary John Was Trying to Contact Aliens #2, violating the science-fiction requirement.",
+      "tail": "Flash still includes that documentary at #10, so it demotes rather than eliminates the error. Both can improve on broader coverage, but v2 had a cleaner five-item list.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "c05b3f733463",
+      "request": "A tense legal thriller with clever courtroom arguments, not a serial-killer investigation.",
+      "split": "challenge",
+      "preference": "flash, modest",
+      "assessment": "Both v3 models improve v2 by leading with A Few Good Men and Anatomy of a Murder rather than jury-room-only 12 Angry Men. Both top fives better fit courtroom advocacy. Flash removes 12 Angry Men from top10; lite retains it #7 and calls it courtroom deliberation despite source explicitly locating it in a jury room. Flash tail is more literally aligned.",
+      "top5": "Both v3 models improve v2 by leading with A Few Good Men and Anatomy of a Murder rather than jury-room-only 12 Angry Men. Both top fives better fit courtroom advocacy.",
+      "tail": "Flash removes 12 Angry Men from top10; lite retains it #7 and calls it courtroom deliberation despite source explicitly locating it in a jury room. Flash tail is more literally aligned.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "717260825ed1",
+      "request": "A comedy about ordinary coworkers, not high school or teenagers.",
+      "split": "challenge",
+      "preference": "tie",
+      "assessment": "Both top fives are supported adult workplace comedy; neither confuses the children's-show setting of Uramichi with teenage protagonists. Both tails remain workplace-related. An office fantasy is not excluded just because supernatural elements exist; user excluded school/teens, not fantasy.",
+      "top5": "Both top fives are supported adult workplace comedy; neither confuses the children's-show setting of Uramichi with teenage protagonists.",
+      "tail": "Both tails remain workplace-related. An office fantasy is not excluded just because supernatural elements exist; user excluded school/teens, not fantasy.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "0206e75fb053",
+      "request": "A fast-paced heist where the plan goes wrong, but keep the violence mild.",
+      "split": "challenge",
+      "preference": "flash, material leader gain",
+      "assessment": "Flash promotes Foolproof, whose synopsis explicitly says a planned heist game goes wrong when the plan is stolen and executed. Lite puts Coin Heist first and invents a botched plan; its source only establishes teens planning to rob the Mint. Flash still fills with generic successful/uncertain heists. Lite explicitly admits Ocean's Eight is largely successful. Flash improves the best match but does not solve plan-goes-wrong throughout the list.",
+      "top5": "Flash promotes Foolproof, whose synopsis explicitly says a planned heist game goes wrong when the plan is stolen and executed. Lite puts Coin Heist first and invents a botched plan; its source only establishes teens planning to rob the Mint.",
+      "tail": "Flash still fills with generic successful/uncertain heists. Lite explicitly admits Ocean's Eight is largely successful. Flash improves the best match but does not solve plan-goes-wrong throughout the list.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "134bc9d838cf",
+      "request": "A documentary series about the natural world; no true crime.",
+      "split": "challenge",
+      "preference": "tie",
+      "assessment": "Both top fives are directly supported nature documentary series, and the old controls were already strong. Both tails are relevant. Stronger model adds cost without a demonstrated quality need on this request.",
+      "top5": "Both top fives are directly supported nature documentary series, and the old controls were already strong.",
+      "tail": "Both tails are relevant. Stronger model adds cost without a demonstrated quality need on this request.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "02d75f344631",
+      "request": "Un thriller de ciencia ficción sobre recuerdos falsos, sin terror.",
+      "split": "challenge",
+      "preference": "flash, small top-two gain; both incomplete",
+      "assessment": "Both v3 arms fix v2 Eternal Sunshine leader by choosing Total Recall, whose synopsis explicitly names manufactured/implanted memories. Flash gives both adaptations up front; this is direct false-memory support. Both still equate memory recording/access/wipes with false memories for later titles. Flash calls OtherLife fake memories and Self/less false memories without direct source support established here. It also includes candidates with unverified genre/no-horror. Do not call the entire list a whole-conjunction success.",
+      "top5": "Both v3 arms fix v2 Eternal Sunshine leader by choosing Total Recall, whose synopsis explicitly names manufactured/implanted memories. Flash gives both adaptations up front; this is direct false-memory support.",
+      "tail": "Both still equate memory recording/access/wipes with false memories for later titles. Flash calls OtherLife fake memories and Self/less false memories without direct source support established here. It also includes candidates with unverified genre/no-horror. Do not call the entire list a whole-conjunction success.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "b02a6546100d",
+      "request": "A story about a university professor, not space or the universe.",
+      "split": "challenge",
+      "preference": "tie; both v3 improve v2",
+      "assessment": "Both remove the high-school coach mismatch and lead with directly supported academic protagonists. Flash top five is university-focused; lite top five also is. Both tails have professor evidence. No reason to award Flash the entire professor gain: packing-v3 lite fixed Coach Carter too.",
+      "top5": "Both remove the high-school coach mismatch and lead with directly supported academic protagonists. Flash top five is university-focused; lite top five also is.",
+      "tail": "Both tails have professor evidence. No reason to award Flash the entire professor gain: packing-v3 lite fixed Coach Carter too.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    },
+    {
+      "id": "ee4de4e1e371",
+      "request": "Something to watch with my parents: we all enjoy dark adult comedy, so it does not need to be family-friendly.",
+      "split": "challenge",
+      "preference": "tie",
+      "assessment": "Both honor explicit dark adult comedy and keep supported satire leaders. Neither needs to exclude family-compatible Addams Family Values. Flash and lite offer different coherent adult-comedy tails; increased darkness alone is not a demonstrated improvement.",
+      "top5": "Both honor explicit dark adult comedy and keep supported satire leaders. Neither needs to exclude family-compatible Addams Family Values.",
+      "tail": "Flash and lite offer different coherent adult-comedy tails; increased darkness alone is not a demonstrated improvement.",
+      "next_experiment": "Compare the frozen stronger model with shorter output against the cheaper same-pool model on untouched confirmation requests; do not tune to these judged cases."
+    }
+  ],
+  "metrics": {
+    "planned_union_fast31": {
+      "requests": 21,
+      "median_reconstructed_end_to_end_ms": 7332.955285994103,
+      "mean_reconstructed_end_to_end_ms": 7429.888429999664,
+      "mean_reported_cost_usd": 0.008349260285714286
+    },
+    "planned_union_google_gemini_3_1_flash_lite_packing3": {
+      "requests": 21,
+      "median_reconstructed_end_to_end_ms": 6492.45875399356,
+      "mean_reconstructed_end_to_end_ms": 6981.536358903733,
+      "mean_reported_cost_usd": 0.003928867428571428
+    },
+    "planned_union_google_gemini_3_flash_preview_packing3": {
+      "requests": 21,
+      "median_reconstructed_end_to_end_ms": 8373.739409004687,
+      "mean_reconstructed_end_to_end_ms": 8585.891236188825,
+      "mean_reported_cost_usd": 0.006651938857142857
+    }
+  },
+  "overall": {
+    "preference": "Flash packing3 as quality finalist; no production/global winner yet",
+    "assessment": "Flash materially avoids costly lite mistakes in contact genre, getaway-driver role and failed-heist leader, while preserving strong shared lists. The benefit is concentrated, not universal: many cases tie and professor/legal gains also occur with lite packing3. Flash still has weak tail conjunctions. On these 21 requests Flash average reported cost is about $0.00665 versus lite $0.00393 (about 69% higher), with reconstructed median end-to-end time about 8.37s versus 6.49s (about 29% higher). Versus prior v2 it is cheaper but slower. This supports testing a leaner Flash finalist, not silently accepting the latency premium or declaring flawless quality.",
+    "limitations": [
+      "Same pools and already-inspected development/challenge requests; not fresh generalization evidence.",
+      "Latencies include reconstructed frozen upstream components; do not present them as a single freshly measured production end-to-end run.",
+      "Source annotation quality and explicit-constraint tail failures remain unresolved.",
+      "Final confirmation outputs were not inspected."
+    ]
+  }
+}

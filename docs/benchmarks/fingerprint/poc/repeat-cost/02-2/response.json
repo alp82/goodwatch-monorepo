@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789409957-SeYXMu9fdW92dh1x3yow",
+  "object": "chat.completion",
+  "created": 1789409957,
+  "model": "qwen/qwen3.7-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n    {\n      \"benchmark_id\": \"movie:603\",\n      \"analysis\": {\n        \"fingerprint\": {\n          \"scores\": {\n            \"adrenaline\": 9,\n            \"tension\": 8,\n            \"scare\": 4,\n            \"violence\": 7,\n            \"romance\": 2,\n            \"eroticism\": 1,\n            \"wholesome\": 2,\n            \"wonder\": 7,\n            \"pathos\": 3,\n            \"melancholy\": 2,\n            \"uncanny\": 6,\n            \"catharsis\": 5,\n            \"nostalgia\": 8,\n            \"situational_comedy\": 1,\n            \"wit_wordplay\": 5,\n            \"physical_comedy\": 1,\n            \"cringe_humor\": 0,\n            \"absurdist_humor\": 1,\n            \"satire_parody\": 2,\n            \"dark_humor\": 2,\n            \"fantasy\": 6,\n            \"futuristic\": 9,\n            \"historical\": 0,\n            \"contemporary_realism\": 1,\n            \"crime\": 1,\n            \"mystery\": 5,\n            \"warfare\": 6,\n            \"political\": 4,\n            \"sports\": 0,\n            \"biographical\": 0,\n            \"coming_of_age\": 5,\n            \"family_dynamics\": 1,\n            \"psychological\": 7,\n            \"showbiz\": 0,\n            \"gaming\": 3,\n            \"pop_culture\": 9,\n            \"social_commentary\": 7,\n            \"class_and_capitalism\": 4,\n            \"technology_and_humanity\": 9,\n            \"spiritual\": 4,\n            \"narrative_structure\": 8,\n            \"dialogue_quality\": 7,\n            \"character_depth\": 6,\n            \"slow_burn\": 3,\n            \"fast_pace\": 8,\n            \"intrigue\": 8,\n            \"complexity\": 6,\n            \"rewatchability\": 9,\n            \"hopefulness\": 5,\n            \"bleakness\": 4,\n            \"ambiguity\": 4,\n            \"novelty\": 9,\n            \"homage_and_reference\": 6,\n            \"non_linear_narrative\": 1,\n            \"meta_narrative\": 2,\n            \"surrealism\": 5,\n            \"eccentricity\": 3,\n            \"philosophical\": 7,\n            \"educational\": 0,\n            \"direction\": 9,\n            \"acting\": 7,\n            \"cinematography\": 10,\n            \"editing\": 9,\n            \"music_composition\": 9,\n            \"world_immersion\": 9,\n            \"spectacle\": 9,\n            \"visual_stylization\": 10,\n            \"pastiche\": 4,\n            \"psychedelic\": 3,\n            \"grotesque\": 2,\n            \"camp_and_irony\": 1,\n            \"dialogue_centrality\": 6,\n            \"music_centrality\": 7,\n            \"sound_centrality\": 9\n          },\n          \"highlight_keys\": [\n            \"visual_stylization\",\n            \"cinematography\",\n            \"novelty\",\n            \"technology_and_humanity\",\n            \"futuristic\",\n            \"adrenaline\",\n            \"sound_centrality\",\n            \"pop_culture\"\n          ]\n        },\n        \"is_anime\": false,\n        \"production_info\": {\n          \"method\": \"Live-Action\",\n          \"animation_style\": null\n        },\n        \"content_advisories\": [\n          \"Violence\",\n          \"Strong Language\"\n        ],\n        \"social_suitability\": {\n          \"solo_watch\": true,\n          \"date_night\": true,\n          \"group_party\": true,\n          \"family\": false,\n          \"partner\": true,\n          \"friends\": true,\n          \"kids\": false,\n          \"teens\": true,\n          \"adults\": true,\n          \"intergenerational\": false,\n          \"public_viewing_safe\": true\n        },\n        \"viewing_context\": {\n          \"is_thought_provoking\": true,\n          \"is_pure_escapism\": false,\n          \"is_background_friendly\": false,\n          \"is_comfort_watch\": false,\n          \"is_binge_friendly\": false,\n          \"is_drop_in_friendly\": true\n        },\n        \"essence_tags\": [\n          \"Cyberpunk Action Thriller\",\n          \"Philosophical Sci-Fi\",\n          \"Groundbreaking Visual Effects\",\n          \"Matrix Gun-Fu Choreography\",\n          \"Reality vs. Simulation\",\n          \"High-Octane Spectacle\",\n          \"Iconic 90s Pop Culture\",\n          \"Mind-Bending Narrative\",\n          \"Stylish Dystopia\"\n        ],\n        \"essence_text\": \"A visually revolutionary sci-fi masterpiece that redefined action cinema with its 'bullet time' effects and gritty, green-tinted aesthetic. The film blends high-octane adrenaline with deep philosophical questions about reality, consciousness, and human freedom. Its iconic choreography and immersive sound design create a world that is both terrifying and exhilarating. This is a defining pop culture moment that rewards intense focus and offers immense rewatchability for its sheer stylistic impact.\"\n      }\n    }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 9283,
+    "completion_tokens": 1282,
+    "total_tokens": 10565,
+    "cost": 0.00026083,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00026083,
+      "upstream_inference_prompt_cost": 9.417e-05,
+      "upstream_inference_completions_cost": 0.00016666
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

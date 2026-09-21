@@ -1,0 +1,540 @@
+[
+  {
+    "id": "01a0a00f-b52d-7837-1214-2522ed6c0c24",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark",
+    "script_hash": null,
+    "duration_ms": 23646,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 4,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a00f-b552-d852-ba23-13130fe1fe00",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a00f-ba8a-e943-0c23-7f0ce06b677b",
+          "type": "Success",
+          "skipped": false,
+          "flow_jobs": [
+            "01a0a00f-ba8a-e943-0c23-7f0ce06b677b"
+          ],
+          "flow_jobs_success": [
+            true
+          ],
+          "flow_jobs_duration": {
+            "started_at": [
+              "2026-09-14T13:16:20.505869Z"
+            ],
+            "duration_ms": [
+              18144
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "job": "01a0a010-0198-3a1c-c672-49b2620b5901",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "vectors",
+          "job": "01a0a010-0213-9dba-1e64-30d5987f7aa8",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00f-b552-d852-ba23-13130fe1fe00",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 1288,
+    "result": [
+      [
+        {
+          "id": "68473b6e1f87b65f339a1d59",
+          "type": "movie",
+          "tmdb_id": 150540
+        }
+      ]
+    ],
+    "logs": "job=01a0a00f-b552-d852-ba23-13130fe1fe00 tag=python3 worker=wk-default-2f4bb8b4f321-Ngr5d hostname=2f4bb8b4f321 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00f-ba8a-e943-0c23-7f0ce06b677b",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0",
+    "script_hash": null,
+    "duration_ms": 18144,
+    "result": [
+      {
+        "id": "68473b6e1f87b65f339a1d59",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 0,
+              "scare": 2,
+              "acting": 8,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 8,
+              "fantasy": 7,
+              "mystery": 2,
+              "novelty": 8,
+              "romance": 1,
+              "showbiz": 0,
+              "tension": 5,
+              "uncanny": 4,
+              "warfare": 0,
+              "intrigue": 7,
+              "pastiche": 0,
+              "violence": 1,
+              "ambiguity": 2,
+              "bleakness": 3,
+              "catharsis": 9,
+              "direction": 9,
+              "eroticism": 0,
+              "fast_pace": 6,
+              "grotesque": 1,
+              "nostalgia": 6,
+              "political": 0,
+              "slow_burn": 3,
+              "spectacle": 7,
+              "spiritual": 3,
+              "wholesome": 9,
+              "adrenaline": 3,
+              "complexity": 7,
+              "dark_humor": 2,
+              "futuristic": 1,
+              "historical": 0,
+              "melancholy": 7,
+              "surrealism": 5,
+              "educational": 7,
+              "hopefulness": 9,
+              "pop_culture": 2,
+              "psychedelic": 2,
+              "biographical": 0,
+              "cringe_humor": 2,
+              "eccentricity": 6,
+              "wit_wordplay": 5,
+              "coming_of_age": 10,
+              "philosophical": 6,
+              "psychological": 9,
+              "satire_parody": 1,
+              "camp_and_irony": 1,
+              "cinematography": 8,
+              "meta_narrative": 1,
+              "rewatchability": 8,
+              "absurdist_humor": 6,
+              "character_depth": 9,
+              "family_dynamics": 9,
+              "physical_comedy": 4,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 8,
+              "sound_centrality": 6,
+              "music_composition": 9,
+              "social_commentary": 4,
+              "situational_comedy": 6,
+              "visual_stylization": 8,
+              "dialogue_centrality": 7,
+              "narrative_structure": 9,
+              "class_and_capitalism": 0,
+              "contemporary_realism": 6,
+              "homage_and_reference": 1,
+              "non_linear_narrative": 4,
+              "technology_and_humanity": 2
+            },
+            "highlight_keys": [
+              "coming_of_age",
+              "pathos",
+              "catharsis",
+              "wholesome",
+              "psychological",
+              "family_dynamics",
+              "music_composition",
+              "novelty"
+            ]
+          },
+          "essence_tags": [
+            "Emotional Intelligence Metaphor",
+            "Pixar Masterpiece",
+            "Bittersweet Coming-of-Age",
+            "Visually Inventive",
+            "Heartwarming & Tearjerking",
+            "Psychological Depth",
+            "Family Bonding",
+            "Joyful Melancholy"
+          ],
+          "essence_text": "A visually inventive and emotionally profound exploration of the human psyche, personifying feelings as characters navigating a child's internal world. The film masterfully balances whimsical adventure with deep psychological insight, delivering a powerful message about the necessity of sadness in growing up. Its narrative structure is tight and clever, leading to an incredibly cathartic and heartwarming climax that resonates with both children and adults. With its iconic score and vibrant animation, it stands as a touching testament to emotional complexity and family love.",
+          "production_info": {
+            "method": "Animation",
+            "animation_style": "3D CGI"
+          },
+          "viewing_context": {
+            "is_comfort_watch": true,
+            "is_pure_escapism": false,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [],
+          "social_suitability": {
+            "kids": true,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": false,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "c",
+          "job": "01a0a00f-baa9-a242-543d-8ce3bb54936a",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00f-baa9-a242-543d-8ce3bb54936a",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0/c",
+    "script_hash": null,
+    "duration_ms": 18076,
+    "result": [
+      {
+        "id": "68473b6e1f87b65f339a1d59",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 0,
+              "scare": 2,
+              "acting": 8,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 8,
+              "fantasy": 7,
+              "mystery": 2,
+              "novelty": 8,
+              "romance": 1,
+              "showbiz": 0,
+              "tension": 5,
+              "uncanny": 4,
+              "warfare": 0,
+              "intrigue": 7,
+              "pastiche": 0,
+              "violence": 1,
+              "ambiguity": 2,
+              "bleakness": 3,
+              "catharsis": 9,
+              "direction": 9,
+              "eroticism": 0,
+              "fast_pace": 6,
+              "grotesque": 1,
+              "nostalgia": 6,
+              "political": 0,
+              "slow_burn": 3,
+              "spectacle": 7,
+              "spiritual": 3,
+              "wholesome": 9,
+              "adrenaline": 3,
+              "complexity": 7,
+              "dark_humor": 2,
+              "futuristic": 1,
+              "historical": 0,
+              "melancholy": 7,
+              "surrealism": 5,
+              "educational": 7,
+              "hopefulness": 9,
+              "pop_culture": 2,
+              "psychedelic": 2,
+              "biographical": 0,
+              "cringe_humor": 2,
+              "eccentricity": 6,
+              "wit_wordplay": 5,
+              "coming_of_age": 10,
+              "philosophical": 6,
+              "psychological": 9,
+              "satire_parody": 1,
+              "camp_and_irony": 1,
+              "cinematography": 8,
+              "meta_narrative": 1,
+              "rewatchability": 8,
+              "absurdist_humor": 6,
+              "character_depth": 9,
+              "family_dynamics": 9,
+              "physical_comedy": 4,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 8,
+              "sound_centrality": 6,
+              "music_composition": 9,
+              "social_commentary": 4,
+              "situational_comedy": 6,
+              "visual_stylization": 8,
+              "dialogue_centrality": 7,
+              "narrative_structure": 9,
+              "class_and_capitalism": 0,
+              "contemporary_realism": 6,
+              "homage_and_reference": 1,
+              "non_linear_narrative": 4,
+              "technology_and_humanity": 2
+            },
+            "highlight_keys": [
+              "coming_of_age",
+              "pathos",
+              "catharsis",
+              "wholesome",
+              "psychological",
+              "family_dynamics",
+              "music_composition",
+              "novelty"
+            ]
+          },
+          "essence_tags": [
+            "Emotional Intelligence Metaphor",
+            "Pixar Masterpiece",
+            "Bittersweet Coming-of-Age",
+            "Visually Inventive",
+            "Heartwarming & Tearjerking",
+            "Psychological Depth",
+            "Family Bonding",
+            "Joyful Melancholy"
+          ],
+          "essence_text": "A visually inventive and emotionally profound exploration of the human psyche, personifying feelings as characters navigating a child's internal world. The film masterfully balances whimsical adventure with deep psychological insight, delivering a powerful message about the necessity of sadness in growing up. Its narrative structure is tight and clever, leading to an incredibly cathartic and heartwarming climax that resonates with both children and adults. With its iconic score and vibrant animation, it stands as a touching testament to emotional complexity and family love.",
+          "production_info": {
+            "method": "Animation",
+            "animation_style": "3D CGI"
+          },
+          "viewing_context": {
+            "is_comfort_watch": true,
+            "is_pure_escapism": false,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [],
+          "social_suitability": {
+            "kids": true,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": false,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a00f-baa9-a242-543d-8ce3bb54936a tag=python3 worker=wk-default-5a13c6df3030-F9Ldo hostname=5a13c6df3030 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nACCEPTANCE_RESERVATION {\"model\": \"qwen/qwen3.8-flash\", \"usd\": 0.00950664, \"input_byte_bound\": 28282}\nACCEPTANCE_USAGE {\"model\": \"qwen/qwen3.8-flash\", \"id\": \"gen-1789391781-Jt805ELsetGvNq13AW2r\", \"provider\": \"Alibaba\", \"usage\": {\"prompt_tokens\": 4554, \"completion_tokens\": 1097, \"total_tokens\": 5651, \"cost\": 0.000615522, \"is_byok\": false, \"prompt_tokens_details\": {\"cached_tokens\": 4352, \"cache_write_tokens\": 0, \"audio_tokens\": 0, \"video_tokens\": 0}, \"cost_details\": {\"upstream_inference_cost\": 0.000615522, \"upstream_inference_prompt_cost\": 9.9932e-05, \"upstream_inference_completions_cost\": 0.00051559}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"image_tokens\": 0, \"audio_tokens\": 0}}}\nOpenRouter qwen/qwen3.8-flash usage.cost=0.000615522\nACCEPTANCE_ACCOUNTED_USD 0.0006155220000000003",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a010-0198-3a1c-c672-49b2620b5901",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/d",
+    "script_hash": null,
+    "duration_ms": 67,
+    "result": [
+      {
+        "id": "68473b6e1f87b65f339a1d59",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 0,
+              "scare": 2,
+              "acting": 8,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 8,
+              "fantasy": 7,
+              "mystery": 2,
+              "novelty": 8,
+              "romance": 1,
+              "showbiz": 0,
+              "tension": 5,
+              "uncanny": 4,
+              "warfare": 0,
+              "intrigue": 7,
+              "pastiche": 0,
+              "violence": 1,
+              "ambiguity": 2,
+              "bleakness": 3,
+              "catharsis": 9,
+              "direction": 9,
+              "eroticism": 0,
+              "fast_pace": 6,
+              "grotesque": 1,
+              "nostalgia": 6,
+              "political": 0,
+              "slow_burn": 3,
+              "spectacle": 7,
+              "spiritual": 3,
+              "wholesome": 9,
+              "adrenaline": 3,
+              "complexity": 7,
+              "dark_humor": 2,
+              "futuristic": 1,
+              "historical": 0,
+              "melancholy": 7,
+              "surrealism": 5,
+              "educational": 7,
+              "hopefulness": 9,
+              "pop_culture": 2,
+              "psychedelic": 2,
+              "biographical": 0,
+              "cringe_humor": 2,
+              "eccentricity": 6,
+              "wit_wordplay": 5,
+              "coming_of_age": 10,
+              "philosophical": 6,
+              "psychological": 9,
+              "satire_parody": 1,
+              "camp_and_irony": 1,
+              "cinematography": 8,
+              "meta_narrative": 1,
+              "rewatchability": 8,
+              "absurdist_humor": 6,
+              "character_depth": 9,
+              "family_dynamics": 9,
+              "physical_comedy": 4,
+              "world_immersion": 9,
+              "dialogue_quality": 8,
+              "music_centrality": 8,
+              "sound_centrality": 6,
+              "music_composition": 9,
+              "social_commentary": 4,
+              "situational_comedy": 6,
+              "visual_stylization": 8,
+              "dialogue_centrality": 7,
+              "narrative_structure": 9,
+              "class_and_capitalism": 0,
+              "contemporary_realism": 6,
+              "homage_and_reference": 1,
+              "non_linear_narrative": 4,
+              "technology_and_humanity": 2
+            },
+            "highlight_keys": [
+              "coming_of_age",
+              "pathos",
+              "catharsis",
+              "wholesome",
+              "psychological",
+              "family_dynamics",
+              "music_composition",
+              "novelty"
+            ]
+          },
+          "essence_tags": [
+            "Emotional Intelligence Metaphor",
+            "Pixar Masterpiece",
+            "Bittersweet Coming-of-Age",
+            "Visually Inventive",
+            "Heartwarming & Tearjerking",
+            "Psychological Depth",
+            "Family Bonding",
+            "Joyful Melancholy"
+          ],
+          "essence_text": "A visually inventive and emotionally profound exploration of the human psyche, personifying feelings as characters navigating a child's internal world. The film masterfully balances whimsical adventure with deep psychological insight, delivering a powerful message about the necessity of sadness in growing up. Its narrative structure is tight and clever, leading to an incredibly cathartic and heartwarming climax that resonates with both children and adults. With its iconic score and vibrant animation, it stands as a touching testament to emotional complexity and family love.",
+          "production_info": {
+            "method": "Animation",
+            "animation_style": "3D CGI"
+          },
+          "viewing_context": {
+            "is_comfort_watch": true,
+            "is_pure_escapism": false,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [],
+          "social_suitability": {
+            "kids": true,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": false,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a010-0198-3a1c-c672-49b2620b5901 tag=python3 worker=wk-default-5a13c6df3030-F9Ldo hostname=5a13c6df3030 isolation=none\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a010-0213-9dba-1e64-30d5987f7aa8",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/vectors",
+    "script_hash": "d7d1a5ead6496c07",
+    "duration_ms": 3942,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "job=01a0a010-0213-9dba-1e64-30d5987f7aa8 tag=python3 worker=wk-default-f2f4cd808ea9-byElp hostname=f2f4cd808ea9 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, cachetools==6.2.2, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, google-auth==2.43.0, google-genai==1.53.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pyasn1==0.6.1, pyasn1-modules==0.4.2, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, requests==2.32.5, rsa==4.9.1, tenacity==9.1.2, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, websockets==15.0.1, wmill==1.589.1\n\n\nCopying some packages from cache to job_dir...\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nSuccessfully generated 1 embeddings.\nInitializing mongodb...\nSuccessfully initialized mongodb\nsaving DNA for Inside Out (2015)\n[3.0, 5.0, 2.0, 1.0, 1.0, 0.0, 9.0, 8.0, 9.0, 7.0, 4.0, 9.0, 6.0, 6.0, 5.0, 4.0, 2.0, 6.0, 1.0, 2.0, 7.0, 1.0, 0.0, 6.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 10.0, 9.0, 9.0, 0.0, 0.0, 2.0, 4.0, 0.0, 2.0, 3.0, 9.0, 8.0, 9.0, 3.0, 6.0, 7.0, 7.0, 8.0, 9.0, 3.0, 2.0, 8.0, 1.0, 4.0, 1.0, 5.0, 6.0, 6.0, 7.0, 9.0, 8.0, 8.0, 8.0, 9.0, 9.0, 7.0, 8.0, 0.0, 2.0, 1.0, 1.0, 7.0, 8.0, 6.0]",
+    "flow_status": null
+  }
+]

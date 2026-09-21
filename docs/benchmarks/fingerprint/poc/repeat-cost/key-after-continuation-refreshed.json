@@ -1,0 +1,10 @@
+{
+  "limit": 9,
+  "limit_reset": null,
+  "limit_remaining": 8.611783792,
+  "include_byok_in_limit": false,
+  "usage": 0.388216208,
+  "usage_daily": 0.01179756,
+  "usage_monthly": 0.388216208,
+  "is_free_tier": false
+}

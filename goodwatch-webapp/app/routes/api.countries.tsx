@@ -19,6 +19,10 @@ export const useCountries = () => {
 	const url = "/api/countries"
 	return useQuery<GetCountriesResult>({
 		queryKey: queryKeyCountries,
-		queryFn: async () => await (await fetch(url)).json(),
+		queryFn: async ({ signal }) => {
+			const response = await fetch(url, { signal })
+			if (!response.ok) throw new Error("Could not load countries")
+			return response.json()
+		},
 	})
 }

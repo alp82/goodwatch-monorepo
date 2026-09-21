@@ -1,4 +1,5 @@
 import { redactSearchTelemetry } from "~/utils/search-telemetry"
+export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
@@ -335,7 +336,7 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-5NK4EX51SM');
-										`,
+                  `,
 									}}
 								/>
 							</HydrationBoundary>

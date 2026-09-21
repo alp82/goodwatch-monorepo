@@ -1,0 +1,549 @@
+[
+  {
+    "id": "01a0a00f-4f58-bc9e-5ecb-8ae54b4f02f1",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark",
+    "script_hash": null,
+    "duration_ms": 23987,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 4,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a00f-4f71-efcb-7108-7b7de0694fb7",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a00f-54e6-04bd-93e2-84f2a8df9d58",
+          "type": "Success",
+          "skipped": false,
+          "flow_jobs": [
+            "01a0a00f-54e6-04bd-93e2-84f2a8df9d58"
+          ],
+          "flow_jobs_success": [
+            true
+          ],
+          "flow_jobs_duration": {
+            "started_at": [
+              "2026-09-14T13:15:54.501540Z"
+            ],
+            "duration_ms": [
+              19127
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "job": "01a0a00f-9fe9-6129-c78d-3344bd42aa96",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "vectors",
+          "job": "01a0a00f-a09b-0b38-864d-222334a96b6f",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00f-4f71-efcb-7108-7b7de0694fb7",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 1350,
+    "result": [
+      [
+        {
+          "id": "684986af09c1e22f7560075d",
+          "type": "movie",
+          "tmdb_id": 1233066
+        }
+      ]
+    ],
+    "logs": "job=01a0a00f-4f71-efcb-7108-7b7de0694fb7 tag=python3 worker=wk-default-06b3c66b44d9-52HGf hostname=06b3c66b44d9 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00f-54e6-04bd-93e2-84f2a8df9d58",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0",
+    "script_hash": null,
+    "duration_ms": 19127,
+    "result": [
+      {
+        "id": "684986af09c1e22f7560075d",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 5,
+              "scare": 1,
+              "acting": 8,
+              "gaming": 0,
+              "pathos": 1,
+              "sports": 0,
+              "wonder": 2,
+              "editing": 8,
+              "fantasy": 2,
+              "mystery": 2,
+              "novelty": 3,
+              "romance": 3,
+              "showbiz": 0,
+              "tension": 5,
+              "uncanny": 1,
+              "warfare": 1,
+              "intrigue": 5,
+              "pastiche": 10,
+              "violence": 4,
+              "ambiguity": 1,
+              "bleakness": 0,
+              "catharsis": 2,
+              "direction": 8,
+              "eroticism": 0,
+              "fast_pace": 8,
+              "grotesque": 0,
+              "nostalgia": 9,
+              "political": 4,
+              "slow_burn": 2,
+              "spectacle": 6,
+              "spiritual": 3,
+              "wholesome": 6,
+              "adrenaline": 7,
+              "complexity": 4,
+              "dark_humor": 5,
+              "futuristic": 0,
+              "historical": 6,
+              "melancholy": 0,
+              "surrealism": 2,
+              "educational": 0,
+              "hopefulness": 8,
+              "pop_culture": 6,
+              "psychedelic": 0,
+              "biographical": 0,
+              "cringe_humor": 4,
+              "eccentricity": 7,
+              "wit_wordplay": 9,
+              "coming_of_age": 0,
+              "philosophical": 1,
+              "psychological": 1,
+              "satire_parody": 10,
+              "camp_and_irony": 9,
+              "cinematography": 7,
+              "meta_narrative": 8,
+              "rewatchability": 8,
+              "absurdist_humor": 8,
+              "character_depth": 6,
+              "family_dynamics": 7,
+              "physical_comedy": 7,
+              "world_immersion": 8,
+              "dialogue_quality": 9,
+              "music_centrality": 6,
+              "sound_centrality": 5,
+              "music_composition": 7,
+              "social_commentary": 7,
+              "situational_comedy": 8,
+              "visual_stylization": 6,
+              "dialogue_centrality": 9,
+              "narrative_structure": 7,
+              "class_and_capitalism": 2,
+              "contemporary_realism": 0,
+              "homage_and_reference": 10,
+              "non_linear_narrative": 1,
+              "technology_and_humanity": 0
+            },
+            "highlight_keys": [
+              "satire_parody",
+              "pastiche",
+              "homage_and_reference",
+              "wit_wordplay",
+              "nostalgia",
+              "camp_and_irony",
+              "meta_narrative",
+              "absurdist_humor"
+            ]
+          },
+          "essence_tags": [
+            "German Western Parody",
+            "Nostalgic Sequel",
+            "Sharp Satirical Wit",
+            "Buddy Comedy",
+            "Cultural Homage",
+            "Absurd Humor",
+            "Family Friendly (Teens+)",
+            "Light-hearted Adventure"
+          ],
+          "essence_text": "A raucous and deeply nostalgic return to the German cinematic landscape, this sequel leans heavily into its identity as a parody of classic Western tropes. The humor is driven by sharp wordplay and absurd situational comedy, celebrating the enduring chemistry between the lead characters. It offers a pure, escapist experience that prioritizes laughter and camaraderie over serious narrative stakes. Fans of the original will find comfort in its familiar style, while new viewers are treated to a witty, self-aware satire.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": true,
+            "is_pure_escapism": true,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": false,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Strong Language",
+            "Violence"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "c",
+          "job": "01a0a00f-5516-0ce3-cba0-e2ec8063d53f",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a00f-5516-0ce3-cba0-e2ec8063d53f",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0/c",
+    "script_hash": null,
+    "duration_ms": 19045,
+    "result": [
+      {
+        "id": "684986af09c1e22f7560075d",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 5,
+              "scare": 1,
+              "acting": 8,
+              "gaming": 0,
+              "pathos": 1,
+              "sports": 0,
+              "wonder": 2,
+              "editing": 8,
+              "fantasy": 2,
+              "mystery": 2,
+              "novelty": 3,
+              "romance": 3,
+              "showbiz": 0,
+              "tension": 5,
+              "uncanny": 1,
+              "warfare": 1,
+              "intrigue": 5,
+              "pastiche": 10,
+              "violence": 4,
+              "ambiguity": 1,
+              "bleakness": 0,
+              "catharsis": 2,
+              "direction": 8,
+              "eroticism": 0,
+              "fast_pace": 8,
+              "grotesque": 0,
+              "nostalgia": 9,
+              "political": 4,
+              "slow_burn": 2,
+              "spectacle": 6,
+              "spiritual": 3,
+              "wholesome": 6,
+              "adrenaline": 7,
+              "complexity": 4,
+              "dark_humor": 5,
+              "futuristic": 0,
+              "historical": 6,
+              "melancholy": 0,
+              "surrealism": 2,
+              "educational": 0,
+              "hopefulness": 8,
+              "pop_culture": 6,
+              "psychedelic": 0,
+              "biographical": 0,
+              "cringe_humor": 4,
+              "eccentricity": 7,
+              "wit_wordplay": 9,
+              "coming_of_age": 0,
+              "philosophical": 1,
+              "psychological": 1,
+              "satire_parody": 10,
+              "camp_and_irony": 9,
+              "cinematography": 7,
+              "meta_narrative": 8,
+              "rewatchability": 8,
+              "absurdist_humor": 8,
+              "character_depth": 6,
+              "family_dynamics": 7,
+              "physical_comedy": 7,
+              "world_immersion": 8,
+              "dialogue_quality": 9,
+              "music_centrality": 6,
+              "sound_centrality": 5,
+              "music_composition": 7,
+              "social_commentary": 7,
+              "situational_comedy": 8,
+              "visual_stylization": 6,
+              "dialogue_centrality": 9,
+              "narrative_structure": 7,
+              "class_and_capitalism": 2,
+              "contemporary_realism": 0,
+              "homage_and_reference": 10,
+              "non_linear_narrative": 1,
+              "technology_and_humanity": 0
+            },
+            "highlight_keys": [
+              "satire_parody",
+              "pastiche",
+              "homage_and_reference",
+              "wit_wordplay",
+              "nostalgia",
+              "camp_and_irony",
+              "meta_narrative",
+              "absurdist_humor"
+            ]
+          },
+          "essence_tags": [
+            "German Western Parody",
+            "Nostalgic Sequel",
+            "Sharp Satirical Wit",
+            "Buddy Comedy",
+            "Cultural Homage",
+            "Absurd Humor",
+            "Family Friendly (Teens+)",
+            "Light-hearted Adventure"
+          ],
+          "essence_text": "A raucous and deeply nostalgic return to the German cinematic landscape, this sequel leans heavily into its identity as a parody of classic Western tropes. The humor is driven by sharp wordplay and absurd situational comedy, celebrating the enduring chemistry between the lead characters. It offers a pure, escapist experience that prioritizes laughter and camaraderie over serious narrative stakes. Fans of the original will find comfort in its familiar style, while new viewers are treated to a witty, self-aware satire.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": true,
+            "is_pure_escapism": true,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": false,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Strong Language",
+            "Violence"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a00f-5516-0ce3-cba0-e2ec8063d53f tag=python3 worker=wk-default-cf6f7cad9016-UChJx hostname=cf6f7cad9016 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nACCEPTANCE_RESERVATION {\"model\": \"qwen/qwen3.8-flash\", \"usd\": 0.00951684, \"input_byte_bound\": 28333}\nACCEPTANCE_USAGE {\"model\": \"qwen/qwen3.8-flash\", \"id\": \"gen-1789391755-ZPOFnRobUy2H3B8aX9xY\", \"provider\": \"Alibaba\", \"usage\": {\"prompt_tokens\": 4561, \"completion_tokens\": 1223, \"total_tokens\": 5784, \"cost\": 0.000675792, \"is_byok\": false, \"prompt_tokens_details\": {\"cached_tokens\": 4352, \"cache_write_tokens\": 0, \"audio_tokens\": 0, \"video_tokens\": 0}, \"cost_details\": {\"upstream_inference_cost\": 0.000675792, \"upstream_inference_prompt_cost\": 0.000100982, \"upstream_inference_completions_cost\": 0.00057481}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"image_tokens\": 0, \"audio_tokens\": 0}}}\nOpenRouter qwen/qwen3.8-flash usage.cost=0.000675792\nACCEPTANCE_ACCOUNTED_USD 0.0006757919999999997",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00f-9fe9-6129-c78d-3344bd42aa96",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/d",
+    "script_hash": null,
+    "duration_ms": 87,
+    "result": [
+      {
+        "id": "684986af09c1e22f7560075d",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 5,
+              "scare": 1,
+              "acting": 8,
+              "gaming": 0,
+              "pathos": 1,
+              "sports": 0,
+              "wonder": 2,
+              "editing": 8,
+              "fantasy": 2,
+              "mystery": 2,
+              "novelty": 3,
+              "romance": 3,
+              "showbiz": 0,
+              "tension": 5,
+              "uncanny": 1,
+              "warfare": 1,
+              "intrigue": 5,
+              "pastiche": 10,
+              "violence": 4,
+              "ambiguity": 1,
+              "bleakness": 0,
+              "catharsis": 2,
+              "direction": 8,
+              "eroticism": 0,
+              "fast_pace": 8,
+              "grotesque": 0,
+              "nostalgia": 9,
+              "political": 4,
+              "slow_burn": 2,
+              "spectacle": 6,
+              "spiritual": 3,
+              "wholesome": 6,
+              "adrenaline": 7,
+              "complexity": 4,
+              "dark_humor": 5,
+              "futuristic": 0,
+              "historical": 6,
+              "melancholy": 0,
+              "surrealism": 2,
+              "educational": 0,
+              "hopefulness": 8,
+              "pop_culture": 6,
+              "psychedelic": 0,
+              "biographical": 0,
+              "cringe_humor": 4,
+              "eccentricity": 7,
+              "wit_wordplay": 9,
+              "coming_of_age": 0,
+              "philosophical": 1,
+              "psychological": 1,
+              "satire_parody": 10,
+              "camp_and_irony": 9,
+              "cinematography": 7,
+              "meta_narrative": 8,
+              "rewatchability": 8,
+              "absurdist_humor": 8,
+              "character_depth": 6,
+              "family_dynamics": 7,
+              "physical_comedy": 7,
+              "world_immersion": 8,
+              "dialogue_quality": 9,
+              "music_centrality": 6,
+              "sound_centrality": 5,
+              "music_composition": 7,
+              "social_commentary": 7,
+              "situational_comedy": 8,
+              "visual_stylization": 6,
+              "dialogue_centrality": 9,
+              "narrative_structure": 7,
+              "class_and_capitalism": 2,
+              "contemporary_realism": 0,
+              "homage_and_reference": 10,
+              "non_linear_narrative": 1,
+              "technology_and_humanity": 0
+            },
+            "highlight_keys": [
+              "satire_parody",
+              "pastiche",
+              "homage_and_reference",
+              "wit_wordplay",
+              "nostalgia",
+              "camp_and_irony",
+              "meta_narrative",
+              "absurdist_humor"
+            ]
+          },
+          "essence_tags": [
+            "German Western Parody",
+            "Nostalgic Sequel",
+            "Sharp Satirical Wit",
+            "Buddy Comedy",
+            "Cultural Homage",
+            "Absurd Humor",
+            "Family Friendly (Teens+)",
+            "Light-hearted Adventure"
+          ],
+          "essence_text": "A raucous and deeply nostalgic return to the German cinematic landscape, this sequel leans heavily into its identity as a parody of classic Western tropes. The humor is driven by sharp wordplay and absurd situational comedy, celebrating the enduring chemistry between the lead characters. It offers a pure, escapist experience that prioritizes laughter and camaraderie over serious narrative stakes. Fans of the original will find comfort in its familiar style, while new viewers are treated to a witty, self-aware satire.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": true,
+            "is_pure_escapism": true,
+            "is_binge_friendly": false,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": false,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Strong Language",
+            "Violence"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": true,
+            "adults": true,
+            "family": true,
+            "friends": true,
+            "partner": true,
+            "date_night": true,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": true,
+            "public_viewing_safe": true
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a00f-9fe9-6129-c78d-3344bd42aa96 tag=python3 worker=wk-default-06b3c66b44d9-52HGf hostname=06b3c66b44d9 isolation=none\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a00f-a09b-0b38-864d-222334a96b6f",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/vectors",
+    "script_hash": "d7d1a5ead6496c07",
+    "duration_ms": 3145,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "job=01a0a00f-a09b-0b38-864d-222334a96b6f tag=python3 worker=wk-default-d18e365e6886-bAfOl hostname=d18e365e6886 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, cachetools==6.2.2, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, google-auth==2.43.0, google-genai==1.53.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pyasn1==0.6.1, pyasn1-modules==0.4.2, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, requests==2.32.5, rsa==4.9.1, tenacity==9.1.2, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, websockets==15.0.1, wmill==1.589.1\n\n\nCopying some packages from cache to job_dir...\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nSuccessfully generated 1 embeddings.\nInitializing mongodb...\nSuccessfully initialized mongodb\nsaving DNA for Das Kanu des Manitu (2025)\n[7.0, 5.0, 1.0, 4.0, 3.0, 0.0, 6.0, 2.0, 1.0, 0.0, 1.0, 2.0, 9.0, 8.0, 9.0, 7.0, 4.0, 8.0, 10.0, 5.0, 2.0, 0.0, 6.0, 0.0, 5.0, 2.0, 1.0, 4.0, 0.0, 0.0, 0.0, 7.0, 1.0, 0.0, 0.0, 6.0, 7.0, 2.0, 0.0, 3.0, 7.0, 9.0, 6.0, 2.0, 8.0, 5.0, 4.0, 8.0, 8.0, 0.0, 1.0, 3.0, 10.0, 1.0, 8.0, 2.0, 7.0, 1.0, 0.0, 8.0, 8.0, 7.0, 8.0, 7.0, 8.0, 6.0, 6.0, 10.0, 0.0, 0.0, 9.0, 9.0, 6.0, 5.0]",
+    "flow_status": null
+  }
+]

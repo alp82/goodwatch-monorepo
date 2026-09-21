@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789410143-jJC3hyeX8kLRFvcOSXHi",
+  "object": "chat.completion",
+  "created": 1789410143,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n   \"benchmark_id\": \"movie:550\",\n   \"analysis\": {\n   \"fingerprint\": {\n   \"scores\": {\n   \"adrenaline\": 8,\n   \"tension\": 9,\n   \"scare\": 4,\n   \"violence\": 9,\n   \"romance\": 3,\n   \"eroticism\": 2,\n   \"wholesome\": 1,\n   \"wonder\": 6,\n   \"pathos\": 7,\n   \"melancholy\": 6,\n   \"uncanny\": 8,\n   \"catharsis\": 8,\n   \"nostalgia\": 2,\n   \"situational_comedy\": 4,\n   \"wit_wordplay\": 9,\n   \"physical_comedy\": 2,\n   \"cringe_humor\": 3,\n   \"absurdist_humor\": 5,\n   \"satire_parody\": 9,\n   \"dark_humor\": 8,\n   \"fantasy\": 0,\n   \"futuristic\": 0,\n   \"historical\": 0,\n   \"contemporary_realism\": 8,\n   \"crime\": 6,\n   \"mystery\": 5,\n   \"warfare\": 0,\n   \"political\": 7,\n   \"sports\": 0,\n   \"biographical\": 0,\n   \"coming_of_age\": 6,\n   \"family_dynamics\": 2,\n   \"psychological\": 10,\n   \"showbiz\": 0,\n   \"gaming\": 0,\n   \"pop_culture\": 8,\n   \"social_commentary\": 10,\n   \"class_and_capitalism\": 9,\n   \"technology_and_humanity\": 6,\n   \"spiritual\": 4,\n   \"narrative_structure\": 10,\n   \"dialogue_quality\": 10,\n   \"character_depth\": 9,\n   \"slow_burn\": 5,\n   \"fast_pace\": 8,\n   \"intrigue\": 9,\n   \"complexity\": 8,\n   \"rewatchability\": 10,\n   \"hopefulness\": 2,\n   \"bleakness\": 8,\n   \"ambiguity\": 7,\n   \"novelty\": 9,\n   \"homage_and_reference\": 3,\n   \"non_linear_narrative\": 8,\n   \"meta_narrative\": 6,\n   \"surrealism\": 7,\n   \"eccentricity\": 8,\n   \"philosophical\": 9,\n   \"educational\": 1,\n   \"direction\": 10,\n   \"acting\": 9,\n   \"cinematography\": 9,\n   \"editing\": 10,\n   \"music_composition\": 9,\n   \"world_immersion\": 9,\n   \"spectacle\": 7,\n   \"visual_stylization\": 9,\n   \"pastiche\": 2,\n   \"psychedelic\": 5,\n   \"grotesque\": 7,\n   \"camp_and_irony\": 4,\n   \"dialogue_centrality\": 9,\n   \"music_centrality\": 8,\n   \"sound_centrality\": 8\n   },\n   \"highlight_keys\": [\n   \"social_commentary\",\n   \"psychological\",\n   \"narrative_structure\",\n   \"dialogue_quality\",\n   \"class_and_capitalism\",\n   \"satire_parody\",\n   \"violence\",\n   \"cinematography\"\n   ]\n   },\n   \"is_anime\": false,\n   \"production_info\": {\n   \"method\": \"Live-Action\",\n   \"animation_style\": null\n   },\n   \"content_advisories\": [\n   \"Violence\",\n   \"Strong Language\",\n   \"Sexual Content\",\n   \"Disturbing Imagery\"\n   ],\n   \"social_suitability\": {\n   \"solo_watch\": true,\n   \"date_night\": false,\n   \"group_party\": true,\n   \"family\": false,\n   \"partner\": true,\n   \"friends\": true,\n   \"kids\": false,\n   \"teens\": false,\n   \"adults\": true,\n   \"intergenerational\": false,\n   \"public_viewing_safe\": true\n   },\n   \"viewing_context\": {\n   \"is_thought_provoking\": true,\n   \"is_pure_escapism\": false,\n   \"is_background_friendly\": false,\n   \"is_comfort_watch\": false,\n   \"is_binge_friendly\": false,\n   \"is_drop_in_friendly\": false\n   },\n   \"essence_tags\": [\n   \"Psychological Thriller\",\n   \"Anti-Corporate Satire\",\n   \"Masculinity Crisis\",\n   \"Unreliable Narrator\",\n   \"Cult Classic\",\n   \"Gritty Urban Aesthetic\",\n   \"Philosophical Provocation\",\n   \"Visceral Violence\",\n   \"Complex Plot Twist\"\n   ],\n   \"essence_text\": \"A visceral and provocative exploration of modern masculinity, consumerism, and psychological fragmentation. The film combines sharp, quotable dialogue with a non-linear narrative structure that builds intense suspense toward a shocking revelation. Its gritty aesthetic and violent imagery serve as a backdrop for biting social commentary on the emptiness of capitalist culture. Anchored by iconic performances and an unforgettable score, it remains a defining cult classic that challenges viewers to question reality and identity.\"\n   }\n   }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7980,
+    "completion_tokens": 1273,
+    "total_tokens": 9253,
+    "cost": 0.00076619,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00076619,
+      "upstream_inference_prompt_cost": 0.00016788,
+      "upstream_inference_completions_cost": 0.00059831
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

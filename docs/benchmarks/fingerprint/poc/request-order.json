@@ -1,0 +1,652 @@
+[
+  {
+    "candidate_index": 2,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 3,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 9,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 4,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "movie:550",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "show:249042",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "show:42009",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 2,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 6,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "movie:545611",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 10,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "show:1399",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 8,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 7,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 0,
+    "benchmark_id": "movie:1233066",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 12,
+    "benchmark_id": "show:64230",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 5,
+    "benchmark_id": "movie:150540",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 11,
+    "benchmark_id": "movie:603",
+    "pass": "first"
+  },
+  {
+    "candidate_index": 1,
+    "benchmark_id": "show:1396",
+    "pass": "first"
+  }
+]

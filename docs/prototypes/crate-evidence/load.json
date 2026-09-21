@@ -1,0 +1,20 @@
+{
+  "counts": [
+    {
+      "media_type": "movie",
+      "n": 39146
+    },
+    {
+      "media_type": "show",
+      "n": 10854
+    }
+  ],
+  "sample_size": 50000,
+  "retained_original": 5000,
+  "min_votes": 1000,
+  "selection": "Original 5,000 retained; highest-voted remaining 45,000 with essence text, globally across movies and shows",
+  "loaded_at": "2026-09-20T05:57:10Z",
+  "trope_titles": 20842,
+  "posters": 49905,
+  "bytes_evidence": 74649679
+}

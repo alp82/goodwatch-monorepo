@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789415448-axwywxppub0D9xfKbQnA",
+  "object": "chat.completion",
+  "created": 1789415448,
+  "model": "qwen/qwen3.7-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n    {\n      \"benchmark_id\": \"show:249042\",\n      \"analysis\": {\n        \"fingerprint\": {\n          \"scores\": {\n            \"adrenaline\": 3,\n            \"tension\": 8,\n            \"scare\": 1,\n            \"violence\": 2,\n            \"romance\": 1,\n            \"eroticism\": 0,\n            \"wholesome\": 2,\n            \"wonder\": 1,\n            \"pathos\": 7,\n            \"melancholy\": 6,\n            \"uncanny\": 3,\n            \"catharsis\": 5,\n            \"nostalgia\": 2,\n            \"situational_comedy\": 0,\n            \"wit_wordplay\": 2,\n            \"physical_comedy\": 0,\n            \"cringe_humor\": 0,\n            \"absurdist_humor\": 0,\n            \"satire_parody\": 0,\n            \"dark_humor\": 1,\n            \"fantasy\": 0,\n            \"futuristic\": 0,\n            \"historical\": 0,\n            \"contemporary_realism\": 9,\n            \"crime\": 8,\n            \"mystery\": 7,\n            \"warfare\": 0,\n            \"political\": 1,\n            \"sports\": 0,\n            \"biographical\": 0,\n            \"coming_of_age\": 9,\n            \"family_dynamics\": 8,\n            \"psychological\": 9,\n            \"showbiz\": 0,\n            \"gaming\": 0,\n            \"pop_culture\": 0,\n            \"social_commentary\": 8,\n            \"class_and_capitalism\": 2,\n            \"technology_and_humanity\": 4,\n            \"spiritual\": 1,\n            \"narrative_structure\": 8,\n            \"dialogue_quality\": 8,\n            \"character_depth\": 9,\n            \"slow_burn\": 7,\n            \"fast_pace\": 4,\n            \"intrigue\": 8,\n            \"complexity\": 7,\n            \"rewatchability\": 6,\n            \"hopefulness\": 3,\n            \"bleakness\": 6,\n            \"ambiguity\": 7,\n            \"novelty\": 6,\n            \"homage_and_reference\": 2,\n            \"non_linear_narrative\": 3,\n            \"meta_narrative\": 0,\n            \"surrealism\": 1,\n            \"eccentricity\": 2,\n            \"philosophical\": 7,\n            \"educational\": 4,\n            \"direction\": 8,\n            \"acting\": 9,\n            \"cinematography\": 7,\n            \"editing\": 7,\n            \"music_composition\": 5,\n            \"world_immersion\": 7,\n            \"spectacle\": 1,\n            \"visual_stylization\": 4,\n            \"pastiche\": 0,\n            \"psychedelic\": 0,\n            \"grotesque\": 0,\n            \"camp_and_irony\": 0,\n            \"dialogue_centrality\": 8,\n            \"music_centrality\": 3,\n            \"sound_centrality\": 5\n          },\n          \"highlight_keys\": [\n            \"psychological\",\n            \"coming_of_age\",\n            \"contemporary_realism\",\n            \"family_dynamics\",\n            \"social_commentary\",\n            \"character_depth\",\n            \"dialogue_quality\",\n            \"tension\"\n          ]\n        },\n        \"is_anime\": false,\n        \"production_info\": {\n          \"method\": \"Live-Action\",\n          \"animation_style\": null\n        },\n        \"content_advisories\": [\n          \"Violence\",\n          \"Strong Language\"\n        ],\n        \"social_suitability\": {\n          \"solo_watch\": true,\n          \"date_night\": true,\n          \"group_party\": false,\n          \"family\": false,\n          \"partner\": true,\n          \"friends\": true,\n          \"kids\": false,\n          \"teens\": true,\n          \"adults\": true,\n          \"intergenerational\": false,\n          \"public_viewing_safe\": true\n        },\n        \"viewing_context\": {\n          \"is_thought_provoking\": true,\n          \"is_pure_escapism\": false,\n          \"is_background_friendly\": false,\n          \"is_comfort_watch\": false,\n          \"is_binge_friendly\": true,\n          \"is_drop_in_friendly\": false\n        },\n        \"essence_tags\": [\n          \"Gritty Legal Drama\",\n          \"Teen Psychological Thriller\",\n          \"Intimate Family Portrait\",\n          \"Social Realism\",\n          \"Moral Ambiguity\",\n          \"Character-Driven Mystery\",\n          \"Coming-of-Age Tragedy\",\n          \"Heavy Emotional Weight\",\n          \"Contemporary Social Commentary\",\n          \"Dialogue-Intensive\"\n        ],\n        \"essence_text\": \"A harrowing and intimate exploration of adolescence colliding with the justice system, this series strips away the sensationalism to focus on the raw emotional reality of a tragedy. It serves as a psychological deep-dive into the fractured dynamics of a family under siege, balanced against the procedural tension of a criminal investigation. The narrative is driven by nuanced performances and sharp dialogue that challenge the viewer's assumptions about guilt, innocence, and the complexities of teenage life. While emotionally heavy and often bleak, it offers a profound, thought-provoking look at the societal forces shaping young people today.\"\n      }\n    }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7958,
+    "completion_tokens": 1302,
+    "total_tokens": 9260,
+    "cost": 0.000408,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000408,
+      "upstream_inference_prompt_cost": 0.00023874,
+      "upstream_inference_completions_cost": 0.00016926
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

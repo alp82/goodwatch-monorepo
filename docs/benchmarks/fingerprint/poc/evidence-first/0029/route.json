@@ -1,0 +1,52 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/minimax/minimax-m3/endpoints",
+  "captured_at": "2026-09-12T05:09:02.185195+00:00",
+  "route": {
+    "name": "CoreWeave | minimax/minimax-m3-20260531",
+    "model_id": "minimax/minimax-m3",
+    "model_name": "MiniMax: MiniMax M3",
+    "context_length": 262144,
+    "pricing": {
+      "prompt": "0.00000023",
+      "completion": "0.00000096",
+      "input_cache_read": "0.00000005",
+      "discount": 0
+    },
+    "provider_name": "CoreWeave",
+    "tag": "coreweave/fp4",
+    "quantization": "fp4",
+    "max_completion_tokens": 235929,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "top_k",
+      "repetition_penalty",
+      "frequency_penalty",
+      "presence_penalty",
+      "stop",
+      "seed",
+      "response_format",
+      "structured_outputs",
+      "logprobs",
+      "top_logprobs"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": true,
+      "function": true
+    },
+    "status": 0,
+    "uptime_last_30m": 99.91047448522829,
+    "uptime_last_5m": 99.58847736625515,
+    "uptime_last_1d": 96.95462281623868,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "final_older_heist",
+    "request": "A funny film about older people pulling off a robbery."
+  },
+  {
+    "id": "final_train",
+    "request": "A tense film set mostly on a train, without zombies."
+  },
+  {
+    "id": "final_doctors",
+    "request": "A series about doctors at work, with dry humor rather than slapstick."
+  },
+  {
+    "id": "final_music_doc",
+    "request": "A documentary about making music, not a fictional musician biopic."
+  },
+  {
+    "id": "final_after_prison",
+    "request": "A hopeful drama about rebuilding life after leaving prison."
+  },
+  {
+    "id": "final_peaceful_contact",
+    "request": "A science-fiction story about communicating with aliens, with a peaceful mood."
+  },
+  {
+    "id": "final_driver_not_race",
+    "request": "A crime thriller about a getaway driver, not a racing competition."
+  },
+  {
+    "id": "final_political_comedy",
+    "request": "A darkly funny series about political ambition, aimed at adults."
+  }
+]

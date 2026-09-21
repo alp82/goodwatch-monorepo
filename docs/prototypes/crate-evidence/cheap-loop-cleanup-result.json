@@ -1,0 +1,12 @@
+{
+  "status": "dropped_and_verified_absent",
+  "table": "doc.prototype_search_evidence_104_v1",
+  "verified_at": "2026-09-20T10:30:09.522505+00:00",
+  "present_before": true,
+  "absent_after": true,
+  "drop_wall_ms": 257.3626840021461,
+  "verification_wall_ms": 84.84681100526359,
+  "source_catalog_writes": false,
+  "private_snapshots_and_candidate_pools_retained": true,
+  "historical_cleanup_records_preserved": true
+}

@@ -1,0 +1,193 @@
+{
+  "generated_at_utc": "2026-09-20T07:32:43.634221+00:00",
+  "scope": "All saved OpenRouter attempt artifacts, including failures, diagnostics, and superseded experiments, deduplicated by provider generation ID. Jev coverage is the four canonical loop capture sets: development13, challenge8, confirmation12, final_validation8. Other earlier experiments outside these canonical captures are excluded.",
+  "attempt_artifacts": 346,
+  "unique_openrouter_attempts": 346,
+  "duplicate_generation_artifacts": 0,
+  "reported_openrouter_cost_usd": 1.23115935,
+  "estimated_openrouter_cost_usd": 0,
+  "unknown_openrouter_cost_attempts": 0,
+  "jev_capture_sets": [
+    {
+      "set": "development13",
+      "captured_requests": 13,
+      "unique_provider_stage_records": 26,
+      "provider_calls": 26,
+      "reported_cost_usd": 0.004436460000000001,
+      "unknown_cost_stage_records": 0,
+      "tokens": 105630
+    },
+    {
+      "set": "challenge8",
+      "captured_requests": 8,
+      "unique_provider_stage_records": 16,
+      "provider_calls": 16,
+      "reported_cost_usd": 0.002778006,
+      "unknown_cost_stage_records": 0,
+      "tokens": 66143
+    },
+    {
+      "set": "confirmation12",
+      "captured_requests": 12,
+      "unique_provider_stage_records": 24,
+      "provider_calls": 24,
+      "reported_cost_usd": 0.004183956,
+      "unknown_cost_stage_records": 0,
+      "tokens": 99618
+    },
+    {
+      "set": "final_validation8",
+      "captured_requests": 8,
+      "unique_provider_stage_records": 16,
+      "provider_calls": 16,
+      "reported_cost_usd": 0.0027701939999999997,
+      "unknown_cost_stage_records": 0,
+      "tokens": 65957
+    }
+  ],
+  "reported_jev_cost_usd": 0.014168616,
+  "known_combined_cost_usd": 1.245327966,
+  "groups": [
+    {
+      "model": "google/gemini-2.5-flash-lite",
+      "stage": "plan",
+      "attempts": 16,
+      "reported_cost_usd": 0.0042675000000000005,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 0,
+      "prompt_tokens": 23091,
+      "completion_tokens": 4896,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-2.5-flash-lite",
+      "stage": "rerank",
+      "attempts": 1,
+      "reported_cost_usd": 0.0031144,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 0,
+      "prompt_tokens": 22504,
+      "completion_tokens": 2160,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-2.5-flash-lite",
+      "stage": "rerank_compact",
+      "attempts": 15,
+      "reported_cost_usd": 0.017700300000000002,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 1,
+      "prompt_tokens": 104871,
+      "completion_tokens": 18033,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-3-flash-preview",
+      "stage": "rerank_fast_v1",
+      "attempts": 26,
+      "reported_cost_usd": 0.1564965,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 0,
+      "prompt_tokens": 243441,
+      "completion_tokens": 11592,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-3-flash-preview",
+      "stage": "rerank_ids_v1",
+      "attempts": 21,
+      "reported_cost_usd": 0.08936550000000003,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 1,
+      "prompt_tokens": 162561,
+      "completion_tokens": 2695,
+      "reasoning_tokens": 287
+    },
+    {
+      "model": "google/gemini-3-flash-preview",
+      "stage": "rerank_ids_v2",
+      "attempts": 35,
+      "reported_cost_usd": 0.12611485000000003,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 1,
+      "prompt_tokens": 268883,
+      "completion_tokens": 5063,
+      "reasoning_tokens": 864
+    },
+    {
+      "model": "google/gemini-3-flash-preview",
+      "stage": "rerank_ids_v3_minimal",
+      "attempts": 41,
+      "reported_cost_usd": 0.15362805000000002,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 0,
+      "prompt_tokens": 313287,
+      "completion_tokens": 5025,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-3.1-flash-lite",
+      "stage": "plan",
+      "attempts": 58,
+      "reported_cost_usd": 0.061710499999999995,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 0,
+      "prompt_tokens": 141524,
+      "completion_tokens": 17553,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-3.1-flash-lite",
+      "stage": "rerank",
+      "attempts": 16,
+      "reported_cost_usd": 0.17515424999999998,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 0,
+      "prompt_tokens": 465579,
+      "completion_tokens": 39173,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-3.1-flash-lite",
+      "stage": "rerank_compact",
+      "attempts": 15,
+      "reported_cost_usd": 0.051567499999999995,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 0,
+      "prompt_tokens": 116936,
+      "completion_tokens": 14889,
+      "reasoning_tokens": 0
+    },
+    {
+      "model": "google/gemini-3.1-flash-lite",
+      "stage": "rerank_fast_v1",
+      "attempts": 102,
+      "reported_cost_usd": 0.39203999999999994,
+      "estimated_cost_usd": 0,
+      "unknown_cost_attempts": 0,
+      "provider_nonstop_or_transport_attempts": 1,
+      "prompt_tokens": 1342728,
+      "completion_tokens": 37572,
+      "reasoning_tokens": 0
+    }
+  ],
+  "accounting_notes": [
+    "Actual saved provider usage only: per-search projections are never summed as spend.",
+    "Schema/semantic failures can have provider finish_reason stop; their paid costs are still included.",
+    "Missing billing data stays unknown, never zero. Stage tokens and billed amounts are provider reports.",
+    "Original attempts behind local cache hits are counted once; reading the cache adds no new spend.",
+    "Jev stages are deduplicated by request, model, capture timestamp, and stage. This is captured-usage accounting, not an external billing invoice."
+  ],
+  "refresh_needed_after_further_calls": false,
+  "snapshot_status": "Final snapshot after all provider jobs completed; regenerate if any future calls occur."
+}

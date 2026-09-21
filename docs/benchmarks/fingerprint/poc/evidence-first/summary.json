@@ -1,0 +1,954 @@
+[
+  {
+    "model": "google/gemini-2.5-flash",
+    "provider": "google-ai-studio",
+    "output_mode": "Strict schema",
+    "thinking": "Off, using the documented Gemini budget control",
+    "expected_titles": 10,
+    "attempted_titles": 1,
+    "attempts": 2,
+    "first_attempt_74_score_valid": 0,
+    "first_attempt_valid": 0,
+    "after_retry_valid": 0,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0",
+    "unresolved_reservation_usd": "0.1051069999999999944220",
+    "cost_per_attempted_title_usd": null,
+    "cost_per_structurally_valid_title_usd": null,
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 2,
+    "median_request_seconds": 0.5501279204981984,
+    "p95_request_seconds": 0.6864315580023685,
+    "median_total_attempt_seconds_per_valid_title": null,
+    "complete_pair_wall_times": [],
+    "median_complete_pair_wall_seconds": null,
+    "stop_reason": "Two compatibility/transport errors; remaining titles not attempted",
+    "transport_failures": [
+      {
+        "attempt": "0013",
+        "http_status": 400,
+        "error": {
+          "message": "Provider returned error",
+          "code": 400,
+          "metadata": {
+            "raw": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"The specified schema produces a constraint that has too many states for serving. Typical causes of this error are schemas with lots of text (for example, very long property or enum names), schemas with long array length limits (especially when nested), or schemas using complex value matchers (for example, integers or numbers with minimum/maximum bounds or strings with complex formats like date-time)\",\n    \"status\": \"INVALID_ARGUMENT\"\n  }\n}\n",
+            "provider_name": "Google AI Studio",
+            "is_byok": false,
+            "provider_error_code": "400"
+          }
+        }
+      },
+      {
+        "attempt": "0014",
+        "http_status": 400,
+        "error": {
+          "message": "Provider returned error",
+          "code": 400,
+          "metadata": {
+            "raw": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"The specified schema produces a constraint that has too many states for serving. Typical causes of this error are schemas with lots of text (for example, very long property or enum names), schemas with long array length limits (especially when nested), or schemas using complex value matchers (for example, integers or numbers with minimum/maximum bounds or strings with complex formats like date-time)\",\n    \"status\": \"INVALID_ARGUMENT\"\n  }\n}\n",
+            "provider_name": "Google AI Studio",
+            "is_byok": false,
+            "provider_error_code": "400"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "model": "google/gemini-3.6-flash",
+    "provider": "google-ai-studio",
+    "output_mode": "Strict schema",
+    "thinking": "Minimal",
+    "expected_titles": 10,
+    "attempted_titles": 1,
+    "attempts": 2,
+    "first_attempt_74_score_valid": 0,
+    "first_attempt_valid": 0,
+    "after_retry_valid": 0,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0",
+    "unresolved_reservation_usd": "0.1941581666666666722548",
+    "cost_per_attempted_title_usd": null,
+    "cost_per_structurally_valid_title_usd": null,
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 2,
+    "median_request_seconds": 0.46709686599933775,
+    "p95_request_seconds": 0.4795904479979072,
+    "median_total_attempt_seconds_per_valid_title": null,
+    "complete_pair_wall_times": [],
+    "median_complete_pair_wall_seconds": null,
+    "stop_reason": "Two compatibility/transport errors; remaining titles not attempted",
+    "transport_failures": [
+      {
+        "attempt": "0021",
+        "http_status": 400,
+        "error": {
+          "message": "Provider returned error",
+          "code": 400,
+          "metadata": {
+            "raw": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"Request contains an invalid argument.\",\n    \"status\": \"INVALID_ARGUMENT\"\n  }\n}\n",
+            "provider_name": "Google AI Studio",
+            "is_byok": false,
+            "provider_error_code": "400"
+          }
+        }
+      },
+      {
+        "attempt": "0022",
+        "http_status": 400,
+        "error": {
+          "message": "Provider returned error",
+          "code": 400,
+          "metadata": {
+            "raw": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"Request contains an invalid argument.\",\n    \"status\": \"INVALID_ARGUMENT\"\n  }\n}\n",
+            "provider_name": "Google AI Studio",
+            "is_byok": false,
+            "provider_error_code": "400"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "model": "deepseek/deepseek-v4.1-flash",
+    "provider": "deepinfra/fp8",
+    "output_mode": "Strict schema",
+    "thinking": "Disabled",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.015166720",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.001516672",
+    "cost_per_structurally_valid_title_usd": "0.001516672",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 39.1060499765008,
+    "p95_request_seconds": 71.60019221500261,
+    "median_total_attempt_seconds_per_valid_title": 39.1060499765008,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 19.995444,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 45.940711,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 43.988256,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 48.446925,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 71.600906,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 22.100631,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 26.528466,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 58.325789,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 34.22538,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 28.919188,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 39.106818000000004,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "z-ai/glm-5.3-flash",
+    "provider": "deepinfra/fp4",
+    "output_mode": "Strict schema",
+    "thinking": "Low; mandatory thinking",
+    "expected_titles": 10,
+    "attempted_titles": 1,
+    "attempts": 2,
+    "first_attempt_74_score_valid": 0,
+    "first_attempt_valid": 0,
+    "after_retry_valid": 0,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0",
+    "unresolved_reservation_usd": "0.03325820",
+    "cost_per_attempted_title_usd": null,
+    "cost_per_structurally_valid_title_usd": null,
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 2,
+    "median_request_seconds": 0.36118534899287624,
+    "p95_request_seconds": 0.3628130019933451,
+    "median_total_attempt_seconds_per_valid_title": null,
+    "complete_pair_wall_times": [],
+    "median_complete_pair_wall_seconds": null,
+    "stop_reason": "Two compatibility/transport errors; remaining titles not attempted",
+    "transport_failures": [
+      {
+        "attempt": "0001",
+        "http_status": 429,
+        "error": {
+          "message": "Provider returned error",
+          "code": 429,
+          "metadata": {
+            "raw": "z-ai/glm-5.3-flash is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations",
+            "provider_name": "DeepInfra",
+            "is_byok": false,
+            "provider_error_code": "engine_overloaded",
+            "limit_source": "upstream_provider_shared_pool",
+            "remedy_hint": "Retry shortly, add your own provider key (https://openrouter.ai/settings/integrations), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing"
+          }
+        }
+      },
+      {
+        "attempt": "0002",
+        "http_status": 429,
+        "error": {
+          "message": "Provider returned error",
+          "code": 429,
+          "metadata": {
+            "raw": "z-ai/glm-5.3-flash is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations",
+            "provider_name": "DeepInfra",
+            "is_byok": false,
+            "provider_error_code": "engine_overloaded",
+            "limit_source": "upstream_provider_shared_pool",
+            "remedy_hint": "Retry shortly, add your own provider key (https://openrouter.ai/settings/integrations), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "model": "openai/gpt-5.6-luna",
+    "provider": "openai",
+    "output_mode": "Strict schema",
+    "thinking": "None",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.01377491",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.001377491",
+    "cost_per_structurally_valid_title_usd": "0.001377491",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 7.103102831999422,
+    "p95_request_seconds": 8.408507782005472,
+    "median_total_attempt_seconds_per_valid_title": 7.103102831999422,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 7.170653,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 7.615662,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 7.036342,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 7.368193,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 8.301019,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 6.960597,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 8.409218,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 6.563838,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 6.230192,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 6.969578,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 7.1034975,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "meta/muse-spark-1.3-contributor",
+    "provider": "meta",
+    "output_mode": "Strict schema",
+    "thinking": "Minimal; mandatory thinking",
+    "expected_titles": 10,
+    "attempted_titles": 1,
+    "attempts": 2,
+    "first_attempt_74_score_valid": 0,
+    "first_attempt_valid": 0,
+    "after_retry_valid": 0,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0",
+    "unresolved_reservation_usd": "0.0200636",
+    "cost_per_attempted_title_usd": null,
+    "cost_per_structurally_valid_title_usd": null,
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 2,
+    "median_request_seconds": 0.09824625100736739,
+    "p95_request_seconds": 0.09980572501081042,
+    "median_total_attempt_seconds_per_valid_title": null,
+    "complete_pair_wall_times": [],
+    "median_complete_pair_wall_seconds": null,
+    "stop_reason": "Two compatibility/transport errors; remaining titles not attempted",
+    "transport_failures": [
+      {
+        "attempt": "0007",
+        "http_status": 404,
+        "error": {
+          "message": "0 endpoints out of 1 requested are available matching your guardrail restrictions and data policy. We removed them for the following reasons (an endpoint may have matched multiple reasons):\nPaid model training violation (account settings): 1 endpoint excluded; configurable at https://openrouter.ai/settings/privacy",
+          "code": 404,
+          "metadata": {
+            "input_endpoint_count": 1,
+            "ineligibility_reasons": [
+              {
+                "reason": "paid-model-training-violation-by-account",
+                "endpoint_count": 1,
+                "configure_url": "https://openrouter.ai/settings/privacy"
+              }
+            ],
+            "routing_funnel": [
+              {
+                "step": "Initial Endpoints",
+                "endpoint_count": 1
+              }
+            ],
+            "failed_routing_step": "Filter by Guardrails"
+          }
+        }
+      },
+      {
+        "attempt": "0008",
+        "http_status": 404,
+        "error": {
+          "message": "0 endpoints out of 1 requested are available matching your guardrail restrictions and data policy. We removed them for the following reasons (an endpoint may have matched multiple reasons):\nPaid model training violation (account settings): 1 endpoint excluded; configurable at https://openrouter.ai/settings/privacy",
+          "code": 404,
+          "metadata": {
+            "input_endpoint_count": 1,
+            "ineligibility_reasons": [
+              {
+                "reason": "paid-model-training-violation-by-account",
+                "endpoint_count": 1,
+                "configure_url": "https://openrouter.ai/settings/privacy"
+              }
+            ],
+            "routing_funnel": [
+              {
+                "step": "Initial Endpoints",
+                "endpoint_count": 1
+              }
+            ],
+            "failed_routing_step": "Filter by Guardrails"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "model": "qwen/qwen3.8-flash",
+    "provider": "alibaba",
+    "output_mode": "Strict schema",
+    "thinking": "Request disabled; verify adapter",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.00846388",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.000846388",
+    "cost_per_structurally_valid_title_usd": "0.000846388",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 19.188466402993072,
+    "p95_request_seconds": 32.976083393004956,
+    "median_total_attempt_seconds_per_valid_title": 19.188466402993072,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 17.85562,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 20.81264,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 15.423532,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 19.741328,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 17.815248,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 18.637331,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 16.230463,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 21.545644,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 20.869486,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 32.977271,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 19.1893295,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "qwen/qwen3.7-flash",
+    "provider": "alibaba",
+    "output_mode": "JSON object, locally validated",
+    "thinking": "Request disabled; verify adapter",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 13,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 7,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.00337971",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.000337971",
+    "cost_per_structurally_valid_title_usd": "0.000337971",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 13,
+    "median_request_seconds": 11.635674093005946,
+    "p95_request_seconds": 13.530726454002433,
+    "median_total_attempt_seconds_per_valid_title": 12.819668033000198,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 11.297389,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 11.971283,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 10.923013,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 10.523531,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 42.154943,
+        "attempts": 2
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 13.528378,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 41.338445,
+        "attempts": 2
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 12.505556,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 41.301449,
+        "attempts": 2
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 13.136466,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 12.821011,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "mistralai/mistral-small-2603",
+    "provider": "mistral",
+    "output_mode": "Strict schema",
+    "thinking": "None",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.015058635",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.0015058635",
+    "cost_per_structurally_valid_title_usd": "0.0015058635",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 5.542904977002763,
+    "p95_request_seconds": 6.69530369900167,
+    "median_total_attempt_seconds_per_valid_title": 5.542904977002763,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 5.62434,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 5.448594,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 6.69585,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 5.168001,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 5.871396,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 6.064351,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 5.456982,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 5.462804,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 5.328366,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 5.797675,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 5.543572,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "minimax/minimax-m3",
+    "provider": "coreweave/fp4",
+    "output_mode": "Strict schema",
+    "thinking": "Request disabled; verify adapter",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.01618840",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.00161884",
+    "cost_per_structurally_valid_title_usd": "0.00161884",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 8.120841128999018,
+    "p95_request_seconds": 21.454531745999702,
+    "median_total_attempt_seconds_per_valid_title": 8.120841128999018,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 5.482885,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 10.201259,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 10.7389,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 3.744533,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 3.580792,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 3.733344,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 21.455253,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 10.059551,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 10.116971,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 6.183658,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 8.1216045,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "xiaomi/mimo-v2.5",
+    "provider": "deepinfra/fp8",
+    "output_mode": "Strict schema",
+    "thinking": "Request disabled; verify adapter",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.0111639934",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.00111639934",
+    "cost_per_structurally_valid_title_usd": "0.00111639934",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 20.250314186494506,
+    "p95_request_seconds": 31.313866386000882,
+    "median_total_attempt_seconds_per_valid_title": 20.250314186494506,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 16.712362,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 19.372685,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 31.314449,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 18.408126,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 29.457643,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 18.112034,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 21.132582,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 16.816053,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 24.64712,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 28.235362,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 20.2526335,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "nvidia/nemotron-3.5-lightning",
+    "provider": "deepinfra/bf16",
+    "output_mode": "Strict schema",
+    "thinking": "Request disabled; verify adapter",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.00707840",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.00070784",
+    "cost_per_structurally_valid_title_usd": "0.00070784",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 2.1130520414953935,
+    "p95_request_seconds": 3.743505185993854,
+    "median_total_attempt_seconds_per_valid_title": 2.1130520414953935,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 2.048619,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 2.134779,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 2.076081,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 2.308027,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 1.96452,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 2.053264,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 2.093523,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 3.74471,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 3.371012,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 2.647065,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 2.1141509999999997,
+    "stop_reason": null,
+    "transport_failures": []
+  },
+  {
+    "model": "x-ai/grok-4.6",
+    "provider": "xai",
+    "output_mode": "Strict schema",
+    "thinking": "Low; mandatory thinking",
+    "expected_titles": 10,
+    "attempted_titles": 10,
+    "attempts": 10,
+    "first_attempt_74_score_valid": 10,
+    "first_attempt_valid": 10,
+    "after_retry_valid": 10,
+    "abstaining_titles": 0,
+    "reconciled_cost_usd": "0.286144",
+    "unresolved_reservation_usd": "0",
+    "cost_per_attempted_title_usd": "0.0286144",
+    "cost_per_structurally_valid_title_usd": "0.0286144",
+    "cost_per_human_accepted_title_usd": null,
+    "quality_verdict": "pending independent review",
+    "latency_sample_count": 10,
+    "median_request_seconds": 21.57032553400495,
+    "p95_request_seconds": 25.769854136990034,
+    "median_total_attempt_seconds_per_valid_title": 21.57032553400495,
+    "complete_pair_wall_times": [
+      {
+        "benchmark_id": "show:1396",
+        "seconds": 16.366677,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:1399",
+        "seconds": 17.524709,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:550",
+        "seconds": 25.770311,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:42009",
+        "seconds": 12.651787,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:249042",
+        "seconds": 18.314228,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:150540",
+        "seconds": 23.457232,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:603",
+        "seconds": 24.871078,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:545611",
+        "seconds": 22.602622,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "movie:1233066",
+        "seconds": 20.540012,
+        "attempts": 1
+      },
+      {
+        "benchmark_id": "show:64230",
+        "seconds": 23.568224,
+        "attempts": 1
+      }
+    ],
+    "median_complete_pair_wall_seconds": 21.571317,
+    "stop_reason": null,
+    "transport_failures": []
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "source_commit": "a7841d2",
+  "seed": 20260914,
+  "budget_usd": 0.05,
+  "embedding_reservation_usd": 0.004,
+  "request_replay": "Exact original first-attempt payload, parsed JSON equality",
+  "started_at": "2026-09-14T18:18:05Z",
+  "source_hashes": {
+    "schema.json": "642d0b51a2d0096027164f8a422d0a21f89a6090090a1f0f17e2976f6de516ea",
+    "system-prompt.txt": "42f90596cdead205be55f50f8b9fc01925d2f8c716a1ec0845cbadab9ce95ca5",
+    "human-review/completed-review.original.json": "e16a0be33eed70fdb3aa16efb9d697a7d3830d8ada86c1966563a6b9fb0519f5"
+  }
+}

@@ -1,0 +1,1520 @@
+{
+  "benchmark_id": "movie:1233066",
+  "metadata": {
+    "original_title": "Das Kanu des Manitu",
+    "release_year": 2025,
+    "media_type": "movie",
+    "overview": "Abahachi, the Apache chief, and his white blood brother Ranger fight tirelessly for peace and justice - but a new, up-and-coming gang is making life particularly difficult for them! They lure Abahachi and Ranger into a trap in order to get their hands on the legendary “Canoe of Manitou”."
+  },
+  "candidates": [
+    {
+      "label": "A",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 5,
+                      "tension": 3,
+                      "scare": 1,
+                      "violence": 4,
+                      "romance": 3,
+                      "eroticism": 2,
+                      "wholesome": 5,
+                      "wonder": 3,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 1,
+                      "catharsis": 4,
+                      "nostalgia": 8,
+                      "situational_comedy": 7,
+                      "wit_wordplay": 8,
+                      "physical_comedy": 9,
+                      "cringe_humor": 5,
+                      "absurdist_humor": 8,
+                      "satire_parody": 9,
+                      "dark_humor": 3,
+                      "fantasy": 2,
+                      "futuristic": 0,
+                      "historical": 4,
+                      "contemporary_realism": 1,
+                      "crime": 4,
+                      "mystery": 3,
+                      "warfare": 1,
+                      "political": 1,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 0,
+                      "family_dynamics": 3,
+                      "psychological": 1,
+                      "showbiz": 2,
+                      "gaming": 0,
+                      "pop_culture": 6,
+                      "social_commentary": 3,
+                      "class_and_capitalism": 1,
+                      "technology_and_humanity": 0,
+                      "spiritual": 2,
+                      "narrative_structure": 5,
+                      "dialogue_quality": 7,
+                      "character_depth": 4,
+                      "slow_burn": 2,
+                      "fast_pace": 7,
+                      "intrigue": 4,
+                      "complexity": 3,
+                      "rewatchability": 7,
+                      "hopefulness": 7,
+                      "bleakness": 1,
+                      "ambiguity": 1,
+                      "novelty": 4,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 6,
+                      "surrealism": 4,
+                      "eccentricity": 8,
+                      "philosophical": 1,
+                      "educational": 0,
+                      "direction": 6,
+                      "acting": 6,
+                      "cinematography": 5,
+                      "editing": 6,
+                      "music_composition": 6,
+                      "world_immersion": 6,
+                      "spectacle": 5,
+                      "visual_stylization": 6,
+                      "pastiche": 8,
+                      "psychedelic": 1,
+                      "grotesque": 2,
+                      "camp_and_irony": 9,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 5,
+                      "sound_centrality": 4
+                    },
+                    "highlight_keys": [
+                      "satire_parody",
+                      "camp_and_irony",
+                      "physical_comedy",
+                      "homage_and_reference",
+                      "nostalgia",
+                      "absurdist_humor",
+                      "wit_wordplay",
+                      "eccentricity"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "German Western Parody Sequel",
+                    "Slapstick Ensemble Comedy",
+                    "Cult-Franchise Nostalgia",
+                    "Campy Genre Pastiche",
+                    "Pun-Heavy Dialogue",
+                    "Cartoonish Frontier Action",
+                    "Beloved Recurring Characters",
+                    "Broad Absurdist Humor",
+                    "Meta Homage to Winnetou Lore",
+                    "Feel-Good Escapist Farce"
+                  ],
+                  "essence_text": "A broad, affectionate return to a beloved German parody-Western universe, built on slapstick collisions, running gags, and proudly silly wordplay. The tone is campy and communal rather than tense, inviting fans to revel in familiar personas and exaggerated frontier pastiche. Action stays cartoonish and the plotting is a vehicle for set-pieces, callbacks, and meta winks. It plays best as shared escapism: loud, colorful, and unapologetically dedicated to making the original’s comic language feel like a reunion."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 5,
+                      "tension": 5,
+                      "scare": 2,
+                      "violence": 4,
+                      "romance": 3,
+                      "eroticism": 1,
+                      "wholesome": 5,
+                      "wonder": 3,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 1,
+                      "catharsis": 5,
+                      "nostalgia": 6,
+                      "situational_comedy": 9,
+                      "wit_wordplay": 8,
+                      "physical_comedy": 9,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 8,
+                      "satire_parody": 4,
+                      "dark_humor": 3,
+                      "fantasy": 2,
+                      "futuristic": 0,
+                      "historical": 2,
+                      "contemporary_realism": 3,
+                      "crime": 3,
+                      "mystery": 2,
+                      "warfare": 1,
+                      "political": 1,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 1,
+                      "family_dynamics": 2,
+                      "psychological": 1,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 3,
+                      "social_commentary": 2,
+                      "class_and_capitalism": 1,
+                      "technology_and_humanity": 1,
+                      "spiritual": 2,
+                      "narrative_structure": 4,
+                      "dialogue_quality": 7,
+                      "character_depth": 5,
+                      "slow_burn": 2,
+                      "fast_pace": 7,
+                      "intrigue": 4,
+                      "complexity": 3,
+                      "rewatchability": 6,
+                      "hopefulness": 8,
+                      "bleakness": 1,
+                      "ambiguity": 1,
+                      "novelty": 4,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 2,
+                      "surrealism": 4,
+                      "eccentricity": 7,
+                      "philosophical": 1,
+                      "educational": 1,
+                      "direction": 6,
+                      "acting": 7,
+                      "cinematography": 6,
+                      "editing": 6,
+                      "music_composition": 5,
+                      "world_immersion": 5,
+                      "spectacle": 5,
+                      "visual_stylization": 4,
+                      "pastiche": 6,
+                      "psychedelic": 1,
+                      "grotesque": 2,
+                      "camp_and_irony": 7,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 3,
+                      "sound_centrality": 4
+                    },
+                    "highlight_keys": [
+                      "situational_comedy",
+                      "physical_comedy",
+                      "wit_wordplay",
+                      "absurdist_humor",
+                      "eccentricity",
+                      "nostalgia",
+                      "hopefulness",
+                      "camp_and_irony"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": false,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": true,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "German Western Parody",
+                    "Slapstick Comedy",
+                    "Buddy Adventure",
+                    "Irreverent Spoof",
+                    "Cult Comedy Sequel",
+                    "Nostalgic Humor",
+                    "Lighthearted Escapism",
+                    "Quirky Characters",
+                    "Family-Friendly Western"
+                  ],
+                  "essence_text": "A gleefully silly German Western parody that thrives on relentless slapstick, absurd situations, and witty wordplay. The buddy dynamic between the bumbling heroes carries an infectious, lighthearted charm that invites laughter without demanding much thought. Its campy, self-aware tone and reverence-free approach to the Western genre make for a thoroughly comforting and nostalgic comedic romp. Best enjoyed with friends or family as a carefree, popcorn-movie experience."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "D",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "structural_failure",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 5,
+                      "tension": 3,
+                      "scare": 1,
+                      "violence": 4,
+                      "romance": 2,
+                      "eroticism": 0,
+                      "wholesome": 5,
+                      "wonder": 3,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 1,
+                      "catharsis": 4,
+                      "nostalgia": 7,
+                      "situational_comedy": 8,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 9,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 7,
+                      "satire_parody": 9,
+                      "dark_humor": 3,
+                      "fantasy": 4,
+                      "futuristic": 0,
+                      "historical": 6,
+                      "contemporary_realism": 0,
+                      "crime": 2,
+                      "mystery": 2,
+                      "warfare": 3,
+                      "political": 1,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 0,
+                      "family_dynamics": 5,
+                      "psychological": 1,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 4,
+                      "social_commentary": 5,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 0,
+                      "spiritual": 2,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 6,
+                      "character_depth": 5,
+                      "slow_burn": 3,
+                      "fast_pace": 6,
+                      "intrigue": 4,
+                      "complexity": 3,
+                      "rewatchability": 7,
+                      "hopefulness": 6,
+                      "bleakness": 1,
+                      "ambiguity": 2,
+                      "novelty": 5,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 0,
+                      "meta_narrative": 1,
+                      "surrealism": 2,
+                      "eccentricity": 7,
+                      "philosophical": 1,
+                      "educational": 0,
+                      "direction": 6,
+                      "acting": 6,
+                      "cinematography": 5,
+                      "editing": 6,
+                      "music_composition": 5,
+                      "world_immersion": 6,
+                      "spectacle": 4,
+                      "visual_stylization": 5,
+                      "pastiche": 8,
+                      "psychedelic": 0,
+                      "grotesque": 1,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 4,
+                      "sound_centrality": 3
+                    },
+                    "highlight_keys": [
+                      "satire_parody",
+                      "pastiche",
+                      "homage_and_reference",
+                      "physical_comedy",
+                      "camp_and_irony",
+                      "nostalgia",
+                      "sitcom_comedy"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Parody Western",
+                    "Oskar-Friedrich-Lore",
+                    "Slapstick Comedy",
+                    "Family Entertainment",
+                    "Satirical Adventure",
+                    "Nostalgic Animation Style",
+                    "Lighthearted Action",
+                    "Cult Classic Revival",
+                    "Visual Gags",
+                    "Campy Humor"
+                  ],
+                  "essence_text": "A vibrant and nostalgic parody of the classic Oskar-Friedrich western cartoons, this film delivers high-energy slapstick humor and visual gags tailored for family audiences. It faithfully recreates the charm of mid-20th-century animation with a modern live-action twist, celebrating the absurdity and campiness of its source material. The narrative is simple and lighthearted, focusing on physical comedy and satirical takes on genre tropes rather than deep thematic complexity. Ideally suited for groups seeking a fun, low-stakes, and visually entertaining experience that appeals to both children and adults familiar with the franchise."
+                }
+              }
+            ]
+          },
+          "validation_errors": [
+            "['results', 0, 'analysis', 'fingerprint', 'highlight_keys', 6]: 'sitcom_comedy' is not one of ['adrenaline', 'tension', 'scare', 'violence', 'romance', 'eroticism', 'wholesome', 'wonder', 'pathos', 'melancholy', 'uncanny', 'catharsis', 'nostalgia', 'situational_comedy', 'wit_wordplay', 'physical_comedy', 'cringe_humor', 'absurdist_humor', 'satire_parody', 'dark_humor', 'fantasy', 'futuristic', 'historical', 'contemporary_realism', 'crime', 'mystery', 'warfare', 'political', 'sports', 'biographical', 'coming_of_age', 'family_dynamics', 'psychological', 'showbiz', 'gaming', 'pop_culture', 'social_commentary', 'class_and_capitalism', 'technology_and_humanity', 'spiritual', 'narrative_structure', 'dialogue_quality', 'character_depth', 'slow_burn', 'fast_pace', 'intrigue', 'complexity', 'rewatchability', 'hopefulness', 'bleakness', 'ambiguity', 'novelty', 'homage_and_reference', 'non_linear_narrative', 'meta_narrative', 'surrealism', 'eccentricity', 'philosophical', 'educational', 'direction', 'acting', 'cinematography', 'editing', 'music_composition', 'world_immersion', 'spectacle', 'visual_stylization', 'pastiche', 'psychedelic', 'grotesque', 'camp_and_irony', 'dialogue_centrality', 'music_centrality', 'sound_centrality']"
+          ]
+        },
+        {
+          "attempt": 2,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 5,
+                      "tension": 3,
+                      "scare": 1,
+                      "violence": 4,
+                      "romance": 2,
+                      "eroticism": 0,
+                      "wholesome": 5,
+                      "wonder": 3,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 1,
+                      "catharsis": 4,
+                      "nostalgia": 7,
+                      "situational_comedy": 8,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 9,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 7,
+                      "satire_parody": 9,
+                      "dark_humor": 3,
+                      "fantasy": 4,
+                      "futuristic": 0,
+                      "historical": 6,
+                      "contemporary_realism": 0,
+                      "crime": 2,
+                      "mystery": 2,
+                      "warfare": 3,
+                      "political": 1,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 0,
+                      "family_dynamics": 5,
+                      "psychological": 1,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 4,
+                      "social_commentary": 5,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 0,
+                      "spiritual": 2,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 6,
+                      "character_depth": 5,
+                      "slow_burn": 3,
+                      "fast_pace": 6,
+                      "intrigue": 4,
+                      "complexity": 3,
+                      "rewatchability": 7,
+                      "hopefulness": 6,
+                      "bleakness": 1,
+                      "ambiguity": 2,
+                      "novelty": 5,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 0,
+                      "meta_narrative": 1,
+                      "surrealism": 2,
+                      "eccentricity": 7,
+                      "philosophical": 1,
+                      "educational": 0,
+                      "direction": 6,
+                      "acting": 6,
+                      "cinematography": 5,
+                      "editing": 6,
+                      "music_composition": 5,
+                      "world_immersion": 6,
+                      "spectacle": 4,
+                      "visual_stylization": 5,
+                      "pastiche": 8,
+                      "psychedelic": 0,
+                      "grotesque": 1,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 4,
+                      "sound_centrality": 3
+                    },
+                    "highlight_keys": [
+                      "satire_parody",
+                      "pastiche",
+                      "homage_and_reference",
+                      "physical_comedy",
+                      "camp_and_irony",
+                      "nostalgia",
+                      "situational_comedy"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Parody Western",
+                    "Oskar-Friedrich-Lore",
+                    "Slapstick Comedy",
+                    "Family Entertainment",
+                    "Satirical Adventure",
+                    "Nostalgic Animation Style",
+                    "Lighthearted Action",
+                    "Cult Classic Revival",
+                    "Visual Gags",
+                    "Campy Humor"
+                  ],
+                  "essence_text": "A vibrant and nostalgic parody of the classic Oskar-Friedrich western cartoons, this film delivers high-energy slapstick humor and visual gags tailored for family audiences. It faithfully recreates the charm of mid-20th-century animation with a modern live-action twist, celebrating the absurdity and campiness of its source material. The narrative is simple and lighthearted, focusing on physical comedy and satirical takes on genre tropes rather than deep thematic complexity. Ideally suited for groups seeking a fun, low-stakes, and visually entertaining experience that appeals to both children and adults familiar with the franchise."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "E",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 6,
+                      "tension": 4,
+                      "scare": 0,
+                      "violence": 5,
+                      "romance": 3,
+                      "eroticism": 1,
+                      "wholesome": 6,
+                      "wonder": 3,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 1,
+                      "catharsis": 4,
+                      "nostalgia": 7,
+                      "situational_comedy": 8,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 9,
+                      "cringe_humor": 5,
+                      "absurdist_humor": 7,
+                      "satire_parody": 8,
+                      "dark_humor": 4,
+                      "fantasy": 2,
+                      "futuristic": 0,
+                      "historical": 1,
+                      "contemporary_realism": 0,
+                      "crime": 1,
+                      "mystery": 2,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 1,
+                      "family_dynamics": 5,
+                      "psychological": 1,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 3,
+                      "class_and_capitalism": 1,
+                      "technology_and_humanity": 0,
+                      "spiritual": 1,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 7,
+                      "character_depth": 4,
+                      "slow_burn": 2,
+                      "fast_pace": 8,
+                      "intrigue": 6,
+                      "complexity": 4,
+                      "rewatchability": 7,
+                      "hopefulness": 7,
+                      "bleakness": 2,
+                      "ambiguity": 1,
+                      "novelty": 6,
+                      "homage_and_reference": 8,
+                      "non_linear_narrative": 0,
+                      "meta_narrative": 3,
+                      "surrealism": 2,
+                      "eccentricity": 5,
+                      "philosophical": 2,
+                      "educational": 1,
+                      "direction": 7,
+                      "acting": 7,
+                      "cinematography": 6,
+                      "editing": 7,
+                      "music_composition": 7,
+                      "world_immersion": 6,
+                      "spectacle": 7,
+                      "visual_stylization": 5,
+                      "pastiche": 8,
+                      "psychedelic": 0,
+                      "grotesque": 0,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 6,
+                      "sound_centrality": 5
+                    },
+                    "highlight_keys": [
+                      "physical_comedy",
+                      "satire_parody",
+                      "nostalgia",
+                      "pastiche",
+                      "camp_and_irony",
+                      "situational_comedy",
+                      "fast_pace",
+                      "homage_and_reference"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": true,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "German Comedy Parody",
+                    "Western Spoof",
+                    "Physical Slapstick",
+                    "Cultural Satire",
+                    "Nostalgic Homage",
+                    "Campy Adventure",
+                    "Absurdist Humor",
+                    "Buddy Film",
+                    "Fast-Paced Farce",
+                    "Pop Culture Reference"
+                  ],
+                  "essence_text": "A raucous and irreverent German comedy that lovingly spoofs classic Western tropes and Hollywood adventure films. The film thrives on its manic energy, delivering a constant barrage of slapstick, wordplay, and absurd situations. Its humor is deeply rooted in cultural satire and self-aware camp, creating a nostalgic yet fresh comedic experience. The dynamic between the mismatched leads drives the narrative, making it a lighthearted and relentlessly entertaining romp that prioritizes fun over substance."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "F",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 5,
+                      "tension": 4,
+                      "scare": 1,
+                      "violence": 3,
+                      "romance": 2,
+                      "eroticism": 1,
+                      "wholesome": 7,
+                      "wonder": 3,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 1,
+                      "catharsis": 4,
+                      "nostalgia": 8,
+                      "situational_comedy": 9,
+                      "wit_wordplay": 8,
+                      "physical_comedy": 9,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 7,
+                      "satire_parody": 10,
+                      "dark_humor": 4,
+                      "fantasy": 2,
+                      "futuristic": 0,
+                      "historical": 6,
+                      "contemporary_realism": 1,
+                      "crime": 4,
+                      "mystery": 2,
+                      "warfare": 1,
+                      "political": 3,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 1,
+                      "family_dynamics": 5,
+                      "psychological": 1,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 6,
+                      "social_commentary": 5,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 0,
+                      "spiritual": 3,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 8,
+                      "character_depth": 5,
+                      "slow_burn": 2,
+                      "fast_pace": 7,
+                      "intrigue": 5,
+                      "complexity": 4,
+                      "rewatchability": 7,
+                      "hopefulness": 8,
+                      "bleakness": 1,
+                      "ambiguity": 1,
+                      "novelty": 4,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 4,
+                      "surrealism": 2,
+                      "eccentricity": 6,
+                      "philosophical": 1,
+                      "educational": 1,
+                      "direction": 7,
+                      "acting": 8,
+                      "cinematography": 6,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 5,
+                      "spectacle": 4,
+                      "visual_stylization": 3,
+                      "pastiche": 9,
+                      "psychedelic": 1,
+                      "grotesque": 1,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 4,
+                      "sound_centrality": 3
+                    },
+                    "highlight_keys": [
+                      "satire_parody",
+                      "situational_comedy",
+                      "physical_comedy",
+                      "homage_and_reference",
+                      "nostalgia",
+                      "pastiche",
+                      "camp_and_irony",
+                      "dialogue_quality"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Gaga Family Western Parody",
+                    "Nostalgic German Comedy",
+                    "Slapstick Heavy",
+                    "Campy and Ironic",
+                    "Buddy Adventure",
+                    "Spoof of Classic Tropes",
+                    "Lighthearted Satire",
+                    "Ensemble Cast Humor",
+                    "Comfort Viewing",
+                    "Cultural Phenomenon"
+                  ],
+                  "essence_text": "This film serves as a raucous, slapstick-heavy parody of classic Western tropes, leaning heavily into the distinctive comedic style established by its predecessor. It is defined by exaggerated physical comedy, witty wordplay, and a campy sense of irony that appeals to fans of German cinema nostalgia. The narrative functions primarily as a vehicle for gags and character interactions rather than serious plot development, creating a lighthearted and escapist experience. With its broad humor and familiar archetypes, it offers a comforting return to a beloved comedic universe, prioritizing laughter over logical consistency or deep thematic exploration."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "G",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 6,
+                      "tension": 4,
+                      "scare": 0,
+                      "violence": 4,
+                      "romance": 2,
+                      "eroticism": 0,
+                      "wholesome": 6,
+                      "wonder": 4,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 0,
+                      "catharsis": 5,
+                      "nostalgia": 9,
+                      "situational_comedy": 7,
+                      "wit_wordplay": 8,
+                      "physical_comedy": 7,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 6,
+                      "satire_parody": 10,
+                      "dark_humor": 3,
+                      "fantasy": 2,
+                      "futuristic": 0,
+                      "historical": 5,
+                      "contemporary_realism": 1,
+                      "crime": 4,
+                      "mystery": 2,
+                      "warfare": 1,
+                      "political": 2,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 1,
+                      "family_dynamics": 4,
+                      "psychological": 1,
+                      "showbiz": 1,
+                      "gaming": 0,
+                      "pop_culture": 8,
+                      "social_commentary": 4,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 0,
+                      "spiritual": 2,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 8,
+                      "character_depth": 4,
+                      "slow_burn": 2,
+                      "fast_pace": 7,
+                      "intrigue": 5,
+                      "complexity": 3,
+                      "rewatchability": 7,
+                      "hopefulness": 7,
+                      "bleakness": 1,
+                      "ambiguity": 1,
+                      "novelty": 4,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 0,
+                      "meta_narrative": 5,
+                      "surrealism": 3,
+                      "eccentricity": 7,
+                      "philosophical": 1,
+                      "educational": 0,
+                      "direction": 6,
+                      "acting": 7,
+                      "cinematography": 5,
+                      "editing": 6,
+                      "music_composition": 6,
+                      "world_immersion": 6,
+                      "spectacle": 6,
+                      "visual_stylization": 5,
+                      "pastiche": 10,
+                      "psychedelic": 0,
+                      "grotesque": 1,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 5,
+                      "sound_centrality": 4
+                    },
+                    "highlight_keys": [
+                      "satire_parody",
+                      "pastiche",
+                      "homage_and_reference",
+                      "nostalgia",
+                      "wit_wordplay",
+                      "situational_comedy",
+                      "physical_comedy",
+                      "dialogue_centrality"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": true,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "German Western Spoof",
+                    "Broad Buddy Adventure",
+                    "Nostalgic Franchise Comedy",
+                    "Sharp Genre Parody",
+                    "Clever Wordplay",
+                    "Slapstick Action",
+                    "Campy Frontier Spectacle",
+                    "Pop-Culture Homage",
+                    "Lighthearted Escapism"
+                  ],
+                  "essence_text": "A buoyant German Western spoof built around the comic chemistry of its mismatched frontier heroes. It leans into broad physical gags, rapid-fire wordplay, and knowingly exaggerated genre conventions rather than dramatic realism. The adventure offers colorful camp, accessible action, and a strong dose of nostalgia for audiences familiar with the franchise and its cultural references. Primarily an easygoing, communal entertainment, it is best enjoyed as playful escapism with enough verbal wit to reward attentive viewers."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "H",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 6,
+                      "tension": 5,
+                      "scare": 1,
+                      "violence": 4,
+                      "romance": 2,
+                      "eroticism": 1,
+                      "wholesome": 7,
+                      "wonder": 3,
+                      "pathos": 2,
+                      "melancholy": 1,
+                      "uncanny": 1,
+                      "catharsis": 4,
+                      "nostalgia": 5,
+                      "situational_comedy": 9,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 8,
+                      "cringe_humor": 7,
+                      "absurdist_humor": 9,
+                      "satire_parody": 8,
+                      "dark_humor": 5,
+                      "fantasy": 2,
+                      "futuristic": 0,
+                      "historical": 1,
+                      "contemporary_realism": 0,
+                      "crime": 3,
+                      "mystery": 2,
+                      "warfare": 2,
+                      "political": 1,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 0,
+                      "family_dynamics": 3,
+                      "psychological": 1,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 8,
+                      "social_commentary": 4,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 0,
+                      "spiritual": 1,
+                      "narrative_structure": 5,
+                      "dialogue_quality": 6,
+                      "character_depth": 3,
+                      "slow_burn": 2,
+                      "fast_pace": 7,
+                      "intrigue": 4,
+                      "complexity": 3,
+                      "rewatchability": 6,
+                      "hopefulness": 6,
+                      "bleakness": 1,
+                      "ambiguity": 2,
+                      "novelty": 7,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 0,
+                      "meta_narrative": 1,
+                      "surrealism": 1,
+                      "eccentricity": 8,
+                      "philosophical": 1,
+                      "educational": 0,
+                      "direction": 6,
+                      "acting": 5,
+                      "cinematography": 5,
+                      "editing": 6,
+                      "music_composition": 5,
+                      "world_immersion": 4,
+                      "spectacle": 5,
+                      "visual_stylization": 3,
+                      "pastiche": 9,
+                      "psychedelic": 0,
+                      "grotesque": 1,
+                      "camp_and_irony": 9,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 4,
+                      "sound_centrality": 3
+                    },
+                    "highlight_keys": [
+                      "absurdist_humor",
+                      "camp_and_irony",
+                      "pastiche",
+                      "pop_culture",
+                      "situational_comedy",
+                      "eccentricity",
+                      "novelty",
+                      "fast_pace"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Absurdist Comedy",
+                    "German Parody",
+                    "Cult Classic Homage",
+                    "Physical Slapstick",
+                    "Pop Culture Satire",
+                    "Fast-Paced Farce",
+                    "Eccentric Western",
+                    "Campy Adventure"
+                  ],
+                  "essence_text": "A relentlessly silly and fast-paced parody that gleefully lampoons classic Western tropes through exaggerated slapstick and absurd humor. The film leans heavily into camp and irony, creating a world where nothing is taken seriously—least of all the plot. Packed with pop culture references and homage to beloved genre clichés, it’s a chaotic yet oddly wholesome celebration of bad taste. The eccentric energy and breakneck pace make it a perfect, mindless escape for those in the mood for unapologetic nonsense."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "I",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 6,
+                      "tension": 4,
+                      "scare": 3,
+                      "violence": 7,
+                      "romance": 3,
+                      "eroticism": 1,
+                      "wholesome": 5,
+                      "wonder": 6,
+                      "pathos": 4,
+                      "melancholy": 2,
+                      "uncanny": 2,
+                      "catharsis": 5,
+                      "nostalgia": 1,
+                      "situational_comedy": 9,
+                      "wit_wordplay": 3,
+                      "physical_comedy": 9,
+                      "cringe_humor": 4,
+                      "absurdist_humor": 8,
+                      "satire_parody": 6,
+                      "dark_humor": 5,
+                      "fantasy": 5,
+                      "futuristic": 1,
+                      "historical": 6,
+                      "contemporary_realism": 0,
+                      "crime": 2,
+                      "mystery": 1,
+                      "warfare": 4,
+                      "political": 2,
+                      "sports": 1,
+                      "biographical": 0,
+                      "coming_of_age": 1,
+                      "family_dynamics": 6,
+                      "psychological": 3,
+                      "showbiz": 1,
+                      "gaming": 0,
+                      "pop_culture": 2,
+                      "social_commentary": 5,
+                      "class_and_capitalism": 3,
+                      "technology_and_humanity": 3,
+                      "spiritual": 4,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 6,
+                      "character_depth": 5,
+                      "slow_burn": 2,
+                      "fast_pace": 8,
+                      "intrigue": 6,
+                      "complexity": 4,
+                      "rewatchability": 8,
+                      "hopefulness": 6,
+                      "bleakness": 2,
+                      "ambiguity": 2,
+                      "novelty": 8,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 2,
+                      "surrealism": 7,
+                      "eccentricity": 8,
+                      "philosophical": 3,
+                      "educational": 0,
+                      "direction": 7,
+                      "acting": 7,
+                      "cinematography": 7,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 7,
+                      "spectacle": 8,
+                      "visual_stylization": 8,
+                      "pastiche": 5,
+                      "psychedelic": 3,
+                      "grotesque": 5,
+                      "camp_and_irony": 9,
+                      "dialogue_centrality": 6,
+                      "music_centrality": 6,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "camp_and_irony",
+                      "physical_comedy",
+                      "absurdist_humor",
+                      "visual_stylization",
+                      "novelty",
+                      "spectacle",
+                      "surrealism",
+                      "situational_comedy"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": false,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Dark Satirical Western",
+                    "Slapstick Absurdist Comedy",
+                    "Euro-western Parody",
+                    "Visually Stylized Adventure",
+                    "Cult Classic Humor",
+                    "Eccentric Characters",
+                    "High-Octane Action",
+                    "Grotesque Visuals",
+                    "Playful Subversion",
+                    "Campy Aesthetic"
+                  ],
+                  "essence_text": "A wildly eccentric and slapstick-infused satire that subverts classic Western tropes with absurdist humor and grotesque visual flourishes. The film thrives on high-energy pacing and a playful, campy aesthetic, delivering a spectacle that is as bizarre as it is entertaining. It is a cult-conscious parody that prioritizes laughs and visual wit over narrative depth, making it a perfect drop-in for viewers seeking chaotic, high-concept fun."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "J",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "K",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "L",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "M",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:1233066",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 6,
+                      "tension": 4,
+                      "scare": 1,
+                      "violence": 4,
+                      "romance": 3,
+                      "eroticism": 2,
+                      "wholesome": 6,
+                      "wonder": 5,
+                      "pathos": 3,
+                      "melancholy": 2,
+                      "uncanny": 5,
+                      "catharsis": 6,
+                      "nostalgia": 8,
+                      "situational_comedy": 7,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 7,
+                      "cringe_humor": 6,
+                      "absurdist_humor": 7,
+                      "satire_parody": 9,
+                      "dark_humor": 4,
+                      "fantasy": 3,
+                      "futuristic": 0,
+                      "historical": 5,
+                      "contemporary_realism": 1,
+                      "crime": 4,
+                      "mystery": 3,
+                      "warfare": 5,
+                      "political": 2,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 2,
+                      "family_dynamics": 6,
+                      "psychological": 1,
+                      "showbiz": 2,
+                      "gaming": 0,
+                      "pop_culture": 6,
+                      "social_commentary": 4,
+                      "class_and_capitalism": 2,
+                      "technology_and_humanity": 1,
+                      "spiritual": 4,
+                      "narrative_structure": 6,
+                      "dialogue_quality": 7,
+                      "character_depth": 4,
+                      "slow_burn": 3,
+                      "fast_pace": 7,
+                      "intrigue": 5,
+                      "complexity": 4,
+                      "rewatchability": 8,
+                      "hopefulness": 7,
+                      "bleakness": 1,
+                      "ambiguity": 3,
+                      "novelty": 4,
+                      "homage_and_reference": 9,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 3,
+                      "surrealism": 6,
+                      "eccentricity": 8,
+                      "philosophical": 2,
+                      "educational": 1,
+                      "direction": 6,
+                      "acting": 6,
+                      "cinematography": 6,
+                      "editing": 7,
+                      "music_composition": 6,
+                      "world_immersion": 6,
+                      "spectacle": 5,
+                      "visual_stylization": 6,
+                      "pastiche": 8,
+                      "psychedelic": 2,
+                      "grotesque": 4,
+                      "camp_and_irony": 8,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 6,
+                      "sound_centrality": 5
+                    },
+                    "highlight_keys": [
+                      "nostalgia",
+                      "satire_parody",
+                      "homage_and_reference",
+                      "pastiche",
+                      "camp_and_irony",
+                      "eccentricity",
+                      "situational_comedy",
+                      "family_dynamics"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Strong Language",
+                    "Drug Use"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": false,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": true,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Comedy Western Parody",
+                    "German Cult Nostalgia",
+                    "Slapstick Adventure",
+                    "Native American Satire",
+                    "Sequel Comedy",
+                    "Goofy Ensemble Humor",
+                    "Canoe Treasure Quest",
+                    "Campy Entertainment",
+                    "Family-Friendly Action"
+                  ],
+                  "essence_text": "This German comedy revives a beloved cult parody series with its trademark mix of slapstick, wordplay, and affectionate Western spoofing. Fans of the original will revel in the nostalgic return of Abahachi and Ranger, while newcomers can enjoy a goofy adventure full of eccentric characters and absurd humor. The film's warmth and silly charm make it an easy, comforting watch, though its broadly drawn Native American caricatures and campy tone may not suit every taste. It's a lively, good-natured escape that celebrates its own legacy with knowing winks and chaotic set pieces."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    }
+  ]
+}

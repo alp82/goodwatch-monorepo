@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789409978-y7YzsXeaeZCGmOUPtFzg",
+  "object": "chat.completion",
+  "created": 1789409978,
+  "model": "qwen/qwen3.7-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n    {\n      \"benchmark_id\": \"movie:150540\",\n      \"analysis\": {\n        \"fingerprint\": {\n          \"scores\": {\n            \"adrenaline\": 3,\n            \"tension\": 4,\n            \"scare\": 2,\n            \"violence\": 1,\n            \"romance\": 2,\n            \"eroticism\": 0,\n            \"wholesome\": 8,\n            \"wonder\": 7,\n            \"pathos\": 9,\n            \"melancholy\": 6,\n            \"uncanny\": 2,\n            \"catharsis\": 8,\n            \"nostalgia\": 6,\n            \"situational_comedy\": 5,\n            \"wit_wordplay\": 5,\n            \"physical_comedy\": 4,\n            \"cringe_humor\": 2,\n            \"absurdist_humor\": 4,\n            \"satire_parody\": 1,\n            \"dark_humor\": 1,\n            \"fantasy\": 6,\n            \"futuristic\": 0,\n            \"historical\": 0,\n            \"contemporary_realism\": 7,\n            \"crime\": 0,\n            \"mystery\": 0,\n            \"warfare\": 0,\n            \"political\": 0,\n            \"sports\": 0,\n            \"biographical\": 0,\n            \"coming_of_age\": 9,\n            \"family_dynamics\": 8,\n            \"psychological\": 9,\n            \"showbiz\": 0,\n            \"gaming\": 0,\n            \"pop_culture\": 0,\n            \"social_commentary\": 3,\n            \"class_and_capitalism\": 0,\n            \"technology_and_humanity\": 0,\n            \"spiritual\": 1,\n            \"narrative_structure\": 9,\n            \"dialogue_quality\": 7,\n            \"character_depth\": 9,\n            \"slow_burn\": 5,\n            \"fast_pace\": 6,\n            \"intrigue\": 6,\n            \"complexity\": 7,\n            \"rewatchability\": 9,\n            \"hopefulness\": 8,\n            \"bleakness\": 2,\n            \"ambiguity\": 2,\n            \"novelty\": 8,\n            \"homage_and_reference\": 1,\n            \"non_linear_narrative\": 3,\n            \"meta_narrative\": 0,\n            \"surrealism\": 5,\n            \"eccentricity\": 4,\n            \"philosophical\": 6,\n            \"educational\": 5,\n            \"direction\": 9,\n            \"acting\": 8,\n            \"cinematography\": 8,\n            \"editing\": 8,\n            \"music_composition\": 9,\n            \"world_immersion\": 9,\n            \"spectacle\": 5,\n            \"visual_stylization\": 7,\n            \"pastiche\": 0,\n            \"psychedelic\": 0,\n            \"grotesque\": 0,\n            \"camp_and_irony\": 0,\n            \"dialogue_centrality\": 6,\n            \"music_centrality\": 7,\n            \"sound_centrality\": 7\n          },\n          \"highlight_keys\": [\n            \"psychological\",\n            \"coming_of_age\",\n            \"pathos\",\n            \"narrative_structure\",\n            \"character_depth\",\n            \"wholesome\",\n            \"catharsis\",\n            \"music_composition\"\n          ]\n        },\n        \"is_anime\": false,\n        \"production_info\": {\n          \"method\": \"Animation\",\n          \"animation_style\": \"3D CGI\"\n        },\n        \"content_advisories\": [],\n        \"social_suitability\": {\n          \"solo_watch\": true,\n          \"date_night\": true,\n          \"group_party\": false,\n          \"family\": true,\n          \"partner\": true,\n          \"friends\": true,\n          \"kids\": true,\n          \"teens\": true,\n          \"adults\": true,\n          \"intergenerational\": true,\n          \"public_viewing_safe\": true\n        },\n        \"viewing_context\": {\n          \"is_thought_provoking\": true,\n          \"is_pure_escapism\": false,\n          \"is_background_friendly\": false,\n          \"is_comfort_watch\": true,\n          \"is_binge_friendly\": false,\n          \"is_drop_in_friendly\": true\n        },\n        \"essence_tags\": [\n          \"Emotional Intelligence Fantasy\",\n          \"Heartfelt Coming-of-Age\",\n          \"Psychological Visual Metaphor\",\n          \"Family Drama with Heart\",\n          \"Nostalgic & Bittersweet\",\n          \"Visually Creative World-Building\",\n          \"Touching Emotional Journey\",\n          \"Universal Human Experience\",\n          \"Pixar Animation Excellence\",\n          \"Cathartic Storytelling\"\n        ],\n        \"essence_text\": \"A groundbreaking and deeply moving exploration of the inner emotional life of a young girl navigating the complexities of growing up. The film brilliantly visualizes abstract psychological concepts into a vibrant, imaginative world that is both whimsical and poignant. Anchored by exceptional voice work and a soaring musical score, it balances humor with profound sadness to deliver a cathartic experience for all ages. This is a masterful piece of storytelling that resonates with universal truths about memory, identity, and the importance of embracing all emotions.\"\n      }\n    }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7983,
+    "completion_tokens": 1283,
+    "total_tokens": 9266,
+    "cost": 0.00022196,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00022196,
+      "upstream_inference_prompt_cost": 5.517e-05,
+      "upstream_inference_completions_cost": 0.00016679
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

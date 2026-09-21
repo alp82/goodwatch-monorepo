@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789409998-EwGetCITotSYobHQpmam",
+  "object": "chat.completion",
+  "created": 1789409998,
+  "model": "qwen/qwen3.8-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n   {\n\"benchmark_id\": \"movie:150540\",\n\"analysis\": {\n\"fingerprint\": {\n\"scores\": {\n\"adrenaline\": 3,\n\"tension\": 5,\n\"scare\": 2,\n\"violence\": 1,\n\"romance\": 1,\n\"eroticism\": 0,\n\"wholesome\": 9,\n\"wonder\": 8,\n\"pathos\": 8,\n\"melancholy\": 6,\n\"uncanny\": 3,\n\"catharsis\": 9,\n\"nostalgia\": 7,\n\"situational_comedy\": 7,\n\"wit_wordplay\": 6,\n\"physical_comedy\": 5,\n\"cringe_humor\": 2,\n\"absurdist_humor\": 7,\n\"satire_parody\": 3,\n\"dark_humor\": 2,\n\"fantasy\": 8,\n\"futuristic\": 1,\n\"historical\": 0,\n\"contemporary_realism\": 6,\n\"crime\": 0,\n\"mystery\": 3,\n\"warfare\": 0,\n\"political\": 0,\n\"sports\": 0,\n\"biographical\": 0,\n\"coming_of_age\": 9,\n\"family_dynamics\": 8,\n\"psychological\": 9,\n\"showbiz\": 0,\n\"gaming\": 0,\n\"pop_culture\": 2,\n\"social_commentary\": 4,\n\"class_and_capitalism\": 0,\n\"technology_and_humanity\": 2,\n\"spiritual\": 1,\n\"narrative_structure\": 9,\n\"dialogue_quality\": 8,\n\"character_depth\": 9,\n\"slow_burn\": 3,\n\"fast_pace\": 6,\n\"intrigue\": 7,\n\"complexity\": 8,\n\"rewatchability\": 9,\n\"hopefulness\": 9,\n\"bleakness\": 2,\n\"ambiguity\": 1,\n\"novelty\": 9,\n\"homage_and_reference\": 2,\n\"non_linear_narrative\": 2,\n\"meta_narrative\": 1,\n\"surrealism\": 7,\n\"eccentricity\": 6,\n\"philosophical\": 6,\n\"educational\": 7,\n\"direction\": 9,\n\"acting\": 8,\n\"cinematography\": 8,\n\"editing\": 8,\n\"music_composition\": 9,\n\"world_immersion\": 9,\n\"spectacle\": 7,\n\"visual_stylization\": 9,\n\"pastiche\": 1,\n\"psychedelic\": 4,\n\"grotesque\": 0,\n\"camp_and_irony\": 1,\n\"dialogue_centrality\": 8,\n\"music_centrality\": 9,\n\"sound_centrality\": 7\n},\n\"highlight_keys\": [\n\"psychological\",\n\"coming_of_age\",\n\"novelty\",\n\"catharsis\",\n\"wholesome\",\n\"world_immersion\",\n\"character_depth\",\n\"music_composition\"\n]\n},\n\"is_anime\": false,\n\"production_info\": {\n\"method\": \"Animation\",\n\"animation_style\": \"3D CGI\"\n},\n\"content_advisories\": [],\n\"social_suitability\": {\n\"solo_watch\": true,\n\"date_night\": true,\n\"group_party\": false,\n\"family\": true,\n\"partner\": true,\n\"friends\": true,\n\"kids\": true,\n\"teens\": true,\n\"adults\": true,\n\"intergenerational\": true,\n\"public_viewing_safe\": true\n},\n\"viewing_context\": {\n\"is_thought_provoking\": true,\n\"is_pure_escapism\": false,\n\"is_background_friendly\": false,\n\"is_comfort_watch\": true,\n\"is_binge_friendly\": false,\n\"is_drop_in_friendly\": false\n},\n\"essence_tags\": [\n\"Emotional Intelligence\",\n\"Psychological Fantasy\",\n\"Coming-of-Age Drama\",\n\"Family-Friendly Animation\",\n\"Conceptually Innovative\",\n\"Heartwarming & Bittersweet\",\n\"Visualizing the Mind\",\n\"Pixar Storytelling Peak\",\n\"Accessible Psychology\"\n],\n\"essence_text\": \"A groundbreaking exploration of human emotion that visualizes the internal workings of a child's mind with whimsical creativity and profound psychological insight. The film balances high-concept fantasy with grounded family drama, delivering a narrative that is both intellectually stimulating for adults and emotionally resonant for children. Its vibrant animation style serves as a perfect vehicle for abstract ideas, making complex feelings like sadness and nostalgia tangible and understandable. Ultimately, it offers a cathartic and hopeful message about the necessity of all emotions in forming a complete, healthy self.\"\n}\n}\n]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 7983,
+    "completion_tokens": 1120,
+    "total_tokens": 9103,
+    "cost": 0.00069473,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00069473,
+      "upstream_inference_prompt_cost": 0.00016833,
+      "upstream_inference_completions_cost": 0.0005264
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

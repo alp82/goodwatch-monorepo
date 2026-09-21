@@ -1,0 +1,54 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/qwen/qwen3.8-flash/endpoints",
+  "captured_at": "2026-09-12T05:21:00.134241+00:00",
+  "route": {
+    "name": "Alibaba | qwen/qwen3.8-flash-20260826",
+    "model_id": "qwen/qwen3.8-flash",
+    "model_name": "Qwen: Qwen3.8 Flash",
+    "context_length": 1000000,
+    "pricing": {
+      "prompt": "0.00000015",
+      "completion": "0.00000047",
+      "input_cache_read": "0.000000016",
+      "input_cache_write": "0.0000002",
+      "discount": 0
+    },
+    "provider_name": "Alibaba",
+    "tag": "alibaba",
+    "quantization": "unknown",
+    "max_completion_tokens": 131072,
+    "max_prompt_tokens": 983616,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "seed",
+      "presence_penalty",
+      "response_format",
+      "tools",
+      "structured_outputs",
+      "top_k",
+      "frequency_penalty",
+      "stop",
+      "logprobs",
+      "top_logprobs",
+      "tool_choice"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": false,
+      "function": false
+    },
+    "status": 0,
+    "uptime_last_30m": 99.83543970510796,
+    "uptime_last_5m": 99.82857142857144,
+    "uptime_last_1d": 99.59331292847928,
+    "supports_implicit_caching": true,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

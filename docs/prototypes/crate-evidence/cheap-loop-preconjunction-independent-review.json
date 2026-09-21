@@ -1,0 +1,145 @@
+{
+  "reviewer": "Independent assistant",
+  "inputs": [
+    "private/cheap-loop/native-preconjunction-v2-screen.json",
+    "private/cheap-loop/preconjunction-ranked.json",
+    "private/cheap-loop/native-preconjunction-v2-benchmark.json"
+  ],
+  "overall": {
+    "winner_id": null,
+    "assessment": "Promising structural candidate: pre-cap conjunction fixes a real candidate truncation limitation and improves wealthy-comedy fit versus plain English while focusing getaway retrieval. Measured matched runs are faster for the two activations with small local anti overhead. The generic guard changes only2/13 and leaves11 unchanged, including two unavailable gated paths. This is a useful conditional route, not a demonstrated global best list: stock English phrase remains competitive and RaspberryReich #3 still weakens wealthy-subject precision. Supplemental guard confirmation must finish before acceptance.",
+    "hygiene": "Optional conservative identity cleanup is separately validated; it does not repair subject relations or imply semantic correctness. Preserve original uncleaned controls.",
+    "scope": "Original13 exact requests, shared original Jev, same50k, no extra runtime model calls. Not a fresh unseen cohort."
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "activated": true,
+      "preference": "pre-cap conjunction + anti64 versus English; stock English phrase remains competitive",
+      "outcome": "better_than_english",
+      "assessment": "Joint SQL returns116 titles satisfying both lexical groups before independent caps truncate them. Anti64 Saltburn/Gemstones/WhiteLotus/Favourite provide direct wealth/class plus dark-comedy support among top5, materially stronger than English KillingIt/CrimeSceneCleaner/OnAir. However #3 RaspberryReich is revolutionary-gang satire with a rich hostage, not centrally rich people; this remains a subject-relation weakness, especially against strongest stock English phrase. Raw joint Saltburn/KillingIt/Gemstones also improves conjunction; anti is a tradeoff, not indisputably better at every rank. RRF and lexical75 promote broader satire and do not repair that issue. Tail KingOfComedy/Quills should not be treated as proven wealthy-subject matches merely from lexical eligibility.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort.",
+      "timing": {
+        "matched5_english_retrieval_median_ms": 825,
+        "matched5_joint_retrieval_median_ms": 616,
+        "separately_measured_anti_local_ms": 29.802746008499525,
+        "scope": "Rounded matched5 medians; adding separately measured local time is reconstructed, not measured end-to-end."
+      }
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unevaluable",
+      "assessment": "Unchanged gated empty text path; production vector fill absent. No quality or complete-search speed conclusion.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unevaluable",
+      "assessment": "Unchanged gated empty text path; production vector fill absent. No quality or complete-search speed conclusion.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "activated": true,
+      "preference": "joint anti64 / corrected / stock English phrase: all credible",
+      "outcome": "better_or_tie",
+      "assessment": "Joint13 pool retains complete getaway/chase conjunction. Anti64 Drive/BabyDriver/Motorway are direct getaway-driver stories; BabyDriver/Motorway explicitly emphasize chases. Drive source emphasizes character-driven bursts of action rather than nonstop chasing, but request prefers getaway over city destruction, so no hard failure. Heaven’sBurning high-stakes chase and ExecutiveTarget coerced getaway also support scope. Raw joint ExecutiveTarget/DriveHard/Motorway is already directly relevant; unfamiliar ExecutiveTarget is not inferior by familiarity. Original corrected and phrase are likewise strong. This is evidence of a cheaper focused route, not an unequivocal quality win over the strongest cheap alternative.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort.",
+      "timing": {
+        "matched5_english_retrieval_median_ms": 866,
+        "matched5_joint_retrieval_median_ms": 533,
+        "separately_measured_anti_local_ms": 3.2389800035161898,
+        "scope": "Rounded matched5 medians; local sum is reconstructed."
+      }
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "activated": false,
+      "preference": "unchanged English baseline",
+      "outcome": "unchanged",
+      "assessment": "Conjunction guard does not activate; this preserves the existing English path, including its strengths and unresolved weaknesses. No new quality gain claimed.",
+      "next_experiment": "Confirm frozen generic guard on the fixed supplemental cohort."
+    }
+  ]
+}

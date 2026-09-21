@@ -1,0 +1,50 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/meta/muse-spark-1.3-contributor/endpoints",
+  "captured_at": "2026-09-12T05:01:06.292511+00:00",
+  "route": {
+    "name": "Meta | meta/muse-spark-1.3-contributor-20260902",
+    "model_id": "meta/muse-spark-1.3-contributor",
+    "model_name": "Meta: Muse Spark 1.3 Contributor",
+    "context_length": 1048576,
+    "pricing": {
+      "prompt": "0.0000001",
+      "completion": "0.0000002",
+      "web_search": "0.0025",
+      "input_cache_read": "0.000000002",
+      "discount": 0
+    },
+    "provider_name": "Meta",
+    "tag": "meta",
+    "quantization": "unknown",
+    "max_completion_tokens": 943718,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "max_tokens",
+      "repetition_penalty",
+      "top_k",
+      "temperature",
+      "top_p",
+      "tools",
+      "tool_choice",
+      "structured_outputs",
+      "response_format",
+      "reasoning_effort"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": true,
+      "function": true
+    },
+    "status": 0,
+    "uptime_last_30m": 100,
+    "uptime_last_5m": 100,
+    "uptime_last_1d": 99.99931133229654,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

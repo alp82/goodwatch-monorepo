@@ -113,3 +113,5 @@ __pycache__
 
 # temp folder
 tmp
+# Claude Code agent worktrees
+.claude/worktrees/

@@ -1,0 +1,9 @@
+{
+  "table": "doc.prototype_search_evidence_104_v1",
+  "rows_before": 50000,
+  "verified_absent": true,
+  "completed_at": "2026-09-20T07:39:57.781631+00:00",
+  "authorization": "Approved prototype scratch-write scope; ticket explicitly requires dropping the scratch table on closure.",
+  "preserved": "Committed review, results, assessments, and code; local frozen sample.json and raw caches retained.",
+  "source_catalog_changed": false
+}

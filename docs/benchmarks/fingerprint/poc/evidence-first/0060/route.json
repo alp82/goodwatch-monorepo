@@ -1,0 +1,55 @@
+{
+  "url": "https://openrouter.ai/api/v1/models/deepseek/deepseek-v4.1-flash/endpoints",
+  "captured_at": "2026-09-12T05:26:45.480160+00:00",
+  "route": {
+    "name": "DeepInfra | deepseek/deepseek-v4.1-flash-20260910",
+    "model_id": "deepseek/deepseek-v4.1-flash",
+    "model_name": "DeepSeek: DeepSeek V4.1 Flash",
+    "context_length": 1048576,
+    "pricing": {
+      "prompt": "0.0000002",
+      "completion": "0.0000006",
+      "input_cache_read": "0.000000006",
+      "discount": 0
+    },
+    "provider_name": "DeepInfra",
+    "tag": "deepinfra/fp8",
+    "quantization": "fp8",
+    "max_completion_tokens": 131072,
+    "max_prompt_tokens": null,
+    "supported_parameters": [
+      "reasoning",
+      "include_reasoning",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "stop",
+      "frequency_penalty",
+      "presence_penalty",
+      "repetition_penalty",
+      "top_k",
+      "seed",
+      "min_p",
+      "response_format",
+      "logit_bias",
+      "structured_outputs",
+      "tools",
+      "tool_choice",
+      "reasoning_effort"
+    ],
+    "supports_tool_choice": {
+      "none": true,
+      "auto": true,
+      "required": true,
+      "function": true
+    },
+    "status": 0,
+    "uptime_last_30m": 95.9211682037769,
+    "uptime_last_5m": 96.75544794188862,
+    "uptime_last_1d": 93.81855875014026,
+    "supports_implicit_caching": false,
+    "supports_voice_cloning": false,
+    "latency_last_30m": null,
+    "throughput_last_30m": null
+  }
+}

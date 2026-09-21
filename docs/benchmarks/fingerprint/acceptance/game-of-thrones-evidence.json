@@ -1,0 +1,564 @@
+[
+  {
+    "id": "01a0a010-941d-5ab2-9bdb-4d35da45d205",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark",
+    "script_hash": null,
+    "duration_ms": 28379,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 4,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a010-9432-9ccc-279f-72371290cdc9",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a010-98ea-92ab-1696-5419406cb3aa",
+          "type": "Success",
+          "skipped": false,
+          "flow_jobs": [
+            "01a0a010-98ea-92ab-1696-5419406cb3aa"
+          ],
+          "flow_jobs_success": [
+            true
+          ],
+          "flow_jobs_duration": {
+            "started_at": [
+              "2026-09-14T13:17:17.423985Z"
+            ],
+            "duration_ms": [
+              23397
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "job": "01a0a010-f471-0025-3aa1-b5d92ae55754",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "vectors",
+          "job": "01a0a010-f4fa-1e91-6f1c-5f1d16df1bee",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a010-9432-9ccc-279f-72371290cdc9",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 1166,
+    "result": [
+      [
+        {
+          "id": "6849925e09c1e22f756947e3",
+          "type": "tv",
+          "tmdb_id": 1399
+        }
+      ]
+    ],
+    "logs": "job=01a0a010-9432-9ccc-279f-72371290cdc9 tag=python3 worker=wk-default-cf90f010ac28-soi2e hostname=cf90f010ac28 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a010-98ea-92ab-1696-5419406cb3aa",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0",
+    "script_hash": null,
+    "duration_ms": 23397,
+    "result": [
+      {
+        "id": "6849925e09c1e22f756947e3",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 5,
+              "scare": 6,
+              "acting": 10,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 8,
+              "fantasy": 10,
+              "mystery": 6,
+              "novelty": 8,
+              "romance": 7,
+              "showbiz": 0,
+              "tension": 10,
+              "uncanny": 4,
+              "warfare": 10,
+              "intrigue": 10,
+              "pastiche": 1,
+              "violence": 9,
+              "ambiguity": 4,
+              "bleakness": 9,
+              "catharsis": 5,
+              "direction": 9,
+              "eroticism": 6,
+              "fast_pace": 6,
+              "grotesque": 6,
+              "nostalgia": 3,
+              "political": 10,
+              "slow_burn": 7,
+              "spectacle": 10,
+              "spiritual": 6,
+              "wholesome": 2,
+              "adrenaline": 8,
+              "complexity": 10,
+              "dark_humor": 4,
+              "futuristic": 0,
+              "historical": 8,
+              "melancholy": 7,
+              "surrealism": 2,
+              "educational": 1,
+              "hopefulness": 3,
+              "pop_culture": 9,
+              "psychedelic": 1,
+              "biographical": 0,
+              "cringe_humor": 1,
+              "eccentricity": 3,
+              "wit_wordplay": 8,
+              "coming_of_age": 7,
+              "philosophical": 6,
+              "psychological": 8,
+              "satire_parody": 2,
+              "camp_and_irony": 1,
+              "cinematography": 9,
+              "meta_narrative": 0,
+              "rewatchability": 7,
+              "absurdist_humor": 0,
+              "character_depth": 10,
+              "family_dynamics": 9,
+              "physical_comedy": 1,
+              "world_immersion": 10,
+              "dialogue_quality": 9,
+              "music_centrality": 9,
+              "sound_centrality": 8,
+              "music_composition": 10,
+              "social_commentary": 7,
+              "situational_comedy": 2,
+              "visual_stylization": 8,
+              "dialogue_centrality": 9,
+              "narrative_structure": 9,
+              "class_and_capitalism": 6,
+              "contemporary_realism": 0,
+              "homage_and_reference": 2,
+              "non_linear_narrative": 1,
+              "technology_and_humanity": 2
+            },
+            "highlight_keys": [
+              "political",
+              "warfare",
+              "character_depth",
+              "world_immersion",
+              "spectacle",
+              "music_composition",
+              "tension",
+              "complexity"
+            ]
+          },
+          "essence_tags": [
+            "Epic Fantasy Drama",
+            "Intricate Political Maneuvering",
+            "Brutal Medieval Warfare",
+            "Ensemble Character Study",
+            "High-Stakes Power Struggles",
+            "Dark & Gritty Tone",
+            "Cinematic Spectacle",
+            "Iconic Score",
+            "Complex Moral Ambiguity",
+            "Apocalyptic Threat"
+          ],
+          "essence_text": "A sprawling epic that masterfully blends high fantasy with gritty political realism, focusing on the intricate web of alliances and betrayals among noble houses. The narrative is driven by deep character development and moral ambiguity, where heroes can become villains and vice versa amidst brutal warfare. Its immersive world-building is amplified by a haunting musical score and cinematic spectacle, creating an intense, binge-worthy experience defined by constant tension and shocking twists.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": true,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Nudity",
+            "Sexual Content",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": false,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": false,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": false,
+            "public_viewing_safe": false
+          }
+        }
+      }
+    ],
+    "logs": "Flow job completed with success\n",
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "c",
+          "job": "01a0a010-98ff-4480-6eb2-bc322a7d1f5b",
+          "type": "Success",
+          "skipped": false
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a010-98ff-4480-6eb2-bc322a7d1f5b",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0/c",
+    "script_hash": null,
+    "duration_ms": 23327,
+    "result": [
+      {
+        "id": "6849925e09c1e22f756947e3",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 5,
+              "scare": 6,
+              "acting": 10,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 8,
+              "fantasy": 10,
+              "mystery": 6,
+              "novelty": 8,
+              "romance": 7,
+              "showbiz": 0,
+              "tension": 10,
+              "uncanny": 4,
+              "warfare": 10,
+              "intrigue": 10,
+              "pastiche": 1,
+              "violence": 9,
+              "ambiguity": 4,
+              "bleakness": 9,
+              "catharsis": 5,
+              "direction": 9,
+              "eroticism": 6,
+              "fast_pace": 6,
+              "grotesque": 6,
+              "nostalgia": 3,
+              "political": 10,
+              "slow_burn": 7,
+              "spectacle": 10,
+              "spiritual": 6,
+              "wholesome": 2,
+              "adrenaline": 8,
+              "complexity": 10,
+              "dark_humor": 4,
+              "futuristic": 0,
+              "historical": 8,
+              "melancholy": 7,
+              "surrealism": 2,
+              "educational": 1,
+              "hopefulness": 3,
+              "pop_culture": 9,
+              "psychedelic": 1,
+              "biographical": 0,
+              "cringe_humor": 1,
+              "eccentricity": 3,
+              "wit_wordplay": 8,
+              "coming_of_age": 7,
+              "philosophical": 6,
+              "psychological": 8,
+              "satire_parody": 2,
+              "camp_and_irony": 1,
+              "cinematography": 9,
+              "meta_narrative": 0,
+              "rewatchability": 7,
+              "absurdist_humor": 0,
+              "character_depth": 10,
+              "family_dynamics": 9,
+              "physical_comedy": 1,
+              "world_immersion": 10,
+              "dialogue_quality": 9,
+              "music_centrality": 9,
+              "sound_centrality": 8,
+              "music_composition": 10,
+              "social_commentary": 7,
+              "situational_comedy": 2,
+              "visual_stylization": 8,
+              "dialogue_centrality": 9,
+              "narrative_structure": 9,
+              "class_and_capitalism": 6,
+              "contemporary_realism": 0,
+              "homage_and_reference": 2,
+              "non_linear_narrative": 1,
+              "technology_and_humanity": 2
+            },
+            "highlight_keys": [
+              "political",
+              "warfare",
+              "character_depth",
+              "world_immersion",
+              "spectacle",
+              "music_composition",
+              "tension",
+              "complexity"
+            ]
+          },
+          "essence_tags": [
+            "Epic Fantasy Drama",
+            "Intricate Political Maneuvering",
+            "Brutal Medieval Warfare",
+            "Ensemble Character Study",
+            "High-Stakes Power Struggles",
+            "Dark & Gritty Tone",
+            "Cinematic Spectacle",
+            "Iconic Score",
+            "Complex Moral Ambiguity",
+            "Apocalyptic Threat"
+          ],
+          "essence_text": "A sprawling epic that masterfully blends high fantasy with gritty political realism, focusing on the intricate web of alliances and betrayals among noble houses. The narrative is driven by deep character development and moral ambiguity, where heroes can become villains and vice versa amidst brutal warfare. Its immersive world-building is amplified by a haunting musical score and cinematic spectacle, creating an intense, binge-worthy experience defined by constant tension and shocking twists.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": true,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Nudity",
+            "Sexual Content",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": false,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": false,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": false,
+            "public_viewing_safe": false
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a010-98ff-4480-6eb2-bc322a7d1f5b tag=python3 worker=wk-default-f2f4cd808ea9-byElp hostname=f2f4cd808ea9 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nACCEPTANCE_RESERVATION {\"model\": \"qwen/qwen3.8-flash\", \"usd\": 0.00952324, \"input_byte_bound\": 28365}\nACCEPTANCE_USAGE {\"model\": \"qwen/qwen3.8-flash\", \"id\": \"gen-1789391838-HWoBbbGCaiBm6T2nZx8s\", \"provider\": \"Alibaba\", \"usage\": {\"prompt_tokens\": 4565, \"completion_tokens\": 1122, \"total_tokens\": 5687, \"cost\": 0.000628922, \"is_byok\": false, \"prompt_tokens_details\": {\"cached_tokens\": 4352, \"cache_write_tokens\": 0, \"audio_tokens\": 0, \"video_tokens\": 0}, \"cost_details\": {\"upstream_inference_cost\": 0.000628922, \"upstream_inference_prompt_cost\": 0.000101582, \"upstream_inference_completions_cost\": 0.00052734}, \"completion_tokens_details\": {\"reasoning_tokens\": 0, \"image_tokens\": 0, \"audio_tokens\": 0}}}\nOpenRouter qwen/qwen3.8-flash usage.cost=0.000628922\nACCEPTANCE_ACCOUNTED_USD 0.0006289220000000005",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a010-f471-0025-3aa1-b5d92ae55754",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/acceptance/benchmark/d",
+    "script_hash": null,
+    "duration_ms": 89,
+    "result": [
+      {
+        "id": "6849925e09c1e22f756947e3",
+        "dna": {
+          "is_anime": false,
+          "fingerprint": {
+            "scores": {
+              "crime": 5,
+              "scare": 6,
+              "acting": 10,
+              "gaming": 0,
+              "pathos": 9,
+              "sports": 0,
+              "wonder": 8,
+              "editing": 8,
+              "fantasy": 10,
+              "mystery": 6,
+              "novelty": 8,
+              "romance": 7,
+              "showbiz": 0,
+              "tension": 10,
+              "uncanny": 4,
+              "warfare": 10,
+              "intrigue": 10,
+              "pastiche": 1,
+              "violence": 9,
+              "ambiguity": 4,
+              "bleakness": 9,
+              "catharsis": 5,
+              "direction": 9,
+              "eroticism": 6,
+              "fast_pace": 6,
+              "grotesque": 6,
+              "nostalgia": 3,
+              "political": 10,
+              "slow_burn": 7,
+              "spectacle": 10,
+              "spiritual": 6,
+              "wholesome": 2,
+              "adrenaline": 8,
+              "complexity": 10,
+              "dark_humor": 4,
+              "futuristic": 0,
+              "historical": 8,
+              "melancholy": 7,
+              "surrealism": 2,
+              "educational": 1,
+              "hopefulness": 3,
+              "pop_culture": 9,
+              "psychedelic": 1,
+              "biographical": 0,
+              "cringe_humor": 1,
+              "eccentricity": 3,
+              "wit_wordplay": 8,
+              "coming_of_age": 7,
+              "philosophical": 6,
+              "psychological": 8,
+              "satire_parody": 2,
+              "camp_and_irony": 1,
+              "cinematography": 9,
+              "meta_narrative": 0,
+              "rewatchability": 7,
+              "absurdist_humor": 0,
+              "character_depth": 10,
+              "family_dynamics": 9,
+              "physical_comedy": 1,
+              "world_immersion": 10,
+              "dialogue_quality": 9,
+              "music_centrality": 9,
+              "sound_centrality": 8,
+              "music_composition": 10,
+              "social_commentary": 7,
+              "situational_comedy": 2,
+              "visual_stylization": 8,
+              "dialogue_centrality": 9,
+              "narrative_structure": 9,
+              "class_and_capitalism": 6,
+              "contemporary_realism": 0,
+              "homage_and_reference": 2,
+              "non_linear_narrative": 1,
+              "technology_and_humanity": 2
+            },
+            "highlight_keys": [
+              "political",
+              "warfare",
+              "character_depth",
+              "world_immersion",
+              "spectacle",
+              "music_composition",
+              "tension",
+              "complexity"
+            ]
+          },
+          "essence_tags": [
+            "Epic Fantasy Drama",
+            "Intricate Political Maneuvering",
+            "Brutal Medieval Warfare",
+            "Ensemble Character Study",
+            "High-Stakes Power Struggles",
+            "Dark & Gritty Tone",
+            "Cinematic Spectacle",
+            "Iconic Score",
+            "Complex Moral Ambiguity",
+            "Apocalyptic Threat"
+          ],
+          "essence_text": "A sprawling epic that masterfully blends high fantasy with gritty political realism, focusing on the intricate web of alliances and betrayals among noble houses. The narrative is driven by deep character development and moral ambiguity, where heroes can become villains and vice versa amidst brutal warfare. Its immersive world-building is amplified by a haunting musical score and cinematic spectacle, creating an intense, binge-worthy experience defined by constant tension and shocking twists.",
+          "production_info": {
+            "method": "Live-Action",
+            "animation_style": null
+          },
+          "viewing_context": {
+            "is_comfort_watch": false,
+            "is_pure_escapism": false,
+            "is_binge_friendly": true,
+            "is_drop_in_friendly": false,
+            "is_thought_provoking": true,
+            "is_background_friendly": false
+          },
+          "content_advisories": [
+            "Violence",
+            "Nudity",
+            "Sexual Content",
+            "Strong Language",
+            "Disturbing Imagery"
+          ],
+          "social_suitability": {
+            "kids": false,
+            "teens": false,
+            "adults": true,
+            "family": false,
+            "friends": true,
+            "partner": true,
+            "date_night": false,
+            "solo_watch": true,
+            "group_party": true,
+            "intergenerational": false,
+            "public_viewing_safe": false
+          }
+        }
+      }
+    ],
+    "logs": "job=01a0a010-f471-0025-3aa1-b5d92ae55754 tag=python3 worker=wk-default-06b3c66b44d9-52HGf hostname=06b3c66b44d9 isolation=none\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a010-f4fa-1e91-6f1c-5f1d16df1bee",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/vectors",
+    "script_hash": "d7d1a5ead6496c07",
+    "duration_ms": 3545,
+    "result": {
+      "embeddings_count": 1
+    },
+    "logs": "job=01a0a010-f4fa-1e91-6f1c-5f1d16df1bee tag=python3 worker=wk-default-41a0443101de-wiJq1 hostname=41a0443101de isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, cachetools==6.2.2, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, google-auth==2.43.0, google-genai==1.53.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pyasn1==0.6.1, pyasn1-modules==0.4.2, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, requests==2.32.5, rsa==4.9.1, tenacity==9.1.2, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, websockets==15.0.1, wmill==1.589.1\n\n\nCopying some packages from cache to job_dir...\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nSuccessfully generated 1 embeddings.\nInitializing mongodb...\nSuccessfully initialized mongodb\nsaving DNA for Game of Thrones (2011)\n[8.0, 10.0, 6.0, 9.0, 7.0, 6.0, 2.0, 8.0, 9.0, 7.0, 4.0, 5.0, 3.0, 2.0, 8.0, 1.0, 1.0, 0.0, 2.0, 4.0, 10.0, 0.0, 8.0, 0.0, 5.0, 6.0, 10.0, 10.0, 0.0, 0.0, 7.0, 9.0, 8.0, 0.0, 0.0, 9.0, 7.0, 6.0, 2.0, 6.0, 9.0, 9.0, 10.0, 7.0, 6.0, 10.0, 10.0, 7.0, 3.0, 9.0, 4.0, 8.0, 2.0, 1.0, 0.0, 2.0, 3.0, 6.0, 1.0, 9.0, 10.0, 9.0, 8.0, 10.0, 10.0, 10.0, 8.0, 1.0, 1.0, 6.0, 1.0, 9.0, 9.0, 8.0]",
+    "flow_status": null
+  }
+]

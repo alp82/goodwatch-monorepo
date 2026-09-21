@@ -1,0 +1,131 @@
+{
+  "reviewer": "Independent assistant",
+  "inputs": [
+    "private/cheap-loop/native-round1.json",
+    "private/cheap-loop/native-english-phrase-control.json"
+  ],
+  "overall": {
+    "winner_id": null,
+    "assessment": "Native SQL query shapes offer some directly supported car/getaway results but no universal quality advance. Material artifact, rich-subject and narrator-sense failures remain. Fresh stock English phrase remains strongest wealth-short/warm alternative; native cleanup and bounded shortlist need measured separate ablations.",
+    "timing_caveat": "Native wall timings are actual fresh-restored scratch runs, 1 warm-up + 3 repeats. Compare to contemporaneous controls, not historical cache/hardware timings; two gated cases excluded from complete-search claims."
+  },
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "request": "car chases",
+      "preference": "corrected / native_phrase",
+      "outcome": "mixed",
+      "assessment": "Native prose/best put the explicitly Universal attraction Supercharged #1, worse ordinary-title scope than corrected. Native phrase Black Cadillac/Riding Bean/Fast Five each explicitly centers car chases, so unfamiliar leaders are supported. Cleanup can repair artifact identity separately but is not already applied.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "request": "sunglasses",
+      "preference": "english / prior centrality",
+      "outcome": "tie_or_mixed",
+      "assessment": "Native arms retain direct They Live/Fiancés top2, then The Young Ones with less plot-central source support. No demonstrated gain over original/fresh English. Prior prose-centrality Dream a Little Dream 2 #3 is more direct.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "request": "unreliable narrator",
+      "preference": "english / english_phrase",
+      "outcome": "worse",
+      "assessment": "Native prose/best/phrase all put unreleased1999pilot at #3. Fresh English/English phrase instead Mosaic with shifting perspectives. Hygiene is independently testable but current ranking has a concrete catalog regression.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "preference": "english_phrase",
+      "outcome": "worse",
+      "assessment": "Prose/best promote generic darkcomedy Crime Scene Cleaner/On Air/South Park. Native phrase King of Stonks improves subject finance, but Wonder Showzen and Trigger Warning remain weaker whole wealth-comedy conjunction than stock phrase White Lotus/Politician. Changing SQL query shape alone does not solve subject centrality.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "preference": "unavailable",
+      "outcome": "unevaluable",
+      "assessment": "All native and stock controls gated empty; vector fill absent. Near-zero skipped timings are not complete-search gains.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "request": "no anime, gritty crime show",
+      "preference": "corrected / english",
+      "outcome": "tie_or_mixed",
+      "assessment": "Gomorrah remains a strong leader. America’s Most Wanted and Spotless also support crime; documentary format not prohibited. Corrected gritty organized-crime top3 remains more consistently direct, but no hard exclusion failure established.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "preference": "unavailable",
+      "outcome": "unevaluable",
+      "assessment": "All native and stock controls gated empty. Cannot infer parents suitability or production performance.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "preference": "no demonstrated winner",
+      "outcome": "mixed",
+      "assessment": "Native Caught/Terapist/Duranga keeps suspense but no resolution evidence. Terapist explicitly dark/unsettling psychological murder story; Duranga previously documented bleak. Native ranking does not repair the nonmiserable preference. Stock controls also weak; no title familiarity supplies unknown endings.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "preference": "english / english_phrase",
+      "outcome": "mixed",
+      "assessment": "Loaded is directly newly-rich friendship comedy, valid native #1. The Devil Judge is dystopian legal spectacle without equally direct wealthy-mutual-misconduct/comedy support, weakening #2. Native phrase Gemstones #2 direct wealth/dysfunction gain but South Park #3 broad satire. No clear list-wide improvement over Saltburn-led stock conjunction support.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "ca891060b1f6",
+      "request": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "preference": "english ≈ native_prose_boost",
+      "outcome": "tie_or_mixed",
+      "assessment": "Native prose/best Crime Patrol/Most Wanted/24 Hours all actual investigative/truecrime support, not prohibited format. Original/fresh English includes Hidden and24 Hours; native largely reshuffles acceptable candidates. Native phrase reverts Ten Days incidental show-producer match and is weaker.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "6e92210d59ae",
+      "request": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "preference": "english",
+      "outcome": "worse",
+      "assessment": "Prose/best promote Words on Bathroom Walls through halfway-through-school wrong sense. Native phrase The Day/Matrix/Hansel & Gretel provide perspective shifts or reality/story puzzles, not direct evidence of a narrator deliberately feeding nonsense. This is semantic drift, even when titles are good independently.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "4161f08beb03",
+      "request": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "preference": "native_prose_boost ≈ corrected",
+      "outcome": "better_or_tie",
+      "assessment": "Motorway/Baby Driver/Executive Target all explicitly getaway drivers and pursuit/chases. Native best Gone in Sixty Seconds also car-theft/chase support; phrase Baby Driver/Motorway/Refuge direct. Strong local fit, but corrected and stock phrase already have strong top3. No global default follows.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "preference": "corrected / english_phrase",
+      "outcome": "tie_or_mixed",
+      "assessment": "Native phrase Moone Boy/Here We Go/Cosby supports warm family comedy; stock phrase/corrected Moone Boy/Fever Pitch/Here We Go already direct. Prose/best lead whimsical children Pumuckl and holiday Three Wise Men; not forbidden but less clearly uncheesy than realistic comedy alternatives.",
+      "next_experiment": "Review bounded same-pool shortlist and conservative identity cleanup independently; preserve fresh stock controls.",
+      "evidence_basis": "Actual native1 warm-up + 3 repeats top3/top5, fresh stock English phrase and frozen source prose; no model-generated assurances."
+    }
+  ]
+}

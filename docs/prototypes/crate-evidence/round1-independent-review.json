@@ -1,0 +1,153 @@
+{
+  "reviewer": "independent assistant; not user judgments",
+  "round": "Round 1",
+  "scope": "Six development requests; selective source-evidence audit of four non-reranker variants",
+  "source_files": [
+    "goodwatch-webapp/scripts/prototype-crate-evidence/private/loop-round1.json",
+    "goodwatch-webapp/scripts/prototype-crate-evidence/private/sample.json"
+  ],
+  "method": "Compared top-10 lists and inspected selected actual synopsis, essence_text, trope_names, fingerprint_scores and facet_evidence. No outside title familiarity used as proof; corpus annotations themselves are not independently verified ground truth. No numerical precision scores inferred from this selective audit.",
+  "excluded": "evidence_rerank discarded separately after failures on 8/13 requests; not assessed here as a viable variant.",
+  "cases": [
+    {
+      "id": "d0097285b9f0",
+      "request": "dark comedy about rich people",
+      "preference": "english_phrase (provisional; planned_facets competitive)",
+      "assessment": "Combined English evidence and planned facets both improve the actual wealth-plus-dark-comedy intersection over corrected. Planned #1 The Discreet Charm of the Bourgeoisie is supported by upper-class dinner synopsis and explicit satire of bourgeois hypocrisy, not title familiarity. English results include The White Lotus, whose essence explicitly joins dark comedy with privileged resort guests, and Succession, whose essence explicitly joins dark comedy, wealth and family dysfunction. Slight provisional preference for English consistency; no decisive winner from a selective evidence audit.",
+      "concrete_failures": [
+        {
+          "variant": "corrected",
+          "key": "show:1459",
+          "title": "Wonder Showzen",
+          "failure": "Rank 1 strongly supports dark comedy but synopsis/essence describe broad political/cultural sketch satire, not a story centered on rich people."
+        },
+        {
+          "variant": "planned_facets",
+          "key": "show:23023",
+          "title": "The Buccaneers",
+          "failure": "High-society subject is supported, but period romance, coming of age and betrayals do not establish required dark comedy; dark_humor is 1."
+        },
+        {
+          "variant": "planned_balanced",
+          "key": "movie:402897",
+          "title": "The Death of Stalin",
+          "failure": "Power struggle among Soviet leaders supports dark political comedy; it does not by itself establish rich people as the requested central subject."
+        }
+      ],
+      "next_experiment": "Preserve retrieval breadth but require subject and genre support in synopsis/essence or specific tags, with disagreement from fingerprints exposed rather than hidden."
+    },
+    {
+      "id": "b09cf57be4c4",
+      "request": "Rich people being absolutely awful to each other, preferably funny.",
+      "preference": "english_phrase",
+      "assessment": "English is clearly preferable to both planned variants here. Its White Lotus and Succession entries explicitly describe privileged people and dysfunctional relationships with dark comedy. Planned rankings reward trope occurrences as central-subject evidence, producing false confidence at the very top. Corrected is mixed and does not show the same consistent conjunction.",
+      "concrete_failures": [
+        {
+          "variant": "planned_facets/planned_balanced",
+          "key": "show:815",
+          "title": "Peep Show",
+          "failure": "Rank 1: synopsis describes an employed man and an unemployed aspiring musician. Upper-Class Twit and Chronic Backstabbing Disorder trope names became upper class/backstabbing facet evidence with full coverage. Those literal matches do not establish a story centered on wealthy people."
+        },
+        {
+          "variant": "planned_facets/planned_balanced",
+          "key": "movie:11609",
+          "title": "Yellowbeard",
+          "failure": "Rank 2/3: synopsis and essence describe pirate treasure and a broad swashbuckler spoof. Upper-Class Twit and Chronic Backstabbing Disorder again satisfy required facets without central-subject entailment."
+        },
+        {
+          "variant": "planned_facets/planned_balanced",
+          "key": "show:208851",
+          "title": "A Thousand Blows",
+          "failure": "Synopsis centers immigrants, street crime and boxing; essence says brutal underworld survival. A high class_and_capitalism score is not evidence of rich protagonists."
+        }
+      ],
+      "next_experiment": "Distinguish a story about wealthy people from incidental class tropes or class commentary. Compare central-subject claims against synopsis before accepting a required facet. Keep user-preferred humor soft; do not invent a fiction-only requirement."
+    },
+    {
+      "id": "505703b7de29",
+      "request": "with my parents",
+      "preference": "none; planned retrieval adds coverage but misinterprets audience",
+      "assessment": "Both existing text controls return no titles; that is their text gate, not proof that the complete production search has no suitable results. Both planned variants return the same child-oriented list. The request is underspecified, so these results cannot establish a winner. Parents are not evidence that the viewer seeks preschool programming.",
+      "concrete_failures": [
+        {
+          "variant": "planned_facets/planned_balanced",
+          "key": "show:10048",
+          "title": "Reading Rainbow",
+          "failure": "Rank 1 has explicit young-viewer educational positioning in essence and children's literature in synopsis. Wholesome intergenerational viewing is compatible with some households but does not justify a preschool-heavy default."
+        },
+        {
+          "variant": "planned_facets/planned_balanced",
+          "key": "show:46262",
+          "title": "Doc McStuffins",
+          "failure": "Essence explicitly describes a children's animated show teaching health and friendship; this is an audience inference, not a user constraint."
+        }
+      ],
+      "next_experiment": "Keep audience age unknown. For co-viewing, separate mature-content comfort from child targeting and diversify age appeal; communicate the inferred assumption or seek a preference when the product flow permits."
+    },
+    {
+      "id": "8bef98a13e75",
+      "request": "tense but not bleak",
+      "preference": "planned_facets/planned_balanced tie, coverage improvement only",
+      "assessment": "Planned retrieval produces actual candidates where both text controls are empty. Players is supported within the supplied corpus by high-stakes competition, tension 9 and bleakness 1; The Bullet Train has an explicit ticking-bomb premise, tension 10 and bleakness 3. Do not penalize Players simply because a reviewer expects a conventional thriller. This is promising candidate coverage, not a validated overall quality win.",
+      "concrete_failures": [
+        {
+          "variant": "corrected/english_phrase",
+          "failure": "No text results; compare only the tested text component, since omitted production fill could change the outcome."
+        },
+        {
+          "variant": "planned_facets/planned_balanced",
+          "failure": "Low numeric bleakness and absence of grim words do not verify a non-miserable ending. The corpus can support provisional suitability but not a guaranteed ending."
+        }
+      ],
+      "next_experiment": "Keep tone-only retrieval with low-bleakness preferences; preserve format openness and calibrate claims to the available evidence."
+    },
+    {
+      "id": "c93c866eabf3",
+      "request": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "preference": "none; planned_balanced is less bad than planned_facets but not a winner",
+      "assessment": "All variants need better handling of the negative emotional constraint. Planned facets puts The Orphanage first despite explicit sadness/loss evidence; balanced demotes it to fourth but still fails the constraint. Existing controls mostly demonstrate suspense phrases, which do not validate a non-miserable conclusion. No defensible overall winner from this evidence.",
+      "concrete_failures": [
+        {
+          "variant": "planned_facets/planned_balanced",
+          "key": "movie:6537",
+          "title": "The Orphanage",
+          "failure": "Cathartic Scream trope is matched as cathartic and counted as emotional-resolution support. Essence explicitly says childhood trauma, loss, melancholy and sadness; bleakness 7, hopefulness 3. A cathartic scream is not evidence of an uplifting ending."
+        },
+        {
+          "variant": "planned_facets/planned_balanced",
+          "key": "movie:915935",
+          "title": "Anatomy of a Fall",
+          "failure": "Cathartic Crying trope similarly supplies positive resolution while essence describes profound ambiguity and a family under scrutiny; hopefulness is 3. This is unsupported reassurance rather than verified non-miserable resolution."
+        }
+      ],
+      "next_experiment": "Keep explicit avoid constraints from being compensated by positive term matches. Reject cathartic trope substrings as ending evidence; use contradiction-aware mood checking and retain unknown when resolution is not supported."
+    },
+    {
+      "id": "0bf0423488cf",
+      "request": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "preference": "corrected, narrowly; planned variants also have supported candidates",
+      "assessment": "Corrected starts with Moone Boy, supported by explicit warm/funny escapism and low bleakness. Planned Outnumbered and Emma. are also well supported by naturalistic humor, comfort and wit. The Ellen DeGeneres Show is not automatically wrong: the request did not demand fiction and its corpus description supports lighthearted humor and background-friendly viewing. The unresolved issue across variants is avoiding excessive sentimentality; a literal absence of cheesy words does not prove that.",
+      "concrete_failures": [
+        {
+          "variant": "english_phrase",
+          "key": "show:4086",
+          "title": "Diners, Drive-Ins and Dives",
+          "failure": "Rank 4 is attributed to brain fried words. Corpus supports comforting food/background television but not especially funny content; brain fried is the viewer's state, not a desired subject."
+        },
+        {
+          "variant": "planned_facets/planned_balanced",
+          "failure": "Planner notes additionally say avoid slapstick or overly cynical humor, neither explicitly requested. High wholesomeness alone may over-select generic family content without testing not-cheesy."
+        }
+      ],
+      "next_experiment": "Classify viewer-state language separately from content concepts; reward naturalistic humor and low cognitive effort without silently excluding formats or inventing extra avoidances."
+    }
+  ],
+  "general_improvements": [
+    "Exact substring presence is evidence of a mention, not entailment of the requested central subject or emotional ending.",
+    "Separate central-subject facets, mood preferences, explicit exclusions and viewer context; do not let a topical class score substitute for rich protagonists.",
+    "Treat contradictions and explicit avoidances before aggregate similarity, especially when grief/bleakness conflicts with requested emotional outcome.",
+    "Do not infer fiction-only or child-audience constraints from underspecified wording.",
+    "Use challenge requests to test any general fix; do not hardcode these titles or request phrases."
+  ],
+  "overall": "No clear overall winner. English evidence is substantially better on the long rich-people conjunction; planned retrieval broadens tone-only coverage but introduces centrality and negative-constraint failures."
+}

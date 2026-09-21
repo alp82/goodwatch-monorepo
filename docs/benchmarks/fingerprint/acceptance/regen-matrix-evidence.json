@@ -1,0 +1,135 @@
+[
+  {
+    "id": "01a0a048-96e1-436d-8cdb-4f852f084e2f",
+    "type": "CompletedJob",
+    "success": false,
+    "script_path": "f/dna/acceptance/benchmark",
+    "script_hash": null,
+    "duration_ms": 7902,
+    "result": [
+      {
+        "error": {
+          "name": "AcceptanceBudgetStop",
+          "stack": "  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/f/dna/acceptance/benchmark/flow.py\", line 57, in main\n    return fetch.main(next_ids)\n           ^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 569, in main\n    return generate_dna(entries)\n           ^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 507, in generate_dna\n    raw = request_dna(api_key, model, model_messages)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 420, in request_dna\n    response = requests.post(\n               ^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/f/dna/acceptance/benchmark/flow.py\", line 49, in guarded\n    raise AcceptanceBudgetStop('Missing usage.cost; reserve retained, stop paid work')\n",
+          "message": "Missing usage.cost; reserve retained, stop paid work",
+          "step_id": "c"
+        }
+      }
+    ],
+    "logs": "Flow job completed with error\n",
+    "flow_status": {
+      "step": 1,
+      "modules": [
+        {
+          "id": "a",
+          "job": "01a0a048-970a-5a61-1e90-0b8bbbeccf8c",
+          "type": "Success",
+          "skipped": false
+        },
+        {
+          "id": "b",
+          "job": "01a0a048-9c03-fbba-b8b3-8a6179d9470b",
+          "type": "Failure",
+          "flow_jobs": [
+            "01a0a048-9c03-fbba-b8b3-8a6179d9470b"
+          ],
+          "flow_jobs_success": [
+            false
+          ],
+          "flow_jobs_duration": {
+            "started_at": [
+              "2026-09-14T14:18:28.252455Z"
+            ],
+            "duration_ms": [
+              6562
+            ]
+          }
+        },
+        {
+          "id": "d",
+          "type": "WaitingForPriorSteps"
+        },
+        {
+          "id": "vectors",
+          "type": "WaitingForPriorSteps"
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a048-970a-5a61-1e90-0b8bbbeccf8c",
+    "type": "CompletedJob",
+    "success": true,
+    "script_path": "f/dna/generate/iterate",
+    "script_hash": "39d43a45f8959150",
+    "duration_ms": 1221,
+    "result": [
+      [
+        {
+          "id": "68471cdd1f87b65f3388b42a",
+          "type": "movie",
+          "tmdb_id": 603
+        }
+      ]
+    ],
+    "logs": "job=01a0a048-970a-5a61-1e90-0b8bbbeccf8c tag=python3 worker=wk-default-45c078dda957-p4PSF hostname=45c078dda957 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, typing-extensions==4.15.0, typing-inspection==0.4.2, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb",
+    "flow_status": null
+  },
+  {
+    "id": "01a0a048-9c03-fbba-b8b3-8a6179d9470b",
+    "type": "CompletedJob",
+    "success": false,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0",
+    "script_hash": null,
+    "duration_ms": 6562,
+    "result": {
+      "error": {
+        "name": "AcceptanceBudgetStop",
+        "stack": "  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/f/dna/acceptance/benchmark/flow.py\", line 57, in main\n    return fetch.main(next_ids)\n           ^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 569, in main\n    return generate_dna(entries)\n           ^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 507, in generate_dna\n    raw = request_dna(api_key, model, model_messages)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 420, in request_dna\n    response = requests.post(\n               ^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/f/dna/acceptance/benchmark/flow.py\", line 49, in guarded\n    raise AcceptanceBudgetStop('Missing usage.cost; reserve retained, stop paid work')\n",
+        "message": "Missing usage.cost; reserve retained, stop paid work",
+        "step_id": "c"
+      }
+    },
+    "logs": "Flow job completed with error\n",
+    "flow_status": {
+      "step": 0,
+      "modules": [
+        {
+          "id": "c",
+          "job": "01a0a048-9c30-5c24-2f53-da81ff92eacc",
+          "type": "Failure"
+        }
+      ],
+      "cleanup_module": {},
+      "failure_module": {
+        "id": "failure",
+        "type": "WaitingForPriorSteps"
+      },
+      "preprocessor_module": null
+    }
+  },
+  {
+    "id": "01a0a048-9c30-5c24-2f53-da81ff92eacc",
+    "type": "CompletedJob",
+    "success": false,
+    "script_path": "f/dna/acceptance/benchmark/forloop-0/c",
+    "script_hash": null,
+    "duration_ms": 6504,
+    "result": {
+      "error": {
+        "name": "AcceptanceBudgetStop",
+        "stack": "  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/f/dna/acceptance/benchmark/flow.py\", line 57, in main\n    return fetch.main(next_ids)\n           ^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 569, in main\n    return generate_dna(entries)\n           ^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 507, in generate_dna\n    raw = request_dna(api_key, model, model_messages)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/tmp/f/dna/generate/fetch.py\", line 420, in request_dna\n    response = requests.post(\n               ^^^^^^^^^^^^^^\n\n  File \"/tmp/windmill/wk-default-cf6f7cad9016-UChJx/01a0a048-9c30-5c24-2f53-da81ff92eacc/f/dna/acceptance/benchmark/flow.py\", line 49, in guarded\n    raise AcceptanceBudgetStop('Missing usage.cost; reserve retained, stop paid work')\n",
+        "message": "Missing usage.cost; reserve retained, stop paid work",
+        "step_id": "c"
+      }
+    },
+    "logs": "job=01a0a048-9c30-5c24-2f53-da81ff92eacc tag=python3 worker=wk-default-cf6f7cad9016-UChJx hostname=cf6f7cad9016 isolation=none\n\nenv deps from local cache: annotated-types==0.7.0, anyio==4.12.0, certifi==2025.11.12, charset-normalizer==3.4.4, dnspython==2.8.0, h11==0.16.0, httpcore==1.0.9, httpx==0.28.1, idna==3.11, mongoengine==0.29.1, pydantic==2.12.5, pydantic-core==2.41.5, pymongo==4.15.5, redis==3.5.3, redis-py-cluster==2.1.3, requests==2.32.5, typing-extensions==4.15.0, typing-inspection==0.4.2, urllib3==2.5.0, wmill==1.589.1\n\n\n--- PYTHON (3.11) CODE EXECUTION ---\n\nInitializing mongodb...\nSuccessfully initialized mongodb\nACCEPTANCE_RESERVATION {\"model\": \"qwen/qwen3.8-flash\", \"usd\": 0.009492839999999999, \"input_byte_bound\": 28213}\nACCEPTANCE_RESPONSE_DIAGNOSTIC {\"status\": 429, \"error\": {\"message\": \"Provider returned error\", \"code\": 429, \"metadata\": {\"raw\": \"qwen/qwen3.8-flash is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations\", \"provider_name\": \"Alibaba\", \"is_byok\": false, \"limit_source\": \"upstream_provider_shared_pool\", \"remedy_hint\": \"Retry shortly, add your own provider key (https://openrouter.ai/settings/integrations), or route to another provider with provider routing: https://openrouter.ai/docs/features/provider-routing\"}}, \"id\": null, \"has_choices\": false}\nACCEPTANCE_UNRECONCILED 0.009492839999999999\nACCEPTANCE_ACCOUNTED_USD 0.009492839999999999",
+    "flow_status": null
+  }
+]

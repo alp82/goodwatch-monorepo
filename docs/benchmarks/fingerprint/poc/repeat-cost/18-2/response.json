@@ -1,0 +1,46 @@
+{
+  "id": "gen-1789415618-3PU4kfbuaDKNEQCtEZZv",
+  "object": "chat.completion",
+  "created": 1789415618,
+  "model": "qwen/qwen3.7-flash",
+  "provider": "Alibaba",
+  "system_fingerprint": null,
+  "service_tier": null,
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"results\": [\n    {\n      \"benchmark_id\": \"movie:550\",\n      \"analysis\": {\n        \"fingerprint\": {\n          \"scores\": {\n            \"adrenaline\": 8,\n            \"tension\": 9,\n            \"scare\": 3,\n            \"violence\": 9,\n            \"romance\": 4,\n            \"eroticism\": 2,\n            \"wholesome\": 0,\n            \"wonder\": 1,\n            \"pathos\": 6,\n            \"melancholy\": 7,\n            \"uncanny\": 6,\n            \"catharsis\": 7,\n            \"nostalgia\": 2,\n            \"situational_comedy\": 0,\n            \"wit_wordplay\": 7,\n            \"physical_comedy\": 0,\n            \"cringe_humor\": 1,\n            \"absurdist_humor\": 3,\n            \"satire_parody\": 9,\n            \"dark_humor\": 8,\n            \"fantasy\": 0,\n            \"futuristic\": 0,\n            \"historical\": 0,\n            \"contemporary_realism\": 6,\n            \"crime\": 7,\n            \"mystery\": 7,\n            \"warfare\": 2,\n            \"political\": 5,\n            \"sports\": 0,\n            \"biographical\": 0,\n            \"coming_of_age\": 5,\n            \"family_dynamics\": 2,\n            \"psychological\": 10,\n            \"showbiz\": 0,\n            \"gaming\": 0,\n            \"pop_culture\": 8,\n            \"social_commentary\": 9,\n            \"class_and_capitalism\": 9,\n            \"technology_and_humanity\": 4,\n            \"spiritual\": 3,\n            \"narrative_structure\": 10,\n            \"dialogue_quality\": 9,\n            \"character_depth\": 9,\n            \"slow_burn\": 6,\n            \"fast_pace\": 7,\n            \"intrigue\": 9,\n            \"complexity\": 9,\n            \"rewatchability\": 9,\n            \"hopefulness\": 2,\n            \"bleakness\": 8,\n            \"ambiguity\": 8,\n            \"novelty\": 8,\n            \"homage_and_reference\": 6,\n            \"non_linear_narrative\": 6,\n            \"meta_narrative\": 5,\n            \"surrealism\": 4,\n            \"eccentricity\": 6,\n            \"philosophical\": 8,\n            \"educational\": 0,\n            \"direction\": 10,\n            \"acting\": 9,\n            \"cinematography\": 9,\n            \"editing\": 9,\n            \"music_composition\": 8,\n            \"world_immersion\": 8,\n            \"spectacle\": 7,\n            \"visual_stylization\": 9,\n            \"pastiche\": 2,\n            \"psychedelic\": 2,\n            \"grotesque\": 6,\n            \"camp_and_irony\": 5,\n            \"dialogue_centrality\": 8,\n            \"music_centrality\": 7,\n            \"sound_centrality\": 8\n          },\n          \"highlight_keys\": [\n            \"psychological\",\n            \"narrative_structure\",\n            \"social_commentary\",\n            \"class_and_capitalism\",\n            \"satire_parody\",\n            \"direction\",\n            \"dialogue_quality\",\n            \"character_depth\"\n          ]\n        },\n        \"is_anime\": false,\n        \"production_info\": {\n          \"method\": \"Live-Action\",\n          \"animation_style\": null\n        },\n        \"content_advisories\": [\n          \"Violence\",\n          \"Strong Language\",\n          \"Drug Use\"\n        ],\n        \"social_suitability\": {\n          \"solo_watch\": true,\n          \"date_night\": false,\n          \"group_party\": false,\n          \"family\": false,\n          \"partner\": false,\n          \"friends\": true,\n          \"kids\": false,\n          \"teens\": false,\n          \"adults\": true,\n          \"intergenerational\": false,\n          \"public_viewing_safe\": false\n        },\n        \"viewing_context\": {\n          \"is_thought_provoking\": true,\n          \"is_pure_escapism\": false,\n          \"is_background_friendly\": false,\n          \"is_comfort_watch\": false,\n          \"is_binge_friendly\": false,\n          \"is_drop_in_friendly\": false\n        },\n        \"essence_tags\": [\n          \"Psychological Thriller\",\n          \"Anti-Capitalist Satire\",\n          \"Unreliable Narrator Mystery\",\n          \"Toxic Masculinity Deconstruction\",\n          \"Visceral & Viscous Action\",\n          \"Cult Classic Aesthetic\",\n          \"Darkly Cynical Humor\",\n          \"Philosophical Provocation\",\n          \"Narrative Twist Icon\"\n        ],\n        \"essence_text\": \"A visceral and intellectually provocative descent into the psyche of a disaffected modern man. The film utilizes a masterful, twist-laden narrative structure to deliver a biting satire of consumer culture and toxic masculinity. Its aesthetic is gritty, kinetic, and deeply stylized, creating an immersive world that feels both hyper-real and dreamlike. This is a challenging, intense experience that demands attention and rewards re-watching with deeper layers of meaning.\"\n      }\n    }\n  ]\n}",
+        "refusal": null,
+        "reasoning": null
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 9310,
+    "completion_tokens": 1285,
+    "total_tokens": 10595,
+    "cost": 0.00026203,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 7680,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00026203,
+      "upstream_inference_prompt_cost": 9.498e-05,
+      "upstream_inference_completions_cost": 0.00016705
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

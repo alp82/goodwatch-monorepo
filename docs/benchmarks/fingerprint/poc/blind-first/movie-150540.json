@@ -1,0 +1,1363 @@
+{
+  "benchmark_id": "movie:150540",
+  "metadata": {
+    "original_title": "Inside Out",
+    "release_year": 2015,
+    "media_type": "movie",
+    "overview": "When 11-year-old Riley moves to a new city, her Emotions team up to help her through the transition. Joy, Fear, Anger, Disgust and Sadness work together, but when Joy and Sadness get lost, they must journey through unfamiliar places to get back home."
+  },
+  "candidates": [
+    {
+      "label": "A",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 4,
+                      "tension": 5,
+                      "scare": 2,
+                      "violence": 1,
+                      "romance": 2,
+                      "eroticism": 0,
+                      "wholesome": 8,
+                      "wonder": 8,
+                      "pathos": 8,
+                      "melancholy": 7,
+                      "uncanny": 2,
+                      "catharsis": 9,
+                      "nostalgia": 6,
+                      "situational_comedy": 6,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 7,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 5,
+                      "satire_parody": 2,
+                      "dark_humor": 1,
+                      "fantasy": 8,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 5,
+                      "crime": 0,
+                      "mystery": 2,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 3,
+                      "biographical": 0,
+                      "coming_of_age": 8,
+                      "family_dynamics": 8,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 4,
+                      "class_and_capitalism": 0,
+                      "technology_and_humanity": 1,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 8,
+                      "slow_burn": 4,
+                      "fast_pace": 7,
+                      "intrigue": 7,
+                      "complexity": 6,
+                      "rewatchability": 9,
+                      "hopefulness": 8,
+                      "bleakness": 3,
+                      "ambiguity": 2,
+                      "novelty": 8,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 1,
+                      "meta_narrative": 1,
+                      "surrealism": 6,
+                      "eccentricity": 5,
+                      "philosophical": 6,
+                      "educational": 5,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 8,
+                      "music_composition": 8,
+                      "world_immersion": 9,
+                      "spectacle": 7,
+                      "visual_stylization": 8,
+                      "pastiche": 1,
+                      "psychedelic": 3,
+                      "grotesque": 1,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 7,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "psychological",
+                      "pathos",
+                      "coming_of_age",
+                      "wonder",
+                      "catharsis",
+                      "wholesome",
+                      "family_dynamics",
+                      "novelty"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": false,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Personified Inner Emotions",
+                    "Coming-of-Age Relocation",
+                    "Colorful Mindscape Fantasy",
+                    "Bittersweet Family Heart",
+                    "Empathy Through Sadness",
+                    "Pixar Visual Imagination",
+                    "Psychological Adventure",
+                    "Comforting Emotional Catharsis",
+                    "Found-Family Headquarters",
+                    "Playful Yet Profound"
+                  ],
+                  "essence_text": "A luminous inner-world adventure that makes feelings feel like characters you can root for, then quietly breaks your heart in the gentlest way. Watching it is like being given permission to be sad and still okay, wrapped in candy-colored invention and slapstick HQ chaos. The ride through memory, imagination, and abstract thought is playful spectacle with a surprisingly mature emotional core. It leaves you both lighter and more tender toward your own messy inner weather, a rare comfort that still thinks."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 4,
+                      "tension": 5,
+                      "scare": 2,
+                      "violence": 1,
+                      "romance": 2,
+                      "eroticism": 0,
+                      "wholesome": 9,
+                      "wonder": 8,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 3,
+                      "catharsis": 9,
+                      "nostalgia": 7,
+                      "situational_comedy": 3,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 5,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 7,
+                      "satire_parody": 3,
+                      "dark_humor": 1,
+                      "fantasy": 8,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 7,
+                      "crime": 0,
+                      "mystery": 3,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 9,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 1,
+                      "pop_culture": 0,
+                      "social_commentary": 4,
+                      "class_and_capitalism": 0,
+                      "technology_and_humanity": 2,
+                      "spiritual": 0,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 5,
+                      "fast_pace": 6,
+                      "intrigue": 7,
+                      "complexity": 7,
+                      "rewatchability": 9,
+                      "hopefulness": 8,
+                      "bleakness": 4,
+                      "ambiguity": 5,
+                      "novelty": 9,
+                      "homage_and_reference": 4,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 5,
+                      "surrealism": 8,
+                      "eccentricity": 7,
+                      "philosophical": 8,
+                      "educational": 5,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 8,
+                      "music_composition": 9,
+                      "world_immersion": 9,
+                      "spectacle": 7,
+                      "visual_stylization": 9,
+                      "pastiche": 2,
+                      "psychedelic": 4,
+                      "grotesque": 0,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 8,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "psychological",
+                      "coming_of_age",
+                      "pathos",
+                      "novelty",
+                      "visual_stylization",
+                      "catharsis",
+                      "character_depth",
+                      "family_dynamics"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": false,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Imaginative Psychological Journey",
+                    "Bittersweet Coming-of-Age",
+                    "Personified Emotions",
+                    "Heartwarming Family Drama",
+                    "Visually Inventive",
+                    "Profoundly Cathartic",
+                    "Pixar Emotional Core",
+                    "Conceptually Original",
+                    "Accessible Depth"
+                  ],
+                  "essence_text": "A visually inventive and emotionally profound animated journey that translates the complexities of growing up into a brilliantly imaginative landscape of personified feelings. The film balances vibrant whimsy with a surprising depth of melancholy, exploring how sadness is essential to genuine joy. It delivers a cathartic emotional experience that resonates with audiences of all ages, anchored by exceptional character work and a deeply affecting score. The result is a rare piece of family entertainment that is both universally accessible and psychologically sophisticated."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "D",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 4,
+                      "scare": 2,
+                      "violence": 0,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 8,
+                      "wonder": 7,
+                      "pathos": 9,
+                      "melancholy": 6,
+                      "uncanny": 3,
+                      "catharsis": 9,
+                      "nostalgia": 4,
+                      "situational_comedy": 6,
+                      "wit_wordplay": 5,
+                      "physical_comedy": 4,
+                      "cringe_humor": 1,
+                      "absurdist_humor": 4,
+                      "satire_parody": 2,
+                      "dark_humor": 1,
+                      "fantasy": 7,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 8,
+                      "crime": 0,
+                      "mystery": 0,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 8,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 0,
+                      "social_commentary": 5,
+                      "class_and_capitalism": 0,
+                      "technology_and_humanity": 6,
+                      "spiritual": 0,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 5,
+                      "fast_pace": 6,
+                      "intrigue": 7,
+                      "complexity": 8,
+                      "rewatchability": 9,
+                      "hopefulness": 8,
+                      "bleakness": 2,
+                      "ambiguity": 3,
+                      "novelty": 8,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 3,
+                      "surrealism": 6,
+                      "eccentricity": 5,
+                      "philosophical": 6,
+                      "educational": 4,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 9,
+                      "spectacle": 6,
+                      "visual_stylization": 8,
+                      "pastiche": 0,
+                      "psychedelic": 3,
+                      "grotesque": 0,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 8,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "pathos",
+                      "catharsis",
+                      "psychological",
+                      "character_depth",
+                      "narrative_structure",
+                      "family_dynamics",
+                      "coming_of_age",
+                      "music_composition"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Emotional Psychology Personified",
+                    "Heartfelt Coming-of-Age",
+                    "Visually Inventive Fantasy",
+                    "Bittersweet Family Drama",
+                    "Intellectually Stimulating",
+                    "Universal Childhood Themes",
+                    "Touching & Emotional",
+                    "Pixar Masterpiece",
+                    "Clever Concept Execution"
+                  ],
+                  "essence_text": "A visually inventive and emotionally resonant masterpiece that personifies the inner workings of a young girl's mind. The film brilliantly balances whimsical adventure with profound insights into grief, growing up, and the necessity of sadness. Its clever narrative structure allows for a deeply engaging experience that appeals to both children and adults, offering a cathartic journey through the complexities of human emotion. Ultimately, it is a touching, thought-provoking celebration of family dynamics and personal growth."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "E",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 5,
+                      "scare": 2,
+                      "violence": 1,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 10,
+                      "wonder": 9,
+                      "pathos": 9,
+                      "melancholy": 5,
+                      "uncanny": 3,
+                      "catharsis": 9,
+                      "nostalgia": 8,
+                      "situational_comedy": 6,
+                      "wit_wordplay": 5,
+                      "physical_comedy": 4,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 5,
+                      "satire_parody": 2,
+                      "dark_humor": 2,
+                      "fantasy": 8,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 7,
+                      "crime": 0,
+                      "mystery": 1,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 9,
+                      "family_dynamics": 9,
+                      "psychological": 10,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 0,
+                      "social_commentary": 3,
+                      "class_and_capitalism": 0,
+                      "technology_and_humanity": 5,
+                      "spiritual": 2,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 2,
+                      "fast_pace": 7,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 8,
+                      "hopefulness": 8,
+                      "bleakness": 3,
+                      "ambiguity": 2,
+                      "novelty": 10,
+                      "homage_and_reference": 1,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 1,
+                      "surrealism": 6,
+                      "eccentricity": 7,
+                      "philosophical": 5,
+                      "educational": 3,
+                      "direction": 10,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 8,
+                      "visual_stylization": 8,
+                      "pastiche": 1,
+                      "psychedelic": 1,
+                      "grotesque": 1,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 8,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "psychological",
+                      "novelty",
+                      "wholesome",
+                      "world_immersion",
+                      "coming_of_age",
+                      "wonder",
+                      "pathos",
+                      "catharsis"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": false,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Psychological Fantasy",
+                    "Emotional Coming-of-Age",
+                    "Family-Friendly Wonder",
+                    "Visually Inventive World-Building",
+                    "Heartwarming & Poignant",
+                    "Cathartic Emotional Journey",
+                    "Deeply Relatable Characters",
+                    "Conceptually Unique",
+                    "Universal Human Experience",
+                    "Sentimental & Hopeful"
+                  ],
+                  "essence_text": "A groundbreaking and deeply empathetic exploration of the inner workings of the human mind, making complex emotional concepts accessible and profoundly moving. The film's imaginative world-building and vibrant visual style create a sense of wonder and immersion that captivates audiences of all ages. It masterfully balances humor and heart, delivering a cathartic and poignant experience that validates the importance of sadness and the complexity of growing up. A universal, comforting, and thought-provoking masterpiece that resonates on a fundamental human level."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "F",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 6,
+                      "scare": 2,
+                      "violence": 1,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 9,
+                      "wonder": 8,
+                      "pathos": 7,
+                      "melancholy": 6,
+                      "uncanny": 3,
+                      "catharsis": 8,
+                      "nostalgia": 5,
+                      "situational_comedy": 5,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 4,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 5,
+                      "satire_parody": 1,
+                      "dark_humor": 2,
+                      "fantasy": 8,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 7,
+                      "crime": 0,
+                      "mystery": 2,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 9,
+                      "family_dynamics": 8,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 2,
+                      "class_and_capitalism": 0,
+                      "technology_and_humanity": 3,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 8,
+                      "slow_burn": 3,
+                      "fast_pace": 6,
+                      "intrigue": 7,
+                      "complexity": 6,
+                      "rewatchability": 8,
+                      "hopefulness": 8,
+                      "bleakness": 2,
+                      "ambiguity": 1,
+                      "novelty": 9,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 1,
+                      "surrealism": 7,
+                      "eccentricity": 6,
+                      "philosophical": 6,
+                      "educational": 7,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 8,
+                      "music_composition": 8,
+                      "world_immersion": 9,
+                      "spectacle": 7,
+                      "visual_stylization": 9,
+                      "pastiche": 1,
+                      "psychedelic": 4,
+                      "grotesque": 1,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 7,
+                      "sound_centrality": 6
+                    },
+                    "highlight_keys": [
+                      "psychological",
+                      "coming_of_age",
+                      "novelty",
+                      "visual_stylization",
+                      "wholesome",
+                      "catharsis",
+                      "family_dynamics",
+                      "world_immersion"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": false,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Psychological Adventure",
+                    "Emotional Intelligence",
+                    "Family Drama",
+                    "Coming-of-Age",
+                    "Visually Creative",
+                    "Heartwarming",
+                    "Educational",
+                    "Pixar Classic",
+                    "Inner World Exploration"
+                  ],
+                  "essence_text": "A visually inventive and emotionally resonant journey into the mind of a young girl navigating change. The film brilliantly personifies complex psychological concepts, making them accessible and deeply moving for audiences of all ages. It balances humor and heartbreak with a sophisticated narrative structure that rewards repeated viewing. Ultimately, it serves as a poignant reminder of the vital role sadness plays in our emotional growth and human connection."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "G",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 4,
+                      "tension": 5,
+                      "scare": 1,
+                      "violence": 1,
+                      "romance": 0,
+                      "eroticism": 0,
+                      "wholesome": 9,
+                      "wonder": 9,
+                      "pathos": 8,
+                      "melancholy": 6,
+                      "uncanny": 2,
+                      "catharsis": 8,
+                      "nostalgia": 4,
+                      "situational_comedy": 5,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 6,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 5,
+                      "satire_parody": 3,
+                      "dark_humor": 1,
+                      "fantasy": 8,
+                      "futuristic": 1,
+                      "historical": 0,
+                      "contemporary_realism": 7,
+                      "crime": 0,
+                      "mystery": 2,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 1,
+                      "biographical": 0,
+                      "coming_of_age": 9,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 5,
+                      "class_and_capitalism": 1,
+                      "technology_and_humanity": 1,
+                      "spiritual": 2,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 7,
+                      "character_depth": 8,
+                      "slow_burn": 3,
+                      "fast_pace": 6,
+                      "intrigue": 6,
+                      "complexity": 6,
+                      "rewatchability": 8,
+                      "hopefulness": 9,
+                      "bleakness": 2,
+                      "ambiguity": 2,
+                      "novelty": 8,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 1,
+                      "surrealism": 6,
+                      "eccentricity": 5,
+                      "philosophical": 7,
+                      "educational": 6,
+                      "direction": 8,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 7,
+                      "music_composition": 8,
+                      "world_immersion": 9,
+                      "spectacle": 7,
+                      "visual_stylization": 8,
+                      "pastiche": 1,
+                      "psychedelic": 3,
+                      "grotesque": 0,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 7,
+                      "music_centrality": 6,
+                      "sound_centrality": 5
+                    },
+                    "highlight_keys": [
+                      "psychological",
+                      "coming_of_age",
+                      "family_dynamics",
+                      "wholesome",
+                      "wonder",
+                      "pathos",
+                      "catharsis",
+                      "world_immersion"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Emotionally Intelligent Family Animation",
+                    "Childhood Transition and Resilience",
+                    "Inventive Inner-Mind World",
+                    "Celebration of Sadness",
+                    "Tender Parent-Child Dynamics",
+                    "Colorful Character-Driven Fantasy",
+                    "Warm Psychological Insight",
+                    "Bittersweet Catharsis",
+                    "All-Ages Accessibility"
+                  ],
+                  "essence_text": "A warm, imaginative journey through the inner landscape of childhood, where abstract emotions become vivid, lovable personalities. Its playful fantasy carries genuine emotional weight, treating sadness not as a problem to eliminate but as an essential part of healing and connection. The colorful world-building and comic energy make difficult feelings approachable for younger viewers while offering adults a tender reflection on change, memory, and growing up. It is uplifting without denying melancholy, culminating in a deeply satisfying and compassionate catharsis."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "H",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 5,
+                      "scare": 1,
+                      "violence": 0,
+                      "romance": 1,
+                      "eroticism": 0,
+                      "wholesome": 10,
+                      "wonder": 9,
+                      "pathos": 7,
+                      "melancholy": 6,
+                      "uncanny": 8,
+                      "catharsis": 8,
+                      "nostalgia": 7,
+                      "situational_comedy": 6,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 5,
+                      "cringe_humor": 4,
+                      "absurdist_humor": 5,
+                      "satire_parody": 3,
+                      "dark_humor": 2,
+                      "fantasy": 8,
+                      "futuristic": 0,
+                      "historical": 0,
+                      "contemporary_realism": 9,
+                      "crime": 0,
+                      "mystery": 1,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 9,
+                      "family_dynamics": 10,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 0,
+                      "social_commentary": 6,
+                      "class_and_capitalism": 1,
+                      "technology_and_humanity": 4,
+                      "spiritual": 2,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 4,
+                      "fast_pace": 6,
+                      "intrigue": 7,
+                      "complexity": 7,
+                      "rewatchability": 9,
+                      "hopefulness": 9,
+                      "bleakness": 2,
+                      "ambiguity": 5,
+                      "novelty": 9,
+                      "homage_and_reference": 4,
+                      "non_linear_narrative": 8,
+                      "meta_narrative": 1,
+                      "surrealism": 9,
+                      "eccentricity": 7,
+                      "philosophical": 7,
+                      "educational": 6,
+                      "direction": 10,
+                      "acting": 9,
+                      "cinematography": 8,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 9,
+                      "spectacle": 7,
+                      "visual_stylization": 9,
+                      "pastiche": 3,
+                      "psychedelic": 2,
+                      "grotesque": 1,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 9,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "wholesome",
+                      "novelty",
+                      "visual_stylization",
+                      "direction",
+                      "family_dynamics",
+                      "surrealism",
+                      "music_composition"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": true,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Psychological Fantasy Adventure",
+                    "Emotional Coming-of-Age",
+                    "Whimsical Visual Storytelling",
+                    "Family-Centric Narrative",
+                    "Surreal Metaphorical Journey",
+                    "Heartwarming Wholesomeness",
+                    "Character-Driven Fantasy",
+                    "Pixar Emotional Masterpiece"
+                  ],
+                  "essence_text": "A visually inventive and emotionally rich journey that transforms abstract concepts into a vibrant, heartfelt adventure. The film’s surreal metaphors and playful animation style create a uniquely immersive experience, blending humor, wonder, and poignant introspection. Centered on the universal struggles of growing up, it balances whimsy with genuine emotional depth, making it both thought-provoking and comforting. The score and sound design elevate every moment, while the ensemble cast of emotions feels both fantastical and deeply human."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "I",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 3,
+                      "tension": 4,
+                      "scare": 2,
+                      "violence": 1,
+                      "romance": 1,
+                      "eroticism": 1,
+                      "wholesome": 10,
+                      "wonder": 8,
+                      "pathos": 6,
+                      "melancholy": 6,
+                      "uncanny": 2,
+                      "catharsis": 8,
+                      "nostalgia": 5,
+                      "situational_comedy": 6,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 4,
+                      "cringe_humor": 1,
+                      "absurdist_humor": 3,
+                      "satire_parody": 2,
+                      "dark_humor": 1,
+                      "fantasy": 7,
+                      "futuristic": 1,
+                      "historical": 1,
+                      "contemporary_realism": 10,
+                      "crime": 1,
+                      "mystery": 1,
+                      "warfare": 1,
+                      "political": 1,
+                      "sports": 1,
+                      "biographical": 1,
+                      "coming_of_age": 9,
+                      "family_dynamics": 9,
+                      "psychological": 9,
+                      "showbiz": 1,
+                      "gaming": 1,
+                      "pop_culture": 1,
+                      "social_commentary": 1,
+                      "class_and_capitalism": 1,
+                      "technology_and_humanity": 6,
+                      "spiritual": 2,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 9,
+                      "character_depth": 9,
+                      "slow_burn": 1,
+                      "fast_pace": 4,
+                      "intrigue": 4,
+                      "complexity": 8,
+                      "rewatchability": 10,
+                      "hopefulness": 9,
+                      "bleakness": 1,
+                      "ambiguity": 1,
+                      "novelty": 9,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 2,
+                      "surrealism": 7,
+                      "eccentricity": 4,
+                      "philosophical": 9,
+                      "educational": 7,
+                      "direction": 9,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 9,
+                      "spectacle": 7,
+                      "visual_stylization": 8,
+                      "pastiche": 2,
+                      "psychedelic": 3,
+                      "grotesque": 1,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 8,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "wholesome",
+                      "wonder",
+                      "philosophical",
+                      "character_depth",
+                      "dialogue_quality",
+                      "coming_of_age",
+                      "narrative_structure",
+                      "social_commentary"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "2D Traditional"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": true,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Emotional Journey",
+                    "Personified Emotions",
+                    "Family Dynamics",
+                    "Growing Up",
+                    "Pixar Masterpiece",
+                    "Visual Storytelling",
+                    "Innovative Concept",
+                    "Heartwarming"
+                  ],
+                  "essence_text": "A groundbreaking exploration of the inner workings of the human mind, where personified emotions navigate the complexities of growing up and adapting to change. The film masterfully blends wonder, humor, and pathos to create a deeply moving portrait of family and identity. Its inventive structure and philosophical depth make it a rewarding experience for audiences of all ages, celebrating the beauty of emotional complexity."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "J",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "K",
+      "status": "transport_error",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "transport_error"
+        },
+        {
+          "attempt": 2,
+          "status": "transport_error"
+        }
+      ]
+    },
+    {
+      "label": "L",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "M",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "movie:150540",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 4,
+                      "tension": 5,
+                      "scare": 3,
+                      "violence": 1,
+                      "romance": 2,
+                      "eroticism": 0,
+                      "wholesome": 8,
+                      "wonder": 8,
+                      "pathos": 9,
+                      "melancholy": 7,
+                      "uncanny": 3,
+                      "catharsis": 9,
+                      "nostalgia": 5,
+                      "situational_comedy": 5,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 6,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 4,
+                      "satire_parody": 2,
+                      "dark_humor": 3,
+                      "fantasy": 6,
+                      "futuristic": 1,
+                      "historical": 0,
+                      "contemporary_realism": 6,
+                      "crime": 0,
+                      "mystery": 2,
+                      "warfare": 0,
+                      "political": 0,
+                      "sports": 1,
+                      "biographical": 0,
+                      "coming_of_age": 9,
+                      "family_dynamics": 8,
+                      "psychological": 9,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 4,
+                      "class_and_capitalism": 1,
+                      "technology_and_humanity": 2,
+                      "spiritual": 1,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 7,
+                      "character_depth": 9,
+                      "slow_burn": 3,
+                      "fast_pace": 6,
+                      "intrigue": 8,
+                      "complexity": 7,
+                      "rewatchability": 9,
+                      "hopefulness": 9,
+                      "bleakness": 3,
+                      "ambiguity": 2,
+                      "novelty": 10,
+                      "homage_and_reference": 1,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 1,
+                      "surrealism": 6,
+                      "eccentricity": 6,
+                      "philosophical": 6,
+                      "educational": 4,
+                      "direction": 9,
+                      "acting": 8,
+                      "cinematography": 8,
+                      "editing": 9,
+                      "music_composition": 9,
+                      "world_immersion": 9,
+                      "spectacle": 7,
+                      "visual_stylization": 9,
+                      "pastiche": 1,
+                      "psychedelic": 2,
+                      "grotesque": 1,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 9,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "pathos",
+                      "coming_of_age",
+                      "psychological",
+                      "catharsis",
+                      "novelty",
+                      "wholesome",
+                      "narrative_structure",
+                      "music_composition"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Animation",
+                    "animation_style": "3D CGI"
+                  },
+                  "content_advisories": [],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": false,
+                    "family": true,
+                    "partner": true,
+                    "friends": true,
+                    "kids": true,
+                    "teens": true,
+                    "adults": true,
+                    "intergenerational": true,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": true,
+                    "is_binge_friendly": false,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Psychological Coming-of-Age",
+                    "Anthropomorphized Emotions",
+                    "Pixar Original",
+                    "Visual Metaphor",
+                    "Heartfelt Tearjerker",
+                    "Family Dynamics",
+                    "Colorful Character Design",
+                    "Creative World-Building",
+                    "Emotional Catharsis",
+                    "Bright Score"
+                  ],
+                  "essence_text": "A breathtakingly original journey into the mind of a young girl, transforming abstract psychology into a vibrant, relatable adventure. It delivers a powerful emotional punch that resonates with adults and children alike, exploring the necessity of sadness with profound tenderness. The inventive visual metaphors and lush musical score create an immersive world that feels both fantastical and deeply familiar. It is a celebration of memory, growth, and the bittersweet nature of leaving childhood behind."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    }
+  ]
+}

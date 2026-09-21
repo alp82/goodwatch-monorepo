@@ -1,0 +1,1412 @@
+{
+  "benchmark_id": "show:1399",
+  "metadata": {
+    "original_title": "Game of Thrones",
+    "release_year": 2011,
+    "media_type": "show",
+    "overview": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond."
+  },
+  "candidates": [
+    {
+      "label": "A",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 9,
+                      "scare": 5,
+                      "violence": 9,
+                      "romance": 6,
+                      "eroticism": 7,
+                      "wholesome": 2,
+                      "wonder": 7,
+                      "pathos": 8,
+                      "melancholy": 6,
+                      "uncanny": 4,
+                      "catharsis": 7,
+                      "nostalgia": 3,
+                      "situational_comedy": 2,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 1,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 1,
+                      "satire_parody": 3,
+                      "dark_humor": 6,
+                      "fantasy": 9,
+                      "futuristic": 0,
+                      "historical": 6,
+                      "contemporary_realism": 1,
+                      "crime": 4,
+                      "mystery": 6,
+                      "warfare": 9,
+                      "political": 9,
+                      "sports": 1,
+                      "biographical": 0,
+                      "coming_of_age": 5,
+                      "family_dynamics": 8,
+                      "psychological": 6,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 6,
+                      "class_and_capitalism": 7,
+                      "technology_and_humanity": 1,
+                      "spiritual": 4,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 8,
+                      "character_depth": 8,
+                      "slow_burn": 7,
+                      "fast_pace": 6,
+                      "intrigue": 9,
+                      "complexity": 9,
+                      "rewatchability": 8,
+                      "hopefulness": 3,
+                      "bleakness": 8,
+                      "ambiguity": 5,
+                      "novelty": 7,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 1,
+                      "surrealism": 2,
+                      "eccentricity": 4,
+                      "philosophical": 5,
+                      "educational": 2,
+                      "direction": 8,
+                      "acting": 8,
+                      "cinematography": 9,
+                      "editing": 8,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 9,
+                      "visual_stylization": 6,
+                      "pastiche": 3,
+                      "psychedelic": 1,
+                      "grotesque": 6,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 8,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "world_immersion",
+                      "political",
+                      "warfare",
+                      "intrigue",
+                      "fantasy",
+                      "violence",
+                      "spectacle",
+                      "character_depth"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic Political Fantasy",
+                    "Brutal Dynastic Warfare",
+                    "Moral Ambiguity",
+                    "Lavish World-Building",
+                    "Shocking Betrayals",
+                    "Court Intrigue",
+                    "Foundational Dark Fantasy TV",
+                    "Large Ensemble Drama",
+                    "Visceral Spectacle",
+                    "Power and Legacy"
+                  ],
+                  "essence_text": "A sprawling, immersive saga that makes political maneuvering feel as lethal as the battlefield, wrapping viewers in a lived-in medieval-fantasy world of ice, fire, and shifting loyalties. The experience is defined by dread, surprise, and the slow unraveling of noble pretenses into raw survival. Grand set pieces and a sweeping score amplify both intimacy and scale, while characters you invest in can be crushed without warning. It is lavish, often brutal entertainment that rewards attention to alliances, bloodlines, and the cost of power. Later seasons trade some of that patient complexity for spectacle, but the overall identity remains one of grim, addictive epic television."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "B",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 7,
+                      "tension": 9,
+                      "scare": 5,
+                      "violence": 9,
+                      "romance": 6,
+                      "eroticism": 7,
+                      "wholesome": 2,
+                      "wonder": 8,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 6,
+                      "catharsis": 6,
+                      "nostalgia": 4,
+                      "situational_comedy": 2,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 1,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 2,
+                      "satire_parody": 5,
+                      "dark_humor": 6,
+                      "fantasy": 10,
+                      "futuristic": 0,
+                      "historical": 5,
+                      "contemporary_realism": 0,
+                      "crime": 5,
+                      "mystery": 7,
+                      "warfare": 9,
+                      "political": 10,
+                      "sports": 0,
+                      "biographical": 2,
+                      "coming_of_age": 5,
+                      "family_dynamics": 8,
+                      "psychological": 7,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 6,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 8,
+                      "technology_and_humanity": 1,
+                      "spiritual": 4,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 7,
+                      "fast_pace": 5,
+                      "intrigue": 10,
+                      "complexity": 10,
+                      "rewatchability": 8,
+                      "hopefulness": 4,
+                      "bleakness": 8,
+                      "ambiguity": 5,
+                      "novelty": 7,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 4,
+                      "meta_narrative": 2,
+                      "surrealism": 4,
+                      "eccentricity": 5,
+                      "philosophical": 5,
+                      "educational": 1,
+                      "direction": 9,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 7,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 9,
+                      "visual_stylization": 7,
+                      "pastiche": 3,
+                      "psychedelic": 2,
+                      "grotesque": 6,
+                      "camp_and_irony": 3,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 9,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "political",
+                      "fantasy",
+                      "violence",
+                      "character_depth",
+                      "world_immersion",
+                      "intrigue",
+                      "complexity",
+                      "pathos"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic Political Fantasy",
+                    "Noble House Warfare",
+                    "Intricate Power Struggles",
+                    "Morally Gray Characters",
+                    "Brutal Medieval Violence",
+                    "Dragons and Dark Magic",
+                    "Spectacular Battle Sequences",
+                    "Betrayal and Tragedy",
+                    "Complex Multi-Plot Narrative",
+                    "Throne-Seeking Ambition"
+                  ],
+                  "essence_text": "A sprawling, epic fantasy where noble houses scheme, betray, and butcher each other for an iron throne, intertwining human political machinations with ancient supernatural threats. The series delivers an immersive, meticulously built world filled with morally complex characters, breathtaking spectacle, and shocking acts of violence that fundamentally subvert viewer expectations. It is a relentlessly ambitious, character-driven saga that balances grand-scale warfare, political intrigue, and poignant human drama. The experience is as bleak as it is captivating, leaving audiences emotionally exhausted yet eager for the next betrayal."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "C",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "D",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 9,
+                      "scare": 5,
+                      "violence": 9,
+                      "romance": 4,
+                      "eroticism": 6,
+                      "wholesome": 2,
+                      "wonder": 7,
+                      "pathos": 7,
+                      "melancholy": 5,
+                      "uncanny": 6,
+                      "catharsis": 6,
+                      "nostalgia": 0,
+                      "situational_comedy": 0,
+                      "wit_wordplay": 5,
+                      "physical_comedy": 1,
+                      "cringe_humor": 0,
+                      "absurdist_humor": 0,
+                      "satire_parody": 0,
+                      "dark_humor": 4,
+                      "fantasy": 9,
+                      "futuristic": 0,
+                      "historical": 8,
+                      "contemporary_realism": 0,
+                      "crime": 4,
+                      "mystery": 6,
+                      "warfare": 9,
+                      "political": 10,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 6,
+                      "family_dynamics": 9,
+                      "psychological": 7,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 0,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 6,
+                      "technology_and_humanity": 0,
+                      "spiritual": 4,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 6,
+                      "fast_pace": 7,
+                      "intrigue": 9,
+                      "complexity": 10,
+                      "rewatchability": 7,
+                      "hopefulness": 3,
+                      "bleakness": 8,
+                      "ambiguity": 5,
+                      "novelty": 7,
+                      "homage_and_reference": 4,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 0,
+                      "surrealism": 2,
+                      "eccentricity": 3,
+                      "philosophical": 6,
+                      "educational": 0,
+                      "direction": 9,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 8,
+                      "music_composition": 10,
+                      "world_immersion": 10,
+                      "spectacle": 9,
+                      "visual_stylization": 7,
+                      "pastiche": 2,
+                      "psychedelic": 0,
+                      "grotesque": 5,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 9,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "political",
+                      "world_immersion",
+                      "complexity",
+                      "music_composition",
+                      "warfare",
+                      "family_dynamics",
+                      "spectacle",
+                      "acting"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": true
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic Political Intrigue",
+                    "Gritty High Fantasy",
+                    "Complex Multi-Narrative",
+                    "Machiavellian Warfare",
+                    "Visually Spectacular",
+                    "Character-Driven Drama",
+                    "Dark & Unpredictable",
+                    "Cinematic Production Value",
+                    "Mythological Scope"
+                  ],
+                  "essence_text": "A sprawling epic of power, betrayal, and survival set against a backdrop of war and magic. The series is defined by its intricate political maneuvering and the brutal consequences of ambition, creating a world that feels historically grounded yet mythically vast. With massive production values and a legendary score, it offers an immersive experience where no character is safe and alliances are fleeting. It is a dark, compelling journey through the complexities of human nature and the heavy price of leadership."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "E",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 9,
+                      "scare": 4,
+                      "violence": 9,
+                      "romance": 5,
+                      "eroticism": 7,
+                      "wholesome": 1,
+                      "wonder": 8,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 6,
+                      "catharsis": 7,
+                      "nostalgia": 3,
+                      "situational_comedy": 2,
+                      "wit_wordplay": 6,
+                      "physical_comedy": 1,
+                      "cringe_humor": 1,
+                      "absurdist_humor": 0,
+                      "satire_parody": 2,
+                      "dark_humor": 4,
+                      "fantasy": 10,
+                      "futuristic": 0,
+                      "historical": 2,
+                      "contemporary_realism": 0,
+                      "crime": 2,
+                      "mystery": 3,
+                      "warfare": 9,
+                      "political": 9,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 4,
+                      "family_dynamics": 8,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 5,
+                      "social_commentary": 6,
+                      "class_and_capitalism": 7,
+                      "technology_and_humanity": 1,
+                      "spiritual": 3,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 7,
+                      "fast_pace": 7,
+                      "intrigue": 10,
+                      "complexity": 10,
+                      "rewatchability": 8,
+                      "hopefulness": 4,
+                      "bleakness": 8,
+                      "ambiguity": 6,
+                      "novelty": 9,
+                      "homage_and_reference": 2,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 0,
+                      "surrealism": 1,
+                      "eccentricity": 3,
+                      "philosophical": 4,
+                      "educational": 0,
+                      "direction": 10,
+                      "acting": 10,
+                      "cinematography": 10,
+                      "editing": 9,
+                      "music_composition": 10,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 9,
+                      "pastiche": 1,
+                      "psychedelic": 0,
+                      "grotesque": 3,
+                      "camp_and_irony": 0,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 10,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "intrigue",
+                      "complexity",
+                      "character_depth",
+                      "world_immersion",
+                      "spectacle",
+                      "music_composition",
+                      "political",
+                      "violence"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic Fantasy Saga",
+                    "High-Stakes Political Intrigue",
+                    "Brutal & Unpredictable",
+                    "Massive World-Building",
+                    "Ensemble Character Drama",
+                    "Spectacle & Cinematic Scale",
+                    "Morally Grey Characters",
+                    "Subversive Storytelling",
+                    "Iconic Soundtrack"
+                  ],
+                  "essence_text": "A monumental, sprawling epic that redefined fantasy television with its brutal, unpredictable narrative and deeply complex political intrigue. The series immerses viewers in a meticulously crafted world where power is the ultimate currency and loyalty is a fragile commodity. Its massive scale, breathtaking visuals, and iconic score create an unparalleled sense of world-building and spectacle. Anchored by a vast ensemble of morally grey characters, the show offers a relentless, binge-worthy experience that is as thought-provoking as it is visually stunning, though its darker themes and graphic content demand a mature audience."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "F",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 9,
+                      "scare": 7,
+                      "violence": 9,
+                      "romance": 6,
+                      "eroticism": 7,
+                      "wholesome": 2,
+                      "wonder": 8,
+                      "pathos": 8,
+                      "melancholy": 7,
+                      "uncanny": 4,
+                      "catharsis": 6,
+                      "nostalgia": 5,
+                      "situational_comedy": 1,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 1,
+                      "cringe_humor": 2,
+                      "absurdist_humor": 0,
+                      "satire_parody": 3,
+                      "dark_humor": 4,
+                      "fantasy": 10,
+                      "futuristic": 0,
+                      "historical": 6,
+                      "contemporary_realism": 0,
+                      "crime": 5,
+                      "mystery": 6,
+                      "warfare": 9,
+                      "political": 9,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 7,
+                      "family_dynamics": 9,
+                      "psychological": 7,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 8,
+                      "social_commentary": 6,
+                      "class_and_capitalism": 5,
+                      "technology_and_humanity": 2,
+                      "spiritual": 5,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 8,
+                      "character_depth": 9,
+                      "slow_burn": 6,
+                      "fast_pace": 7,
+                      "intrigue": 9,
+                      "complexity": 9,
+                      "rewatchability": 7,
+                      "hopefulness": 4,
+                      "bleakness": 8,
+                      "ambiguity": 5,
+                      "novelty": 6,
+                      "homage_and_reference": 4,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 1,
+                      "surrealism": 2,
+                      "eccentricity": 3,
+                      "philosophical": 5,
+                      "educational": 1,
+                      "direction": 8,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 8,
+                      "music_composition": 10,
+                      "world_immersion": 10,
+                      "spectacle": 9,
+                      "visual_stylization": 7,
+                      "pastiche": 2,
+                      "psychedelic": 1,
+                      "grotesque": 6,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 9,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "world_immersion",
+                      "music_composition",
+                      "political",
+                      "violence",
+                      "family_dynamics",
+                      "warfare",
+                      "character_depth",
+                      "fantasy"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic High Fantasy Drama",
+                    "Intricate Political Maneuvering",
+                    "Visceral and Graphic Violence",
+                    "Complex Moral Ambiguity",
+                    "Ensemble Cast Dynamics",
+                    "Cinematic World-Building",
+                    "Tragic Character Arcs",
+                    "Dark Medieval Aesthetic"
+                  ],
+                  "essence_text": "A sprawling epic that masterfully blends high fantasy with gritty political realism, demanding total attention from its audience. The narrative is defined by its intricate web of alliances and betrayals, where moral certainty is rare and consequences are often brutal. Its world-building is immersive and visually stunning, supported by a legendary score that elevates every moment of tension or triumph. Viewers are drawn into a dark, unforgiving realm where beloved characters can meet sudden, shocking ends, creating an atmosphere of perpetual suspense and emotional weight."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "G",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 9,
+                      "scare": 5,
+                      "violence": 9,
+                      "romance": 5,
+                      "eroticism": 6,
+                      "wholesome": 2,
+                      "wonder": 8,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 6,
+                      "catharsis": 7,
+                      "nostalgia": 3,
+                      "situational_comedy": 3,
+                      "wit_wordplay": 8,
+                      "physical_comedy": 2,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 2,
+                      "satire_parody": 4,
+                      "dark_humor": 7,
+                      "fantasy": 9,
+                      "futuristic": 0,
+                      "historical": 5,
+                      "contemporary_realism": 1,
+                      "crime": 4,
+                      "mystery": 7,
+                      "warfare": 9,
+                      "political": 9,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 6,
+                      "family_dynamics": 9,
+                      "psychological": 8,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 1,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 7,
+                      "technology_and_humanity": 1,
+                      "spiritual": 6,
+                      "narrative_structure": 7,
+                      "dialogue_quality": 9,
+                      "character_depth": 9,
+                      "slow_burn": 8,
+                      "fast_pace": 6,
+                      "intrigue": 10,
+                      "complexity": 9,
+                      "rewatchability": 8,
+                      "hopefulness": 3,
+                      "bleakness": 9,
+                      "ambiguity": 6,
+                      "novelty": 8,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 2,
+                      "meta_narrative": 0,
+                      "surrealism": 3,
+                      "eccentricity": 6,
+                      "philosophical": 7,
+                      "educational": 1,
+                      "direction": 8,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 8,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 8,
+                      "pastiche": 3,
+                      "psychedelic": 1,
+                      "grotesque": 8,
+                      "camp_and_irony": 2,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 8,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "intrigue",
+                      "political",
+                      "warfare",
+                      "character_depth",
+                      "family_dynamics",
+                      "world_immersion",
+                      "violence",
+                      "bleakness"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": true,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic Political Fantasy",
+                    "Intricate Dynastic Conflict",
+                    "Brutal Medieval Warfare",
+                    "Morally Complex Characters",
+                    "High-Stakes Betrayal",
+                    "Expansive World-Building",
+                    "Bleak and Tragic Drama",
+                    "Mythic Supernatural Threat",
+                    "Sharp Ensemble Dialogue"
+                  ],
+                  "essence_text": "A sweeping political fantasy defined by ruthless power struggles, intricate loyalties, and an unusually deep ensemble of morally compromised characters. Its vast world-building balances courtly intrigue with brutal warfare, ancient myth, and spectacular supernatural escalation. The experience is tense, emotionally punishing, and often melancholic, with sudden reversals that make safety feel temporary. Sharp dialogue, commanding performances, and richly atmospheric production reward sustained attention across its long-form narrative."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "H",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 10,
+                      "scare": 8,
+                      "violence": 10,
+                      "romance": 7,
+                      "eroticism": 6,
+                      "wholesome": 2,
+                      "wonder": 7,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 5,
+                      "catharsis": 8,
+                      "nostalgia": 6,
+                      "situational_comedy": 4,
+                      "wit_wordplay": 7,
+                      "physical_comedy": 3,
+                      "cringe_humor": 6,
+                      "absurdist_humor": 5,
+                      "satire_parody": 8,
+                      "dark_humor": 9,
+                      "fantasy": 10,
+                      "futuristic": 1,
+                      "historical": 8,
+                      "contemporary_realism": 2,
+                      "crime": 9,
+                      "mystery": 8,
+                      "warfare": 10,
+                      "political": 10,
+                      "sports": 1,
+                      "biographical": 1,
+                      "coming_of_age": 6,
+                      "family_dynamics": 8,
+                      "psychological": 9,
+                      "showbiz": 2,
+                      "gaming": 1,
+                      "pop_culture": 7,
+                      "social_commentary": 9,
+                      "class_and_capitalism": 9,
+                      "technology_and_humanity": 3,
+                      "spiritual": 6,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 8,
+                      "character_depth": 10,
+                      "slow_burn": 9,
+                      "fast_pace": 8,
+                      "intrigue": 10,
+                      "complexity": 10,
+                      "rewatchability": 10,
+                      "hopefulness": 3,
+                      "bleakness": 9,
+                      "ambiguity": 8,
+                      "novelty": 8,
+                      "homage_and_reference": 7,
+                      "non_linear_narrative": 6,
+                      "meta_narrative": 2,
+                      "surrealism": 4,
+                      "eccentricity": 7,
+                      "philosophical": 8,
+                      "educational": 5,
+                      "direction": 9,
+                      "acting": 10,
+                      "cinematography": 10,
+                      "editing": 9,
+                      "music_composition": 10,
+                      "world_immersion": 10,
+                      "spectacle": 10,
+                      "visual_stylization": 7,
+                      "pastiche": 6,
+                      "psychedelic": 2,
+                      "grotesque": 8,
+                      "camp_and_irony": 5,
+                      "dialogue_centrality": 8,
+                      "music_centrality": 9,
+                      "sound_centrality": 8
+                    },
+                    "highlight_keys": [
+                      "tension",
+                      "violence",
+                      "warfare",
+                      "political",
+                      "intrigue",
+                      "character_depth",
+                      "complexity",
+                      "rewatchability"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Suicide Themes",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": false,
+                    "family": false,
+                    "partner": false,
+                    "friends": false,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic Dark Fantasy",
+                    "Political Intrigue",
+                    "Gritty Medieval Warfare",
+                    "Morally Gray Characters",
+                    "Brutal Violence",
+                    "Complex World-Building",
+                    "Slow-Burn Narrative",
+                    "Unpredictable Storytelling",
+                    "Haunting Atmosphere",
+                    "Cultural Phenomenon"
+                  ],
+                  "essence_text": "A sprawling, high-stakes epic where power, betrayal, and survival collide in a meticulously crafted world. The series masterfully balances political intrigue with visceral warfare, delivering relentless tension and emotional gut-punches. Its morally ambiguous characters and labyrinthine plotlines reward deep engagement, while the stark bleakness and unflinching brutality create an immersive, haunting experience. A cultural touchstone that redefined modern fantasy television."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "I",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 9,
+                      "tension": 9,
+                      "scare": 7,
+                      "violence": 9,
+                      "romance": 7,
+                      "eroticism": 7,
+                      "wholesome": 1,
+                      "wonder": 7,
+                      "pathos": 9,
+                      "melancholy": 8,
+                      "uncanny": 5,
+                      "catharsis": 7,
+                      "nostalgia": 6,
+                      "situational_comedy": 4,
+                      "wit_wordplay": 4,
+                      "physical_comedy": 3,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 2,
+                      "satire_parody": 3,
+                      "dark_humor": 6,
+                      "fantasy": 9,
+                      "futuristic": 3,
+                      "historical": 4,
+                      "contemporary_realism": 1,
+                      "crime": 2,
+                      "mystery": 5,
+                      "warfare": 9,
+                      "political": 9,
+                      "sports": 1,
+                      "biographical": 2,
+                      "coming_of_age": 6,
+                      "family_dynamics": 8,
+                      "psychological": 8,
+                      "showbiz": 3,
+                      "gaming": 3,
+                      "pop_culture": 8,
+                      "social_commentary": 8,
+                      "class_and_capitalism": 7,
+                      "technology_and_humanity": 6,
+                      "spiritual": 5,
+                      "narrative_structure": 8,
+                      "dialogue_quality": 7,
+                      "character_depth": 8,
+                      "slow_burn": 6,
+                      "fast_pace": 7,
+                      "intrigue": 9,
+                      "complexity": 9,
+                      "rewatchability": 8,
+                      "hopefulness": 5,
+                      "bleakness": 9,
+                      "ambiguity": 7,
+                      "novelty": 4,
+                      "homage_and_reference": 5,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 2,
+                      "surrealism": 2,
+                      "eccentricity": 5,
+                      "philosophical": 7,
+                      "educational": 1,
+                      "direction": 8,
+                      "acting": 8,
+                      "cinematography": 9,
+                      "editing": 7,
+                      "music_composition": 7,
+                      "world_immersion": 9,
+                      "spectacle": 9,
+                      "visual_stylization": 6,
+                      "pastiche": 3,
+                      "psychedelic": 2,
+                      "grotesque": 5,
+                      "camp_and_irony": 4,
+                      "dialogue_centrality": 5,
+                      "music_centrality": 6,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "warfare",
+                      "political",
+                      "complexity",
+                      "character_depth",
+                      "spectacle",
+                      "fantasy",
+                      "social_commentary",
+                      "pathos"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Drug Use",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": false,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": true
+                  },
+                  "essence_tags": [
+                    "Epic Fantasy Warfare",
+                    "Political Intrigue",
+                    "Complex Character Arcs",
+                    "Dark Medieval Aesthetic",
+                    "Grand Spectacle",
+                    "Moral Ambiguity",
+                    "High-Stakes Drama",
+                    "Pop Culture Phenomenon",
+                    "Thematic Depth",
+                    "Immersive World-Building"
+                  ],
+                  "essence_text": "A sprawling epic of political intrigue and grand warfare set in a richly detailed fantasy realm, where moral ambiguity and complex character arcs drive the narrative. The series delivers high-stakes drama through immense spectacle and immersive world-building, exploring themes of power, legacy, and survival amidst relentless conflict. Its blend of dark pathos and strategic political maneuvering creates a compelling, though often bleak, viewing experience that has become a defining pop culture phenomenon of the decade."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    },
+    {
+      "label": "J",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "K",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "L",
+      "status": "not_attempted",
+      "attempts": []
+    },
+    {
+      "label": "M",
+      "status": "valid",
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "valid",
+          "response": {
+            "results": [
+              {
+                "benchmark_id": "show:1399",
+                "analysis": {
+                  "fingerprint": {
+                    "scores": {
+                      "adrenaline": 8,
+                      "tension": 9,
+                      "scare": 6,
+                      "violence": 10,
+                      "romance": 6,
+                      "eroticism": 8,
+                      "wholesome": 1,
+                      "wonder": 8,
+                      "pathos": 9,
+                      "melancholy": 7,
+                      "uncanny": 6,
+                      "catharsis": 8,
+                      "nostalgia": 1,
+                      "situational_comedy": 2,
+                      "wit_wordplay": 8,
+                      "physical_comedy": 1,
+                      "cringe_humor": 3,
+                      "absurdist_humor": 0,
+                      "satire_parody": 2,
+                      "dark_humor": 6,
+                      "fantasy": 10,
+                      "futuristic": 0,
+                      "historical": 3,
+                      "contemporary_realism": 0,
+                      "crime": 6,
+                      "mystery": 8,
+                      "warfare": 9,
+                      "political": 10,
+                      "sports": 0,
+                      "biographical": 0,
+                      "coming_of_age": 6,
+                      "family_dynamics": 10,
+                      "psychological": 7,
+                      "showbiz": 0,
+                      "gaming": 0,
+                      "pop_culture": 2,
+                      "social_commentary": 7,
+                      "class_and_capitalism": 8,
+                      "technology_and_humanity": 1,
+                      "spiritual": 5,
+                      "narrative_structure": 9,
+                      "dialogue_quality": 9,
+                      "character_depth": 10,
+                      "slow_burn": 8,
+                      "fast_pace": 6,
+                      "intrigue": 10,
+                      "complexity": 10,
+                      "rewatchability": 8,
+                      "hopefulness": 2,
+                      "bleakness": 9,
+                      "ambiguity": 6,
+                      "novelty": 9,
+                      "homage_and_reference": 3,
+                      "non_linear_narrative": 3,
+                      "meta_narrative": 0,
+                      "surrealism": 1,
+                      "eccentricity": 4,
+                      "philosophical": 6,
+                      "educational": 1,
+                      "direction": 9,
+                      "acting": 9,
+                      "cinematography": 9,
+                      "editing": 8,
+                      "music_composition": 9,
+                      "world_immersion": 10,
+                      "spectacle": 9,
+                      "visual_stylization": 7,
+                      "pastiche": 3,
+                      "psychedelic": 0,
+                      "grotesque": 6,
+                      "camp_and_irony": 1,
+                      "dialogue_centrality": 9,
+                      "music_centrality": 8,
+                      "sound_centrality": 7
+                    },
+                    "highlight_keys": [
+                      "political",
+                      "violence",
+                      "character_depth",
+                      "family_dynamics",
+                      "complexity",
+                      "world_immersion",
+                      "fantasy",
+                      "bleakness"
+                    ]
+                  },
+                  "is_anime": false,
+                  "production_info": {
+                    "method": "Live-Action",
+                    "animation_style": null
+                  },
+                  "content_advisories": [
+                    "Violence",
+                    "Nudity",
+                    "Sexual Content",
+                    "Strong Language",
+                    "Disturbing Imagery"
+                  ],
+                  "social_suitability": {
+                    "solo_watch": true,
+                    "date_night": true,
+                    "group_party": true,
+                    "family": false,
+                    "partner": true,
+                    "friends": true,
+                    "kids": false,
+                    "teens": false,
+                    "adults": true,
+                    "intergenerational": false,
+                    "public_viewing_safe": false
+                  },
+                  "viewing_context": {
+                    "is_thought_provoking": true,
+                    "is_pure_escapism": false,
+                    "is_background_friendly": false,
+                    "is_comfort_watch": false,
+                    "is_binge_friendly": true,
+                    "is_drop_in_friendly": false
+                  },
+                  "essence_tags": [
+                    "Epic Political Fantasy",
+                    "Grimdark Sword & Sorcery",
+                    "Complex Power Struggles",
+                    "Large Ensemble Cast",
+                    "Moral Ambiguity",
+                    "Surprise Character Deaths",
+                    "High-Stakes Drama",
+                    "Intricate World-Building",
+                    "Cynical & Brutal",
+                    "TV Event Television"
+                  ],
+                  "essence_text": "An expansive and often brutal political fantasy epic that redefined event television with its sprawling ensemble and willingness to kill off anyone. The experience is defined by mounting dread, moral ambiguity, and the constant threat of violence lurking beneath every negotiation. It offers deep immersion in a meticulously built world where noble houses scheme, betray, and war over a throne. Watching it is a tense, often bleak, ride that rewards patient viewers with shocking payoffs and unmatched scale. It is less comfort viewing than a gripping, emotionally taxing saga about power and survival."
+                }
+              }
+            ]
+          },
+          "validation_errors": []
+        }
+      ]
+    }
+  ]
+}

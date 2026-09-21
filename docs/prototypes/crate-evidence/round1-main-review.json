@@ -1,0 +1,47 @@
+{
+  "basis": "Independent assistant reading of returned essence, synopsis and match evidence; subjective development assessment, not user ground truth.",
+  "cases": [
+    {
+      "id": "9b140261afcf",
+      "preference": "corrected",
+      "assessment": "Corrected is the stronger usable list. Planner expands car chases to vehicular combat, promoting Death Race and Death Race 2050. Upgrade and Heroes Shed No Tears match an exact keyword but their prose centers AI revenge and mercenary warfare. Full reranking improves centrality but its latency and aggregate failures disqualify it.",
+      "next_experiment": "Preserve the central requested concept; distinguish prose centrality from incidental tags."
+    },
+    {
+      "id": "754ee0c9fc2c",
+      "preference": "english_phrase",
+      "assessment": "They Live is strong across variants. Planned retrieval mostly finds isolated sunglasses tags; the combined phrase control includes Fianc\u00e9s on the Bridge, whose sunglasses drive the plot. No reason to prefer familiar films with incidental props.",
+      "next_experiment": "Prioritize central evidence, preserve the combined source in candidate unions."
+    },
+    {
+      "id": "b5d624d26fe3",
+      "preference": "planned_facets",
+      "assessment": "Planner list has coherent perceptual unreliability: Fight Club, The Father, Rashomon, Mr. Robot and Perfect Blue. It removes the rejected Mulholland pilot. Corrected also has strong leaders; this is a broader coherent list rather than a categorical win on every rank.",
+      "next_experiment": "Keep conceptual interpretation and general artifact hygiene."
+    },
+    {
+      "id": "ae792ebd0c67",
+      "preference": "corrected",
+      "assessment": "Both lists have substantial crime and gritty-tone evidence. Corrected Gomorrah, Spiral and Happy Valley remain convincing, with lower latency. Planned Southland and NYPD Blue are good; Shadow and Copycat Killer are supported, so unfamiliarity is not a failure. No clear relevance gain justifies planner overhead here.",
+      "next_experiment": "Reduce unnecessary tone expansion without restricting crime to police procedurals."
+    },
+    {
+      "id": "ca891060b1f6",
+      "preference": "planned_facets",
+      "assessment": "NYPD Blue, Police Woman, Mare of Easttown, Love/Hate and Gomorrah have direct grounded gritty-crime prose support. This is a marked improvement over the control mixtures. Metadata absence cannot prove the absence of magic or animation, but the supported overall fit is stronger.",
+      "next_experiment": "Retain conceptual interpretation; qualify exclusion certainty."
+    },
+    {
+      "id": "6e92210d59ae",
+      "preference": "planned_facets",
+      "assessment": "The Usual Suspects and Fight Club directly support unreliable narration; Rashomon is a reasonable adjacent form. This greatly improves the literal halfway-through failures. Game of Thrones has an unreliable-narrator trope tag but no central narration evidence in its essence; a major ranking false positive. The Father offers subjective unreliability rather than intentional deception.",
+      "next_experiment": "Use whole-story evidence to distinguish central narrative device from isolated trope."
+    },
+    {
+      "id": "4161f08beb03",
+      "preference": "corrected",
+      "assessment": "Corrected has focused driver leaders Baby Driver, Motorway, The Driver and Wheelman. Planner promotes Faster and Son of a Gun from exact getaway-driver tags despite revenge or criminal mentorship dominating prose. Full reranker improves the top set but is operationally eliminated.",
+      "next_experiment": "Keep chase action and driver focus jointly, with centrality-aware scoring."
+    }
+  ]
+}

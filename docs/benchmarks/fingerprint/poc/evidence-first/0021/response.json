@@ -1,0 +1,9 @@
+{
+  "http_status": 400,
+  "raw": "{\"error\": {\"message\": \"Provider returned error\", \"code\": 400, \"metadata\": {\"raw\": \"{\\\"error\\\": {\\\"code\\\": 400, \\\"message\\\": \\\"Request contains an invalid argument.\\\", \\\"status\\\": \\\"INVALID_ARGUMENT\\\"}}\", \"provider_name\": \"Google AI Studio\", \"is_byok\": false, \"provider_error_code\": \"400\"}}}",
+  "elapsed_seconds": 0.4795904479979072,
+  "headers": {
+    "Date": "Sat, 12 Sep 2026 05:06:27 GMT"
+  },
+  "captured_at": "2026-09-12T05:06:27.490161+00:00"
+}

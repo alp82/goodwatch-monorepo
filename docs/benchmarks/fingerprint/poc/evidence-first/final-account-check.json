@@ -1,0 +1,19 @@
+{
+  "captured_at": "2026-09-12T05:49:57.361702+00:00",
+  "metadata": {
+    "limit": 9,
+    "limit_remaining": 8.623581352,
+    "limit_reset": null,
+    "usage": 0.376418648,
+    "byok_usage": 0,
+    "include_byok_in_limit": false,
+    "is_management_key": false,
+    "is_provisioning_key": false,
+    "expires_at": null
+  },
+  "reconciled_attempt_total_usd": "0.3764186484",
+  "difference_usd": "-4E-10",
+  "no_new_credit_purchase": true,
+  "judge_api_cost_usd": 0,
+  "embedding_cost_usd": 0
+}
