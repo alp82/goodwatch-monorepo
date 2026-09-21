@@ -83,7 +83,8 @@ function useController() {
 	const setting = (key: string, fallback = "") => params.get(key) ?? fallback;
 	// The controller runs on every page, so read the saved services from user
 	// settings and don't load the full provider list here.
-	const userSettings = useUserSettings().data;
+	const userSettingsQuery = useUserSettings();
+	const userSettings = userSettingsQuery.data;
 	const userCountry = userSettings?.country_default;
 	const country =
 		(setting("streamingPreset") === "mine" && userCountry) ||
@@ -203,6 +204,8 @@ function useController() {
 			ready &&
 			!!config.data &&
 			requested === q &&
+			// "Mine" needs the saved services; searching before they load is wasted.
+			!(streamingPreset === "mine" && userSettingsQuery.isLoading) &&
 			requested.trim().length >= 2 &&
 			settledFilters === filtersKey &&
 			!batches[batchKey],
