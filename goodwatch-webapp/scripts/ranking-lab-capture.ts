@@ -68,12 +68,16 @@ for (const q of queries) {
 			for (const r of rows) titles[`${table}:${r.tmdb_id}`] = { title: r.title, year: r.release_year };
 		}
 	}
+	const split = (attributes as unknown as { split: { word: string; isConcrete: boolean }[] }).split ?? [];
+	const phrases = ((attributes as unknown as { phrases: { phrase: string; probability: number }[] }).phrases ?? []).slice(0, 2).map((p) => ({
+		...p, concrete: p.phrase.split(" ").some((w) => split.find((x) => x.word === w)?.isConcrete),
+	}));
 	captures.push({
-		query: q, language: language.policy.mode, used, flags: attributes.flags.filter((f) => f.decision),
+		query: q, language: language.policy.mode, used, flags: attributes.flags.filter((f) => f.decision), phrases, split,
 		gated: textRun.gated ?? null, tropeMode: textRun.tropeMode, notes: textRun.notes ?? [], vectorMs, textMs,
 		vectorPool, textPool, titles,
 	});
-	console.log(`${q}: vector ${vectorPool.length} (${vectorMs} ms), text ${textPool.length} (${textMs} ms), gated ${textRun.gated}`);
+	console.log(`${q}: charged ${outcome.chargedNano} nano, phrases ${JSON.stringify(phrases)}, vector ${vectorPool.length} (${vectorMs} ms), text ${textPool.length} (${textMs} ms), gated ${textRun.gated}`);
 	writeFileSync(out, JSON.stringify(captures));
 }
 process.exit(0);

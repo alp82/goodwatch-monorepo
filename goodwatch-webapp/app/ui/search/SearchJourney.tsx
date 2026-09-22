@@ -37,6 +37,11 @@ import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
 import AddFilterMenu from "~/ui/filter/AddFilterMenu";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
+// PROTOTYPE — grid variants on /search, gated by ?variant=. Remove with the prototype.
+import { VariantB, VariantC, VariantD, VariantE, VariantF } from "~/ui/prototype/SearchGridVariants";
+import { VariantSwitcher, useVariant } from "~/ui/prototype/VariantSwitcher";
+const GRID_VARIANTS = ["A", "B", "C", "D", "E", "F"] as const;
+const GRID_NAMES = { A: "List (current)", B: "Overlay", C: "Caption", D: "DNA tags", E: "Footer", F: "Backdrop" };
 
 // --- Tunables ----------------------------------------------------------------------------
 
@@ -117,7 +122,7 @@ function useController() {
 	const makeParams = (changes: Record<string, string | null> = {}) => {
 		const next = new URLSearchParams(location.search);
 		next.set("searchJourney", "1");
-		next.delete("variant");
+		// PROTOTYPE: keep ?variant= across navigation.
 		next.set("country", country);
 		for (const [key, value] of Object.entries(changes)) {
 			if (value === null || value === "") next.delete(key);
@@ -734,6 +739,7 @@ function HiddenResultsLink({ titlesOnly = false }: { titlesOnly?: boolean }) {
 }
 function JourneyList({ compact = false }: { compact?: boolean }) {
 	const j = useSearchJourney()!;
+	const variant = useVariant(GRID_VARIANTS);
 	return (
 		<section aria-label="Search results" className="min-w-0">
 			<div
@@ -755,6 +761,12 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 					</button>
 				) : null}
 			</div>
+			{variant === "B" && <VariantB />}
+			{variant === "C" && <VariantC />}
+			{variant === "D" && <VariantD />}
+			{variant === "E" && <VariantE />}
+			{variant === "F" && <VariantF />}
+			{variant === "A" && (
 			<ul aria-busy={j.loading} className="divide-y divide-gray-700/60">
 				{j.pageRows.map((r, i) => {
 					const body = (
@@ -831,6 +843,7 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 					);
 				})}
 			</ul>
+			)}
 			{j.rows.length > 0 && (
 				<nav
 					aria-label="Search pages"
@@ -1121,6 +1134,7 @@ export function JourneyResultsPage() {
 			<div className="min-w-0 rounded-xl border border-gray-700 bg-gray-950/30">
 				<JourneyList />
 			</div>
+			<VariantSwitcher variants={GRID_VARIANTS} names={GRID_NAMES} />
 		</div>
 	);
 }

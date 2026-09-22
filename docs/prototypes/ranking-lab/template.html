@@ -49,11 +49,12 @@
     <label>Tiebreak <select id="tie"><option value="sum">weighted sum</option><option value="cosine">cosine</option><option value="none">none</option></select></label>
     <label>Tiebreak span <input type="range" id="span" min="0" max="12" step="0.05"><b id="spanV"></b></label>
     <label>Tiebreak scale <select id="scale"><option value="possible">possible range for the query</option><option value="pool">observed range in the pool</option></select></label>
-    <label>Combine <select id="combine"><option value="textfirst">text pool first, vector fills</option><option value="union">union, evidence additive</option><option value="vector">vector pool only</option><option value="text">text pool only</option><option value="rrf">RRF of vector rank and text rank</option><option value="intersect">vector pool, evidence only if in text pool</option></select></label>
-    <label>Evidence weight <input type="range" id="evw" min="0" max="2" step="0.1"><b id="evwV"></b></label>
+    <label>Combine <select id="combine"><option value="textfirst">text pool first, vector fills</option><option value="union">union, evidence additive</option><option value="auto">phrase-aware: union for mood phrase, text first for concrete</option><option value="vector">vector pool only</option><option value="text">text pool only</option><option value="intersect">vector pool, evidence only if in text pool</option></select></label>
+    <label>Evidence weight, mood <input type="range" id="evw" min="0" max="2" step="0.1"><b id="evwV"></b></label>
+    <label>Evidence weight, concrete <input type="range" id="evwc" min="0" max="2" step="0.1"><b id="evwcV"></b></label>
     <label>Text hits counted (cap) <input type="range" id="textcap" min="1" max="4" step="1"><b id="textcapV"></b></label>
-    <label>Evidence cap (units) <input type="range" id="evcap" min="0" max="3" step="0.25"><b id="evcapV"></b></label>
-    <label>RRF k <input type="range" id="rrfk" min="1" max="100" step="1"><b id="rrfkV"></b></label>
+    <label>Evidence cap, mood phrase <input type="range" id="evcap" min="0" max="3" step="0.25"><b id="evcapV"></b></label>
+    <label>Evidence cap, concrete phrase <input type="range" id="evcapc" min="0" max="3" step="0.25"><b id="evcapcV"></b></label>
     <label>Rows shown <input type="range" id="rows" min="10" max="100" step="10"><b id="rowsV"></b></label>
   </div>
 </header>
@@ -77,25 +78,28 @@ const WATCH = {
   "furious": ["The Raid", "Extraction", "Kill", "Fast & Furious"],
   "craty": ["Police Squad!", "The Tom Green Show", "Monty Python's Flying Circus"],
   "melancholy lighthouse keeper mystery": ["The Lighthouse", "The Returned", "Picnic at Hanging Rock", "Platform 7"],
+  "scifi with cars": ["Mad Max: Fury Road", "Death Race", "Blade Runner", "Titane", "The Fifth Element", "Cars"],
+  "sunglasses at night": ["They Live", "Blade", "The Matrix", "Drive", "Terminator 2: Judgment Day", "Kung Fury"],
+  "fantasy with dragons": ["Game of Thrones", "How to Train Your Dragon", "Dragonheart", "Eragon", "The Hobbit: The Desolation of Smaug", "House of the Dragon"],
+  "like groundhog day": ["Palm Springs", "Edge of Tomorrow", "Russian Doll", "Happy Death Day", "Groundhog Day", "The Map of Tiny Perfect Things"],
+  "time travel complex": ["Primer", "Dark", "Predestination", "Tenet", "12 Monkeys", "Timecrimes"],
 };
 const PRESETS = [
-  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 3, rrfk: 60 },
-    note: "<b>What main does today.</b> Normalized weighted sum (0..1) plus text evidence up to 2.0. Look at <b>complete nonsense</b>: titles with one hit but two matched phrases lead. Text pool first; the vector pool only fills when the text pool is short." },
-  { id: "count", name: "Range count (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
-    note: "<b>The prototype branch.</b> Count of in-range dimensions first, weighted sum as tiebreak inside one unit, evidence capped at one unit. Check <b>tarkovsky</b>: Stalker (21 hits, high sum) sits behind 23-hit titles with lower sums. Check <b>feel good cooking show</b>: Cooku with Comali drops out." },
-  { id: "blend", name: "Count + sum blend", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 6, scale: "pool", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
-    note: "<b>Let the sum cross tiers.</b> Same count, but the sum (scaled over the pool's observed range) spans six units (about a quarter of the 23 dimensions on tarkovsky), so a strong 21-hit title can pass a flat 23-hit one. Does Stalker come back without Kung Fu Panda returning?" },
-  { id: "soft", name: "Soft count (near-miss credit)", cfg: { strong: 6, weak: 4, near: 0.5, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
-    note: "<b>A score one step outside the band counts half.</b> Softens the cliff at 5 versus 6 without giving credit for far misses. Compare tarkovsky and grief." },
-  { id: "union", name: "Union: vector + text additive", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "union", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
-    note: "<b>Merge both pools, add evidence where present.</b> Titles from the vector prefetch compete with text hits on the same scale. On <b>complete nonsense</b>, The Last Sharknado can appear because it was in the vector pool but not the text pool." },
-  { id: "rrf", name: "RRF fusion", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "rrf", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
-    note: "<b>Reciprocal rank fusion.</b> Rank the vector pool by the fingerprint rank and the text pool by fingerprint rank plus evidence, then sum 1/(k+rank). Scale-free, but a title in both lists gets a large lift regardless of how good either rank is." },
-  { id: "strict", name: "Stricter bands (7 / 3)", cfg: { strong: 7, weak: 3, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
-    note: "<b>Tighter bands.</b> Fewer titles reach the top tier, so the tiebreak decides more. Watch whether the head gets sharper or just noisier." },
+  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3 },
+    note: "<b>What main does today.</b> Normalized weighted sum (0..1) plus text evidence up to 2.0. Text pool first; the vector pool fills when the text pool is short. Fails on <b>complete nonsense</b>: one-hit titles with two matched phrases lead. Strong on concrete queries (dragons, groundhog day) because evidence dominates there." },
+  { id: "count", name: "Range count 6/4, flat cap", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1 },
+    note: "<b>The prototype branch.</b> In-range count first, weighted sum as tiebreak, evidence capped at one unit for every phrase. Fixes nonsense. Costs Stalker on <b>tarkovsky</b>, Cooku with Comali on <b>cooking show</b>, and How to Train Your Dragon (7 to 23) on <b>dragons</b>." },
+  { id: "aware", name: "Concrete-aware cap (1 / 2)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 2 },
+    note: "<b>Mood phrase gets one unit, concrete phrase two.</b> Same as the flat cap on every query in the sweep: with weight 0.5 and at most four text hits, the second unit is rarely reached. Not enough on its own." },
+  { id: "leads", name: "Concrete phrase leads", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3 },
+    note: "<b>For a concrete phrase, evidence weighs one unit per text hit, up to three.</b> A title matching both phrases can pass a title with two more fingerprint hits. Mood phrases keep the one-unit cap. Check: Cooku with Comali and How to Train Your Dragon back, Kung Fu Panda still down?" },
+  { id: "leadsauto", name: "Concrete leads + mood union", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "auto", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3 },
+    note: "<b>Same, and a mood phrase searches the union of both pools.</b> Text matches on a mood word are weak evidence, so the vector prefetch competes on equal terms (The Last Sharknado appears). Concrete phrases stay text first, since the union buried Groundhog Day under fingerprint-only titles." },
+  { id: "textonly", name: "Text pool only (reference)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "text", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3 },
+    note: "<b>Reference: only titles that matched the phrase.</b> Shows what the text pool alone delivers for a concrete query and how thin it gets (groundhog day has 54 rows)." },
 ];
 const $ = (id) => document.getElementById(id);
-const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","textcap","evcap","rrfk","rows"];
+const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","evwc","textcap","evcap","evcapc","rows"];
 let queryIndex = 0, presetId = "prod";
 function readCfg() { const c = {}; for (const k of ctl) c[k] = $(k).tagName === "SELECT" ? $(k).value : Number($(k).value); return c; }
 function writeCfg(c) { for (const k of ctl) if (k in c) $(k).value = c[k]; }
@@ -124,7 +128,7 @@ function rankRows(rows, used, cfg, ctx) {
     else primary = norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
     if (cfg.tie === "sum") tie = cfg.span * (cfg.scale === "pool" ? norm(r.ws, ctx.wsMin, ctx.wsMax) : norm(r.ws, sumMin, sumMax));
     else if (cfg.tie === "cosine") tie = cfg.span * norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
-    r.ev = Math.min(cfg.evw * Math.min(r.text ?? 0, cfg.textcap), cfg.evcap);
+    r.ev = Math.min((ctx.concrete ? cfg.evwc : cfg.evw) * Math.min(r.text ?? 0, cfg.textcap), ctx.concrete ? cfg.evcapc : cfg.evcap);
     r.base = primary + tie;
   }
 }
@@ -136,8 +140,10 @@ function compute(cap, cfg) {
   for (const [k, r] of vec) all.set(k, { ...r });
   for (const [k, r] of txt) { const e = all.get(k); if (e) { e.text = r.text; e.inT = true; e.evidence = r.evidence; } else all.set(k, { ...r }); }
   const ctxOf = (rows) => ({ wsMin: Math.min(...rows.map((r) => fingerprint(r.fp, used, cfg).ws)), wsMax: Math.max(...rows.map((r) => fingerprint(r.fp, used, cfg).ws)),
-    cosMin: Math.min(...rows.map((r) => r.cosine ?? 0)), cosMax: Math.max(...rows.map((r) => r.cosine ?? 0)) });
+    cosMin: Math.min(...rows.map((r) => r.cosine ?? 0)), cosMax: Math.max(...rows.map((r) => r.cosine ?? 0)), concrete: Boolean(cap.phrases?.[0]?.concrete) });
   const desc = (a, b) => b.score - a.score;
+  const concrete = Boolean(cap.phrases?.[0]?.concrete);
+  if (cfg.combine === "auto") cfg = { ...cfg, combine: concrete && txt.size ? "textfirst" : "union" };
   let out;
   if (cfg.combine === "vector") { const rows = [...vec.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base); out = rows.sort(desc); }
   else if (cfg.combine === "text") { const rows = [...txt.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
@@ -147,13 +153,6 @@ function compute(cap, cfg) {
     const t = [...txt.values()]; if (t.length) { rankRows(t, used, cfg, ctxOf(t)); t.forEach((r) => r.score = r.base + r.ev); t.sort(desc); }
     const v = [...vec.values()].filter((r) => !txt.has(r.key)); rankRows(v, used, cfg, ctxOf(v.length ? v : [...vec.values()])); v.forEach((r) => r.score = r.base); v.sort(desc);
     out = t.length >= 100 ? t : [...t, ...v];
-  } else { // rrf
-    const v = [...vec.values()]; rankRows(v, used, cfg, ctxOf(v)); v.forEach((r) => r.score = r.base); v.sort(desc);
-    const t = [...txt.values()]; if (t.length) { rankRows(t, used, cfg, ctxOf(t)); t.forEach((r) => r.score = r.base + r.ev); t.sort(desc); }
-    const fused = new Map();
-    v.forEach((r, i) => fused.set(r.key, { ...r, score: 1 / (cfg.rrfk + i + 1) }));
-    t.forEach((r, i) => { const e = fused.get(r.key); if (e) { e.score += 1 / (cfg.rrfk + i + 1); e.inT = true; e.text = r.text; } else fused.set(r.key, { ...r, score: 1 / (cfg.rrfk + i + 1) }); });
-    out = [...fused.values()].sort(desc);
   }
   return out;
 }
@@ -165,7 +164,7 @@ function render() {
   const prod = compute(cap, prodCfg); prodRanks = {}; prod.forEach((r, i) => prodRanks[r.key] = i + 1);
   const rows = compute(cap, cfg);
   const flags = cap.flags.map((f) => `${f.decision}:${f.id}`).join(", ");
-  $("meta").innerHTML = `<b>${cap.query}</b> · dimensions: ${cap.used.map(([k, w]) => `${w > 0 ? "+" : "−"}${k}`).join(" ")} · flags: ${flags || "none"} · vector pool ${cap.vectorPool.length} (${cap.vectorMs} ms) · text pool ${cap.textPool.length} (${cap.textMs} ms) · ${cap.tropeMode}`;
+  $("meta").innerHTML = `<b>${cap.query}</b> · dimensions: ${cap.used.map(([k, w]) => `${w > 0 ? "+" : "−"}${k}`).join(" ")} · phrases: ${(cap.phrases ?? []).map((p) => `“${p.phrase}” ${p.concrete ? "concrete" : "mood"}`).join(", ") || "none"} · flags: ${flags || "none"} · vector pool ${cap.vectorPool.length} (${cap.vectorMs} ms) · text pool ${cap.textPool.length} (${cap.textMs} ms) · ${cap.tropeMode}`;
   const rankOf = {}; rows.forEach((r, i) => rankOf[r.key] = i + 1);
   const title = (r) => cap.titles[r.key]?.title ?? r.key;
   const watch = WATCH[cap.query] ?? [];
