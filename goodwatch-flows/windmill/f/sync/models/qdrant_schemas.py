@@ -48,14 +48,21 @@ def desired_media_collection() -> CollectionSpec:
         replication_factor=1,
         write_consistency_factor=1,
         optimizers_config={
-            # Reasonable safe defaults; tune later if needed
             "deleted_threshold": 0.2,
             "vacuum_min_vector_number": 10000,
+            # Thresholds are kilobytes of vectors, not points. A 74-float vector is 296 bytes,
+            # so 1000 KB is about 3,400 vectors. With the 10,000 KB default no segment of this
+            # collection (about 32,000 points per shard) ever reached the threshold, and no
+            # HNSW graph was built. Two segments per shard keeps them well above 1000 KB.
+            "indexing_threshold": 1000,
+            "default_segment_number": 2,
         },
         hnsw_config={
             "m": 16,
             "ef_construct": 200,
-            "full_scan_threshold": 10000,
+            # Same unit. Above this estimated candidate size the planner walks the HNSW graph
+            # instead of scanning; the default 10,000 KB exceeded every filtered candidate set.
+            "full_scan_threshold": 1000,
         },
     )
 
@@ -77,6 +84,10 @@ def desired_payload_indexes() -> List[PayloadIndexSpec]:
         PayloadIndexSpec("release_year", "integer"),
         PayloadIndexSpec("release_decade", "integer"),
         PayloadIndexSpec("is_anime", "bool"),
+        # Every search excludes adult titles with a must_not clause. Without an index that
+        # clause scanned every point and cost about 500 ms per query.
+        PayloadIndexSpec("adult", "bool"),
+        // placeholder
         PayloadIndexSpec("production_method", "keyword"),
     ]
 
