@@ -1,6 +1,5 @@
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
 import {
-	Fragment,
 	createContext,
 	useContext,
 	useEffect,
@@ -22,19 +21,20 @@ import {
 } from "@heroicons/react/20/solid";
 import { Highlight, type Row } from "./search-model";
 import type { SearchBatch } from "~/server/combined-search/search.server";
-import { useStreamingProviders } from "~/routes/api.streaming-providers";
 import { useGenres } from "~/routes/api.genres.all";
+import {
+	type SearchFilters,
+	matchesRow,
+	searchFiltersKey,
+} from "~/server/combined-search/search-filters";
 import SectionGenre from "~/ui/filter/sections/SectionGenre";
+import SectionStreaming from "~/ui/filter/sections/SectionStreaming";
+import type { StreamingPreset } from "~/server/discover.server";
+import { useUserSettings } from "~/routes/api.user-settings.get";
 import SectionRelease from "~/ui/filter/sections/SectionRelease";
 import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
-import FilterCountries from "~/ui/filter/FilterCountries";
-import { Tag } from "~/ui/tags/Tag";
-import FilterBarSection from "~/ui/filter/FilterBarSection";
-import FilterChip from "~/ui/filter/FilterChip";
 import AddFilterMenu from "~/ui/filter/AddFilterMenu";
 import { discoverFilters } from "~/server/types/discover-types";
-import Select from "~/ui/form/Select";
-import Checkbox from "~/ui/form/Checkbox";
 import placeholder from "~/img/placeholder-poster.png";
 
 type Batch = SearchBatch & { cacheKey: string };
@@ -49,6 +49,7 @@ const refinements = [
 	"minYear",
 	"maxYear",
 	"availability",
+	"streamingPreset",
 	"country",
 	"services",
 	"paid",
@@ -80,7 +81,14 @@ function useController() {
  scrollParams.sort();
  const url = `${location.pathname}?${scrollParams}`;
 	const setting = (key: string, fallback = "") => params.get(key) ?? fallback;
-	const country = setting("country", "DE");
+	// The controller runs on every page, so read the saved services from user
+	// settings and don't load the full provider list here.
+	const userSettingsQuery = useUserSettings();
+	const userSettings = userSettingsQuery.data;
+	const userCountry = userSettings?.country_default;
+	const country =
+		(setting("streamingPreset") === "mine" && userCountry) ||
+		setting("country", "DE");
 	const makeParams = (changes: Record<string, string | null> = {}) => {
 		const next = new URLSearchParams(location.search);
 		next.set("searchJourney", "1");
@@ -150,8 +158,45 @@ function useController() {
 		refetchOnMount: "always",
 		refetchOnWindowFocus: "always",
 	});
-	const policyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}`;
+	const streamingPreset = setting("streamingPreset");
+	const serviceIds = (
+		streamingPreset === "mine"
+			? (userSettings?.streaming_providers_default ?? "")
+			: setting("services")
+	)
+		.split(",")
+		.map(Number)
+		.filter((n) => Number.isInteger(n) && n > 0);
+	// A streaming filter shows only matching titles; "availability" keeps old links working.
+	const mode = streamingPreset ? "only" : setting("availability", "all");
+	// The server applies the streaming filter during retrieval, so a filtered
+	// search still returns a full set of candidates.
+	const streaming =
+		streamingPreset && serviceIds.length
+			? { country, providerIds: serviceIds }
+			: null;
+	const yearSetting = (key: "minYear" | "maxYear") =>
+		/^\d{4}$/.test(setting(key)) ? Number(setting(key)) : undefined;
+	const genreSetting = setting("genre").split(",").filter(Boolean);
+	const filters: SearchFilters = {
+		...(setting("type") === "movie" || setting("type") === "show"
+			? { type: setting("type") as "movie" | "show" }
+			: {}),
+		...(genreSetting.length ? { genres: genreSetting } : {}),
+		...(yearSetting("minYear") ? { minYear: yearSetting("minYear") } : {}),
+		...(yearSetting("maxYear") ? { maxYear: yearSetting("maxYear") } : {}),
+		...(streaming ? { streaming } : {}),
+	};
+	const filtersKey = searchFiltersKey(filters);
+	const policyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${filtersKey ? `:${filtersKey}` : ""}`;
 	const batchKey = `${policyKey}:${q}`;
+	// Filter changes narrow the shown batch at once; the refetch waits until the
+	// filters stop changing, so dragging the year slider sends one request.
+	const [settledFilters, setSettledFilters] = useState(filtersKey);
+	useEffect(() => {
+		const timer = setTimeout(() => setSettledFilters(filtersKey), 400);
+		return () => clearTimeout(timer);
+	}, [filtersKey]);
 	const search = useQuery({
 		queryKey: ["combined-search", requested, policyKey, revision],
 		enabled:
@@ -159,7 +204,10 @@ function useController() {
 			ready &&
 			!!config.data &&
 			requested === q &&
+			// "Mine" needs the saved services; searching before they load is wasted.
+			!(streamingPreset === "mine" && userSettingsQuery.isLoading) &&
 			requested.trim().length >= 2 &&
+			settledFilters === filtersKey &&
 			!batches[batchKey],
 		retry: false,
 		refetchOnWindowFocus: false,
@@ -173,6 +221,7 @@ function useController() {
 					q: requested,
 					includeAdult: false,
 					lesserKnown: setting("lesserKnown") === "1",
+					filters,
 				}),
 			});
 			const body = await response.json();
@@ -187,14 +236,20 @@ function useController() {
 	useEffect(() => {
 		if (search.data) {
 			setBatches((old) => ({
-				...Object.fromEntries(Object.entries(old).slice(-9)),
+				// Descriptive batches reach about 220 KB, and each filter set adds one,
+				// so keep six to stay well under the sessionStorage quota.
+				...Object.fromEntries(Object.entries(old).slice(-5)),
 				[search.data.cacheKey]: search.data,
 			}));
 			setPrevious(search.data);
 		}
 	}, [search.data]);
+	// While a filtered fetch is pending, narrow the unfiltered batch of this query
+	// when it is cached: it holds more matches than another filtered batch.
+	const unfilteredKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}:${q}`;
 	const batch = q
 		? (batches[batchKey] ??
+			batches[unfilteredKey] ??
 			(previous?.cacheKey.startsWith(`${config.data?.version}:`)
 				? previous
 				: null))
@@ -266,22 +321,19 @@ function useController() {
 	const metadata = new Map(
 		batch?.metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]) ?? [],
 	);
-	const identities = new Set<string>();
-	const candidates = (batch?.rows ?? []).filter((r) => {
-		if (r.type !== "movie" && r.type !== "show") return true;
-		const m = metadata.get(r.key);
-		if (m?.adult === true || r.adult === true)
-			return false;
-		const key = m?.imdb_id ? `imdb:${m.imdb_id}` : r.key;
-		if (identities.has(key)) return false;
-		identities.add(key);
-		return true;
-	});
-	const serviceIds = setting("services")
-		.split(",")
-		.map(Number)
-		.filter((n) => Number.isInteger(n) && n > 0);
-	const mode = setting("availability", "all");
+	const dedupe = (source: Batch | null | undefined, meta = metadata) => {
+		const identities = new Set<string>();
+		return (source?.rows ?? []).filter((r) => {
+			if (r.type !== "movie" && r.type !== "show") return true;
+			const m = meta.get(r.key);
+			if (m?.adult === true || r.adult === true) return false;
+			const key = m?.imdb_id ? `imdb:${m.imdb_id}` : r.key;
+			if (identities.has(key)) return false;
+			identities.add(key);
+			return true;
+		});
+	};
+	const candidates = dedupe(batch);
 	const watch = useQuery<{
 		results: { key: string; result: { state: string } }[];
 	}>({
@@ -320,27 +372,25 @@ function useController() {
 			return response.json();
 		},
 	});
-	const watchable = (row: Row) =>
+	const watchState = (row: Row) =>
 		watch.data?.results.find((x) => x.key === row.key.replace(":", "-"))?.result
-			.state === "watchable";
+			.state;
+	const watchable = (row: Row) => watchState(row) === "watchable";
 	const rows = candidates.filter(
 		(r) =>
-			(setting("type", "all") === "all" || r.type === setting("type")) &&
-			(!setting("genre") ||
-				setting("genre")
-					.split(",")
-					.every((genre) =>
-						(metadata.get(r.key)?.genres ?? r.discovery?.genres ?? []).includes(
-							genre,
-						),
-					)) &&
-			(!setting("minYear") || Number(r.year) >= Number(setting("minYear"))) &&
-			(!setting("maxYear") || Number(r.year) <= Number(setting("maxYear"))) &&
+			// Retrieval applied these already; title matches still need the check.
+			matchesRow(filters, {
+				type: r.type,
+				year: r.year,
+				genres: metadata.get(r.key)?.genres ?? r.discovery?.genres,
+			}) &&
 			(mode !== "only" ||
 				serviceIds.length === 0 ||
 				watch.isFetching ||
 				!watch.data ||
-				watchable(r)),
+				// Retrieval already applied the streaming filter, so keep titles with
+				// unknown availability and drop only confirmed mismatches.
+				(streaming ? watchState(r) !== "no_match" : watchable(r))),
 	);
 	if (mode === "prefer" && watch.data)
 		rows.sort((a, b) => Number(watchable(b)) - Number(watchable(a)));
@@ -371,7 +421,21 @@ function useController() {
 		navigate(`${location.pathname}?${makeParams({ page: null, ...changes })}`, {
 			preventScrollReset: true,
 		});
+	// The server filters during retrieval, so a filtered and an unfiltered search are
+	// different result sets. Offer the unfiltered search without claiming a count.
+	const filtersActive =
+		!!filtersKey || (mode === "only" && serviceIds.length > 0);
+	// The shown batch was fetched with other filters and is only narrowed locally.
+	const refining =
+		active &&
+		ready &&
+		!!config.data &&
+		requested === q &&
+		q.trim().length >= 2 &&
+		!batches[batchKey] &&
+		!search.error;
 	const loading =
+		refining ||
 		active &&
 		draft.trim().length >= 2 &&
 		(search.isFetching ||
@@ -380,7 +444,9 @@ function useController() {
 			!ready ||
 			config.isLoading);
 	const status = loading
-		? `Searching for “${draft}”…${batch ? ` Showing “${batch.q}” until ready.` : ""}`
+		? refining && draft === q && batch?.q === q
+			? `Refining results for “${q}”… ${rows.length} matching so far.`
+			: `Searching for “${draft}”…${batch ? ` Showing “${batch.q}” until ready.` : ""}`
 		: search.error || config.error
 			? (search.error || config.error)!.message
 			: batch
@@ -400,10 +466,7 @@ function useController() {
 		batch,
 		rows,
 		pageRows,
-		hiddenResults: candidates.length - rows.length,
-		hiddenTitles:
-			candidates.filter((r) => r.type === "movie" || r.type === "show").length -
-			sequence.length,
+		filtersActive,
 		clearFiltersHref: `${location.pathname}?${makeParams({ ...Object.fromEntries(refinements.filter((key) => key !== "country").map((key) => [key, null])), page: null })}`,
 		page,
 		pageCount,
@@ -547,8 +610,7 @@ export function JourneyHeader() {
 }
 function HiddenResultsLink({ titlesOnly = false }: { titlesOnly?: boolean }) {
 	const j = useSearchJourney()!;
-	const count = titlesOnly ? j.hiddenTitles : j.hiddenResults;
-	if (!count || j.loading || j.batch?.q !== j.q) return null;
+	if (!j.filtersActive || j.loading || j.batch?.q !== j.q) return null;
 	return (
 		<Link
 			prefetch={titlesOnly ? "render" : "intent"}
@@ -557,7 +619,7 @@ function HiddenResultsLink({ titlesOnly = false }: { titlesOnly?: boolean }) {
 			className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
 			onClick={() => j.setOpen(false)}
 		>
-			{count} more {count === 1 ? "result" : "results"} without filters
+			Search without filters
 		</Link>
 	);
 }
@@ -629,13 +691,11 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 										Known for: {r.knownFor}
 									</p>
 								)}
-								{!compact && j.mode !== "all" && (
+								{/* Rows without offer evidence stay quiet: retrieval already
+								    matched them to the selected services. */}
+								{!compact && j.mode !== "all" && j.watchable(r) && (
 									<p className="text-xs text-gray-400 mt-2">
-										{j.watch.isFetching
-											? "Checking current offers…"
-											: j.watchable(r)
-												? "Current matching offer"
-												: "No confirmed matching offer"}
+										Current matching offer
 									</p>
 								)}
 							</div>
@@ -703,7 +763,7 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 			{!j.rows.length && !j.loading && (
 				<div className="p-6 text-gray-400">
 					{j.batch
-						? j.hiddenResults
+						? j.filtersActive
 							? "No titles match these filters. Use the link above to see the results without filters."
 							: "No results for this search. Try a different request."
 						: "Try Heat, a favorite actor, or a description such as ‘tense but not bleak’."}
@@ -712,378 +772,160 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 		</section>
 	);
 }
-type FilterKey = "type" | "genre" | "minYear" | "country" | "availability";
-const filterNames: Record<FilterKey, string> = {
-	type: discoverFilters.type.label,
-	genre: "Genre",
-	minYear: "Release year",
-	country: "Country",
-	availability: "Availability",
-};
-// Filters shared with Discover use the Discover colors.
-const filterColors = {
-	type: discoverFilters.type.color,
-	genre: discoverFilters.genre.color,
-	minYear: discoverFilters.release.color,
-	country: "sky",
-	availability: discoverFilters.streaming.color,
-} as const;
-function FilterField({
-	field,
-	inline = false,
-}: { field: FilterKey; inline?: boolean }) {
-	const j = useSearchJourney()!;
-	const genres = [
-		...new Set(
-			j.batch?.rows.flatMap(
-				(r) => j.metadata.get(r.key)?.genres ?? r.discovery?.genres ?? [],
-			) ?? [],
-		),
-	].sort();
-	const options: Record<FilterKey, [string, string][]> = {
-		type: [
-			["all", "Movies & shows"],
-			["movie", "Movies"],
-			["show", "Shows"],
-		],
-		genre: [
-			["", "Any genre"],
-			...genres.map((g) => [g, g] as [string, string]),
-		],
-		minYear: [
-			["", "Any year"],
-			["1990", "1990"],
-			["2000", "2000"],
-			["2010", "2010"],
-			["2020", "2020"],
-		],
-		country: [
-			["DE", "Germany"],
-			["US", "United States"],
-			["GB", "United Kingdom"],
-			["FR", "France"],
-			["ES", "Spain"],
-			["TR", "Türkiye"],
-		],
-		availability: [
-			["all", "Explore everything"],
-			["prefer", "Prefer my services"],
-			["only", "Only on my services"],
-		],
-	};
-	const fallback =
-		field === "type" || field === "availability"
-			? "all"
-			: field === "country"
-				? "DE"
-				: "";
-	if (field === "country")
-		return (
-			<FilterCountries
-				mediaType="movie"
-				selectedCountry={j.setting("country", "DE")}
-				onChange={(country) => j.update({ country })}
-			/>
-		);
-	return (
-		<label
-			className={
-				inline
-					? "flex items-center gap-2 text-xs whitespace-nowrap"
-					: "flex flex-col gap-2 text-xs text-gray-300 w-full"
-			}
-		>
-			<span>{filterNames[field]}</span>
-			<select
-				aria-label={filterNames[field]}
-				className={
-					inline
-						? "min-w-0 bg-gray-900/80 border border-white/15 rounded px-2 py-1.5 text-sm max-w-44"
-						: `${control} w-full`
-				}
-				value={j.setting(field, fallback)}
-				onChange={(e) => j.update({ [field]: e.target.value })}
-			>
-				{options[field].map(([v, l]) => (
-					<option key={v} value={v}>
-						{l}
-					</option>
-				))}
-			</select>
-		</label>
-	);
-}
-function ServiceSelection() {
-	const j = useSearchJourney()!;
-	const { data: providers = [] } = useStreamingProviders();
-	const items = providers.map((p) => ({
-		key: String(p.id),
-		label: p.name,
-		icon: p.logo_path
-			? `https://image.tmdb.org/t/p/w92${p.logo_path}`
-			: undefined,
-	}));
-	return (
-		<div className="space-y-3" role="group" aria-label="Streaming services">
-			<Select
-				selectItems={items}
-				selectedItems={items.filter((i) =>
-					j.serviceIds.includes(Number(i.key)),
-				)}
-				withMultiSelection
-				withSearch
-				onSelect={(items) =>
-					j.update({ services: items.map((i) => i.key).join(",") })
-				}
-			/>
-			<Checkbox
-				key={j.setting("paid")}
-				option={{ name: "search-include-paid", label: "Include rent and buy" }}
-				defaultChecked={j.setting("paid") === "1"}
-				onChange={(yes) => j.update({ paid: yes ? "1" : null })}
-			/>
-			{!j.serviceIds.length && (
-				<p className="text-xs text-amber-200">
-					Choose services to check availability.
-				</p>
-			)}
-			{j.watch.isError && (
-				<p className="text-xs text-amber-200">
-					Availability could not be checked; results remain visible.
-				</p>
-			)}
-		</div>
-	);
-}
-export function JourneyFilters({ inline = false }: { inline?: boolean }) {
-	const j = useSearchJourney()!;
-	const [added, setAdded] = useState<FilterKey[]>([]);
-	const [editing, setEditing] = useState<FilterKey | null>(null);
-	const { data: genres = [] } = useGenres();
-	const all = Object.keys(filterNames) as FilterKey[];
-	const visible = all.filter(
-		(k) =>
-			added.includes(k) ||
-			(k === "minYear" && Boolean(j.setting("maxYear"))) ||
-			(k === "country"
-				? j.setting(k, "DE") !== "DE"
-				: j.setting(k) && j.setting(k) !== "all"),
-	);
-	const reset = () =>
+type FilterKey = "type" | "streaming" | "genre" | "release"
+const filterKeys: FilterKey[] = ["type", "streaming", "genre", "release"]
+// Every search filter renders the matching Discover section, so both pages
+// share one look. Only the URL parameters differ.
+export function JourneyFilters() {
+	const j = useSearchJourney()!
+	const [added, setAdded] = useState<FilterKey[]>([])
+	const [editing, setEditing] = useState<FilterKey | null>(null)
+	const { data: genres = [] } = useGenres()
+	const hasValue: Record<FilterKey, boolean> = {
+		type: j.setting("type", "all") !== "all",
+		streaming: Boolean(j.setting("streamingPreset")),
+		genre: Boolean(j.setting("genre")),
+		release: Boolean(j.setting("minYear") || j.setting("maxYear")),
+	}
+	const visible = filterKeys.filter((k) => added.includes(k) || hasValue[k])
+	const reset = () => {
 		j.update(
 			Object.fromEntries(
 				refinements.filter((k) => k !== "country").map((k) => [k, null]),
 			),
-		);
-	if (inline) {
-		const remove = (field: FilterKey) => {
-			j.update({
-				[field]: null,
-				...(field === "minYear" ? { maxYear: null } : {}),
-				...(field === "availability" ? { services: null, paid: null } : {}),
-			});
-			setAdded((a) => a.filter((k) => k !== field));
-			setEditing(null);
-		};
-		// Closing the editor keeps the chip only when the filter has a value.
-		const close = (field: FilterKey) => {
-			setAdded((a) => a.filter((k) => k !== field));
-			setEditing(null);
-		};
-		const summaries: Record<FilterKey, string> = {
-			type: j.setting("type", "all"),
-			genre:
-				j.setting("genre").split(",").filter(Boolean).join(" + ") ||
-				"Any genre",
-			minYear:
-				j.setting("minYear") || j.setting("maxYear")
-					? `${j.setting("minYear", "Any")} – ${j.setting("maxYear", "today")}`
-					: "Any year",
-			country: j.setting("country", "DE"),
-			availability:
-				j.mode === "all"
-					? "Explore everything"
-					: `${j.mode === "only" ? "Only" : "Prefer"} my services (${j.serviceIds.length})`,
-		};
-		return (
-			<div aria-label="Inline search filters" className="relative">
-				<div className="flex flex-wrap gap-4 mb-3 text-sm text-gray-300">
-					<label className="flex items-center gap-2">
-						<input
-							type="checkbox"
-							checked={j.setting("lesserKnown") === "1"}
-							onChange={(e) =>
-								j.update({ lesserKnown: e.target.checked ? "1" : null })
-							}
-						/>
-						Include lesser-known titles
-					</label>
-				</div>
-				<div className="flex flex-wrap items-stretch gap-1 mb-3 text-sm">
-					{visible.map((field) =>
-						field === "type" ? (
-							<SectionType
-								key={field}
-								value={
-									j.setting("type", "all") === "all"
-										? undefined
-										: (j.setting("type") as TitleType)
-								}
-								onChange={(type) => j.update({ type: type ?? null })}
-								editing={editing === "type"}
-								onEdit={() => setEditing("type")}
-								onClose={() => close("type")}
-							/>
-						) : field === "genre" ? (
-							<SectionGenre
-								key={field}
-								params={{
-									withGenres: genres
-										.filter((g) =>
-											j.setting("genre").split(",").includes(g.name),
-										)
-										.map((g) => g.id)
-										.join(","),
-								}}
-								editing={editing === "genre"}
-								onEdit={() => setEditing("genre")}
-								onClose={() => close("genre")}
-								onChange={({ withGenres }) =>
-									j.update({
-										genre:
-											genres
-												.filter((g) =>
-													withGenres.split(",").includes(String(g.id)),
-												)
-												.map((g) => g.name)
-												.join(",") || null,
-									})
-								}
-							/>
-						) : field === "minYear" ? (
-							<SectionRelease
-								key={field}
-								params={{
-									minYear: j.setting("minYear") || undefined,
-									maxYear: j.setting("maxYear") || undefined,
-								}}
-								editing={editing === "minYear"}
-								initializeOnEdit={false}
-								onEdit={() => setEditing("minYear")}
-								onClose={() => close("minYear")}
-								onChange={(years) =>
-									j.update({
-										minYear: years.minYear || null,
-										maxYear: years.maxYear || null,
-									})
-								}
-							/>
-						) : (
-							<Fragment key={field}>
-								<FilterChip
-									label={filterNames[field]}
-									color={filterColors[field]}
-									isEditing={editing === field}
-									onEdit={() =>
-										editing === field ? close(field) : setEditing(field)
-									}
-									onRemove={() => remove(field)}
-								>
-									<Tag>{summaries[field]}</Tag>
-								</FilterChip>
-								{editing === field && (
-									<div className="order-last basis-full flex">
-									<div className="flex min-w-[min(24rem,100%)] max-w-full">
-										<FilterBarSection
-											label={filterNames[field]}
-											color={filterColors[field]}
-											isActive
-											onClick={() => close(field)}
-											onRemove={() => remove(field)}
-										>
-											<div className="w-full max-w-sm space-y-3">
-												<FilterField field={field} />
-												{field === "availability" && j.mode !== "all" && (
-													<ServiceSelection />
-												)}
-											</div>
-										</FilterBarSection>
-									</div>
-									</div>
-								)}
-							</Fragment>
-						),
-					)}
-					<AddFilterMenu
-						options={all
-							.filter((k) => !visible.includes(k))
-							.map((k) => ({
-								key: k,
-								label: filterNames[k],
-								color: filterColors[k],
-							}))}
-						onSelect={(field) => {
-							setAdded((a) => [...a, field]);
-							setEditing(field);
-						}}
-					/>
-					{visible.length > 0 && (
-						<button
-							type="button"
-							className="text-xs text-gray-400 px-2 cursor-pointer hover:text-white"
-							onClick={() => {
-								reset();
-								setAdded([]);
-								setEditing(null);
-							}}
-						>
-							Reset
-						</button>
-					)}
-				</div>
-			</div>
-		);
+		)
+		setAdded([])
+		setEditing(null)
 	}
-
+	// Closing the editor keeps the chip only when the filter has a value.
+	const close = (field: FilterKey) => {
+		setAdded((a) => a.filter((k) => k !== field))
+		setEditing(null)
+	}
+	const section = (field: FilterKey) => ({
+		editing: editing === field,
+		onEdit: () => setEditing(field),
+		onClose: () => close(field),
+	})
 	return (
-		<div aria-label="Search filter sidebar" className="space-y-3">
-			<div className="flex items-center justify-between">
-				<h2 className="font-semibold text-gray-100">Filters</h2>
-				<button
-					className="text-xs text-gray-400 hover:text-white"
-					onClick={reset}
-				>
-					Reset
-				</button>
+		<div aria-label="Search filters" className="relative">
+			<div className="flex flex-wrap gap-4 mb-3 text-sm text-gray-300">
+				<label className="flex items-center gap-2">
+					<input
+						type="checkbox"
+						checked={j.setting("lesserKnown") === "1"}
+						onChange={(e) =>
+							j.update({ lesserKnown: e.target.checked ? "1" : null })
+						}
+					/>
+					Include lesser-known titles
+				</label>
 			</div>
-			{all.map((field) => (
-				<FilterBarSection
-					key={field}
-					color={filterColors[field]}
-					isActive={false}
-				>
-					<FilterField field={field} />
-				</FilterBarSection>
-			))}
-			{j.mode !== "all" && (
-				<FilterBarSection color="green" isActive={false}>
-					<div className="w-full">
-						<ServiceSelection />
-					</div>
-				</FilterBarSection>
+			<div className="flex flex-wrap items-stretch gap-1 mb-3 text-sm">
+				{visible.includes("type") && (
+					<SectionType
+						value={hasValue.type ? (j.setting("type") as TitleType) : undefined}
+						onChange={(type) => j.update({ type: type ?? null })}
+						{...section("type")}
+					/>
+				)}
+				{visible.includes("streaming") && (
+					<SectionStreaming
+						params={{
+							streamingPreset:
+								(j.setting("streamingPreset") as StreamingPreset) || undefined,
+							withStreamingProviders: j.setting("services"),
+							country: j.setting("country"),
+						}}
+						presets={["mine", "custom"]}
+						defaultPreset="custom"
+						onChange={(changes) =>
+							j.update({
+								...("streamingPreset" in changes
+									? { streamingPreset: changes.streamingPreset ?? null }
+									: {}),
+								...("withStreamingProviders" in changes
+									? { services: changes.withStreamingProviders || null }
+									: {}),
+								...(changes.country ? { country: changes.country } : {}),
+							})
+						}
+						{...section("streaming")}
+					/>
+				)}
+				{visible.includes("genre") && (
+					<SectionGenre
+						params={{
+							withGenres: genres
+								.filter((g) => j.setting("genre").split(",").includes(g.name))
+								.map((g) => g.id)
+								.join(","),
+						}}
+						onChange={({ withGenres }) =>
+							j.update({
+								genre:
+									genres
+										.filter((g) => withGenres.split(",").includes(String(g.id)))
+										.map((g) => g.name)
+										.join(",") || null,
+							})
+						}
+						{...section("genre")}
+					/>
+				)}
+				{visible.includes("release") && (
+					<SectionRelease
+						params={{
+							minYear: j.setting("minYear") || undefined,
+							maxYear: j.setting("maxYear") || undefined,
+						}}
+						initializeOnEdit={false}
+						onChange={(years) =>
+							j.update({
+								minYear: years.minYear || null,
+								maxYear: years.maxYear || null,
+							})
+						}
+						{...section("release")}
+					/>
+				)}
+				<AddFilterMenu
+					options={filterKeys
+						.filter((k) => !visible.includes(k))
+						.map((k) => ({
+							key: k,
+							label: discoverFilters[k].label,
+							color: discoverFilters[k].color,
+						}))}
+					onSelect={(field) => {
+						setAdded((a) => [...a, field])
+						setEditing(field)
+					}}
+				/>
+				{visible.length > 0 && (
+					<button
+						type="button"
+						className="text-xs text-gray-400 px-2 cursor-pointer hover:text-white"
+						onClick={reset}
+					>
+						Reset
+					</button>
+				)}
+			</div>
+			{j.watch.isError && (
+				<p className="mb-3 text-xs text-amber-200">
+					Availability could not be checked; results remain visible.
+				</p>
 			)}
-			<p className="text-xs text-gray-500">
-				Filters apply to these search results.
-			</p>
 		</div>
-	);
+	)
 }
 export function JourneyNavigation({
 	current,
 }: { current: { tmdb_id: number; media_type: string; title: string } }) {
 	const j = useSearchJourney()!;
 	const [expanded, setExpanded] = useState(false);
-	if (!j.batch || !j.q || (!j.sequence.length && !j.hiddenTitles)) return null;
+	if (!j.batch || !j.q || (!j.sequence.length && !j.filtersActive)) return null;
 	return (
 		<nav
 			aria-label="Search result navigation"
@@ -1118,6 +960,8 @@ export function JourneyNavigation({
 								? `${j.index + 1} of ${j.sequence.length}`
 								: j.sequence.length
 									? "Outside filters"
+									: j.loading
+									? "Refining results…"
 									: "No titles match these filters"}
 						</span>
 						{j.index >= 0 && j.index < j.sequence.length - 1 ? (
@@ -1149,7 +993,7 @@ export function JourneyNavigation({
 				)}
 				{expanded && (
 					<div className="mt-4">
-						<JourneyFilters inline />
+						<JourneyFilters />
 					</div>
 				)}
 			</div>
@@ -1161,7 +1005,7 @@ export function JourneyResultsPage() {
 		<div className="search-private ph-no-capture sentry-mask mx-auto max-w-7xl p-4 sm:p-6 pb-36">
 			<h1 className="text-3xl text-white mt-2 mb-5">Find your next watch</h1>
 			<div className="mb-4">
-				<JourneyFilters inline />
+				<JourneyFilters />
 			</div>
 			<div className="min-w-0 rounded-xl border border-gray-700 bg-gray-950/30">
 				<JourneyList />

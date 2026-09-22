@@ -16,6 +16,7 @@ import {
 	Meta,
 	Scripts,
 	ScrollRestoration,
+	type ShouldRevalidateFunction,
 	useLoaderData,
 	useLocation,
 	useRouteError,
@@ -104,6 +105,23 @@ type LoaderData = {
 		SUPABASE_URL: string
 		SUPABASE_ANON_KEY: string
 	}
+}
+
+// Root data (user, locale, env) never depends on the query string, so filter and
+// search text changes must not rerun the auth check and the user data prefetch.
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+	currentUrl,
+	nextUrl,
+	formMethod,
+	defaultShouldRevalidate,
+}) => {
+	if (
+		!formMethod &&
+		currentUrl.pathname === nextUrl.pathname &&
+		currentUrl.search !== nextUrl.search
+	)
+		return false
+	return defaultShouldRevalidate
 }
 
 export const loader: LoaderFunction = async ({

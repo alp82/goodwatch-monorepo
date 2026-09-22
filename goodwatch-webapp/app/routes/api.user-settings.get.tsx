@@ -132,11 +132,18 @@ export const useOnboardingRequired = () => {
 
 export const useUserStreamingProviders = () => {
 	const userSettings = useUserSettings()
-	const streamingProviders = useStreamingProviders()
-
 	const streamingProviderIds = (
 		userSettings.data?.streaming_providers_default || ""
-	).split(",")
+	)
+		.split(",")
+		.filter(Boolean)
+	const streamingProviders = useStreamingProviders({
+		country: userSettings.data?.country_default,
+		include: streamingProviderIds,
+		// Without a saved country there is nothing to match; skip the full list.
+		enabled: Boolean(userSettings.data?.country_default),
+	})
+
 	return (streamingProviders?.data || []).filter((provider) => {
 		return streamingProviderIds.includes(provider.id.toString())
 	})

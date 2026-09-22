@@ -20,8 +20,19 @@ import { useNav } from "~/utils/navigation"
 
 const EVERYWHERE_LIMIT = 3
 
+type StreamingParams = Pick<
+	DiscoverParams,
+	| "streamingPreset"
+	| "withStreamingProviders"
+	| "withStreamingTypes"
+	| "country"
+>
+
 interface SectionStreamingParams {
-	params: DiscoverParams
+	params: Partial<StreamingParams>
+	presets?: StreamingPreset[]
+	defaultPreset?: StreamingPreset
+	onChange?: (params: Partial<StreamingParams>) => void
 	editing: boolean
 	onEdit: () => void
 	onClose: () => void
@@ -29,6 +40,9 @@ interface SectionStreamingParams {
 
 export default function SectionStreaming({
 	params,
+	presets = ["everywhere", "mine", "custom"],
+	defaultPreset = "everywhere",
+	onChange,
 	editing,
 	onEdit,
 	onClose,
@@ -55,32 +69,34 @@ export default function SectionStreaming({
 	// tabs
 
 	const [selectedTab, setSelectedTab] = React.useState<StreamingPreset>(
-		params.streamingPreset || "everywhere",
+		params.streamingPreset || defaultPreset,
 	)
-	const streamingTabs: Tab<StreamingPreset>[] = [
-		{
-			key: "everywhere",
-			label: "Everywhere",
-			current: selectedTab === "everywhere",
-		},
-		{
-			key: "mine",
-			label: "Mine",
-			current: selectedTab === "mine",
-			requiresLoginContent: (
-				<>
-					Only show what's available on your <strong>streaming services</strong>{" "}
-					in your <strong>country</strong> to quickly find what you're looking
-					for.
-				</>
-			),
-		},
-		{
-			key: "custom",
-			label: "Custom",
-			current: selectedTab === "custom",
-		},
-	]
+	const streamingTabs = (
+		[
+			{
+				key: "everywhere",
+				label: "Everywhere",
+				current: selectedTab === "everywhere",
+			},
+			{
+				key: "mine",
+				label: "Mine",
+				current: selectedTab === "mine",
+				requiresLoginContent: (
+					<>
+						Only show what's available on your{" "}
+						<strong>streaming services</strong> in your <strong>country</strong>{" "}
+						to quickly find what you're looking for.
+					</>
+				),
+			},
+			{
+				key: "custom",
+				label: "Custom",
+				current: selectedTab === "custom",
+			},
+		] as Tab<StreamingPreset>[]
+	).filter((tab) => presets.includes(tab.key))
 
 	// selection logic
 
@@ -95,7 +111,7 @@ export default function SectionStreaming({
 			if (!params.country) country = localCountry
 		}
 
-		updateQueryParams({
+		update({
 			streamingPreset,
 			withStreamingProviders,
 			country,
@@ -105,18 +121,14 @@ export default function SectionStreaming({
 	const { user } = useUser()
 	useEffect(() => {
 		if (!editing || params.streamingPreset) {
-			setSelectedTab(params.streamingPreset || "everywhere")
+			setSelectedTab(params.streamingPreset || defaultPreset)
 			return
 		}
 
-		const streamingPreset = "everywhere"
-		onSelectStreamingPreset(streamingPreset)
+		onSelectStreamingPreset(defaultPreset)
 	}, [user?.id, params.streamingPreset, editing])
 
 	// data retrieval
-
-	const streamingProvidersResult = useStreamingProviders()
-	const streamingProviders = streamingProvidersResult?.data || []
 
 	const userStreamingProviders = useUserStreamingProviders()
 	let streamingProviderIds: string[] = []
@@ -142,6 +154,13 @@ export default function SectionStreaming({
 	} else {
 		country = localCountry
 	}
+	// Only the providers of the shown country, plus the selected ones.
+	const streamingProvidersResult = useStreamingProviders({
+		country: country || undefined,
+		include: streamingProviderIds.filter(Boolean),
+	})
+	const streamingProviders = streamingProvidersResult?.data || []
+
 	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`
 
 	// autocomplete data
@@ -171,22 +190,14 @@ export default function SectionStreaming({
 
 	// update handlers
 
-	const { updateQueryParams } =
-		useNav<
-			Pick<
-				DiscoverParams,
-				| "streamingPreset"
-				| "withStreamingProviders"
-				| "withStreamingTypes"
-				| "country"
-			>
-		>()
+	const { updateQueryParams } = useNav<StreamingParams>()
+	const update = onChange ?? updateQueryParams
 
 	const handleSelectStreamingProviders = (selectedItems: SelectItem[]) => {
 		const withStreamingProviders = selectedItems
 			.map((item) => item.key)
 			.join(",")
-		updateQueryParams({
+		update({
 			withStreamingProviders,
 		})
 		localStorage.setItem("withStreamingProviders", withStreamingProviders)
@@ -194,7 +205,7 @@ export default function SectionStreaming({
 
 	const handleSelectCountry = (selectedItem: SelectItem) => {
 		const country = selectedItem.key
-		updateQueryParams({
+		update({
 			country,
 		})
 		localStorage.setItem("country", country)
@@ -202,14 +213,14 @@ export default function SectionStreaming({
 
 	const handleIncludeBuyRentChange = (checked: boolean) => {
 		const withStreamingTypes = checked ? "flatrate,free,buy,rent" : ""
-		updateQueryParams({
+		update({
 			withStreamingTypes,
 		})
 	}
 
 	const handleRemoveAll = () => {
 		onClose()
-		updateQueryParams({
+		update({
 			streamingPreset: undefined,
 			withStreamingProviders: "",
 			country: "",

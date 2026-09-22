@@ -16,12 +16,15 @@ import { queryKeyCast } from "~/routes/api.cast"
 import { queryKeyCountries } from "~/routes/api.countries"
 import { queryKeyCrew } from "~/routes/api.crew"
 import { queryKeyGenres } from "~/routes/api.genres.all"
-import { queryKeyStreamingProviders } from "~/routes/api.streaming-providers"
+import { getQueryKeyStreamingProviders } from "~/routes/api.streaming-providers"
 import { getCast } from "~/server/cast.server"
 import { getCountries } from "~/server/countries.server"
 import { getCrew } from "~/server/crew.server"
 import { getGenresUnique } from "~/server/genres.server"
-import { getStreamingProviders } from "~/server/streaming-providers.server"
+import {
+	getStreamingProviders,
+	slimStreamingProviders,
+} from "~/server/streaming-providers.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import {
 	type DiscoverParams,
@@ -109,6 +112,9 @@ export const loader = async ({
 	const withoutCrew = urlParams.get("withoutCrew") || ""
 	const hasStreaming =
 		urlParams.has("streamingPreset") || urlParams.has("withStreamingProviders")
+	const selectedProviderIds = (baseParams.withStreamingProviders || "")
+		.split(",")
+		.filter(Boolean)
 	const chipPromises = [
 		hasStreaming && prefetchUserSettings({ queryClient, request }),
 		(urlParams.has("withGenres") || urlParams.has("withoutGenres")) &&
@@ -128,8 +134,17 @@ export const loader = async ({
 			}),
 		hasStreaming &&
 			queryClient.prefetchQuery({
-				queryKey: queryKeyStreamingProviders,
-				queryFn: () => getStreamingProviders({ country: baseParams.country }),
+				// Same key and list as SectionStreaming requests for this country
+				queryKey: getQueryKeyStreamingProviders({
+					country: baseParams.country,
+					include: selectedProviderIds,
+				}),
+				queryFn: async () =>
+					slimStreamingProviders(
+						await getStreamingProviders({ country: baseParams.country }),
+						baseParams.country,
+						selectedProviderIds.map(Number),
+					),
 			}),
 		hasStreaming &&
 			queryClient.prefetchQuery({

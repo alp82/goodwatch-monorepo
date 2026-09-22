@@ -70,3 +70,24 @@ export async function _getStreamingProviders(
 		`Failed to fetch streaming providers for country: ${params.country}`,
 	)
 }
+
+// The browser needs id, name and logo only; the per-country order map is about 40%
+// of the payload. With a country, keep its providers plus the selected ones.
+export const slimStreamingProviders = (
+	providers: StreamingProviderResults,
+	country?: string,
+	include: number[] = [],
+): StreamingProviderResults =>
+	providers
+		.filter(
+			(provider) =>
+				!country ||
+				provider.order_by_country?.[country] != null ||
+				include.includes(provider.id),
+		)
+		.map(({ id, name, logo_path, order_default }) => ({
+			id,
+			name,
+			logo_path,
+			order_default,
+		}))
