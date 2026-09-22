@@ -61,19 +61,40 @@ export async function action({ request }: ActionFunctionArgs) {
 			: null;
 		const networkIdentity =
 			address && isIP(address) ? address : "shared-unverified-ingress";
-		return json(
-			await combinedSearch(
-				q,
-				{
-					includeAdult: false,
-					lesserKnown: body.lesserKnown === true,
-					filters,
-				},
-				{ accountId: user?.id || null, networkIdentity },
-				request.signal,
-			),
-			{ headers },
-		);
+		// Newline-delimited JSON: a "reading" line as soon as the interpretation is known,
+		// then the "batch" line with the results. "no-transform" keeps the compression
+		// middleware from holding the first line back until the response ends.
+		const encoder = new TextEncoder();
+		const stream = new ReadableStream({
+			async start(controller) {
+				const send = (message: object) =>
+					controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
+				try {
+					const batch = await combinedSearch(
+						q,
+						{
+							includeAdult: false,
+							lesserKnown: body.lesserKnown === true,
+							filters,
+						},
+						{ accountId: user?.id || null, networkIdentity },
+						request.signal,
+						(reading) => send({ kind: "reading", reading }),
+					);
+					send({ kind: "batch", batch });
+				} catch {
+					send({
+						kind: "error",
+						error: "Search is unavailable. Your previous results are kept.",
+					});
+				} finally {
+					controller.close();
+				}
+			},
+		});
+		headers.set("Content-Type", "application/x-ndjson; charset=utf-8");
+		headers.set("Cache-Control", "private, no-store, no-transform");
+		return new Response(stream, { headers });
 	} catch {
 		return json(
 			{ error: "Search is unavailable. Your previous results are kept." },

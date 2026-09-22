@@ -15,14 +15,59 @@ import {
 	toCrateSql,
 	toQdrantMust,
 } from "./search-filters";
+// --- Tunables ----------------------------------------------------------------------------
+// Every threshold and weight of the search lives here. Probabilities are Jev outputs in 0..1.
+
+// How many titles a search returns.
+const RESULT_LIMIT = 100;
+// A flag or genre becomes "required" or "excluded" when Jev's probability for that choice
+// reaches this value. Below it, the flag is ignored.
+const FLAG_DECISION_PROBABILITY = 0.5;
+// A request word counts as concrete (a thing worth a text search) at this probability.
+// Mood and style words stay below it and are covered by the fingerprint dimensions instead.
+const CONCRETE_WORD_PROBABILITY = 0.6;
+// Ask Jev only the attribute flags, the concrete-word questions, and the phrase choice. The
+// genre, request-shape, and "mention" questions only serve hidden columns. Questions can't see
+// one another, so leaving some out doesn't change the remaining answers.
+const LEAN_ATTRIBUTE_QUESTIONS = true;
+// A fingerprint dimension weighs 2 * (want - avoid), so it ranges from -2 to 2. It enters the
+// query vector when the net want reaches WANT_WEIGHT_MIN or the net avoid reaches
+// AVOID_WEIGHT_MIN. Avoiding needs a stronger signal because it excludes more than it finds.
+const WANT_WEIGHT_MIN = 0.5;
+const AVOID_WEIGHT_MIN = 1.2;
+// Upper bound on dimensions in the query vector. Set above the dimension count, so it never cuts.
+const MAX_QUERY_DIMENSIONS = 74;
+// A trope match adds up to this much to a title's normalized 0..1 base score.
+const TROPE_MATCH_WEIGHT = 1;
+// Genre decisions shift the normalized score: added per required genre the title has,
+// subtracted per excluded genre it has.
+const REQUIRED_GENRE_BOOST = 0.3;
+const EXCLUDED_GENRE_PENALTY = 0.5;
+// How many titles each essence text search fetches from Crate before ranking.
+const TEXT_POOL_SIZE = 300;
+// Text evidence (number of matching text clauses, capped) is added to the normalized fingerprint
+// score with this weight.
+const TEXT_EVIDENCE_WEIGHT = 0.5;
+const TEXT_EVIDENCE_CAP = 4;
+// Also search Jev's second-best phrase when it reaches this probability.
+const SECOND_PHRASE_PROBABILITY = 0.15;
+// How many fingerprint dimensions the reading chips show to the person.
+const READING_CHIP_DIMENSIONS = 8;
+// Fingerprint scores run 0..10. A result gets a reason chip for a wanted dimension at or above
+// STRONG_SCORE_MIN, and for an avoided dimension at or below WEAK_SCORE_MAX. The opposite
+// cases become "mismatch" reasons, which the UI hides.
+const STRONG_SCORE_MIN = 6;
+const WEAK_SCORE_MAX = 4;
+
+const isQueryDimension = (d: { weight: number }) =>
+	d.weight >= WANT_WEIGHT_MIN || d.weight <= -AVOID_WEIGHT_MIN;
+
 export interface Eligibility {
 	includeAdult: boolean;
 	lesserKnown: boolean;
 	// Chip filters, validated by the route. ANDed with the flags; a chip type overrides a media flag.
 	filters?: SearchFilters;
 }
-const RESULTS = 100;
-const FLAG_THRESHOLD = 0.6;
 type Key = (typeof VALID_FINGERPRINT_KEYS)[number];
 const label = (key: string) => FINGERPRINT_META[key]?.label ?? key;
 const describe = (key: string) =>
@@ -253,8 +298,6 @@ const phraseCandidates = (request: string) => {
 // D4+ uses the attribute flags, the concrete-word questions, and the phrase choice. The genre,
 // request-shape, and "mention" questions only serve hidden columns, so they are left out.
 // Questions can't see one another, so leaving some out doesn't change the remaining answers.
-const LEAN_ATTRIBUTES = true;
-const CONCRETE = 0.6;
 const contentWords = (request: string) =>
 	[...new Set(tropeTerms(request).split(" ").filter(Boolean))].slice(0, 12);
 
@@ -297,7 +340,7 @@ export const attributeRequest = (request: string): SystemOneRequest => {
 						},
 					};
 	}
-	for (const genre of LEAN_ATTRIBUTES ? [] : GENRES) {
+	for (const genre of LEAN_ATTRIBUTE_QUESTIONS ? [] : GENRES) {
 		questions[`genre:${genre.id}`] = {
 			type: "choice",
 			instructions: `A person describes what they want to watch in \`request\`. What does the request say about the genre "${genre.id}"?`,
@@ -310,7 +353,7 @@ export const attributeRequest = (request: string): SystemOneRequest => {
 			},
 		};
 	}
-	if (!LEAN_ATTRIBUTES)
+	if (!LEAN_ATTRIBUTE_QUESTIONS)
 		questions.covered = {
 			type: "noul",
 			instructions:
@@ -321,7 +364,7 @@ export const attributeRequest = (request: string): SystemOneRequest => {
 					"Some part of the request names a specific thing, motif, plot device, or character type that none of the listed qualities can express",
 			},
 		};
-	if (!LEAN_ATTRIBUTES)
+	if (!LEAN_ATTRIBUTE_QUESTIONS)
 		questions.specific = {
 			type: "noul",
 			instructions:
@@ -343,7 +386,7 @@ export const attributeRequest = (request: string): SystemOneRequest => {
 	});
 	// D5: would a written description of the ideal title mention this word? Unlike the concrete
 	// question, this one follows the direction of the request: "little action" scores low.
-	if (!LEAN_ATTRIBUTES)
+	if (!LEAN_ATTRIBUTE_QUESTIONS)
 		words.forEach((_, i) => {
 			questions[`mention:${i}`] = {
 				type: "noul",
@@ -396,7 +439,7 @@ const decodeAttributes = (request: string, answers: Record<string, Answer>) => {
 		return {
 			word,
 			concrete,
-			isConcrete: concrete >= CONCRETE,
+			isConcrete: concrete >= CONCRETE_WORD_PROBABILITY,
 			mention: (answers[`mention:${i}`] as NoulAnswer | undefined)?.noul ?? 0,
 		};
 	});
@@ -414,9 +457,9 @@ const decodeAttributes = (request: string, answers: Record<string, Answer>) => {
 			required,
 			excluded,
 			decision:
-				required >= FLAG_THRESHOLD
+				required >= FLAG_DECISION_PROBABILITY
 					? "required"
-					: excluded >= FLAG_THRESHOLD
+					: excluded >= FLAG_DECISION_PROBABILITY
 						? "excluded"
 						: null,
 		};
@@ -432,9 +475,9 @@ const decodeAttributes = (request: string, answers: Record<string, Answer>) => {
 			required,
 			excluded,
 			decision:
-				required >= FLAG_THRESHOLD
+				required >= FLAG_DECISION_PROBABILITY
 					? "required"
-					: excluded >= FLAG_THRESHOLD
+					: excluded >= FLAG_DECISION_PROBABILITY
 						? "excluded"
 						: null,
 		};
@@ -566,8 +609,6 @@ export interface Result {
 
 // --- Trope layer (Crate full-text, no Jev call) -------------------------------------------
 
-const TROPE_GATE = 0.6;
-const TROPE_WEIGHT = 1;
 const NEGATIONS =
 	/^(not|no|non|without|never|nothing|little|less|few|fewer|minimal|low|barely|hardly)\b/;
 const STOPWORDS = new Set(
@@ -663,19 +704,17 @@ interface Query {
 	weights: Partial<Record<Key, number>>;
 	vector: number[];
 	order: "weighted_sum" | "cosine";
-	// Decided genres shift the normalized score: +GENRE_BOOST per required genre the title has,
-	// -GENRE_PENALTY per excluded genre it has. Empty means no genre layer.
+	// Decided genres shift the normalized score by REQUIRED_GENRE_BOOST and
+	// EXCLUDED_GENRE_PENALTY. Empty means no genre layer.
 	genres: GenreJudgment[];
 }
-const GENRE_BOOST = 0.3;
-const GENRE_PENALTY = 0.5;
 
 const retrieve = async (
 	reading: Query,
 	flags: FlagJudgment[],
 	tropeQuery: string,
 	eligibility: Eligibility,
-	resultLimit = RESULTS,
+	resultLimit = RESULT_LIMIT,
 ) => {
 	const started = Date.now();
 	const empty = {
@@ -708,7 +747,10 @@ const retrieve = async (
 				(name) => genres?.includes(name),
 			);
 			if (!has) continue;
-			shift += g.decision === "required" ? GENRE_BOOST : -GENRE_PENALTY;
+			shift +=
+				g.decision === "required"
+					? REQUIRED_GENRE_BOOST
+					: -EXCLUDED_GENRE_PENALTY;
 			if (g.decision === "required") matched.push(g.id);
 		}
 		return { shift, matched };
@@ -737,7 +779,7 @@ const retrieve = async (
 	]);
 	const tropeMs = tropeQuery ? Date.now() - tropeStarted : 0;
 
-	// Base score is normalized to 0..1 within the pool, then a trope match adds up to TROPE_WEIGHT
+	// Base score is normalized to 0..1 within the pool, then a trope match adds up to TROPE_MATCH_WEIGHT
 	const base = (p: (typeof pool)[number]) =>
 		reading.order === "weighted_sum" ? p.weightedSum : p.cosine;
 	const values = pool.map(base);
@@ -752,7 +794,7 @@ const retrieve = async (
 				combined:
 					(base(p) - min) / span +
 					p.genre.shift +
-					TROPE_WEIGHT * (matches[0]?.score ?? 0),
+					TROPE_MATCH_WEIGHT * (matches[0]?.score ?? 0),
 			};
 		})
 		.sort((a, b) => b.combined - a.combined || b.cosine - a.cosine)
@@ -795,16 +837,16 @@ const retrieve = async (
 		for (const [key, weight] of used) {
 			const value = scores[key];
 			if (typeof value !== "number") continue;
-			if (weight > 0 && value >= 7)
+			if (weight > 0 && value >= STRONG_SCORE_MIN)
 				reasons.push({ text: `${label(key)} ${value}`, kind: "dimension" });
-			else if (weight < 0 && value <= 3)
+			else if (weight < 0 && value <= WEAK_SCORE_MAX)
 				reasons.push({ text: `low ${label(key)} ${value}`, kind: "dimension" });
-			else if (weight > 0 && value <= 3)
+			else if (weight > 0 && value <= WEAK_SCORE_MAX)
 				reasons.push({
 					text: `but ${label(key)} only ${value}`,
 					kind: "mismatch",
 				});
-			else if (weight < 0 && value >= 7)
+			else if (weight < 0 && value >= STRONG_SCORE_MIN)
 				reasons.push({ text: `but ${label(key)} ${value}`, kind: "mismatch" });
 		}
 		return {
@@ -836,10 +878,6 @@ const retrieve = async (
 		pool: pool.length,
 	};
 };
-
-const TEXT_POOL = 300;
-const TEXT_BLEND = 0.5;
-const OPTIONAL_BONUS = 0.15;
 
 // No stemming in the index: search the word with and without a plural ending
 const wordForms = (word: string) =>
@@ -895,7 +933,7 @@ interface TextRow {
 }
 
 interface PhraseSpec {
-	// Search the second phrase too when Jev gives it SECOND_PHRASE or more. Matching both ranks first.
+	// Search the second phrase too when Jev gives it SECOND_PHRASE_PROBABILITY or more. Matching both ranks first.
 	twoPhrases?: boolean;
 	// No text search when the best phrase is one word that Jev marked as not concrete
 	moodGate?: boolean;
@@ -903,12 +941,9 @@ interface PhraseSpec {
 	wider?: boolean;
 	// Jev selects, among the frequent tags of the first matches, the tags that express the request
 	feedback?: boolean;
-	// Jev reads the request against the essence text of the top JUDGED titles and re-orders them
+	// Jev reads the request against the essence text of the top titles and re-orders them
 	judge?: boolean;
 }
-const SECOND_PHRASE = 0.15;
-const JUDGED = 30;
-const FEEDBACK_TAGS = 24;
 
 interface PoolRow {
 	key: string;
@@ -926,7 +961,7 @@ const runPhraseVariant = async (
 	attributes: ReturnType<typeof decodeAttributes>,
 	vectorQuery: Query,
 	eligibility: Eligibility,
-	resultLimit = RESULTS,
+	resultLimit = RESULT_LIMIT,
 ) => {
 	const started = Date.now();
 	const notes: string[] = [];
@@ -957,7 +992,7 @@ const runPhraseVariant = async (
 					const rows = await query<Record<string, unknown>>(
 						`SELECT tmdb_id, essence_tags${fpColumns ? `, ${fpColumns}` : ""}${scored ? ", _score" : ""} FROM ${table}
 						 WHERE ${eligibility.lesserKnown ? "true" : "goodwatch_overall_score_voting_count >= 2000"} AND ${eligibility.includeAdult ? "true" : "NOT coalesce(adult, false)"} AND essence_text IS NOT NULL${chips.sql}
-						 AND ${clause.sql}${filter}${scored ? " ORDER BY _score DESC" : ""} LIMIT ${TEXT_POOL}`,
+						 AND ${clause.sql}${filter}${scored ? " ORDER BY _score DESC" : ""} LIMIT ${TEXT_POOL_SIZE}`,
 						[...chips.params, ...clause.params],
 					);
 					return rows.map((row) => ({
@@ -1048,7 +1083,7 @@ const runPhraseVariant = async (
 			best,
 			...(spec.twoPhrases &&
 			phrases[1] &&
-			phrases[1].probability >= SECOND_PHRASE
+			phrases[1].probability >= SECOND_PHRASE_PROBABILITY
 				? [phrases[1]]
 				: []),
 		];
@@ -1145,7 +1180,7 @@ const runPhraseVariant = async (
 	let ranked = rows
 		.map((r) => ({
 			...r,
-			combined: (r.weightedSum - min) / span + TEXT_BLEND * Math.min(r.text, 4),
+			combined: (r.weightedSum - min) / span + TEXT_EVIDENCE_WEIGHT * Math.min(r.text, TEXT_EVIDENCE_CAP),
 		}))
 		.sort((a, b) => b.combined - a.combined)
 		.slice(0, resultLimit);
@@ -1177,16 +1212,16 @@ const runPhraseVariant = async (
 		for (const [key, weight] of used) {
 			const value = scores[key];
 			if (typeof value !== "number") continue;
-			if (weight > 0 && value >= 7)
+			if (weight > 0 && value >= STRONG_SCORE_MIN)
 				reasons.push({ text: `${label(key)} ${value}`, kind: "dimension" });
-			else if (weight < 0 && value <= 3)
+			else if (weight < 0 && value <= WEAK_SCORE_MAX)
 				reasons.push({ text: `low ${label(key)} ${value}`, kind: "dimension" });
-			else if (weight > 0 && value <= 3)
+			else if (weight > 0 && value <= WEAK_SCORE_MAX)
 				reasons.push({
 					text: `but ${label(key)} only ${value}`,
 					kind: "mismatch",
 				});
-			else if (weight < 0 && value >= 7)
+			else if (weight < 0 && value >= STRONG_SCORE_MIN)
 				reasons.push({ text: `but ${label(key)} ${value}`, kind: "mismatch" });
 		}
 		const tagHits = (d?.essence_tags ?? [])
@@ -1254,6 +1289,68 @@ const runPhraseVariant = async (
 	};
 };
 
+export interface ReadingChip {
+	text: string;
+	// attribute: a required flag; excluded: a ruled-out flag; want/avoid: a fingerprint
+	// dimension the retrieval weights; phrase: text that the essence search looks for.
+	kind: "attribute" | "excluded" | "want" | "avoid" | "phrase";
+}
+// The interpretation shown to the person before results arrive. It uses the same
+// decisions, thresholds, and phrase rule as retrieveD4, so the chips describe what
+// the search actually looks for.
+export function summarizeReading(
+	request: string,
+	readings: [SystemOneResult<Questions>, SystemOneResult<Questions>],
+	nativeOnly: boolean,
+): ReadingChip[] {
+	const attributes = decodeAttributes(
+		request,
+		readings[0].answers as Record<string, Answer>,
+	);
+	const reading = decodeFingerprint(
+		readings[1].answers as Record<string, Answer>,
+	);
+	const weights = pick(reading.details, isQueryDimension, MAX_QUERY_DIMENSIONS);
+	const chips: ReadingChip[] = [];
+	for (const judgment of attributes.flags) {
+		if (!judgment.decision) continue;
+		const f = FLAGS.find((x) => x.id === judgment.id) as Flag;
+		const soft = f.id.startsWith("suitability_") || f.id.startsWith("context_");
+		if (judgment.decision === "excluded" && soft) continue;
+		if (judgment.decision === "required")
+			chips.push({ text: f.label, kind: "attribute" });
+		else chips.push({ text: `Not ${f.label.toLowerCase()}`, kind: "excluded" });
+	}
+	const dimensions = (Object.entries(weights) as [Key, number][])
+		.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+		.slice(0, READING_CHIP_DIMENSIONS);
+	for (const [key, weight] of dimensions)
+		chips.push({
+			text: weight > 0 ? label(key) : `Low ${label(key).toLowerCase()}`,
+			kind: weight > 0 ? "want" : "avoid",
+		});
+	if (!nativeOnly) {
+		const best = attributes.phrases[0];
+		const bestWord =
+			best && !best.phrase.includes(" ")
+				? attributes.split.find((w) => w.word === best.phrase)
+				: undefined;
+		const gated = Boolean(bestWord && !bestWord.isConcrete);
+		if (best && !gated) {
+			const searched = [
+				best,
+				...(attributes.phrases[1] &&
+				attributes.phrases[1].probability >= SECOND_PHRASE_PROBABILITY
+					? [attributes.phrases[1]]
+					: []),
+			];
+			for (const p of searched)
+				chips.push({ text: `“${p.phrase}”`, kind: "phrase" });
+		}
+	}
+	return chips;
+}
+
 export async function retrieveD4(
 	request: string,
 	readings: [SystemOneResult<Questions>, SystemOneResult<Questions>],
@@ -1267,11 +1364,7 @@ export async function retrieveD4(
 	const reading = decodeFingerprint(
 		readings[1].answers as Record<string, Answer>,
 	);
-	const weights = pick(
-		reading.details,
-		(d) => d.weight >= 0.6 || d.weight <= -1.2,
-		74,
-	);
+	const weights = pick(reading.details, isQueryDimension, MAX_QUERY_DIMENSIONS);
 	const vectorQuery: Query = {
 		weights,
 		vector: sparseVector(weights),

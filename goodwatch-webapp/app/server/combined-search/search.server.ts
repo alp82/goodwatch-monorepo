@@ -5,7 +5,9 @@ import {
 	attributeRequest,
 	fingerprintRequest,
 	retrieveD4,
+	summarizeReading,
 	type Eligibility,
+	type ReadingChip,
 	type Result,
 } from "./d4.server";
 import { toCrateSql } from "./search-filters";
@@ -28,6 +30,8 @@ import {
 export interface SearchBatch {
 	q: string;
 	rows: Row[];
+	// The interpretation the search used; empty when it ran as a basic search.
+	reading: ReadingChip[];
 	metadata: Metadata[];
 	errors: string[];
 	mode: string;
@@ -183,6 +187,9 @@ export async function combinedSearch(
 	policy: Eligibility,
 	visitor: JevStageInput["visitor"],
 	signal: AbortSignal,
+	// Called once the interpretation is known and before retrieval, so the caller can
+	// show it while the results are still on their way.
+	onReading?: (reading: ReadingChip[]) => void,
 ): Promise<SearchBatch> {
 	const started = Date.now(),
 		errors: string[] = [];
@@ -230,6 +237,15 @@ export async function combinedSearch(
 	});
 	chargedNano += outcome.chargedNano;
 	let results: Result[] = [];
+	let reading: ReadingChip[] = [];
+	if (outcome.kind !== "basic") {
+		reading = summarizeReading(
+			language.text,
+			outcome.readings,
+			language.policy.mode === "native-vector-only",
+		);
+		onReading?.(reading);
+	}
 	if (outcome.kind === "basic") {
 		errors.push(BASIC_SEARCH_MESSAGE);
 		try {
@@ -306,6 +322,7 @@ export async function combinedSearch(
 	return {
 		q,
 		rows,
+		reading,
 		metadata,
 		errors,
 		mode: language.policy.mode,

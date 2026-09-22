@@ -21,6 +21,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { Highlight, type Row } from "./search-model";
 import type { SearchBatch } from "~/server/combined-search/search.server";
+import type { ReadingChip } from "~/server/combined-search/d4.server";
 import { useGenres } from "~/routes/api.genres.all";
 import {
 	type SearchFilters,
@@ -36,6 +37,25 @@ import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
 import AddFilterMenu from "~/ui/filter/AddFilterMenu";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
+
+// --- Tunables ----------------------------------------------------------------------------
+
+// Wait this long after the last keystroke before sending the query to the server.
+const QUERY_DEBOUNCE_MS = 500;
+// Wait this long after the last filter change before refetching. Filter changes narrow the
+// shown batch at once; only the request waits, so dragging the year slider sends one request.
+const FILTER_DEBOUNCE_MS = 100;
+// A query shorter than this is not searched. Longer than this can't be typed.
+const MIN_QUERY_LENGTH = 2;
+const MAX_QUERY_LENGTH = 512;
+// Result batches kept in sessionStorage. Descriptive batches reach about 220 KB, and each
+// filter set adds one, so six stays well under the quota.
+const CACHED_BATCHES = 6;
+// Give up restoring the scroll position after this long, when the page never reaches it.
+const SCROLL_RESTORE_MS = 3000;
+// How many reason chips a result row shows, in the full and the compact layout.
+const RESULT_CHIPS = 5;
+const RESULT_CHIPS_COMPACT = 3;
 
 type Batch = SearchBatch & { cacheKey: string };
 const path = "/search";
@@ -70,6 +90,11 @@ function useController() {
 	const [ready, setReady] = useState(false);
 	const [batches, setBatches] = useState<Record<string, Batch>>({});
 	const [previous, setPrevious] = useState<Batch | null>(null);
+	// The interpretation arrives before the results, so it is kept apart from the batch.
+	const [reading, setReading] = useState<{
+		q: string;
+		chips: ReadingChip[];
+	} | null>(null);
 	const [revision, setRevision] = useState(0);
 	const positions = useRef<Record<string, number>>({});
 	const input = useRef<HTMLInputElement>(null);
@@ -140,7 +165,7 @@ function useController() {
 	}, [q, navigationType, location.search]);
 	useEffect(() => {
 		if (!active || !ready) return;
-		const timer = setTimeout(() => setRequested(q), 1000);
+		const timer = setTimeout(() => setRequested(q), QUERY_DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	}, [q, active, ready]);
 
@@ -194,7 +219,7 @@ function useController() {
 	// filters stop changing, so dragging the year slider sends one request.
 	const [settledFilters, setSettledFilters] = useState(filtersKey);
 	useEffect(() => {
-		const timer = setTimeout(() => setSettledFilters(filtersKey), 400);
+		const timer = setTimeout(() => setSettledFilters(filtersKey), FILTER_DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	}, [filtersKey]);
 	const search = useQuery({
@@ -206,7 +231,7 @@ function useController() {
 			requested === q &&
 			// "Mine" needs the saved services; searching before they load is wasted.
 			!(streamingPreset === "mine" && userSettingsQuery.isLoading) &&
-			requested.trim().length >= 2 &&
+			requested.trim().length >= MIN_QUERY_LENGTH &&
 			settledFilters === filtersKey &&
 			!batches[batchKey],
 		retry: false,
@@ -224,21 +249,46 @@ function useController() {
 					filters,
 				}),
 			});
-			const body = await response.json();
-			if (!response.ok)
-				throw new Error(
-					body.error ??
-						"Search is unavailable. Your previous results are kept.",
-				);
-			return { ...body, q: requested, cacheKey: batchKey };
+			const unavailable =
+				"Search is unavailable. Your previous results are kept.";
+			if (!response.ok) {
+				const body = await response.json().catch(() => ({}));
+				throw new Error(body.error ?? unavailable);
+			}
+			// The route streams newline-delimited JSON: the reading first, the batch last.
+			const reader = response.body?.getReader();
+			if (!reader) throw new Error(unavailable);
+			const decoder = new TextDecoder();
+			let buffered = "";
+			let batch: SearchBatch | undefined;
+			const handle = (line: string) => {
+				if (!line.trim()) return;
+				const message = JSON.parse(line);
+				if (message.kind === "reading")
+					setReading({ q: requested, chips: message.reading });
+				else if (message.kind === "batch") batch = message.batch;
+				else if (message.kind === "error")
+					throw new Error(message.error ?? unavailable);
+			};
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				buffered += decoder.decode(value, { stream: true });
+				const lines = buffered.split("\n");
+				buffered = lines.pop() ?? "";
+				for (const line of lines) handle(line);
+			}
+			handle(buffered + decoder.decode());
+			if (!batch) throw new Error(unavailable);
+			return { ...batch, q: requested, cacheKey: batchKey };
 		},
 	});
 	useEffect(() => {
 		if (search.data) {
 			setBatches((old) => ({
-				// Descriptive batches reach about 220 KB, and each filter set adds one,
-				// so keep six to stay well under the sessionStorage quota.
-				...Object.fromEntries(Object.entries(old).slice(-5)),
+				...Object.fromEntries(
+					Object.entries(old).slice(-(CACHED_BATCHES - 1)),
+				),
 				[search.data.cacheKey]: search.data,
 			}));
 			setPrevious(search.data);
@@ -283,7 +333,7 @@ function useController() {
 		const started = performance.now();
 		const restore = () => {
 			window.scrollTo({ top: target, behavior: "instant" });
-			if (Math.abs(scrollY - target) < 2 || performance.now() - started > 3000)
+			if (Math.abs(scrollY - target) < 2 || performance.now() - started > SCROLL_RESTORE_MS)
 				restoring = false;
 			else frame = requestAnimationFrame(restore);
 		};
@@ -334,6 +384,15 @@ function useController() {
 		});
 	};
 	const candidates = dedupe(batch);
+	// Chips describe the current request only: the streamed reading while its results
+	// are on their way, then the reading stored with the batch. Batches saved before
+	// readings existed have none.
+	const chips: ReadingChip[] =
+		batch?.q === q
+			? (batch.reading ?? [])
+			: reading?.q === q
+				? reading.chips
+				: [];
 	const watch = useQuery<{
 		results: { key: string; result: { state: string } }[];
 	}>({
@@ -431,13 +490,13 @@ function useController() {
 		ready &&
 		!!config.data &&
 		requested === q &&
-		q.trim().length >= 2 &&
+		q.trim().length >= MIN_QUERY_LENGTH &&
 		!batches[batchKey] &&
 		!search.error;
 	const loading =
 		refining ||
 		active &&
-		draft.trim().length >= 2 &&
+		draft.trim().length >= MIN_QUERY_LENGTH &&
 		(search.isFetching ||
 			requested !== q ||
 			draft !== q ||
@@ -482,6 +541,7 @@ function useController() {
 		changeQuery,
 		loading,
 		status,
+		chips,
 		watch,
 		mode,
 		serviceIds,
@@ -512,6 +572,51 @@ export function SearchJourneyProvider({ children }: { children: ReactNode }) {
 	return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
+const chipStyle: Record<ReadingChip["kind"], string> = {
+	attribute: "bg-cyan-400/10 text-cyan-200",
+	want: "bg-cyan-400/10 text-cyan-200",
+	excluded: "bg-rose-400/10 text-rose-200",
+	avoid: "bg-rose-400/10 text-rose-200",
+	phrase: "bg-amber-400/10 text-amber-200",
+};
+// What the search understood, shown inside the open search box as soon as the
+// interpretation arrives. The row keeps one chip line of height even when empty,
+// so the box doesn't jump when chips come and go.
+function ReadingChips() {
+	const j = useSearchJourney()!;
+	const row = "flex flex-wrap items-center gap-1 pt-2 min-h-8 text-xs";
+	if (!j.chips.length) {
+		const query = j.draft.trim();
+		const empty =
+			query.length < MIN_QUERY_LENGTH
+				? "Describe a mood, a story, or a title. The search shows what it understood here."
+				: j.loading
+					? "Reading your request…"
+					: j.batch?.q === j.q
+						? "Title and name matches only for this search."
+						: "Waiting for the search to start…";
+		return (
+			<p
+				className={`${row} text-gray-500 ${j.loading && query.length >= MIN_QUERY_LENGTH ? "animate-pulse motion-reduce:animate-none" : ""}`}
+			>
+				{empty}
+			</p>
+		);
+	}
+	return (
+		<ul aria-label="How the search read your request" className={row}>
+			<li className="text-gray-500 mr-1">Looking for</li>
+			{j.chips.map((chip) => (
+				<li
+					key={`${chip.kind}:${chip.text}`}
+					className={`rounded px-2 py-0.5 ${chipStyle[chip.kind]}`}
+				>
+					{chip.text}
+				</li>
+			))}
+		</ul>
+	);
+}
 export function JourneyHeader() {
 	const j = useSearchJourney()!;
 	const container = useRef<HTMLDivElement>(null);
@@ -539,9 +644,11 @@ export function JourneyHeader() {
 					j.setOpen(true);
 				}}
 			>
+				{/* Open, the box grows downward and shows the reading chips under the input. */}
 				<div
-					className={`flex items-center gap-2 rounded-md border-2 border-slate-700 bg-gray-800 px-3 py-2 text-gray-200 ${j.open ? "absolute top-2 left-0 w-full z-10 h-12 bg-slate-800" : "h-9 min-w-24 max-w-52"}`}
+					className={`rounded-md border-2 border-slate-700 bg-gray-800 px-3 py-2 text-gray-200 ${j.open ? "absolute top-2 left-0 w-full z-10 min-h-12 bg-slate-800" : "h-9 min-w-24 max-w-52"}`}
 				>
+					<div className={`flex items-center gap-2 ${j.open ? "min-h-8" : "h-full"}`}>
 					{j.loading ? (
 						<ArrowPathIcon className="w-5 shrink-0 animate-spin" />
 					) : (
@@ -552,7 +659,7 @@ export function JourneyHeader() {
 						type="search"
 						aria-label="Search titles, people, or descriptions"
 						autoComplete="off"
-						maxLength={4096}
+						maxLength={MAX_QUERY_LENGTH}
 						data-ph-no-capture
 						placeholder={j.open ? "A title, a person, or a story…" : "Search…"}
 						className="w-full min-w-0 bg-transparent border-0 outline-none text-sm sm:text-base"
@@ -603,6 +710,8 @@ export function JourneyHeader() {
 							</button>
 						</>
 					)}
+					</div>
+					{j.open && <ReadingChips />}
 				</div>
 			</form>
 		</div>
@@ -678,7 +787,7 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 									)}
 									{r.discovery?.reasons
 										.filter((x) => x.kind !== "mismatch")
-										.slice(0, compact ? 2 : 3)
+										.slice(0, compact ? RESULT_CHIPS_COMPACT : RESULT_CHIPS)
 										.map((x) => (
 											<span
 												key={x.text}
