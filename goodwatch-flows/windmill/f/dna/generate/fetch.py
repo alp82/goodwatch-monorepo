@@ -479,6 +479,10 @@ def is_tmdb_deleted(entry):
     return model.objects(tmdb_id=entry.tmdb_id, tmdb_deleted=True).first() is not None
 
 
+class UnidentifiedTitle(ValueError):
+    """The model filled the strict schema with zeros instead of rating the title."""
+
+
 def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
     if not next_entries:
         return []
@@ -535,6 +539,8 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
                     dna = DNAAnalysis.model_validate_json(raw, strict=True).model_dump()
                     if any(not 0 <= score <= 10 for score in dna["fingerprint"]["scores"].values()):
                         raise ValueError("Fingerprint scores must be integers from 0 to 10")
+                    if not any(dna["fingerprint"]["scores"].values()):
+                        raise UnidentifiedTitle("All fingerprint scores are zero; the model did not identify the title")
                     unknown_highlights = sorted(set(dna["fingerprint"]["highlight_keys"])
                                                 - dna["fingerprint"]["scores"].keys())
                     if unknown_highlights:
@@ -543,7 +549,8 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
                 except (ValidationError, ValueError) as error:
                     dna = None
                     last_error = error
-                    if repairs == 1:
+                    # A repair cannot help a model that does not know the title; try the other model.
+                    if repairs == 1 or isinstance(error, UnidentifiedTitle):
                         break
                     repairs += 1
                     model_messages = messages + [
