@@ -113,6 +113,28 @@ class OpenRouterGenerationTest(unittest.TestCase):
         self.assertIn('{"unknown": true}', json.dumps(payloads[1]['messages']).replace('\\"', '"'))
         self.assertIn('0.002', self.output.getvalue())
 
+    def test_all_zero_scores_skip_repair_and_try_the_other_model_once(self):
+        movie = self.title(is_selected=True)
+        zero = json.loads(json.dumps(self.dna))
+        zero['fingerprint']['scores'] = {key: 0 for key in zero['fingerprint']['scores']}
+        zero['essence_text'] = 'The provided title could not be identified in the database.'
+        unidentified = response({'choices': [{'message': {'content': json.dumps(zero)}}], 'usage': {'cost': 0.001}})
+        self.post.side_effect = [unidentified, unidentified]
+        self.assertEqual(fetch.generate_dna([movie]), [])
+        self.assertEqual([c.kwargs['json']['model'] for c in self.post.call_args_list], [PRIMARY, FALLBACK])
+        self.assertIsNotNone(movie.failed_at)
+        self.assertIn('did not identify', movie.error_message)
+        self.assertFalse(movie.is_selected)
+        self.assertEqual(movie.dna, {})
+
+    def test_all_zero_scores_from_the_first_model_accept_the_fallback_result(self):
+        movie = self.title()
+        zero = json.loads(json.dumps(self.dna))
+        zero['fingerprint']['scores'] = {key: 0 for key in zero['fingerprint']['scores']}
+        self.post.side_effect = [response({'choices': [{'message': {'content': json.dumps(zero)}}]}), self.success()]
+        self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
+        self.assertEqual([c.kwargs['json']['model'] for c in self.post.call_args_list], [PRIMARY, FALLBACK])
+
     def test_unknown_highlight_keys_are_repaired_before_persistence(self):
         for popularity in [1.0, 0.5]:
             for invalid_key in ['action_core_scores_placeholder_check', 'erotica']:
