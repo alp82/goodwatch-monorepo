@@ -58,6 +58,14 @@ const READING_CHIP_DIMENSIONS = 8;
 // cases become "mismatch" reasons, which the UI hides.
 const STRONG_SCORE_MIN = 6;
 const WEAK_SCORE_MAX = 4;
+// Ranking. A title's primary key is its range count: the number of wanted dimensions at or
+// above STRONG_SCORE_MIN plus avoided dimensions at or below WEAK_SCORE_MAX, so the ranking and
+// the reason chips agree. Misses count zero. The weighted sum breaks ties: it is rescaled from
+// its possible range for the query into 0..TIEBREAK_SPAN, so it never crosses a count unit.
+// Text and trope evidence together add at most EVIDENCE_MAX_UNITS, so evidence lifts a title
+// past one more dimension hit at most, never past two.
+const TIEBREAK_SPAN = 0.25;
+const EVIDENCE_MAX_UNITS = 1;
 
 const isQueryDimension = (d: { weight: number }) =>
 	d.weight >= WANT_WEIGHT_MIN || d.weight <= -AVOID_WEIGHT_MIN;
@@ -594,6 +602,8 @@ export interface Result {
 	poster_path: string | null;
 	genres: string[];
 	rank: number;
+	// Range count: wanted dimensions at or above STRONG_SCORE_MIN plus avoided at or below WEAK_SCORE_MAX
+	hits: number;
 	weightedSum: number;
 	cosine: number;
 	combined: number;
@@ -709,6 +719,72 @@ interface Query {
 	genres: GenreJudgment[];
 }
 
+// --- Ranking -----------------------------------------------------------------------------
+// One definition of the fingerprint rank in two forms. `rankingScore` computes it in
+// TypeScript over stored scores; `rankingFormula` states the same number as a Qdrant formula,
+// so the vector path ranks on the server. Both give hits + tiebreak: hits is the range count,
+// tiebreak is the weighted sum shifted and scaled into 0..TIEBREAK_SPAN.
+type Used = [Key, number][];
+const scoreKey = (key: Key) => `fingerprint_scores_v1.${key}`;
+const inRange = (weight: number, value: number) =>
+	weight > 0 ? value >= STRONG_SCORE_MIN : value <= WEAK_SCORE_MAX;
+const tiebreak = (used: Used) => {
+	// The weighted sum spans sumMin (every avoided dimension at 10) to sumMax (every wanted
+	// dimension at 10).
+	const sumMin = used.reduce((s, [, w]) => s + Math.min(w, 0) * 10, 0);
+	const sumMax = used.reduce((s, [, w]) => s + Math.max(w, 0) * 10, 0);
+	return {
+		offset: -sumMin,
+		scale: TIEBREAK_SPAN / Math.max(sumMax - sumMin, 1),
+	};
+};
+const rankingScore = (scores: Record<string, number>, used: Used) => {
+	const { offset, scale } = tiebreak(used);
+	let hits = 0;
+	let weightedSum = 0;
+	for (const [key, weight] of used) {
+		const value = scores[key] ?? 0;
+		if (inRange(weight, value)) hits += 1;
+		weightedSum += weight * value;
+	}
+	return { hits, weightedSum, score: hits + scale * (weightedSum + offset) };
+};
+const rankingFormula = (used: Used) => {
+	const { offset, scale } = tiebreak(used);
+	return {
+		formula: {
+			sum: [
+				...used.map(([key, weight]) => ({
+					key: scoreKey(key),
+					range:
+						weight > 0 ? { gte: STRONG_SCORE_MIN } : { lte: WEAK_SCORE_MAX },
+				})),
+				{
+					mult: [
+						scale,
+						{
+							sum: [
+								...used.map(([key, weight]) => ({
+									mult: [weight, scoreKey(key)],
+								})),
+								offset,
+							],
+						},
+					],
+				},
+			],
+		},
+		// A missing stored score reads as 0 in the sum. Its range condition is false either way.
+		defaults: Object.fromEntries(used.map(([key]) => [scoreKey(key), 0])),
+	};
+};
+// Text and trope evidence enters the rank capped at EVIDENCE_MAX_UNITS
+const evidenceUnits = (evidence: number) =>
+	Math.min(Math.max(evidence, 0), EVIDENCE_MAX_UNITS);
+
+// The cosine prefetch bounds recall, as the 2000-point pool did before
+const PREFETCH_LIMIT = 2000;
+
 const retrieve = async (
 	reading: Query,
 	flags: FlagJudgment[],
@@ -725,20 +801,25 @@ const retrieve = async (
 		pool: 0,
 	};
 	if (reading.vector.every((x) => x === 0)) return empty;
-	const used = Object.entries(reading.weights) as [Key, number][];
-	const wide = reading.order === "weighted_sum" || Boolean(tropeQuery);
-	// The pool carries only the used dimensions. Display fields are fetched for the final 20.
+	const used = Object.entries(reading.weights) as Used;
+	const decidedGenres = reading.genres.filter((g) => g.decision);
+	// Qdrant ranks the cosine prefetch by the formula and returns the top of it. Trope and genre
+	// layers still re-rank in Node, so they need the whole prefetch back.
+	const wide = Boolean(tropeQuery) || decidedGenres.length > 0;
 	const response = await getQdrant().query(MEDIA_COLLECTION, {
-		query: reading.vector,
-		using: "fingerprint_v1",
-		filter: qdrantFilter(flags, eligibility) as never,
-		limit: wide ? 2000 : resultLimit,
+		prefetch: {
+			query: reading.vector,
+			using: "fingerprint_v1",
+			filter: qdrantFilter(flags, eligibility) as never,
+			limit: PREFETCH_LIMIT,
+		},
+		query: rankingFormula(used),
+		limit: wide ? PREFETCH_LIMIT : resultLimit,
 		with_payload: [
-			...used.map(([key]) => `fingerprint_scores_v1.${key}`),
+			...used.map(([key]) => scoreKey(key)),
 			...(reading.genres.length ? ["genres"] : []),
 		],
 	});
-	const decidedGenres = reading.genres.filter((g) => g.decision);
 	const genreShift = (genres: string[] | null | undefined) => {
 		let shift = 0;
 		const matched: string[] = [];
@@ -759,15 +840,18 @@ const retrieve = async (
 		const scores =
 			(point.payload as unknown as Payload)?.fingerprint_scores_v1 ?? {};
 		const { mediaType, tmdbId } = parsePointId(Number(point.id));
+		const rank = rankingScore(scores, used);
 		return {
 			id: point.id,
 			media_type: mediaType,
 			tmdb_id: tmdbId,
-			cosine: point.score,
-			weightedSum: used.reduce(
-				(sum, [key, weight]) => sum + weight * (scores[key] ?? 0),
-				0,
-			),
+			// The formula score replaces the cosine: the prefetch score isn't returned alongside it
+			cosine: 0,
+			hits: rank.hits,
+			weightedSum: rank.weightedSum,
+			// Qdrant's formula score; rank.score is the same number computed in Node
+			base: point.score,
+			drift: Math.abs(point.score - rank.score),
 			genre: genreShift((point.payload as unknown as Payload)?.genres),
 		};
 	});
@@ -779,12 +863,7 @@ const retrieve = async (
 	]);
 	const tropeMs = tropeQuery ? Date.now() - tropeStarted : 0;
 
-	// Base score is normalized to 0..1 within the pool, then a trope match adds up to TROPE_MATCH_WEIGHT
-	const base = (p: (typeof pool)[number]) =>
-		reading.order === "weighted_sum" ? p.weightedSum : p.cosine;
-	const values = pool.map(base);
-	const min = Math.min(...values);
-	const span = Math.max(...values) - min || 1;
+	// Range count plus tiebreak from Qdrant, then the genre shift and capped trope evidence
 	const ranked = pool
 		.map((p) => {
 			const matches = tropes.found.get(`${p.media_type}:${p.tmdb_id}`) ?? [];
@@ -792,12 +871,12 @@ const retrieve = async (
 				...p,
 				matches,
 				combined:
-					(base(p) - min) / span +
+					p.base +
 					p.genre.shift +
-					TROPE_MATCH_WEIGHT * (matches[0]?.score ?? 0),
+					evidenceUnits(TROPE_MATCH_WEIGHT * (matches[0]?.score ?? 0)),
 			};
 		})
-		.sort((a, b) => b.combined - a.combined || b.cosine - a.cosine)
+		.sort((a, b) => b.combined - a.combined)
 		.slice(0, resultLimit);
 
 	const displayStarted = Date.now();
@@ -857,6 +936,7 @@ const retrieve = async (
 			poster_path: payload.poster_path ?? null,
 			genres: payload.genres ?? [],
 			rank: i + 1,
+			hits: r.hits,
 			weightedSum: r.weightedSum,
 			cosine: r.cosine,
 			combined: r.combined,
@@ -873,9 +953,13 @@ const retrieve = async (
 	return {
 		results,
 		ms: poolMs + displayMs,
+		poolMs,
+		displayMs,
 		tropeMs,
 		tropeMode: tropes.mode,
 		pool: pool.length,
+		// Largest gap between Qdrant's formula score and the Node computation of the same rank
+		drift: Math.max(0, ...pool.map((p) => p.drift)),
 	};
 };
 
@@ -1166,22 +1250,22 @@ const runPhraseVariant = async (
 		}
 	}
 
-	// Rank: normalized B2 weighted sum, plus text evidence
-	const rows = [...pool.values()].map((row) => ({
-		...row,
-		weightedSum: used.reduce(
-			(sum, [key, weight]) => sum + weight * (row.fp[key] ?? 0),
-			0,
-		),
-	}));
-	const sums = rows.map((r) => r.weightedSum);
-	const min = Math.min(...sums, 0);
-	const span = Math.max(...sums, 1) - min || 1;
-	let ranked = rows
-		.map((r) => ({
-			...r,
-			combined: (r.weightedSum - min) / span + TEXT_EVIDENCE_WEIGHT * Math.min(r.text, TEXT_EVIDENCE_CAP),
-		}))
+	// Rank: range count plus tiebreak, the same number the vector path gets from Qdrant, plus
+	// capped text evidence
+	let ranked = [...pool.values()]
+		.map((row) => {
+			const rank = rankingScore(row.fp, used);
+			return {
+				...row,
+				hits: rank.hits,
+				weightedSum: rank.weightedSum,
+				combined:
+					rank.score +
+					evidenceUnits(
+						TEXT_EVIDENCE_WEIGHT * Math.min(row.text, TEXT_EVIDENCE_CAP),
+					),
+			};
+		})
 		.sort((a, b) => b.combined - a.combined)
 		.slice(0, resultLimit);
 
@@ -1236,6 +1320,7 @@ const runPhraseVariant = async (
 			poster_path: d?.poster_path ?? null,
 			genres: d?.genres ?? [],
 			rank: i + 1,
+			hits: r.hits,
 			weightedSum: r.weightedSum,
 			cosine: 0,
 			combined: r.combined,
@@ -1253,6 +1338,8 @@ const runPhraseVariant = async (
 	});
 
 	let ms = Date.now() - started - extra.ms;
+	let fillTiming: Omit<Awaited<ReturnType<typeof retrieve>>, "results"> | null =
+		null;
 	if (results.length < resultLimit && vectorQuery.vector.some((x) => x !== 0)) {
 		const fill = await retrieve(
 			vectorQuery,
@@ -1269,6 +1356,8 @@ const runPhraseVariant = async (
 				results.push({ ...r, rank: results.length + 1 });
 		}
 		ms += fill.ms;
+		const { results: _fillResults, ...timing } = fill;
+		fillTiming = timing;
 		if (!gated)
 			notes.push(
 				`Only ${found} titles had evidence. The rest come from the B2 vector search.`,
@@ -1286,6 +1375,7 @@ const runPhraseVariant = async (
 		pool: pool.size,
 		notes,
 		extra,
+		fill: fillTiming,
 	};
 };
 
@@ -1371,16 +1461,14 @@ export async function retrieveD4(
 		order: "weighted_sum",
 		genres: [],
 	};
+	// The timings and pool sizes come back with the results for debugging
 	if (nativeOnly)
-		return (await retrieve(vectorQuery, attributes.flags, "", eligibility))
-			.results;
-	return (
-		await runPhraseVariant(
-			request,
-			{ twoPhrases: true, moodGate: true, wider: true },
-			attributes,
-			vectorQuery,
-			eligibility,
-		)
-	).results;
+		return await retrieve(vectorQuery, attributes.flags, "", eligibility);
+	return await runPhraseVariant(
+		request,
+		{ twoPhrases: true, moodGate: true, wider: true },
+		attributes,
+		vectorQuery,
+		eligibility,
+	);
 }

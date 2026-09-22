@@ -174,6 +174,7 @@ async function literal(q: string, policy: Eligibility): Promise<Result[]> {
 		.map((r, i) => ({
 			...r,
 			rank: i + 1,
+			hits: 0,
 			weightedSum: 0,
 			cosine: 0,
 			combined: r._score,
@@ -255,12 +256,14 @@ export async function combinedSearch(
 		}
 	} else {
 		try {
-			results = await retrieveD4(
-				language.text,
-				outcome.readings,
-				policy,
-				language.policy.mode === "native-vector-only",
-			);
+			results = (
+				await retrieveD4(
+					language.text,
+					outcome.readings,
+					policy,
+					language.policy.mode === "native-vector-only",
+				)
+			).results;
 		} catch {
 			errors.push(BASIC_SEARCH_MESSAGE);
 			try {

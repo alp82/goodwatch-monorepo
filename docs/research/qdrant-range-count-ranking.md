@@ -199,3 +199,21 @@ The measurements above ran against a collection with no HNSW graph: both `indexi
 | Formula over a 2000-point prefetch | 33 to 41 ms |
 
 The formula rescoring is now the larger share of the query, but the whole thing is an order of magnitude below the previous pool query.
+
+## Prototype result (2026-09-22, branch `proto/range-count-ranking`)
+
+Both paths of `d4.server.ts` rank by range count plus a weighted-sum tiebreak (scaled into 0..0.25), with text and trope evidence capped at one count unit. The vector path uses a formula query over a 2000-point cosine prefetch; the text path computes the same number in Node. The Node recomputation of Qdrant's formula score differed by at most 1.4e-6 across all runs. `scripts/range-count-replay.ts` replays search-history queries through `retrieveD4` with cached Jev readings.
+
+| Query | Path | Before (main) | After |
+| --- | --- | --- | --- |
+| complete nonsense | text | Kung Fu Panda: The Dragon Knight 1, Mechanic: Resurrection 2, Aqua Teen Hunger Force 5 | Tim and Eric 1, Monty Python's Fliegender Zirkus 2, Aqua Teen Hunger Force 3; Kung Fu Panda 96, Mechanic 98 |
+| craty | vector | Police Squad!, Monty Python, Tom Green Show | same head, 4 of 4 hits |
+| furious | vector | Extraction, Kill, The Raid (all 5 of 5) | same set, 5 of 5 |
+| tarkovsky | vector | Begotten, Color of Pomegranates, Knight of Cups, Stalker 9 | You Won't Be Alone (23 of 23 hits, lower sum); Begotten 24, Stalker 28 (21 hits each) |
+| feel good cooking show | text | Cooku with Comali 1 (evidence 2.1), Home Town 2 | Home Town 1, Pottery Throw Down 2, James May: Oh Cook! 3; Cooku with Comali out of the top 100 |
+
+The Last Sharknado does not appear for "complete nonsense" on either ranking: the text path ranks only the Crate text pool (442 rows), and the title is not in it. It appeared in the earlier live formula test because that ran the vector path.
+
+Vector-path latency from Node (`fill.poolMs`, formula query including network): 107 to 253 ms; display fetch 116 to 181 ms. Wall time for the four vector-only queries: 224 to 402 ms, against 402 to 727 ms on main for the same queries.
+
+Trade-offs seen: a title with every dimension at 6 outranks a title with most dimensions at 10 and one at 5 (tarkovsky). Capping evidence at one unit removes the difference between matching one phrase and both ("feel good cooking show"), so text-heavy queries lean on the fingerprint count.
