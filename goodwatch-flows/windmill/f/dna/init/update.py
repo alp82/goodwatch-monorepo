@@ -1,11 +1,51 @@
+from datetime import datetime, timedelta
 from typing import Union
 from mongoengine import get_db
+from pymongo.collection import Collection
 
 from f.data_source.common import get_documents_for_ids
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 from f.tmdb_daily.models import DumpType
 from f.dna.init.main import build_operation, store_copies
+
+# Keep in sync with BUFFER_SELECTED_AT_MINUTES in f/dna/generate/next.
+BUFFER_SELECTED_AT_MINUTES = 60
+# Every priority crawl of a title would otherwise retry a failed generation.
+FAILED_COOLDOWN_DAYS = 7
+
+
+def claim_without_fingerprint(collection: Collection, tmdb_id: int):
+    """Atomically reserve a DNA document that still needs a fingerprint.
+
+    Mirrors the f/dna/generate/next selector: a claim inside the buffer belongs
+    to another run, an older one is stale and may be taken over. A recent
+    failed generation is left alone until the cooldown passes.
+    """
+    now = datetime.utcnow()
+    stale_before = now - timedelta(minutes=BUFFER_SELECTED_AT_MINUTES)
+    failed_before = now - timedelta(days=FAILED_COOLDOWN_DAYS)
+    doc = collection.find_one_and_update(
+        {
+            "tmdb_id": tmdb_id,
+            # No first element: matches an absent field, None and an empty list.
+            "vector_fingerprint.0": {"$exists": False},
+            "$and": [
+                {"$or": [
+                    {"is_selected": {"$ne": True}},
+                    {"selected_at": None},
+                    {"selected_at": {"$lt": stale_before}},
+                ]},
+                {"$or": [
+                    {"failed_at": None},
+                    {"failed_at": {"$lt": failed_before}},
+                ]},
+            ],
+        },
+        {"$set": {"is_selected": True, "selected_at": now}},
+        projection={"_id": 1},
+    )
+    return str(doc["_id"]) if doc else None
 
 
 def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetails]]):
@@ -14,8 +54,8 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
 
     count_new_movies = 0
     count_new_tv = 0
-    upserted_movie_ids = []
-    upserted_tv_ids = []
+    movie_ids = []
+    tv_ids = []
 
     for next_entry in next_entries:
         print(f"copying {next_entry.original_title} ({next_entry.tmdb_id}) DNA")
@@ -30,7 +70,9 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
                 label_plural="movies",
             )
             count_new_movies += movie_upserts.get("count_new_documents")
-            upserted_movie_ids += movie_upserts.get("upserted_ids")
+            claimed_id = claim_without_fingerprint(mongo_db.dna_movie, next_entry.tmdb_id)
+            if claimed_id:
+                movie_ids.append(claimed_id)
 
         elif isinstance(next_entry, TmdbTvDetails):
             operation = build_operation(
@@ -43,7 +85,9 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
                 label_plural="tv series",
             )
             count_new_tv += tv_upserts.get("count_new_documents")
-            upserted_tv_ids += tv_upserts.get("upserted_ids")
+            claimed_id = claim_without_fingerprint(mongo_db.dna_tv, next_entry.tmdb_id)
+            if claimed_id:
+                tv_ids.append(claimed_id)
 
         else:
             raise Exception(f"next_entry has an unexpected type: {type(next_entry)}")
@@ -51,8 +95,8 @@ def initialize_documents(next_entries: list[Union[TmdbMovieDetails, TmdbTvDetail
     return {
         "count_new_movies": count_new_movies,
         "count_new_tv": count_new_tv,
-        "upserted_movie_ids": upserted_movie_ids,
-        "upserted_tv_ids": upserted_tv_ids,
+        "movie_ids": movie_ids,
+        "tv_ids": tv_ids,
     }
 
 
@@ -71,6 +115,6 @@ def main(next_ids: dict):
 
     print(docs)
     return {
-        "movie_ids": docs["upserted_movie_ids"],
-        "tv_ids": docs["upserted_tv_ids"],
+        "movie_ids": docs["movie_ids"],
+        "tv_ids": docs["tv_ids"],
     }

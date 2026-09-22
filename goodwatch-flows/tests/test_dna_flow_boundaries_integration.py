@@ -85,7 +85,7 @@ class DNAFlowBoundaries(unittest.TestCase):
         collect(job)
         return called
 
-    def test_priority_crawl_publishes_without_generating_dna(self):
+    def test_priority_crawl_generates_fingerprints_and_publishes(self):
         called = self.run_boundary("f/priority/crawl_all")
         for path in (
             "f/tmdb_api/tmdb_fetch_details_from_api/fetch",
@@ -95,7 +95,10 @@ class DNAFlowBoundaries(unittest.TestCase):
         ):
             self.assertIn(path, called)
         self.assertIn("f/priority/reset", called)
-        self.assertFalse([path for path in called if path.startswith("f/dna/")], called)
+        for path in ("f/dna/init/update", "f/dna/crawl_all_by_id", "f/dna/generate/vectors"):
+            self.assertIn(path, called)
+            # Top-level modules are collected in flow order; the branchall precedes publish.
+            self.assertLess(called.index(path), called.index("f/priority/publish"), called)
 
     def test_dedicated_dna_flow_reaches_fingerprint_persistence(self):
         called = self.run_boundary("f/dna/generate_dna")
