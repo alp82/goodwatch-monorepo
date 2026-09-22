@@ -1,0 +1,6257 @@
+{
+  "phase": "development",
+  "indices": [
+    0,
+    2,
+    3,
+    5,
+    11,
+    12
+  ],
+  "judgmentProvenance": "Rank-blinded agent proxy, not user judgments",
+  "results": [
+    {
+      "id": "legacy-main",
+      "config": {
+        "id": "legacy-main",
+        "name": "Legacy main approximation",
+        "family": "legacy"
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 5.5,
+        "unknown": 2,
+        "zeroTop5": 9
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.4946451705656385,
+            "ndcgBounds": [
+              0.4946451705656385,
+              0.4946451705656385
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:129959",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "movie:278924",
+                "grade": 0
+              },
+              {
+                "rank": 3,
+                "key": "movie:24051",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:152483",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.4485711581715298,
+            "ndcgBounds": [
+              0.4485711581715298,
+              0.4485711581715298
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 3,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:92139",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:1580",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.2689105432974706,
+            "ndcgBounds": [
+              0.2689105432974706,
+              0.2689105432974706
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:6143",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:81951",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "movie:994143",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:127865",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:125988",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.5293521541592355,
+            "ndcgBounds": [
+              0.5293521541592355,
+              0.5293521541592355
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 3,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 5,
+                "key": "movie:15584",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "movie:641662",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:61555",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "show:90040",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8842952959585678,
+            "ndcgBounds": [
+              0.8842952959585678,
+              0.8842952959585678
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:1585",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:49051",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.43213145599630104,
+              0.7072026931545269
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 7,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 9,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:1824",
+                "grade": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "legacy-leads",
+      "config": {
+        "id": "legacy-leads",
+        "name": "Legacy concrete leads",
+        "family": "legacy"
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 5.833333333333333,
+        "unknown": 1,
+        "zeroTop5": 9
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9580777588003657,
+            "ndcgBounds": [
+              0.9580777588003657,
+              0.9580777588003657
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:433941",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:18162",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.1986130541917195,
+            "ndcgBounds": [
+              0.1986130541917195,
+              0.1986130541917195
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "show:77631",
+                "grade": 0
+              },
+              {
+                "rank": 3,
+                "key": "show:76305",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:1025",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:1317",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:154916",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:35058",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:2589",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:95074",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.3095735643159124,
+            "ndcgBounds": [
+              0.3095735643159124,
+              0.3095735643159124
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 4,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:376865",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 3,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:36581",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:61635",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "movie:594718",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "movie:421443",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:548473",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:97400",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.3965996876482058,
+            "ndcgBounds": [
+              0.3965996876482058,
+              0.3965996876482058
+            ],
+            "acceptable": 6,
+            "acceptableBounds": [
+              6,
+              6
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:2265",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:132378",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:81357",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:194741",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:828305",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "show:98537",
+                "grade": 1
+              },
+              {
+                "rank": 8,
+                "key": "show:139396",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:201408",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "show:202140",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8638606976827782,
+            "ndcgBounds": [
+              0.8638606976827782,
+              0.8638606976827782
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:385232",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:27243",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:39144",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "movie:8840",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.47149639967724,
+              0.6787646096867846
+            ],
+            "acceptable": 5,
+            "acceptableBounds": [
+              5,
+              6
+            ],
+            "unknown": 1,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 3,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 6,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:433310",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:1824",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "movie:397837",
+                "grade": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "strength-intent",
+      "config": {
+        "id": "strength-intent",
+        "name": "Strength + bounded mood evidence",
+        "family": "strength",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 5.833333333333333,
+        "unknown": 2,
+        "zeroTop5": 6
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9173414328953917,
+            "ndcgBounds": [
+              0.9173414328953917,
+              0.9173414328953917
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:4241",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:433941",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.4901162016255324,
+            "ndcgBounds": [
+              0.4901162016255324,
+              0.4901162016255324
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:92139",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:77631",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.2689105432974706,
+            "ndcgBounds": [
+              0.2689105432974706,
+              0.2689105432974706
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:6143",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:127865",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:125988",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:81951",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "movie:994143",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.5571102206492972,
+            "ndcgBounds": [
+              0.5571102206492972,
+              0.5571102206492972
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 5,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:15584",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:61555",
+                "grade": 1
+              },
+              {
+                "rank": 9,
+                "key": "movie:641662",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:90040",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8282583716420736,
+            "ndcgBounds": [
+              0.8282583716420736,
+              0.8282583716420736
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:49051",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:493529",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.43213145599630104,
+              0.7072026931545269
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 7,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 9,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:1824",
+                "grade": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "coverage-blend",
+      "config": {
+        "id": "coverage-blend",
+        "name": "Weighted coverage / strength blend",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 5.833333333333333,
+        "unknown": 2,
+        "zeroTop5": 6
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9188462530413559,
+            "ndcgBounds": [
+              0.9188462530413559,
+              0.9188462530413559
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:433941",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:4241",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.4901162016255324,
+            "ndcgBounds": [
+              0.4901162016255324,
+              0.4901162016255324
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:77631",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:92139",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.29502570520315996,
+            "ndcgBounds": [
+              0.29502570520315996,
+              0.29502570520315996
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:6143",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:127865",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:81951",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:36581",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:86825",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.5185702463374926,
+            "ndcgBounds": [
+              0.5185702463374926,
+              0.5185702463374926
+            ],
+            "acceptable": 6,
+            "acceptableBounds": [
+              6,
+              6
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "show:61555",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 8,
+                "key": "movie:15584",
+                "grade": 1
+              },
+              {
+                "rank": 9,
+                "key": "show:90040",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:91752",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8827904758126036,
+            "ndcgBounds": [
+              0.8827904758126036,
+              0.8827904758126036
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:49051",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "show:1585",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.43716580287561635,
+              0.7072026931545269
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 8,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 9,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:1824",
+                "grade": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "soft-deficit",
+      "config": {
+        "id": "soft-deficit",
+        "name": "Strength with soft deficit penalty",
+        "family": "strength",
+        "penalty": 0.3,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 6,
+        "unknown": 2,
+        "zeroTop5": 6
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9173414328953917,
+            "ndcgBounds": [
+              0.9173414328953917,
+              0.9173414328953917
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:4241",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:433941",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.4901162016255324,
+            "ndcgBounds": [
+              0.4901162016255324,
+              0.4901162016255324
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:77631",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:67012",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.2689105432974706,
+            "ndcgBounds": [
+              0.2689105432974706,
+              0.2689105432974706
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:6143",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:125988",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:81951",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:232230",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:63647",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.5571102206492972,
+            "ndcgBounds": [
+              0.5571102206492972,
+              0.5571102206492972
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 5,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:15584",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:61555",
+                "grade": 1
+              },
+              {
+                "rank": 9,
+                "key": "movie:641662",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:90040",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8282583716420736,
+            "ndcgBounds": [
+              0.8282583716420736,
+              0.8282583716420736
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:49051",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:493529",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.4887060707774669,
+              0.7661767233290206
+            ],
+            "acceptable": 5,
+            "acceptableBounds": [
+              5,
+              7
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 8,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 10,
+                "key": "movie:433310",
+                "grade": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "selective-strength",
+      "config": {
+        "id": "selective-strength",
+        "name": "Highest-weight half of dimensions",
+        "family": "blend",
+        "topFraction": 0.5,
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 5.333333333333333,
+        "unknown": 2,
+        "zeroTop5": 6
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.8715649924597886,
+            "ndcgBounds": [
+              0.8715649924597886,
+              0.8715649924597886
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:4241",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:630476",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:36217",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.38772926306223404,
+            "ndcgBounds": [
+              0.38772926306223404,
+              0.38772926306223404
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:13941",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:92139",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:1580",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:58552",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.3891133079233494,
+            "ndcgBounds": [
+              0.3891133079233494,
+              0.3891133079233494
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:6143",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:593",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:127865",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:68800",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "movie:760245",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.5092440350701894,
+            "ndcgBounds": [
+              0.5092440350701894,
+              0.5092440350701894
+            ],
+            "acceptable": 6,
+            "acceptableBounds": [
+              6,
+              6
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 3,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:77059",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:79932",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:13614",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "show:139396",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:2265",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:1427",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8093285935122482,
+            "ndcgBounds": [
+              0.8093285935122482,
+              0.8093285935122482
+            ],
+            "acceptable": 8,
+            "acceptableBounds": [
+              8,
+              8
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:385232",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:27243",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:39144",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "movie:126963",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.4311679061873088,
+              0.7071671661618063
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 6,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:1824",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:433310",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:550988",
+                "grade": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "rounded-evidence",
+      "config": {
+        "id": "rounded-evidence",
+        "name": "Rounded evidence + attribute strength",
+        "family": "strength",
+        "evidenceTransform": "round",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 6.333333333333333,
+        "unknown": 2,
+        "zeroTop5": 4
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9173414328953917,
+            "ndcgBounds": [
+              0.9173414328953917,
+              0.9173414328953917
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:630476",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:4257",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.4901162016255324,
+            "ndcgBounds": [
+              0.4901162016255324,
+              0.4901162016255324
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:67012",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:95074",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:2174",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.6463066809302572,
+            "ndcgBounds": [
+              0.6463066809302572,
+              0.6463066809302572
+            ],
+            "acceptable": 6,
+            "acceptableBounds": [
+              6,
+              6
+            ],
+            "unknown": 0,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "movie:376865",
+                "grade": 2
+              },
+              {
+                "rank": 5,
+                "key": "movie:8413",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:421443",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:81951",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:994143",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:78183",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.4227242313416419,
+            "ndcgBounds": [
+              0.4227242313416419,
+              0.4227242313416419
+            ],
+            "acceptable": 5,
+            "acceptableBounds": [
+              5,
+              5
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "movie:641662",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:15584",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 5,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:334541",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "movie:59437",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 9,
+                "key": "show:79932",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "movie:429195",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8378785402874104,
+            "ndcgBounds": [
+              0.8378785402874104,
+              0.8378785402874104
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:166428",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:49051",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.4159103874078195,
+              0.6956474181175626
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 6,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 9,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:1824",
+                "grade": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "soft-coverage",
+      "config": {
+        "id": "soft-coverage",
+        "name": "Soft weighted coverage blend",
+        "family": "soft",
+        "coverageMix": 0.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 5.666666666666667,
+        "unknown": 2,
+        "zeroTop5": 7
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9149920538053871,
+            "ndcgBounds": [
+              0.9149920538053871,
+              0.9149920538053871
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:433941",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:4241",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.5003398300386096,
+            "ndcgBounds": [
+              0.5003398300386096,
+              0.5003398300386096
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:76305",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "show:92139",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.36982295676362104,
+            "ndcgBounds": [
+              0.36982295676362104,
+              0.36982295676362104
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:6143",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:127865",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:61335",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:46638",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:96628",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.48918004023987943,
+            "ndcgBounds": [
+              0.48918004023987943,
+              0.48918004023987943
+            ],
+            "acceptable": 6,
+            "acceptableBounds": [
+              6,
+              6
+            ],
+            "unknown": 0,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:61555",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:2265",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:91752",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 9,
+                "key": "show:54344",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "show:139396",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8577666702728031,
+            "ndcgBounds": [
+              0.8577666702728031,
+              0.8577666702728031
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:39144",
+                "grade": 1
+              },
+              {
+                "rank": 8,
+                "key": "movie:27243",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:385232",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:1585",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.42853447093187147,
+              0.7071671661618063
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 6,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:1824",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 10,
+                "key": "movie:43967",
+                "grade": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "log-evidence",
+      "config": {
+        "id": "log-evidence",
+        "name": "Strength + diminishing text evidence",
+        "family": "strength",
+        "evidenceTransform": "log",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 5.666666666666667,
+        "unknown": 2,
+        "zeroTop5": 6
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9173414328953917,
+            "ndcgBounds": [
+              0.9173414328953917,
+              0.9173414328953917
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:4241",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:433941",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.45898960236274144,
+            "ndcgBounds": [
+              0.45898960236274144,
+              0.45898960236274144
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 3,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:92139",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:77631",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.2689105432974706,
+            "ndcgBounds": [
+              0.2689105432974706,
+              0.2689105432974706
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "show:6143",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:127865",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:81951",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:994143",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:125988",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.5266290126029027,
+            "ndcgBounds": [
+              0.5266290126029027,
+              0.5266290126029027
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 3,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 5,
+                "key": "movie:15584",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:61555",
+                "grade": 1
+              },
+              {
+                "rank": 9,
+                "key": "movie:641662",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:90040",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.7584355552573155,
+            "ndcgBounds": [
+              0.7584355552573155,
+              0.7584355552573155
+            ],
+            "acceptable": 8,
+            "acceptableBounds": [
+              8,
+              8
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:49051",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:493529",
+                "grade": 1
+              },
+              {
+                "rank": 8,
+                "key": "show:1585",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:166428",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:39144",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.4403428013580046,
+              0.7072026931545269
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 8,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 10,
+                "key": "movie:1824",
+                "grade": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "nonlinear-strength",
+      "config": {
+        "id": "nonlinear-strength",
+        "name": "Emphasize strong attributes",
+        "family": "strength",
+        "strengthPower": 1.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 6,
+        "unknown": 2,
+        "zeroTop5": 6
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9173414328953917,
+            "ndcgBounds": [
+              0.9173414328953917,
+              0.9173414328953917
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:4241",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:4257",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.47969775743432075,
+            "ndcgBounds": [
+              0.47969775743432075,
+              0.47969775743432075
+            ],
+            "acceptable": 3,
+            "acceptableBounds": [
+              3,
+              3
+            ],
+            "unknown": 0,
+            "zeroTop5": 2,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:71359",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:108178",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:2174",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "show:58552",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "show:50035",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:92139",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:1580",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.36982295676362104,
+            "ndcgBounds": [
+              0.36982295676362104,
+              0.36982295676362104
+            ],
+            "acceptable": 2,
+            "acceptableBounds": [
+              2,
+              2
+            ],
+            "unknown": 0,
+            "zeroTop5": 3,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:8838",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:62097",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "show:127865",
+                "grade": 0
+              },
+              {
+                "rank": 6,
+                "key": "movie:994143",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "movie:7345",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "movie:50037",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "show:46638",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "show:6143",
+                "grade": 0
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.5612717470282913,
+            "ndcgBounds": [
+              0.5612717470282913,
+              0.5612717470282913
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:59183",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:1427",
+                "grade": 2
+              },
+              {
+                "rank": 5,
+                "key": "show:156946",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "show:61555",
+                "grade": 1
+              },
+              {
+                "rank": 8,
+                "key": "show:90040",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:15584",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "show:77059",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8842952959585678,
+            "ndcgBounds": [
+              0.8842952959585678,
+              0.8842952959585678
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:1585",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:49051",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.42853447093187147,
+              0.7071671661618063
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 6,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:1824",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 10,
+                "key": "movie:43967",
+                "grade": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "core-balanced",
+      "config": {
+        "id": "core-balanced",
+        "name": "Core evidence + weighted coverage",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.08,
+        "evidenceConcrete": 0.15,
+        "coreWeight": 1,
+        "combine": "auto"
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 8.166666666666666,
+        "unknown": 1,
+        "zeroTop5": 2
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 1,
+            "ndcgBounds": [
+              1,
+              1
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:16127",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:35236",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:523849",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:14769",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:206013",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:3108",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.7401571781592171,
+            "ndcgBounds": [
+              0.7401571781592171,
+              0.7401571781592171
+            ],
+            "acceptable": 8,
+            "acceptableBounds": [
+              8,
+              8
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:76305",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "show:129024",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:281006",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "show:117303",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:33024",
+                "grade": 1
+              },
+              {
+                "rank": 9,
+                "key": "show:280976",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "show:16395",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.7549631009181547,
+            "ndcgBounds": [
+              0.7549631009181547,
+              0.7549631009181547
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "movie:548473",
+                "grade": 0
+              },
+              {
+                "rank": 3,
+                "key": "show:78183",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:376865",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:421443",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:8413",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "movie:994143",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:1267592",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:55215",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.7734903583419945,
+            "ndcgBounds": [
+              0.7734903583419945,
+              0.7734903583419945
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "show:90040",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:10217",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:713776",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:202140",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:77059",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:201408",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:595930",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.7759169755812949,
+            "ndcgBounds": [
+              0.7759169755812949,
+              0.7759169755812949
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:1585",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:527774",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:61461",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:57278",
+                "grade": 2
+              },
+              {
+                "rank": 9,
+                "key": "movie:49051",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:300803",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.48261836197916846,
+              0.677963181383605
+            ],
+            "acceptable": 5,
+            "acceptableBounds": [
+              5,
+              6
+            ],
+            "unknown": 1,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 8,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:1824",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "movie:433310",
+                "grade": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "core-strength",
+      "config": {
+        "id": "core-strength",
+        "name": "Core evidence + attribute strength",
+        "family": "strength",
+        "evidenceMood": 0.08,
+        "evidenceConcrete": 0.2,
+        "coreWeight": 1,
+        "combine": "auto"
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 8.166666666666666,
+        "unknown": 1,
+        "zeroTop5": 2
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 1,
+            "ndcgBounds": [
+              1,
+              1
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:16127",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:35236",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:523849",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:14769",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:206013",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:3108",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.7552638999161629,
+            "ndcgBounds": [
+              0.7552638999161629,
+              0.7552638999161629
+            ],
+            "acceptable": 8,
+            "acceptableBounds": [
+              8,
+              8
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:76305",
+                "grade": 1
+              },
+              {
+                "rank": 5,
+                "key": "show:129024",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:281006",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "show:16395",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:117303",
+                "grade": 2
+              },
+              {
+                "rank": 9,
+                "key": "show:33024",
+                "grade": 1
+              },
+              {
+                "rank": 10,
+                "key": "show:280976",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.78776836029308,
+            "ndcgBounds": [
+              0.78776836029308,
+              0.78776836029308
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:78183",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:548473",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:376865",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:994143",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "movie:55215",
+                "grade": 1
+              },
+              {
+                "rank": 8,
+                "key": "movie:8413",
+                "grade": 2
+              },
+              {
+                "rank": 9,
+                "key": "movie:421443",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:1267592",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.7734903583419945,
+            "ndcgBounds": [
+              0.7734903583419945,
+              0.7734903583419945
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "show:90040",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:77059",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:10217",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:713776",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:202140",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:201408",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:595930",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.8264429439378518,
+            "ndcgBounds": [
+              0.8264429439378518,
+              0.8264429439378518
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:1585",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:527774",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:57158",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:49051",
+                "grade": 2
+              },
+              {
+                "rank": 9,
+                "key": "movie:166428",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:61461",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.5039635895569563,
+              0.7039914898574594
+            ],
+            "acceptable": 5,
+            "acceptableBounds": [
+              5,
+              6
+            ],
+            "unknown": 1,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 8,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:1824",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "movie:289280",
+                "grade": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "core-first",
+      "config": {
+        "id": "core-first",
+        "name": "Core evidence takes priority",
+        "family": "strength",
+        "evidenceMood": 0.08,
+        "evidenceConcrete": 0.05,
+        "coreWeight": 2,
+        "combine": "textfirst"
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 8,
+        "unknown": 1,
+        "zeroTop5": 1
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9173414328953917,
+            "ndcgBounds": [
+              0.9173414328953917,
+              0.9173414328953917
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:4241",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:433941",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.6840581564946533,
+            "ndcgBounds": [
+              0.6840581564946533,
+              0.6840581564946533
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:33024",
+                "grade": 1
+              },
+              {
+                "rank": 3,
+                "key": "show:280976",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "show:76305",
+                "grade": 1
+              },
+              {
+                "rank": 5,
+                "key": "show:89557",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:42500",
+                "grade": 1
+              },
+              {
+                "rank": 7,
+                "key": "show:83039",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:129024",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "show:63397",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.7114899182707871,
+            "ndcgBounds": [
+              0.7114899182707871,
+              0.7114899182707871
+            ],
+            "acceptable": 7,
+            "acceptableBounds": [
+              7,
+              7
+            ],
+            "unknown": 0,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:548473",
+                "grade": 0
+              },
+              {
+                "rank": 2,
+                "key": "show:78183",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "movie:376865",
+                "grade": 2
+              },
+              {
+                "rank": 5,
+                "key": "movie:8413",
+                "grade": 2
+              },
+              {
+                "rank": 6,
+                "key": "movie:421443",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:1267592",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:594718",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "movie:55215",
+                "grade": 1
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.8363737201414462,
+            "ndcgBounds": [
+              0.8363737201414462,
+              0.8363737201414462
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:90040",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:10217",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:713776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:77059",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:202140",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:595930",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:201408",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:27585",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.7814782559745507,
+            "ndcgBounds": [
+              0.7814782559745507,
+              0.7814782559745507
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:1585",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "movie:527774",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:61461",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:57278",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:300803",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "show:5182",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:31394",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:10191",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.49226360870709823,
+              0.704088084023158
+            ],
+            "acceptable": 5,
+            "acceptableBounds": [
+              5,
+              6
+            ],
+            "unknown": 1,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 4,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 6,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:1824",
+                "grade": 0
+              },
+              {
+                "rank": 8,
+                "key": "movie:289280",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 10,
+                "key": "movie:433310",
+                "grade": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "core-tempered",
+      "config": {
+        "id": "core-tempered",
+        "name": "Core evidence with stronger text",
+        "family": "strength",
+        "evidenceMood": 0.08,
+        "evidenceConcrete": 0.35,
+        "coreWeight": 0.6,
+        "combine": "textfirst"
+      },
+      "summary": {
+        "queries": 6,
+        "ndcg": null,
+        "acceptable": 8.166666666666666,
+        "unknown": 2,
+        "zeroTop5": 2
+      },
+      "queries": [
+        {
+          "index": 0,
+          "query": "complete nonsense",
+          "metric": {
+            "ndcg": 0.9173414328953917,
+            "ndcgBounds": [
+              0.9173414328953917,
+              0.9173414328953917
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:46740",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:251",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:1229",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:67352",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:17776",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:152483",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "movie:928344",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:36217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:4241",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:433941",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "query": "feel good cooking show",
+          "metric": {
+            "ndcg": 0.8578356910176074,
+            "ndcgBounds": [
+              0.8578356910176074,
+              0.8578356910176074
+            ],
+            "acceptable": 9,
+            "acceptableBounds": [
+              9,
+              9
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:114574",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "show:30745",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:106694",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:76305",
+                "grade": 1
+              },
+              {
+                "rank": 5,
+                "key": "show:129024",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:281006",
+                "grade": 2
+              },
+              {
+                "rank": 7,
+                "key": "show:16395",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "show:154916",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "show:117303",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "show:214250",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "query": "slow burn space horror",
+          "metric": {
+            "ndcg": 0.6775823906441728,
+            "ndcgBounds": [
+              0.6775823906441728,
+              0.6775823906441728
+            ],
+            "acceptable": 6,
+            "acceptableBounds": [
+              6,
+              6
+            ],
+            "unknown": 0,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:28893",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "movie:2154",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:994143",
+                "grade": 0
+              },
+              {
+                "rank": 4,
+                "key": "show:78183",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:55215",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:548473",
+                "grade": 0
+              },
+              {
+                "rank": 7,
+                "key": "movie:376865",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "movie:611605",
+                "grade": 0
+              },
+              {
+                "rank": 9,
+                "key": "movie:8413",
+                "grade": 2
+              },
+              {
+                "rank": 10,
+                "key": "movie:421443",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "query": "grief after losing a child",
+          "metric": {
+            "ndcg": 0.7330729372883246,
+            "ndcgBounds": [
+              0.7330729372883246,
+              0.7330729372883246
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:165567",
+                "grade": 2
+              },
+              {
+                "rank": 2,
+                "key": "show:217699",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "show:83584",
+                "grade": 2
+              },
+              {
+                "rank": 4,
+                "key": "show:90040",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "show:77059",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "show:202140",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "show:201408",
+                "grade": 2
+              },
+              {
+                "rank": 8,
+                "key": "movie:10217",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:713776",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:16350",
+                "grade": 2
+              }
+            ]
+          }
+        },
+        {
+          "index": 11,
+          "query": "fantasy with dragons",
+          "metric": {
+            "ndcg": 0.9206500320722545,
+            "ndcgBounds": [
+              0.9206500320722545,
+              0.9206500320722545
+            ],
+            "acceptable": 10,
+            "acceptableBounds": [
+              10,
+              10
+            ],
+            "unknown": 0,
+            "zeroTop5": 0,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "show:61445",
+                "grade": 3
+              },
+              {
+                "rank": 2,
+                "key": "movie:167858",
+                "grade": 2
+              },
+              {
+                "rank": 3,
+                "key": "show:118956",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "show:1585",
+                "grade": 3
+              },
+              {
+                "rank": 5,
+                "key": "movie:59883",
+                "grade": 3
+              },
+              {
+                "rank": 6,
+                "key": "movie:31221",
+                "grade": 3
+              },
+              {
+                "rank": 7,
+                "key": "movie:527774",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:5494",
+                "grade": 3
+              },
+              {
+                "rank": 9,
+                "key": "movie:10191",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:57158",
+                "grade": 3
+              }
+            ]
+          }
+        },
+        {
+          "index": 12,
+          "query": "like groundhog day",
+          "metric": {
+            "ndcg": null,
+            "ndcgBounds": [
+              0.43213145599630104,
+              0.7072026931545269
+            ],
+            "acceptable": 4,
+            "acceptableBounds": [
+              4,
+              6
+            ],
+            "unknown": 2,
+            "zeroTop5": 1,
+            "exclusionTop5": [],
+            "top": [
+              {
+                "rank": 1,
+                "key": "movie:137",
+                "grade": 1
+              },
+              {
+                "rank": 2,
+                "key": "movie:587792",
+                "grade": 3
+              },
+              {
+                "rank": 3,
+                "key": "movie:59700",
+                "grade": 3
+              },
+              {
+                "rank": 4,
+                "key": "movie:26538",
+                "grade": 0
+              },
+              {
+                "rank": 5,
+                "key": "movie:122906",
+                "grade": 1
+              },
+              {
+                "rank": 6,
+                "key": "movie:588064",
+                "grade": null
+              },
+              {
+                "rank": 7,
+                "key": "movie:672647",
+                "grade": 3
+              },
+              {
+                "rank": 8,
+                "key": "movie:293970",
+                "grade": null
+              },
+              {
+                "rank": 9,
+                "key": "movie:43967",
+                "grade": 3
+              },
+              {
+                "rank": 10,
+                "key": "movie:1824",
+                "grade": 0
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

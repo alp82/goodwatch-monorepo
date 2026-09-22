@@ -1,0 +1,43 @@
+{
+  "winner": "semantic-core",
+  "scope": "Interpretation + semantic support + source-fact supplementation, on frozen pooled candidates and stated agent relevance rubric",
+  "comparatorCount": 21,
+  "checks": {
+    "marginNdcg": true,
+    "marginAcceptable": true,
+    "allGuardrails": true,
+    "auditMarginAndGuardrails": true,
+    "selectedRankerUnchanged": true,
+    "confirmationNonnegativeVsEveryComparator": true,
+    "allFinalTopThreeIndependentlyAudited": true
+  },
+  "ndcgRange": [
+    0.9277936983051571,
+    0.9332226765300342
+  ],
+  "independentAuditRange": [
+    0.9205343040819338,
+    0.9259632823068109
+  ],
+  "minimumMarginToAnyComparatorAcrossUnknownAssignments": 0.10748998728455417,
+  "minimumAuditedMarginAcrossUnknownAssignments": 0.1036253842489705,
+  "confirmationMinimumNdcgMargin": 0.07474651376209174,
+  "auditPairs": 56,
+  "metricsFile": "semantic-evaluation-all.json",
+  "qualityMetric": "Macro pool-relative NDCG@10; exact shared-label sensitivity over unresolved Free Guy grade 0,1,2,3",
+  "acceptedHumanBaseline": "Not rerun; no human per-title labels manufactured",
+  "finalEvidenceHashes": {
+    "semantic-evaluation-all.json": "6c36e7dd6db1b149ba878c5cf2446aa93a4de5d3df110abe25ea5412a0b60c14",
+    "semantic-support-v2.json": "a75a1c02acd872b030b80f9debf2a0261580339e7e079434a2cd2d9615124f52",
+    "query-intents.json": "f752f2798cafe1c7b6231c1acac1c538674b1b43edd6adbd497ecfa0643aa4b1",
+    "judgments-a.json": "67c59448ad3fc739b4f705f7a8b2b3a20258cebe0595f5c336200ef39024188b",
+    "judgments-b.json": "f7cc2235d168f4c817d8b2e0799fe7fd5bfb709315a518c1d76f6bf14caab6d9",
+    "judgments-c.json": "6b0860edfc366d0b24eea7cca96f839d330a8647e06dba745a77c2d964ccad4f",
+    "judgments-audit.json": "1ed35a0face7eb1c25a46cc454e61592e461e5d7358b34c8cc9c33f85876c410",
+    "judgments-audit-final.json": "209650a6c9b6a7ef5bf4d2a34c69dda6524716d94110f78509a0034417ed3afe",
+    "uncertain-evidence-audit.json": "c968dcf6c9a151ca277118eebb238a903093abc0cbae73f1e6504fb34f78c572",
+    "evaluate.cjs": "d8127dc32c8667459af92f70a5408d4c2f72757a5a4d0b8eca159f81f7875ed6",
+    "evaluate-semantic.cjs": "bab408988124fa773874adabe7ec65750bb75a4acb44f062d12ec2d3a2ba12ef",
+    "verify-winner.cjs": "7ea108a9052dd100009cce83abc18c2a80eed4ae1e88750c89e29c0c2f71b1c2"
+  }
+}

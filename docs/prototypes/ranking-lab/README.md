@@ -2,6 +2,8 @@
 
 **Throwaway logic prototype. No production ranking has been selected.**
 
+**Latest experiment:** [Open the ranking tournament](tournament.html). The continued loop found a clear proxy winner: explicit request interpretation, semantic core verification, then mood/attribute strength. It beats all 21 preserved comparators under the fixed evaluation, audit, uncertainty and regression criteria. [Full loop findings and reproduction](experiments/README.md). The earlier lab and its first-iteration findings remain below.
+
 Question: can mood searches improve while concrete matches remain useful, and which losses come from attribute coverage, attribute strength, text evidence, or candidate admission?
 
 Open [index.html](index.html) directly. No installation, server, API calls, or persistence is required. The generated HTML embeds all 14 captured queries and can be shared as one file. URL parameters select a starting query/preset, for example `index.html?q=1&preset=blend`. Controls do not update the URL; download a review snapshot to retain a custom configuration and judgments.

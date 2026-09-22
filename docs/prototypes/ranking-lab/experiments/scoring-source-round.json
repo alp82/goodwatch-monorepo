@@ -1,0 +1,6342 @@
+{
+  "warning": "DEVELOPMENT anchors only; not relevance judgments",
+  "candidates": 48,
+  "results": [
+    {
+      "cfg": {
+        "id": "log-evidence-textfirst-weighted",
+        "name": "Strength + diminishing text evidence",
+        "family": "strength",
+        "evidenceTransform": "log",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.6113293925736825,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 82,
+            "movie:278924": 253
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5553618238133438,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 18,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12831862796575777,
+          "targetRanks": {
+            "movie:376865": 129,
+            "movie:594718": 371,
+            "movie:8413": 250
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6781035935540111,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21754450557474006,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 66
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3715076853104982,
+          "targetRanks": {
+            "movie:10191": 3,
+            "movie:57158": 5,
+            "show:94997": 20
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "log-evidence-auto-weighted",
+        "name": "Strength + diminishing text evidence",
+        "family": "strength",
+        "evidenceTransform": "log",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.6113293925736825,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 2036,
+            "movie:278924": 2226
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5553618238133438,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 18,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12831862796575777,
+          "targetRanks": {
+            "movie:376865": 129,
+            "movie:594718": 371,
+            "movie:8413": 250
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6781035935540111,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21754450557474006,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 66
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3715076853104982,
+          "targetRanks": {
+            "movie:10191": 3,
+            "movie:57158": 5,
+            "show:94997": 20
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "log-evidence-union-weighted",
+        "name": "Strength + diminishing text evidence",
+        "family": "strength",
+        "evidenceTransform": "log",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.6113293925736825,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 2036,
+            "movie:278924": 2226
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5553618238133438,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 18,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12831862796575777,
+          "targetRanks": {
+            "movie:376865": 129,
+            "movie:594718": 371,
+            "movie:8413": 250
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6781035935540111,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21754450557474006,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 66
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3715076853104982,
+          "targetRanks": {
+            "movie:10191": 3,
+            "movie:57158": 5,
+            "show:94997": 20
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "log-evidence-textfirst-equal",
+        "name": "Strength + diminishing text evidence",
+        "family": "strength",
+        "evidenceTransform": "log",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6093087891617327,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 87,
+            "movie:278924": 272
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6547543623015969,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 2
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12632550021226366,
+          "targetRanks": {
+            "movie:376865": 221,
+            "movie:594718": 364,
+            "movie:8413": 181
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6577324383928644,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 8
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.37408724020039325,
+          "targetRanks": {
+            "movie:10191": 3,
+            "movie:57158": 5,
+            "show:94997": 18
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "log-evidence-auto-equal",
+        "name": "Strength + diminishing text evidence",
+        "family": "strength",
+        "evidenceTransform": "log",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6068329519500681,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5308031558224253,
+          "targetRanks": {
+            "show:1229": 4,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 2046,
+            "movie:278924": 2245
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6547543623015969,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 2
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12632550021226366,
+          "targetRanks": {
+            "movie:376865": 221,
+            "movie:594718": 364,
+            "movie:8413": 181
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6577324383928644,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 8
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.37408724020039325,
+          "targetRanks": {
+            "movie:10191": 3,
+            "movie:57158": 5,
+            "show:94997": 18
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "log-evidence-union-equal",
+        "name": "Strength + diminishing text evidence",
+        "family": "strength",
+        "evidenceTransform": "log",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6068329519500681,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5308031558224253,
+          "targetRanks": {
+            "show:1229": 4,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 2046,
+            "movie:278924": 2245
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6547543623015969,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 2
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12632550021226366,
+          "targetRanks": {
+            "movie:376865": 221,
+            "movie:594718": 364,
+            "movie:8413": 181
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6577324383928644,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 8
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.37408724020039325,
+          "targetRanks": {
+            "movie:10191": 3,
+            "movie:57158": 5,
+            "show:94997": 18
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-deficit-textfirst-equal",
+        "name": "Strength with soft deficit penalty",
+        "family": "strength",
+        "penalty": 0.3,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6051404644634524,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 59,
+            "movie:278924": 248
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6156891065798795,
+          "targetRanks": {
+            "movie:1398": 19,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.611111111111111,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13644025148430491,
+          "targetRanks": {
+            "movie:376865": 134,
+            "movie:594718": 270,
+            "movie:8413": 121
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 7
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3496358594892313,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 5,
+            "show:94997": 19
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-deficit-auto-equal",
+        "name": "Strength with soft deficit penalty",
+        "family": "strength",
+        "penalty": 0.3,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6051404644634524,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1929,
+            "movie:278924": 2221
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6156891065798795,
+          "targetRanks": {
+            "movie:1398": 19,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.611111111111111,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13644025148430491,
+          "targetRanks": {
+            "movie:376865": 134,
+            "movie:594718": 270,
+            "movie:8413": 121
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 7
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3496358594892313,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 5,
+            "show:94997": 19
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-deficit-union-equal",
+        "name": "Strength with soft deficit penalty",
+        "family": "strength",
+        "penalty": 0.3,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6051404644634524,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1929,
+            "movie:278924": 2221
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6156891065798795,
+          "targetRanks": {
+            "movie:1398": 19,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.611111111111111,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13644025148430491,
+          "targetRanks": {
+            "movie:376865": 134,
+            "movie:594718": 270,
+            "movie:8413": 121
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 7
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3496358594892313,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 5,
+            "show:94997": 19
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "strength-intent-textfirst-equal",
+        "name": "Strength + bounded mood evidence",
+        "family": "strength",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6050974882457157,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 39,
+            "movie:278924": 153
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.611111111111111,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12652769101587028,
+          "targetRanks": {
+            "movie:376865": 220,
+            "movie:594718": 355,
+            "movie:8413": 181
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 7
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3496358594892313,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 5,
+            "show:94997": 19
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "strength-intent-auto-equal",
+        "name": "Strength + bounded mood evidence",
+        "family": "strength",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6050974882457157,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1722,
+            "movie:278924": 2125
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.611111111111111,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12652769101587028,
+          "targetRanks": {
+            "movie:376865": 220,
+            "movie:594718": 355,
+            "movie:8413": 181
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 7
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3496358594892313,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 5,
+            "show:94997": 19
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "strength-intent-union-equal",
+        "name": "Strength + bounded mood evidence",
+        "family": "strength",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.6050974882457157,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1722,
+            "movie:278924": 2125
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.611111111111111,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 7,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.12652769101587028,
+          "targetRanks": {
+            "movie:376865": 220,
+            "movie:594718": 355,
+            "movie:8413": 181
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:75656": 1,
+            "movie:388": 7
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21229171502402247,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 52
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3496358594892313,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 5,
+            "show:94997": 19
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "strength-intent-textfirst-weighted",
+        "name": "Strength + bounded mood evidence",
+        "family": "strength",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5953139915550076,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 36,
+            "movie:278924": 138
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5568296748805082,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 17,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.1303197642071703,
+          "targetRanks": {
+            "movie:376865": 112,
+            "movie:594718": 366,
+            "movie:8413": 234
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.49356847033973983,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21754450557474006,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 66
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3283582069547434,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 7,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "strength-intent-auto-weighted",
+        "name": "Strength + bounded mood evidence",
+        "family": "strength",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5953139915550076,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1709,
+            "movie:278924": 2107
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5568296748805082,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 17,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.1303197642071703,
+          "targetRanks": {
+            "movie:376865": 112,
+            "movie:594718": 366,
+            "movie:8413": 234
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.49356847033973983,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21754450557474006,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 66
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3283582069547434,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 7,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "strength-intent-union-weighted",
+        "name": "Strength + bounded mood evidence",
+        "family": "strength",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5953139915550076,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1709,
+            "movie:278924": 2107
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5568296748805082,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 17,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.1303197642071703,
+          "targetRanks": {
+            "movie:376865": 112,
+            "movie:594718": 366,
+            "movie:8413": 234
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.49356847033973983,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21754450557474006,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 66
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3283582069547434,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 7,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-deficit-textfirst-weighted",
+        "name": "Strength with soft deficit penalty",
+        "family": "strength",
+        "penalty": 0.3,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5917190609903076,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 49,
+            "movie:278924": 236
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6445324131589439,
+          "targetRanks": {
+            "movie:1398": 10,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5644420310368622,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 13,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.14291793663153862,
+          "targetRanks": {
+            "movie:376865": 60,
+            "movie:594718": 264,
+            "movie:8413": 163
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.42810359355401106,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21845241054699321,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 63
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3283582069547434,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 7,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-deficit-auto-weighted",
+        "name": "Strength with soft deficit penalty",
+        "family": "strength",
+        "penalty": 0.3,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5917190609903076,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1906,
+            "movie:278924": 2209
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6445324131589439,
+          "targetRanks": {
+            "movie:1398": 10,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5644420310368622,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 13,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.14291793663153862,
+          "targetRanks": {
+            "movie:376865": 60,
+            "movie:594718": 264,
+            "movie:8413": 163
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.42810359355401106,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21845241054699321,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 63
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3283582069547434,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 7,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-deficit-union-weighted",
+        "name": "Strength with soft deficit penalty",
+        "family": "strength",
+        "penalty": 0.3,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5917190609903076,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1906,
+            "movie:278924": 2209
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6445324131589439,
+          "targetRanks": {
+            "movie:1398": 10,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5644420310368622,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 13,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.14291793663153862,
+          "targetRanks": {
+            "movie:376865": 60,
+            "movie:594718": 264,
+            "movie:8413": 163
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.42810359355401106,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21845241054699321,
+          "targetRanks": {
+            "movie:334541": 12,
+            "movie:27585": 63
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.3283582069547434,
+          "targetRanks": {
+            "movie:10191": 4,
+            "movie:57158": 7,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "coverage-blend-textfirst-weighted",
+        "name": "Weighted coverage / strength blend",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5900921761575353,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 48,
+            "movie:278924": 105
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:1398": 7,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.566971570833571,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 12,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13565565262738707,
+          "targetRanks": {
+            "movie:376865": 77,
+            "movie:594718": 282,
+            "movie:8413": 254
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.42810359355401106,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21667840735045685,
+          "targetRanks": {
+            "movie:334541": 13,
+            "movie:27585": 57
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "coverage-blend-auto-weighted",
+        "name": "Weighted coverage / strength blend",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5900921761575353,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1898,
+            "movie:278924": 2069
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:1398": 7,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.566971570833571,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 12,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13565565262738707,
+          "targetRanks": {
+            "movie:376865": 77,
+            "movie:594718": 282,
+            "movie:8413": 254
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.42810359355401106,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21667840735045685,
+          "targetRanks": {
+            "movie:334541": 13,
+            "movie:27585": 57
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "coverage-blend-union-weighted",
+        "name": "Weighted coverage / strength blend",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5900921761575353,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1898,
+            "movie:278924": 2069
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:1398": 7,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.566971570833571,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 12,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13565565262738707,
+          "targetRanks": {
+            "movie:376865": 77,
+            "movie:594718": 282,
+            "movie:8413": 254
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.42810359355401106,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 6
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21667840735045685,
+          "targetRanks": {
+            "movie:334541": 13,
+            "movie:27585": 57
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "coverage-blend-textfirst-equal",
+        "name": "Weighted coverage / strength blend",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5834118839104655,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 53,
+            "movie:278924": 125
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6351190772136599,
+          "targetRanks": {
+            "movie:1398": 12,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6187357290360074,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 6,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13215336715208534,
+          "targetRanks": {
+            "movie:376865": 133,
+            "movie:594718": 283,
+            "movie:8413": 188
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.4659798746177194,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 9
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21501566332834632,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 46
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "coverage-blend-auto-equal",
+        "name": "Weighted coverage / strength blend",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5834118839104655,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1905,
+            "movie:278924": 2092
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6351190772136599,
+          "targetRanks": {
+            "movie:1398": 12,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6187357290360074,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 6,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13215336715208534,
+          "targetRanks": {
+            "movie:376865": 133,
+            "movie:594718": 283,
+            "movie:8413": 188
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.4659798746177194,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 9
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21501566332834632,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 46
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "coverage-blend-union-equal",
+        "name": "Weighted coverage / strength blend",
+        "family": "blend",
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5834118839104655,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1905,
+            "movie:278924": 2092
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6351190772136599,
+          "targetRanks": {
+            "movie:1398": 12,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6187357290360074,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 6,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.13215336715208534,
+          "targetRanks": {
+            "movie:376865": 133,
+            "movie:594718": 283,
+            "movie:8413": 188
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.4659798746177194,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 9
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.21501566332834632,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 46
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "nonlinear-strength-textfirst-weighted",
+        "name": "Emphasize strong attributes",
+        "family": "strength",
+        "strengthPower": 1.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.582558348151136,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 39,
+            "movie:278924": 73
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6577324383928644,
+          "targetRanks": {
+            "movie:1398": 8,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5359725122306818,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 22,
+            "show:106694": 5
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11190622624751312,
+          "targetRanks": {
+            "movie:376865": 411,
+            "movie:594718": 582,
+            "movie:8413": 493
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 4
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.20502653662741066,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 75
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2880454963852529,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 24
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "nonlinear-strength-auto-weighted",
+        "name": "Emphasize strong attributes",
+        "family": "strength",
+        "strengthPower": 1.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5800825109394715,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5308031558224253,
+          "targetRanks": {
+            "show:1229": 4,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1783,
+            "movie:278924": 2007
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6577324383928644,
+          "targetRanks": {
+            "movie:1398": 8,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5359725122306818,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 22,
+            "show:106694": 5
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11190622624751312,
+          "targetRanks": {
+            "movie:376865": 411,
+            "movie:594718": 582,
+            "movie:8413": 493
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 4
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.20502653662741066,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 75
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2880454963852529,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 24
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "nonlinear-strength-union-weighted",
+        "name": "Emphasize strong attributes",
+        "family": "strength",
+        "strengthPower": 1.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5800825109394715,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5308031558224253,
+          "targetRanks": {
+            "show:1229": 4,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1783,
+            "movie:278924": 2007
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6577324383928644,
+          "targetRanks": {
+            "movie:1398": 8,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5359725122306818,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 22,
+            "show:106694": 5
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11190622624751312,
+          "targetRanks": {
+            "movie:376865": 411,
+            "movie:594718": 582,
+            "movie:8413": 493
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 4
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.20502653662741066,
+          "targetRanks": {
+            "movie:334541": 15,
+            "movie:27585": 75
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2880454963852529,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 24
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "nonlinear-strength-textfirst-equal",
+        "name": "Emphasize strong attributes",
+        "family": "strength",
+        "strengthPower": 1.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5785860961026605,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 41,
+            "movie:278924": 85
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6351190772136599,
+          "targetRanks": {
+            "movie:1398": 12,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6051549589285763,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 8,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.1125026756616417,
+          "targetRanks": {
+            "movie:376865": 467,
+            "movie:594718": 548,
+            "movie:8413": 416
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5088912804029996,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 5
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.20323956661739906,
+          "targetRanks": {
+            "movie:334541": 17,
+            "movie:27585": 63
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "nonlinear-strength-auto-equal",
+        "name": "Emphasize strong attributes",
+        "family": "strength",
+        "strengthPower": 1.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5761102588909959,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5308031558224253,
+          "targetRanks": {
+            "show:1229": 4,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1798,
+            "movie:278924": 2030
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6351190772136599,
+          "targetRanks": {
+            "movie:1398": 12,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6051549589285763,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 8,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.1125026756616417,
+          "targetRanks": {
+            "movie:376865": 467,
+            "movie:594718": 548,
+            "movie:8413": 416
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5088912804029996,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 5
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.20323956661739906,
+          "targetRanks": {
+            "movie:334541": 17,
+            "movie:27585": 63
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "nonlinear-strength-union-equal",
+        "name": "Emphasize strong attributes",
+        "family": "strength",
+        "strengthPower": 1.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5761102588909959,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5308031558224253,
+          "targetRanks": {
+            "show:1229": 4,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1798,
+            "movie:278924": 2030
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6351190772136599,
+          "targetRanks": {
+            "movie:1398": 12,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6051549589285763,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 8,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.1125026756616417,
+          "targetRanks": {
+            "movie:376865": 467,
+            "movie:594718": 548,
+            "movie:8413": 416
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5088912804029996,
+          "targetRanks": {
+            "movie:75656": 2,
+            "movie:388": 5
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.20323956661739906,
+          "targetRanks": {
+            "movie:334541": 17,
+            "movie:27585": 63
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2899543131921886,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 22
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-coverage-textfirst-weighted",
+        "name": "Soft weighted coverage blend",
+        "family": "soft",
+        "coverageMix": 0.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5667283466152165,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 44,
+            "movie:278924": 78
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:1398": 7,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5772355179124581,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 9,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11289322402564843,
+          "targetRanks": {
+            "movie:376865": 375,
+            "movie:594718": 528,
+            "movie:8413": 507
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.40876468265396737,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 5
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.17224739283504986,
+          "targetRanks": {
+            "movie:334541": 47,
+            "movie:27585": 65
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.23938230203609145,
+          "targetRanks": {
+            "movie:10191": 11,
+            "movie:57158": 18,
+            "show:94997": 29
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-coverage-auto-weighted",
+        "name": "Soft weighted coverage blend",
+        "family": "soft",
+        "coverageMix": 0.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5667283466152165,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1908,
+            "movie:278924": 2030
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:1398": 7,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5772355179124581,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 9,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11289322402564843,
+          "targetRanks": {
+            "movie:376865": 375,
+            "movie:594718": 528,
+            "movie:8413": 507
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.40876468265396737,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 5
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.17224739283504986,
+          "targetRanks": {
+            "movie:334541": 47,
+            "movie:27585": 65
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.23938230203609145,
+          "targetRanks": {
+            "movie:10191": 11,
+            "movie:57158": 18,
+            "show:94997": 29
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-coverage-union-weighted",
+        "name": "Soft weighted coverage blend",
+        "family": "soft",
+        "coverageMix": 0.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5667283466152165,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1908,
+            "movie:278924": 2030
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6666666666666666,
+          "targetRanks": {
+            "movie:1398": 7,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5772355179124581,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 9,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11289322402564843,
+          "targetRanks": {
+            "movie:376865": 375,
+            "movie:594718": 528,
+            "movie:8413": 507
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.40876468265396737,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 5
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.17224739283504986,
+          "targetRanks": {
+            "movie:334541": 47,
+            "movie:27585": 65
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.23938230203609145,
+          "targetRanks": {
+            "movie:10191": 11,
+            "movie:57158": 18,
+            "show:94997": 29
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "rounded-evidence-textfirst-weighted",
+        "name": "Rounded evidence + attribute strength",
+        "family": "strength",
+        "evidenceTransform": "round",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5652444510315163,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 55,
+            "movie:278924": 171
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5478075372089187,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 25,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.3347272588489594,
+          "targetRanks": {
+            "movie:376865": 4,
+            "movie:594718": 40,
+            "movie:8413": 5
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 2
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.2702480101283642,
+          "targetRanks": {
+            "movie:334541": 6,
+            "movie:27585": 42
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 0.3010299956639812,
+          "targetRanks": {
+            "movie:8337": 9
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2863693759920715,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 26
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "rounded-evidence-auto-weighted",
+        "name": "Rounded evidence + attribute strength",
+        "family": "strength",
+        "evidenceTransform": "round",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5652444510315163,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1922,
+            "movie:278924": 2144
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5478075372089187,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 25,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.3347272588489594,
+          "targetRanks": {
+            "movie:376865": 4,
+            "movie:594718": 40,
+            "movie:8413": 5
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 2
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.2702480101283642,
+          "targetRanks": {
+            "movie:334541": 6,
+            "movie:27585": 42
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 0.3010299956639812,
+          "targetRanks": {
+            "movie:8337": 9
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2863693759920715,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 26
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "rounded-evidence-union-weighted",
+        "name": "Rounded evidence + attribute strength",
+        "family": "strength",
+        "evidenceTransform": "round",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5652444510315163,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1922,
+            "movie:278924": 2144
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6505149978319906,
+          "targetRanks": {
+            "movie:1398": 9,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5478075372089187,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 25,
+            "show:106694": 4
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.3347272588489594,
+          "targetRanks": {
+            "movie:376865": 4,
+            "movie:594718": 40,
+            "movie:8413": 5
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 2
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.2702480101283642,
+          "targetRanks": {
+            "movie:334541": 6,
+            "movie:27585": 42
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5674392280067568,
+          "targetRanks": {
+            "movie:545609": 5,
+            "movie:1160018": 1,
+            "movie:94329": 8
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 5
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 0.3010299956639812,
+          "targetRanks": {
+            "movie:8337": 9
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2863693759920715,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 26
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "rounded-evidence-textfirst-equal",
+        "name": "Rounded evidence + attribute strength",
+        "family": "strength",
+        "evidenceTransform": "round",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5649292305442325,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 62,
+            "movie:278924": 204
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6051549589285763,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 8,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.3318776529539819,
+          "targetRanks": {
+            "movie:376865": 5,
+            "movie:594718": 48,
+            "movie:8413": 4
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 2
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.2800011170992642,
+          "targetRanks": {
+            "movie:334541": 6,
+            "movie:27585": 29
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 0.3333333333333333,
+          "targetRanks": {
+            "movie:8337": 7
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2880454963852529,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 24
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "rounded-evidence-auto-equal",
+        "name": "Rounded evidence + attribute strength",
+        "family": "strength",
+        "evidenceTransform": "round",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5649292305442325,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1960,
+            "movie:278924": 2177
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6051549589285763,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 8,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.3318776529539819,
+          "targetRanks": {
+            "movie:376865": 5,
+            "movie:594718": 48,
+            "movie:8413": 4
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 2
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.2800011170992642,
+          "targetRanks": {
+            "movie:334541": 6,
+            "movie:27585": 29
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 0.3333333333333333,
+          "targetRanks": {
+            "movie:8337": 7
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2880454963852529,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 24
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "rounded-evidence-union-equal",
+        "name": "Rounded evidence + attribute strength",
+        "family": "strength",
+        "evidenceTransform": "round",
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.3,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5649292305442325,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1960,
+            "movie:278924": 2177
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.625,
+          "targetRanks": {
+            "movie:1398": 15,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6051549589285763,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 8,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.3318776529539819,
+          "targetRanks": {
+            "movie:376865": 5,
+            "movie:594718": 48,
+            "movie:8413": 4
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 2
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.2800011170992642,
+          "targetRanks": {
+            "movie:334541": 6,
+            "movie:27585": 29
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 0.3333333333333333,
+          "targetRanks": {
+            "movie:8337": 7
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2880454963852529,
+          "targetRanks": {
+            "movie:10191": 7,
+            "movie:57158": 8,
+            "show:94997": 24
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 2
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.8154648767857288,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 2
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-coverage-textfirst-equal",
+        "name": "Soft weighted coverage blend",
+        "family": "soft",
+        "coverageMix": 0.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5629846780688373,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 52,
+            "movie:278924": 91
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6279790124049077,
+          "targetRanks": {
+            "movie:1398": 14,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6289509357448472,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 5,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11348500400626532,
+          "targetRanks": {
+            "movie:376865": 440,
+            "movie:594718": 478,
+            "movie:8413": 429
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.4005149978319906,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 9
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.1719386188234132,
+          "targetRanks": {
+            "movie:334541": 52,
+            "movie:27585": 59
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.25903832751724515,
+          "targetRanks": {
+            "movie:10191": 9,
+            "movie:57158": 12,
+            "show:94997": 28
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-coverage-auto-equal",
+        "name": "Soft weighted coverage blend",
+        "family": "soft",
+        "coverageMix": 0.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5629846780688373,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1931,
+            "movie:278924": 2046
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6279790124049077,
+          "targetRanks": {
+            "movie:1398": 14,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6289509357448472,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 5,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11348500400626532,
+          "targetRanks": {
+            "movie:376865": 440,
+            "movie:594718": 478,
+            "movie:8413": 429
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.4005149978319906,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 9
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.1719386188234132,
+          "targetRanks": {
+            "movie:334541": 52,
+            "movie:27585": 59
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.25903832751724515,
+          "targetRanks": {
+            "movie:10191": 9,
+            "movie:57158": 12,
+            "show:94997": 28
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "soft-coverage-union-equal",
+        "name": "Soft weighted coverage blend",
+        "family": "soft",
+        "coverageMix": 0.5,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.5629846780688373,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.5654648767857288,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 2
+          },
+          "negatives": {
+            "show:129959": 1931,
+            "movie:278924": 2046
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.6279790124049077,
+          "targetRanks": {
+            "movie:1398": 14,
+            "movie:1483": 1
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.6289509357448472,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 5,
+            "show:106694": 3
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11348500400626532,
+          "targetRanks": {
+            "movie:376865": 440,
+            "movie:594718": 478,
+            "movie:8413": 429
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.4005149978319906,
+          "targetRanks": {
+            "movie:75656": 3,
+            "movie:388": 9
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.1719386188234132,
+          "targetRanks": {
+            "movie:334541": 52,
+            "movie:27585": 59
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.5524123942573345,
+          "targetRanks": {
+            "movie:545609": 6,
+            "movie:1160018": 1,
+            "movie:94329": 9
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.6313247675185968,
+          "targetRanks": {
+            "show:6024": 1,
+            "show:9826": 13
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.43067655807339306,
+          "targetRanks": {
+            "movie:503919": 4
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.25903832751724515,
+          "targetRanks": {
+            "movie:10191": 9,
+            "movie:57158": 12,
+            "show:94997": 28
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "selective-strength-textfirst-weighted",
+        "name": "Highest-weight half of dimensions",
+        "family": "blend",
+        "topFraction": 0.5,
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5105062295539008,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.75,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 1
+          },
+          "negatives": {
+            "show:129959": 37,
+            "movie:278924": 68
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.3813247675185968,
+          "targetRanks": {
+            "movie:1398": 13,
+            "movie:1483": 3
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.4951921444880054,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 24,
+            "show:106694": 12
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11468116163536042,
+          "targetRanks": {
+            "movie:376865": 248,
+            "movie:594718": 546,
+            "movie:8413": 595
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 3
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.16705128716518736,
+          "targetRanks": {
+            "movie:334541": 35,
+            "movie:27585": 137
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.3749858339228034,
+          "targetRanks": {
+            "movie:545609": 13,
+            "movie:1160018": 2,
+            "movie:94329": 19
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.1694277400050476,
+          "targetRanks": {
+            "show:6024": 52,
+            "show:9826": 67
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2290859999829127,
+          "targetRanks": {
+            "movie:10191": 15,
+            "movie:57158": 18,
+            "show:94997": 30
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "selective-strength-auto-weighted",
+        "name": "Highest-weight half of dimensions",
+        "family": "blend",
+        "topFraction": 0.5,
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5105062295539008,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.75,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 1
+          },
+          "negatives": {
+            "show:129959": 1660,
+            "movie:278924": 1971
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.3813247675185968,
+          "targetRanks": {
+            "movie:1398": 13,
+            "movie:1483": 3
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.4951921444880054,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 24,
+            "show:106694": 12
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11468116163536042,
+          "targetRanks": {
+            "movie:376865": 248,
+            "movie:594718": 546,
+            "movie:8413": 595
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 3
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.16705128716518736,
+          "targetRanks": {
+            "movie:334541": 35,
+            "movie:27585": 137
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.3749858339228034,
+          "targetRanks": {
+            "movie:545609": 13,
+            "movie:1160018": 2,
+            "movie:94329": 19
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.1694277400050476,
+          "targetRanks": {
+            "show:6024": 52,
+            "show:9826": 67
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2290859999829127,
+          "targetRanks": {
+            "movie:10191": 15,
+            "movie:57158": 18,
+            "show:94997": 30
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "selective-strength-union-weighted",
+        "name": "Highest-weight half of dimensions",
+        "family": "blend",
+        "topFraction": 0.5,
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": true
+      },
+      "proxyMeanDiscount": 0.5105062295539008,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.75,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 1
+          },
+          "negatives": {
+            "show:129959": 1660,
+            "movie:278924": 1971
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.3813247675185968,
+          "targetRanks": {
+            "movie:1398": 13,
+            "movie:1483": 3
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.4951921444880054,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 24,
+            "show:106694": 12
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11468116163536042,
+          "targetRanks": {
+            "movie:376865": 248,
+            "movie:594718": 546,
+            "movie:8413": 595
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 3
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.16705128716518736,
+          "targetRanks": {
+            "movie:334541": 35,
+            "movie:27585": 137
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.3749858339228034,
+          "targetRanks": {
+            "movie:545609": 13,
+            "movie:1160018": 2,
+            "movie:94329": 19
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.1694277400050476,
+          "targetRanks": {
+            "show:6024": 52,
+            "show:9826": 67
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.5,
+          "targetRanks": {
+            "movie:503919": 3
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.2290859999829127,
+          "targetRanks": {
+            "movie:10191": 15,
+            "movie:57158": 18,
+            "show:94997": 30
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 3
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "selective-strength-textfirst-equal",
+        "name": "Highest-weight half of dimensions",
+        "family": "blend",
+        "topFraction": 0.5,
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "textfirst",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.49732950749328547,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.75,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 1
+          },
+          "negatives": {
+            "show:129959": 36,
+            "movie:278924": 64
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.36990623328406574,
+          "targetRanks": {
+            "movie:1398": 17,
+            "movie:1483": 3
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5000025583695445,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 22,
+            "show:106694": 11
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11381924090072243,
+          "targetRanks": {
+            "movie:376865": 287,
+            "movie:594718": 546,
+            "movie:8413": 573
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 3
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.16168714267362339,
+          "targetRanks": {
+            "movie:334541": 42,
+            "movie:27585": 145
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.3749858339228034,
+          "targetRanks": {
+            "movie:545609": 13,
+            "movie:1160018": 2,
+            "movie:94329": 19
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.1694277400050476,
+          "targetRanks": {
+            "show:6024": 52,
+            "show:9826": 67
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.38685280723454163,
+          "targetRanks": {
+            "movie:503919": 5
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.22716686586168103,
+          "targetRanks": {
+            "movie:10191": 17,
+            "movie:57158": 19,
+            "show:94997": 26
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 5
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "selective-strength-auto-equal",
+        "name": "Highest-weight half of dimensions",
+        "family": "blend",
+        "topFraction": 0.5,
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "auto",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.49732950749328547,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.75,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 1
+          },
+          "negatives": {
+            "show:129959": 1571,
+            "movie:278924": 1966
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.36990623328406574,
+          "targetRanks": {
+            "movie:1398": 17,
+            "movie:1483": 3
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5000025583695445,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 22,
+            "show:106694": 11
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11381924090072243,
+          "targetRanks": {
+            "movie:376865": 287,
+            "movie:594718": 546,
+            "movie:8413": 573
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 3
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.16168714267362339,
+          "targetRanks": {
+            "movie:334541": 42,
+            "movie:27585": 145
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.3749858339228034,
+          "targetRanks": {
+            "movie:545609": 13,
+            "movie:1160018": 2,
+            "movie:94329": 19
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.1694277400050476,
+          "targetRanks": {
+            "show:6024": 52,
+            "show:9826": 67
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.38685280723454163,
+          "targetRanks": {
+            "movie:503919": 5
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.22716686586168103,
+          "targetRanks": {
+            "movie:10191": 17,
+            "movie:57158": 19,
+            "show:94997": 26
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 5
+          },
+          "negatives": {}
+        }
+      }
+    },
+    {
+      "cfg": {
+        "id": "selective-strength-union-equal",
+        "name": "Highest-weight half of dimensions",
+        "family": "blend",
+        "topFraction": 0.5,
+        "coverageMix": 0.2,
+        "evidenceMood": 0.1,
+        "evidenceConcrete": 0.55,
+        "combine": "union",
+        "weighted": false
+      },
+      "proxyMeanDiscount": 0.49732950749328547,
+      "badTop10": 0,
+      "perQuery": {
+        "complete nonsense": {
+          "discount": 0.75,
+          "targetRanks": {
+            "show:1229": 3,
+            "show:251": 1
+          },
+          "negatives": {
+            "show:129959": 1571,
+            "movie:278924": 1966
+          }
+        },
+        "tarkovsky": {
+          "discount": 0.36990623328406574,
+          "targetRanks": {
+            "movie:1398": 17,
+            "movie:1483": 3
+          },
+          "negatives": {}
+        },
+        "feel good cooking show": {
+          "discount": 0.5000025583695445,
+          "targetRanks": {
+            "show:114574": 1,
+            "show:76305": 22,
+            "show:106694": 11
+          },
+          "negatives": {}
+        },
+        "slow burn space horror": {
+          "discount": 0.11381924090072243,
+          "targetRanks": {
+            "movie:376865": 287,
+            "movie:594718": 546,
+            "movie:8413": 573
+          },
+          "negatives": {}
+        },
+        "tense heist thriller, not bleak": {
+          "discount": 0.46533827903669656,
+          "targetRanks": {
+            "movie:75656": 4,
+            "movie:388": 3
+          },
+          "negatives": {}
+        },
+        "grief after losing a child": {
+          "discount": 0.16168714267362339,
+          "targetRanks": {
+            "movie:334541": 42,
+            "movie:27585": 145
+          },
+          "negatives": {}
+        },
+        "furious": {
+          "discount": 0.3749858339228034,
+          "targetRanks": {
+            "movie:545609": 13,
+            "movie:1160018": 2,
+            "movie:94329": 19
+          },
+          "negatives": {}
+        },
+        "craty": {
+          "discount": 0.1694277400050476,
+          "targetRanks": {
+            "show:6024": 52,
+            "show:9826": 67
+          },
+          "negatives": {}
+        },
+        "melancholy lighthouse keeper mystery": {
+          "discount": 0.38685280723454163,
+          "targetRanks": {
+            "movie:503919": 5
+          },
+          "negatives": {}
+        },
+        "scifi with cars": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:10483": 1
+          },
+          "negatives": {}
+        },
+        "sunglasses at night": {
+          "discount": 1,
+          "targetRanks": {
+            "movie:8337": 1
+          },
+          "negatives": {}
+        },
+        "fantasy with dragons": {
+          "discount": 0.22716686586168103,
+          "targetRanks": {
+            "movie:10191": 17,
+            "movie:57158": 19,
+            "show:94997": 26
+          },
+          "negatives": {}
+        },
+        "like groundhog day": {
+          "discount": 0.75,
+          "targetRanks": {
+            "movie:137": 1,
+            "movie:587792": 3
+          },
+          "negatives": {}
+        },
+        "time travel complex": {
+          "discount": 0.6934264036172708,
+          "targetRanks": {
+            "movie:206487": 1,
+            "movie:14337": 5
+          },
+          "negatives": {}
+        }
+      }
+    }
+  ]
+}

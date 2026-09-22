@@ -1,0 +1,2929 @@
+[
+  {
+    "query": "complete nonsense",
+    "key": "movie:16127",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Intestinal passage to a bizarre dimension supports the essence's sustained surreal absurdity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:18162",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "The incompetent time-vortex expedition is described as relentlessly absurd and deliberately campy.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:24051",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Synopsis and essence describe a straightforward corporate-implant action conspiracy; no-nonsense is incidental wording.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "contradicted"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:251516",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Time-travel kung-fu battle against Hitler and explicit parody establish central absurdity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:278924",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A coerced assassination rescue is described as straightforward action; no-nonsense is not absurdism.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "contradicted"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:36217",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Mutant toxic squirrel, subhumanoid twins and an intentionally schlocky showdown support sustained absurdity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:4241",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Bizarre family intervention and disturbing surreal dark humor support substantial surrealism, though depravity and social commentary also lead.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:4257",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Spoof alien invasion and a stated barrage of incoherent sight gags directly support nonsensical parody.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:433941",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A living-room cardboard fort becomes an impossible world; essence confirms bizarre absurdist adventure.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:46740",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis identifies comedy specials; generated essence specifically supports rapid sketches and disregard for conventional narrative.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:523849",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Sharks combined with time travel and explicit ludicrous camp support deliberate sustained nonsense.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:630476",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Kissing-controlled school collars are a central absurd premise, while the described story retains coherent coming-of-age melancholy.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:928344",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "The biographical premise is described as fantastical fabrications and outrageous genre parody rather than ordinary biography.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:1229",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly describes surreal sketches, bizarre commercials and deliberately camp editing.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:129959",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A coherent weapons-recovery fantasy adventure with friendship themes; no-nonsense describes the knight rather than absurdist storytelling.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "contradicted"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:14769",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Pseudo-shaman protagonist plus explicit philosophical absurdity and surreal humor establish the requested sensibility.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:152483",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Unhinged superhero shorts and inventive brutal satire support substantial outrageous entertainment, less directly narrative nonsense.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:17776",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis promises nonsense and essence describes chaotic absurd comedy with little narrative concern.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:206013",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Talking-object puppet lessons become a surreal philosophical nightmare according to the supplied essence.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:251",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Surreal anthropomorphic fast-food adventures and explicit non-sequitur logic directly fit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:3108",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Bizarre prison premise and an explicitly absurdist psychedelic treatment support sustained surreal chaos.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:35236",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Hair-stealing empire and hair-controlled martial arts anchor explicitly nonsensical plots and visual gags.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:67352",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Post-apocalyptic sketch satire is described as dark absurdist comedy with deliberate disregard for norms.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Absurdist or surreal sensibility is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:1025",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Synopsis centers on animal adventures and spy parody, not cooking.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:106694",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Accessible recipe preparation is central and the essence describes wholesome, unpretentious comfort viewing.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:108178",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The specified format is a general celebrity and human-interest talk show, not a cooking-focused series.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:114574",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Cooking competitors are paired with comedians; both central cooking and lighthearted entertainment are explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:117303",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "A TV cooking program is central to the protagonist's work, though the main drama also tackles discrimination rather than simple comfort.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:129024",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Celebrity friends prepare recipes together and the supplied essence explicitly supports lighthearted charm.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:1317",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Teen goal coaching across singing, sports and other aspirations is the program's core, not cooking.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:13941",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Synopsis defines a family music-career sitcom, a different subject.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:154916",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis establishes the household series; generated essence specifically centers a young woman's cooking and gentle found-family warmth.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:1580",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A surfing teenager and father-daughter sitcom is the stated core.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:16395",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Cooking competition is verified; the essence mixes a supportive atmosphere with intense high-stakes challenges.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:214250",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Running a street-food bar is central and essence supports authentic, wholesome situational enjoyment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:2174",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The premise centers on a coach's large family and teenage daughters, not cooking.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:2589",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A gifted-student classroom sitcom has a different central subject.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:280976",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Cooking is explicitly a recurring topic alongside gardening and hosting; warm tone fits but culinary focus is shared.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:281006",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Chef recipes and culinary honors materially drive a feel-good romance; cooking shares focus with the relationship drama.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:30745",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "The synopsis establishes cooking competition and essence specifically describes comforting home cooking and friendly competition.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:33024",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Cooking is one of many children's activities, alongside crafts, science and games; wholesome tone does not make it cooking-centered.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:35058",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Home buying and renovation are the explicit subject.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:42500",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Cooking appears among ordinary schoolgirl activities; essence centers general slice-of-life and otaku humor.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:50035",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Cheerful childhood and friendships are the described subject, rather than a culinary program.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:58552",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A community patriarch's family sitcom is the stated central premise.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:63397",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Cooking and chefs' creative techniques are central; the description is appreciative and educational, with comfort less explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:6587",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Newlyweds and an extended Greek family's meddling drive the sitcom, not cooking.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:67012",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A young employee's game-development workplace is the explicit core.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:71359",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Renovation of historical houses is the subject despite an uplifting presentation.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:76305",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Eating local cuisines and cultural travel fit a warm food show, but central food preparation is not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:77631",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Contestants make pottery; a supportive competition is not a cooking show.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:83039",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Cooking principles, feasts and practical tips are central, with an immersive comforting presentation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:89557",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Chefs and friends explore cooking in kitchens; essence directly supports relaxed low-stakes enjoyment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "supported"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:92139",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A music professor leading a church choir is a different core activity.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:95074",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Personal transformation and confidence-building in Japan are the stated focus, not a culinary series.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Cooking or food preparation is a central continuing subject",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A show or series",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Warm, enjoyable, reassuring or upbeat",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:1267592",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "A derelict space station's deranged AI supports space horror; the essence emphasizes sustained eerie psychological atmosphere.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:2154",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Possession kills a stranded spaceship crew and the essence explicitly describes a slow burn of growing dread.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:28893",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A spacecraft crew's nightmares become real; atmospheric horror is supported but deliberate pacing is not explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:376865",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Deep-space isolation and explicitly psychological sci-fi horror fit the core; the packet does not directly establish gradual pacing.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:421443",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "An abandoned space mining ship's bloodbath supports space horror; claustrophobic mystery is supported, pacing less certain.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:50037",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The captive girl's mind-control institute is an Earthlike institutional setting rather than space, despite slow-burn horror.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:548473",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The horror unfolds on a New England farm after a meteorite lands; extraterrestrial origin is not a space setting.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:55215",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Space horror is explicit, but both synopsis and essence call it fast-paced, opposing the requested slow burn.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "contradicted"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:593",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Space station and meditative pacing are supported, but the packet emphasizes memory and philosophy rather than central fear or horror.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:594718",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A returned cosmonaut is examined on Earth; the stated horror setting is terrestrial, despite space origin.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:611605",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A Los Angeles apartment complex supplies the horror setting; space refers to apartment roominess.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:7345",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "An early California oil prospector's feud is neither a space setting nor the requested horror premise.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:760245",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "A farming couple's near-future identity drama is described, rather than horror unfolding in space.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:8413",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Astronauts investigate a sinister starship; dread-building fits, though the essence also calls the treatment relentlessly intense.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:994143",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Children trapped in a transformed home establish domestic horror, not space horror.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:125988",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The specified setting is an underground silo in a ruined future, not outer space.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:127865",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Detectives investigate terrestrial serial murders and a missing child, a different core.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:16089",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A buried UFO transforms local residents in a town; alien source does not make the setting outer space.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:232230",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The explicitly alternate Victorian steampunk world and occult churches are not a space setting.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:2940",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A Florida town after a hurricane is the explicit setting of the invasion mystery.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:36581",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A secluded village's mysterious deaths establish terrestrial supernatural horror.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:46638",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A detective's crime cases and haunted past are terrestrial psychological drama.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:61335",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "An Arctic town murder mystery is explicitly set on Earth.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:6143",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "An artifact unearthed at a building site drives Earthbound sci-fi horror, not space exploration.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:61635",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A care center and mysterious deaths supply the setting, not outer space.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:62097",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A forest disappearance investigation and local folklore define the setting.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:63647",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The story follows alien rule and human society on Earth; alien presence alone does not meet space horror.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:68800",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Historical London serial murders are the explicit premise.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:78183",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "A scientific spacecraft expedition becomes onboard psychological horror; essence supports progressive tension and dread.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "supported"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:78317",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A murder investigation across two cities supplies the setting; shared space means geography, not outer space.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:81951",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A future society's immortality and suicide investigation are described, not a space-horror setting.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:86825",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The frightening anthology is anchored in a lost Argentine city, not space.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:8838",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Conflict among cyberpunk city factions is the stated core, not horror aboard or beyond Earth.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:96628",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The true-crime story concerns UK serial killer Dennis Nilsen, a different setting and premise.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:97400",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "A priest's unsettling influence in an isolated island community is terrestrial religious horror.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "Outer-space, spacecraft or off-world setting is material",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "Horror or sustained fear is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [
+      {
+        "requirement": "Gradual, atmospheric build rather than continuous action",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:10217",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A school-bus accident kills children and the story explores bereaved families and a shattered community.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:13614",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Massacre and grieving families are supported, but the packet does not establish parental grief over a child as a central perspective.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:15584",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "The supplied synopsis centers a murdered father and a documentary for his unborn son; parental grief after a child's death is not established in the packet.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:16350",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "A mother lost her child in a tsunami and remains consumed by grief, although a desperate search and uncertainty also drive the thriller.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:165567",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A couple's lost child and grief-strained marriage are explicit, sharing focus with a visitor-driven survival thriller.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:27585",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A couple's young son dies and their grief and relationship aftermath are explicitly the central story.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:334541",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Profound grief and family trauma are supported, but the supplied packet names a brother's death and leaves the earlier tragedy unspecified.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:429195",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The explicitly described loss is the protagonist's father, with an inherited-farm dispute rather than loss of her child.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "contradicted"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:59437",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Parents face their son's murder-suicide; their grief, guilt and aftermath are explicitly central.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:595930",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A father brings his dead son's body home, with grief and the remaining family bond central to the journey.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:641662",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A tragic home birth leads to a mother's year of mourning and fractured relationships.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:713776",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis directly identifies grieving parents mourning their child after a school shooting.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:828305",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A mother loses her son to hazing and grieves while pursuing accountability and revenge; the aftermath is substantial but thriller goals also lead.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:132378",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "A prolonged murder-justice campaign and grief are supported, but the packet does not identify the Lawrences as the victim's parents or establish his age.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:139396",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Parents mourn children killed in a nightclub fire; grief and its aftermath are explicitly central.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:1427",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "A boy's murder and devastating community grief are central, though the description gives shared emphasis to the crime investigation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:156946",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A grieving mother confronts the man she believes killed her daughter; maternal aftermath is the explicit focus.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:194741",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A son's murder drives a father's return to crime; loss and revenge matter, but sustained emotional processing is less established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:201408",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A father identifies his dead daughter and investigates her death; trauma and grief share focus with the mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:202140",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A mother's enduring grief for her murdered daughter is explicitly central when the killer is paroled.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:217699",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Grief-stricken parents navigate the loss of their children after a cinema fire and pursue justice.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:2265",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "Abandonment and tragic romance are the supplied story's core; this is not the specified parental bereavement premise.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "contradicted"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:54344",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Collective grief after unexplained disappearance is supported, but confirmed child death and a parental focus are not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:59183",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Aftermath of community shootings and psychological trauma fit grief broadly, but a parent mourning a child is not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:61555",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "The packet explicitly concerns a child's abduction and family fallout; death and subsequent bereavement remain unconfirmed.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:77059",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A grieving father blames a doctor for his teenage son's death, directly centering the requested aftermath.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:79932",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Terror-attack anguish and grief are supported, but the packet focuses on survivors and responders rather than bereaved parents.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "unknown"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:81357",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The stated central bereavement is a widow's husband's death, not loss of a child.",
+    "source": "catalog synopsis",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "contradicted"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "contradicted"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:83584",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A man loses his wife and daughter, attempts suicide and enters an intertwined aftermath; parental grief shares a broader multi-person drama.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:90040",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A mother grieves her teenage son's death and persistently fights for justice alongside other families.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "supported"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:91752",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Teenage murders and collective grief are supported, but the packet centers political conflict rather than a parent's bereavement.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:98537",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "A teenager's murder and two fathers' destructive conflict are supported, but the packet does not establish that either is the bereaved parent.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-a",
+    "core": [
+      {
+        "requirement": "A child has died",
+        "status": "supported"
+      },
+      {
+        "requirement": "A parent or caregiver's subsequent grief is central",
+        "status": "unknown"
+      }
+    ],
+    "modifiers": [],
+    "exclusion": "unknown",
+    "exclusionReason": "No explicit exclusion in this query rubric."
+  }
+]

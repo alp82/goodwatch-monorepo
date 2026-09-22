@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "authored_at": "2026-09-23",
+  "status": "frozen_before_new_experiment_scores",
+  "scope": "Agent-defined proxy relevance assumptions, not user judgments. No title targets are inferred from existing ranks.",
+  "grade_scale": {"3": "Core requirements supported and requested modifiers strongly supported", "2": "Core requirements supported; modifiers plausible, mixed, or incompletely described without contradiction", "1": "Partial relevance: related core but at least one requested core requirement remains unsupported", "0": "Explicit contradiction of a core/exclusion or clearly incidental relevance", "null": "Insufficient evidence to distinguish relevance from irrelevance"},
+  "queries": [
+    {
+      "index": 0, "query": "complete nonsense", "group": "mood", "partition": "development",
+      "assumed_intent": "Deliberately absurd, surreal, or incoherent entertainment",
+      "core": ["Absurdist or surreal sensibility is central"], "modifiers": [], "explicit_exclusions": [],
+      "strong": "Sustained absurdist situations, surreal logic, or intentionally nonsensical comedy",
+      "acceptable": "Substantial eccentric, camp, or surreal entertainment even if narrative remains coherent",
+      "incidental_or_wrong": "A nonsense word in a description, one silly character, generic family animation, or bad quality alone",
+      "ambiguity": "Could express dissatisfaction rather than a discovery request; this experiment assumes discovery"
+    },
+    {
+      "index": 1, "query": "tarkovsky", "group": "ambiguous_creator", "partition": "ambiguity_audit",
+      "assumed_intent": "Unresolved creator lookup versus stylistic affinity",
+      "core": [], "modifiers": [], "explicit_exclusions": [],
+      "strong": "Score separately for the two declared readings, never merge them into one presumed intent",
+      "acceptable": "Conditional on the reading being evaluated",
+      "incidental_or_wrong": "A reference to the name alone does not establish creator identity or stylistic affinity",
+      "readings": [{"id": "creator", "core": ["A work directed by Andrei Tarkovsky"], "strong": "Creator credit verified in supplied evidence", "acceptable": "A substantial documentary specifically about the creator, with this broader inclusion stated"}, {"id": "style", "core": ["Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility"], "strong": "Several of these stylistic traits are supported by description", "acceptable": "Clear contemplative or philosophical affinity; exact creator identity not required"}],
+      "ambiguity": "No default reading may be called the user's actual intent"
+    },
+    {
+      "index": 2, "query": "feel good cooking show", "group": "concrete_with_mood", "partition": "development",
+      "assumed_intent": "A comforting or upbeat series centered on cooking",
+      "core": ["Cooking or food preparation is a central continuing subject", "A show or series"], "modifiers": ["Warm, enjoyable, reassuring or upbeat"], "explicit_exclusions": [],
+      "strong": "Cooking-focused series with supportive, convivial, low-conflict or clearly uplifting tone",
+      "acceptable": "Cooking-focused series with plausible enjoyable tone; ordinary competition alone does not make it wrong",
+      "incidental_or_wrong": "Gardening, home renovation, pottery, generic wholesome shows, or food merely appearing in a dramatic story",
+      "ambiguity": "Feel-good tolerance for competitive tension is not specified"
+    },
+    {
+      "index": 3, "query": "slow burn space horror", "group": "concrete_with_pacing", "partition": "development",
+      "assumed_intent": "Horror in outer-space or off-world conditions with gradual tension",
+      "core": ["Outer-space, spacecraft or off-world setting is material", "Horror or sustained fear is central"], "modifiers": ["Gradual, atmospheric build rather than continuous action"], "explicit_exclusions": [],
+      "strong": "All core requirements and deliberate dread-building pacing supported",
+      "acceptable": "Space horror with some patient atmosphere and mixed pacing",
+      "incidental_or_wrong": "Earthbound horror with no material space setting, generic science fiction, or high-action space adventure without horror",
+      "ambiguity": "An alien on Earth alone is not enough to establish space as the requested setting"
+    },
+    {
+      "index": 4, "query": "tense heist thriller, not bleak", "group": "concrete_with_exclusion", "partition": "reused_case_confirmation",
+      "assumed_intent": "A suspenseful planned-theft thriller that avoids a relentlessly hopeless tone",
+      "core": ["A heist, robbery operation or planned theft is central", "Thriller suspense or tension is material"], "modifiers": ["Engaging tension"], "explicit_exclusions": ["Relentlessly bleak or hopeless overall tone"],
+      "strong": "Tense central heist with playful, hopeful, resilient or otherwise non-bleak treatment",
+      "acceptable": "Heist thriller whose tone is mixed but not affirmatively relentlessly bleak",
+      "incidental_or_wrong": "Generic crime or revenge without a central heist; a strongly supported hopeless treatment violates the explicit exclusion",
+      "ambiguity": "Violence or a sad event alone does not prove overall bleakness; unknown tone is not a violation"
+    },
+    {
+      "index": 5, "query": "grief after losing a child", "group": "concrete_emotional_subject", "partition": "development",
+      "assumed_intent": "A story centrally exploring a parent or caregiver's grief following a child's death",
+      "core": ["A child has died", "A parent or caregiver's subsequent grief is central"], "modifiers": [], "explicit_exclusions": [],
+      "strong": "Sustained exploration of bereavement and its emotional or relational aftermath",
+      "acceptable": "The loss and aftermath are important though shared with another major plot",
+      "incidental_or_wrong": "Generic sadness, a child grieving a parent, infertility alone, or missing-child rescue without established bereavement",
+      "ambiguity": "Losing could mean disappearance rather than death; record this alternate reading, but primary proxy grading assumes bereavement"
+    },
+    {
+      "index": 6, "query": "furious", "group": "ambiguous_mood_or_title", "partition": "ambiguity_audit",
+      "assumed_intent": "Unresolved intense angry mood versus title lookup",
+      "core": ["For the conditional mood reading, anger, rage or ferocious intensity is central"], "modifiers": [], "explicit_exclusions": [],
+      "strong": "Sustained furious energy or anger-driven conflict under the mood reading",
+      "acceptable": "High-intensity or rage-driven entertainment with clear affinity",
+      "incidental_or_wrong": "Fast pacing without anger or ferocity is insufficient on its own; a furious word match is not a relevance judgment",
+      "ambiguity": "Could name a specific title or franchise; do not invent which title. Report mood result conditionally"
+    },
+    {
+      "index": 7, "query": "craty", "group": "unresolved_typo", "partition": "ambiguity_audit",
+      "assumed_intent": "Unknown; optional sensitivity analysis assuming the intended word was crazy",
+      "core": [], "modifiers": [], "explicit_exclusions": [],
+      "strong": "No unconditional relevance grade; if crazy is assumed, sustained eccentric or chaotic entertainment",
+      "acceptable": "Conditional crazy interpretation only",
+      "incidental_or_wrong": "Do not infer meaning from the existing fingerprint, existing winners, or spelling similarity alone",
+      "ambiguity": "Could be crazy, crafty, a name or another term; exclude from decisive aggregate"
+    },
+    {
+      "index": 8, "query": "melancholy lighthouse keeper mystery", "group": "concrete_with_mood", "partition": "reused_case_confirmation",
+      "assumed_intent": "A melancholy mystery materially involving a lighthouse keeper",
+      "core": ["A lighthouse keeper or keeping a lighthouse is material to the story", "A mystery or unexplained situation is central"], "modifiers": ["Melancholy, wistful or sorrowful tone"], "explicit_exclusions": [],
+      "strong": "Keeper, mystery and melancholy are all supported",
+      "acceptable": "Keeper-centered mystery with plausible subdued or melancholy tone",
+      "incidental_or_wrong": "A lighthouse briefly used as scenery; a different kind of keeper; melancholy crime unrelated to a lighthouse keeper",
+      "ambiguity": "No particular famous lighthouse title is assumed"
+    },
+    {
+      "index": 9, "query": "scifi with cars", "group": "concrete_combination", "partition": "reused_case_confirmation",
+      "assumed_intent": "Science fiction in which cars or road vehicles matter",
+      "core": ["Science-fiction premise or setting", "Cars, road vehicles, driving or vehicle pursuit are material"], "modifiers": [], "explicit_exclusions": [],
+      "strong": "Vehicle-centered science fiction or cars central to the speculative mechanism or conflict",
+      "acceptable": "Science fiction with a substantial driving or road-vehicle component",
+      "incidental_or_wrong": "Ordinary cars in a futuristic city, spaceship-only adventures, or realistic racing without a science-fiction premise",
+      "ambiguity": "No required action intensity, racing format, car count or franchise is specified"
+    },
+    {
+      "index": 10, "query": "sunglasses at night", "group": "ambiguous_literal_clue", "partition": "ambiguity_audit",
+      "assumed_intent": "Unresolved literal scene/object clue versus cultural-reference or mood search",
+      "core": ["For literal reading, sunglasses worn or used at night are a meaningful feature"], "modifiers": [], "explicit_exclusions": [],
+      "strong": "Literal feature explicitly supported, or a separately declared reference reading directly supported",
+      "acceptable": "Sunglasses are narratively central but nighttime use is uncertain: partial literal evidence only",
+      "incidental_or_wrong": "Generic stylish nocturnal imagery, sunglasses alone, or a familiar remembered movie without supplied supporting evidence",
+      "ambiguity": "Song/reference interpretation and literal movie clue are both possible; unknown nighttime use must remain unknown"
+    },
+    {
+      "index": 11, "query": "fantasy with dragons", "group": "concrete_combination", "partition": "development",
+      "assumed_intent": "Fantasy featuring actual dragons as meaningful creatures",
+      "core": ["Fantasy premise or world", "Actual dragons appear materially"], "modifiers": [], "explicit_exclusions": [],
+      "strong": "Dragons are central or substantial participants in the fantasy story",
+      "acceptable": "Dragons recur or matter while sharing the fantasy story with other elements",
+      "incidental_or_wrong": "Dragon in a person's name, a martial-arts metaphor, title-only word matches, or fantasy without supported dragons",
+      "ambiguity": "Animation, age audience, tone and dragon friendliness are unspecified"
+    },
+    {
+      "index": 12, "query": "like groundhog day", "group": "title_analogy", "partition": "development",
+      "assumed_intent": "Other entertainment with a repeating-day/time-loop premise, preferably character growth or comedy",
+      "core": ["Repeated lived time or a repeating-day/time-loop narrative is central"], "modifiers": ["Comedic, romantic or personal-growth affinity to the named reference"], "explicit_exclusions": [],
+      "strong": "A different work with a central time loop plus comedic or personal-growth affinity",
+      "acceptable": "A different central time-loop story even in another tone or genre",
+      "incidental_or_wrong": "Groundhog animal/holiday matches, generic wholesome comedy, or nonlinear storytelling without repeated lived time",
+      "reference_title_policy": "The original is a useful reference/lookup result, but not a new similar suggestion: grade 1 in the discovery proxy and report its rank separately",
+      "ambiguity": "User may mean tone more than mechanism; the loop-first reading is an explicit proxy assumption"
+    },
+    {
+      "index": 13, "query": "time travel complex", "group": "concrete_with_structure", "partition": "reused_case_confirmation",
+      "assumed_intent": "Time-travel fiction with intricate temporal causality or structure",
+      "core": ["Time travel, causal time loops or movement between time periods is central"], "modifiers": ["Complex paradoxes, timelines, causality or intricate temporal plotting"], "explicit_exclusions": [],
+      "strong": "Central time travel with substantial temporal complexity",
+      "acceptable": "Central time travel with some causal puzzle or structural intricacy",
+      "incidental_or_wrong": "A complex ordinary mystery, flashbacks alone, or travel in space without time travel",
+      "ambiguity": "A simple time-travel comedy may be partially relevant but fails the complexity modifier"
+    }
+  ]
+}

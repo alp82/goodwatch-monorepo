@@ -1,0 +1,2388 @@
+[
+  {
+    "query": "tarkovsky",
+    "key": "movie:10341",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Dream recording premise and described meditative, philosophical visual journey support style affinity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Wim Wenders",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1069387",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Spectral family history and visual melancholy support partial affinity; sustained contemplation or philosophy is not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Rodrigo Prieto",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:110838",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Near-wordless religious symbolism and described contemplative visual form strongly support the style reading.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Derek Jarman",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:12516",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Dream anthology is described as deliberate, poetic and spiritually contemplative.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Akira Kurosawa",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:137698",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Search for meaning and visually surreal autobiography support philosophical affinity; contemplative pacing is unclear.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Alejandro Jodorowsky",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1381",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Spirituality and mortality across parallel stories are described as a visually sustained meditation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Darren Aronofsky",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1394",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly describes austere imagery, extended rhythms, spiritual redemption and exile.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 3,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Andrei Tarkovsky",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "supported"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1398",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Desire-granting Zone and described slow philosophical visual contemplation strongly fit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 3,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Andrei Tarkovsky",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "supported"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1483",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Creation myth and symbolic imagery offer partial affinity; description emphasizes grotesque horror rather than contemplation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: E. Elias Merhige",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1563",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly gives meditations on time and memory through images; essence supports poetic form.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Chris Marker",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:15916",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Dreamlike egg narrative is described as slow philosophical meditation with spiritual allegory.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Mamoru Oshii",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1730",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Surreal fractured reality and experimental imagery offer partial affinity; contemplative philosophy is not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: David Lynch",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:1923",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Dreamlike supernatural tragedy supports visual affinity, but philosophical contemplation remains unsupported.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: David Lynch",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:21832",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Described existential reflection and experimental montage support philosophical affinity, with rapid rather than meditative form.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Masayuki, Tsuyoshi Kaga, Minoru Ohara, Akira Takamura, Hiroyuki Ishido, Ken Ando, Hideaki Anno, Masahiko Otsuka, Shoichi Masuo, Tensai Okamura, Kazuya Tsurumaki, Naoyasu Habu, Seiji Mizushima, Tetsuya Watanabe, Keiichi Sugiyama",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:24348",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Modernization documentary is described as a visual meditation and cinematic poem.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Godfrey Reggio",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:26302",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Poems and still tableaux in synopsis combine with described spiritual, contemplative visual form.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Sergei Parajanov",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:27072",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Creation of myths and a god combines with described slow philosophical and religious allegory.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Andrzej Żuławski",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:298721",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Dreams and goddesses combine with described slow meditation on consciousness and spirituality.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Apichatpong Weerasethakul",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:38368",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Dying man contemplates past lives among spirits; description explicitly supports tranquil spiritual meditation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Apichatpong Weerasethakul",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:4558",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Poet entering the land of the dead combines with described poetic philosophical imagery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Jean Cocteau",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:86835",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Search for meaning is described through contemplative, sparse-dialogue spiritual and visual introspection.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Terrence Malick",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:883083",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Experiencing other bodies and described philosophical undertones support affinity; sustained contemplation is less explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Goran Stolevski",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "movie:8967",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis questions faith and existence; essence supports meditative, visually poetic form.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Terrence Malick",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "show:1087",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Identity and interconnected psyches support described existential inquiry, but poetic contemplative form is less explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Akihiko Nishiyama, Yuichi Tanaka, Johei Matsuura, Ryutaro Nakamura, Shigeru Ueda, Masahiko Murata",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "show:124396",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Alternate-dimension school is described through poetic visual minimalism and existential contemplation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Nichika Ono, Atsushi Kashiwa, Tomoya Kitagawa, Lim Ka-hee, Rei Ishikura, Shingo Natsume, Keiichiro Saito, Kento Matsui",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "show:1920",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Slow surreal mystery and inward investigation offer partial affinity; sustained philosophical sensibility remains unclear.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Graeme Clifford, Lesli Linka Glatter, Duwayne Dunham, Todd Holland, David Lynch, Tim Hunter, Diane Keaton, James Foley, Stephen Gyllenhaal, Caleb Deschanel, Uli Edel, Mark Frost, Jonathan Sanger, Tina Rathborne",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "show:69061",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Described slow spiritual drama on reality and afterlife supports affinity; visual poetry is less explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Andrew Haigh, Anna Rose Holmer, Zal Batmanglij",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "tarkovsky",
+    "key": "show:8838",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Described slow existential philosophy, sparse dialogue and striking visual world strongly support style affinity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Contemplative, poetic, philosophical cinema with a sustained visual or spiritual sensibility",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "style",
+    "creatorGrade": 0,
+    "creatorConfidence": "high",
+    "creatorSource": "catalog verified director credits",
+    "creatorReason": "Director credit: Hong Heon-pyo, Ko Matsuo, Toshiharu Sato, Sayo Yamamoto, Yasuhiro Matsumura, Hiroshi Hamasaki, Nanako Shimazaki, Takuji Endo, Kazuhiro Ozawa",
+    "creatorCore": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky",
+        "status": "contradicted"
+      }
+    ]
+  },
+  {
+    "query": "furious",
+    "key": "movie:10483",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis calls the deadly prison races brutal; essence supports relentless aggressive car combat.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:1160018",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Commando fights knife-wielding attackers; described relentless brutal combat supports ferocious intensity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:11782",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Partner loss and excessive force combine with described unrelenting gunfights and chaotic bloodshed.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:17467",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Corrupt prison premise is described through extreme gore and brutal over-the-top martial arts.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:180299",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Undercover survival conflict is described as relentless brutal visceral action.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:27352",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "One-man rescue assault and relentless warfare support intensity; furious anger is less explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:325348",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Cyborg rescue combat is described as relentless violence and extreme no-holds-barred mayhem.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:396263",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Forced alien combat is described as relentlessly brutal and graphically violent.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:44943",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Desperate urban battle and described raw destruction support ferocity, though anger is not explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:458156",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Assassin pursuit and sustained visceral combat support intense affinity; description emphasizes choreography more than rage.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:531876",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Overwhelming attack and described harrowing brutal combat support ferocious intensity without explicit anger.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:545609",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Rescue survival mission is described with relentless brutal combat and intense visceral thrills.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:697843",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Mercenary rescue is described through relentless visceral combat and no-holds-barred intensity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:800345",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Coerced survival operation is described as nonstop extreme visceral violence.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "furious",
+    "key": "movie:94329",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Trapped SWAT survival and described hyper-violent bone-crunching combat strongly support furious energy.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For the conditional mood reading, anger, rage or ferocious intensity is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional mood",
+    "titleLookupGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:1073566",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:112679",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:13158",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:15097",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:16127",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:16375",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:1649",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:20874",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:228165",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:324440",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:46740",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "movie:692",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "show:16382",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "show:35236",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "show:43199",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "show:6024",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "show:74666",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "show:9519",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "craty",
+    "key": "show:9826",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Meaning of craty is unresolved; no unconditional relevance can be inferred from this candidate.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [],
+    "exclusion": "supported",
+    "reading": "unresolved",
+    "conditionalGrade": null
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:10843",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:1262983",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:19354",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:23202",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:244688",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Synopsis explicitly says there are no sunglasses in the post-party games; nighttime use is not supported.",
+    "source": "catalog synopsis",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "contradicted"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:254526",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:29095",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:342179",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:35253",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:430214",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:47406",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:54464",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Synopsis makes sunglasses narratively central, but nighttime use remains unknown.",
+    "source": "catalog synopsis",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown",
+    "sunglassesCentral": "supported"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:59762",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "movie:8337",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Synopsis makes sunglasses narratively central, but nighttime use remains unknown.",
+    "source": "catalog synopsis",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown",
+    "sunglassesCentral": "supported"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:2197",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:2391",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:240601",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:36243",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:4267",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:4573",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:56590",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "sunglasses at night",
+    "key": "show:67235",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Supplied description does not establish meaningful sunglasses use at night.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "For literal reading, sunglasses worn or used at night are a meaningful feature",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "conditional literal",
+    "nighttimeUse": "unknown"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:10191",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Viking boy befriends a dragon; fantasy and a central actual dragon are explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:126963",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Gods and supernatural combat support fantasy; actual dragons are not established by franchise terminology.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:166428",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Dragon utopia, Toothless and dragon survival are explicitly central.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:167858",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Fantasy quest includes surviving a gigantic dragon, sharing the story with other threats.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:27243",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Fictional scientific investigation uses CGI dragons as its central creatures.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:300803",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Knight bonds with dragon Drago to defeat a sorcerer; both cores explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:31221",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Dragon attacks and described dragon-hunting quest make dragons substantial in a fantasy realm.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:31394",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Lost-world survivors explicitly face dragons among several giant creatures.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:385232",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Wizard commands a fire-breathing dragon; defeating them drives the fantasy quest.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:39144",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Fantasy and Dragon Balls quest are supported; actual dragon creatures are not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:49051",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Reclaiming home from dragon Smaug is material; description does not establish how substantial his appearance is.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:493529",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Magical fantasy heist is supported; creature designs and title alone do not establish actual dragons.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:527774",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Fantasy land and quest for the actual last dragon to restore it are explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:5494",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Medieval knight battles last surviving dragon during his central quest.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:57158",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Quest culminates in direct confrontation with dragon Smaug, explicitly supported by essence.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:57278",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Synopsis explicitly places fire-breathing dragons in a fantasy world while rescue quest shares focus.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:59883",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Medieval crew hunts dragons, with revenge on White Dragon central.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:8840",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Knight bonds with last dragon Draco, whose life is bound to the central conflict.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "show:118956",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Dragon encounter and dragon-filled magical conflict are explicitly substantial.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "show:1585",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Enchanted portal leads to friendly actual dragons who are central recurring characters.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "show:5182",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Speculative docufiction depicts dragons throughout history and makes them its central subject.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "show:61445",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Magical world seals dragon Bahamut and risks its return; dragon is central.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "show:61461",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Fantasy is explicit, but Four Dragons may be legendary identities; actual creatures are not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Fantasy premise or world",
+        "status": "supported"
+      },
+      {
+        "requirement": "Actual dragons appear materially",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:122906",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Personal time travel and romantic growth are supported; repeated lived time as the central mechanism is not explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:137",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Explicit repeating day supports the reference, but frozen discovery policy assigns the original grade 1.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:1824",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Synopsis explains repeated courtship through memory loss, not repeated lived time.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "contradicted"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:26538",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Groundhog narrator and seasonal deadline are incidental matches; described quest is becoming human.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:289280",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Essence explicitly says rewind and relive her life, with reflection on growing up, love and loss.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:293970",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Entering a slasher movie and reconnecting with mother are supported; repeating lived time is not supplied.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:397837",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly repeats the same day while questioning her life; self-discovery is central.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:433310",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly revisits and alters the same night repeatedly in a romantic comedy.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:43967",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly repeats days and resets escape attempts; essence supports coming-of-age reflection.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:550988",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Game-world self-awareness and comedy are supported, but no supplied description establishes a central time loop.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:587792",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Essence explicitly supports a romantic-comedy time loop with emotional growth and connection.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:588064",
+    "grade": null,
+    "confidence": "low",
+    "reason": "Vanishing taxi passenger and reality mystery are described; no supplied evidence establishes repeated lived time.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:59700",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Twelve chances to perfect Christmas Eve plus described redemption strongly support repeating-day growth affinity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:672647",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly traps two teens in a time loop; description supports romantic warmth and appreciation of life.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "supported"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:9339",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Time-controlling remote and personal growth support partial affinity, but repeated lived time is not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-c",
+    "core": [
+      {
+        "requirement": "Repeated lived time or a repeating-day/time-loop narrative is central",
+        "status": "unknown"
+      }
+    ],
+    "exclusion": "supported",
+    "reading": "declared loop-first discovery proxy"
+  }
+]

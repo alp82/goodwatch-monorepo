@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ranking tournament · GoodWatch prototype</title>
+<style>
+:root{color-scheme:dark;--bg:#101318;--panel:#191f27;--text:#e7ecf3;--muted:#abb8c9;--line:#354051;--accent:#92c6fa;--good:#8ddfb4;--warn:#f2c688}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,sans-serif}main{max-width:1350px;margin:auto;padding:28px 22px}h1{font-size:30px;margin:8px 0}h2{font-size:19px;margin:0 0 12px}h3{font-size:16px;margin:12px 0 8px}p{max-width:1000px}a{color:var(--accent)}button,select{font:inherit;color:var(--text);background:#242e3c;border:1px solid var(--line);border-radius:7px;padding:8px 11px;max-width:100%}button,summary{cursor:pointer}button:hover,button:focus-visible{border-color:var(--accent)}button.active{background:var(--accent);color:#101318}button.title{padding:0;border:0;background:none;color:var(--accent);text-align:left}.muted{color:var(--muted)}.small{font-size:12px;overflow-wrap:anywhere}.tag{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--accent)}.panel{min-width:0;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:16px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}.metrics{display:flex;flex-wrap:wrap;gap:14px 36px}.metrics strong{display:block;font-size:23px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}.controls label{display:flex;flex-direction:column;gap:6px}.controls select{width:100%}.queryButtons{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}.results{padding:0;list-style:none}.results li{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}.grade{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--good);margin:2px 0}.grade.bad{color:var(--warn)}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--muted)}.warn{color:var(--warn)}.reason{border-left:2px solid var(--accent);padding-left:12px}.state{display:flex;flex-wrap:wrap;gap:16px 30px}.state b{display:block}.empty:empty{display:none}details>summary{padding:4px 0}.split{display:grid;grid-template-columns:2fr 1fr;gap:16px}@media(max-width:720px){main{padding:18px 12px}.columns,.controls,.split{grid-template-columns:1fr}h1{font-size:25px}.panel{min-width:0;padding:13px}.metrics strong{font-size:20px}}
+</style>
+<main>
+<div class="tag">Throwaway prototype · captured offline experiments</div>
+<h1>Find the right subject. Then match the mood.</h1>
+<p class="muted">Does checking the meaning of a request before ranking beat attribute scores and word matches alone? Compare the preserved candidates, inspect their evidence, and make your own judgments.</p>
+<section class="panel" id="verdict"></section>
+<div class="row"><button id="toggleGrades">Reveal agent judgments</button><button id="download">Download my review</button><span id="ownCount" class="small muted"></span></div>
+<section class="panel">
+<h2>Walk through the changes</h2><div class="row" id="walkthroughs"></div><p id="walkText" class="muted"></p><div class="row" id="steps"></div>
+</section>
+<div class="queryButtons" id="queries"></div>
+<div class="controls"><label>Compare from<select id="baseline"></select></label><label>Compare to<select id="candidate"></select></label></div>
+<section class="panel" aria-live="polite"><div class="state" id="state"></div><p id="intent" class="muted"></p><details><summary>Exact configuration and evidence limits</summary><div id="configuration"></div></details></section>
+<section class="panel empty" id="inspector"></section>
+<div class="columns"><section><h2 id="leftTitle"></h2><div id="leftMetrics" class="small muted"></div><ol class="results" id="left"></ol></section><section><h2 id="rightTitle"></h2><div id="rightMetrics" class="small muted"></div><ol class="results" id="right"></ol></section></div>
+<details class="panel"><summary>All interpreted queries: gains and regressions</summary><p class="small muted">These are agent assessments against stated interpretations. Previously seen confirmation queries are not an unseen generalization test. Four ambiguous requests are reported separately and do not choose the winner.</p><div class="scroll" id="scoreboard"></div></details>
+<details class="panel"><summary>What this experiment establishes</summary><div id="limits"></div></details>
+<p class="small muted">Nothing is saved automatically. Semantic evidence is captured inference, not a live service. <a href="index.html">Open the original free-play ranking lab</a> · <a href="README.md">Read the experiment record</a></p>
+</main>
+<script>
+const ARTIFACT=/*ARTIFACT*/;
+// Portable, deterministic comparison logic. No DOM or external services.
+const Comparison={
+ query(data,index){return data.queries[index];},
+ ranking(query,id){return query.rankings.find(r=>r.id===id);},
+ changes(from,to){const old=new Map(from.rows.slice(0,10).map((r,i)=>[r.key,i+1]));return to.rows.slice(0,10).map((r,i)=>({...r,rank:i+1,oldRank:old.get(r.key)??null}));},
+ gradeLabel(g){return g===null||g===undefined?'Unknown':g===3?'Strong':g===2?'Acceptable':g===1?'Partial':'Off target';}
+};
+</script>
+<script>
+const $=id=>document.getElementById(id), esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let queryIndex=2,showGrades=false,selected=null,walkIndex=0,stepIndex=-1;
+const own=new Map();
+const walks=[
+ {name:'Cooking and comfort',text:'A comforting result can still be about the wrong subject. Compare generic word evidence, a lexical subject check, and an independently inferred semantic check.',steps:[['Start with range count',2,'legacy-main','legacy-leads'],['Check the subject words',2,'legacy-leads','core-strength'],['Check the meaning',2,'core-strength','semantic-core']]},
+ {name:'Space must matter',text:'Space horror needs more than a cosmic keyword. Look for a material space setting, then inspect whether its pacing fits slow burn.',steps:[['Word evidence alone',3,'legacy-main','rounded-evidence'],['Lexical core',3,'rounded-evidence','core-strength'],['Semantic core',3,'core-strength','semantic-core']]},
+ {name:'Similar premise',text:'Time controls, repeating routines and a repeated lived day are different ideas. The assumed interpretation is visible, and uncertain evidence stays uncertain.',steps:[['Compare premise checks',12,'core-strength','semantic-core']]},
+ {name:'Check the regressions',text:'Review the same locked configuration on specific subjects and exclusions. An average gain cannot hide a broken request.',steps:[['Not bleak',4,'legacy-leads','semantic-core'],['Lighthouse keeper',8,'legacy-leads','semantic-core'],['Science fiction and cars',9,'legacy-main','semantic-core'],['Temporal complexity',13,'legacy-main','semantic-core']]}
+];
+function current(){return Comparison.query(ARTIFACT,queryIndex);}
+function ranking(id){return Comparison.ranking(current(),id);}
+function number(n){return n===null||n===undefined?'unresolved':n.toFixed(3);}
+function quality(m){if(!m)return '—';if(m.ndcgRange&&m.ndcgRange[0]!==m.ndcgRange[1])return `${m.ndcgRange[0].toFixed(3)}–${m.ndcgRange[1].toFixed(3)}`;return number(m.ndcg??m.ndcgRange?.[0]);}
+function metrics(r){const m=r.metrics;return !showGrades?'Agent judgments hidden. Inspect the results first.':m?`NDCG@10 ${quality(m)} · acceptable ${m.acceptable}/10 · unjudged ${m.unknown} · off target in top 5: ${m.zeroTop5}`:'Ambiguity audit; excluded from decisive metric.';}
+function renderList(side,id,other){const r=ranking(id),o=ranking(other),previous=new Map(o.rows.map((x,i)=>[x.key,i+1]));
+ $(side).innerHTML=r.rows.slice(0,10).map((x,i)=>{const t=current().titles[x.key],g=current().grades[x.key],p=previous.get(x.key);return `<li><span class="muted">${i+1}</span><div><button class="title" data-key="${esc(x.key)}">${esc(t?.title??x.key)}</button> <span class="small muted">${t?.year??''} · ${esc(x.key)}</span><br><span class="small muted">${p?`Other ranking: ${p}`:'Outside other top 30'} · score ${x.score.toFixed(3)}</span>${showGrades?`<br><span class="grade ${g?.grade===0?'bad':''}">${Comparison.gradeLabel(g?.grade)}</span>`:''}</div></li>`;}).join('');
+}
+function inspect(){
+ if(!selected){$('inspector').innerHTML='';return;}
+ const q=current(),t=q.titles[selected],g=q.grades[selected],right=ranking($('candidate').value).rows.find(r=>r.key===selected),left=ranking($('baseline').value).rows.find(r=>r.key===selected),r=right??left;
+ if(!t||!r){selected=null;$('inspector').innerHTML='';return;}
+ const s=r.semantic;
+ $('inspector').innerHTML=`<h2>${esc(t.title)} (${t.year??'year unknown'})</h2><div class="split"><div><h3>Catalog synopsis</h3><p>${esc(t.synopsis||'Not captured')}</p><details><summary>Generated catalog description</summary><p>${esc(t.essence||'Not captured')}</p></details><h3>Ranking evidence</h3><p class="reason">${s?esc(s.reason):'This configuration uses fingerprint and/or text scores. It does not have an individual semantic explanation.'}</p>${s?`<p class="small">Core support ${s.core}/2 · modifier fit ${s.fit}/2 · explicit exclusion ${s.contradiction?'violated':'not flagged'} · original reference ${s.reference?'yes':'no'}</p>`:''}${showGrades?`<h3>Separate evaluator assessment</h3><p><b>${Comparison.gradeLabel(g?.grade)}</b> · ${esc(g?.confidence??'unknown')} confidence</p><p>${esc(g?.reason??'No judgment available')}</p><p class="small muted">Source: ${esc(g?.source??'none')}. This is an agent assessment, not yours.</p>`:''}</div><div><h3>Your assessment</h3><p class="small muted">Stored only in memory until you download it.</p><select id="ownGrade"><option value="">Unjudged</option><option value="3">Strong</option><option value="2">Acceptable</option><option value="1">Partial</option><option value="0">Off target</option></select><p class="small">The source packet and inference are fixed. A different interpretation of the request can change relevance.</p></div></div>`;
+ const k=q.query+'|'+selected;$('ownGrade').value=own.has(k)?String(own.get(k).grade):'';
+ $('ownGrade').onchange=()=>{const v=$('ownGrade').value;if(v==='')own.delete(k);else own.set(k,{query:q.query,key:selected,grade:Number(v),provenance:'entered in review UI'});$('ownCount').textContent=`${own.size} of your judgments in memory`;};
+}
+function render(){
+ const q=current(),from=$('baseline').value,to=$('candidate').value,fromCfg=ARTIFACT.configs.find(c=>c.id===from),toCfg=ARTIFACT.configs.find(c=>c.id===to);
+ $('leftTitle').textContent=fromCfg.name;$('rightTitle').textContent=toCfg.name;
+ $('leftMetrics').textContent=metrics(ranking(from));$('rightMetrics').textContent=metrics(ranking(to));
+ $('state').innerHTML=`<div>Query<b>${esc(q.query)}</b></div><div>Evaluation role<b>${esc(q.partition.replaceAll('_',' '))}</b></div><div>Candidate configuration<b>${esc(toCfg.name)}</b></div><div>Judgments<b>${showGrades?'Shown; agent proxy':'Hidden'}</b></div>`;
+ $('intent').textContent=q.interpretation;
+ $('configuration').innerHTML=`<p>${esc(toCfg.formula??JSON.stringify(toCfg.config))}</p><p class="small muted">${esc(ARTIFACT.limits)}</p><p class="small muted">Capture SHA-256: ${ARTIFACT.captureHash}<br>Catalog SHA-256: ${ARTIFACT.catalogHash}</p>`;
+ renderList('left',from,to);renderList('right',to,from);inspect();
+ document.querySelectorAll('#queries button').forEach(b=>b.classList.toggle('active',Number(b.dataset.query)===queryIndex));
+ const included=ARTIFACT.queries.filter(c=>c.partition!=='ambiguity_audit');
+ $('scoreboard').innerHTML=!showGrades?'<p>Reveal agent judgments to see the measured comparison.</p>':`<table><thead><tr><th>Query</th><th>Role</th><th>From: NDCG / acceptable</th><th>To: NDCG / acceptable</th></tr></thead><tbody>${included.map(c=>{const a=Comparison.ranking(c,from).metrics,b=Comparison.ranking(c,to).metrics;return `<tr><td>${esc(c.query)}</td><td>${esc(c.partition)}</td><td>${quality(a)} / ${a?.acceptable??'—'}</td><td>${quality(b)} / ${b?.acceptable??'—'}</td></tr>`;}).join('')}</tbody></table>`;
+ $('toggleGrades').textContent=showGrades?'Hide agent judgments':'Reveal agent judgments';
+}
+function renderWalk(){const w=walks[walkIndex];$('walkthroughs').innerHTML=walks.map((w,i)=>`<button data-walk="${i}" class="${i===walkIndex?'active':''}">${w.name}</button>`).join('');$('walkText').textContent=w.text;$('steps').innerHTML=w.steps.map((s,i)=>`<button data-step="${i}" class="${i===stepIndex?'active':''}">${i+1}. ${s[0]}</button>`).join('');}
+function step(i){const s=walks[walkIndex].steps[i];stepIndex=i;queryIndex=s[1];$('baseline').value=s[2];$('candidate').value=s[3];selected=null;renderWalk();render();}
+$('queries').innerHTML=ARTIFACT.queries.map((q,i)=>`<button data-query="${i}">${esc(q.query)}</button>`).join('');
+for(const id of ['baseline','candidate']){$(id).innerHTML=ARTIFACT.configs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');$(id).onchange=()=>{stepIndex=-1;renderWalk();render();};}
+$('baseline').value='legacy-leads';$('candidate').value=ARTIFACT.preferred;
+$('queries').onclick=e=>{const b=e.target.closest('[data-query]');if(b){queryIndex=Number(b.dataset.query);selected=null;stepIndex=-1;renderWalk();render();}};
+$('walkthroughs').onclick=e=>{const b=e.target.closest('[data-walk]');if(b){walkIndex=Number(b.dataset.walk);step(0);}};
+$('steps').onclick=e=>{const b=e.target.closest('[data-step]');if(b)step(Number(b.dataset.step));};
+for(const id of ['left','right'])$(id).onclick=e=>{const b=e.target.closest('[data-key]');if(b){selected=b.dataset.key;inspect();$('inspector').scrollIntoView({block:'nearest'});}};
+$('toggleGrades').onclick=()=>{showGrades=!showGrades;render();};
+$('download').onclick=()=>{const value={prototype:'ranking-tournament',revision:ARTIFACT.revision,captureHash:ARTIFACT.captureHash,catalogHash:ARTIFACT.catalogHash,query:current().query,baseline:$('baseline').value,candidate:$('candidate').value,judgments:[...own.values()]};const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='ranking-tournament-review.json';a.click();URL.revokeObjectURL(url);};
+$('verdict').innerHTML=`<h2>${esc(ARTIFACT.verdict.title)}</h2><p>${esc(ARTIFACT.verdict.description)}</p><div class="metrics">${ARTIFACT.verdict.metrics.map(m=>`<div><span class="small muted">${esc(m.label)}</span><strong>${esc(m.value)}</strong></div>`).join('')}</div>`;
+$('limits').innerHTML=`<p>${esc(ARTIFACT.limits)}</p><p>${esc(ARTIFACT.verdict.scope)}</p>`;
+const params=new URLSearchParams(location.search),qi=Number(params.get('q')??2);if(Number.isInteger(qi)&&qi>=0&&qi<ARTIFACT.queries.length)queryIndex=qi;
+if(ARTIFACT.configs.some(c=>c.id===params.get('candidate')))$('candidate').value=params.get('candidate');
+renderWalk();render();
+</script></html>

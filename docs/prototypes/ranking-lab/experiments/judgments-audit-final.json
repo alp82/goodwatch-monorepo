@@ -1,0 +1,202 @@
+[
+  {
+    "query": "complete nonsense",
+    "key": "show:251",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis explicitly describes \"surreal adventures\" of anthropomorphic fast food; generated essence confirms sustained disregard for narrative logic.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "complete nonsense",
+    "key": "show:1229",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis establishes \"surrealistic\" humor, bizarre faux-commercials and camp effects throughout the sketch series.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "complete nonsense",
+    "key": "movie:46740",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Generated essence explicitly supports absurdism, rapid-fire sketches and \"complete disregard for conventional narrative\"; synopsis confirms comedy specials.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:89557",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Chefs explore food in and out of the kitchen; generated essence explicitly supports cooking, relaxed conversations and a \"pleasant, low-stakes escape\".",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:421443",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Deep-space vessel and suspected crew bloodbath are explicit; generated essence supports claustrophobia and existential dread, but gradual pacing is only plausible.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:376865",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Synopsis establishes isolated deep-space survival; generated essence calls it \"psychological sci-fi horror\", while slow-building pacing is not directly established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:955916",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Central passenger-plane gold heist is explicit; generated essence supports consistent tension and energetic pure escapism, with the supplied Comedy genre supporting non-bleak treatment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:763285",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Synopsis establishes a major bank heist; generated essence supports constant suspense and escapist action, but overall non-bleak tone remains uncertain.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "unknown"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:75656",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Illusionists conduct bank heists and reward audiences; generated essence describes dazzling stage magic and \"pure popcorn entertainment\" with exhilarating suspense.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:59437",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Parents learn their son \"took his own life\"; generated essence explicitly centers parents grappling with loss, guilt and psychological aftermath.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:503919",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Two lighthouse keepers on a mysterious island face sanity loss; generated essence supports unreliable reality and dread, with melancholy less clearly established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:449459",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Three lighthouse keepers make an unexplained discovery; generated essence supports an \"unsettling mystery\", isolation and guilt, with melancholy plausible rather than explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:15655",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis centers KITT, a car with advanced AI, weapons and the ability to transform into other vehicles, directly establishing speculative vehicle action.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:57158",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Dwarves, Bilbo and Gandalf seek gold from \"the Dragon, Smaug\"; generated essence confirms a climactic dragon confrontation in a fantastical world.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:166428",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis centers a \"peaceful dragon utopia\", dragon-rider decisions and saving their kind, directly supporting fantasy with material dragons.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:672647",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Two teenagers are \"trapped in an endless time loop\" while seeking a perfect day; generated essence confirms romantic comedy and appreciation of small wonders.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:587792",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Generated essence explicitly describes a romantic comedy using a \"time loop premise\" for humor, emotional depth, purpose and connection.",
+    "source": "catalog essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:43967",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis explicitly says \"the days are literally repeating themselves\"; generated essence supports coming-of-age reflection, supplemented by supplied Comedy and Romance genres.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:206487",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis establishes an \"intricate series of time-travel journeys\"; generated essence adds non-linear temporal paradoxes and identity causality.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:14337",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Generated essence explicitly identifies time travel, complex narrative and a dense non-linear structure; synopsis supports an invention whose consequences catch up with its users.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  }
+]

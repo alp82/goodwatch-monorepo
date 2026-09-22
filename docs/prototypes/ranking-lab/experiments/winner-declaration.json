@@ -1,0 +1,20 @@
+{
+  "title": "Experiment winner: semantic core, then mood",
+  "description": "Interpret the request, check its subject and relationships against descriptions, then rank matching titles by mood and attribute strength. Source facts supplement incomplete descriptions. This pipeline beat all 21 preserved comparators under the fixed margins, guardrails, independent audit and uncertainty checks.",
+  "metrics": [
+    {
+      "label": "Acceptable results / 10 \u00b7 legacy \u2192 winner",
+      "value": "6.6 \u2192 8.8"
+    },
+    {
+      "label": "Winner NDCG@10 \u00b7 unresolved-label range",
+      "value": "0.928\u20130.933"
+    },
+    {
+      "label": "Off-target in top 5 \u00b7 all 10 queries",
+      "value": "10 \u2192 0"
+    }
+  ],
+  "scope": "Clear proxy winner on ten interpreted, previously captured requests under independent agent judgments. Four ambiguous requests remain separate. Confirmation reused prior development cases; unseen generalization, live cost/latency and the accepted 30-query human baseline remain unverified. This is a pipeline comparison, not a scoring-only ablation on identical text inputs.",
+  "status": "clear-proxy-winner"
+}

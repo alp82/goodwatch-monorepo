@@ -1,0 +1,232 @@
+[
+  {
+    "query": "complete nonsense",
+    "core": [
+      {
+        "requirement": "Absurd or deliberately nonsensical storytelling."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Could instead be a meaningless test query or a complaint; no stable subject is specified."
+    ],
+    "assumption": "Tentatively read as a request for absurd entertainment; clarification could change the interpretation.",
+    "kind": "ambiguous"
+  },
+  {
+    "query": "tarkovsky",
+    "core": [
+      {
+        "requirement": "A work directed by Andrei Tarkovsky."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Could mean films resembling his style or works about him rather than his own filmography."
+    ],
+    "assumption": "Read the surname as a filmmaker lookup; do not substitute stylistic similarity for authorship.",
+    "kind": "ambiguous"
+  },
+  {
+    "query": "feel good cooking show",
+    "core": [
+      {
+        "requirement": "A television show substantially about cooking."
+      }
+    ],
+    "modifiers": [
+      "Warm, uplifting, comforting viewing experience."
+    ],
+    "exclusions": [],
+    "ambiguities": [
+      "Does not specify instructional, competition, documentary, or fictional format."
+    ],
+    "assumption": "Cooking is the subject and feel-good is the desired tone; no particular cooking-show format is assumed.",
+    "kind": "subject"
+  },
+  {
+    "query": "slow burn space horror",
+    "core": [
+      {
+        "requirement": "Horror set in outer space or aboard a spacecraft."
+      }
+    ],
+    "modifiers": [
+      "Gradual buildup of dread and tension."
+    ],
+    "exclusions": [],
+    "ambiguities": [
+      "Space may include extraterrestrial settings; Earth-bound alien horror alone is not the conventional reading."
+    ],
+    "assumption": "Treat horror and the space setting as essential, with slow-burn pacing.",
+    "kind": "subject"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "core": [
+      {
+        "requirement": "A thriller centrally involving a planned or executed heist."
+      }
+    ],
+    "modifiers": [
+      "Sustained tension and suspense."
+    ],
+    "exclusions": [
+      "An overwhelmingly bleak or hopeless overall tone."
+    ],
+    "ambiguities": [
+      "The user does not specify a happy ending; a tense or dangerous story can still avoid bleakness."
+    ],
+    "assumption": "Heist thriller supplies the premise, tension supplies the mood, and not bleak limits the overall emotional experience.",
+    "kind": "subject"
+  },
+  {
+    "query": "grief after losing a child",
+    "core": [
+      {
+        "requirement": "A substantial portrayal of grief experienced by someone whose child has died."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Child may mean a young person or an adult offspring.",
+      "Losing could refer to disappearance or separation rather than death, although bereavement is the conventional reading.",
+      "The bereaved person need not be a biological parent, but the wording does not primarily describe a child grieving someone else."
+    ],
+    "assumption": "Read as parental or caregiver bereavement caused by the death of their child; offspring age is unspecified and the literal form of loss remains uncertain.",
+    "kind": "subject"
+  },
+  {
+    "query": "furious",
+    "core": [
+      {
+        "requirement": "A pronounced sense of anger or rage."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Could be an emotional tone, a character trait, or a partial title lookup.",
+      "The single word does not establish an action genre or a specific story subject."
+    ],
+    "assumption": "Tentatively read as a desired emotional quality; actual intent is unresolved.",
+    "kind": "ambiguous"
+  },
+  {
+    "query": "craty",
+    "core": [],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Unrecognized token; it may be a typo for crazy or another word, or a name or title."
+    ],
+    "assumption": "Do not silently choose a correction or invent a subject; clarification is needed for a reliable interpretation.",
+    "kind": "ambiguous"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "core": [
+      {
+        "requirement": "A mystery centrally involving a lighthouse keeper."
+      }
+    ],
+    "modifiers": [
+      "Melancholy mood."
+    ],
+    "exclusions": [],
+    "ambiguities": [
+      "Does not specify whether the keeper investigates the mystery, is its subject, or is implicated in it."
+    ],
+    "assumption": "Preserve lighthouse keeper as a meaningful character role and mystery as the narrative form; melancholy is the tone.",
+    "kind": "subject"
+  },
+  {
+    "query": "scifi with cars",
+    "core": [
+      {
+        "requirement": "A science-fiction story."
+      },
+      {
+        "requirement": "Cars have a meaningful presence in the premise or action."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Does not specify racing, futuristic vehicles, car chases, or sentient cars.",
+      "With cars leaves the required degree of prominence uncertain."
+    ],
+    "assumption": "Read scifi as science fiction and require recognizable cars beyond incidental background appearances, without imposing a particular car-related premise.",
+    "kind": "subject"
+  },
+  {
+    "query": "sunglasses at night",
+    "core": [
+      {
+        "requirement": "A notable depiction of someone wearing sunglasses at night."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Could be a title or cultural-reference lookup rather than a literal scene request.",
+      "Does not establish a neon aesthetic, action genre, or general coolness preference."
+    ],
+    "assumption": "Use the literal visual motif provisionally; a broader implied mood is not established.",
+    "kind": "ambiguous"
+  },
+  {
+    "query": "fantasy with dragons",
+    "core": [
+      {
+        "requirement": "A fantasy story."
+      },
+      {
+        "requirement": "Dragons have a meaningful presence in the story."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "No preference is stated for friendly versus threatening dragons or for a particular audience age."
+    ],
+    "assumption": "Treat fantasy and dragons as essential; no additional tone or setting constraints are inferred.",
+    "kind": "subject"
+  },
+  {
+    "query": "like groundhog day",
+    "core": [
+      {
+        "requirement": "A story resembling Groundhog Day in its defining premise: a character repeatedly relives the same day or bounded period while retaining awareness across repetitions."
+      }
+    ],
+    "modifiers": [],
+    "exclusions": [],
+    "ambiguities": [
+      "Similarity could instead target comedy, romance, personal growth, or tone; the user has not resolved which aspect matters most.",
+      "The duration of the repeated period need not literally be one day under this premise-based reading."
+    ],
+    "assumption": "Prefer the conventional time-loop analogy; humor, romance, and uplifting tone remain optional possibilities rather than inferred requirements.",
+    "kind": "analogy"
+  },
+  {
+    "query": "time travel complex",
+    "core": [
+      {
+        "requirement": "Time travel is central to the story."
+      }
+    ],
+    "modifiers": [
+      "An intricate plot or temporal structure involving time travel."
+    ],
+    "exclusions": [],
+    "ambiguities": [
+      "Complex could describe time-travel rules, causal paradoxes, interwoven timelines, or the effort needed to follow the plot."
+    ],
+    "assumption": "Read as a request for narratively complex time travel; no particular mechanism or emotional tone is assumed.",
+    "kind": "subject"
+  }
+]

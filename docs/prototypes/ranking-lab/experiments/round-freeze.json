@@ -1,0 +1,14 @@
+{
+  "round": "scalar-and-core-evidence",
+  "ordering": "Stable media-key ordering, independent of algorithm rank; not randomly shuffled",
+  "catalogSha256": "3a3ce1cd290b9d294e15292cb8eef045cf3e12dc752a471bc7df1e4089a45abc",
+  "hashes": {
+    "query-intents.json": "f752f2798cafe1c7b6231c1acac1c538674b1b43edd6adbd497ecfa0643aa4b1",
+    "evaluation-contract.md": "b1ec74ad9028ad49bcd085de9e99099783446232df945edb4f3ca7a95151fa96",
+    "rankers.cjs": "6dc0e8798cc7125eb77cb44d69d62f3692d143105b5a6ba9d81036b1ced63b76",
+    "core-evidence.cjs": "65d08abb140352e5bc8d817bc86c0eed142b71cc2e0fbeb446c7a6e141fe034d",
+    "run-rounds.cjs": "561a5c91126bece0fe604deb16ef14deaf7c333a0c046f39cb8c4b5ff6eaf907",
+    "blinded-slate.json": "0fe3d367cec724e73615216307f0c97d9f5e32b8d72cc1c09670c49da618ee96"
+  },
+  "status": "Frozen before reading relevance judgments; confirmation held until development selection"
+}

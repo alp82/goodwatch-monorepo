@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "researchedAt": "2026-09-23",
+  "assessor": "agent-a-independent-primary-source-audit",
+  "query": "like groundhog day",
+  "rubric": "query-intents.json version 1, query index 12",
+  "scope": "Factual supplementation for three uncertain packets. No algorithms, rankings, configurations or metrics inspected. Proposed grades are agent rubric judgments, not human acceptance; apply evidence equally to every ranking.",
+  "sourcesPolicy": "Official distributor pages and directly attributed filmmaker/performer statements only. Interview quotations are primary testimony even when hosted by a publication. Search-result reviews and Wikipedia were not used as evidence. Paraphrases are labeled; quoted excerpts remain under 25 words per source.",
+  "records": [
+    {
+      "key": "movie:293970",
+      "title": "The Final Girls",
+      "repeatingTime": "established",
+      "confidence": "medium",
+      "sources": [
+        {
+          "url": "https://www.sonypictures.com/movies/thefinalgirls",
+          "publisher": "Sony Pictures Entertainment",
+          "type": "official distributor synopsis",
+          "paraphrase": "Friends enter an old horror film, encounter a character played by Max's dead mother, and must survive the film's killer.",
+          "supports": "A lived movie-world premise and horror-comedy tone; this synopsis alone does not establish a temporal loop."
+        },
+        {
+          "url": "https://dailydead.com/interview-with-the-final-girls-director-todd-strauss-schulson/",
+          "publisher": "Daily Dead",
+          "type": "direct interview with director Todd Strauss-Schulson",
+          "publishedAt": "2015-11-04",
+          "excerpt": "the movie could loop on you",
+          "paraphrase": "Strauss-Schulson includes looping among movie-world devices he added, and describes an emotional comedy about seeing a deceased parent again.",
+          "supports": "The director confirms looping is part of the lived movie-world mechanism, alongside comedy and emotional reunion."
+        }
+      ],
+      "proposedGrade": 2,
+      "reasoning": "The filmmaker's testimony resolves whether looping exists, while the official synopsis places the characters inside that movie-world. This supports an acceptable alternate loop-based suggestion. The retrieved primary evidence does not establish how sustained the resets are, so it does not justify the strongest repeated-day affinity grade.",
+      "remainingUncertainty": "No primary source retrieved here specifies reset duration, frequency or whether repeated lived events dominate the whole narrative. Do not import the 92-minute detail from secondary summaries."
+    },
+    {
+      "key": "movie:550988",
+      "title": "Free Guy",
+      "repeatingTime": "unknown",
+      "confidence": "medium",
+      "sources": [
+        {
+          "url": "https://www.20thcenturystudios.com/movies/free-guy",
+          "publisher": "20th Century Studios",
+          "type": "official distributor synopsis",
+          "paraphrase": "A bank teller discovers he is a video-game background character and chooses to become a hero who saves his world.",
+          "supports": "Video-game setting and self-directed personal change, but no explicit time reset."
+        },
+        {
+          "url": "https://www.20thcenturystudios.jp/movies/freeguy",
+          "publisher": "20th Century Studios Japan",
+          "type": "official distributor synopsis",
+          "paraphrase": "The Japanese synopsis describes a background game character repeating ordinary, boring days before rebelling against his programming.",
+          "supports": "Repeated daily routine; this wording does not distinguish behavioral repetition from reliving the same time."
+        },
+        {
+          "url": "https://d23.com/fall-guy-is-a-fastball-of-joy/",
+          "publisher": "D23",
+          "type": "official Disney publication quoting actor-producer Ryan Reynolds and director Shawn Levy",
+          "publishedAt": "2020-10-05",
+          "excerpt": "he's kind of on a loop with his world",
+          "paraphrase": "Reynolds describes recurring daily events followed by growth after meeting Milly; Levy relates the premise to feeling trapped in routine.",
+          "supports": "Behavioral looping and personal-growth affinity, not an unambiguous temporal reset."
+        }
+      ],
+      "proposedGrade": null,
+      "reasoning": "Primary sources establish a programmed daily routine and positive character change. They do not establish that Guy repeatedly lives the same elapsed time, which the frozen rubric requires. They also do not prove temporal repetition absent, so a forced wrong or acceptable label would overstate this audit.",
+      "remainingUncertainty": "Whether the intended analogy admits an NPC behavioral routine as repeated lived time. The rubric cannot be broadened after seeing ranking outcomes. A separately declared routine-and-growth reading would support partial affinity, but is not applied here."
+    },
+    {
+      "key": "movie:588064",
+      "title": "The Fare",
+      "repeatingTime": "established",
+      "confidence": "high",
+      "sources": [
+        {
+          "url": "https://epic-pictures.com/film/the-fare",
+          "publisher": "Epic Pictures",
+          "type": "official distributor synopsis",
+          "paraphrase": "After Penny disappears, resetting Harris's taxi meter returns him to her pickup; their shared ride repeats, with attraction and life-changing consequences.",
+          "supports": "An explicit return to an earlier event, an ongoing shared loop, and a romantic character connection."
+        }
+      ],
+      "proposedGrade": 3,
+      "reasoning": "The distributor explicitly describes a central time-reset mechanism and an endlessly repeated ride. Harris's attraction to Penny and their life-changing connection supply romantic/personal affinity in addition to the required temporal premise.",
+      "remainingUncertainty": "The official description establishes attraction and transformation but does not quantify comedic tone; comedy is one optional affinity in the rubric, not a requirement."
+    }
+  ]
+}

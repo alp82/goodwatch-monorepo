@@ -1,0 +1,812 @@
+[
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:1171640",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "The brother is recruited for a central heist and the essence stresses family stakes and tense action; overall non-bleak tone is plausible but not explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:119283",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Hijacking a heist and suspenseful planning are explicit; satisfying twists support an engaging treatment without establishing a consistently upbeat tone.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:1225915",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "The diamond heist and suspense are central, and the essence explicitly frames the dangerous contest as pure escapism.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:14979",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "A final vault theft drives the plot, with suspense and an entertaining caper tone rather than an explicitly hopeless treatment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:165904",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "The final con and police pursuit are central; witty dialogue and a smart, satisfying entertainment tone support non-bleak suspense.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:17134",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The robbery is an initiating incident; the supplied central plot is revenge through dangerous tasks and hostage rescue, not a planned-theft thriller.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:183659",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Crime and tension are supported, but the synopsis centers a romantic friendship triangle and the essence calls heists a backdrop rather than a clearly central operation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:22907",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Detailed bank and armored-car heist planning and a tense police pursuit satisfy the core; loyalty and risk do not establish either hopefulness or relentless bleakness.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:291805",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A dangerous heist with dazzling illusions, charismatic performers and spectacle supports a suspenseful, entertaining rather than hopeless treatment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:29231",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "The coordinated cash heist and hidden-agenda suspense are explicit; escalating violence alone does not establish the excluded hopeless overall tone.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:369032",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The essence explicitly describes brutal unrelenting horror with little respite or hope, violating the requested non-bleak treatment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:37984",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A jewel thief planning another large score drives the surveillance cat-and-mouse thriller; the source does not settle its overall emotional outlook.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:388",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A bank robbery and gripping psychological battle are central; cleverness and suspense are clear, but non-bleak overall tone remains incompletely described.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:43216",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "The essence calls this heist-centered and suspenseful with an escapist treatment, though the synopsis emphasizes the aftermath and amnesia more than theft execution.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:531380",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "The truck heist anchors the betrayal story, while redemption and unbreakable bonds explicitly support resilience alongside danger.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:56821",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "The embassy jewel theft, suspenseful execution and classic escapist caper framing directly support the requested combination.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:581644",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "An elaborate gold robbery and thrills are central; the essence explicitly promises a lighthearted thrilling ride.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:593395",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A diamond theft and police pursuit are central with suspense and romance; the overall non-bleak tone is plausible rather than directly established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:630004",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "An audacious bank-vault robbery supplies constant tension, explicitly framed as an engaging escapist experience.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:678470",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "International heists and the mystery linking the criminal to the protagonist establish thriller interest; overall tone is not specified enough for a strong non-bleak claim.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:75656",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Bank heists during magic performances and exhilarating suspense combine with explicit popcorn-entertainment framing.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:763285",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "A central bank robbery spirals into sustained suspense, and the essence explicitly frames the intense chase as an escapist thrill ride.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:796499",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Tense bank robberies are central and comedy, charm, fun and wit directly support the non-bleak modifier.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:955916",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "A plane gold heist and consistent tension are central, with colorful characters and explicit pure-escapism treatment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:97614",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "The heist is already botched and the described central action concerns its family aftermath and survival; tense crime is supported but central theft planning is not.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "show:112836",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "A major heist, intricate plotting and constant tension satisfy the core; the description leaves overall hopefulness or bleakness unsettled.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "show:134375",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Coordinated bank heists and a suspenseful psychological duel are explicit; no firm non-bleak overall treatment is supplied.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "show:71446",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Detailed heist preparation and tense hostage stakes satisfy the core; moral ambiguity and high risks alone do not establish relentless hopelessness.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:107054",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The melancholy mystery is a Victorian conspiracy involving sisters and a woman in white; no keeper connection is supported in the described central story.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:11114",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "A lighthouse keeper is materially involved, but the supplied story is a heartwarming dragon rescue adventure rather than a supported melancholy mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:283552",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "A lighthouse keeper and profound melancholy are central; the rescued baby raises questions, but the source describes romantic moral drama without establishing a central mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:354125",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The central mystery concerns a murdered granddaughter, river disappearances and a banker; lighthouse keeping is unsupported beyond the shared melancholy atmosphere.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:426487",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Trapped lighthouse keepers and blurred reality or supernatural uncertainty satisfy the core; the oppressive isolation supports a subdued tone but melancholy is not explicit.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:449459",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Three lighthouse keepers and an unsettling discovery-centered mystery satisfy the core; guilt and isolation make melancholy plausible without directly establishing it.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:50042",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "The lighthouse keeper is central, but the source describes a heartwarming romantic comedy and supplies no central mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:503919",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Lighthouse keepers face mysterious surroundings and unreliable reality; dread and haunting unease support the mystery but only partially establish melancholy.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:57840",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "The lighthouse keeper is a material guardian, but the source centers a wholesome custody conflict and rescue, not a melancholy mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:90974",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "The surviving lighthouse keeper is central, but the openly described pirate plot is a survival conflict; central unexplained mystery and melancholy remain unsupported.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:136735",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The described central story is a father sustaining his vampire daughter; melancholy is supported but no lighthouse-keeper mystery is established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:137903",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The source centers a real disappearance investigation and police failures; its melancholy mystery supplies no material keeper connection.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:157226",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The central enigma involves a plane crash, bereavement and a domestic robot in Kyoto; no material lighthouse keeper is supported.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:201420",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The source centers religious family trauma and messianic delusions; mood and secrets do not establish a lighthouse-keeper mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:214065",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The supplied mystery concerns a woman in Georgian London and a murder trial; a keeper-related story is not supported.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:217667",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The central mystery is a missing child in New York and a fathers psychological struggle; no keeper involvement is established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:237232",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The source centers railway-station events and fragmented memory; melancholy mystery alone does not support lighthouse keeping.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:45462",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The described unexplained deaths are linked to a supernatural pet shop, not a material lighthouse-keeper story.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:46616",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The central mystery is dead relatives returning near a hydraulic dam; the atmospheric affinity does not establish a keeper-related plot.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:4860",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "Cold-case police investigations and melancholy are supported, but the supplied generic premise provides only incidental affinity to the specific keeper request.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:62142",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The central mystery concerns presumed-dead townspeople returning; no keeper connection is supported by the supplied family and community premise.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:62547",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The mystery and grief center a missing teenager and her family; the source offers no material lighthouse-keeper connection.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:69871",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The melancholy mystery centers a lawyer investigating a ballet prodigys death, without a supported keeper-related premise.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:71967",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The mystery is a disappearance in the Ardennes forest and a teachers past; no lighthouse-keeper role is supported.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "show:86735",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "The source offers melancholy detective investigations but no material keeper story, making its match only atmospheric.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:10017",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "An invincible car and sustained vehicular revenge are central; the essence identifies sci-fi affinity but the mechanism is described chiefly as supernatural.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:10483",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A dystopian future built around deadly televised car racing directly supports vehicle-centered science fiction.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:1286710",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Cars are central to a crime-themed attraction, but projection and special-effects technology describe presentation rather than a science-fiction story premise.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:13282",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A future governments weaponized cross-country race makes cars central to the speculative conflict.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:156717",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "The essence explicitly places brutal car combat in a dystopian future, and the synopsis centers the prison death race.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:209379",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "An artificially intelligent supercar is the central invention and crime-fighting partner, directly combining science fiction and cars.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:31162",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "A flying car is the central superhero mechanism and tool for fighting crime; the speculative vehicle is essential rather than scenery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:35453",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A cross-country race-car escape drives the explicit sci-fi authoritarian-future premise.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:36349",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "The central stolen high-tech car is explicitly framed by the essence as futuristic sci-fi crime action.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:573560",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A murdered man becoming a sentient driverless revenge car in a cyberpunk future directly satisfies both requirements.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:584",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The supplied premise is contemporary undercover crime and racing; spectacular stunts and car culture do not establish science fiction.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:133748",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A post-apocalyptic delivery journey depends on destructive road vehicles and vehicular conflict throughout.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:15655",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "An AI car with transforming body and advanced weapons is central to the adventures and speculative technology.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:2384",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "The indestructible computerized talking car is central to the explicitly futuristic crime-fighting premise.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:30986",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Racing and an advanced gadget-equipped car are central; speculative technology is supported but the source gives limited detail on its science-fiction mechanism.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:4620",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Scientific inventions are central, but the described car crash only strands the protagonist in town and does not establish a substantial driving component.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:71693",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A dystopian death race using cars fueled by human blood makes vehicles central to the speculative mechanism.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:14139",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A central time machine creates self-encounters and escalating paradox loops, with explicit intricate puzzle-box plotting.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:14337",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "The essence explicitly describes dense time-travel plotting and a nonlinear structure requiring repeated viewing.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:165",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Time travel across multiple periods and an intricately interwoven timeline are explicitly supported.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:206487",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "The temporal agents journeys and identity paradoxes are central, with explicit intricate nonlinear complexity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:475961",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "A time-machine mystery and a warning from the protagonists apparent own voice support intricate temporal causality and identity puzzles.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:529216",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "The essence explicitly establishes time travel, alternate realities and complex consequences of changing a life.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:59967",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "An assassin receiving his future self creates a central causal conflict within explicitly complex time-travel plotting.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:604605",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A future self intervenes in the past, and the essence supports intricate time-travel plotting around reality and destiny.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:7551",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Time-shifting surveillance drives the crime plot, with explicit intricate nonlinear structure and fate questions.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:108681",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "The plane arriving after 35 years supports a temporal enigma and intricate plotting; the essence only hints at time travel rather than fully confirming its mechanism.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:121",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Time travel is central to the Doctors adventures, but this supplied overview does not establish substantial temporal paradox or timeline complexity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:195928",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Seven body swaps into the past interweave a death investigation and prevention attempt, supporting intricate temporal structure.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:196474",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Travel to 1998 and a lost-loves resemblance are embedded in an explicitly complex mystery across timelines.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:206344",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Changing the past creates unforeseen consequences, with explicit deep causality and time-travel complexity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:212055",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Repeated alterations to the past and unintended ripple effects explicitly form a layered cause-and-effect narrative.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:3184",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "The reporter changes lives across time, with explicitly described temporal paradoxes and intertwined past and present relationships.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:57243",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "The time-traveling protagonist and adventures satisfy the core, but the supplied summary stresses morality and character rather than temporal complexity.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:62099",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Preventing changes to history creates causal stakes and a complex time-travel adventure; substantial intricate timeline mechanics are only partly described.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:65249",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Time reversal and revisiting childhood to prevent deaths create a causal puzzle; the described complexity also concerns crime and character rather than clearly intricate temporal mechanics.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:70440",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "A detective travels from 1986 to the present to save his daughter; complex mystery is supported but detailed temporal causality remains incompletely described.",
+    "source": "catalog synopsis + essence",
+    "assessor": "agent-b"
+  }
+]

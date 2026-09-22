@@ -1,0 +1,362 @@
+[
+  {
+    "query": "complete nonsense",
+    "key": "movie:24051",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Generated essence calls it a \"straightforward narrative\" and \"no-nonsense ride\"; corporate-implant action gives only an incidental nonsense match.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:33024",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Synopsis includes \"cooking\" among crafts, science and games; wholesome series supported, cooking-centered continuing focus unestablished.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:30745",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis establishes a \"competitive cooking game show\"; generated essence explicitly describes comforting viewing and \"friendly competition\".",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:280976",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Cooking is one of the recurring tips shared with guests; generated essence describes \"domestic warmth\" and comfort viewing.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "feel good cooking show",
+    "key": "show:106694",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Synopsis centers accessible recipes from a kitchen; generated essence describes dry wit, gentle learning and a wholesome cooking show.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "show:78183",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis places true horror \"already on their ship\" at the solar-system edge; generated essence supports building tension and pervasive dread.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:994143",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Synopsis locates children in \"their home\"; generated essence supports slow horror but no material off-world setting, an explicit rubric mismatch.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:548473",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "Meteorite horror occurs at a \"farmstead in rural New England\"; an alien force on Earth does not satisfy the specified space setting.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "slow burn space horror",
+    "key": "movie:2154",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Stranded spaceship crew is \"possessed and killed\"; generated essence explicitly supports \"a slow burn with a growing sense of dread\".",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "show:134375",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Synopsis establishes coordinated bank heists and a high-stakes thriller; generated essence supports suspense but does not establish non-bleak overall tone.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "unknown"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:388",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Bank hostage operation and generated essence's \"clever heist thrillers\" support core suspense; cleverness alone does not establish non-bleak tone.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "unknown"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:369032",
+    "grade": 0,
+    "confidence": "medium",
+    "reason": "Botched bank heist initiates survival horror; generated essence describes an unrelenting experience with \"little room for respite or hope\", violating the exclusion.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "violated"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:29231",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Synopsis explicitly describes an \"elaborate heist\" and \"action-thriller\"; escalating violence and betrayals leave overall hopelessness unknown.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "unknown"
+  },
+  {
+    "query": "tense heist thriller, not bleak",
+    "key": "movie:22907",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Bank robbers plan an armored-car heist as police close in; suspense is supported, but the packet does not establish overall non-bleak treatment.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "unknown"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:90040",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Mother is \"devastated by the loss of her son\" killed at a match; bereavement shares the narrative with her fight for justice.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:83584",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Father loses \"his wife and daughter in a terrorist act\" and attempts suicide; grief remains important within an ensemble accident story.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:61555",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "\"Emotional fallout of a child's abduction\" on family supports related loss, but neither field establishes the child's death.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "show:1427",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "A \"young boy's murder\" and community grief are explicit; neither description establishes a parent or caregiver's grief as central.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:641662",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A young mother's home-birth tragedy begins a \"year-long odyssey of mourning\" that fractures relationships, directly supporting infant-loss aftermath.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:334541",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Packet supports \"grief and unresolved trauma\" and a brother's death; the unspecified tragic past does not establish a child's death or parental bereavement.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:165567",
+    "grade": 2,
+    "confidence": "medium",
+    "reason": "Couple has marital problems \"after losing their child\"; generated essence confirms grief, with a mysterious visitor and survival plot sharing focus.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "grief after losing a child",
+    "key": "movie:15584",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Packet establishes a father's murder and broad \"grief, loss, and family tragedy\"; parental grief after a child's death is not established.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:426487",
+    "grade": 2,
+    "confidence": "low",
+    "reason": "Two stranded lighthouse keepers are explicit; generated essence supplies reality/nightmare uncertainty and supernatural elements, while melancholy is only plausible from isolation.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "melancholy lighthouse keeper mystery",
+    "key": "movie:283552",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Synopsis establishes a lighthouse keeper rescuing an adrift baby; generated essence supports melancholy but not a central mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:71693",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "\"Near-dystopian future\" and a death race where \"cars run on human blood\" directly establish vehicle-centered science fiction.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "show:4620",
+    "grade": 1,
+    "confidence": "high",
+    "reason": "Futuristic scientific creations are central; \"wrecking his car\" supports only an introductory vehicle incident, not substantial driving or vehicle conflict.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:35453",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "A speculative authoritarian future centers a rebuilt race car and cross-country escape; generated essence confirms a science-fiction chase premise.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "scifi with cars",
+    "key": "movie:10483",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Synopsis supplies the privatized-prison future; generated essence explicitly identifies \"deadly car races\" and \"explosive car combat\".",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "show:1585",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "An enchanted scale transports siblings to a fantasy land inhabited by dragons who become their friends.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:167858",
+    "grade": 2,
+    "confidence": "high",
+    "reason": "Fantasy travelers \"survive a gigantic sleeping dragon\"; an actual dragon matters as one episode in a broader sibling-rescue adventure.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "fantasy with dragons",
+    "key": "movie:10191",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Young Viking befriends the dragon he was expected to kill; generated essence confirms a fantasy adventure built around that relationship.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:26538",
+    "grade": 0,
+    "confidence": "high",
+    "reason": "The Groundhog Day connection is a groundhog narrator; the described human-transformation romance supplies no repeated-lived-time premise.",
+    "source": "catalog synopsis",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "like groundhog day",
+    "key": "movie:122906",
+    "grade": 1,
+    "confidence": "medium",
+    "reason": "Changing events in one's own life and personal growth support related temporal romance, but the packet does not establish central repeated lived time or a time loop.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "time travel complex",
+    "key": "show:196474",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Woman travels to 1998; generated essence explicitly adds connections \"across timelines\" and a complex non-linear mystery.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:59967",
+    "grade": 3,
+    "confidence": "high",
+    "reason": "Assassin is sent his own future self as a target; generated essence supports intricate plotting around the explicit temporal conflict.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  },
+  {
+    "query": "time travel complex",
+    "key": "movie:14139",
+    "grade": 3,
+    "confidence": "medium",
+    "reason": "Man travels back nearly an hour and encounters himself; generated essence explicitly describes a \"loop of paradoxes\" and intricate plotting.",
+    "source": "catalog synopsis + essence",
+    "assessor": "independent-agent",
+    "exclusion": "supported"
+  }
+]

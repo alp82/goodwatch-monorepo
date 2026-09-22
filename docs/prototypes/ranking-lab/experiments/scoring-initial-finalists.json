@@ -1,0 +1,6977 @@
+[
+  {
+    "id": "legacy-main",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "show:129959",
+            "title": "Kung Fu Panda: The Dragon Knight",
+            "score": 1.6548992931804676
+          },
+          {
+            "key": "movie:278924",
+            "title": "Mechanic: Resurrection",
+            "score": 1.4449370757497224
+          },
+          {
+            "key": "movie:24051",
+            "title": "Hardwired",
+            "score": 1.4218093112112373
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.3857408701385208
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.3718446191297744
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 1.3687882797472146
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 1.3373417604190934
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 1.2411780092283735
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 1.238329475207417
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 1.2356853465953828
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 1.0079012345679013
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.9492649869526127
+          },
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.9313373769269563
+          },
+          {
+            "key": "movie:1730",
+            "title": "Inland Empire",
+            "score": 0.9212248229283156
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.9092568559086021
+          },
+          {
+            "key": "movie:15916",
+            "title": "Angel's Egg",
+            "score": 0.8794478872004037
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 0.8767397846632896
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 0.872561278863233
+          },
+          {
+            "key": "movie:1398",
+            "title": "Stalker",
+            "score": 0.8725141766989017
+          },
+          {
+            "key": "show:1087",
+            "title": "Serial Experiments Lain",
+            "score": 0.8658071004100605
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 1.6038371579458424
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.4747287978499153
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 1.4576124896335605
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.4483964708132941
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.4255508792951879
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.4136784970535705
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.410516579871821
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.410187740674189
+          },
+          {
+            "key": "show:92139",
+            "title": "Perfect Harmony",
+            "score": 1.3894656646990402
+          },
+          {
+            "key": "show:1580",
+            "title": "Gidget",
+            "score": 1.3884412250082216
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.5476245641262052
+          },
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.392604154082941
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.342977162708913
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.3161888672220166
+          },
+          {
+            "key": "movie:50037",
+            "title": "Beyond the Black Rainbow",
+            "score": 1.2803079277337104
+          },
+          {
+            "key": "show:6143",
+            "title": "Quatermass and the Pit",
+            "score": 1.275977843173933
+          },
+          {
+            "key": "show:81951",
+            "title": "Ad Vitam",
+            "score": 1.264376590330789
+          },
+          {
+            "key": "movie:994143",
+            "title": "Skinamarink",
+            "score": 1.2600508905852421
+          },
+          {
+            "key": "show:127865",
+            "title": "The Chestnut Man",
+            "score": 1.2567712212739308
+          },
+          {
+            "key": "show:125988",
+            "title": "Silo",
+            "score": 1.2489418359986888
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.5948063497082576
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.587533370656688
+          },
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.534685345827147
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.5322699659939578
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.5311316778722834
+          },
+          {
+            "key": "movie:119283",
+            "title": "Parker",
+            "score": 1.4736013276804567
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.465788196485616
+          },
+          {
+            "key": "movie:796499",
+            "title": "Army of Thieves",
+            "score": 1.4498569144127336
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 1.4487863623678423
+          },
+          {
+            "key": "movie:630004",
+            "title": "The Vault",
+            "score": 1.4463822594212934
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.6547164225888982
+          },
+          {
+            "key": "show:59183",
+            "title": "Southcliffe",
+            "score": 1.4285625699474438
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 1.4283651734094667
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.425218595986285
+          },
+          {
+            "key": "movie:15584",
+            "title": "Dear Zachary: A Letter to a Son About His Father",
+            "score": 1.406974763984317
+          },
+          {
+            "key": "show:156946",
+            "title": "Without Sin",
+            "score": 1.4053722015601875
+          },
+          {
+            "key": "show:83584",
+            "title": "Crash",
+            "score": 1.4022940174190115
+          },
+          {
+            "key": "movie:641662",
+            "title": "Pieces of a Woman",
+            "score": 1.3975458128241955
+          },
+          {
+            "key": "show:61555",
+            "title": "The Missing",
+            "score": 1.3972773764662298
+          },
+          {
+            "key": "show:90040",
+            "title": "Anne",
+            "score": 1.3935705627287531
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 1.0035488877392653
+          },
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 1.0035178479048112
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 1.0031867563372996
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 1.0027780651836524
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 1.0019710294878428
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 1.0019089498189342
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 1.0014743921365752
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 1.0009829280910503
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 0.9907864549360085
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 0.983906914235588
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 1.0032954545454544
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.968398904645994
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 0.9382784321521223
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 0.936758161881852
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 0.9366015279752181
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 0.9360822073263864
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 0.9348905611347402
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9347093572035362
+          },
+          {
+            "key": "show:74666",
+            "title": "At Home with Amy Sedaris",
+            "score": 0.9345803645745436
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 0.9344268019209809
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.134566866955283
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 1.8417106125115454
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.5522702823448156
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.5067545663655495
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.4733147784600853
+          },
+          {
+            "key": "show:86735",
+            "title": "Baptiste",
+            "score": 1.4350346545407642
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.4270165722743653
+          },
+          {
+            "key": "show:217667",
+            "title": "Eric",
+            "score": 1.420031304396863
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 1.4163989032334021
+          },
+          {
+            "key": "show:214065",
+            "title": "The Confessions of Frannie Langton",
+            "score": 1.3993741931535897
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.3229431734686736
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 1.2487119183891724
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.1843889405284267
+          },
+          {
+            "key": "show:71693",
+            "title": "Blood Drive",
+            "score": 1.1651371678903248
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 1.143878349213458
+          },
+          {
+            "key": "movie:1286710",
+            "title": "Fast & Furious: Supercharged",
+            "score": 1.1409391422416326
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 1.1207817880882671
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 1.1116515794332233
+          },
+          {
+            "key": "show:4620",
+            "title": "Eureka",
+            "score": 1.1031861951940436
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 1.0967459078485833
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.30012077294686
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.274909418560119
+          },
+          {
+            "key": "show:4267",
+            "title": "The Kingdom",
+            "score": 1.1958851403153676
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.1925117064392516
+          },
+          {
+            "key": "movie:430214",
+            "title": "Night Is Short, Walk On Girl",
+            "score": 1.1782609913386435
+          },
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.177274909688328
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 1.1617168337311794
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 1.1578472677834728
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 1.1521211491713956
+          },
+          {
+            "key": "movie:47406",
+            "title": "Arabian Nights",
+            "score": 1.1431159420289854
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 1.8625503694756023
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.7213387304788352
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.604860295302023
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.5700066355821507
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.5618456660305742
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.535122966892208
+          },
+          {
+            "key": "movie:10191",
+            "title": "How to Train Your Dragon",
+            "score": 1.4984633739502644
+          },
+          {
+            "key": "movie:57158",
+            "title": "The Hobbit: The Desolation of Smaug",
+            "score": 1.4706733270264634
+          },
+          {
+            "key": "show:1585",
+            "title": "Dragon Tales",
+            "score": 1.4630474450378035
+          },
+          {
+            "key": "movie:49051",
+            "title": "The Hobbit: An Unexpected Journey",
+            "score": 1.4604927894280428
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.651979212079236
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.6037037037037036
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.4852445502873373
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.4126689241722503
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.223809523809524
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.14021164021164
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 1.1007936507936504
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 1.0833333333333333
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 1.0785714285714285
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 1.0481481481481483
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.5513200955808184
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.454783242143629
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.4371501463667897
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.4124912129424023
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.4091964471042266
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.4082636894598024
+          },
+          {
+            "key": "show:212055",
+            "title": "Plan B",
+            "score": 1.3742327233493143
+          },
+          {
+            "key": "movie:7551",
+            "title": "Déjà Vu",
+            "score": 1.369021672582233
+          },
+          {
+            "key": "show:195928",
+            "title": "The 7 Lives of Lea",
+            "score": 1.3652298816325827
+          },
+          {
+            "key": "movie:165",
+            "title": "Back to the Future Part II",
+            "score": 1.362920822988668
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "legacy-leads",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 5.643364281288733
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 5.631096601363817
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 5.621863159448085
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 5.621554234086174
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 5.592224079895323
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 5.582231068737552
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 5.581136046350716
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 5.580671635567406
+          },
+          {
+            "key": "movie:433941",
+            "title": "Dave Made a Maze",
+            "score": 5.4225820086820695
+          },
+          {
+            "key": "movie:18162",
+            "title": "Land of the Lost",
+            "score": 4.595593683372767
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:883083",
+            "title": "You Won't Be Alone",
+            "score": 23.18692838654012
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 22.211777394305436
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 22.208563416738567
+          },
+          {
+            "key": "show:1087",
+            "title": "Serial Experiments Lain",
+            "score": 22.207269197584125
+          },
+          {
+            "key": "movie:21832",
+            "title": "Neon Genesis Evangelion: Death and Rebirth",
+            "score": 22.202415875754962
+          },
+          {
+            "key": "movie:1923",
+            "title": "Twin Peaks: Fire Walk with Me",
+            "score": 22.20237273511648
+          },
+          {
+            "key": "movie:27072",
+            "title": "On the Silver Globe",
+            "score": 22.201315789473686
+          },
+          {
+            "key": "movie:38368",
+            "title": "Uncle Boonmee Who Can Recall His Past Lives",
+            "score": 22.19844693701467
+          },
+          {
+            "key": "movie:4558",
+            "title": "Orpheus",
+            "score": 22.19792924935289
+          },
+          {
+            "key": "movie:137698",
+            "title": "The Dance of Reality",
+            "score": 22.197627264883522
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 12.309730253851475
+          },
+          {
+            "key": "show:77631",
+            "title": "The Great Pottery Throw Down",
+            "score": 12.302655716191481
+          },
+          {
+            "key": "show:76305",
+            "title": "Somebody Feed Phil",
+            "score": 12.298370991694895
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 12.291112877723666
+          },
+          {
+            "key": "show:1025",
+            "title": "The Bullwinkle Show",
+            "score": 12.289877857795693
+          },
+          {
+            "key": "show:1317",
+            "title": "Made",
+            "score": 12.28404721374428
+          },
+          {
+            "key": "show:154916",
+            "title": "The Makanai: Cooking for the Maiko House",
+            "score": 12.277760352450443
+          },
+          {
+            "key": "show:35058",
+            "title": "Property Brothers",
+            "score": 12.276062817801686
+          },
+          {
+            "key": "show:2589",
+            "title": "Head of the Class",
+            "score": 12.268756138118707
+          },
+          {
+            "key": "show:95074",
+            "title": "Queer Eye: We're in Japan!",
+            "score": 12.228902116402116
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:376865",
+            "title": "High Life",
+            "score": 15.731044137132235
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 15.305048682818112
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 15.280909671403178
+          },
+          {
+            "key": "show:36581",
+            "title": "Shiki",
+            "score": 15.181236080178174
+          },
+          {
+            "key": "show:61635",
+            "title": "Remember Me",
+            "score": 15.162165924276168
+          },
+          {
+            "key": "movie:594718",
+            "title": "Sputnik",
+            "score": 14.779007977548341
+          },
+          {
+            "key": "movie:421443",
+            "title": "Teleios",
+            "score": 14.75041350711374
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 14.697691249994351
+          },
+          {
+            "key": "movie:548473",
+            "title": "Color Out of Space",
+            "score": 14.592128255833435
+          },
+          {
+            "key": "show:97400",
+            "title": "Midnight Mass",
+            "score": 14.280491383316605
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 11.559440532045874
+          },
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 10.761112218808234
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 10.636787953497667
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 10.620100671586181
+          },
+          {
+            "key": "movie:183659",
+            "title": "Qurbani",
+            "score": 10.599039737816616
+          },
+          {
+            "key": "movie:531380",
+            "title": "Golden Job",
+            "score": 10.591750388086428
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 10.57627732443353
+          },
+          {
+            "key": "movie:43216",
+            "title": "Prince",
+            "score": 10.572803754353805
+          },
+          {
+            "key": "movie:1225915",
+            "title": "Jewel Thief - The Heist Begins",
+            "score": 10.57261387178363
+          },
+          {
+            "key": "movie:796499",
+            "title": "Army of Thieves",
+            "score": 10.561881574649808
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "show:2265",
+            "title": "I'm Sorry, I Love You",
+            "score": 11.186951878387013
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 11.177038177049697
+          },
+          {
+            "key": "show:132378",
+            "title": "Stephen",
+            "score": 11.146435922642329
+          },
+          {
+            "key": "show:81357",
+            "title": "Dead to Me",
+            "score": 11.145100442640894
+          },
+          {
+            "key": "show:194741",
+            "title": "Parish",
+            "score": 11.138116224440981
+          },
+          {
+            "key": "movie:828305",
+            "title": "Rushed",
+            "score": 11.137513016856909
+          },
+          {
+            "key": "show:98537",
+            "title": "Reckoning",
+            "score": 11.137285335521904
+          },
+          {
+            "key": "show:139396",
+            "title": "The Endless Night",
+            "score": 11.131774094566467
+          },
+          {
+            "key": "show:201408",
+            "title": "Suspect",
+            "score": 11.131691499871069
+          },
+          {
+            "key": "show:202140",
+            "title": "The Light in the Hall",
+            "score": 11.128297273374415
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 5.246933085501858
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 5.245260223048327
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 5.2438661710037175
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 4.25
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 4.244105691056911
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 4.2386178861788615
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 4.2386178861788615
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 4.2386178861788615
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 4.238211382113821
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 4.238211382113821
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 4.238211382113821
+          },
+          {
+            "key": "show:74666",
+            "title": "At Home with Amy Sedaris",
+            "score": 4.238211382113821
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 4.238211382113821
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 17.153852972602234
+          },
+          {
+            "key": "show:201420",
+            "title": "The Messiah",
+            "score": 17.130117380257726
+          },
+          {
+            "key": "show:45462",
+            "title": "Pet Shop of Horrors",
+            "score": 17.09579506743265
+          },
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 16.827112825243987
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 16.125801419395227
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 16.112006101010053
+          },
+          {
+            "key": "show:137903",
+            "title": "Dig Deeper: The Disappearance of Birgit Meier",
+            "score": 16.10607970760451
+          },
+          {
+            "key": "show:69871",
+            "title": "Case",
+            "score": 16.102115345379985
+          },
+          {
+            "key": "show:217667",
+            "title": "Eric",
+            "score": 16.101179342117483
+          },
+          {
+            "key": "show:157226",
+            "title": "Sunny",
+            "score": 16.09947299173811
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 3.8676981138739888
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 3.8124350309024697
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 3.71817014817272
+          },
+          {
+            "key": "movie:31162",
+            "title": "Black Lightning",
+            "score": 3.7128607482634997
+          },
+          {
+            "key": "movie:156717",
+            "title": "Death Race: Inferno",
+            "score": 3.7127968774609506
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 3.7127223442410315
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 3.711084948261665
+          },
+          {
+            "key": "movie:36349",
+            "title": "Black Moon Rising",
+            "score": 3.6998124256726124
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 3.699132045287337
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 3.6815695354906715
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 8.172869955156951
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 7.808412329103138
+          },
+          {
+            "key": "show:4267",
+            "title": "The Kingdom",
+            "score": 7.601747859106072
+          },
+          {
+            "key": "movie:59762",
+            "title": "Silent Night Deadly Night 4: Initiation",
+            "score": 6.882583829355952
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 6.811934116719407
+          },
+          {
+            "key": "show:2391",
+            "title": "Tales from the Crypt",
+            "score": 6.804367452632247
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 6.783742850757166
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 6.77656951661155
+          },
+          {
+            "key": "movie:29095",
+            "title": "Waxwork",
+            "score": 6.776274194259746
+          },
+          {
+            "key": "movie:254526",
+            "title": "The Midnight After",
+            "score": 6.767707433573445
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 7.236653007632311
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 6.94129242894962
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 6.922487836630127
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 6.8848574022742435
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 6.7964051903680245
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 6.7905254688565275
+          },
+          {
+            "key": "movie:385232",
+            "title": "Dudes & Dragons",
+            "score": 6.594613724992327
+          },
+          {
+            "key": "movie:27243",
+            "title": "The Last Dragon",
+            "score": 6.482610529969911
+          },
+          {
+            "key": "movie:39144",
+            "title": "Dragon Ball: Curse of the Blood Rubies",
+            "score": 6.410782734616047
+          },
+          {
+            "key": "movie:8840",
+            "title": "DragonHeart",
+            "score": 6.398793267708558
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 15.192220421393841
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 11.965235008103729
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 11.762155591572123
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 10.946393841166937
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 10.94371961102107
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 9.942990275526743
+          },
+          {
+            "key": "movie:433310",
+            "title": "When We First Met",
+            "score": 9.932739059967586
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 9.845215992290717
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 8.938330632090763
+          },
+          {
+            "key": "movie:397837",
+            "title": "Before I Fall",
+            "score": 8.931482982171799
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 8.334097991673147
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 8.31769306264076
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 8.31534825962563
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 8.304195190619422
+          },
+          {
+            "key": "show:3184",
+            "title": "Journeyman",
+            "score": 8.30239765925544
+          },
+          {
+            "key": "movie:7551",
+            "title": "Déjà Vu",
+            "score": 8.300836097829773
+          },
+          {
+            "key": "movie:475961",
+            "title": "Curvature",
+            "score": 8.298565358621111
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 8.297605658943072
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 8.293949143912851
+          },
+          {
+            "key": "movie:604605",
+            "title": "Hello World",
+            "score": 8.287858800794435
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "strength-intent",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.05857109892889
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.05109199947855
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 1.0257281922261259
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 1.0097258665800806
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 0.9313319555719792
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 0.9276698970171786
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 0.9231286104454677
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 0.9098651860795262
+          },
+          {
+            "key": "movie:4241",
+            "title": "Visitor Q",
+            "score": 0.8624506550045941
+          },
+          {
+            "key": "movie:433941",
+            "title": "Dave Made a Maze",
+            "score": 0.8448918958075602
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 0.8896462467644526
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.8649698015530631
+          },
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.8560828300258847
+          },
+          {
+            "key": "movie:1730",
+            "title": "Inland Empire",
+            "score": 0.8531492666091463
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.847109577221743
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 0.8342536669542714
+          },
+          {
+            "key": "movie:15916",
+            "title": "Angel's Egg",
+            "score": 0.8333045729076792
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 0.8321829163071616
+          },
+          {
+            "key": "movie:1398",
+            "title": "Stalker",
+            "score": 0.8310612597066439
+          },
+          {
+            "key": "show:1087",
+            "title": "Serial Experiments Lain",
+            "score": 0.8290767903364974
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 1.954614245455732
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.8863018666521092
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.5299151316818038
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.5188465147809165
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 1.5168233922718253
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.5049782300679895
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.502876809078788
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.502744533946513
+          },
+          {
+            "key": "show:77631",
+            "title": "The Great Pottery Throw Down",
+            "score": 1.4957910010481719
+          },
+          {
+            "key": "show:92139",
+            "title": "Perfect Harmony",
+            "score": 1.4948643694066792
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.5400520599279988
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.4974286841561364
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.4415852388016321
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.340714127735
+          },
+          {
+            "key": "movie:50037",
+            "title": "Beyond the Black Rainbow",
+            "score": 1.3223125498252724
+          },
+          {
+            "key": "show:6143",
+            "title": "Quatermass and the Pit",
+            "score": 1.3222685668476566
+          },
+          {
+            "key": "show:127865",
+            "title": "The Chestnut Man",
+            "score": 1.3142873750067574
+          },
+          {
+            "key": "show:125988",
+            "title": "Silo",
+            "score": 1.3103941612421308
+          },
+          {
+            "key": "show:63647",
+            "title": "Childhood's End",
+            "score": 1.300448723991212
+          },
+          {
+            "key": "show:61335",
+            "title": "Fortitude",
+            "score": 1.297244907440636
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.6280068816348516
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.5924493785889888
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.5915285786767122
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.5782831735997316
+          },
+          {
+            "key": "show:71446",
+            "title": "Money Heist",
+            "score": 1.5577137845286875
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 1.5515467384790167
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.5502095737312225
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.5499839252019985
+          },
+          {
+            "key": "movie:119283",
+            "title": "Parker",
+            "score": 1.528008068393436
+          },
+          {
+            "key": "movie:796499",
+            "title": "Army of Thieves",
+            "score": 1.5234645895596988
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.7721542381283557
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 1.4033436794965388
+          },
+          {
+            "key": "show:59183",
+            "title": "Southcliffe",
+            "score": 1.3811509491150786
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.3803690911244124
+          },
+          {
+            "key": "show:156946",
+            "title": "Without Sin",
+            "score": 1.3760695855272838
+          },
+          {
+            "key": "show:61555",
+            "title": "The Missing",
+            "score": 1.3714338239378798
+          },
+          {
+            "key": "show:90040",
+            "title": "Anne",
+            "score": 1.3681185691862894
+          },
+          {
+            "key": "show:2265",
+            "title": "I'm Sorry, I Love You",
+            "score": 1.3679559834439834
+          },
+          {
+            "key": "show:77059",
+            "title": "Trauma",
+            "score": 1.3666510985128841
+          },
+          {
+            "key": "show:83584",
+            "title": "Crash",
+            "score": 1.366280763951066
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 0.9810408921933085
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 0.97546468401487
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 1
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9764227642276423
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "movie:16127",
+            "title": "Forbidden Zone",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 0.9528455284552845
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.197479186000196
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 2.025074963644098
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.5777927200078796
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.5765059476679202
+          },
+          {
+            "key": "movie:90974",
+            "title": "The Light at the Edge of the World",
+            "score": 1.5364770259055427
+          },
+          {
+            "key": "movie:50042",
+            "title": "The Lightkeepers",
+            "score": 1.4286425290492852
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.349539919034343
+          },
+          {
+            "key": "show:86735",
+            "title": "Baptiste",
+            "score": 1.3346006772855996
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 1.3164168816340784
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.3160555574889352
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.217439186511291
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 1.1347771400788358
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.083671348409587
+          },
+          {
+            "key": "movie:1286710",
+            "title": "Fast & Furious: Supercharged",
+            "score": 1.0726563736367472
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 1.067324341623224
+          },
+          {
+            "key": "movie:584",
+            "title": "2 Fast 2 Furious",
+            "score": 1.0634328358208955
+          },
+          {
+            "key": "show:71693",
+            "title": "Blood Drive",
+            "score": 1.0504024083676313
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 1.0288184684004664
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 1.0243174010274385
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 1.0154786561218616
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.2459853732964017
+          },
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.2414798206278026
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.1884963072110444
+          },
+          {
+            "key": "movie:47406",
+            "title": "Arabian Nights",
+            "score": 1.1248878923766816
+          },
+          {
+            "key": "movie:430214",
+            "title": "Night Is Short, Walk On Girl",
+            "score": 1.1093764472888679
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.0944056924467953
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 1.0719698303340803
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 1.0629652520735724
+          },
+          {
+            "key": "movie:19354",
+            "title": "The Adventures of Prince Achmed",
+            "score": 1.0607369527461548
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 1.060335473746038
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 1.9793670749898507
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.8217578656252607
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.7080934633166347
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.7052395972752827
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.6925131554092498
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.65695849826677
+          },
+          {
+            "key": "movie:385232",
+            "title": "Dudes & Dragons",
+            "score": 1.5465424992408292
+          },
+          {
+            "key": "movie:27243",
+            "title": "The Last Dragon",
+            "score": 1.5435793558398865
+          },
+          {
+            "key": "movie:10191",
+            "title": "How to Train Your Dragon",
+            "score": 1.5321380941835745
+          },
+          {
+            "key": "movie:39144",
+            "title": "Dragon Ball: Curse of the Blood Rubies",
+            "score": 1.531116147603182
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.4188816855753648
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.5723737920894159
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.528622366288493
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.441226170152114
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.2446677471636953
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.1009400324149112
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 1.0255753646677475
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 1.014878444084279
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 1.0119611021069694
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 0.9933225283630471
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.532283307184936
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.4575591898529203
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.4449517726877121
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.4242926489583299
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.4206684065363366
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.419319087975598
+          },
+          {
+            "key": "movie:7551",
+            "title": "Déjà Vu",
+            "score": 1.3915627949828453
+          },
+          {
+            "key": "show:212055",
+            "title": "Plan B",
+            "score": 1.3914758180929359
+          },
+          {
+            "key": "show:195928",
+            "title": "The 7 Lives of Lea",
+            "score": 1.3859909226134506
+          },
+          {
+            "key": "movie:165",
+            "title": "Back to the Future Part II",
+            "score": 1.3859294776028313
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "coverage-blend",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.0641442214585342
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.0584437781346763
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 1.0424475598150587
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 1.0301211234970766
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 0.9739011255324536
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 0.971424837728641
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 0.9690179385087089
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 0.9593118263957318
+          },
+          {
+            "key": "movie:433941",
+            "title": "Dave Made a Maze",
+            "score": 0.9047733187324614
+          },
+          {
+            "key": "movie:4241",
+            "title": "Visitor Q",
+            "score": 0.8810672557951078
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 0.9067040552200175
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.8907247627264883
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.8849525452976704
+          },
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.8821742881794652
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 0.8728472821397759
+          },
+          {
+            "key": "movie:1730",
+            "title": "Inland Empire",
+            "score": 0.8682139775668682
+          },
+          {
+            "key": "show:1087",
+            "title": "Serial Experiments Lain",
+            "score": 0.8617169974115619
+          },
+          {
+            "key": "movie:1398",
+            "title": "Stalker",
+            "score": 0.8607765314926663
+          },
+          {
+            "key": "movie:1923",
+            "title": "Twin Peaks: Fire Walk with Me",
+            "score": 0.8562899050905953
+          },
+          {
+            "key": "movie:15916",
+            "title": "Angel's Egg",
+            "score": 0.8556169111302848
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 1.984614245455732
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.8991193269695694
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.5483278300945023
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 1.536228154176587
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.5300369909713925
+          },
+          {
+            "key": "show:77631",
+            "title": "The Great Pottery Throw Down",
+            "score": 1.5247195724767433
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.520375055464815
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.5185117297137087
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.518419137121116
+          },
+          {
+            "key": "show:76305",
+            "title": "Somebody Feed Phil",
+            "score": 1.5164849978131452
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.5459030716839761
+          },
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.5377135298611835
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.463433791140162
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.3926963103630623
+          },
+          {
+            "key": "show:6143",
+            "title": "Quatermass and the Pit",
+            "score": 1.371678366402222
+          },
+          {
+            "key": "show:127865",
+            "title": "The Chestnut Man",
+            "score": 1.358285147835265
+          },
+          {
+            "key": "movie:50037",
+            "title": "Beyond the Black Rainbow",
+            "score": 1.353080923990083
+          },
+          {
+            "key": "show:125988",
+            "title": "Silo",
+            "score": 1.336953181286674
+          },
+          {
+            "key": "show:68800",
+            "title": "Rillington Place",
+            "score": 1.3365368182138844
+          },
+          {
+            "key": "show:61335",
+            "title": "Fortitude",
+            "score": 1.3359976914050011
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.6816013516809347
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.630053924298832
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.627288088266408
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.6096656620789944
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.609333997694356
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 1.6079522684329337
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.5876797777365605
+          },
+          {
+            "key": "movie:531380",
+            "title": "Golden Job",
+            "score": 1.5792933586088256
+          },
+          {
+            "key": "movie:119283",
+            "title": "Parker",
+            "score": 1.576487331066247
+          },
+          {
+            "key": "show:71446",
+            "title": "Money Heist",
+            "score": 1.5751331393673973
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.8293727811747131
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 1.440396659628989
+          },
+          {
+            "key": "show:2265",
+            "title": "I'm Sorry, I Love You",
+            "score": 1.4192142615896788
+          },
+          {
+            "key": "show:156946",
+            "title": "Without Sin",
+            "score": 1.4124768702954955
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.411064455362823
+          },
+          {
+            "key": "show:61555",
+            "title": "The Missing",
+            "score": 1.409231837182913
+          },
+          {
+            "key": "show:90040",
+            "title": "Anne",
+            "score": 1.4061649268021834
+          },
+          {
+            "key": "show:98537",
+            "title": "Reckoning",
+            "score": 1.4029800305635372
+          },
+          {
+            "key": "show:139396",
+            "title": "The Endless Night",
+            "score": 1.4017183016804307
+          },
+          {
+            "key": "show:83584",
+            "title": "Crash",
+            "score": 1.400601956004046
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 0.9914126394052045
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 0.986728624535316
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 0.9828252788104088
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 1
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9834959349593495
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 0.9681300813008131
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 0.9681300813008131
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 0.9681300813008131
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 0.966991869918699
+          },
+          {
+            "key": "movie:16127",
+            "title": "Forbidden Zone",
+            "score": 0.966991869918699
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 0.966991869918699
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.966991869918699
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 0.966991869918699
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.2411096908337083
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 2.040671096834216
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.5980612484718968
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.5963233483123882
+          },
+          {
+            "key": "movie:90974",
+            "title": "The Light at the Edge of the World",
+            "score": 1.5611601623180023
+          },
+          {
+            "key": "movie:50042",
+            "title": "The Lightkeepers",
+            "score": 1.4194588555798977
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.4008718202158683
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 1.3642364305062589
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.3613616799379147
+          },
+          {
+            "key": "show:86735",
+            "title": "Baptiste",
+            "score": 1.358736015631464
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.259976499944127
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 1.176418931123612
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 1.151503446100836
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.1427758260215275
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 1.1017800875946024
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 1.1013557818333024
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 1.0996577605994735
+          },
+          {
+            "key": "show:71693",
+            "title": "Blood Drive",
+            "score": 1.0987606173228552
+          },
+          {
+            "key": "movie:31162",
+            "title": "Black Lightning",
+            "score": 1.0967375906494023
+          },
+          {
+            "key": "movie:156717",
+            "title": "Death Race: Inferno",
+            "score": 1.084109178125911
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.3340358744394618
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.1953572937581296
+          },
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.1605593643277918
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 1.1537635523071743
+          },
+          {
+            "key": "movie:47406",
+            "title": "Arabian Nights",
+            "score": 1.1447982062780269
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.1340917911015036
+          },
+          {
+            "key": "movie:59762",
+            "title": "Silent Night Deadly Night 4: Initiation",
+            "score": 1.1134199850695403
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 1.1068217543157248
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 1.1064789715038854
+          },
+          {
+            "key": "show:4267",
+            "title": "The Kingdom",
+            "score": 1.103410874077846
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 2.01877301558391
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.8594806379024884
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.7798930626218172
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.7643943435280613
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.756509304900793
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.7242852309400374
+          },
+          {
+            "key": "movie:385232",
+            "title": "Dudes & Dragons",
+            "score": 1.6136712121121164
+          },
+          {
+            "key": "movie:27243",
+            "title": "The Last Dragon",
+            "score": 1.590312029107213
+          },
+          {
+            "key": "movie:39144",
+            "title": "Dragon Ball: Curse of the Blood Rubies",
+            "score": 1.5684428802764494
+          },
+          {
+            "key": "show:1585",
+            "title": "Dragon Tales",
+            "score": 1.552534439862778
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.4357050243111833
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.5572036138074061
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.5499189627228527
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.449491972421158
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.1858346839546192
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.1360453808752027
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 1.064327390599676
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 1.037390599675851
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 1.006742301458671
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 1.0017990275526745
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.5545339465711252
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.5022139213107208
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.4944402637363055
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.4783847205695828
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.4747604781475898
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.4731809805587182
+          },
+          {
+            "key": "movie:7551",
+            "title": "Déjà Vu",
+            "score": 1.4563965545736384
+          },
+          {
+            "key": "show:212055",
+            "title": "Plan B",
+            "score": 1.4521663551773347
+          },
+          {
+            "key": "show:3184",
+            "title": "Journeyman",
+            "score": 1.4519325233321805
+          },
+          {
+            "key": "movie:475961",
+            "title": "Curvature",
+            "score": 1.4493931723055493
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "soft-deficit",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.05857109892889
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.05109199947855
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 1.0257281922261259
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 1.0097258665800806
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 0.9313319555719792
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 0.9276698970171786
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 0.9231286104454677
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 0.9098651860795262
+          },
+          {
+            "key": "movie:4241",
+            "title": "Visitor Q",
+            "score": 0.853260931684436
+          },
+          {
+            "key": "movie:433941",
+            "title": "Dave Made a Maze",
+            "score": 0.8448918958075602
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 0.887863100373886
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.8630644233534658
+          },
+          {
+            "key": "movie:1730",
+            "title": "Inland Empire",
+            "score": 0.8523439746908259
+          },
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.8488999137187233
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.8468866839229221
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 0.8339444923784877
+          },
+          {
+            "key": "show:1087",
+            "title": "Serial Experiments Lain",
+            "score": 0.82855910267472
+          },
+          {
+            "key": "movie:298721",
+            "title": "Cemetery of Splendor",
+            "score": 0.821829163071614
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 0.8207794075352317
+          },
+          {
+            "key": "movie:1398",
+            "title": "Stalker",
+            "score": 0.8200675870002878
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 1.9444511061259262
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.8741435774104866
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.5299151316818038
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.5177001303011988
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 1.5168233922718253
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.4982912711599168
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.4978133270697533
+          },
+          {
+            "key": "show:77631",
+            "title": "The Great Pottery Throw Down",
+            "score": 1.4957910010481719
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.4924270736290528
+          },
+          {
+            "key": "show:92139",
+            "title": "Perfect Harmony",
+            "score": 1.484546909089219
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.5257424830905824
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.483564541617161
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.4386527963368958
+          },
+          {
+            "key": "movie:50037",
+            "title": "Beyond the Black Rainbow",
+            "score": 1.3208648883553393
+          },
+          {
+            "key": "show:6143",
+            "title": "Quatermass and the Pit",
+            "score": 1.3205889083472853
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.3139880698285413
+          },
+          {
+            "key": "show:125988",
+            "title": "Silo",
+            "score": 1.3043622384507425
+          },
+          {
+            "key": "show:63647",
+            "title": "Childhood's End",
+            "score": 1.2921710699451836
+          },
+          {
+            "key": "show:127865",
+            "title": "The Chestnut Man",
+            "score": 1.287125162683075
+          },
+          {
+            "key": "show:78317",
+            "title": "The City and the City",
+            "score": 1.282132586588049
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.623744208823792
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.5900940278465412
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.5890452197417402
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.5729836344292245
+          },
+          {
+            "key": "show:71446",
+            "title": "Money Heist",
+            "score": 1.551006155240413
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.5502095737312225
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 1.5472840656679567
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.5446843860314914
+          },
+          {
+            "key": "movie:119283",
+            "title": "Parker",
+            "score": 1.5261135471440759
+          },
+          {
+            "key": "movie:531380",
+            "title": "Golden Job",
+            "score": 1.5203404656236748
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.767435695081998
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 1.4033436794965388
+          },
+          {
+            "key": "show:59183",
+            "title": "Southcliffe",
+            "score": 1.3806266665543723
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.3803690911244124
+          },
+          {
+            "key": "show:156946",
+            "title": "Without Sin",
+            "score": 1.3760695855272838
+          },
+          {
+            "key": "show:61555",
+            "title": "The Missing",
+            "score": 1.3714338239378798
+          },
+          {
+            "key": "show:90040",
+            "title": "Anne",
+            "score": 1.3681185691862894
+          },
+          {
+            "key": "show:2265",
+            "title": "I'm Sorry, I Love You",
+            "score": 1.3679559834439834
+          },
+          {
+            "key": "show:83584",
+            "title": "Crash",
+            "score": 1.366280763951066
+          },
+          {
+            "key": "show:77059",
+            "title": "Trauma",
+            "score": 1.3645539682700585
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 0.9810408921933085
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 0.97546468401487
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 1
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9764227642276423
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "movie:16127",
+            "title": "Forbidden Zone",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 0.9528455284552845
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.1924845565694766
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 1.9985085476039977
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.570578255274618
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.5577716118283211
+          },
+          {
+            "key": "movie:90974",
+            "title": "The Light at the Edge of the World",
+            "score": 1.5256374269080488
+          },
+          {
+            "key": "movie:50042",
+            "title": "The Lightkeepers",
+            "score": 1.398638948669765
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.349539919034343
+          },
+          {
+            "key": "show:86735",
+            "title": "Baptiste",
+            "score": 1.3272429973715285
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 1.3161483531700613
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.3093423458885056
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.217439186511291
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 1.1347771400788358
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.083671348409587
+          },
+          {
+            "key": "movie:1286710",
+            "title": "Fast & Furious: Supercharged",
+            "score": 1.067556871149185
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 1.067324341623224
+          },
+          {
+            "key": "show:71693",
+            "title": "Blood Drive",
+            "score": 1.0504024083676313
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 1.0288184684004664
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 1.0243174010274385
+          },
+          {
+            "key": "movie:584",
+            "title": "2 Fast 2 Furious",
+            "score": 1.0175373134328358
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 1.0154786561218616
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.2414798206278026
+          },
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.1901931460916184
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.183638310200581
+          },
+          {
+            "key": "movie:47406",
+            "title": "Arabian Nights",
+            "score": 1.1129297458893872
+          },
+          {
+            "key": "movie:430214",
+            "title": "Night Is Short, Walk On Girl",
+            "score": 1.1034721124607663
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.0856612978279612
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 1.0719698303340803
+          },
+          {
+            "key": "show:4267",
+            "title": "The Kingdom",
+            "score": 1.0553839682482498
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 1.051591079127204
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 1.0474196616400895
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 1.9793670749898507
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.8217578656252607
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.7080934633166347
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.7052395972752827
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.6925131554092498
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.65695849826677
+          },
+          {
+            "key": "movie:385232",
+            "title": "Dudes & Dragons",
+            "score": 1.5465424992408292
+          },
+          {
+            "key": "movie:27243",
+            "title": "The Last Dragon",
+            "score": 1.5435793558398865
+          },
+          {
+            "key": "movie:10191",
+            "title": "How to Train Your Dragon",
+            "score": 1.5321380941835745
+          },
+          {
+            "key": "movie:39144",
+            "title": "Dragon Ball: Curse of the Blood Rubies",
+            "score": 1.531116147603182
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.4130334954078876
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.5013128038897896
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.4708070713978978
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.4019095845227247
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.167965964343598
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.0721988114532688
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 0.9960913019989197
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 0.9880551053484605
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 0.9796272285251217
+          },
+          {
+            "key": "movie:433310",
+            "title": "When We First Met",
+            "score": 0.9428363047001621
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.532283307184936
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.4575591898529203
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.4449517726877121
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.4242926489583299
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.4206684065363366
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.419319087975598
+          },
+          {
+            "key": "movie:7551",
+            "title": "Déjà Vu",
+            "score": 1.3915627949828453
+          },
+          {
+            "key": "show:212055",
+            "title": "Plan B",
+            "score": 1.3914758180929359
+          },
+          {
+            "key": "show:3184",
+            "title": "Journeyman",
+            "score": 1.3842598890610807
+          },
+          {
+            "key": "movie:475961",
+            "title": "Curvature",
+            "score": 1.3814903590063166
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "selective-strength",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.0755979283323047
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.0562592851388155
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 1.03257052863368
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 1.0150433896367341
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 0.9695196993887203
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 0.9365374817673825
+          },
+          {
+            "key": "movie:4241",
+            "title": "Visitor Q",
+            "score": 0.9359245241306373
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 0.9274514109957827
+          },
+          {
+            "key": "movie:630476",
+            "title": "Wyrm",
+            "score": 0.9267422365488489
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 0.9217984315779891
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.9653088042049935
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.9403942181340343
+          },
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 0.9286202365308807
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.9071747700394222
+          },
+          {
+            "key": "movie:1394",
+            "title": "Nostalgia",
+            "score": 0.9051773981603155
+          },
+          {
+            "key": "movie:8967",
+            "title": "The Tree of Life",
+            "score": 0.9046517739816033
+          },
+          {
+            "key": "movie:24348",
+            "title": "Powaqqatsi",
+            "score": 0.9043363994743758
+          },
+          {
+            "key": "movie:1563",
+            "title": "Sans Soleil",
+            "score": 0.9039159001314063
+          },
+          {
+            "key": "movie:1381",
+            "title": "The Fountain",
+            "score": 0.90149802890933
+          },
+          {
+            "key": "movie:298721",
+            "title": "Cemetery of Splendor",
+            "score": 0.9009724047306178
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 2.0326526583778657
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.854592581105614
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.5375064378777612
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.5367552812943344
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.5356003904070206
+          },
+          {
+            "key": "show:13941",
+            "title": "The Partridge Family",
+            "score": 1.5238748096222832
+          },
+          {
+            "key": "show:92139",
+            "title": "Perfect Harmony",
+            "score": 1.523802253228284
+          },
+          {
+            "key": "show:1580",
+            "title": "Gidget",
+            "score": 1.5232531393434035
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.522577134593067
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.5206713741332267
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.506213705690512
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.4880757360843981
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.429031757380931
+          },
+          {
+            "key": "show:6143",
+            "title": "Quatermass and the Pit",
+            "score": 1.3439698621237088
+          },
+          {
+            "key": "movie:593",
+            "title": "Solaris",
+            "score": 1.3221710526315789
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.321495982148316
+          },
+          {
+            "key": "show:127865",
+            "title": "The Chestnut Man",
+            "score": 1.3103983233129348
+          },
+          {
+            "key": "movie:50037",
+            "title": "Beyond the Black Rainbow",
+            "score": 1.3095142260648691
+          },
+          {
+            "key": "show:68800",
+            "title": "Rillington Place",
+            "score": 1.309477270681356
+          },
+          {
+            "key": "movie:760245",
+            "title": "Foe",
+            "score": 1.3042763157894737
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.7009041475217623
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.6802089100257906
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.6769113793422363
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.6545219677093446
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.6351431809370487
+          },
+          {
+            "key": "movie:796499",
+            "title": "Army of Thieves",
+            "score": 1.6235962754009874
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.6151194601579908
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 1.6101652433196776
+          },
+          {
+            "key": "movie:581644",
+            "title": "The Misfits",
+            "score": 1.6063821447373812
+          },
+          {
+            "key": "movie:165904",
+            "title": "Special 26",
+            "score": 1.5913759459462402
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.8260093881917625
+          },
+          {
+            "key": "show:59183",
+            "title": "Southcliffe",
+            "score": 1.4443656877370314
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 1.4353642515692453
+          },
+          {
+            "key": "show:77059",
+            "title": "Trauma",
+            "score": 1.433437064413969
+          },
+          {
+            "key": "show:79932",
+            "title": "November 13: Attack on Paris",
+            "score": 1.4287273828184779
+          },
+          {
+            "key": "movie:13614",
+            "title": "Katyn",
+            "score": 1.4234804249848956
+          },
+          {
+            "key": "show:139396",
+            "title": "The Endless Night",
+            "score": 1.4229871476716944
+          },
+          {
+            "key": "show:2265",
+            "title": "I'm Sorry, I Love You",
+            "score": 1.4194552084686418
+          },
+          {
+            "key": "show:156946",
+            "title": "Without Sin",
+            "score": 1.4150867758894088
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.414389099578689
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1
+          },
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 1
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 1
+          },
+          {
+            "key": "movie:17467",
+            "title": "Riki-Oh: The Story of Ricky",
+            "score": 1
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 1
+          },
+          {
+            "key": "movie:27352",
+            "title": "Braddock: Missing in Action III",
+            "score": 1
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 1
+          },
+          {
+            "key": "movie:396263",
+            "title": "GANTZ:O",
+            "score": 1
+          },
+          {
+            "key": "movie:44943",
+            "title": "Battle: Los Angeles",
+            "score": 1
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "movie:1073566",
+            "title": "Bushworld Adventures",
+            "score": 1
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 1
+          },
+          {
+            "key": "movie:13158",
+            "title": "Aqua Teen Hunger Force Colon Movie Film for Theaters",
+            "score": 1
+          },
+          {
+            "key": "movie:15097",
+            "title": "Fear City: A Family-Style Comedy",
+            "score": 1
+          },
+          {
+            "key": "movie:16127",
+            "title": "Forbidden Zone",
+            "score": 1
+          },
+          {
+            "key": "movie:16375",
+            "title": "Schizopolis",
+            "score": 1
+          },
+          {
+            "key": "movie:1649",
+            "title": "Bill & Ted's Bogus Journey",
+            "score": 1
+          },
+          {
+            "key": "movie:20874",
+            "title": "Kin-dza-dza!",
+            "score": 1
+          },
+          {
+            "key": "movie:228165",
+            "title": "The SpongeBob Movie: Sponge Out of Water",
+            "score": 1
+          },
+          {
+            "key": "movie:324440",
+            "title": "The Bunker",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.218879044189086
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 2.0839971992049886
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.5794447492406256
+          },
+          {
+            "key": "movie:90974",
+            "title": "The Light at the Edge of the World",
+            "score": 1.5705801408357254
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.5628842884779286
+          },
+          {
+            "key": "movie:50042",
+            "title": "The Lightkeepers",
+            "score": 1.472586352192578
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.396162126432302
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.3918880863714536
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 1.3897381399619713
+          },
+          {
+            "key": "show:137903",
+            "title": "Dig Deeper: The Disappearance of Birgit Meier",
+            "score": 1.3843110506284626
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.2377487498059287
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 1.1743238509688303
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.1621677552642031
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 1.1271806158078566
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 1.10326709699206
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 1.075334930306494
+          },
+          {
+            "key": "movie:31162",
+            "title": "Black Lightning",
+            "score": 1.072414760356423
+          },
+          {
+            "key": "show:71693",
+            "title": "Blood Drive",
+            "score": 1.070855697477637
+          },
+          {
+            "key": "movie:36349",
+            "title": "Black Moon Rising",
+            "score": 1.0513147445676978
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 1.049868772435845
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.328888888888889
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.301216785536904
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.2243957273247226
+          },
+          {
+            "key": "movie:47406",
+            "title": "Arabian Nights",
+            "score": 1.2177777777777778
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 1.1885232989096464
+          },
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.1813067484832478
+          },
+          {
+            "key": "movie:430214",
+            "title": "Night Is Short, Walk On Girl",
+            "score": 1.1697102788783051
+          },
+          {
+            "key": "show:4573",
+            "title": "Late Night with Conan O'Brien",
+            "score": 1.16338986595458
+          },
+          {
+            "key": "movie:19354",
+            "title": "The Adventures of Prince Achmed",
+            "score": 1.1629267883216405
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 1.1551835056344288
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 2.0122296442656467
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.8554249681845736
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.8069146704429768
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.778532210144912
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.7709890358927605
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.7277960348506172
+          },
+          {
+            "key": "movie:385232",
+            "title": "Dudes & Dragons",
+            "score": 1.6348331773652458
+          },
+          {
+            "key": "movie:27243",
+            "title": "The Last Dragon",
+            "score": 1.6072794616995294
+          },
+          {
+            "key": "movie:39144",
+            "title": "Dragon Ball: Curse of the Blood Rubies",
+            "score": 1.5819536841870292
+          },
+          {
+            "key": "movie:126963",
+            "title": "Dragon Ball Z: Battle of Gods",
+            "score": 1.5770448239568258
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.4816209476309226
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.6653450915554993
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.6445885286783044
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.4377715975075507
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.2209476309226934
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.2035910224438902
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 1.1553117206982546
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 1.1449376558603492
+          },
+          {
+            "key": "movie:433310",
+            "title": "When We First Met",
+            "score": 1.06214463840399
+          },
+          {
+            "key": "movie:550988",
+            "title": "Free Guy",
+            "score": 1.0376059850374066
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.5649190040936043
+          },
+          {
+            "key": "show:196474",
+            "title": "A Time Called You",
+            "score": 1.4970031864716409
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.491007597848144
+          },
+          {
+            "key": "show:195928",
+            "title": "The 7 Lives of Lea",
+            "score": 1.4895103537156902
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.4872653258926634
+          },
+          {
+            "key": "movie:529216",
+            "title": "Mirage",
+            "score": 1.4780663423476392
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.4772122457050902
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.4750956637172414
+          },
+          {
+            "key": "show:65249",
+            "title": "ERASED",
+            "score": 1.4742847191967319
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.4632755125173271
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rounded-evidence",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.0814229249011857
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.075494071146245
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 1.0442687747035573
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 1.0320158102766799
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 0.9581027667984188
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 0.9541501976284584
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 0.9470355731225295
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 0.9351778656126482
+          },
+          {
+            "key": "movie:630476",
+            "title": "Wyrm",
+            "score": 0.8865612648221342
+          },
+          {
+            "key": "movie:4257",
+            "title": "Scary Movie 4",
+            "score": 0.86798418972332
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 0.8896462467644526
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.8649698015530631
+          },
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.8560828300258847
+          },
+          {
+            "key": "movie:1730",
+            "title": "Inland Empire",
+            "score": 0.8531492666091463
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.847109577221743
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 0.8342536669542714
+          },
+          {
+            "key": "movie:15916",
+            "title": "Angel's Egg",
+            "score": 0.8333045729076792
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 0.8321829163071616
+          },
+          {
+            "key": "movie:1398",
+            "title": "Stalker",
+            "score": 0.8310612597066439
+          },
+          {
+            "key": "show:1087",
+            "title": "Serial Experiments Lain",
+            "score": 0.8290767903364974
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 1.8756613756613758
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.8019841269841272
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.4886243386243387
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 1.4853174603174604
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.4783068783068782
+          },
+          {
+            "key": "show:67012",
+            "title": "NEW GAME!",
+            "score": 1.4685185185185186
+          },
+          {
+            "key": "show:95074",
+            "title": "Queer Eye: We're in Japan!",
+            "score": 1.4656084656084656
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.4642857142857144
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.4634920634920636
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.4633597883597884
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.7614699331848553
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.7535634743875281
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.3891982182628064
+          },
+          {
+            "key": "movie:376865",
+            "title": "High Life",
+            "score": 1.3430957683741647
+          },
+          {
+            "key": "movie:8413",
+            "title": "Event Horizon",
+            "score": 1.2974387527839646
+          },
+          {
+            "key": "movie:421443",
+            "title": "Teleios",
+            "score": 1.2920935412026728
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.287639198218263
+          },
+          {
+            "key": "show:81951",
+            "title": "Ad Vitam",
+            "score": 1.2860801781737194
+          },
+          {
+            "key": "movie:994143",
+            "title": "Skinamarink",
+            "score": 1.2841870824053454
+          },
+          {
+            "key": "show:78183",
+            "title": "Nightflyers",
+            "score": 1.2827394209354122
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.864516129032258
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.8440860215053765
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.3747311827956992
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.3632104454685101
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.3536866359447006
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.3529185867895546
+          },
+          {
+            "key": "movie:119283",
+            "title": "Parker",
+            "score": 1.3315668202764976
+          },
+          {
+            "key": "movie:630004",
+            "title": "The Vault",
+            "score": 1.3238863287250384
+          },
+          {
+            "key": "movie:796499",
+            "title": "Army of Thieves",
+            "score": 1.3203533026113674
+          },
+          {
+            "key": "movie:581644",
+            "title": "The Misfits",
+            "score": 1.3126728110599077
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.84635761589404
+          },
+          {
+            "key": "movie:641662",
+            "title": "Pieces of a Woman",
+            "score": 1.4554635761589405
+          },
+          {
+            "key": "movie:15584",
+            "title": "Dear Zachary: A Letter to a Son About His Father",
+            "score": 1.4521523178807947
+          },
+          {
+            "key": "show:59183",
+            "title": "Southcliffe",
+            "score": 1.4508278145695366
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.447682119205298
+          },
+          {
+            "key": "movie:334541",
+            "title": "Manchester by the Sea",
+            "score": 1.4432119205298015
+          },
+          {
+            "key": "movie:59437",
+            "title": "Beautiful Boy",
+            "score": 1.4377483443708612
+          },
+          {
+            "key": "show:83584",
+            "title": "Crash",
+            "score": 1.4355960264900665
+          },
+          {
+            "key": "show:79932",
+            "title": "November 13: Attack on Paris",
+            "score": 1.434933774834437
+          },
+          {
+            "key": "movie:429195",
+            "title": "Dark River",
+            "score": 1.4339403973509937
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 0.987732342007435
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 0.9810408921933085
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 0.97546468401487
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 1
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9764227642276423
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 0.9544715447154473
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "movie:16127",
+            "title": "Forbidden Zone",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9528455284552845
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 0.9528455284552845
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.3950053705692804
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 2.2908163265306127
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.8305048335123524
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.79656283566058
+          },
+          {
+            "key": "movie:90974",
+            "title": "The Light at the Edge of the World",
+            "score": 1.7158968850698175
+          },
+          {
+            "key": "movie:50042",
+            "title": "The Lightkeepers",
+            "score": 1.646186895810956
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.3788936627282493
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.3667561761546725
+          },
+          {
+            "key": "show:217667",
+            "title": "Eric",
+            "score": 1.3660042964554242
+          },
+          {
+            "key": "show:86735",
+            "title": "Baptiste",
+            "score": 1.3599892588614395
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.4082089552238806
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.3529850746268655
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 1.2917910447761196
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 1.2694029850746267
+          },
+          {
+            "key": "movie:31162",
+            "title": "Black Lightning",
+            "score": 1.2694029850746267
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 1.2694029850746267
+          },
+          {
+            "key": "movie:156717",
+            "title": "Death Race: Inferno",
+            "score": 1.2470149253731342
+          },
+          {
+            "key": "movie:1286710",
+            "title": "Fast & Furious: Supercharged",
+            "score": 1.2440298507462686
+          },
+          {
+            "key": "movie:36349",
+            "title": "Black Moon Rising",
+            "score": 1.2305970149253733
+          },
+          {
+            "key": "movie:10017",
+            "title": "The Wraith",
+            "score": 1.1888059701492537
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.5013452914798207
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.301121076233184
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.2939461883408072
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 1.287219730941704
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 1.2795964125560537
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 1.277354260089686
+          },
+          {
+            "key": "show:240601",
+            "title": "Five Nights At Freddy's",
+            "score": 1.2531390134529148
+          },
+          {
+            "key": "show:56590",
+            "title": "The Eric Andre Show",
+            "score": 1.241928251121076
+          },
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.2414798206278026
+          },
+          {
+            "key": "movie:430214",
+            "title": "Night Is Short, Walk On Girl",
+            "score": 1.2374439461883406
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.9742574257425742
+          },
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 1.9686468646864688
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.9386138613861386
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.8755775577557756
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.8603960396039605
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.8511551155115513
+          },
+          {
+            "key": "movie:10191",
+            "title": "How to Train Your Dragon",
+            "score": 1.5338283828382837
+          },
+          {
+            "key": "movie:57158",
+            "title": "The Hobbit: The Desolation of Smaug",
+            "score": 1.5186468646864686
+          },
+          {
+            "key": "movie:166428",
+            "title": "How to Train Your Dragon: The Hidden World",
+            "score": 1.5037953795379537
+          },
+          {
+            "key": "movie:49051",
+            "title": "The Hobbit: An Unexpected Journey",
+            "score": 1.5037953795379537
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.4188816855753648
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.748622366288493
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.594327390599676
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.5298217179902758
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.4646677471636953
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.210940032414911
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 1.1355753646677473
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 1.124878444084279
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 1.1219611021069693
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 1.103322528363047
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.4758312020460358
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.401150895140665
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.3850383631713554
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.370460358056266
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.369693094629156
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.369693094629156
+          },
+          {
+            "key": "show:212055",
+            "title": "Plan B",
+            "score": 1.3476982097186703
+          },
+          {
+            "key": "show:121",
+            "title": "Doctor Who",
+            "score": 1.3459079283887467
+          },
+          {
+            "key": "show:195928",
+            "title": "The 7 Lives of Lea",
+            "score": 1.3372122762148337
+          },
+          {
+            "key": "movie:7551",
+            "title": "Déjà Vu",
+            "score": 1.3338874680306905
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "soft-coverage",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.067859636478297
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.0633449639054273
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 1.0535938048743474
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 1.0204966175682229
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 0.9852785926693526
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 0.9690549093996842
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 0.9558378844257341
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 0.9531681361371672
+          },
+          {
+            "key": "movie:433941",
+            "title": "Dave Made a Maze",
+            "score": 0.9140618562818684
+          },
+          {
+            "key": "movie:4241",
+            "title": "Visitor Q",
+            "score": 0.8934783229887838
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 0.9084771354616051
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.895383951682485
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.8877480586712685
+          },
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.8773511647972393
+          },
+          {
+            "key": "movie:1730",
+            "title": "Inland Empire",
+            "score": 0.8749137187230374
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 0.8717213114754101
+          },
+          {
+            "key": "movie:1398",
+            "title": "Stalker",
+            "score": 0.8644089732528043
+          },
+          {
+            "key": "movie:1069387",
+            "title": "Pedro Páramo",
+            "score": 0.8604184641932703
+          },
+          {
+            "key": "show:69061",
+            "title": "The OA",
+            "score": 0.859339948231234
+          },
+          {
+            "key": "movie:27072",
+            "title": "On the Silver Globe",
+            "score": 0.8590595340811048
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 1.9923787957202823
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.8873269989272412
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.5563040205706926
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 1.549164662113095
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.53749730843171
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.5306396057293652
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.5289350101369892
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.5288688725708517
+          },
+          {
+            "key": "show:76305",
+            "title": "Somebody Feed Phil",
+            "score": 1.525625209453357
+          },
+          {
+            "key": "show:92139",
+            "title": "Perfect Harmony",
+            "score": 1.5252876498299597
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.5090108572553929
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.492055632931192
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.4565629670867102
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.375290965151481
+          },
+          {
+            "key": "movie:50037",
+            "title": "Beyond the Black Rainbow",
+            "score": 1.3424127725424215
+          },
+          {
+            "key": "show:6143",
+            "title": "Quatermass and the Pit",
+            "score": 1.3351583218587924
+          },
+          {
+            "key": "show:127865",
+            "title": "The Chestnut Man",
+            "score": 1.331520114427693
+          },
+          {
+            "key": "show:61335",
+            "title": "Fortitude",
+            "score": 1.326615731494088
+          },
+          {
+            "key": "show:46638",
+            "title": "Top of the Lake",
+            "score": 1.3179242363765789
+          },
+          {
+            "key": "show:96628",
+            "title": "Des",
+            "score": 1.3096057092223732
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.6633755452293217
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.6092312526289274
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.6026673310276895
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.5983292565490403
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.5773964742220268
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 1.568175002687926
+          },
+          {
+            "key": "movie:796499",
+            "title": "Army of Thieves",
+            "score": 1.5603309490067032
+          },
+          {
+            "key": "show:71446",
+            "title": "Money Heist",
+            "score": 1.5590962730079503
+          },
+          {
+            "key": "movie:581644",
+            "title": "The Misfits",
+            "score": 1.5562597535325193
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.5542465980130582
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.8050184765389516
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 1.465098646383956
+          },
+          {
+            "key": "show:61555",
+            "title": "The Missing",
+            "score": 1.4265662742690057
+          },
+          {
+            "key": "show:156946",
+            "title": "Without Sin",
+            "score": 1.4185364729445022
+          },
+          {
+            "key": "show:2265",
+            "title": "I'm Sorry, I Love You",
+            "score": 1.4184112814572285
+          },
+          {
+            "key": "show:91752",
+            "title": "Our Boys",
+            "score": 1.4171791255350534
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.4157995547005715
+          },
+          {
+            "key": "show:83584",
+            "title": "Crash",
+            "score": 1.4156185122954366
+          },
+          {
+            "key": "show:54344",
+            "title": "The Leftovers",
+            "score": 1.411651861106711
+          },
+          {
+            "key": "show:139396",
+            "title": "The Endless Night",
+            "score": 1.411453401018179
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 0.9938661710037175
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 0.9905204460966542
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 0.987732342007435
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 1
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9882113821138212
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 0.9772357723577236
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 0.9772357723577236
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 0.9772357723577236
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 0.9764227642276422
+          },
+          {
+            "key": "movie:16127",
+            "title": "Forbidden Zone",
+            "score": 0.9764227642276422
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 0.9764227642276422
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9764227642276422
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 0.9764227642276422
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.2440151688143746
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 2.0259611075753545
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.5845618015884355
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.5823039982033684
+          },
+          {
+            "key": "movie:90974",
+            "title": "The Light at the Edge of the World",
+            "score": 1.502830409364189
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.3809846021707555
+          },
+          {
+            "key": "movie:50042",
+            "title": "The Lightkeepers",
+            "score": 1.373057136997728
+          },
+          {
+            "key": "show:86735",
+            "title": "Baptiste",
+            "score": 1.3681130295949442
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.364444386704832
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 1.3463040996791913
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.2883347088993506
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 1.2041801251534627
+          },
+          {
+            "key": "show:71693",
+            "title": "Blood Drive",
+            "score": 1.1309994232930045
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.1094176170663035
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 1.1068765804291942
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 1.0806606846095281
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 1.0732214534750932
+          },
+          {
+            "key": "movie:209379",
+            "title": "Knight Rider",
+            "score": 1.0550308949278318
+          },
+          {
+            "key": "movie:31162",
+            "title": "Black Lightning",
+            "score": 1.0521107249777608
+          },
+          {
+            "key": "show:133748",
+            "title": "Twisted Metal",
+            "score": 1.047026932769766
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.2600896860986546
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.18255460317517
+          },
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.1378015167941595
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.1308406700252704
+          },
+          {
+            "key": "show:4267",
+            "title": "The Kingdom",
+            "score": 1.1208548202661868
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 1.1069722450464865
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 1.1069114404143796
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 1.1023509962533626
+          },
+          {
+            "key": "movie:430214",
+            "title": "Night Is Short, Walk On Girl",
+            "score": 1.0840401244189128
+          },
+          {
+            "key": "movie:47406",
+            "title": "Arabian Nights",
+            "score": 1.0560538116591929
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 2.0450436426466165
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.8644146313018284
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.7698096349337962
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.7355824623399427
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.7141504883643917
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.7114139438113245
+          },
+          {
+            "key": "movie:39144",
+            "title": "Dragon Ball: Curse of the Blood Rubies",
+            "score": 1.5933273687252945
+          },
+          {
+            "key": "movie:27243",
+            "title": "The Last Dragon",
+            "score": 1.5822757254768502
+          },
+          {
+            "key": "movie:385232",
+            "title": "Dudes & Dragons",
+            "score": 1.5614764926401692
+          },
+          {
+            "key": "show:1585",
+            "title": "Dragon Tales",
+            "score": 1.5509997863974316
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.4382090761750406
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.5448616364978438
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.5238006482982174
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.3808533986772358
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.1405348460291735
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.10677471636953
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 1.0279659643435983
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 0.9946191247974069
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 0.9802755267423017
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 0.9587601296596436
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.569367706161918
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.5156039466007556
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.4865873228452475
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.4852464116514263
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.48447254066102
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.4843949507486114
+          },
+          {
+            "key": "movie:7551",
+            "title": "Déjà Vu",
+            "score": 1.4593377310442266
+          },
+          {
+            "key": "show:3184",
+            "title": "Journeyman",
+            "score": 1.4449376384216945
+          },
+          {
+            "key": "show:212055",
+            "title": "Plan B",
+            "score": 1.442115204282194
+          },
+          {
+            "key": "show:62099",
+            "title": "The Ministry of Time",
+            "score": 1.435542079845154
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nonlinear-strength",
+    "queries": [
+      {
+        "query": "complete nonsense",
+        "top": [
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 1.0499912708954382
+          },
+          {
+            "key": "show:251",
+            "title": "Aqua Teen Hunger Force",
+            "score": 1.0407433604935614
+          },
+          {
+            "key": "show:1229",
+            "title": "Tim and Eric Awesome Show, Great Job!",
+            "score": 0.9999887081257712
+          },
+          {
+            "key": "show:67352",
+            "title": "Million Dollar Extreme Presents: World Peace",
+            "score": 0.9828261783926515
+          },
+          {
+            "key": "show:17776",
+            "title": "Strutter",
+            "score": 0.8771810179601787
+          },
+          {
+            "key": "show:152483",
+            "title": "The Boys Presents: Diabolical",
+            "score": 0.8669352579645737
+          },
+          {
+            "key": "movie:928344",
+            "title": "Weird: The Al Yankovic Story",
+            "score": 0.8636473819115719
+          },
+          {
+            "key": "movie:36217",
+            "title": "Class of Nuke 'Em High 3: The Good, the Bad and the Subhumanoid",
+            "score": 0.8404299024840686
+          },
+          {
+            "key": "movie:4241",
+            "title": "Visitor Q",
+            "score": 0.8023770936915275
+          },
+          {
+            "key": "movie:4257",
+            "title": "Scary Movie 4",
+            "score": 0.7756632902638895
+          }
+        ]
+      },
+      {
+        "query": "tarkovsky",
+        "top": [
+          {
+            "key": "movie:1483",
+            "title": "Begotten",
+            "score": 0.8481125625473815
+          },
+          {
+            "key": "movie:26302",
+            "title": "The Color of Pomegranates",
+            "score": 0.8132244648604752
+          },
+          {
+            "key": "movie:86835",
+            "title": "Knight of Cups",
+            "score": 0.8091524168788435
+          },
+          {
+            "key": "movie:1730",
+            "title": "Inland Empire",
+            "score": 0.7980546594727379
+          },
+          {
+            "key": "movie:15916",
+            "title": "Angel's Egg",
+            "score": 0.7899027968736801
+          },
+          {
+            "key": "movie:12516",
+            "title": "Dreams",
+            "score": 0.7856471745062898
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 0.7836590387996493
+          },
+          {
+            "key": "movie:1398",
+            "title": "Stalker",
+            "score": 0.7786869060149033
+          },
+          {
+            "key": "show:124396",
+            "title": "Sonny Boy",
+            "score": 0.7688896640702576
+          },
+          {
+            "key": "movie:298721",
+            "title": "Cemetery of Splendor",
+            "score": 0.7649520613736495
+          }
+        ]
+      },
+      {
+        "query": "feel good cooking show",
+        "top": [
+          {
+            "key": "show:114574",
+            "title": "Cooku with Comali",
+            "score": 1.8795725904253715
+          },
+          {
+            "key": "show:30745",
+            "title": "My Kitchen Rules",
+            "score": 1.7943762961605805
+          },
+          {
+            "key": "show:71359",
+            "title": "Home Town",
+            "score": 1.502401626689302
+          },
+          {
+            "key": "show:108178",
+            "title": "The Drew Barrymore Show",
+            "score": 1.4902091011246978
+          },
+          {
+            "key": "show:106694",
+            "title": "James May: Oh Cook!",
+            "score": 1.487755573922387
+          },
+          {
+            "key": "show:2174",
+            "title": "Just the Ten of Us",
+            "score": 1.4794192989104697
+          },
+          {
+            "key": "show:58552",
+            "title": "Citizen Khan",
+            "score": 1.4791139414671912
+          },
+          {
+            "key": "show:50035",
+            "title": "Clarence",
+            "score": 1.4718278494677777
+          },
+          {
+            "key": "show:92139",
+            "title": "Perfect Harmony",
+            "score": 1.467536803004271
+          },
+          {
+            "key": "show:1580",
+            "title": "Gidget",
+            "score": 1.4669463854606626
+          }
+        ]
+      },
+      {
+        "query": "slow burn space horror",
+        "top": [
+          {
+            "key": "movie:28893",
+            "title": "Galaxy of Terror",
+            "score": 1.4402231402615209
+          },
+          {
+            "key": "movie:2154",
+            "title": "The Dark Side of the Moon",
+            "score": 1.3908549229637308
+          },
+          {
+            "key": "show:8838",
+            "title": "Texhnolyze",
+            "score": 1.3845496461109787
+          },
+          {
+            "key": "show:62097",
+            "title": "Jordskott",
+            "score": 1.2731421746341356
+          },
+          {
+            "key": "show:127865",
+            "title": "The Chestnut Man",
+            "score": 1.240373107474603
+          },
+          {
+            "key": "movie:994143",
+            "title": "Skinamarink",
+            "score": 1.2305540521501823
+          },
+          {
+            "key": "movie:7345",
+            "title": "There Will Be Blood",
+            "score": 1.2252265040193855
+          },
+          {
+            "key": "movie:50037",
+            "title": "Beyond the Black Rainbow",
+            "score": 1.22227845567422
+          },
+          {
+            "key": "show:46638",
+            "title": "Top of the Lake",
+            "score": 1.2219415355424847
+          },
+          {
+            "key": "show:6143",
+            "title": "Quatermass and the Pit",
+            "score": 1.221336340569231
+          }
+        ]
+      },
+      {
+        "query": "tense heist thriller, not bleak",
+        "top": [
+          {
+            "key": "movie:22907",
+            "title": "Takers",
+            "score": 1.5428518498931714
+          },
+          {
+            "key": "movie:955916",
+            "title": "Lift",
+            "score": 1.5247318057673809
+          },
+          {
+            "key": "movie:75656",
+            "title": "Now You See Me",
+            "score": 1.5178742873460909
+          },
+          {
+            "key": "movie:388",
+            "title": "Inside Man",
+            "score": 1.503784294469417
+          },
+          {
+            "key": "movie:291805",
+            "title": "Now You See Me 2",
+            "score": 1.484072876569345
+          },
+          {
+            "key": "show:71446",
+            "title": "Money Heist",
+            "score": 1.4712077963998655
+          },
+          {
+            "key": "movie:56821",
+            "title": "Lassiter",
+            "score": 1.4711071039712378
+          },
+          {
+            "key": "show:112836",
+            "title": "Money Heist: Korea - Joint Economic Area",
+            "score": 1.4653573203895496
+          },
+          {
+            "key": "movie:119283",
+            "title": "Parker",
+            "score": 1.4477662740832522
+          },
+          {
+            "key": "movie:796499",
+            "title": "Army of Thieves",
+            "score": 1.4413067392376533
+          }
+        ]
+      },
+      {
+        "query": "grief after losing a child",
+        "top": [
+          {
+            "key": "movie:165567",
+            "title": "Static",
+            "score": 1.681486610334051
+          },
+          {
+            "key": "show:217699",
+            "title": "Trial by Fire",
+            "score": 1.349902811609274
+          },
+          {
+            "key": "show:59183",
+            "title": "Southcliffe",
+            "score": 1.3413180710859212
+          },
+          {
+            "key": "show:1427",
+            "title": "Broadchurch",
+            "score": 1.3372231926154323
+          },
+          {
+            "key": "show:156946",
+            "title": "Without Sin",
+            "score": 1.3245443798668624
+          },
+          {
+            "key": "show:83584",
+            "title": "Crash",
+            "score": 1.3159623722671632
+          },
+          {
+            "key": "show:61555",
+            "title": "The Missing",
+            "score": 1.3158283575167709
+          },
+          {
+            "key": "show:90040",
+            "title": "Anne",
+            "score": 1.3157412212985613
+          },
+          {
+            "key": "movie:15584",
+            "title": "Dear Zachary: A Letter to a Son About His Father",
+            "score": 1.3143997797886082
+          },
+          {
+            "key": "show:77059",
+            "title": "Trauma",
+            "score": 1.308548934547916
+          }
+        ]
+      },
+      {
+        "query": "furious",
+        "top": [
+          {
+            "key": "movie:1160018",
+            "title": "Kill",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:11782",
+            "title": "Hard Boiled",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:180299",
+            "title": "The Raid 2",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:458156",
+            "title": "John Wick: Chapter 3 - Parabellum",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:545609",
+            "title": "Extraction",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:697843",
+            "title": "Extraction 2",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:800345",
+            "title": "Carter",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:94329",
+            "title": "The Raid",
+            "score": 0.9820665202680308
+          },
+          {
+            "key": "movie:531876",
+            "title": "The Outpost",
+            "score": 0.972284622232411
+          },
+          {
+            "key": "movie:325348",
+            "title": "Hardcore Henry",
+            "score": 0.9651036351018504
+          }
+        ]
+      },
+      {
+        "query": "craty",
+        "top": [
+          {
+            "key": "show:6024",
+            "title": "Police Squad!",
+            "score": 1
+          },
+          {
+            "key": "movie:46740",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.9655336103993367
+          },
+          {
+            "key": "show:35236",
+            "title": "Bobobo-bo Bo-bobo",
+            "score": 0.9334442131849261
+          },
+          {
+            "key": "show:9519",
+            "title": "Excel Saga",
+            "score": 0.9334442131849261
+          },
+          {
+            "key": "show:9826",
+            "title": "The Tom Green Show",
+            "score": 0.9334442131849261
+          },
+          {
+            "key": "movie:112679",
+            "title": "Italian Spiderman",
+            "score": 0.932932608383724
+          },
+          {
+            "key": "movie:16127",
+            "title": "Forbidden Zone",
+            "score": 0.932932608383724
+          },
+          {
+            "key": "movie:692",
+            "title": "Pink Flamingos",
+            "score": 0.932932608383724
+          },
+          {
+            "key": "show:16382",
+            "title": "Monty Python's Fliegender Zirkus",
+            "score": 0.932932608383724
+          },
+          {
+            "key": "show:43199",
+            "title": "Danger 5",
+            "score": 0.932932608383724
+          }
+        ]
+      },
+      {
+        "query": "melancholy lighthouse keeper mystery",
+        "top": [
+          {
+            "key": "movie:449459",
+            "title": "The Vanishing",
+            "score": 2.1052480864363767
+          },
+          {
+            "key": "movie:283552",
+            "title": "The Light Between Oceans",
+            "score": 1.927648601845621
+          },
+          {
+            "key": "movie:503919",
+            "title": "The Lighthouse",
+            "score": 1.488510165239042
+          },
+          {
+            "key": "movie:426487",
+            "title": "The Lighthouse",
+            "score": 1.4882912423924464
+          },
+          {
+            "key": "movie:90974",
+            "title": "The Light at the Edge of the World",
+            "score": 1.4174353639710178
+          },
+          {
+            "key": "movie:50042",
+            "title": "The Lightkeepers",
+            "score": 1.3102555093741022
+          },
+          {
+            "key": "show:46616",
+            "title": "The Returned",
+            "score": 1.2816982985700718
+          },
+          {
+            "key": "show:86735",
+            "title": "Baptiste",
+            "score": 1.269195794236794
+          },
+          {
+            "key": "show:62547",
+            "title": "The Disappearance",
+            "score": 1.2498760650021805
+          },
+          {
+            "key": "show:237232",
+            "title": "Platform 7",
+            "score": 1.2431772175215037
+          }
+        ]
+      },
+      {
+        "query": "scifi with cars",
+        "top": [
+          {
+            "key": "movie:10483",
+            "title": "Death Race",
+            "score": 1.15679450669022
+          },
+          {
+            "key": "show:15655",
+            "title": "Knight Rider",
+            "score": 1.0737398157633464
+          },
+          {
+            "key": "movie:573560",
+            "title": "The Car: Road to Revenge",
+            "score": 1.0069829000455217
+          },
+          {
+            "key": "movie:1286710",
+            "title": "Fast & Furious: Supercharged",
+            "score": 0.9830397917609894
+          },
+          {
+            "key": "show:71693",
+            "title": "Blood Drive",
+            "score": 0.9807964537285159
+          },
+          {
+            "key": "show:2384",
+            "title": "Knight Rider",
+            "score": 0.9587839205693013
+          },
+          {
+            "key": "movie:584",
+            "title": "2 Fast 2 Furious",
+            "score": 0.9550541019537864
+          },
+          {
+            "key": "show:30986",
+            "title": "Speed Racer",
+            "score": 0.9335017539992441
+          },
+          {
+            "key": "movie:35453",
+            "title": "The Last Chase",
+            "score": 0.9242080297787951
+          },
+          {
+            "key": "show:4620",
+            "title": "Eureka",
+            "score": 0.9151660554893035
+          }
+        ]
+      },
+      {
+        "query": "sunglasses at night",
+        "top": [
+          {
+            "key": "movie:8337",
+            "title": "They Live",
+            "score": 1.1283795184224334
+          },
+          {
+            "key": "movie:244688",
+            "title": "The Hungover Games",
+            "score": 1.1164389970870248
+          },
+          {
+            "key": "movie:342179",
+            "title": "Arabian Nights: Volume 2, The Desolate One",
+            "score": 1.1014450387234553
+          },
+          {
+            "key": "movie:35253",
+            "title": "Madame Tutli-Putli",
+            "score": 1.0095740928015666
+          },
+          {
+            "key": "movie:430214",
+            "title": "Night Is Short, Walk On Girl",
+            "score": 1.0085383630588447
+          },
+          {
+            "key": "movie:47406",
+            "title": "Arabian Nights",
+            "score": 0.9963376000705176
+          },
+          {
+            "key": "show:4267",
+            "title": "The Kingdom",
+            "score": 0.9871792936327468
+          },
+          {
+            "key": "movie:10843",
+            "title": "After Hours",
+            "score": 0.9812138490056417
+          },
+          {
+            "key": "movie:54464",
+            "title": "Fiancés on the Bridge",
+            "score": 0.9700414684437422
+          },
+          {
+            "key": "movie:1262983",
+            "title": "MadS",
+            "score": 0.9673033321269708
+          }
+        ]
+      },
+      {
+        "query": "fantasy with dragons",
+        "top": [
+          {
+            "key": "show:61445",
+            "title": "Rage of Bahamut",
+            "score": 1.921182190207837
+          },
+          {
+            "key": "movie:167858",
+            "title": "The Story of the Voyages",
+            "score": 1.7688010505419982
+          },
+          {
+            "key": "show:118956",
+            "title": "DOTA: Dragon's Blood",
+            "score": 1.6396882403516226
+          },
+          {
+            "key": "movie:59883",
+            "title": "Age of the Dragons",
+            "score": 1.6157137564762003
+          },
+          {
+            "key": "movie:31221",
+            "title": "Dragon Hunter",
+            "score": 1.5994122832732798
+          },
+          {
+            "key": "movie:5494",
+            "title": "George and the Dragon",
+            "score": 1.5670311732705104
+          },
+          {
+            "key": "movie:10191",
+            "title": "How to Train Your Dragon",
+            "score": 1.5246692276622138
+          },
+          {
+            "key": "movie:57158",
+            "title": "The Hobbit: The Desolation of Smaug",
+            "score": 1.4932482751570728
+          },
+          {
+            "key": "show:1585",
+            "title": "Dragon Tales",
+            "score": 1.4864694442370587
+          },
+          {
+            "key": "movie:49051",
+            "title": "The Hobbit: An Unexpected Journey",
+            "score": 1.4812163024943925
+          }
+        ]
+      },
+      {
+        "query": "like groundhog day",
+        "top": [
+          {
+            "key": "movie:137",
+            "title": "Groundhog Day",
+            "score": 2.3396766020096678
+          },
+          {
+            "key": "movie:59700",
+            "title": "12 Days of Christmas Eve",
+            "score": 1.493256901136219
+          },
+          {
+            "key": "movie:587792",
+            "title": "Palm Springs",
+            "score": 1.436312487894621
+          },
+          {
+            "key": "movie:26538",
+            "title": "Jack Frost",
+            "score": 1.317103952811838
+          },
+          {
+            "key": "movie:588064",
+            "title": "The Fare",
+            "score": 1.124848319585465
+          },
+          {
+            "key": "movie:122906",
+            "title": "About Time",
+            "score": 1.012055698367691
+          },
+          {
+            "key": "movie:672647",
+            "title": "The Map of Tiny Perfect Things",
+            "score": 0.930755437426737
+          },
+          {
+            "key": "movie:1824",
+            "title": "50 First Dates",
+            "score": 0.9268843206180593
+          },
+          {
+            "key": "movie:293970",
+            "title": "The Final Girls",
+            "score": 0.9000487651024849
+          },
+          {
+            "key": "movie:43967",
+            "title": "Urusei Yatsura: Beautiful Dreamer",
+            "score": 0.8859412808283527
+          }
+        ]
+      },
+      {
+        "query": "time travel complex",
+        "top": [
+          {
+            "key": "movie:206487",
+            "title": "Predestination",
+            "score": 1.4987771127977683
+          },
+          {
+            "key": "movie:14337",
+            "title": "Primer",
+            "score": 1.3990963634861977
+          },
+          {
+            "key": "movie:14139",
+            "title": "Timecrimes",
+            "score": 1.3746981017565891
+          },
+          {
+            "key": "movie:59967",
+            "title": "Looper",
+            "score": 1.3493894524588614
+          },
+          {
+            "key": "show:206344",
+            "title": "Vortex",
+            "score": 1.3463829081207874
+          },
+          {
+            "key": "show:108681",
+            "title": "JL50",
+            "score": 1.3443446138945587
+          },
+          {
+            "key": "show:195928",
+            "title": "The 7 Lives of Lea",
+            "score": 1.326714340340127
+          },
+          {
+            "key": "show:65249",
+            "title": "ERASED",
+            "score": 1.3172000144958296
+          },
+          {
+            "key": "movie:165",
+            "title": "Back to the Future Part II",
+            "score": 1.3102269379465654
+          },
+          {
+            "key": "show:212055",
+            "title": "Plan B",
+            "score": 1.3101481475117571
+          }
+        ]
+      }
+    ]
+  }
+]

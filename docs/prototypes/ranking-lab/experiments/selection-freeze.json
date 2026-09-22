@@ -1,0 +1,22 @@
+{
+  "selected": "semantic-core",
+  "supportFile": "semantic-support-v2.json",
+  "selectedAt": "2026-09-22T23:23:47.515422+00:00",
+  "selectionEvidence": "Six development queries only. Four reused confirmation scores remain unopened.",
+  "development": {
+    "queries": 6,
+    "ndcg": 0.9189748538149418,
+    "acceptable": 9.166666666666666,
+    "unknown": 0,
+    "zeroTop5": 0
+  },
+  "hashes": {
+    "semantic-rank.cjs": "a6a36dd728c5b680ab096b98d32716fbeaeb6f10fcdbb45d766035ae57000ffe",
+    "semantic-support-v2.json": "a75a1c02acd872b030b80f9debf2a0261580339e7e079434a2cd2d9615124f52",
+    "parsed-intents.json": "02438de0ed945981f94e819166b3b1cdb8be74bdd45b718387c2b3190ce7a372",
+    "semantic-packets-v2.json": "69db05cf3f995bf9e664b163b854968305698b845d38b459f2a76912db063ebf",
+    "query-intents.json": "f752f2798cafe1c7b6231c1acac1c538674b1b43edd6adbd497ecfa0643aa4b1",
+    "evaluation-contract.md": "b1ec74ad9028ad49bcd085de9e99099783446232df945edb4f3ca7a95151fa96",
+    "semantic-evaluation-development.json": "212198e57a1b5a9e27a03b5c7dc7cfa393d7a460e0a4efd19d913adb17fa9e5c"
+  }
+}
