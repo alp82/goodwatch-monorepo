@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ranking lab</title>
+<style>
+  :root { --bg:#0f1115; --panel:#181b22; --line:#2a2f3a; --fg:#e6e8ee; --dim:#8b93a7; --acc:#6ea8fe; --v:#3ddc97; --t:#f7b955; --warn:#ff6b6b; }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--fg); font:13px/1.4 ui-sans-serif,system-ui,sans-serif }
+  header { position:sticky; top:0; background:var(--panel); border-bottom:1px solid var(--line); padding:8px 16px; z-index:2 }
+  h1 { font-size:15px; margin:0 0 6px }
+  .tabs { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 }
+  .tabs button { background:#22262f; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:4px 8px; cursor:pointer; font-size:12px }
+  .tabs button.on { background:var(--acc); color:#000; border-color:var(--acc) }
+  .controls { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:6px 14px; margin-top:6px }
+  label { display:flex; justify-content:space-between; align-items:center; gap:8px; color:var(--dim) }
+  label b { color:var(--fg); font-weight:500; min-width:44px; text-align:right }
+  select, input[type=range] { width:120px }
+  select { background:#22262f; color:var(--fg); border:1px solid var(--line); border-radius:4px }
+  main { padding:12px 16px }
+  .note { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:10px; color:var(--dim) }
+  .note b { color:var(--fg) }
+  .meta { color:var(--dim); margin-bottom:8px }
+  .watch { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 }
+  .watch span { border:1px solid var(--line); border-radius:6px; padding:2px 8px; background:#22262f }
+  .watch span em { color:var(--acc); font-style:normal; font-weight:600 }
+  table { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums }
+  th, td { text-align:left; padding:3px 6px; border-bottom:1px solid var(--line); white-space:nowrap }
+  th { color:var(--dim); font-weight:500; position:sticky; top:0 }
+  td.num, th.num { text-align:right }
+  tr.hl td { background:#1f2a3a }
+  .src { font-weight:600 } .src.V { color:var(--v) } .src.T { color:var(--t) } .src.VT { color:var(--acc) }
+  .up { color:var(--v) } .down { color:var(--warn) } .dims { color:var(--dim); font-size:11px }
+  .miss { color:var(--warn) } .hit { color:var(--v) }
+  @media (max-width:700px) { th:nth-child(n+9), td:nth-child(n+9) { display:none } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Ranking lab. Re-ranks captured candidate pools in the browser. Throwaway prototype.</h1>
+  <div class="tabs" id="presets"></div>
+  <div class="tabs" id="queries"></div>
+  <div class="controls">
+    <label>Strong score min <input type="range" id="strong" min="4" max="9" step="1"><b id="strongV"></b></label>
+    <label>Weak score max <input type="range" id="weak" min="1" max="6" step="1"><b id="weakV"></b></label>
+    <label>Near-miss credit <input type="range" id="near" min="0" max="1" step="0.1"><b id="nearV"></b></label>
+    <label>Primary key <select id="primary"><option value="count">range count</option><option value="sum">weighted sum (normalized)</option><option value="cosine">cosine</option></select></label>
+    <label>Tiebreak <select id="tie"><option value="sum">weighted sum</option><option value="cosine">cosine</option><option value="none">none</option></select></label>
+    <label>Tiebreak span <input type="range" id="span" min="0" max="12" step="0.05"><b id="spanV"></b></label>
+    <label>Tiebreak scale <select id="scale"><option value="possible">possible range for the query</option><option value="pool">observed range in the pool</option></select></label>
+    <label>Combine <select id="combine"><option value="textfirst">text pool first, vector fills</option><option value="union">union, evidence additive</option><option value="vector">vector pool only</option><option value="text">text pool only</option><option value="rrf">RRF of vector rank and text rank</option><option value="intersect">vector pool, evidence only if in text pool</option></select></label>
+    <label>Evidence weight <input type="range" id="evw" min="0" max="2" step="0.1"><b id="evwV"></b></label>
+    <label>Text hits counted (cap) <input type="range" id="textcap" min="1" max="4" step="1"><b id="textcapV"></b></label>
+    <label>Evidence cap (units) <input type="range" id="evcap" min="0" max="3" step="0.25"><b id="evcapV"></b></label>
+    <label>RRF k <input type="range" id="rrfk" min="1" max="100" step="1"><b id="rrfkV"></b></label>
+    <label>Rows shown <input type="range" id="rows" min="10" max="100" step="10"><b id="rowsV"></b></label>
+  </div>
+</header>
+<main>
+  <div class="note" id="presetNote"></div>
+  <div class="meta" id="meta"></div>
+  <div class="watch" id="watch"></div>
+  <table><thead><tr>
+    <th class="num">#</th><th>Title</th><th>Src</th><th class="num">Score</th><th class="num">Hits</th><th class="num">Sum</th><th class="num">Cos</th><th class="num">Text</th><th class="num">vs prod</th><th>Dimensions</th>
+  </tr></thead><tbody id="body"></tbody></table>
+</main>
+<script>
+const DATA = /*DATA*/;
+const WATCH = {
+  "complete nonsense": ["Aqua Teen Hunger Force", "Tim and Eric Awesome Show, Great Job!", "The Last Sharknado: It's About Time", "Kung Fu Panda: The Dragon Knight", "Mechanic: Resurrection"],
+  "tarkovsky": ["Stalker", "Solaris", "Mirror", "Begotten", "You Won't Be Alone"],
+  "feel good cooking show": ["Cooku with Comali", "Somebody Feed Phil", "James May: Oh Cook!", "Home Town", "The Great British Bake Off"],
+  "slow burn space horror": ["High Life", "Sputnik", "Alien", "Event Horizon", "Jordskott"],
+  "tense heist thriller, not bleak": ["Heat", "Now You See Me", "Inside Man", "Lassiter", "Takers"],
+  "grief after losing a child": ["Manchester by the Sea", "Rabbit Hole", "The Missing", "Trial by Fire"],
+  "furious": ["The Raid", "Extraction", "Kill", "Fast & Furious"],
+  "craty": ["Police Squad!", "The Tom Green Show", "Monty Python's Flying Circus"],
+  "melancholy lighthouse keeper mystery": ["The Lighthouse", "The Returned", "Picnic at Hanging Rock", "Platform 7"],
+};
+const PRESETS = [
+  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 3, rrfk: 60 },
+    note: "<b>What main does today.</b> Normalized weighted sum (0..1) plus text evidence up to 2.0. Look at <b>complete nonsense</b>: titles with one hit but two matched phrases lead. Text pool first; the vector pool only fills when the text pool is short." },
+  { id: "count", name: "Range count (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
+    note: "<b>The prototype branch.</b> Count of in-range dimensions first, weighted sum as tiebreak inside one unit, evidence capped at one unit. Check <b>tarkovsky</b>: Stalker (21 hits, high sum) sits behind 23-hit titles with lower sums. Check <b>feel good cooking show</b>: Cooku with Comali drops out." },
+  { id: "blend", name: "Count + sum blend", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 6, scale: "pool", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
+    note: "<b>Let the sum cross tiers.</b> Same count, but the sum (scaled over the pool's observed range) spans six units (about a quarter of the 23 dimensions on tarkovsky), so a strong 21-hit title can pass a flat 23-hit one. Does Stalker come back without Kung Fu Panda returning?" },
+  { id: "soft", name: "Soft count (near-miss credit)", cfg: { strong: 6, weak: 4, near: 0.5, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
+    note: "<b>A score one step outside the band counts half.</b> Softens the cliff at 5 versus 6 without giving credit for far misses. Compare tarkovsky and grief." },
+  { id: "union", name: "Union: vector + text additive", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "union", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
+    note: "<b>Merge both pools, add evidence where present.</b> Titles from the vector prefetch compete with text hits on the same scale. On <b>complete nonsense</b>, The Last Sharknado can appear because it was in the vector pool but not the text pool." },
+  { id: "rrf", name: "RRF fusion", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "rrf", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
+    note: "<b>Reciprocal rank fusion.</b> Rank the vector pool by the fingerprint rank and the text pool by fingerprint rank plus evidence, then sum 1/(k+rank). Scale-free, but a title in both lists gets a large lift regardless of how good either rank is." },
+  { id: "strict", name: "Stricter bands (7 / 3)", cfg: { strong: 7, weak: 3, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, textcap: 4, evcap: 1, rrfk: 60 },
+    note: "<b>Tighter bands.</b> Fewer titles reach the top tier, so the tiebreak decides more. Watch whether the head gets sharper or just noisier." },
+];
+const $ = (id) => document.getElementById(id);
+const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","textcap","evcap","rrfk","rows"];
+let queryIndex = 0, presetId = "prod";
+function readCfg() { const c = {}; for (const k of ctl) c[k] = $(k).tagName === "SELECT" ? $(k).value : Number($(k).value); return c; }
+function writeCfg(c) { for (const k of ctl) if (k in c) $(k).value = c[k]; }
+function fmt(k, v) { return $(k + "V") && ($(k + "V").textContent = v); }
+
+function fingerprint(fp, used, cfg) {
+  let hits = 0, ws = 0;
+  for (const [key, w] of used) {
+    const v = fp[key] ?? 0;
+    ws += w * v;
+    if (w > 0) { if (v >= cfg.strong) hits += 1; else if (v === cfg.strong - 1) hits += cfg.near; }
+    else { if (v <= cfg.weak) hits += 1; else if (v === cfg.weak + 1) hits += cfg.near; }
+  }
+  return { hits, ws };
+}
+function rankRows(rows, used, cfg, ctx) {
+  // ctx: { wsMin, wsMax, cosMin, cosMax } over the candidate set for normalization
+  const sumMin = used.reduce((s, [, w]) => s + Math.min(w, 0) * 10, 0);
+  const sumMax = used.reduce((s, [, w]) => s + Math.max(w, 0) * 10, 0);
+  const norm = (v, lo, hi) => (hi - lo) ? (v - lo) / (hi - lo) : 0;
+  for (const r of rows) {
+    const f = fingerprint(r.fp, used, cfg); r.hits = f.hits; r.ws = f.ws;
+    let primary, tie = 0;
+    if (cfg.primary === "count") primary = r.hits;
+    else if (cfg.primary === "sum") primary = norm(r.ws, ctx.wsMin, ctx.wsMax);
+    else primary = norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
+    if (cfg.tie === "sum") tie = cfg.span * (cfg.scale === "pool" ? norm(r.ws, ctx.wsMin, ctx.wsMax) : norm(r.ws, sumMin, sumMax));
+    else if (cfg.tie === "cosine") tie = cfg.span * norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
+    r.ev = Math.min(cfg.evw * Math.min(r.text ?? 0, cfg.textcap), cfg.evcap);
+    r.base = primary + tie;
+  }
+}
+function compute(cap, cfg) {
+  const used = cap.used;
+  const vec = new Map(cap.vectorPool.map((r) => [r.key, { ...r, text: 0, inV: true, inT: false }]));
+  const txt = new Map(cap.textPool.map((r) => [r.key, { ...r, cosine: null, inV: false, inT: true }]));
+  const all = new Map();
+  for (const [k, r] of vec) all.set(k, { ...r });
+  for (const [k, r] of txt) { const e = all.get(k); if (e) { e.text = r.text; e.inT = true; e.evidence = r.evidence; } else all.set(k, { ...r }); }
+  const ctxOf = (rows) => ({ wsMin: Math.min(...rows.map((r) => fingerprint(r.fp, used, cfg).ws)), wsMax: Math.max(...rows.map((r) => fingerprint(r.fp, used, cfg).ws)),
+    cosMin: Math.min(...rows.map((r) => r.cosine ?? 0)), cosMax: Math.max(...rows.map((r) => r.cosine ?? 0)) });
+  const desc = (a, b) => b.score - a.score;
+  let out;
+  if (cfg.combine === "vector") { const rows = [...vec.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base); out = rows.sort(desc); }
+  else if (cfg.combine === "text") { const rows = [...txt.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
+  else if (cfg.combine === "union") { const rows = [...all.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
+  else if (cfg.combine === "intersect") { const rows = [...vec.values()].map((r) => ({ ...r, text: txt.get(r.key)?.text ?? 0, inT: txt.has(r.key) })); rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
+  else if (cfg.combine === "textfirst") {
+    const t = [...txt.values()]; if (t.length) { rankRows(t, used, cfg, ctxOf(t)); t.forEach((r) => r.score = r.base + r.ev); t.sort(desc); }
+    const v = [...vec.values()].filter((r) => !txt.has(r.key)); rankRows(v, used, cfg, ctxOf(v.length ? v : [...vec.values()])); v.forEach((r) => r.score = r.base); v.sort(desc);
+    out = t.length >= 100 ? t : [...t, ...v];
+  } else { // rrf
+    const v = [...vec.values()]; rankRows(v, used, cfg, ctxOf(v)); v.forEach((r) => r.score = r.base); v.sort(desc);
+    const t = [...txt.values()]; if (t.length) { rankRows(t, used, cfg, ctxOf(t)); t.forEach((r) => r.score = r.base + r.ev); t.sort(desc); }
+    const fused = new Map();
+    v.forEach((r, i) => fused.set(r.key, { ...r, score: 1 / (cfg.rrfk + i + 1) }));
+    t.forEach((r, i) => { const e = fused.get(r.key); if (e) { e.score += 1 / (cfg.rrfk + i + 1); e.inT = true; e.text = r.text; } else fused.set(r.key, { ...r, score: 1 / (cfg.rrfk + i + 1) }); });
+    out = [...fused.values()].sort(desc);
+  }
+  return out;
+}
+let prodRanks = {};
+function render() {
+  const cap = DATA[queryIndex]; const cfg = readCfg();
+  for (const k of ctl) fmt(k, $(k).value);
+  const prodCfg = { ...PRESETS[0].cfg, rows: cfg.rows };
+  const prod = compute(cap, prodCfg); prodRanks = {}; prod.forEach((r, i) => prodRanks[r.key] = i + 1);
+  const rows = compute(cap, cfg);
+  const flags = cap.flags.map((f) => `${f.decision}:${f.id}`).join(", ");
+  $("meta").innerHTML = `<b>${cap.query}</b> · dimensions: ${cap.used.map(([k, w]) => `${w > 0 ? "+" : "−"}${k}`).join(" ")} · flags: ${flags || "none"} · vector pool ${cap.vectorPool.length} (${cap.vectorMs} ms) · text pool ${cap.textPool.length} (${cap.textMs} ms) · ${cap.tropeMode}`;
+  const rankOf = {}; rows.forEach((r, i) => rankOf[r.key] = i + 1);
+  const title = (r) => cap.titles[r.key]?.title ?? r.key;
+  const watch = WATCH[cap.query] ?? [];
+  $("watch").innerHTML = watch.map((w) => { const r = rows.find((x) => title(x) === w); return `<span>${w}: <em>${r ? rankOf[r.key] : "not in pool"}</em>${r ? ` (prod ${prodRanks[r.key] ?? "–"})` : ""}</span>`; }).join("");
+  $("body").innerHTML = rows.slice(0, cfg.rows).map((r, i) => {
+    const t = title(r), y = cap.titles[r.key]?.year ?? "";
+    const p = prodRanks[r.key]; const d = p ? p - (i + 1) : null;
+    const dims = cap.used.map(([k, w]) => { const v = r.fp[k] ?? 0; const ok = w > 0 ? v >= cfg.strong : v <= cfg.weak; return `<span class="${ok ? "hit" : "miss"}">${k.slice(0, 8)}=${v}</span>`; }).join(" ");
+    return `<tr class="${watch.includes(t) ? "hl" : ""}"><td class="num">${i + 1}</td><td>${t} <span class="dims">${y}</span></td><td class="src ${r.inV && r.inT ? "VT" : r.inV ? "V" : "T"}">${r.inV && r.inT ? "V+T" : r.inV ? "V" : "T"}</td><td class="num">${r.score.toFixed(3)}</td><td class="num">${r.hits.toFixed(1)}</td><td class="num">${r.ws.toFixed(1)}</td><td class="num">${r.cosine == null ? "–" : r.cosine.toFixed(3)}</td><td class="num">${(r.text ?? 0).toFixed(2)}</td><td class="num ${d > 0 ? "up" : d < 0 ? "down" : ""}">${p ? (d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "=") : "new"}</td><td class="dims">${dims}</td></tr>`;
+  }).join("");
+}
+function applyPreset(id) { presetId = id; const p = PRESETS.find((x) => x.id === id); writeCfg(p.cfg); $("presetNote").innerHTML = p.note; document.querySelectorAll("#presets button").forEach((b) => b.classList.toggle("on", b.dataset.id === id)); render(); }
+$("presets").innerHTML = PRESETS.map((p) => `<button data-id="${p.id}">${p.name}</button>`).join("");
+$("queries").innerHTML = DATA.map((c, i) => `<button data-i="${i}">${c.query}</button>`).join("");
+$("presets").onclick = (e) => e.target.dataset.id && applyPreset(e.target.dataset.id);
+$("queries").onclick = (e) => { if (!e.target.dataset.i) return; queryIndex = Number(e.target.dataset.i); document.querySelectorAll("#queries button").forEach((b) => b.classList.toggle("on", b.dataset.i == queryIndex)); render(); };
+for (const k of ctl) $(k).addEventListener("input", () => { document.querySelectorAll("#presets button").forEach((b) => b.classList.remove("on")); $("presetNote").innerHTML = "<b>Custom.</b> Controls changed from the last preset."; render(); });
+$("rows").value = 30;
+// Deep links: ?q=<query index>&preset=<id>
+const params = new URLSearchParams(location.search);
+queryIndex = Math.min(DATA.length - 1, Number(params.get("q") ?? 0));
+document.querySelectorAll("#queries button")[queryIndex].classList.add("on");
+applyPreset(PRESETS.some((p) => p.id === params.get("preset")) ? params.get("preset") : "prod");
+</script>
+</body>
+</html>

@@ -1376,7 +1376,23 @@ const runPhraseVariant = async (
 		notes,
 		extra,
 		fill: fillTiming,
+		// PROTOTYPE (branch only): the raw text pool for the ranking lab capture
+		textPool: [...pool.values()],
+		gated,
 	};
+};
+
+// PROTOTYPE (branch only): internals for the ranking lab capture script
+export const prototypeParts = {
+	decodeAttributes,
+	decodeFingerprint,
+	pick,
+	isQueryDimension,
+	sparseVector,
+	qdrantFilter,
+	getQdrant,
+	MAX_QUERY_DIMENSIONS,
+	PREFETCH_LIMIT,
 };
 
 export interface ReadingChip {
