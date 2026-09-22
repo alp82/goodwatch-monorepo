@@ -8,6 +8,7 @@ import {
 
 export type TransferChange = {
 	id: string;
+	// "skip" only appears in transfers saved by earlier versions and is never sent.
 	kind: "score" | "plan" | "skip" | "country" | "services";
 	tmdb_id?: number;
 	media_type?: "movie" | "show";
@@ -85,10 +86,23 @@ export function normalizeTransferSnapshot(
 				: null,
 	};
 }
+// Reviews saved by earlier versions may include skips, which are never transferred.
+function withoutSkips(transfer: PendingTransfer): PendingTransfer {
+	const keep = (c: TransferChange) => c.kind !== "skip";
+	return {
+		...transfer,
+		changes: transfer.changes?.filter(keep),
+		confirmed: transfer.confirmed?.filter(keep),
+		selected: transfer.selected?.filter(
+			(id) => !transfer.changes?.some((c) => c.id === id && !keep(c)),
+		),
+	};
+}
 export function pendingTransfer(accountId: string) {
-	const transfer = read<PendingTransfer[]>(pendingKey, []).find(
+	const found = read<PendingTransfer[]>(pendingKey, []).find(
 		(t) => t.accountId === accountId,
 	);
+	const transfer = found && withoutSkips(found);
 	// A confirmed payload is immutable, including partially written retries.
 	return transfer && !transfer.confirmed?.length
 		? { ...transfer, snapshot: normalizeTransferSnapshot(transfer.snapshot) }
