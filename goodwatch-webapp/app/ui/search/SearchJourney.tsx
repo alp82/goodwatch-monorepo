@@ -669,9 +669,11 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 									{r.year} · {r.type}
 								</p>
 								<div className="flex flex-wrap gap-1 mt-2">
-									{r.lexical > 0 && (
+									{/* The highlight already shows title matches; only a match on the
+									    original name, which is not displayed, needs a chip. */}
+									{r.lexical > 0 && r.match.endsWith("(original name)") && (
 										<span className="rounded bg-amber-400/10 px-2 py-0.5 text-xs text-amber-200">
-											{r.match}
+											Matches original name
 										</span>
 									)}
 									{r.discovery?.reasons
