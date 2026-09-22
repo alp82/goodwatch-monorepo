@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ranking lab</title>
+<title>Ranking lab · Search trade-offs</title>
 <style>
   :root { --bg:#0f1115; --panel:#181b22; --line:#2a2f3a; --fg:#e6e8ee; --dim:#8b93a7; --acc:#6ea8fe; --v:#3ddc97; --t:#f7b955; --warn:#ff6b6b; }
   * { box-sizing:border-box }
   body { margin:0; background:var(--bg); color:var(--fg); font:13px/1.4 ui-sans-serif,system-ui,sans-serif }
-  header { position:sticky; top:0; background:var(--panel); border-bottom:1px solid var(--line); padding:8px 16px; z-index:2 }
+  header { background:var(--panel); border-bottom:1px solid var(--line); padding:8px 16px; z-index:2 }
   h1 { font-size:15px; margin:0 0 6px }
   .tabs { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 }
   .tabs button { background:#22262f; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:4px 8px; cursor:pointer; font-size:12px }
@@ -34,40 +34,75 @@
   .up { color:var(--v) } .down { color:var(--warn) } .dims { color:var(--dim); font-size:11px }
   .miss { color:var(--warn) } .hit { color:var(--v) }
   @media (max-width:700px) { th:nth-child(n+9), td:nth-child(n+9) { display:none } }
+
+  button { cursor:pointer; background:#22262f; color:var(--fg); border:1px solid var(--line); border-radius:5px; padding:6px 9px; font:inherit }
+  button:hover, button:focus-visible { border-color:var(--acc) }
+  h2 { font-size:16px; margin:0 0 8px } h3 { font-size:14px }
+  summary { cursor:pointer; padding:8px 0; color:var(--fg) }
+  .intro { max-width:1000px; color:var(--dim) }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px }
+  .scroll { overflow:auto; max-height:540px }
+  .title-button { border:0; background:none; padding:0; text-align:left; color:var(--acc); white-space:normal; min-width:160px }
+  .state { display:flex; flex-wrap:wrap; gap:8px 24px; padding:10px 0 }
+  .state div { min-width:100px } .state strong { display:block; color:var(--fg) }
+  #inspector:empty { display:none }
+  .notice { color:var(--t) }
+  .selected td { background:#263448 }
+  .review-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0 }
+  .review-controls select { width:auto; max-width:100% }
+  #comparison table td { white-space:normal; min-width:90px }
+  #comparison table td:first-child { min-width:180px }
+  #inspector th, #inspector td { display:table-cell }
+  .compact { font-size:12px; color:var(--dim) }
+  @media (max-width:700px) { header, main { padding:12px } .controls { grid-template-columns:1fr } }
 </style>
 </head>
 <body>
 <header>
-  <h1>Ranking lab. Re-ranks captured candidate pools in the browser. Throwaway prototype.</h1>
+  <h1>Ranking lab · Search trade-offs</h1>
+  <p class="intro"><b>Throwaway logic prototype.</b> Can we improve mood searches while keeping concrete matches useful? Compare threshold coverage, attribute strength, and text evidence on the same 14 captured queries. Assumption: this iteration explores ranking behavior.</p>
+  <p class="compact">Offline snapshot · no new searches · nothing saved automatically · no ranking is approved for production</p>
   <div class="tabs" id="presets"></div>
   <div class="tabs" id="queries"></div>
-  <div class="controls">
+  <details><summary>Free play: adjust the ranking</summary><div class="controls">
     <label>Strong score min <input type="range" id="strong" min="4" max="9" step="1"><b id="strongV"></b></label>
     <label>Weak score max <input type="range" id="weak" min="1" max="6" step="1"><b id="weakV"></b></label>
     <label>Near-miss credit <input type="range" id="near" min="0" max="1" step="0.1"><b id="nearV"></b></label>
-    <label>Primary key <select id="primary"><option value="count">range count</option><option value="sum">weighted sum (normalized)</option><option value="cosine">cosine</option></select></label>
+    <label>Primary key <select id="primary"><option value="count">range count</option><option value="satisfaction">continuous coverage</option><option value="strength">attribute strength × dimensions</option><option value="blend">50/50 count + strength</option><option value="sum">weighted sum (normalized)</option><option value="cosine">cosine</option></select></label>
     <label>Tiebreak <select id="tie"><option value="sum">weighted sum</option><option value="cosine">cosine</option><option value="none">none</option></select></label>
-    <label>Tiebreak span <input type="range" id="span" min="0" max="12" step="0.05"><b id="spanV"></b></label>
+    <label>Tiebreak span <input type="range" id="span" min="0" max="12" step="0.01"><b id="spanV"></b></label>
     <label>Tiebreak scale <select id="scale"><option value="possible">possible range for the query</option><option value="pool">observed range in the pool</option></select></label>
     <label>Combine <select id="combine"><option value="textfirst">text pool first, vector fills</option><option value="union">union, evidence additive</option><option value="auto">phrase-aware: union for mood phrase, text first for concrete</option><option value="vector">vector pool only</option><option value="text">text pool only</option><option value="intersect">vector pool, evidence only if in text pool</option></select></label>
     <label>Evidence weight, mood <input type="range" id="evw" min="0" max="2" step="0.1"><b id="evwV"></b></label>
     <label>Evidence weight, concrete <input type="range" id="evwc" min="0" max="2" step="0.1"><b id="evwcV"></b></label>
-    <label>Text hits counted (cap) <input type="range" id="textcap" min="1" max="4" step="1"><b id="textcapV"></b></label>
+    <label>Text evidence score cap <input type="range" id="textcap" min="1" max="4" step="1"><b id="textcapV"></b></label>
     <label>Evidence cap, mood phrase <input type="range" id="evcap" min="0" max="3" step="0.25"><b id="evcapV"></b></label>
     <label>Evidence cap, concrete phrase <input type="range" id="evcapc" min="0" max="3" step="0.25"><b id="evcapcV"></b></label>
     <label>Rows shown <input type="range" id="rows" min="10" max="100" step="10"><b id="rowsV"></b></label>
-  </div>
+  </div></details>
 </header>
 <main>
+  <section class="note">
+    <h2>Explore a trade-off</h2>
+    <div class="tabs" id="scenarios" role="tablist" aria-label="Guided walkthroughs"></div>
+    <div id="walkthrough"></div>
+  </section>
   <div class="note" id="presetNote"></div>
+  <section class="note" aria-live="polite"><h2>Current ranking state</h2><div id="state" class="state"></div><div id="recipe"></div></section>
+  <div class="note compact">The <b>Legacy main approximation</b> preset is not an exact production replay. Captures omit some server scoring inputs, and the lab normalizes scores differently. Timings below belong to the capture, not this experiment. Watch titles are discussion prompts, not relevance judgments. These 14 queries do not replace the accepted 30-query baseline. Missing vector attributes were converted to zero at capture time; original missingness and per-phrase evidence contributions cannot be recovered.</div>
+  <div class="review-controls"><label>Compare with <select id="baseline"></select></label><button id="export">Download review snapshot</button><button id="clearReviews">Clear judgments</button><span id="reviewSummary" class="compact"></span></div>
+  <details class="note" id="topComparison"><summary>Compare the top 10 side by side</summary><div id="topComparisonBody" class="grid"></div></details>
+  <details class="note" id="comparison"><summary>Across all 14 queries: watch-title movement</summary><div id="comparisonBody"></div></details>
+  <section class="note" id="inspector"></section>
   <div class="meta" id="meta"></div>
   <div class="watch" id="watch"></div>
-  <table><thead><tr>
-    <th class="num">#</th><th>Title</th><th>Src</th><th class="num">Score</th><th class="num">Hits</th><th class="num">Sum</th><th class="num">Cos</th><th class="num">Text</th><th class="num">vs prod</th><th>Dimensions</th>
-  </tr></thead><tbody id="body"></tbody></table>
+  <div class="scroll"><table><thead><tr>
+    <th class="num">#</th><th>Title</th><th>Src</th><th class="num">Score</th><th class="num">Hits</th><th class="num">Sum</th><th class="num">Cos</th><th class="num">Text</th><th class="num">vs baseline</th><th>Dimensions</th>
+  </tr></thead><tbody id="body"></tbody></table></div>
 </main>
 <script>
 const DATA = /*DATA*/;
+const CAPTURE_META = /*CAPTURE_META*/;
 const WATCH = {
   "complete nonsense": ["Aqua Teen Hunger Force", "Tim and Eric Awesome Show, Great Job!", "The Last Sharknado: It's About Time", "Kung Fu Panda: The Dragon Knight", "Mechanic: Resurrection"],
   "tarkovsky": ["Stalker", "Solaris", "Mirror", "Begotten", "You Won't Be Alone"],
@@ -85,8 +120,8 @@ const WATCH = {
   "time travel complex": ["Primer", "Dark", "Predestination", "Tenet", "12 Monkeys", "Timecrimes"],
 };
 const PRESETS = [
-  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3 },
-    note: "<b>What main does today.</b> Normalized weighted sum (0..1) plus text evidence up to 2.0. Text pool first; the vector pool fills when the text pool is short. Fails on <b>complete nonsense</b>: one-hit titles with two matched phrases lead. Strong on concrete queries (dragons, groundhog day) because evidence dominates there." },
+  { id: "prod", name: "Legacy main approximation", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3 },
+    note: "<b>Legacy approximation of main, not a production replay.</b> Normalized weighted sum (0..1) plus text evidence up to 2.0. Text pool first; the vector pool fills when the text pool is short. Fails on <b>complete nonsense</b>: one-hit titles with two matched phrases lead. Strong on concrete queries (dragons, groundhog day) because evidence dominates there." },
   { id: "count", name: "Range count 6/4, flat cap", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1 },
     note: "<b>The prototype branch.</b> In-range count first, weighted sum as tiebreak, evidence capped at one unit for every phrase. Fixes nonsense. Costs Stalker on <b>tarkovsky</b>, Cooku with Comali on <b>cooking show</b>, and How to Train Your Dragon (7 to 23) on <b>dragons</b>." },
   { id: "aware", name: "Concrete-aware cap (1 / 2)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 2 },
@@ -98,22 +133,25 @@ const PRESETS = [
   { id: "textonly", name: "Text pool only (reference)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "text", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3 },
     note: "<b>Reference: only titles that matched the phrase.</b> Shows what the text pool alone delivers for a concrete query and how thin it gets (groundhog day has 54 rows)." },
 ];
-const $ = (id) => document.getElementById(id);
-const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","evwc","textcap","evcap","evcapc","rows"];
-let queryIndex = 0, presetId = "prod";
-function readCfg() { const c = {}; for (const k of ctl) c[k] = $(k).tagName === "SELECT" ? $(k).value : Number($(k).value); return c; }
-function writeCfg(c) { for (const k of ctl) if (k in c) $(k).value = c[k]; }
-function fmt(k, v) { return $(k + "V") && ($(k + "V").textContent = v); }
+const leadCfg = PRESETS.find(p => p.id === "leads").cfg;
+PRESETS.push(
+  { id: "continuous", name: "Experiment: continuous coverage", cfg: { ...leadCfg, primary: "satisfaction" }, note: "<b>Hypothesis: soften the threshold.</b> Each wanted attribute contributes min(score / strong minimum, 1); each avoided attribute contributes min((10 − score) / (10 − weak maximum), 1). Above-threshold strength still only breaks ties. This is a diagnostic experiment, not a recommended winner: partial credit can lift generic near-matches above distinctive titles." },
+  { id: "strength", name: "Experiment: attribute strength", cfg: { ...leadCfg, primary: "strength" }, note: "<b>Hypothesis: retain attribute strength.</b> Normalize the weighted sum over its theoretical range, then multiply by the number of selected dimensions. Use the same concrete-aware evidence as Concrete phrase leads. This changes both the shape and the influence of the fingerprint score; check mood and concrete queries together." }
+);
+
+
+PRESETS.push({id:"blend", name:"Experiment: count + strength", cfg:{...leadCfg,primary:"blend"}, note:"<b>Hypothesis: strength can compensate for incomplete coverage.</b> Half the range count plus half the theoretical normalized weighted sum × selected dimensions, with the same tiebreak and evidence as Concrete phrase leads. This recovers some Tarkovsky and dragon positions but loses cooking and space-horror positions. No winner is established."});
 
 function fingerprint(fp, used, cfg) {
-  let hits = 0, ws = 0;
+  let hits = 0, ws = 0, satisfaction = 0;
   for (const [key, w] of used) {
     const v = fp[key] ?? 0;
     ws += w * v;
+    satisfaction += w > 0 ? Math.min(v / cfg.strong, 1) : Math.min((10 - v) / (10 - cfg.weak), 1);
     if (w > 0) { if (v >= cfg.strong) hits += 1; else if (v === cfg.strong - 1) hits += cfg.near; }
     else { if (v <= cfg.weak) hits += 1; else if (v === cfg.weak + 1) hits += cfg.near; }
   }
-  return { hits, ws };
+  return { hits, ws, satisfaction };
 }
 function rankRows(rows, used, cfg, ctx) {
   // ctx: { wsMin, wsMax, cosMin, cosMax } over the candidate set for normalization
@@ -124,12 +162,15 @@ function rankRows(rows, used, cfg, ctx) {
     const f = fingerprint(r.fp, used, cfg); r.hits = f.hits; r.ws = f.ws;
     let primary, tie = 0;
     if (cfg.primary === "count") primary = r.hits;
+    else if (cfg.primary === "satisfaction") primary = f.satisfaction;
+    else if (cfg.primary === "strength") primary = used.length * norm(r.ws, sumMin, sumMax);
+    else if (cfg.primary === "blend") primary = 0.5 * r.hits + 0.5 * used.length * norm(r.ws, sumMin, sumMax);
     else if (cfg.primary === "sum") primary = norm(r.ws, ctx.wsMin, ctx.wsMax);
     else primary = norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
     if (cfg.tie === "sum") tie = cfg.span * (cfg.scale === "pool" ? norm(r.ws, ctx.wsMin, ctx.wsMax) : norm(r.ws, sumMin, sumMax));
     else if (cfg.tie === "cosine") tie = cfg.span * norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
     r.ev = Math.min((ctx.concrete ? cfg.evwc : cfg.evw) * Math.min(r.text ?? 0, cfg.textcap), ctx.concrete ? cfg.evcapc : cfg.evcap);
-    r.base = primary + tie;
+    r.primaryScore = primary; r.tieScore = tie; r.base = primary + tie;
   }
 }
 function compute(cap, cfg) {
@@ -156,38 +197,157 @@ function compute(cap, cfg) {
   }
   return out;
 }
-let prodRanks = {};
-function render() {
-  const cap = DATA[queryIndex]; const cfg = readCfg();
-  for (const k of ctl) fmt(k, $(k).value);
-  const prodCfg = { ...PRESETS[0].cfg, rows: cfg.rows };
-  const prod = compute(cap, prodCfg); prodRanks = {}; prod.forEach((r, i) => prodRanks[r.key] = i + 1);
-  const rows = compute(cap, cfg);
-  const flags = cap.flags.map((f) => `${f.decision}:${f.id}`).join(", ");
-  $("meta").innerHTML = `<b>${cap.query}</b> · dimensions: ${cap.used.map(([k, w]) => `${w > 0 ? "+" : "−"}${k}`).join(" ")} · phrases: ${(cap.phrases ?? []).map((p) => `“${p.phrase}” ${p.concrete ? "concrete" : "mood"}`).join(", ") || "none"} · flags: ${flags || "none"} · vector pool ${cap.vectorPool.length} (${cap.vectorMs} ms) · text pool ${cap.textPool.length} (${cap.textMs} ms) · ${cap.tropeMode}`;
-  const rankOf = {}; rows.forEach((r, i) => rankOf[r.key] = i + 1);
-  const title = (r) => cap.titles[r.key]?.title ?? r.key;
-  const watch = WATCH[cap.query] ?? [];
-  $("watch").innerHTML = watch.map((w) => { const r = rows.find((x) => title(x) === w); return `<span>${w}: <em>${r ? rankOf[r.key] : "not in pool"}</em>${r ? ` (prod ${prodRanks[r.key] ?? "–"})` : ""}</span>`; }).join("");
-  $("body").innerHTML = rows.slice(0, cfg.rows).map((r, i) => {
-    const t = title(r), y = cap.titles[r.key]?.year ?? "";
-    const p = prodRanks[r.key]; const d = p ? p - (i + 1) : null;
-    const dims = cap.used.map(([k, w]) => { const v = r.fp[k] ?? 0; const ok = w > 0 ? v >= cfg.strong : v <= cfg.weak; return `<span class="${ok ? "hit" : "miss"}">${k.slice(0, 8)}=${v}</span>`; }).join(" ");
-    return `<tr class="${watch.includes(t) ? "hl" : ""}"><td class="num">${i + 1}</td><td>${t} <span class="dims">${y}</span></td><td class="src ${r.inV && r.inT ? "VT" : r.inV ? "V" : "T"}">${r.inV && r.inT ? "V+T" : r.inV ? "V" : "T"}</td><td class="num">${r.score.toFixed(3)}</td><td class="num">${r.hits.toFixed(1)}</td><td class="num">${r.ws.toFixed(1)}</td><td class="num">${r.cosine == null ? "–" : r.cosine.toFixed(3)}</td><td class="num">${(r.text ?? 0).toFixed(2)}</td><td class="num ${d > 0 ? "up" : d < 0 ? "down" : ""}">${p ? (d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "=") : "new"}</td><td class="dims">${dims}</td></tr>`;
-  }).join("");
+</script>
+<script>
+// Throwaway view layer. The scoring functions above have no DOM or persistence dependencies.
+const $ = (id) => document.getElementById(id);
+const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","evwc","textcap","evcap","evcapc","rows"];
+let queryIndex = 0, presetId = "prod";
+function readCfg() { const c = {}; for (const k of ctl) c[k] = $(k).tagName === "SELECT" ? $(k).value : Number($(k).value); return c; }
+function writeCfg(c) { for (const k of ctl) if (k in c) $(k).value = c[k]; }
+function fmt(k, v) { return $(k + "V") && ($(k + "V").textContent = v); }
+
+
+const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let selectedKey = null, scenarioIndex = 0, stepIndex = -1;
+let currentRows = [], baselineRows = [];
+const judgments = new Map();
+const SCENARIOS = [
+  { title:"Mood evidence", text:"A word match is not necessarily the requested mood. Track Tim and Eric and Kung Fu Panda as evidence loses influence, then see which vector candidates can enter.", steps:[["See the legacy ordering","complete nonsense","prod"],["Cap mood evidence","complete nonsense","leads"],["Let both pools compete","complete nonsense","leadsauto"]] },
+  { title:"Distinctive vs complete", text:"Stalker misses non-linear narrative (1) and psychedelic (3), while You Won’t Be Alone matches all 23 selected attributes. These are real low scores, not a one-point threshold cliff. Compare whether completeness or strength should win.", steps:[["Count every match","tarkovsky","leads"],["Give partial credit","tarkovsky","continuous"],["Keep attribute strength","tarkovsky","strength"],["Try half count, half strength","tarkovsky","blend"]] },
+  { title:"Concrete matches", text:"The 2010 How to Train Your Dragon already matches all five attributes. Its movement concerns strength and text evidence. Cooku with Comali exposes the cost of capping concrete evidence.", steps:[["See dragons with count","fantasy with dragons","leads"],["Compare dragons with strength","fantasy with dragons","strength"],["See the flat-cap loss","feel good cooking show","count"],["Restore concrete evidence","feel good cooking show","leads"]] },
+  { title:"Candidate limits", text:"An ordering cannot recover titles it never received. Groundhog Day has a small text pool; text-only drops vector candidates. A concrete union can also place fingerprint-only titles above literal matches.", steps:[["Use text candidates only","like groundhog day","textonly"],["Restore vector fill","like groundhog day","leads"],["Try a full union","like groundhog day","leads",{combine:"union"}]] }
+];
+function currentCap() { return DATA[queryIndex]; }
+function titleFor(cap,key) { const t=cap.titles[key]; return t ? `${t.title}${t.year ? ` (${t.year})` : ""} · ${key}` : key; }
+function watches(cap) {
+  return (WATCH[cap.query] ?? []).flatMap(name => {
+    const keys=Object.keys(cap.titles).filter(key => cap.titles[key].title === name);
+    return keys.length ? keys.map(key => ({key,name:titleFor(cap,key)})) : [{key:null,name}];
+  });
 }
-function applyPreset(id) { presetId = id; const p = PRESETS.find((x) => x.id === id); writeCfg(p.cfg); $("presetNote").innerHTML = p.note; document.querySelectorAll("#presets button").forEach((b) => b.classList.toggle("on", b.dataset.id === id)); render(); }
-$("presets").innerHTML = PRESETS.map((p) => `<button data-id="${p.id}">${p.name}</button>`).join("");
-$("queries").innerHTML = DATA.map((c, i) => `<button data-i="${i}">${c.query}</button>`).join("");
-$("presets").onclick = (e) => e.target.dataset.id && applyPreset(e.target.dataset.id);
-$("queries").onclick = (e) => { if (!e.target.dataset.i) return; queryIndex = Number(e.target.dataset.i); document.querySelectorAll("#queries button").forEach((b) => b.classList.toggle("on", b.dataset.i == queryIndex)); render(); };
-for (const k of ctl) $(k).addEventListener("input", () => { document.querySelectorAll("#presets button").forEach((b) => b.classList.remove("on")); $("presetNote").innerHTML = "<b>Custom.</b> Controls changed from the last preset."; render(); });
-$("rows").value = 30;
-// Deep links: ?q=<query index>&preset=<id>
-const params = new URLSearchParams(location.search);
-queryIndex = Math.min(DATA.length - 1, Number(params.get("q") ?? 0));
-document.querySelectorAll("#queries button")[queryIndex].classList.add("on");
-applyPreset(PRESETS.some((p) => p.id === params.get("preset")) ? params.get("preset") : "prod");
+function presence(cap,key,rows) {
+  if (!key) return "Absent from capture";
+  const i=rows.findIndex(r=>r.key===key);
+  if(i>=0) return String(i+1);
+  return cap.vectorPool.some(r=>r.key===key) || cap.textPool.some(r=>r.key===key) ? "Excluded by strategy" : "Absent from capture";
+}
+function baselineCfg() { return PRESETS.find(p=>p.id===$("baseline").value).cfg; }
+function describeRecipe(cfg) {
+  const base={count:"Number of in-range attributes",satisfaction:"Sum of continuous attribute coverage",strength:"Theoretical normalized weighted sum × selected dimension count",blend:"½ range count + ½ theoretical normalized weighted sum × selected dimension count",sum:"Weighted sum normalized over this candidate pool",cosine:"Cosine normalized over this candidate pool"}[cfg.primary];
+  return `${base}; ${cfg.tie === "none" ? "no tiebreak" : `${cfg.tie} tiebreak × ${cfg.span} (${cfg.scale} range)`}. Mood evidence: min(${cfg.evw} × min(text evidence, ${cfg.textcap}), ${cfg.evcap}). Concrete evidence: min(${cfg.evwc} × min(text evidence, ${cfg.textcap}), ${cfg.evcapc}).`;
+}
+function renderWalkthrough() {
+  $("scenarios").innerHTML=SCENARIOS.map((s,i)=>`<button role="tab" aria-selected="${i===scenarioIndex}" class="${i===scenarioIndex?'on':''}" data-scenario="${i}">${s.title}</button>`).join("");
+  const s=SCENARIOS[scenarioIndex];
+  $("walkthrough").innerHTML=`<p>${s.text}</p><div class="tabs">${s.steps.map((step,i)=>`<button data-step="${i}" class="${stepIndex===i?'on':''}">${i+1}. ${step[0]}</button>`).join("")}</div><span class="compact">Every step resets its query and controls. Free-play changes leave the walkthrough.</span>`;
+}
+function renderTopComparison() {
+  const cap=currentCap(), currentKeys=new Set(currentRows.slice(0,10).map(r=>r.key)), baseKeys=new Set(baselineRows.slice(0,10).map(r=>r.key));
+  $("topComparisonBody").innerHTML=[["Baseline",baselineRows,currentKeys],["Current",currentRows,baseKeys]].map(([label,rows,other])=>`<div><h3>${label}</h3><ol>${rows.slice(0,10).map(r=>`<li><button class="title-button" data-key="${escapeHtml(r.key)}">${escapeHtml(titleFor(cap,r.key))}</button>${other.has(r.key)?'':` <span class="notice">${label==='Current'?'Entered':'Left'} top 10</span>`}</li>`).join('')}</ol></div>`).join('');
+}
+function renderComparison() {
+  if(!$("comparison").open) return;
+  const cfg=readCfg();
+  $("comparisonBody").innerHTML=`<p class="compact">Rank changes indicate movement, not improvement. Each captured identity is listed separately. “Absent from capture” does not establish absence from the catalog.</p><div class="scroll"><table><thead><tr><th>Query / title</th><th>Baseline rank</th><th>Current rank</th></tr></thead><tbody>${DATA.map(cap=>{
+    const current=compute(cap,cfg), baseline=compute(cap,baselineCfg());
+    return watches(cap).map(w=>`<tr><td><b>${escapeHtml(cap.query)}</b><br>${escapeHtml(w.name)}</td><td>${presence(cap,w.key,baseline)}</td><td>${presence(cap,w.key,current)}</td></tr>`).join("");
+  }).join("")}</tbody></table></div>`;
+}
+function renderInspector() {
+  const cap=currentCap(), cfg=readCfg();
+  const r=currentRows.find(r=>r.key===selectedKey);
+  if(!r) { $("inspector").innerHTML=""; return; }
+  const text=cap.textPool.find(t=>t.key===r.key), vec=cap.vectorPool.find(v=>v.key===r.key);
+  const k=`${cap.query}|${r.key}`, judgment=judgments.get(k);
+  $("inspector").innerHTML=`<h2>${escapeHtml(titleFor(cap,r.key))}</h2>
+    <div class="state"><div>Current rank<strong>${presence(cap,r.key,currentRows)}</strong></div><div>Baseline rank<strong>${presence(cap,r.key,baselineRows)}</strong></div><div>Captured in<strong>${vec?'Vector':''}${vec&&text?' + ':''}${text?'Text':''}</strong></div><div>Score components<strong>${r.primaryScore.toFixed(3)} + ${r.tieScore.toFixed(3)} + ${(r.score-r.base).toFixed(3)} = ${r.score.toFixed(3)}</strong></div></div>
+    <p class="compact">Components: fingerprint + tiebreak + applied evidence. Ranks across separate text/vector pools are ordered by pool priority, not by comparing their displayed scores.</p>
+    <p>Captured text evidence: <b>${(text?.text??0).toFixed(3)}</b> · ${text?.evidence?.length ? escapeHtml(text.evidence.join("; ")) : "No clause labels captured; the scalar alone cannot explain the match."}</p>
+    <div class="review-controls"><label>Your relevance judgment <select id="judgment"><option value="">Unjudged</option><option value="0">Off target</option><option value="1">Plausible</option><option value="2">Strong match</option></select></label></div>
+    <div class="scroll"><table><thead><tr><th>Selected attribute</th><th>Intent / weight</th><th>Used score</th><th>Vector / text capture</th><th>Required band</th><th>Match?</th><th>Continuous coverage</th></tr></thead><tbody>${cap.used.map(([key,w])=>{
+      const v=r.fp[key]??0, ok=w>0?v>=cfg.strong:v<=cfg.weak;
+      const credit=w>0?Math.min(v/cfg.strong,1):Math.min((10-v)/(10-cfg.weak),1);
+      return `<tr><td>${escapeHtml(key.replaceAll('_',' '))}</td><td>${w>0?'Want':'Avoid'} · ${Math.abs(w).toFixed(2)}</td><td>${v}</td><td class="${vec&&text&&vec.fp[key]!==text.fp[key]?'notice':''}">${vec?.fp[key]??'—'} / ${text?.fp[key]??'—'}</td><td>${w>0?`${cfg.strong}–10`:`0–${cfg.weak}`}</td><td class="${ok?'hit':'miss'}">${ok?'Yes':'No'}</td><td>${credit.toFixed(2)}</td></tr>`;
+    }).join("")}</tbody></table></div>`;
+  $("judgment").value=judgment===undefined?"":String(judgment.grade);
+  $("judgment").onchange=()=>{
+    const value=$("judgment").value;
+    if(value==="") judgments.delete(k); else judgments.set(k,{query:cap.query,key:r.key,title:cap.titles[r.key]?.title,grade:Number(value)});
+    renderReviewSummary();
+  };
+}
+function renderReviewSummary() {
+  const cap=currentCap(), top=currentRows.slice(0,10), graded=top.map(r=>judgments.get(`${cap.query}|${r.key}`)).filter(Boolean);
+  $("reviewSummary").textContent=`${judgments.size} judgments in memory · current top 10: ${graded.length}/${top.length} judged, ${graded.filter(j=>j.grade===0).length} off target, ${graded.filter(j=>j.grade===2).length} strong. Unjudged ≠ irrelevant.`;
+}
+function render() {
+  const cap=currentCap(),cfg=readCfg();
+  for(const k of ctl) fmt(k,$(k).value);
+  baselineRows=compute(cap,baselineCfg()); currentRows=compute(cap,cfg);
+  const baseRanks=new Map(baselineRows.map((r,i)=>[r.key,i+1]));
+  const concrete=Boolean(cap.phrases?.[0]?.concrete), effective=cfg.combine==='auto'?(concrete&&cap.textPool.length?'textfirst':'union'):cfg.combine;
+  const union=new Set([...cap.vectorPool,...cap.textPool].map(r=>r.key));
+  const vectorByKey=new Map(cap.vectorPool.map(r=>[r.key,r]));
+  const conflicts=cap.textPool.filter(r=>{const v=vectorByKey.get(r.key);return v&&cap.used.some(([key])=>v.fp[key]!==r.fp[key]);}).length;
+  const overlap=cap.textPool.filter(r=>vectorByKey.has(r.key)).length;
+  $("state").innerHTML=`<div>Query<strong>${escapeHtml(cap.query)}</strong></div><div>First-phrase reading<strong>${cap.phrases?.length?(concrete?'Concrete':'Mood'):'No phrase'}</strong></div><div>Selected attributes<strong>${cap.used.length}</strong></div><div>Match bands<strong>Want ≥ ${cfg.strong} · avoid ≤ ${cfg.weak}</strong></div><div>Pool strategy<strong>${escapeHtml(effective)}</strong></div><div>Available / admitted<strong>${union.size} / ${currentRows.length}</strong></div><div>Overlap / differing fingerprints<strong>${overlap} / ${conflicts}</strong></div><div>Ranking<strong>${escapeHtml(presetId==='custom'?'Custom':PRESETS.find(p=>p.id===presetId).name)}</strong></div>`;
+  $("recipe").textContent=describeRecipe(cfg)+` Near-miss credit: ${cfg.near} (count and blend modes). Display: first ${cfg.rows} rows. The first phrase alone chooses the evidence rule; mixed intent is not modeled. Fingerprint source: text-first/text-only use text values; vector/union use vector values for overlaps. ${conflicts ? `This query has ${conflicts} conflicting source fingerprints: changing pools can change both candidates and attribute values.` : "No conflicting source fingerprints in this query."}`;
+  $("meta").textContent=`Captured: vector ${cap.vectorPool.length} (${cap.vectorMs} ms), text ${cap.textPool.length} (${cap.textMs} ms). Phrases: ${(cap.phrases??[]).map(p=>`“${p.phrase}” (${p.concrete?'concrete':'mood'})`).join(', ')||'none'}. Flags: ${cap.flags.map(f=>`${f.decision}:${f.id}`).join(', ')||'none'}. ${cap.notes.join(' ')}`;
+  $("watch").innerHTML=watches(cap).map(w=>`<span>${w.key?`<button class="title-button" data-key="${escapeHtml(w.key)}">${escapeHtml(w.name)}</button>`:escapeHtml(w.name)}: <em>${presence(cap,w.key,currentRows)}</em> (baseline ${presence(cap,w.key,baselineRows)})</span>`).join("");
+  const watchKeys=new Set(watches(cap).map(w=>w.key));
+  $("body").innerHTML=currentRows.slice(0,cfg.rows).map((r,i)=>{
+    const t=cap.titles[r.key],base=baseRanks.get(r.key),d=base?base-i-1:null;
+    const capturedV=cap.vectorPool.some(v=>v.key===r.key),capturedT=cap.textPool.some(t=>t.key===r.key),src=capturedV&&capturedT?'VT':capturedV?'V':'T';
+    const dims=cap.used.map(([k,w])=>{const v=r.fp[k]??0,ok=w>0?v>=cfg.strong:v<=cfg.weak;return `<span class="${ok?'hit':'miss'}" title="${escapeHtml(k)}">${escapeHtml(k.slice(0,8))}=${v}</span>`;}).join(' ');
+    return `<tr class="${watchKeys.has(r.key)?'hl':''} ${selectedKey===r.key?'selected':''}"><td class="num">${i+1}</td><td><button class="title-button" data-key="${escapeHtml(r.key)}">${escapeHtml(t?.title??r.key)} <span class="dims">${t?.year??''} · ${escapeHtml(r.key)}</span></button></td><td class="src ${src}">${src==='VT'?'V+T':src}</td><td class="num">${r.score.toFixed(3)}</td><td class="num">${r.hits.toFixed(1)}</td><td class="num">${r.ws.toFixed(1)}</td><td class="num">${r.cosine==null?'–':r.cosine.toFixed(3)}</td><td class="num">${(r.text??0).toFixed(2)}</td><td class="num ${d>0?'up':d<0?'down':''}">${base?(d>0?'▲'+d:d<0?'▼'+-d:'='):'—'}</td><td class="dims">${dims}</td></tr>`;
+  }).join('');
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',b.dataset.id===presetId));
+  document.querySelectorAll('#queries button').forEach(b=>b.classList.toggle('on',Number(b.dataset.i)===queryIndex));
+  renderInspector(); renderTopComparison(); renderComparison(); renderReviewSummary();
+}
+function applyPreset(id) {
+  presetId=id; const p=PRESETS.find(p=>p.id===id); writeCfg(p.cfg); $("presetNote").innerHTML=p.note; render();
+}
+function selectQuery(i) {queryIndex=i;selectedKey=null;render();}
+function selectStep(i) {
+  const step=SCENARIOS[scenarioIndex].steps[i]; stepIndex=i; selectedKey=null; queryIndex=DATA.findIndex(c=>c.query===step[1]);
+  $("rows").value=30; applyPreset(step[2]);
+  if(step[3]) {writeCfg(step[3]);presetId='custom';$("presetNote").textContent='Walkthrough experiment: concrete phrase leads with a full union.';render();}
+  renderWalkthrough();
+}
+function leaveWalkthrough() {stepIndex=-1;renderWalkthrough();}
+$("presets").innerHTML=PRESETS.map(p=>`<button data-id="${p.id}">${p.name}</button>`).join('');
+$("queries").innerHTML=DATA.map((c,i)=>`<button data-i="${i}">${escapeHtml(c.query)}</button>`).join('');
+$("baseline").innerHTML=PRESETS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+$("baseline").value='leads';
+$("baseline").onchange=render;
+$("comparison").ontoggle=renderComparison;
+$("presets").onclick=e=>{const id=e.target.closest('[data-id]')?.dataset.id;if(id){leaveWalkthrough();applyPreset(id);}};
+$("queries").onclick=e=>{const i=e.target.closest('[data-i]')?.dataset.i;if(i!==undefined){leaveWalkthrough();selectQuery(Number(i));}};
+$("scenarios").onclick=e=>{const i=e.target.closest('[data-scenario]')?.dataset.scenario;if(i!==undefined){scenarioIndex=Number(i);selectStep(0);}};
+$("walkthrough").onclick=e=>{const i=e.target.closest('[data-step]')?.dataset.step;if(i!==undefined)selectStep(Number(i));};
+function inspectClick(e) {
+  const key=e.target.closest('[data-key]')?.dataset.key;
+  if(!key)return;
+  selectedKey=key; render();
+  if(!currentRows.some(r=>r.key===key)) {
+    const cap=currentCap(); $("inspector").innerHTML=`<h2>${escapeHtml(titleFor(cap,key))}</h2><p>${presence(cap,key,currentRows)}. ${cap.vectorPool.some(r=>r.key===key)?'Captured in the vector pool. ':''}${cap.textPool.some(r=>r.key===key)?'Captured in the text pool. ':''}Change the pool strategy to inspect its score.</p>`;
+  }
+  $("inspector").scrollIntoView({block:'nearest'});
+}
+$("body").onclick=inspectClick;$("watch").onclick=inspectClick;$("topComparisonBody").onclick=inspectClick;
+for(const k of ctl) $(k).addEventListener('input',()=>{leaveWalkthrough();presetId='custom';$("presetNote").textContent='Custom ranking. The current state and formula below describe every active control.';render();});
+$("clearReviews").onclick=()=>{judgments.clear();render();};
+$("export").onclick=()=>{
+  const artifact={prototype:'ranking-lab-search-tradeoffs',capture:CAPTURE_META,captureQueries:DATA.map(c=>c.query),query:currentCap().query,config:readCfg(),baseline:$("baseline").value,judgments:[...judgments.values()],topResults:currentRows.slice(0,100).map((r,i)=>({key:r.key,rank:i+1,score:r.score})),limitations:'Captured-pool experiment; legacy baseline is approximate; no acceptance verdict.'};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(artifact,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='ranking-lab-review.json';a.click();URL.revokeObjectURL(url);
+};
+$("rows").value=30;
+const params=new URLSearchParams(location.search), requested=Number(params.get('q')??0);
+queryIndex=Number.isInteger(requested)&&requested>=0&&requested<DATA.length?requested:0;
+renderWalkthrough();
+applyPreset(PRESETS.some(p=>p.id===params.get('preset'))?params.get('preset'):'leads');
 </script>
 </body>
 </html>
