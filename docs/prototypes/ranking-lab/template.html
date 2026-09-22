@@ -58,6 +58,7 @@
     <label>Vector candidates <select id="cands"><option value="cosine">cosine prefetch 2000 (today)</option><option value="tier">in-range tiers (n, n-1, n-2 hits)</option><option value="both">both</option></select></label>
     <label>Keyword + trope evidence weight <input type="range" id="wider" min="0" max="1" step="0.1"><b id="widerV"></b></label>
     <label>Popularity tiebreak (units) <input type="range" id="pop" min="0" max="1" step="0.05"><b id="popV"></b></label>
+    <label>Jev fit judgment (units per fit level 0..4) <input type="range" id="jdg" min="0" max="3" step="0.25"><b id="jdgV"></b></label>
     <label>Rows shown <input type="range" id="rows" min="10" max="100" step="10"><b id="rowsV"></b></label>
   </div>
 </header>
@@ -72,6 +73,7 @@
 </main>
 <script>
 const DATA = /*DATA*/;
+const JUDGE = /*JUDGE*/;
 const WATCH = {
   "complete nonsense": ["Aqua Teen Hunger Force", "Tim and Eric Awesome Show, Great Job!", "The Last Sharknado: It's About Time", "Kung Fu Panda: The Dragon Knight", "Mechanic: Resurrection"],
   "tarkovsky": ["Stalker", "Solaris", "Mirror", "Begotten", "You Won't Be Alone"],
@@ -89,13 +91,13 @@ const WATCH = {
   "time travel complex": ["Primer", "Dark", "Predestination", "Tenet", "12 Monkeys", "Timecrimes"],
 };
 const PRESETS = [
-  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3, cands: "cosine", wider: 0, pop: 0 },
+  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3, cands: "cosine", wider: 0, pop: 0, jdg: 0 },
     note: "<b>What main does today.</b> Cosine prefetch of 2000, text pool first, normalized weighted sum plus uncapped text evidence. Game of Thrones and Blade Runner never enter either pool: the cosine prefetch penalizes titles that score high on many other dimensions, and their texts don't contain the words." },
-  { id: "count", name: "Range count 6/4 (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1, cands: "cosine", wider: 0, pop: 0 },
+  { id: "count", name: "Range count 6/4 (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1, cands: "cosine", wider: 0, pop: 0, jdg: 0 },
     note: "<b>The prototype branch.</b> Same pools as production, range count first, flat one-unit evidence cap." },
-  { id: "leads", name: "Concrete phrase leads", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "cosine", wider: 0, pop: 0 },
+  { id: "leads", name: "Concrete phrase leads", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "cosine", wider: 0, pop: 0, jdg: 0 },
     note: "<b>Best ranking rule from the last round, same pools.</b> Mood evidence capped at one unit, concrete evidence one unit per text hit up to three." },
-  { id: "recall", name: "Leads + tiers + keyword/trope evidence", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", wider: 0.5, pop: 0 },
+  { id: "recall", name: "Leads + tiers + keyword/trope evidence", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", wider: 0.5, pop: 0, jdg: 0 },
     note: "<b>Fix the candidate stage.</b> Vector candidates come from in-range tiers (all hits, one miss, two misses) as well as the cosine prefetch, and keyword and trope-name matches count at half weight (0.4 per hit) as evidence for every concrete word. Slide the weight to 1 to see them flood (Death Race falls from 1 to 76 on scifi with cars). Game of Thrones enters through the tier and through its dragon tropes." },
   { id: "recallpop", name: "Recall + popularity tiebreak", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", wider: 0.5, pop: 0.5 },
     note: "<b>Same, plus up to half a unit for vote count.</b> log10(votes) / 7, so a title with a million votes gets 0.43 and one with 2000 votes gets 0.24. Breaks ties inside a tier toward known titles without crossing a tier." },

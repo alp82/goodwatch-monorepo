@@ -7,6 +7,7 @@ for c in data:
         if r.get("cosine") is not None: r["cosine"] = round(r["cosine"], 4)
     c["titles"] = {k: v for k, v in c["titles"].items()}
 compact = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
-(here / "index.html").write_text((here / "template.html").read_text().replace("/*DATA*/", compact))
+judge = json.dumps(json.load(open(here / "judge.json")) if (here / "judge.json").exists() else {}, separators=(",", ":"))
+(here / "index.html").write_text((here / "template.html").read_text().replace("/*DATA*/", compact).replace("/*JUDGE*/", judge))
 json.dump(data, open(here / "capture.json", "w"), separators=(",", ":"))
 print("index.html", (here / "index.html").stat().st_size // 1024, "KB")
