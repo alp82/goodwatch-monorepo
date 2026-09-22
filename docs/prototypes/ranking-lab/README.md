@@ -49,3 +49,13 @@ Watch-title ranks under production, concrete leads on today's pools, and the rec
 - Keyword and trope evidence at full weight floods: Death Race fell from 1 to 76 on "scifi with cars". Half weight keeps it at 5.
 - Blade Runner still never appears: no "car" in its texts, tropes, or keywords, and it's not in the top three tiers by cosine within the tier. Only the union of pools showed it (159), and the union buries Groundhog Day under Barbie and Willy Wonka. Union stays out.
 - Popularity tiebreak at half a unit: small, mixed. It lifted Inception and The Walking Dead into the top six of "scifi with cars". Not recommended.
+
+## Round 4 (2026-09-23): structured evidence, genre hints, scifi alias
+
+Capture v4: tiers of 2000 (370 ms), exact keyword and whole-token keyword matches, trope hits with global frequency, genres and votes per title, and a branch-only alias so "scifi" also searches "sci-fi" (30 versus 3225 matching texts). Genre decisions from Jev are always empty in the lean question set, so the lab derives genre hints from request words (fantasy, scifi, heist, ...).
+
+- Game of Thrones carries the exact keyword "dragon" and Blade Runner "flying car". Exact keyword at one unit, token keyword at half, trope names at half weighted by rarity: Blade Runner 35 and The Fifth Element 25 on "scifi with cars" (both absent before); Eragon 1, DragonHeart 2, The Dragon Prince 4 on "fantasy with dragons"; Russian Doll 9 on "like groundhog day"; Dark 70 and Tenet 71 on "time travel complex".
+- The head of "feel good cooking show" becomes Somebody Feed Phil, The Makanai, Rachael Ray, Worst Cooks in America, Jinny's Kitchen. Cooku with Comali drops to 56.
+- Costs: Edge of Tomorrow 17 to 131 and Happy Death Day 36 to 263 on "like groundhog day" (trope rows crowd them); Now You See Me 1 to 7 on the heist query; How to Train Your Dragon 7 to 15.
+- Genre hint at half a unit: neutral to small positive (Takers 1 and Now You See Me 3 on the heist query). No downside seen.
+- Still no clear winner: the tier tiebreak is decided by evidence counts, and the evidence sources are noisy in both directions.

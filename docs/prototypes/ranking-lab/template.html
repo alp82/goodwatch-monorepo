@@ -65,6 +65,7 @@
   <div class="note" id="presetNote"></div>
   <div class="meta" id="meta"></div>
   <div class="watch" id="watch"></div>
+  <pre id="dump" hidden></pre>
   <table><thead><tr>
     <th class="num">#</th><th>Title</th><th>Src</th><th class="num">Score</th><th class="num">Hits</th><th class="num">Sum</th><th class="num">Cos</th><th class="num">Text</th><th class="num">vs prod</th><th>Dimensions</th>
   </tr></thead><tbody id="body"></tbody></table>
@@ -177,6 +178,7 @@ function render() {
   const title = (r) => cap.titles[r.key]?.title ?? r.key;
   const watch = WATCH[cap.query] ?? [];
   $("watch").innerHTML = watch.map((w) => { const r = rows.find((x) => title(x) === w); return `<span>${w}: <em>${r ? rankOf[r.key] : "not in pool"}</em>${r ? ` (prod ${prodRanks[r.key] ?? "–"})` : ""}</span>`; }).join("");
+  $("dump").textContent = JSON.stringify(rows.slice(0, 60).map((r) => r.key));
   $("body").innerHTML = rows.slice(0, cfg.rows).map((r, i) => {
     const t = title(r), y = cap.titles[r.key]?.year ?? "";
     const p = prodRanks[r.key]; const d = p ? p - (i + 1) : null;
