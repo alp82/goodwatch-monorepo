@@ -59,3 +59,37 @@ Capture v4: tiers of 2000 (370 ms), exact keyword and whole-token keyword matche
 - Costs: Edge of Tomorrow 17 to 131 and Happy Death Day 36 to 263 on "like groundhog day" (trope rows crowd them); Now You See Me 1 to 7 on the heist query; How to Train Your Dragon 7 to 15.
 - Genre hint at half a unit: neutral to small positive (Takers 1 and Now You See Me 3 on the heist query). No downside seen.
 - Still no clear winner: the tier tiebreak is decided by evidence counts, and the evidence sources are noisy in both directions.
+
+## Round 5 (2026-09-23): Jev judge, phrase-aware. A winner.
+
+`scripts/ranking-lab-judge.ts` asks Jev to score fit 0..4 for the top 40 of production and of recall + genre, from the essence text only (the question from the earlier combined-search prototype). 75 requests, 215k input tokens for 14 queries, about one cent. `judge.json` holds the scores; `sweep.py` renders presets headlessly.
+
+The judge decides for concrete phrases and is skipped for mood phrases (`winner0` preset: fit at three units per level on concrete, zero on mood, over recall + genre). Against production on the 14 queries:
+
+| Query | Production top 3 | Winner top 3 | Watch titles (prod → winner) |
+| --- | --- | --- | --- |
+| complete nonsense | Kung Fu Panda, Mechanic: Resurrection, Hardwired | Tim and Eric, Monty Python, Aqua Teen | Kung Fu Panda 1 → 96 |
+| feel good cooking show | Cooku with Comali, Home Town, James May | The Makanai, Somebody Feed Phil, James May | Cooku 1 → 7; Home Town 2 → 43 |
+| slow burn space horror | Texhnolyze, Galaxy of Terror, Dark Side of the Moon | Dark Side of the Moon, High Life, Alien | High Life 47 → 2; Alien absent → 3; Event Horizon 114 → 5 |
+| grief after losing a child | Static, Southcliffe, Trial by Fire | The Child in Time, Rabbit Hole, The Dollmaker | Rabbit Hole 61 → 2; Manchester by the Sea 10 → 38 |
+| scifi with cars | Frankenstein Unbound, Clockstoppers, Star Trek Into Darkness | The Last Chase, The Wraith, The Car: Road to Revenge | Death Race absent → 4; Fifth Element absent → 34; Blade Runner absent → 67 |
+| fantasy with dragons | Rage of Bahamut, Story of the Voyages, DOTA | DragonHeart, DOTA, Dragons: Race to the Edge | HTTYD 7 → 6; Eragon 22 → 5; Game of Thrones absent → 87 |
+| like groundhog day | Groundhog Day, Palm Springs, 12 Days of Christmas Eve | Groundhog Day, Palm Springs, Russian Doll | Russian Doll absent → 3; Edge of Tomorrow 17 → 11 |
+| time travel complex | Predestination, Primer, Timecrimes | Predestination, Primer, Déjà Vu | Timecrimes 3 → 19; Dark absent → 104 |
+| melancholy lighthouse keeper mystery | The Vanishing, Light Between Oceans, The Lighthouse | The Vanishing, The Returned, Pet Shop of Horrors | Lighthouse 3 → 4; Platform 7 9 → 6 |
+| tense heist thriller, not bleak | Now You See Me, Lift, Takers | Lift, Now You See Me, Now You See Me 2 | Takers 3 → 7 |
+| sunglasses at night | They Live, Arabian Nights 2, The Kingdom | They Live, Tales from the Crypt, The Midnight After | They Live 1 → 1 |
+| tarkovsky (mood) | Begotten, Color of Pomegranates, Knight of Cups | You Won't Be Alone, Dreams, Sonny Boy | Stalker 9 → 28 |
+| furious, craty (mood) | unchanged | unchanged | |
+
+Wins on eight queries, ties on three, loses on two: "tarkovsky" (a single word Jev calls not concrete, so no judge runs; with the judge at three units it puts Nostalgia first and Stalker second) and Timecrimes on "time travel complex" (the judge under-reads its essence text).
+
+What the winner is, in production terms:
+
+1. Candidates: cosine prefetch of 2000 plus three `min_should` tier prefetches (all hits, one miss, two misses) at 2000 each. About 370 ms server side.
+2. Rank: range count, weighted sum as tiebreak inside one unit, half a unit per matching genre named in the request.
+3. Evidence for a concrete phrase: essence text one unit per hit up to three, exact keyword one unit, keyword containing the word half, trope names half weighted by rarity. Mood phrases: essence text capped at one unit, no keyword or trope evidence.
+4. Judge for concrete phrases: Jev scores the top 40 from the essence text, fit decides, retrieval breaks ties. Five parallel requests per search. Not run for mood phrases.
+5. Word aliases (scifi → sci-fi) before the text search.
+
+Open before production: the trope-name query costs up to 3 s for common words and needs an index or a precomputed table; whether single-word names like "tarkovsky" should count as concrete; the daily Jev budget with the judge on every concrete search.

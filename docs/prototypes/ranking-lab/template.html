@@ -61,7 +61,8 @@
     <label>Trope names, rarity-weighted (units) <input type="range" id="trp" min="0" max="2" step="0.1"><b id="trpV"></b></label>
     <label>Genre hint from request words (units) <input type="range" id="gen" min="0" max="2" step="0.1"><b id="genV"></b></label>
     <label>Popularity tiebreak (units) <input type="range" id="pop" min="0" max="1" step="0.05"><b id="popV"></b></label>
-    <label>Jev fit judgment (units per fit level 0..4) <input type="range" id="jdg" min="0" max="3" step="0.25"><b id="jdgV"></b></label>
+    <label>Jev fit, concrete phrase (units per level 0..4) <input type="range" id="jdg" min="0" max="3" step="0.25"><b id="jdgV"></b></label>
+    <label>Jev fit, mood phrase (units per level 0..4) <input type="range" id="jdgm" min="0" max="3" step="0.25"><b id="jdgmV"></b></label>
     <label>Rows shown <input type="range" id="rows" min="10" max="100" step="10"><b id="rowsV"></b></label>
   </div>
 </header>
@@ -97,23 +98,29 @@ const GENRE_WORDS = { fantasy: "Fantasy", scifi: "Science Fiction", "sci-fi": "S
 const GENRE_MATCH = { "Science Fiction": ["Science Fiction", "Sci-Fi & Fantasy"], Fantasy: ["Fantasy", "Sci-Fi & Fantasy"], Action: ["Action", "Action & Adventure"], Adventure: ["Adventure", "Action & Adventure"], War: ["War", "War & Politics"] };
 const genreHints = (cap) => [...new Set(cap.query.toLowerCase().split(/[^a-z-]+/).map((w) => GENRE_WORDS[w]).filter(Boolean))];
 const PRESETS = [
-  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0 },
+  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0, jdgm: 0 },
     note: "<b>What main does today.</b> Cosine prefetch of 2000, text pool first, normalized weighted sum plus uncapped essence-text evidence. Keyword and trope evidence only when the text pool is thin (not modelled: those rows appear with zero weight)." },
-  { id: "count", name: "Range count 6/4 (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0 },
+  { id: "count", name: "Range count 6/4 (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0, jdgm: 0 },
     note: "<b>The prototype branch.</b> Same pools as production, range count first, flat one-unit evidence cap." },
-  { id: "leads", name: "Concrete phrase leads", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0 },
+  { id: "leads", name: "Concrete phrase leads", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0, jdgm: 0 },
     note: "<b>Round 2 winner on today's pools.</b> Mood evidence capped at one unit, concrete evidence one unit per text hit up to three." },
-  { id: "recall", name: "Leads + tiers + keywords + tropes", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0, pop: 0, jdg: 0 },
+  { id: "recall", name: "Leads + tiers + keywords + tropes", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0, pop: 0, jdg: 0, jdgm: 0 },
     note: "<b>Round 3 direction with structured evidence.</b> Tiers of 2000. An exact keyword is worth one unit, a keyword containing the word half, trope names half a unit weighted by rarity (a trope on 2500 titles counts a tenth of one on 300)." },
-  { id: "recallgenre", name: "Recall + genre hint", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 0 },
+  { id: "recallgenre", name: "Recall + genre hint", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 0, jdgm: 0 },
     note: "<b>Same, plus half a unit when a request word names a TMDB genre the title carries.</b> fantasy → Fantasy, scifi → Science Fiction, heist → Crime. Zero cost." },
-  { id: "judge", name: "Recall + genre + Jev judge", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 1 },
+  { id: "judge", name: "Recall + genre + Jev judge", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 1, jdgm: 1 },
     note: "<b>Jev reads the essence text of the top 40 of production and of recall + genre and scores fit 0..4; one unit per fit level.</b> Titles outside those lists are unjudged and keep their score, which mirrors a production step that judges only the head. About 10 requests per query, in parallel." },
-  { id: "judgeonly", name: "Jev judge decides (fit first)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 3 },
+  { id: "winner0", name: "Candidate winner: judge decides concrete, retrieval decides mood", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 3, jdgm: 0 },
+    note: "<b>Phrase-aware.</b> For a concrete phrase, Jev's fit decides and retrieval breaks ties. For a mood phrase, no judge: the essence text says little about mood, and the fingerprint already encodes it. The judge then only runs on concrete requests, which also bounds its cost." },
+  { id: "winner05", name: "Candidate winner, mood judge at half", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 3, jdgm: 0.5 },
+    note: "<b>Same, with the judge as a soft signal on mood phrases.</b> Half a unit per fit level: it can lift a title past one fingerprint hit, not two." },
+  { id: "winner1", name: "Candidate winner, mood judge at one", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 3, jdgm: 1 },
+    note: "<b>Same, one unit per fit level on mood phrases.</b>" },
+  { id: "judgeonly", name: "Jev judge decides (fit first)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 3, jdgm: 3 },
     note: "<b>Three units per fit level: the judgment dominates and the retrieval score breaks ties.</b> The old prototype's rule." },
 ];
 const $ = (id) => document.getElementById(id);
-const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","evwc","textcap","evcap","evcapc","cands","kwx","kws","trp","gen","pop","jdg","rows"];
+const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","evwc","textcap","evcap","evcapc","cands","kwx","kws","trp","gen","pop","jdg","jdgm","rows"];
 let queryIndex = 0, presetId = "prod";
 function readCfg() { const c = {}; for (const k of ctl) c[k] = $(k).tagName === "SELECT" ? $(k).value : Number($(k).value); return c; }
 function writeCfg(c) { for (const k of ctl) if (k in c) $(k).value = c[k]; }
@@ -150,7 +157,7 @@ function rankRows(rows, used, cfg, ctx) {
     r.fit = fit == null ? null : fit;
     const votes = currentCap.titles[r.key]?.votes ?? 0;
     r.pop = cfg.pop * Math.min(1, Math.log10(Math.max(votes, 1)) / 7);
-    r.base = primary + tie + r.pop + r.genre + (r.fit == null ? 0 : cfg.jdg * r.fit);
+    r.base = primary + tie + r.pop + r.genre + (r.fit == null ? 0 : (ctx.concrete ? cfg.jdg : cfg.jdgm) * r.fit);
   }
 }
 function compute(cap, cfg) {
