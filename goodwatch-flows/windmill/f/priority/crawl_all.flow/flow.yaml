@@ -224,6 +224,38 @@ value:
             expr: ''
             parallel: true
             skip_failure: false
+          - summary: Fingerprint
+            modules:
+              - id: aa
+                value:
+                  type: script
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.g.ids
+                  path: f/dna/init/update
+              - id: ab
+                value:
+                  type: flow
+                  input_transforms:
+                    next_ids:
+                      type: javascript
+                      expr: results.aa
+                  path: f/dna/crawl_all_by_id
+              - id: ac
+                value:
+                  type: script
+                  input_transforms:
+                    ids:
+                      type: javascript
+                      expr: results.aa
+                    results:
+                      type: javascript
+                      expr: results.ab
+                  path: f/dna/generate/vectors
+            expr: ''
+            parallel: true
+            skip_failure: true
         parallel: true
     - id: o
       timeout:
