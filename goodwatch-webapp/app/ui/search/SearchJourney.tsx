@@ -37,11 +37,6 @@ import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
 import AddFilterMenu from "~/ui/filter/AddFilterMenu";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
-// PROTOTYPE — grid variants on /search, gated by ?variant=. Remove with the prototype.
-import { VariantB, VariantC, VariantD, VariantE, VariantF } from "~/ui/prototype/SearchGridVariants";
-import { VariantSwitcher, useVariant } from "~/ui/prototype/VariantSwitcher";
-const GRID_VARIANTS = ["A", "B", "C", "D", "E", "F"] as const;
-const GRID_NAMES = { A: "List (current)", B: "Overlay", C: "Caption", D: "DNA tags", E: "Footer", F: "Backdrop" };
 
 // --- Tunables ----------------------------------------------------------------------------
 
@@ -58,9 +53,8 @@ const MAX_QUERY_LENGTH = 512;
 const CACHED_BATCHES = 6;
 // Give up restoring the scroll position after this long, when the page never reaches it.
 const SCROLL_RESTORE_MS = 3000;
-// How many reason chips a result row shows, in the full and the compact layout.
-const RESULT_CHIPS = 5;
-const RESULT_CHIPS_COMPACT = 3;
+// How many reasons a result card reveals on hover or focus.
+const RESULT_REASONS = 3;
 
 type Batch = SearchBatch & { cacheKey: string };
 const path = "/search";
@@ -122,7 +116,7 @@ function useController() {
 	const makeParams = (changes: Record<string, string | null> = {}) => {
 		const next = new URLSearchParams(location.search);
 		next.set("searchJourney", "1");
-		// PROTOTYPE: keep ?variant= across navigation.
+		next.delete("variant");
 		next.set("country", country);
 		for (const [key, value] of Object.entries(changes)) {
 			if (value === null || value === "") next.delete(key);
@@ -737,9 +731,17 @@ function HiddenResultsLink({ titlesOnly = false }: { titlesOnly?: boolean }) {
 		</Link>
 	);
 }
-function JourneyList({ compact = false }: { compact?: boolean }) {
+function JourneyList() {
 	const j = useSearchJourney()!;
-	const variant = useVariant(GRID_VARIANTS);
+	const posterUrl = (r: Row) =>
+		r.poster
+			? `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${r.poster}`
+			: placeholder;
+	const meta = (r: Row) =>
+		r.type === "person" ? `Known for ${r.knownFor}` : `${r.year} · ${r.type}`;
+	const active = (r: Row) =>
+		j.currentKey === r.key ||
+		j.focused === j.sequence.findIndex((item) => item.key === r.key);
 	return (
 		<section aria-label="Search results" className="min-w-0">
 			<div
@@ -761,80 +763,65 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 					</button>
 				) : null}
 			</div>
-			{variant === "B" && <VariantB />}
-			{variant === "C" && <VariantC />}
-			{variant === "D" && <VariantD />}
-			{variant === "E" && <VariantE />}
-			{variant === "F" && <VariantF />}
-			{variant === "A" && (
-			<ul aria-busy={j.loading} className="divide-y divide-gray-700/60">
-				{j.pageRows.map((r, i) => {
+			{/* Columns of 2, 4, and 5 all divide the page size of 20, so a full page
+			    always ends on a complete row. */}
+			<ul
+				aria-busy={j.loading}
+				className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 p-2"
+			>
+				{j.pageRows.map((r) => {
+					const reasons = (r.discovery?.reasons ?? [])
+						.filter((x) => x.kind !== "mismatch")
+						.slice(0, RESULT_REASONS);
+					// Reasons stay hidden until hover or keyboard focus. The title block
+					// rises and the reasons unfold beneath it. Rows without offer evidence
+					// stay quiet: retrieval already matched them to the selected services.
 					const body = (
 						<>
 							<img
-								src={
-									r.poster
-										? `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${r.poster}`
-										: placeholder
-								}
+								src={posterUrl(r)}
 								alt=""
-								width={48}
-								height={72}
-								className={`${compact ? "w-10 h-16" : "w-14 h-20"} rounded object-cover bg-gray-800 shrink-0`}
+								className="h-full w-full object-cover transition-transform duration-300 motion-reduce:transition-none group-hover:scale-105 group-focus-within:scale-105"
 							/>
-							<div className="min-w-0">
-								<h3 className="font-semibold text-base">
-									<Highlight text={r.title} query={j.batch?.q ?? ""} />
-								</h3>
-								<p className="text-xs text-gray-400 mt-1">
-									{r.year} · {r.type}
-								</p>
-								<div className="flex flex-wrap gap-1 mt-2">
-									{/* The highlight already shows title matches; only a match on the
-									    original name, which is not displayed, needs a chip. */}
-									{r.lexical > 0 && r.match.endsWith("(original name)") && (
-										<span className="rounded bg-amber-400/10 px-2 py-0.5 text-xs text-amber-200">
-											Matches original name
-										</span>
-									)}
-									{r.discovery?.reasons
-										.filter((x) => x.kind !== "mismatch")
-										.slice(0, compact ? RESULT_CHIPS_COMPACT : RESULT_CHIPS)
-										.map((x) => (
-											<span
-												key={x.text}
-												className="rounded bg-cyan-400/10 text-xs text-cyan-200 px-2 py-0.5"
-											>
-												{x.text}
-											</span>
-										))}
+							<div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent transition-colors duration-300 group-hover:from-black/95 group-hover:via-black/70 group-focus-within:from-black/95 group-focus-within:via-black/70" />
+							<div className="absolute inset-x-0 bottom-0 px-2.5 pb-2.5">
+								<div className="transition-transform duration-300 ease-out motion-reduce:transition-none group-hover:-translate-y-1 group-focus-within:-translate-y-1">
+									<h3 className="text-sm font-bold text-white leading-tight line-clamp-2">
+										<Highlight text={r.title} query={j.batch?.q ?? ""} />
+									</h3>
+									<p className="text-[11px] text-gray-300 truncate">{meta(r)}</p>
 								</div>
-								{r.type === "person" && (
-									<p className="text-xs text-gray-400 mt-1">
-										Known for: {r.knownFor}
-									</p>
-								)}
-								{/* Rows without offer evidence stay quiet: retrieval already
-								    matched them to the selected services. */}
-								{!compact && j.mode !== "all" && j.watchable(r) && (
-									<p className="text-xs text-gray-400 mt-2">
-										Current matching offer
-									</p>
-								)}
+								<div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none group-hover:grid-rows-[1fr] group-focus-within:grid-rows-[1fr]">
+									<ul className="min-h-0 overflow-hidden space-y-0.5 text-[11px] text-cyan-200 opacity-0 translate-y-2 transition-all duration-300 delay-75 motion-reduce:transition-none group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
+										{r.lexical > 0 && r.match.endsWith("(original name)") && (
+											<li className="truncate text-amber-200">Matches original name</li>
+										)}
+										{reasons.map((x) => (
+											<li key={x.text} className="truncate">
+												{x.text}
+											</li>
+										))}
+										{j.mode !== "all" && j.watchable(r) && (
+											<li className="truncate text-gray-300">Current matching offer</li>
+										)}
+									</ul>
+								</div>
 							</div>
 						</>
 					);
+					const card =
+						"group relative block aspect-[2/3] overflow-hidden rounded-lg border-4 bg-gray-900";
 					return (
-						<li key={r.key}>
+						<li key={r.key} className="min-w-0">
 							{r.type === "person" ? (
-								<div className="flex gap-3 p-4">{body}</div>
+								<div className={`${card} border-gray-800`}>{body}</div>
 							) : (
 								<Link
 									prefetch="intent"
 									data-result={r.key}
 									to={j.detailHref(r)}
 									onClick={j.remember}
-									className={`flex gap-3 p-4 hover:bg-gray-800 focus-visible:outline focus-visible:outline-cyan-300 ${j.currentKey === r.key || j.focused === j.sequence.findIndex((item) => item.key === r.key) ? "bg-gray-800" : ""}`}
+									className={`${card} hover:border-amber-700/50 focus-visible:outline focus-visible:outline-cyan-300 ${active(r) ? "border-cyan-300/70" : "border-gray-800"}`}
 								>
 									{body}
 								</Link>
@@ -843,7 +830,6 @@ function JourneyList({ compact = false }: { compact?: boolean }) {
 					);
 				})}
 			</ul>
-			)}
 			{j.rows.length > 0 && (
 				<nav
 					aria-label="Search pages"
@@ -1134,7 +1120,6 @@ export function JourneyResultsPage() {
 			<div className="min-w-0 rounded-xl border border-gray-700 bg-gray-950/30">
 				<JourneyList />
 			</div>
-			<VariantSwitcher variants={GRID_VARIANTS} names={GRID_NAMES} />
 		</div>
 	);
 }
