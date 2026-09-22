@@ -13,7 +13,7 @@ import { resetUserSettingsCache } from "~/server/user-settings.server";
 const changeSchema = z
 	.object({
 		id: z.string().min(1),
-		kind: z.enum(["score", "plan", "skip", "country", "services"]),
+		kind: z.enum(["score", "plan", "country", "services"]),
 		tmdb_id: z.number().int().positive().optional(),
 		media_type: z.enum(["movie", "show"]).optional(),
 		value: z.string(),
@@ -21,7 +21,7 @@ const changeSchema = z
 	})
 	.superRefine((c, ctx) => {
 		const invalid =
-			(["score", "plan", "skip"].includes(c.kind) &&
+			(["score", "plan"].includes(c.kind) &&
 				(!c.tmdb_id || !c.media_type)) ||
 			(c.kind === "score" &&
 				(!/^(10|[1-9])$/.test(c.value) ||
@@ -162,12 +162,7 @@ async function persistChange(userId: string, c: Change) {
 		return;
 	}
 	const id = canonicalTitleId(c.media_type!, c.tmdb_id!);
-	const table =
-		c.kind === "score"
-			? "user_score"
-			: c.kind === "plan"
-				? "user_wishlist"
-				: "user_skipped";
+	const table = c.kind === "score" ? "user_score" : "user_wishlist";
 	const read = () =>
 		query<{ score?: number }>(
 			`SELECT ${c.kind === "score" ? "score" : "tmdb_id"} FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,

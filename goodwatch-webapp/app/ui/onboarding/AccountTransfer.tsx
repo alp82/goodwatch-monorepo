@@ -102,14 +102,27 @@ export function AccountTransfer() {
 		)
 			return;
 		const changes: TransferChange[] = [];
+		const account = review.data.data;
 		for (const i of pending.snapshot.interactions) {
+			// Skips are quiz navigation, not a preference. They stay in this browser only.
+			if (i.type === "skip") continue;
 			const key = `${i.media_type}-${i.tmdb_id}` as const;
-			const before =
-				i.type === "score" ? review.data.data.scores[key]?.score : null;
+			const score = account.scores[key]?.score;
+			const before = i.type === "score" ? score : null;
+			const known =
+				score !== undefined && score !== null
+					? `${score}/10`
+					: account.watched[key]
+						? "Watched"
+						: account.favorites[key]
+							? "Favorite"
+							: account.wishlist[key]
+								? "On Wishlist"
+								: null;
 			if (
 				(i.type === "score" && before === i.score) ||
-				(i.type === "plan" && review.data.data.wishlist[key]) ||
-				(i.type === "skip" && review.data.data.skipped[key])
+				// A title the account already rated, watched, or listed never regresses to plan-to-watch.
+				(i.type === "plan" && known !== null)
 			)
 				continue;
 			changes.push({
@@ -122,13 +135,8 @@ export function AccountTransfer() {
 				title:
 					titles.data[key] ||
 					`${i.media_type === "movie" ? "Movie" : "Show"} ${i.tmdb_id}`,
-				accountLabel: before ? `${before}/10` : "Not added",
-				browserLabel:
-					i.type === "score"
-						? `${i.score}/10`
-						: i.type === "plan"
-							? "Add to Wishlist"
-							: "Skip in Taste and recommendations",
+				accountLabel: known ?? "Not added",
+				browserLabel: i.type === "score" ? `${i.score}/10` : "Add to Wishlist",
 				fresh: !before,
 			});
 		}
