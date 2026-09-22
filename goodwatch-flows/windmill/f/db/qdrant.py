@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 import wmill
-from qdrant_client import QdrantClient, models as qm
+from qdrant_client import QdrantClient, models as qm  # pin: qdrant-client==1.19.1
 
 
 GRPC_OPTS: dict[str, object] = {

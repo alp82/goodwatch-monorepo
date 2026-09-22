@@ -1,6 +1,6 @@
 services:
   qdrant:
-    image: ${QDRANT_IMAGE}
+    image: ${QDRANT_IMAGE:-qdrant/qdrant:v1.19.1}
     container_name: qdrant-replica
     restart: unless-stopped
 
@@ -27,7 +27,8 @@ services:
       - /mnt/backup-qdrant/snapshots:/qdrant/snapshots
 
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:6333/healthz"]
+      # The image ships bash but no curl or wget, so the check speaks HTTP over /dev/tcp.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/6333 && printf 'GET /healthz HTTP/1.0\\r\\n\\r\\n' >&3 && head -1 <&3 | grep -q ' 200 '"]
       interval: 10s
       timeout: 3s
       retries: 10

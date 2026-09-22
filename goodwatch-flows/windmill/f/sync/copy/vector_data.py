@@ -1,6 +1,6 @@
 from contextlib import ExitStack
 # extra_requirements:
-# qdrant-client==1.15.1
+# qdrant-client==1.19.1
 
 from collections import defaultdict
 from datetime import datetime, timedelta

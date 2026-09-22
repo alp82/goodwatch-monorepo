@@ -13,7 +13,7 @@ locks:
   f/db/cratedb: 2326e1ab2412232737dac82f8a3e43c30dd19d97942762b2d165ba84ba2e6d04
   f/db/milvus: 3a4b8805c5d17c0584d3b942f01aa70142dd23b4f254d0fa5e484628b3340585
   f/db/mongodb: 0067eac7ec0bdba1a7d3a42a3b7ee334d4006d56023808852c28397afc8a3a17
-  f/db/qdrant: 11395fb35c968869b412658b2e428dbcc1da8dd06379e46602a0cf0ce4a093a1
+  f/db/qdrant: 08289415ae97c06a35a81f27b323b6600f3d0a1f5a248d39eb15a0c79c03255e
   f/db/redis: 5fd583e9b1dcd7d08657a4e3c4061f5e7ab323cfb11809d690861301bf7becf1
   f/dna/crawl_all_by_id.flow:
     __flow_hash: 3c19f64f5490bfeba2d6f63817c377ac320c0c0f7b9d28a13d32eca8dd05beda
@@ -89,7 +89,7 @@ locks:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/priority/init: 5546d4dd824c5e52d2df73cf6ca8f79813450b10873486d885475b0d528c7e87
   f/priority/next: 006661dd956e7e159b1738e0bea13fbe33c61dbba237911b6815fb1e3c718af6
-  f/priority/publish: f701baaeae9ff66444fdf0f7bec9804d180c02f0196b1ebb456247fb92c1024a
+  f/priority/publish: a0aa1871ca388bd9e70031fd557762313e4b5a569db4a2f9ba22478a86daf578
   f/priority/queue: aec3e00c51eaee8f7a78278a09fe932a902dc2d3ff94f7ca0d13c9e3df5dee65
   f/priority/reset: 360562732de31e0ec28d089aeebbfd0e9c010c8c62e95a80d8a53378847cf817
   f/rotten_web/crawl_all_by_id.flow:
@@ -108,15 +108,15 @@ locks:
   f/stress/load_testing: 9c3d76afd2c0b13f369998da1324cdab8fa15b2b1e7a10697143e941e369589e
   f/sync/copy/all_ratings: d208051382678c5d96f48d3238d454e808da3bee83afdb930971355d322f4943
   f/sync/copy/dna_data: 4ee1f6629a18cd2ec9b38dec222224578b921aa77562c556230ad02548bf01e2
-  f/sync/copy/qdrant_retry: f4d9eb76cfe0872d068f0a0a3040315ae1c9b0a07b0fae506433052d8add6b13
+  f/sync/copy/qdrant_retry: 89e9a2cb5beca57c66409eac90dec597594bc6c8210ea16c6ddc944b6446c1c6
   f/sync/copy/tmdb_daily: 7814f6ee77bc2e1d9aca4ad0ad7c5eb7ad13793359186a3069884c5335107aa7
   f/sync/copy/tmdb_details: 70e0a525de5a1e5bfaae8fc728bc8fdb2cbde37ad571dd3e6e93d329ec7f89e5
   f/sync/copy/tmdb_streaming: e0cb0b6578c4f6196165d24956dfa023265786ae8a5bfc943a9459ba3d4852bc
   f/sync/copy/tvtropes: 6918d36b4f895e7cd30d8cab9b051821c01b099f4a453b19403a5c7caa475201
-  f/sync/copy/vector_data: a777c4d788783382d19ba2c68028562b03c8301b9cf141befb7b1211c035464c
+  f/sync/copy/vector_data: 6fbe0647ccfdd7307855d189c56514d3898911ad3dc8acc166a9fefe42bae2cb
   f/sync/init/cratedb: aabd1d0a9793c172a5d2b6f0acfd9a5662038437c4db8085229be21a30c8b59d
   f/sync/init/milvus: 5df8f35e0f5a1cd76913276651f81b69c068459960c1db48afa82d4f73dcbe56
-  f/sync/init/qdrant: 9ef9848baf4354fd647038385655b9b6b85f72a85cf247212e606361bf468c4b
+  f/sync/init/qdrant: 7132fd7d462ec13658f1b612a0b0ba414ed7989c83690ae9d36bc46a3bddf44f
   f/sync/models/crate_models: 3725306a02c7fdc8a50db95bee01da324ff74f8f457e51dd93b75a37ad1e165e
   f/sync/models/crate_schemas: 7d3d4bc12aae9d9db9b4d5ceccfa67b63f499fd00a22c752d4a1cecc5b20e085
   f/sync/models/milvus_schemas: 56cde86b69d5d2be4b6de4963b282b9e7a439f2de645797c4214a095cab8c832

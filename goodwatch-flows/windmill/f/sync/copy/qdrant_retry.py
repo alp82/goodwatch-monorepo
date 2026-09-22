@@ -1,5 +1,5 @@
 # extra_requirements:
-# qdrant-client==1.15.1
+# qdrant-client==1.19.1
 
 """Retry only retained Qdrant upserts while publication ownership remains valid."""
 
