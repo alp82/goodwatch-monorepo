@@ -746,7 +746,7 @@ function JourneyList() {
 		<section aria-label="Search results" className="min-w-0">
 			<div
 				role="status"
-				className={`flex flex-wrap items-center gap-2 px-4 py-3 min-h-14 text-sm ${j.loading ? "text-cyan-200 bg-cyan-400/10" : "text-gray-400"}`}
+				className={`flex flex-wrap items-center gap-2 py-3 min-h-14 text-sm ${j.loading ? "text-cyan-200 bg-cyan-400/10" : "text-gray-400"}`}
 			>
 				{j.loading && (
 					<ArrowPathIcon
@@ -767,7 +767,7 @@ function JourneyList() {
 			    always ends on a complete row. */}
 			<ul
 				aria-busy={j.loading}
-				className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 p-2"
+				className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 py-2"
 			>
 				{j.pageRows.map((r) => {
 					const reasons = (r.discovery?.reasons ?? [])
@@ -833,7 +833,7 @@ function JourneyList() {
 			{j.rows.length > 0 && (
 				<nav
 					aria-label="Search pages"
-					className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-700 p-4 text-sm"
+					className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-700 py-4 text-sm"
 				>
 					<span className="text-gray-400">
 						{(j.page - 1) * 20 + 1}–{Math.min(j.page * 20, j.rows.length)} of{" "}
@@ -871,7 +871,7 @@ function JourneyList() {
 				</nav>
 			)}
 			{!j.rows.length && !j.loading && (
-				<div className="p-6 text-gray-400">
+				<div className="py-6 text-gray-400">
 					{j.batch
 						? j.filtersActive
 							? "No titles match these filters. Use the link above to see the results without filters."
@@ -1117,7 +1117,7 @@ export function JourneyResultsPage() {
 			<div className="mb-4">
 				<JourneyFilters />
 			</div>
-			<div className="min-w-0 rounded-xl border border-gray-700 bg-gray-950/30">
+			<div className="min-w-0">
 				<JourneyList />
 			</div>
 		</div>
