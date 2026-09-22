@@ -15,26 +15,37 @@ python docs/prototypes/ranking-lab/build.py capture.json
 
 Per query the capture holds the 2000-point cosine prefetch with the used dimension scores, the Crate text pool with its evidence, and titles for both. Jev readings come from the cache, so capture costs nothing. Timings in the header are the capture's own.
 
-## Answers so far (2026-09-23, 14 queries)
+## Round 3 (2026-09-23): the pools were the problem
 
-Presets kept: production, range count with flat cap, concrete-aware cap, concrete phrase leads, concrete leads plus mood union, text pool only. Dropped after the first sweep: near-miss credit (neutral to negative), count-plus-sum blend (needs a span of several units before it does anything), strict bands 7/3 (fixed tarkovsky but cost the concrete queries: They Live 1 to 14, Primer 2 to 10), plain union (Grand Budapest Hotel led "like groundhog day"), RRF ("Zoom" led "feel good cooking show").
+The user pointed at Game of Thrones missing for "fantasy with dragons" and Blade Runner and The Fifth Element missing for "scifi with cars". Diagnosis with `scripts/ranking-lab-tiers.ts` and a one-off recall script (deleted):
 
-Watch-title ranks, production first, then range count with flat cap, then concrete phrase leads:
+- **The cosine prefetch is a poor candidate generator for sparse queries.** Cosine divides by the title's vector norm, so a title that scores high on many dimensions besides the queried ones ranks below flat titles. Game of Thrones has fantasy 10, spectacle 10, world immersion 10, wonder 8, contemporary realism 0 (5 of 5 bands) and sits at cosine rank 2788 of a 2000-point prefetch. Blade Runner is at 2656 and Mad Max: Fury Road at 2616 on "scifi with cars", all 3 of 3.
+- **Top tiers are bigger than the prefetch.** 3198 titles hit all five bands on "fantasy with dragons", 2276 hit all three on "scifi with cars". The prefetch holds an arbitrary 2000 of them; roughly half of the best hundred by count are outside it.
+- **The texts don't contain the words.** Neither Game of Thrones' essence text nor its synopsis contains "dragon". Its trope names do ("Our Dragons Are Different", "Dragon Rider"), and the keywords column exists, but the keyword and trope search only runs when the text pool has fewer than 100 rows.
+- **"scifi" finds nothing in text.** No alias to "sci-fi" or "science fiction". Not addressed here.
 
-| Query | Title | Prod | Count | Leads |
+A `min_should` prefetch per tier (all hits, one miss, two misses; 1000 each by cosine) plus the formula costs 60 to 140 ms from Node, the same as the cosine prefetch. Forcing the keyword and trope search costs 0.3 to 3 s on Crate for the dragon and car queries; that trope-name query needs work before production.
+
+The capture now holds both candidate sources (cosine, tiers, both) and the text pool with and without keyword and trope evidence. New controls: vector candidates, keyword and trope evidence weight, popularity tiebreak.
+
+Watch-title ranks under production, concrete leads on today's pools, and the recall preset (leads + tiers + keyword/trope evidence at half weight):
+
+| Query | Title | Prod | Leads | Recall |
 | --- | --- | --- | --- | --- |
-| complete nonsense | Kung Fu Panda: The Dragon Knight | 1 | 96 | 96 |
-| complete nonsense | Tim and Eric | 6 | 1 | 1 |
-| tarkovsky | Stalker | 9 | 28 | 28 |
-| tarkovsky | Begotten | 1 | 24 | 24 |
-| feel good cooking show | Cooku with Comali | 1 | 286 | 11 |
-| fantasy with dragons | How to Train Your Dragon | 7 | 23 | 31 |
-| like groundhog day | Groundhog Day / Palm Springs | 1 / 2 | 1 / 3 | 1 / 3 |
-| time travel complex | Predestination / Primer | 1 / 2 | 1 / 2 | 1 / 3 |
+| fantasy with dragons | How to Train Your Dragon | 7 | 30 | 8 |
+| fantasy with dragons | The Hobbit: Desolation of Smaug | 8 | 40 | 9 |
+| fantasy with dragons | House of the Dragon | 23 | 48 | 10 |
+| fantasy with dragons | Game of Thrones | absent | absent | 92 |
+| scifi with cars | Death Race | 1 | 1 | 5 |
+| scifi with cars | The Fifth Element | absent | absent | 13 |
+| scifi with cars | Blade Runner | absent | absent | absent |
 | sunglasses at night | They Live | 1 | 1 | 1 |
-| scifi with cars | Death Race | 1 | 1 | 1 |
+| like groundhog day | Groundhog Day / Palm Springs | 1 / 2 | 1 / 3 | 1 / 3 |
+| time travel complex | Predestination / Primer | 1 / 2 | 1 / 3 | 1 / 3 |
+| complete nonsense | Kung Fu Panda | 1 | 96 | 96 |
+| feel good cooking show | Cooku with Comali | 1 | 11 | 28 |
 
-- The phrase concreteness that the search already computes separates the two failure modes cleanly: "complete nonsense" and "tarkovsky" read as mood, all five new queries and "cooking show" as concrete.
-- "Concrete phrase leads" (count 6/4, mood evidence capped at one unit, concrete evidence one unit per text hit up to three) is the best of the set: it keeps the nonsense fix, restores Cooku with Comali, and leaves the concrete queries within a rank or two of production.
-- Adding the union for mood phrases on top changes only "complete nonsense", where The Last Sharknado appears at 12. Cheap to add, low stakes.
-- Two open losses against production: Stalker and Begotten on "tarkovsky" (count cliff at one dimension scoring 5), and How to Train Your Dragon on "fantasy with dragons" (7 to 31; the text hits tie and the count separates less than the sum did). Both are the count-versus-sum trade-off, not the evidence rule.
+- Tiers plus evidence fix the dragon query outright: the top ten are all dragon titles. Game of Thrones enters but only at 92, because about 900 titles in the top tier have a higher weighted sum and its only evidence is trope names.
+- Keyword and trope evidence at full weight floods: Death Race fell from 1 to 76 on "scifi with cars". Half weight keeps it at 5.
+- Blade Runner still never appears: no "car" in its texts, tropes, or keywords, and it's not in the top three tiers by cosine within the tier. Only the union of pools showed it (159), and the union buries Groundhog Day under Barbie and Willy Wonka. Union stays out.
+- Popularity tiebreak at half a unit: small, mixed. It lifted Inception and The Walking Dead into the top six of "scifi with cars". Not recommended.

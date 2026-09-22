@@ -3,7 +3,8 @@ import json, sys, pathlib
 here = pathlib.Path(__file__).parent
 data = json.load(open(sys.argv[1]))
 for c in data:
-    for r in c["vectorPool"]: r["cosine"] = round(r["cosine"], 4)
+    for r in c["vectorPool"]:
+        if r.get("cosine") is not None: r["cosine"] = round(r["cosine"], 4)
     c["titles"] = {k: v for k, v in c["titles"].items()}
 compact = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
 (here / "index.html").write_text((here / "template.html").read_text().replace("/*DATA*/", compact))

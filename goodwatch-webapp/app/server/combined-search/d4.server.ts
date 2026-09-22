@@ -1023,6 +1023,8 @@ interface PhraseSpec {
 	moodGate?: boolean;
 	// When the essence text finds too little: search TMDB keywords and trope names as well
 	wider?: boolean;
+	// PROTOTYPE (branch only): search keywords and trope names for every concrete phrase
+	widerAlways?: boolean;
 	// Jev selects, among the frequent tags of the first matches, the tags that express the request
 	feedback?: boolean;
 	// Jev reads the request against the essence text of the top titles and re-orders them
@@ -1189,7 +1191,7 @@ const runPhraseVariant = async (
 			);
 		}
 
-		if (spec.wider && pool.size < resultLimit) {
+		if (spec.wider && (pool.size < resultLimit || spec.widerAlways)) {
 			// The essence text holds too little. Search the concrete words alone, because a pair such
 			// as "scifi sunglasses" never appears in a keyword or a trope name.
 			const concrete = attributes.split
@@ -1384,6 +1386,7 @@ const runPhraseVariant = async (
 
 // PROTOTYPE (branch only): internals for the ranking lab capture script
 export const prototypeParts = {
+	runPhraseVariant,
 	decodeAttributes,
 	decodeFingerprint,
 	pick,
