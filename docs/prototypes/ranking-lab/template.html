@@ -56,7 +56,10 @@
     <label>Evidence cap, mood phrase <input type="range" id="evcap" min="0" max="3" step="0.25"><b id="evcapV"></b></label>
     <label>Evidence cap, concrete phrase <input type="range" id="evcapc" min="0" max="3" step="0.25"><b id="evcapcV"></b></label>
     <label>Vector candidates <select id="cands"><option value="cosine">cosine prefetch 2000 (today)</option><option value="tier">in-range tiers (n, n-1, n-2 hits)</option><option value="both">both</option></select></label>
-    <label>Keyword + trope evidence weight <input type="range" id="wider" min="0" max="1" step="0.1"><b id="widerV"></b></label>
+    <label>Exact keyword (units) <input type="range" id="kwx" min="0" max="2" step="0.1"><b id="kwxV"></b></label>
+    <label>Keyword containing the word (units) <input type="range" id="kws" min="0" max="2" step="0.1"><b id="kwsV"></b></label>
+    <label>Trope names, rarity-weighted (units) <input type="range" id="trp" min="0" max="2" step="0.1"><b id="trpV"></b></label>
+    <label>Genre hint from request words (units) <input type="range" id="gen" min="0" max="2" step="0.1"><b id="genV"></b></label>
     <label>Popularity tiebreak (units) <input type="range" id="pop" min="0" max="1" step="0.05"><b id="popV"></b></label>
     <label>Jev fit judgment (units per fit level 0..4) <input type="range" id="jdg" min="0" max="3" step="0.25"><b id="jdgV"></b></label>
     <label>Rows shown <input type="range" id="rows" min="10" max="100" step="10"><b id="rowsV"></b></label>
@@ -90,22 +93,27 @@ const WATCH = {
   "like groundhog day": ["Palm Springs", "Edge of Tomorrow", "Russian Doll", "Happy Death Day", "Groundhog Day", "The Map of Tiny Perfect Things"],
   "time travel complex": ["Primer", "Dark", "Predestination", "Tenet", "12 Monkeys", "Timecrimes"],
 };
+const GENRE_WORDS = { fantasy: "Fantasy", scifi: "Science Fiction", "sci-fi": "Science Fiction", horror: "Horror", comedy: "Comedy", funny: "Comedy", thriller: "Thriller", crime: "Crime", heist: "Crime", romance: "Romance", romantic: "Romance", mystery: "Mystery", animated: "Animation", animation: "Animation", anime: "Animation", documentary: "Documentary", western: "Western", war: "War", family: "Family", drama: "Drama", action: "Action", adventure: "Adventure", history: "History", historical: "History", musical: "Music", music: "Music" };
+const GENRE_MATCH = { "Science Fiction": ["Science Fiction", "Sci-Fi & Fantasy"], Fantasy: ["Fantasy", "Sci-Fi & Fantasy"], Action: ["Action", "Action & Adventure"], Adventure: ["Adventure", "Action & Adventure"], War: ["War", "War & Politics"] };
+const genreHints = (cap) => [...new Set(cap.query.toLowerCase().split(/[^a-z-]+/).map((w) => GENRE_WORDS[w]).filter(Boolean))];
 const PRESETS = [
-  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3, cands: "cosine", wider: 0, pop: 0, jdg: 0 },
-    note: "<b>What main does today.</b> Cosine prefetch of 2000, text pool first, normalized weighted sum plus uncapped text evidence. Game of Thrones and Blade Runner never enter either pool: the cosine prefetch penalizes titles that score high on many other dimensions, and their texts don't contain the words." },
-  { id: "count", name: "Range count 6/4 (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1, cands: "cosine", wider: 0, pop: 0, jdg: 0 },
+  { id: "prod", name: "Production (main)", cfg: { strong: 6, weak: 4, near: 0, primary: "sum", tie: "cosine", span: 0.01, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 3, evcapc: 3, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0 },
+    note: "<b>What main does today.</b> Cosine prefetch of 2000, text pool first, normalized weighted sum plus uncapped essence-text evidence. Keyword and trope evidence only when the text pool is thin (not modelled: those rows appear with zero weight)." },
+  { id: "count", name: "Range count 6/4 (branch)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 0.5, textcap: 4, evcap: 1, evcapc: 1, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0 },
     note: "<b>The prototype branch.</b> Same pools as production, range count first, flat one-unit evidence cap." },
-  { id: "leads", name: "Concrete phrase leads", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "cosine", wider: 0, pop: 0, jdg: 0 },
-    note: "<b>Best ranking rule from the last round, same pools.</b> Mood evidence capped at one unit, concrete evidence one unit per text hit up to three." },
-  { id: "recall", name: "Leads + tiers + keyword/trope evidence", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", wider: 0.5, pop: 0, jdg: 0 },
-    note: "<b>Fix the candidate stage.</b> Vector candidates come from in-range tiers (all hits, one miss, two misses) as well as the cosine prefetch, and keyword and trope-name matches count at half weight (0.4 per hit) as evidence for every concrete word. Slide the weight to 1 to see them flood (Death Race falls from 1 to 76 on scifi with cars). Game of Thrones enters through the tier and through its dragon tropes." },
-  { id: "recallpop", name: "Recall + popularity tiebreak", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", wider: 0.5, pop: 0.5 },
-    note: "<b>Same, plus up to half a unit for vote count.</b> log10(votes) / 7, so a title with a million votes gets 0.43 and one with 2000 votes gets 0.24. Breaks ties inside a tier toward known titles without crossing a tier." },
-  { id: "recallunion", name: "Recall + union of pools", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "union", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", wider: 0.5, pop: 0.5 },
-    note: "<b>Same, ranking the union instead of text pool first.</b> With three units of concrete evidence, a real text match still beats fingerprint-only titles; check whether Groundhog Day still leads its query and whether Blade Runner (fingerprint only, no text) appears for scifi with cars." },
+  { id: "leads", name: "Concrete phrase leads", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "cosine", kwx: 0, kws: 0, trp: 0, gen: 0, pop: 0, jdg: 0 },
+    note: "<b>Round 2 winner on today's pools.</b> Mood evidence capped at one unit, concrete evidence one unit per text hit up to three." },
+  { id: "recall", name: "Leads + tiers + keywords + tropes", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0, pop: 0, jdg: 0 },
+    note: "<b>Round 3 direction with structured evidence.</b> Tiers of 2000. An exact keyword is worth one unit, a keyword containing the word half, trope names half a unit weighted by rarity (a trope on 2500 titles counts a tenth of one on 300)." },
+  { id: "recallgenre", name: "Recall + genre hint", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 0 },
+    note: "<b>Same, plus half a unit when a request word names a TMDB genre the title carries.</b> fantasy → Fantasy, scifi → Science Fiction, heist → Crime. Zero cost." },
+  { id: "judge", name: "Recall + genre + Jev judge", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 1 },
+    note: "<b>Jev reads the essence text of the top 40 of production and of recall + genre and scores fit 0..4; one unit per fit level.</b> Titles outside those lists are unjudged and keep their score, which mirrors a production step that judges only the head. About 10 requests per query, in parallel." },
+  { id: "judgeonly", name: "Jev judge decides (fit first)", cfg: { strong: 6, weak: 4, near: 0, primary: "count", tie: "sum", span: 0.25, scale: "possible", combine: "textfirst", evw: 0.5, evwc: 1, textcap: 4, evcap: 1, evcapc: 3, cands: "both", kwx: 1, kws: 0.5, trp: 0.5, gen: 0.5, pop: 0, jdg: 3 },
+    note: "<b>Three units per fit level: the judgment dominates and the retrieval score breaks ties.</b> The old prototype's rule." },
 ];
 const $ = (id) => document.getElementById(id);
-const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","evwc","textcap","evcap","evcapc","cands","wider","pop","rows"];
+const ctl = ["strong","weak","near","primary","tie","span","scale","combine","evw","evwc","textcap","evcap","evcapc","cands","kwx","kws","trp","gen","pop","jdg","rows"];
 let queryIndex = 0, presetId = "prod";
 function readCfg() { const c = {}; for (const k of ctl) c[k] = $(k).tagName === "SELECT" ? $(k).value : Number($(k).value); return c; }
 function writeCfg(c) { for (const k of ctl) if (k in c) $(k).value = c[k]; }
@@ -135,10 +143,14 @@ function rankRows(rows, used, cfg, ctx) {
     else primary = norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
     if (cfg.tie === "sum") tie = cfg.span * (cfg.scale === "pool" ? norm(r.ws, ctx.wsMin, ctx.wsMax) : norm(r.ws, sumMin, sumMax));
     else if (cfg.tie === "cosine") tie = cfg.span * norm(r.cosine ?? 0, ctx.cosMin, ctx.cosMax);
-    r.ev = Math.min((ctx.concrete ? cfg.evwc : cfg.evw) * Math.min(r.text ?? 0, cfg.textcap), ctx.concrete ? cfg.evcapc : cfg.evcap);
+    r.ev = Math.min((ctx.concrete ? cfg.evwc : cfg.evw) * Math.min(r.text ?? 0, cfg.textcap) + (r.extra ?? 0), ctx.concrete ? cfg.evcapc : cfg.evcap);
+    const hints = genreHints(currentCap); const g = currentCap.titles[r.key]?.genres ?? [];
+    r.genre = cfg.gen * hints.filter((h) => (GENRE_MATCH[h] ?? [h]).some((name) => g.includes(name))).length;
+    const fit = JUDGE[currentCap.query]?.[r.key];
+    r.fit = fit == null ? null : fit;
     const votes = currentCap.titles[r.key]?.votes ?? 0;
     r.pop = cfg.pop * Math.min(1, Math.log10(Math.max(votes, 1)) / 7);
-    r.base = primary + tie + r.pop;
+    r.base = primary + tie + r.pop + r.genre + (r.fit == null ? 0 : cfg.jdg * r.fit);
   }
 }
 function compute(cap, cfg) {
@@ -146,10 +158,12 @@ function compute(cap, cfg) {
   currentCap = cap;
   const vec = new Map(cap.vectorPool.filter((r) => cfg.cands === "both" || r.src === "both" || r.src === cfg.cands).map((r) => [r.key, { ...r, text: 0, inV: true, inT: false }]));
   // 0 = today (keyword and trope evidence only when the text pool is thin); 1 = full weight, always
-  const txt = new Map(cap.textPool.filter((r) => cfg.wider > 0 || !r.wider).map((r) => [r.key, { ...r, text: r.text + cfg.wider * (r.textWide - r.text), cosine: null, inV: false, inT: true }]));
+  // Evidence beyond the essence text: exact keyword, keyword containing the word, trope names weighted by rarity (300 / titles carrying the trope, at most 1 each, sum at most 1)
+  const extra = (r) => (r.kwExact.length ? cfg.kwx : 0) + (r.kwSub.length ? cfg.kws : 0) + cfg.trp * Math.min(1, r.tropes.reduce((s, t) => s + Math.min(1, 300 / Math.max(t.df, 1)), 0));
+  const txt = new Map(cap.textPool.map((r) => ({ ...r, extra: extra(r) })).filter((r) => r.text > 0 || r.extra > 0).map((r) => [r.key, { ...r, cosine: null, inV: false, inT: true, wider: r.text === 0 }]));
   const all = new Map();
   for (const [k, r] of vec) all.set(k, { ...r });
-  for (const [k, r] of txt) { const e = all.get(k); if (e) { e.text = r.text; e.inT = true; e.evidence = r.evidence; } else all.set(k, { ...r }); }
+  for (const [k, r] of txt) { const e = all.get(k); if (e) { e.text = r.text; e.extra = r.extra; e.inT = true; e.wider = r.wider; } else all.set(k, { ...r }); }
   const ctxOf = (rows) => ({ wsMin: Math.min(...rows.map((r) => fingerprint(r.fp, used, cfg).ws)), wsMax: Math.max(...rows.map((r) => fingerprint(r.fp, used, cfg).ws)),
     cosMin: Math.min(...rows.map((r) => r.cosine ?? 0)), cosMax: Math.max(...rows.map((r) => r.cosine ?? 0)), concrete: Boolean(cap.phrases?.[0]?.concrete) });
   const desc = (a, b) => b.score - a.score;
@@ -159,7 +173,7 @@ function compute(cap, cfg) {
   if (cfg.combine === "vector") { const rows = [...vec.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base); out = rows.sort(desc); }
   else if (cfg.combine === "text") { const rows = [...txt.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
   else if (cfg.combine === "union") { const rows = [...all.values()]; rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
-  else if (cfg.combine === "intersect") { const rows = [...vec.values()].map((r) => ({ ...r, text: txt.get(r.key)?.text ?? 0, inT: txt.has(r.key) })); rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
+  else if (cfg.combine === "intersect") { const rows = [...vec.values()].map((r) => ({ ...r, text: txt.get(r.key)?.text ?? 0, extra: txt.get(r.key)?.extra ?? 0, inT: txt.has(r.key) })); rankRows(rows, used, cfg, ctxOf(rows)); rows.forEach((r) => r.score = r.base + r.ev); out = rows.sort(desc); }
   else if (cfg.combine === "textfirst") {
     const t = [...txt.values()]; if (t.length) { rankRows(t, used, cfg, ctxOf(t)); t.forEach((r) => r.score = r.base + r.ev); t.sort(desc); }
     const v = [...vec.values()].filter((r) => !txt.has(r.key)); rankRows(v, used, cfg, ctxOf(v.length ? v : [...vec.values()])); v.forEach((r) => r.score = r.base); v.sort(desc);
@@ -175,7 +189,7 @@ function render() {
   const prod = compute(cap, prodCfg); prodRanks = {}; prod.forEach((r, i) => prodRanks[r.key] = i + 1);
   const rows = compute(cap, cfg);
   const flags = cap.flags.map((f) => `${f.decision}:${f.id}`).join(", ");
-  $("meta").innerHTML = `<b>${cap.query}</b> · dimensions: ${cap.used.map(([k, w]) => `${w > 0 ? "+" : "−"}${k}`).join(" ")} · phrases: ${(cap.phrases ?? []).map((p) => `“${p.phrase}” ${p.concrete ? "concrete" : "mood"}`).join(", ") || "none"} · flags: ${flags || "none"} · cosine pool 2000 (${cap.vectorMs} ms), tiers ${cap.tiers} (${cap.tierMs} ms) · text pool ${cap.textPool.filter((r) => !r.wider).length} (${cap.textMs} ms), with keywords and tropes ${cap.textPool.length} (${cap.widerMs} ms) · ${cap.tropeMode}`;
+  $("meta").innerHTML = `<b>${cap.query}</b> · dimensions: ${cap.used.map(([k, w]) => `${w > 0 ? "+" : "−"}${k}`).join(" ")} · phrases: ${(cap.phrases ?? []).map((p) => `“${p.phrase}” ${p.concrete ? "concrete" : "mood"}`).join(", ") || "none"} · flags: ${flags || "none"} · genre hints: ${genreHints(cap).join(", ") || "none"} · cosine pool 2000 (${cap.vectorMs} ms), tiers ${cap.tiers} (${cap.tierMs} ms) · text pool ${cap.textPool.filter((r) => r.text > 0).length} (${cap.textMs} ms), keyword and trope rows ${cap.textPool.filter((r) => !r.text).length} (${cap.widerMs} ms) · ${cap.tropeMode}`;
   const rankOf = {}; rows.forEach((r, i) => rankOf[r.key] = i + 1);
   const title = (r) => cap.titles[r.key]?.title ?? r.key;
   const watch = WATCH[cap.query] ?? [];
@@ -185,7 +199,7 @@ function render() {
     const t = title(r), y = cap.titles[r.key]?.year ?? "";
     const p = prodRanks[r.key]; const d = p ? p - (i + 1) : null;
     const dims = cap.used.map(([k, w]) => { const v = r.fp[k] ?? 0; const ok = w > 0 ? v >= cfg.strong : v <= cfg.weak; return `<span class="${ok ? "hit" : "miss"}">${k.slice(0, 8)}=${v}</span>`; }).join(" ");
-    return `<tr class="${watch.includes(t) ? "hl" : ""}"><td class="num">${i + 1}</td><td>${t} <span class="dims">${y}</span></td><td class="src ${r.inV && r.inT ? "VT" : r.inV ? "V" : "T"}">${(r.inV ? (r.src === "tier" ? "tier" : "V") : "") + (r.inV && r.inT ? "+" : "") + (r.inT ? (r.wider ? "kw/trope" : "T") : "")}</td><td class="num">${r.score.toFixed(3)}</td><td class="num">${r.hits.toFixed(1)}</td><td class="num">${r.ws.toFixed(1)}</td><td class="num">${r.cosine == null ? "–" : r.cosine.toFixed(3)}</td><td class="num">${(r.text ?? 0).toFixed(2)}</td><td class="num ${d > 0 ? "up" : d < 0 ? "down" : ""}">${p ? (d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "=") : "new"}</td><td class="dims">${dims}</td></tr>`;
+    return `<tr class="${watch.includes(t) ? "hl" : ""}"><td class="num">${i + 1}</td><td>${t} <span class="dims">${y}</span></td><td class="src ${r.inV && r.inT ? "VT" : r.inV ? "V" : "T"}">${(r.inV ? (r.src === "tier" ? "tier" : "V") : "") + (r.inV && r.inT ? "+" : "") + (r.inT ? (r.wider ? "kw/trope" : "T") : "")}</td><td class="num">${r.score.toFixed(3)}</td><td class="num">${r.hits.toFixed(1)}</td><td class="num">${r.ws.toFixed(1)}</td><td class="num">${r.cosine == null ? "–" : r.cosine.toFixed(3)}</td><td class="num" title="${(r.kwExact ?? []).concat(r.kwSub ?? []).join(", ")} ${(r.tropes ?? []).map((t) => `${t.n} (${t.df})`).join(", ")}">${(r.text ?? 0).toFixed(1)}${r.extra ? "+" + r.extra.toFixed(1) : ""}${r.genre ? " g" : ""}${r.fit != null ? ` <b title="Jev fit 0..4">J${r.fit.toFixed(1)}</b>` : ""}</td><td class="num ${d > 0 ? "up" : d < 0 ? "down" : ""}">${p ? (d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "=") : "new"}</td><td class="dims">${dims}</td></tr>`;
   }).join("");
 }
 function applyPreset(id) { presetId = id; const p = PRESETS.find((x) => x.id === id); writeCfg(p.cfg); $("presetNote").innerHTML = p.note; document.querySelectorAll("#presets button").forEach((b) => b.classList.toggle("on", b.dataset.id === id)); render(); }

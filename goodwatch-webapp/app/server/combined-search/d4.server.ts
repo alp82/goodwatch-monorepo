@@ -963,11 +963,17 @@ const retrieve = async (
 	};
 };
 
+// PROTOTYPE (branch only): spellings the texts use for a request word
+const WORD_ALIASES: Record<string, string[]> = {
+	scifi: ["sci-fi", "science fiction"],
+	"sci-fi": ["scifi", "science fiction"],
+};
 // No stemming in the index: search the word with and without a plural ending
 const wordForms = (word: string) =>
 	[
 		...new Set([
 			word,
+			...(WORD_ALIASES[word] ?? []),
 			word.replace(/s$/, ""),
 			word.replace(/es$/, ""),
 			`${word}s`,
