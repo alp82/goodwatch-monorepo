@@ -1,0 +1,86 @@
+[
+ {
+  "query_id": "ppl-04",
+  "query": "tom hanks war movies",
+  "intent": "War films and series with Tom Hanks in the cast first. War films without him are loosely relevant; his non-war films are wrong.",
+  "items": [
+   {
+    "pid": 1000000000013,
+    "title": "Forrest Gump",
+    "year": 1994,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Drama",
+     "Romance"
+    ],
+    "essence_text": "A heartwarming and nostalgic journey through American history, seen through the eyes of an innocent and kind-hearted man. The film celebrates the power of human connection and simple joys, offering a comforting and life-affirming experience. It’s a uniquely charming blend of historical events and personal growth, underscored by a memorable score. Expect a blend of laughter, tears, and a gentle reminder to appreciate the beauty in everyday moments.",
+    "tags": [
+     "American History",
+     "Innocence and Experience",
+     "Accidental Witness",
+     "Southern Charm",
+     "Magical Realism",
+     "Warm and Heartfelt",
+     "Life-affirming",
+     "The Power of Kindness",
+     "Epic Journey"
+    ],
+    "keywords": [
+     "new year's eve",
+     "vietnam war",
+     "vietnam veteran",
+     "mentally disabled",
+     "friendship",
+     "usa president",
+     "washington dc, usa",
+     "post-traumatic stress disorder (ptsd)",
+     "waitress",
+     "based on novel or book",
+     "hippie",
+     "single parent"
+    ],
+    "credits": {
+     "directors": [
+      "Robert Zemeckis"
+     ],
+     "writers": [
+      "Eric Roth",
+      "Winston Groom"
+     ],
+     "cast": [
+      "Tom Hanks",
+      "Robin Wright",
+      "Gary Sinise",
+      "Sally Field",
+      "Mykelti Williamson"
+     ],
+     "companies": [
+      "Paramount Pictures",
+      "The Steve Tisch Company",
+      "Wendy Finerman Productions"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "ppl-18",
+  "query": "christopher nolan",
+  "intent": "Films directed by Christopher Nolan first, then cerebral, puzzle-box blockbusters in his style.",
+  "items": [
+   {
+    "pid": 1000000352114,
+    "title": "Quay",
+    "year": "2015",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   }
+  ]
+ }
+]

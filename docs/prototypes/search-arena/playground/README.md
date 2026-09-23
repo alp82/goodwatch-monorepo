@@ -1,7 +1,10 @@
 # Search arena playground
 
-Type any search and see production next to the round-4 finalists (`r4-combo-fast`, the preferred one, and
-`r4-combo`, both `harness/run4.py` FINAL), top 20 each.
+Type any search and see production next to `r6` (round 6: `r5` plus style neighbours for person / studio style
+queries and alternate cuts folded, `harness/run6.py` FINAL; not a contract winner), `r5` (round 5: `r4-combo-fast` plus person and studio boosts,
+`harness/run5.py` FINAL) and the round-4 finalists (`r4-combo-fast`, still the accepted winner, and `r4-combo`,
+both `harness/run4.py` FINAL), top 20 each. For a query that names a person or studio, the r5 column shows the
+detected entity, the intent (filmography, style or both), the residual query and the centroid titles.
 
 Start it from `docs/prototypes/search-arena`:
 

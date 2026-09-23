@@ -1,0 +1,2135 @@
+{
+ "r6": {
+  "lab-01": {
+   "names": [
+    "Andrei Tarkovsky"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 9,
+   "centroid": [
+    "Stalker",
+    "Solaris",
+    "The Steamroller and the Violin",
+    "Andrei Rublev",
+    "Mirror",
+    "Ivan's Childhood",
+    "The Sacrifice",
+    "Nostalgia",
+    "The Killers"
+   ],
+   "peers": [
+    [
+     "Terrence Malick",
+     1.79
+    ],
+    [
+     "Aleksandr Sokurov",
+     1.78
+    ],
+    [
+     "Carl Theodor Dreyer",
+     1.72
+    ],
+    [
+     "Werner Herzog",
+     1.7
+    ],
+    [
+     "Theo Angelopoulos",
+     1.64
+    ],
+    [
+     "Roberto Rossellini",
+     1.58
+    ],
+    [
+     "Ingmar Bergman",
+     1.57
+    ],
+    [
+     "Nicolas Roeg",
+     1.57
+    ],
+    [
+     "Akira Kurosawa",
+     1.54
+    ],
+    [
+     "Kaneto Shindō",
+     1.54
+    ],
+    [
+     "Stanley Kubrick",
+     1.52
+    ],
+    [
+     "Agnieszka Holland",
+     1.52
+    ],
+    [
+     "Alain Resnais",
+     1.51
+    ],
+    [
+     "Terence Davies",
+     1.51
+    ],
+    [
+     "Robert Bresson",
+     1.5
+    ]
+   ],
+   "terms": [
+    "soviet",
+    "soviet_cinema",
+    "philosophical",
+    "dreamlike",
+    "tarkovsky",
+    "andrei",
+    "andrei_tarkovsky",
+    "profound",
+    "immense_reward",
+    "existential",
+    "meditative",
+    "reward",
+    "masterpiece",
+    "poetic",
+    "art_house"
+   ],
+   "detect_ms": 0.065,
+   "own_max": 6
+  },
+  "ho2-15": {
+   "names": [
+    "Terry Gilliam"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 22,
+   "centroid": [
+    "Monty Python and the Holy Grail",
+    "Twelve Monkeys",
+    "Fear and Loathing in Las Vegas",
+    "Brazil",
+    "The Imaginarium of Doctor Parnassus",
+    "The Brothers Grimm",
+    "The Fisher King",
+    "Time Bandits",
+    "The Adventures of Baron Munchausen",
+    "The Zero Theorem",
+    "Tideland",
+    "The Man Who Killed Don Quixote",
+    "Jabberwocky"
+   ],
+   "peers": [
+    [
+     "Guy Maddin",
+     2.69
+    ],
+    [
+     "Tim Burton",
+     2.65
+    ],
+    [
+     "Jean-Pierre Jeunet",
+     2.48
+    ],
+    [
+     "Henry Selick",
+     2.39
+    ],
+    [
+     "Marc Caro",
+     2.37
+    ],
+    [
+     "Ralph Bakshi",
+     2.35
+    ],
+    [
+     "David Lynch",
+     2.34
+    ],
+    [
+     "Alejandro Jodorowsky",
+     2.34
+    ],
+    [
+     "Robert Fuest",
+     2.3
+    ],
+    [
+     "Michel Gondry",
+     2.3
+    ],
+    [
+     "Jeffrey Lau Chun-Wai",
+     2.28
+    ],
+    [
+     "Daniel Scheinert",
+     2.27
+    ],
+    [
+     "Joe Dante",
+     2.23
+    ],
+    [
+     "Matt Shakman",
+     2.21
+    ],
+    [
+     "Sean Patrick O'Reilly",
+     2.19
+    ]
+   ],
+   "terms": [
+    "surreal",
+    "fantasy",
+    "mind_screw",
+    "scenery",
+    "crazy",
+    "dung_age",
+    "visual",
+    "cuckoo",
+    "dung",
+    "provok_visual",
+    "cameo",
+    "gilliam",
+    "terry_gilliam",
+    "funny",
+    "gainax_end"
+   ],
+   "detect_ms": 0.064,
+   "own_max": 6
+  },
+  "ho2-16": {
+   "names": [
+    "Jackie Chan"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 109,
+   "centroid": [
+    "Kung Fu Panda",
+    "Rush Hour",
+    "Kung Fu Panda 2",
+    "Rush Hour 2",
+    "Rush Hour 3",
+    "The Karate Kid",
+    "Kung Fu Panda 3",
+    "Shanghai Noon",
+    "The Foreigner",
+    "Shanghai Knights",
+    "The Forbidden Kingdom",
+    "Around the World in 80 Days",
+    "Iron Mask",
+    "The Tuxedo",
+    "The Young Master",
+    "Crime Story",
+    "The Shadow's Edge",
+    "Vanguard",
+    "Ride On",
+    "1911"
+   ],
+   "detect_ms": 0.021
+  },
+  "ppl-01": {
+   "names": [
+    "Brad Pitt"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "funny",
+   "negated": [],
+   "era": null,
+   "n_titles": 58,
+   "centroid": [
+    "Fight Club",
+    "Inglourious Basterds",
+    "Se7en",
+    "Snatch",
+    "Once Upon a Time... in Hollywood",
+    "World War Z",
+    "Ocean's Eleven",
+    "The Curious Case of Benjamin Button",
+    "Troy",
+    "Twelve Monkeys",
+    "Fury",
+    "Mr. & Mrs. Smith",
+    "Ocean's Thirteen",
+    "The Big Short",
+    "Moneyball",
+    "Bullet Train",
+    "Ocean's Twelve",
+    "Megamind",
+    "Interview with the Vampire",
+    "Burn After Reading"
+   ],
+   "detect_ms": 0.026
+  },
+  "ppl-02": {
+   "names": [
+    "Keanu Reeves"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "action",
+   "negated": [],
+   "era": null,
+   "n_titles": 78,
+   "centroid": [
+    "The Matrix",
+    "John Wick",
+    "The Matrix Reloaded",
+    "The Matrix Revolutions",
+    "John Wick: Chapter 2",
+    "John Wick: Chapter 3 - Parabellum",
+    "Speed",
+    "Constantine",
+    "The Devil's Advocate",
+    "John Wick: Chapter 4",
+    "The Matrix Resurrections",
+    "Bram Stoker's Dracula",
+    "Point Break",
+    "The Lake House",
+    "47 Ronin",
+    "The Day the Earth Stood Still",
+    "Something's Gotta Give",
+    "Bill & Ted's Excellent Adventure",
+    "A Scanner Darkly",
+    "Street Kings"
+   ],
+   "detect_ms": 0.021
+  },
+  "ppl-03": {
+   "names": [
+    "Bill Murray"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "deadpan comedies",
+   "negated": [],
+   "era": null,
+   "n_titles": 68,
+   "centroid": [
+    "Groundhog Day",
+    "Zombieland",
+    "Lost in Translation",
+    "Ghostbusters",
+    "Moonrise Kingdom",
+    "The Jungle Book",
+    "Rushmore",
+    "Ghostbusters II",
+    "Charlie's Angels",
+    "The Life Aquatic with Steve Zissou",
+    "Isle of Dogs",
+    "The Monuments Men",
+    "Caddyshack",
+    "Wild Things",
+    "Scrooged",
+    "St. Vincent",
+    "Tootsie",
+    "Broken Flowers",
+    "Garfield",
+    "The Dead Don't Die"
+   ],
+   "detect_ms": 0.025
+  },
+  "ppl-04": {
+   "names": [
+    "Tom Hanks"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "war",
+   "negated": [],
+   "era": null,
+   "n_titles": 76,
+   "centroid": [
+    "Forrest Gump",
+    "Saving Private Ryan",
+    "The Green Mile",
+    "Catch Me If You Can",
+    "Toy Story",
+    "Toy Story 3",
+    "Cast Away",
+    "Toy Story 2",
+    "Captain Phillips",
+    "Band of Brothers",
+    "The Terminal",
+    "The Da Vinci Code",
+    "Cloud Atlas",
+    "Toy Story 4",
+    "Bridge of Spies",
+    "Apollo 13",
+    "Sully",
+    "Angels & Demons",
+    "Road to Perdition",
+    "Philadelphia"
+   ],
+   "detect_ms": 0.023
+  },
+  "ppl-05": {
+   "names": [
+    "Steven Spielberg"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": "early",
+   "n_titles": 79,
+   "centroid": [
+    "Saving Private Ryan",
+    "Schindler's List",
+    "Jurassic Park",
+    "Catch Me If You Can",
+    "Raiders of the Lost Ark",
+    "Indiana Jones and the Last Crusade",
+    "Jaws",
+    "Indiana Jones and the Kingdom of the Crystal Skull",
+    "Minority Report",
+    "Indiana Jones and the Temple of Doom",
+    "War of the Worlds",
+    "Ready Player One",
+    "The Terminal",
+    "The Lost World: Jurassic Park",
+    "E.T. the Extra-Terrestrial",
+    "Bridge of Spies",
+    "A.I. Artificial Intelligence",
+    "Lincoln",
+    "Hook",
+    "The Adventures of Tintin"
+   ],
+   "detect_ms": 0.021
+  },
+  "ppl-06": {
+   "names": [
+    "Leonardo DiCaprio"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "fuzzy"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "thrillers",
+   "negated": [],
+   "era": null,
+   "n_titles": 44,
+   "centroid": [
+    "Inception",
+    "Django Unchained",
+    "The Wolf of Wall Street",
+    "Shutter Island",
+    "The Departed",
+    "Titanic",
+    "Catch Me If You Can",
+    "The Revenant",
+    "Once Upon a Time... in Hollywood",
+    "Blood Diamond",
+    "The Great Gatsby",
+    "Don't Look Up",
+    "Gangs of New York",
+    "The Aviator",
+    "Killers of the Flower Moon",
+    "What's Eating Gilbert Grape",
+    "The Beach",
+    "Body of Lies",
+    "Revolutionary Road",
+    "Romeo + Juliet"
+   ],
+   "detect_ms": 0.286
+  },
+  "ppl-07": {
+   "names": [
+    "Stephen Chow"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "kung fu comedies",
+   "negated": [],
+   "era": null,
+   "n_titles": 43,
+   "centroid": [
+    "Kung Fu Hustle",
+    "Shaolin Soccer",
+    "A Chinese Odyssey Part Two: Cinderella",
+    "A Chinese Odyssey Part One: Pandora's Box",
+    "From Beijing with Love",
+    "King of Comedy",
+    "Flirting Scholar",
+    "Fight Back to School",
+    "Hail the Judge",
+    "King of Beggars",
+    "Royal Tramp",
+    "Love on Delivery",
+    "God of Gamblers II",
+    "Justice, My Foot!",
+    "Fight Back to School 2",
+    "Royal Tramp 2",
+    "Tricky Brains",
+    "Sixty Million Dollar Man",
+    "Out of the Dark",
+    "All's Well, Ends Well"
+   ],
+   "detect_ms": 0.029
+  },
+  "ppl-08": {
+   "names": [
+    "Bud Spencer",
+    "Terence Hill"
+   ],
+   "kinds": [
+    "person",
+    "person"
+   ],
+   "match": [
+    "full",
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "lustige",
+   "negated": [],
+   "era": null,
+   "n_titles": 53,
+   "centroid": [
+    "Miami Supercops",
+    "All the Way Boys",
+    "God Forgives... I Don't!",
+    "The Two Missionaries",
+    "Ace High",
+    "Troublemakers",
+    "They Call Me Trinity",
+    "Blackie the Pirate",
+    "Trinity Is Still My Name",
+    "Watch Out, We're Mad",
+    "Crime Busters",
+    "Who Finds a Friend Finds a Treasure",
+    "Double Trouble",
+    "Go for It",
+    "I'm for the Hippopotamus",
+    "Boot Hill"
+   ],
+   "detect_ms": 0.035
+  },
+  "ppl-09": {
+   "names": [
+    "Quentin Tarantino"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 33,
+   "centroid": [
+    "Pulp Fiction",
+    "Django Unchained",
+    "Inglourious Basterds",
+    "Kill Bill: Vol. 1",
+    "Reservoir Dogs",
+    "Once Upon a Time... in Hollywood",
+    "Kill Bill: Vol. 2",
+    "The Hateful Eight",
+    "The Hateful Eight: Extended Version",
+    "Jackie Brown",
+    "Death Proof",
+    "Grindhouse",
+    "Reservoir Dogs",
+    "Four Rooms",
+    "The Hateful Eight: Extended Version",
+    "The Hateful Eight: Extended Version",
+    "My Best Friend's Birthday",
+    "Kill Bill: The Whole Bloody Affair"
+   ],
+   "peers": [
+    [
+     "Drew Goddard",
+     1.94
+    ],
+    [
+     "Guy Ritchie",
+     1.93
+    ],
+    [
+     "Joel Coen",
+     1.91
+    ],
+    [
+     "Ethan Coen",
+     1.91
+    ],
+    [
+     "Brian De Palma",
+     1.88
+    ],
+    [
+     "Álex de la Iglesia",
+     1.71
+    ],
+    [
+     "Takeshi Kitano",
+     1.71
+    ],
+    [
+     "Seijun Suzuki",
+     1.71
+    ],
+    [
+     "Matthew Vaughn",
+     1.7
+    ],
+    [
+     "George McCowan",
+     1.7
+    ],
+    [
+     "Sergio Corbucci",
+     1.63
+    ],
+    [
+     "David Leitch",
+     1.61
+    ],
+    [
+     "Rian Johnson",
+     1.61
+    ],
+    [
+     "Richard Shepard",
+     1.6
+    ],
+    [
+     "Bill Bixby",
+     1.58
+    ]
+   ],
+   "terms": [
+    "tarantino",
+    "trunk_shot",
+    "trunk",
+    "homage",
+    "soundtrack",
+    "styliz_violence",
+    "cluster_bomb",
+    "seinfeldian_conversation",
+    "seinfeldian",
+    "dialogue_driven",
+    "cluster",
+    "punctuat",
+    "author_appeal",
+    "stock_scream",
+    "styliz"
+   ],
+   "detect_ms": 0.052,
+   "own_max": 6
+  },
+  "ppl-10": {
+   "names": [
+    "Wes Anderson"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 22,
+   "centroid": [
+    "The Grand Budapest Hotel",
+    "Moonrise Kingdom",
+    "The Royal Tenenbaums",
+    "Fantastic Mr. Fox",
+    "Rushmore",
+    "The Darjeeling Limited",
+    "The Life Aquatic with Steve Zissou",
+    "Isle of Dogs",
+    "The French Dispatch",
+    "Asteroid City",
+    "Bottle Rocket",
+    "The Wonderful Story of Henry Sugar and Three More",
+    "Castello Cavalcanti",
+    "The Wonderful Story of Henry Sugar",
+    "Come Together: A Fashion Picture in Motion",
+    "The Phoenician Scheme",
+    "Hotel Chevalier",
+    "Prada: Candy",
+    "Poison",
+    "The Swan"
+   ],
+   "peers": [
+    [
+     "Chiaki Kon",
+     1.91
+    ],
+    [
+     "Brad Silberling",
+     1.88
+    ],
+    [
+     "Woody Allen",
+     1.86
+    ],
+    [
+     "Frank Oz",
+     1.75
+    ],
+    [
+     "Randal Kleiser",
+     1.74
+    ],
+    [
+     "Michael Hoffman",
+     1.74
+    ],
+    [
+     "Nicolas Bedos",
+     1.71
+    ],
+    [
+     "Patrice Leconte",
+     1.7
+    ],
+    [
+     "George Roy Hill",
+     1.7
+    ],
+    [
+     "Ethan Coen",
+     1.68
+    ],
+    [
+     "Robert Altman",
+     1.68
+    ],
+    [
+     "Jeremiah S. Chechik",
+     1.67
+    ],
+    [
+     "Richard Linklater",
+     1.66
+    ],
+    [
+     "Peter Bogdanovich",
+     1.66
+    ],
+    [
+     "Arthur Hiller",
+     1.65
+    ]
+   ],
+   "terms": [
+    "wes_anderson",
+    "wes",
+    "anderson",
+    "anderson_aesthetic",
+    "distinctive",
+    "visual_distinctive",
+    "aesthetic",
+    "anderson_signature",
+    "whimsical",
+    "quirky",
+    "signature",
+    "meticulous_craft",
+    "meticulous",
+    "roald_dahl",
+    "dahl"
+   ],
+   "detect_ms": 0.053,
+   "own_max": 6
+  },
+  "ppl-11": {
+   "names": [
+    "David Lynch"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [
+    "weird"
+   ],
+   "era": null,
+   "n_titles": 33,
+   "centroid": [
+    "Mulholland Drive",
+    "The Elephant Man",
+    "Blue Velvet",
+    "Twin Peaks",
+    "Dune",
+    "Lost Highway",
+    "Eraserhead",
+    "Twin Peaks: Fire Walk with Me",
+    "Wild at Heart",
+    "The Straight Story",
+    "Rabbits",
+    "Inland Empire",
+    "Mulholland Dr.",
+    "Mulholland Dr.",
+    "Lumière & Company",
+    "DumbLand",
+    "Twin Peaks",
+    "Lady Blue Shanghai",
+    "Lady Blue Shanghai",
+    "Twin Peaks US Pilot"
+   ],
+   "peers": [
+    [
+     "Leos Carax",
+     1.9
+    ],
+    [
+     "David Cronenberg",
+     1.9
+    ],
+    [
+     "Andrzej Żuławski",
+     1.87
+    ],
+    [
+     "Lars von Trier",
+     1.87
+    ],
+    [
+     "Shinya Tsukamoto",
+     1.81
+    ],
+    [
+     "Ben Wheatley",
+     1.8
+    ],
+    [
+     "Ari Aster",
+     1.8
+    ],
+    [
+     "Bruno Dumont",
+     1.8
+    ],
+    [
+     "Satoshi Kon",
+     1.8
+    ],
+    [
+     "Jan Švankmajer",
+     1.79
+    ],
+    [
+     "Justin Benson",
+     1.79
+    ],
+    [
+     "Guy Maddin",
+     1.79
+    ],
+    [
+     "Robert Fuest",
+     1.78
+    ],
+    [
+     "Aaron Moorhead",
+     1.77
+    ],
+    [
+     "Kiyoshi Kurosawa",
+     1.77
+    ]
+   ],
+   "terms": [
+    "lynchian",
+    "surreal",
+    "surrealism",
+    "dreamlike",
+    "david_lynch",
+    "mind_screw",
+    "surrealist",
+    "reward_multiple",
+    "lynch",
+    "multiple_view",
+    "gainax_end",
+    "gainax",
+    "unsettl",
+    "twin_peak",
+    "noir_mystery"
+   ],
+   "detect_ms": 0.075,
+   "own_max": 6
+  },
+  "ppl-12": {
+   "names": [
+    "Guy Ritchie"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 22,
+   "centroid": [
+    "Snatch",
+    "Sherlock Holmes",
+    "Lock, Stock and Two Smoking Barrels",
+    "Sherlock Holmes: A Game of Shadows",
+    "The Gentlemen",
+    "Aladdin",
+    "The Man from U.N.C.L.E.",
+    "RocknRolla",
+    "King Arthur: Legend of the Sword",
+    "Wrath of Man",
+    "Guy Ritchie's The Covenant",
+    "The Gentlemen",
+    "The Ministry of Ungentlemanly Warfare",
+    "Operation Fortune: Ruse de Guerre",
+    "Revolver",
+    "Star",
+    "Fountain of Youth",
+    "Swept Away"
+   ],
+   "peers": [
+    [
+     "Matthew Vaughn",
+     1.94
+    ],
+    [
+     "Doug Liman",
+     1.84
+    ],
+    [
+     "Ken Hughes",
+     1.83
+    ],
+    [
+     "John McTiernan",
+     1.79
+    ],
+    [
+     "Johnnie To",
+     1.79
+    ],
+    [
+     "Benny Chan",
+     1.77
+    ],
+    [
+     "Richard Donner",
+     1.77
+    ],
+    [
+     "Stephen Surjik",
+     1.76
+    ],
+    [
+     "Simon West",
+     1.75
+    ],
+    [
+     "Walter Hill",
+     1.75
+    ],
+    [
+     "Gérard Krawczyk",
+     1.74
+    ],
+    [
+     "Peter R. Hunt",
+     1.74
+    ],
+    [
+     "Gérard Pirès",
+     1.72
+    ],
+    [
+     "Brian Helgeland",
+     1.72
+    ],
+    [
+     "Harald Zwart",
+     1.72
+    ]
+   ],
+   "terms": [
+    "london_gangster",
+    "sophisticat",
+    "london",
+    "stylish",
+    "british_crime",
+    "skill",
+    "know",
+    "establish_character",
+    "underworld",
+    "guy_ritchie",
+    "character_moment",
+    "caper",
+    "ritchie",
+    "macguffin",
+    "badass"
+   ],
+   "detect_ms": 0.082,
+   "own_max": 6
+  },
+  "ppl-13": {
+   "names": [
+    "Denis Villeneuve"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 12,
+   "centroid": [
+    "Dune",
+    "Prisoners",
+    "Arrival",
+    "Blade Runner 2049",
+    "Dune: Part Two",
+    "Sicario",
+    "Incendies",
+    "Enemy",
+    "Next Floor",
+    "August 32nd on Earth",
+    "Polytechnique",
+    "Maelström"
+   ],
+   "peers": [
+    [
+     "Michael Rymer",
+     1.35
+    ],
+    [
+     "Tom Shankland",
+     1.33
+    ],
+    [
+     "Alex Garland",
+     1.3
+    ],
+    [
+     "Alejandro Amenábar",
+     1.3
+    ],
+    [
+     "Kiyoshi Kurosawa",
+     1.29
+    ],
+    [
+     "Sean Ellis",
+     1.28
+    ],
+    [
+     "Cary Joji Fukunaga",
+     1.27
+    ],
+    [
+     "Mikael Håfström",
+     1.25
+    ],
+    [
+     "Matt Reeves",
+     1.25
+    ],
+    [
+     "Park Chan-wook",
+     1.24
+    ],
+    [
+     "Jack Bender",
+     1.23
+    ],
+    [
+     "David Fincher",
+     1.23
+    ],
+    [
+     "Christopher Nolan",
+     1.23
+    ],
+    [
+     "David Cronenberg",
+     1.22
+    ],
+    [
+     "Tom Tykwer",
+     1.21
+    ]
+   ],
+   "terms": [
+    "cinematography",
+    "canadian_cinema",
+    "character_poster",
+    "stack_character",
+    "massacre",
+    "scenery_porn",
+    "wham",
+    "sound_design",
+    "conlang",
+    "open_scroll",
+    "scroll",
+    "symbolism",
+    "linger_long",
+    "scenery",
+    "drone_dread"
+   ],
+   "detect_ms": 0.055,
+   "own_max": 6
+  },
+  "ppl-14": {
+   "names": [
+    "Joel Coen & Ethan Coen"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "team"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 31,
+   "centroid": [
+    "No Country for Old Men",
+    "The Big Lebowski",
+    "Fargo",
+    "True Grit",
+    "Burn After Reading",
+    "O Brother, Where Art Thou?",
+    "Bridge of Spies",
+    "Unbroken",
+    "Inside Llewyn Davis",
+    "The Ballad of Buster Scruggs",
+    "Raising Arizona",
+    "A Serious Man",
+    "Hail, Caesar!",
+    "Miller's Crossing",
+    "Barton Fink",
+    "Blood Simple",
+    "The Man Who Wasn't There",
+    "Intolerable Cruelty",
+    "The Ladykillers",
+    "Paris Je T'aime"
+   ],
+   "peers": [
+    [
+     "Robert Altman",
+     1.68
+    ],
+    [
+     "Álex de la Iglesia",
+     1.62
+    ],
+    [
+     "Takeshi Kitano",
+     1.57
+    ],
+    [
+     "Barry Levinson",
+     1.54
+    ],
+    [
+     "Richard Shepard",
+     1.54
+    ],
+    [
+     "Peter Yates",
+     1.5
+    ],
+    [
+     "Bob Rafelson",
+     1.5
+    ],
+    [
+     "Bruce Robinson",
+     1.49
+    ],
+    [
+     "Roman Polanski",
+     1.46
+    ],
+    [
+     "Ted Kotcheff",
+     1.46
+    ],
+    [
+     "Brian De Palma",
+     1.45
+    ],
+    [
+     "Georges Lautner",
+     1.45
+    ],
+    [
+     "John Schlesinger",
+     1.43
+    ],
+    [
+     "Basil Dearden",
+     1.42
+    ],
+    [
+     "Spike Lee",
+     1.42
+    ]
+   ],
+   "terms": [
+    "coen_brother",
+    "coen",
+    "brother_style",
+    "brother_signature",
+    "brother",
+    "shaggy_dog",
+    "shaggy",
+    "neo",
+    "style",
+    "signature",
+    "neo_noir",
+    "quirky",
+    "has",
+    "dialogue",
+    "dog"
+   ],
+   "detect_ms": 0.053,
+   "own_max": 6
+  },
+  "ppl-15": {
+   "names": [
+    "Hayao Miyazaki"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 29,
+   "centroid": [
+    "Spirited Away",
+    "Howl's Moving Castle",
+    "Princess Mononoke",
+    "My Neighbor Totoro",
+    "Castle in the Sky",
+    "Kiki's Delivery Service",
+    "Ponyo",
+    "Nausicaä of the Valley of the Wind",
+    "Porco Rosso",
+    "The Wind Rises",
+    "The Boy and the Heron",
+    "On Your Mark",
+    "Lupin the Third: The Castle of Cagliostro",
+    "Lupin the Third: Greatest Capers",
+    "Mei and the Kittenbus",
+    "Yuki's Sun"
+   ],
+   "peers": [
+    [
+     "Don Bluth",
+     2.36
+    ],
+    [
+     "Masaaki Kumagai",
+     2.32
+    ],
+    [
+     "Kirk Wise",
+     2.29
+    ],
+    [
+     "David Lowery",
+     2.28
+    ],
+    [
+     "Tomm Moore",
+     2.25
+    ],
+    [
+     "Gary Goldman",
+     2.24
+    ],
+    [
+     "Simon Wells",
+     2.24
+    ],
+    [
+     "Arthur Rankin Jr.",
+     2.23
+    ],
+    [
+     "Jules Bass",
+     2.23
+    ],
+    [
+     "Hiromasa Yonebayashi",
+     2.22
+    ],
+    [
+     "Dean DeBlois",
+     2.2
+    ],
+    [
+     "Brenda Chapman",
+     2.17
+    ],
+    [
+     "Richard Rich",
+     2.16
+    ],
+    [
+     "Pete Docter",
+     2.16
+    ],
+    [
+     "Robert Zemeckis",
+     2.14
+    ]
+   ],
+   "terms": [
+    "ghibli",
+    "studio_ghibli",
+    "anime",
+    "studio",
+    "animation",
+    "visual_stunn",
+    "stunn",
+    "magical_realism",
+    "yōkai",
+    "magical",
+    "plucky_girl",
+    "giant",
+    "enchant",
+    "blush_sticker",
+    "scenery_porn"
+   ],
+   "detect_ms": 0.048,
+   "own_max": 6
+  },
+  "ppl-16": {
+   "names": [
+    "Stanley Kubrick"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 18,
+   "centroid": [
+    "The Shining",
+    "A Clockwork Orange",
+    "Full Metal Jacket",
+    "2001: A Space Odyssey",
+    "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+    "Eyes Wide Shut",
+    "Paths of Glory",
+    "Barry Lyndon",
+    "Spartacus",
+    "Lolita",
+    "The Killing",
+    "Flying Padre",
+    "Killer's Kiss",
+    "Fear and Desire"
+   ],
+   "peers": [
+    [
+     "John Boorman",
+     1.38
+    ],
+    [
+     "Roman Polanski",
+     1.38
+    ],
+    [
+     "Michael Anderson",
+     1.37
+    ],
+    [
+     "Joseph Losey",
+     1.37
+    ],
+    [
+     "Ridley Scott",
+     1.36
+    ],
+    [
+     "Werner Herzog",
+     1.36
+    ],
+    [
+     "John Frankenheimer",
+     1.34
+    ],
+    [
+     "Tim Mielants",
+     1.34
+    ],
+    [
+     "Marc Munden",
+     1.33
+    ],
+    [
+     "Bernard Rose",
+     1.32
+    ],
+    [
+     "Denis Villeneuve",
+     1.31
+    ],
+    [
+     "Bertrand Tavernier",
+     1.31
+    ],
+    [
+     "Nagisa Ōshima",
+     1.31
+    ],
+    [
+     "Orson Welles",
+     1.31
+    ],
+    [
+     "Tom Shankland",
+     1.3
+    ]
+   ],
+   "terms": [
+    "kubrick_stare",
+    "kubrick",
+    "stare",
+    "domain_soundtrack",
+    "hitler_cam",
+    "public_domain",
+    "direction",
+    "black_white",
+    "book",
+    "anti_war",
+    "black",
+    "chiaroscuro",
+    "men",
+    "scenery",
+    "novel_book"
+   ],
+   "detect_ms": 0.049,
+   "own_max": 6
+  },
+  "ppl-17": {
+   "names": [
+    "Vince Gilligan"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 10,
+   "centroid": [
+    "Breaking Bad",
+    "Better Call Saul",
+    "Hancock",
+    "El Camino: A Breaking Bad Movie",
+    "Home Fries",
+    "The Lone Gunmen",
+    "Pluribus"
+   ],
+   "peers": [
+    [
+     "Chris Long",
+     1.64
+    ],
+    [
+     "Dibakar Banerjee",
+     1.64
+    ],
+    [
+     "Marcos Siega",
+     1.62
+    ],
+    [
+     "Jake Schreier",
+     1.58
+    ],
+    [
+     "Joel Schumacher",
+     1.55
+    ],
+    [
+     "John Herzfeld",
+     1.54
+    ],
+    [
+     "Anurag Kashyap",
+     1.54
+    ],
+    [
+     "Rusty Cundieff",
+     1.52
+    ],
+    [
+     "Nick Hurran",
+     1.51
+    ],
+    [
+     "Peter O'Fallon",
+     1.5
+    ],
+    [
+     "Rian Johnson",
+     1.5
+    ],
+    [
+     "Peter Howitt",
+     1.5
+    ],
+    [
+     "David Mamet",
+     1.48
+    ],
+    [
+     "Spike Lee",
+     1.48
+    ],
+    [
+     "Álex de la Iglesia",
+     1.47
+    ]
+   ],
+   "terms": [
+    "albuquerque_new",
+    "albuquerque",
+    "new_mexico",
+    "mexico",
+    "methamphetamine",
+    "crystal_meth",
+    "meth_lab",
+    "unflinch_walk",
+    "lady_night",
+    "shady_lady",
+    "meth",
+    "pop_cultur",
+    "burner_phone",
+    "crook_contractor",
+    "fall_grace"
+   ],
+   "detect_ms": 0.054,
+   "own_max": 6
+  },
+  "ppl-18": {
+   "names": [
+    "Christopher Nolan"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 16,
+   "centroid": [
+    "The Dark Knight",
+    "Inception",
+    "Interstellar",
+    "Batman Begins",
+    "The Prestige",
+    "Memento",
+    "The Dark Knight Rises",
+    "Oppenheimer",
+    "Dunkirk",
+    "Tenet",
+    "Insomnia",
+    "Following",
+    "The Odyssey"
+   ],
+   "peers": [
+    [
+     "Mikael Håfström",
+     1.39
+    ],
+    [
+     "Morten Tyldum",
+     1.33
+    ],
+    [
+     "Ridley Scott",
+     1.32
+    ],
+    [
+     "Kathryn Bigelow",
+     1.3
+    ],
+    [
+     "Baran bo Odar",
+     1.28
+    ],
+    [
+     "David Fincher",
+     1.27
+    ],
+    [
+     "Duncan Jones",
+     1.27
+    ],
+    [
+     "Mikael Salomon",
+     1.27
+    ],
+    [
+     "Jack Bender",
+     1.27
+    ],
+    [
+     "Denis Villeneuve",
+     1.26
+    ],
+    [
+     "Cary Joji Fukunaga",
+     1.25
+    ],
+    [
+     "Michael Mann",
+     1.25
+    ],
+    [
+     "Martin Campbell",
+     1.25
+    ],
+    [
+     "Tom Shankland",
+     1.25
+    ],
+    [
+     "Stephen Hopkins",
+     1.24
+    ]
+   ],
+   "terms": [
+    "clarity",
+    "anachronic",
+    "anachronic_order",
+    "order",
+    "distraction",
+    "arc_word",
+    "nice_job",
+    "break_hero",
+    "job_break",
+    "interrogation",
+    "speech",
+    "paranoid",
+    "morality",
+    "demand",
+    "loop"
+   ],
+   "detect_ms": 0.056,
+   "own_max": 6
+  },
+  "ppl-19": {
+   "names": [
+    "Jim Carrey"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "filmography",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 42,
+   "centroid": [
+    "The Truman Show",
+    "Eternal Sunshine of the Spotless Mind",
+    "Bruce Almighty",
+    "Dumb and Dumber",
+    "The Mask",
+    "Ace Ventura: Pet Detective",
+    "Yes Man",
+    "Liar Liar",
+    "How the Grinch Stole Christmas",
+    "Kick-Ass 2",
+    "Batman Forever",
+    "Ace Ventura: When Nature Calls",
+    "The Number 23",
+    "Me, Myself & Irene",
+    "Sonic the Hedgehog",
+    "Lemony Snicket's A Series of Unfortunate Events",
+    "The Cable Guy",
+    "Fun with Dick and Jane",
+    "Dumb and Dumber To",
+    "Horton Hears a Who!"
+   ],
+   "peers": [
+    [
+     "Barry Sonnenfeld",
+     2.08
+    ],
+    [
+     "Dmitriy Dyachenko",
+     2.05
+    ],
+    [
+     "Frank Oz",
+     2.04
+    ],
+    [
+     "Jared Hess",
+     2.02
+    ],
+    [
+     "Taika Waititi",
+     2.0
+    ],
+    [
+     "James Huth",
+     2.0
+    ],
+    [
+     "Harold Ramis",
+     1.99
+    ],
+    [
+     "Jake Kasdan",
+     1.98
+    ],
+    [
+     "Paul Feig",
+     1.97
+    ],
+    [
+     "Peter Farrelly",
+     1.97
+    ],
+    [
+     "Bobby Farrelly",
+     1.96
+    ],
+    [
+     "Les Mayfield",
+     1.96
+    ],
+    [
+     "Steve Oedekerk",
+     1.95
+    ],
+    [
+     "Stephen Chow",
+     1.93
+    ],
+    [
+     "Michael Dowse",
+     1.93
+    ]
+   ],
+   "terms": [
+    "carrey",
+    "jim_carrey",
+    "jim",
+    "brick",
+    "laugh",
+    "joke",
+    "brick_joke",
+    "funny",
+    "god",
+    "car",
+    "physical",
+    "physical_comedy",
+    "tempt_fate",
+    "product_placement",
+    "fate"
+   ],
+   "detect_ms": 0.052,
+   "own_max": 6
+  },
+  "ppl-20": {
+   "names": [
+    "Edgar Wright"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 14,
+   "centroid": [
+    "Shaun of the Dead",
+    "Baby Driver",
+    "Hot Fuzz",
+    "Scott Pilgrim vs. the World",
+    "The World's End",
+    "Last Night in Soho",
+    "The Sparks Brothers",
+    "Spaced",
+    "The Running Man",
+    "Don't"
+   ],
+   "peers": [
+    [
+     "John Landis",
+     2.56
+    ],
+    [
+     "Joe Dante",
+     2.39
+    ],
+    [
+     "Jordan Vogt-Roberts",
+     2.37
+    ],
+    [
+     "Craig Mazin",
+     2.37
+    ],
+    [
+     "James Gunn",
+     2.33
+    ],
+    [
+     "Todd Strauss-Schulson",
+     2.33
+    ],
+    [
+     "David Leitch",
+     2.31
+    ],
+    [
+     "Javier Ruiz Caldera",
+     2.28
+    ],
+    [
+     "Ben Stiller",
+     2.23
+    ],
+    [
+     "Wong Jing",
+     2.21
+    ],
+    [
+     "Michel Hazanavicius",
+     2.21
+    ],
+    [
+     "Matthew Vaughn",
+     2.19
+    ],
+    [
+     "Stephen Chow",
+     2.19
+    ],
+    [
+     "Ruben Fleischer",
+     2.18
+    ],
+    [
+     "Chris McKay",
+     2.16
+    ]
+   ],
+   "terms": [
+    "edit",
+    "liner",
+    "pre",
+    "exuberant",
+    "pre_asskick",
+    "asskick_liner",
+    "smash",
+    "meaningful_background",
+    "pre_mortem",
+    "mortem_liner",
+    "mortem",
+    "establish",
+    "brick_joke",
+    "asskick",
+    "brick"
+   ],
+   "detect_ms": 0.054,
+   "own_max": 6
+  },
+  "ppl-21": {
+   "names": [
+    "Studio Ghibli"
+   ],
+   "kinds": [
+    "studio"
+   ],
+   "match": [
+    "alias"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 27,
+   "centroid": [
+    "Spirited Away",
+    "Howl's Moving Castle",
+    "Princess Mononoke",
+    "My Neighbor Totoro",
+    "Castle in the Sky",
+    "Kiki's Delivery Service",
+    "Ponyo",
+    "The Secret World of Arrietty",
+    "Porco Rosso",
+    "The Wind Rises",
+    "The Boy and the Heron",
+    "Whisper of the Heart",
+    "The Cat Returns",
+    "Earwig and the Witch",
+    "The Tale of The Princess Kaguya",
+    "From Up on Poppy Hill",
+    "When Marnie Was There",
+    "Tales from Earthsea",
+    "On Your Mark",
+    "The Red Turtle"
+   ],
+   "detect_ms": 0.014
+  },
+  "ppl-22": {
+   "names": [
+    "A24"
+   ],
+   "kinds": [
+    "studio"
+   ],
+   "match": [
+    "alias"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "horror",
+   "negated": [],
+   "era": null,
+   "n_titles": 99,
+   "centroid": [
+    "Uncut Gems",
+    "Moonlight",
+    "Euphoria",
+    "The Whale",
+    "X",
+    "Heretic",
+    "Past Lives",
+    "BEEF",
+    "Pearl",
+    "The Zone of Interest",
+    "The Green Knight",
+    "The Iron Claw",
+    "It Comes at Night",
+    "The Idol",
+    "Problemista",
+    "Dream Scenario",
+    "Eighth Grade",
+    "The Sympathizer",
+    "mid90s",
+    "Bodies Bodies Bodies"
+   ],
+   "detect_ms": 0.016
+  },
+  "ppl-23": {
+   "names": [
+    "Pixar"
+   ],
+   "kinds": [
+    "studio"
+   ],
+   "match": [
+    "alias"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 87,
+   "centroid": [
+    "WALL·E",
+    "Up",
+    "Finding Nemo",
+    "Toy Story",
+    "Monsters, Inc.",
+    "Toy Story 3",
+    "Ratatouille",
+    "The Incredibles",
+    "Inside Out",
+    "Coco",
+    "Toy Story 2",
+    "Cars",
+    "Brave",
+    "Monsters University",
+    "Soul",
+    "Toy Story 4",
+    "Incredibles 2",
+    "Finding Dory",
+    "A Bug's Life",
+    "Cars 2"
+   ],
+   "detect_ms": 0.011
+  },
+  "ppl-24": {
+   "names": [
+    "HBO"
+   ],
+   "kinds": [
+    "studio"
+   ],
+   "match": [
+    "alias"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "prestige drama",
+   "negated": [],
+   "era": null,
+   "n_titles": 303,
+   "centroid": [
+    "Game of Thrones",
+    "Chernobyl",
+    "True Detective",
+    "The Last of Us",
+    "Band of Brothers",
+    "Westworld",
+    "The Sopranos",
+    "House of the Dragon",
+    "The Wire",
+    "Succession",
+    "The White Lotus",
+    "Euphoria",
+    "True Blood",
+    "Big Little Lies",
+    "The Penguin",
+    "Boardwalk Empire",
+    "Mare of Easttown",
+    "Rome",
+    "The Night Of",
+    "Peacemaker"
+   ],
+   "detect_ms": 0.022
+  }
+ }
+}

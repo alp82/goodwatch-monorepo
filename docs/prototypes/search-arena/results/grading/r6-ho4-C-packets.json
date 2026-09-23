@@ -1,0 +1,201 @@
+[
+ {
+  "query_id": "sty-03",
+  "query": "nicolas cage energy",
+  "intent": "Style query (actor as style): some unhinged Nicolas Cage performances welcome, but mostly other over-the-top, gonzo action and thrillers with manic, scenery-chewing leads. His quiet dramas are weak.",
+  "items": [
+   {
+    "pid": 1000000016231,
+    "title": "Wild Zero",
+    "year": "1999",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-05",
+  "query": "aardman humor",
+  "intent": "Style query (studio): some Aardman films welcome, but mostly other gentle, dry, very British family comedies and stop-motion with sight gags and whimsy.",
+  "items": [
+   {
+    "pid": 2000000121567,
+    "title": "Koala Man",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "An animated absurdist comedy that offers a quirky take on superhero antics within a mundane Australian suburb. The series centers on a family patriarch's not-so-secret identity as Koala Man, driven by an eccentric passion for eradicating petty crime. It blends physical and situational humor with satirical commentary on suburban life and low-stakes heroism. This is a wonderfully strange and often cringeworthy watch that provides pure escapism for those who appreciate offbeat humor.",
+    "tags": [
+     "Animated Comedy",
+     "Superhero Parody",
+     "Australian Humor",
+     "Suburban Satire",
+     "Absurdist Comedy",
+     "Family Sitcom",
+     "Petty Crime",
+     "Quirky Characters",
+     "Self-Proclaimed Hero"
+    ],
+    "keywords": [
+     "superhero spoof",
+     "adult animation"
+    ],
+    "credits": {
+     "directors": [
+      "Michael Dockery"
+     ],
+     "creators": [
+      "Justin Roiland",
+      "Dan Hernandez"
+     ],
+     "writers": [
+      "Michael Cusack"
+     ],
+     "cast": [
+      "Michael Cusack",
+      "Sarah Snook",
+      "Demi Lardner"
+     ],
+     "companies": [
+      "20th Television Animation",
+      "Bento Box Entertainment",
+      "Princess Bento Studio"
+     ],
+     "networks": [
+      "Hulu"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-08",
+  "query": "un film à la jean-pierre jeunet",
+  "intent": "French: style query. Some Jeunet films welcome, but mostly other whimsical, quirky, visually inventive (often French) fantasies and dark fairy tales.",
+  "items": [
+   {
+    "pid": 1000001153714,
+    "title": "Death of a Unicorn",
+    "year": 2025,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Fantasy",
+     "Comedy"
+    ],
+    "essence_text": "A darkly comedic and fantastical thriller that blends elements of magical realism with a satirical edge. The film explores themes of corporate greed and moral compromise through the lens of a bizarre central premise. The strained relationship between a father and daughter serves as a poignant counterpoint to the escalating absurdity of the situation. Expect a blend of dark humor, suspense, and social commentary, with a touch of the uncanny.",
+    "tags": [
+     "Dark Fantasy",
+     "Satirical Thriller",
+     "Magical Realism",
+     "Class Warfare Allegory",
+     "Father-Daughter Dynamics",
+     "Corporate Greed",
+     "Moral Dilemma",
+     "Intense",
+     "Unicorn Lore"
+    ],
+    "keywords": [
+     "dark comedy",
+     "blunt",
+     "macabre",
+     "unicorn",
+     "dark fantasy",
+     "cautionary",
+     "father daughter estrangement",
+     "critical",
+     "instructive"
+    ],
+    "credits": {
+     "directors": [
+      "Alex Scharfman"
+     ],
+     "writers": [
+      "Alex Scharfman"
+     ],
+     "cast": [
+      "Paul Rudd",
+      "Jenna Ortega",
+      "Will Poulter",
+      "Richard E. Grant",
+      "Téa Leoni"
+     ],
+     "companies": [
+      "A24",
+      "Square Peg",
+      "Secret Engine"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-12",
+  "query": "blumhouse-type horror",
+  "intent": "Horror films produced by Blumhouse first, then other lean, low-budget, high-concept horror (found footage, home invasion, supernatural jump scares).",
+  "items": [
+   {
+    "pid": 1000000259233,
+    "title": "Ju-on: The Beginning of the End",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Horror"
+    ],
+    "essence_text": "A slow-burn Japanese horror film that relies heavily on suspense, disturbing imagery, and psychological tension. The film focuses on building a sense of dread and unease through its sound design and unsettling visuals. It delves into the supernatural with a strong emphasis on the psychological impact of its horrors, creating a bleak and disturbing atmosphere. The mystery unravels slowly, keeping viewers on edge with its unpredictable narrative.",
+    "tags": [
+     "Japanese Horror",
+     "J-Horror",
+     "Supernatural Horror",
+     "Psychological Thriller",
+     "Grudge",
+     "Disturbing Imagery",
+     "Slow Burn",
+     "Intrigue",
+     "Mystery",
+     "Uncanny"
+    ],
+    "keywords": [
+     "japan"
+    ],
+    "credits": {
+     "directors": [
+      "Masayuki Ochiai"
+     ],
+     "writers": [
+      "Takashige Ichise",
+      "Masayuki Ochiai"
+     ],
+     "cast": [
+      "Nozomi Sasaki",
+      "Sho Aoyagi",
+      "Reina Triendl",
+      "Miho Kanazawa",
+      "Haori Takahashi"
+     ],
+     "companies": [
+      "Altemate",
+      "Fujishoji",
+      "Gambit"
+     ]
+    }
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ }
+]

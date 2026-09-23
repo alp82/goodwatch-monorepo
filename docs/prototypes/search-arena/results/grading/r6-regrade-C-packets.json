@@ -1,0 +1,65 @@
+[
+ {
+  "query_id": "ppl-14",
+  "query": "coen brothers humor",
+  "intent": "Style query: some Coen brothers comedies welcome, but mostly other dark, deadpan comedies about hapless people and botched crimes.",
+  "items": [
+   {
+    "pid": 1000000010778,
+    "title": "The Man Who Wasn't There",
+    "year": 2001,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "A neo-noir crime drama with striking black and white cinematography and a pervasive sense of melancholy. Set in 1949, the film follows a barber entangled in a web of crime and deceit. The slow-burn narrative emphasizes atmosphere, moral ambiguity, and psychological depth, creating an intriguing and thought-provoking experience. The Coen Brothers' signature style and dark humor are evident in the film's quirky characters and unexpected twists.",
+    "tags": [
+     "Neo-Noir",
+     "Atmospheric",
+     "Black and White Cinematography",
+     "Crime Drama",
+     "Psychological Thriller",
+     "Melancholy",
+     "Intriguing",
+     "Morality",
+     "Coen Brothers"
+    ],
+    "keywords": [
+     "small town",
+     "california",
+     "hairdresser",
+     "con man",
+     "insurance fraud",
+     "black and white",
+     "barber",
+     "neo-noir",
+     "1940s"
+    ],
+    "credits": {
+     "directors": [
+      "Joel Coen"
+     ],
+     "writers": [
+      "Joel Coen",
+      "Ethan Coen"
+     ],
+     "cast": [
+      "Billy Bob Thornton",
+      "Frances McDormand",
+      "Michael Badalucco",
+      "James Gandolfini",
+      "Katherine Borowitz"
+     ],
+     "companies": [
+      "USA Films",
+      "Working Title",
+      "Mike Zoss Productions"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ }
+]

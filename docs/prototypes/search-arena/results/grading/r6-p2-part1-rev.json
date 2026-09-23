@@ -1,0 +1,1049 @@
+[
+ {
+  "query_id": "ppl-20",
+  "query": "edgar wright",
+  "intent": "Films directed by Edgar Wright first, then kinetic, genre-mashing British comedies in his style.",
+  "items": [
+   {
+    "pid": 1000000032389,
+    "title": "Logorama",
+    "year": 2009,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Crime",
+     "Comedy",
+     "Action"
+    ],
+    "essence_text": "A darkly humorous and disturbing satire set in a brand-obsessed world. The film cleverly uses iconic corporate logos as characters, offering a biting commentary on consumerism and environmental issues. Its surreal and violent narrative creates a unique and unsettling viewing experience. While visually striking, the film's true power lies in its ability to provoke thought and question the pervasive influence of corporate culture in modern society. The animation style enhances the film's...",
+    "tags": [
+     "Satirical Black Comedy",
+     "Pop Culture Parody",
+     "Environmental Commentary",
+     "Dystopian",
+     "Brand-Centric",
+     "Surreal and Disturbing",
+     "Darkly Humorous",
+     "Visually Stylized",
+     "Meta-Narrative Elements"
+    ],
+    "keywords": [
+     "california",
+     "police",
+     "hostage",
+     "delinquent",
+     "zoo",
+     "earthquake",
+     "crime scene",
+     "gunfight",
+     "criminal",
+     "advertisement",
+     "short film",
+     "logos"
+    ],
+    "credits": {
+     "directors": [
+      "François Alaux",
+      "Hervé de Crécy",
+      "Ludovic Houplain"
+     ],
+     "writers": [
+      "François Alaux",
+      "Hervé de Crécy",
+      "Ludovic Houplain"
+     ],
+     "cast": [
+      "Bob Stephenson",
+      "Sherman Augustus",
+      "Aja Evans",
+      "Joel Michaely",
+      "Matt Winston"
+     ],
+     "companies": [
+      "H5",
+      "Autour de Minuit",
+      "Little Minx Films"
+     ]
+    }
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ },
+ {
+  "query_id": "ppl-18",
+  "query": "christopher nolan",
+  "intent": "Films directed by Christopher Nolan first, then cerebral, puzzle-box blockbusters in his style.",
+  "items": [
+   {
+    "pid": 2000000194567,
+    "title": "The Lazarus Project",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "This gripping sci-fi thriller plunges viewers into a high-stakes world where a secret organization rewinds time to prevent global extinction. The narrative is a masterclass in tension and intrigue, constantly challenging perceptions and moral boundaries. It's a fast-paced, complex journey that explores profound questions about fate, free will, and the responsibility that comes with unimaginable power. Prepare for a thought-provoking and exhilarating ride that keeps you guessing at every turn.",
+    "tags": [
+     "Time Travel Thriller",
+     "Conspiracy & Espionage",
+     "Global Catastrophe",
+     "Moral Dilemmas",
+     "High-Stakes Action",
+     "Non-Linear Narrative",
+     "Technological Ethics",
+     "Psychological Intrigue",
+     "Secret Organization"
+    ],
+    "keywords": [
+     "time travel",
+     "anxious",
+     "inspirational",
+     "dramatic",
+     "ambiguous",
+     "harsh"
+    ],
+    "credits": {
+     "directors": [
+      "Marco Kreuzpaintner",
+      "Carl Tibbetts",
+      "Pier Wilkie"
+     ],
+     "creators": [
+      "Joe Barton",
+      "Johnny Capps"
+     ],
+     "writers": [
+      "Joe Barton",
+      "Howard Overman"
+     ],
+     "cast": [
+      "Paapa Essiedu",
+      "Rudi Dharmalingam",
+      "Tom Burke",
+      "Anjli Mohindra",
+      "Caroline Quentin"
+     ],
+     "companies": [
+      "Urban Myth Films"
+     ],
+     "networks": [
+      "Sky Max"
+     ]
+    }
+   },
+   {
+    "pid": 1000000045612,
+    "title": "Source Code",
+    "year": 2011,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Science Fiction",
+     "Mystery"
+    ],
+    "essence_text": "This is a taut, high-concept sci-fi thriller that grips you from its unique premise and doesn't let go. It's a masterclass in building tension and intrigue through a clever, non-linear narrative structure. The film explores fascinating themes of perception, identity, and the nature of reality within its thrilling mystery. It's an intellectually stimulating and pulse-pounding experience that demands full attention and offers rewarding rewatches.",
+    "tags": [
+     "High-Concept Sci-Fi",
+     "Mind-Bending Thriller",
+     "Time-Loop Narrative",
+     "Intense Suspense",
+     "Psychological Mystery",
+     "Action-Packed",
+     "Clever Plot",
+     "Conspiracy",
+     "Existential Themes",
+     "Rewatchable"
+    ],
+    "keywords": [
+     "race against time",
+     "bomb",
+     "virtual reality",
+     "identity",
+     "investigation",
+     "bomber",
+     "suspicion",
+     "surrealism",
+     "time loop",
+     "soldier",
+     "helicopter pilot",
+     "augmented reality"
+    ],
+    "credits": {
+     "directors": [
+      "Duncan Jones"
+     ],
+     "writers": [
+      "Ben Ripley"
+     ],
+     "cast": [
+      "Jake Gyllenhaal",
+      "Michelle Monaghan",
+      "Vera Farmiga",
+      "Jeffrey Wright",
+      "Michael Arden"
+     ],
+     "companies": [
+      "The Mark Gordon Company",
+      "Summit Entertainment",
+      "Vendôme Production"
+     ]
+    }
+   },
+   {
+    "pid": 1000000068727,
+    "title": "Trance",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A stylish and psychologically complex thriller that weaves a intricate narrative around an art heist gone wrong and the elusive nature of memory. Through a non-linear structure and hypnotic visuals, it plunges the viewer into a world of deception and fragmented realities. The film is a masterful exercise in tension and intrigue, constantly challenging perceptions and leaving much open to interpretation. It's a truly engaging and cerebral experience for those who appreciate a good puzzle.",
+    "tags": [
+     "Mind-Bending Thriller",
+     "Psychological Puzzle",
+     "Heist Gone Wrong",
+     "Hypnosis & Memory",
+     "Non-Linear Narrative",
+     "Neo-Noir Elements",
+     "Art Crime",
+     "Stylishly Directed",
+     "Complex Plot"
+    ],
+    "keywords": [
+     "amnesia",
+     "loss of sense of reality",
+     "heist",
+     "art thief",
+     "double cross",
+     "hypnotism",
+     "duringcreditsstinger",
+     "implanted memory",
+     "suppressed memory",
+     "forgotten memory",
+     "plot twist",
+     "tense"
+    ],
+    "credits": {
+     "directors": [
+      "Danny Boyle"
+     ],
+     "writers": [
+      "John Hodge",
+      "Joe Ahearne"
+     ],
+     "cast": [
+      "James McAvoy",
+      "Vincent Cassel",
+      "Rosario Dawson",
+      "Danny Sapani",
+      "Matt Cross"
+     ],
+     "companies": [
+      "Pathé",
+      "Decibel Films",
+      "Film4 Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000000791042,
+    "title": "Levels",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Action",
+     "Thriller"
+    ],
+    "essence_text": "A gripping psychological thriller that plunges a man into a desperate search for truth after witnessing a horrific murder, blurring the lines of reality itself. The film promises a mind-bending journey, rich with intrigue and complexity, as the protagonist risks everything to uncover a shocking truth. It's an intense, thought-provoking experience that challenges perceptions and explores themes of grief, obsession, and the nature of existence.",
+    "tags": [
+     "Mind-Bending Thriller",
+     "Psychological Mystery",
+     "Reality-Bending Plot",
+     "Grief & Obsession",
+     "Unreliable Perception",
+     "High-Stakes Quest",
+     "Non-Linear Elements",
+     "Existential Themes",
+     "Intense & Gripping"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Adam Stern"
+     ],
+     "writers": [
+      "Adam Stern"
+     ],
+     "cast": [
+      "Cara Gee",
+      "Peter Mooney",
+      "Aaron Abrams",
+      "David Hewlett",
+      "Amanda Tapping"
+     ],
+     "companies": [
+      "Farpoint Films",
+      "Middle Child Films Inc."
+     ]
+    }
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ },
+ {
+  "query_id": "ppl-17",
+  "query": "vince gilligan",
+  "intent": "Shows and films created or written by Vince Gilligan first, then tense, morally grey crime dramas in his style.",
+  "items": [
+   {
+    "pid": 1000000648878,
+    "title": "Eddington",
+    "year": 2025,
+    "media_type": "movie",
+    "genres": [
+     "Western",
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A tense and character-driven thriller set in a small town rife with simmering conflict. The film explores the dark underbelly of society through a lens of crime and political intrigue, creating a sense of unease and paranoia. Expect a slow-burn narrative with complex characters and a focus on psychological tension, as neighbor turns against neighbor. The bleakness and social commentary underscore a story of moral decay and the disintegration of community.",
+    "tags": [
+     "Small Town Tension",
+     "Crime and Suspense",
+     "Psychological Thriller",
+     "Political Intrigue",
+     "Social Decay",
+     "Character Driven",
+     "Dark and Gritty",
+     "Slow Burn Mystery",
+     "Contemporary Western"
+    ],
+    "keywords": [
+     "small town",
+     "sheriff",
+     "husband wife relationship",
+     "new mexico",
+     "mayor",
+     "dark comedy",
+     "protest",
+     "satire",
+     "murder",
+     "shootout",
+     "neo-western",
+     "satirical"
+    ],
+    "credits": {
+     "directors": [
+      "Ari Aster"
+     ],
+     "writers": [
+      "Ari Aster"
+     ],
+     "cast": [
+      "Joaquin Phoenix",
+      "Deirdre O'Connell",
+      "Emma Stone",
+      "Micheal Ward",
+      "Pedro Pascal"
+     ],
+     "companies": [
+      "A24",
+      "Square Peg",
+      "828 Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000001413575,
+    "title": "The Courier",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "Betrayal, ambition, and moral compromise intertwine in this crime drama centered on complex relationships and dark decisions. Set in a contemporary world, the film explores the psychological depths of its characters as they navigate treacherous paths. The story delves into themes of social commentary and the lengths to which individuals will go for power and survival. Expect a bleak and suspenseful narrative that lingers with its exploration of flawed humanity.",
+    "tags": [
+     "Crime Drama",
+     "Betrayal",
+     "Complex Relationships",
+     "Moral Dilemmas",
+     "Psychological Thriller",
+     "Contemporary",
+     "Character-Driven",
+     "Dark Themes"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [],
+     "companies": []
+    }
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ },
+ {
+  "query_id": "ppl-16",
+  "query": "kubrick-esque",
+  "intent": "Style query: some Kubrick films welcome, but mostly other cold, meticulous, unsettling films with striking symmetric imagery.",
+  "items": [
+   {
+    "pid": 1000000591538,
+    "title": "The Tragedy of Macbeth",
+    "year": 2021,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "War"
+    ],
+    "essence_text": "A stark and mesmerizing adaptation of Shakespeare's classic tragedy, this film plunges viewers into a world of ruthless ambition and psychological decay. Its black-and-white cinematography and meticulous sound design create an intensely immersive and haunting atmosphere. Bolstered by powerhouse performances, the narrative is a slow-burn descent into madness and moral compromise. This is a profoundly bleak and thought-provoking experience, demanding full attention to its rich dialogue and...",
+    "tags": [
+     "Shakespearean Tragedy",
+     "Visually Striking",
+     "Psychological Drama",
+     "Ambition & Betrayal",
+     "Bleak & Intense",
+     "Masterful Performances",
+     "Cinematic Excellence",
+     "Period Adaptation",
+     "Existential Themes"
+    ],
+    "keywords": [
+     "witch",
+     "husband wife relationship",
+     "scotland",
+     "ambition",
+     "treason",
+     "based on play or musical",
+     "black and white",
+     "rise to power",
+     "non-traditional casting"
+    ],
+    "credits": {
+     "directors": [
+      "Joel Coen"
+     ],
+     "writers": [
+      "Joel Coen",
+      "William Shakespeare"
+     ],
+     "cast": [
+      "Denzel Washington",
+      "Frances McDormand",
+      "Alex Hassell",
+      "Bertie Carvel",
+      "Brendan Gleeson"
+     ],
+     "companies": [
+      "IAC Films",
+      "A24"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "ppl-14",
+  "query": "coen brothers humor",
+  "intent": "Style query: some Coen brothers comedies welcome, but mostly other dark, deadpan comedies about hapless people and botched crimes.",
+  "items": [
+   {
+    "pid": 1000000030588,
+    "title": "Monsieur Verdoux",
+    "year": 1947,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "A darkly comedic and cynical film that uses humor to explore serious themes of morality, survival, and societal critique. The film centers on a charming yet ruthless protagonist who navigates the moral complexities of a world driven by desperation. Sharp wit and social commentary blend to create a thought-provoking narrative, challenging viewers to reflect on the nature of good and evil. Its distinctive style and subversive storytelling make it a timeless classic.",
+    "tags": [
+     "Dark Comedy",
+     "Satire of Society",
+     "Cynical Protagonist",
+     "Morality and Ethics",
+     "Critique of Capitalism",
+     "Black Humor",
+     "Social Commentary",
+     "Classic Cinema",
+     "Thought-Provoking"
+    ],
+    "keywords": [
+     "marriage",
+     "dark comedy",
+     "villain",
+     "polygamy",
+     "great depression",
+     "based on true story",
+     "film noir",
+     "black and white",
+     "stock market crash",
+     "cold blooded killer",
+     "1930s"
+    ],
+    "credits": {
+     "directors": [
+      "Charlie Chaplin"
+     ],
+     "writers": [
+      "Charlie Chaplin",
+      "Orson Welles"
+     ],
+     "cast": [
+      "Charlie Chaplin",
+      "Mady Correll",
+      "Allison Roddan",
+      "Robert Lewis",
+      "Audrey Betz"
+     ],
+     "companies": [
+      "Charles Chaplin Productions",
+      "United Artists"
+     ]
+    }
+   },
+   {
+    "pid": 1000000001847,
+    "title": "The Long Goodbye",
+    "year": 1973,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A stylish and cynical neo-noir set against the backdrop of 1970s Hollywood. The film exudes a sense of moral ambiguity and melancholic atmosphere. Its complex plot unfolds with satirical undertones, challenging the conventions of the detective genre. Notable for its sharp dialogue and morally compromised characters, the film offers a compelling, if bleak, reflection on justice and human nature. A true cult classic.",
+    "tags": [
+     "Neo-Noir",
+     "Cynical Detective",
+     "Los Angeles Setting",
+     "1970s Hollywood",
+     "Moral Ambiguity",
+     "Satirical Undertones",
+     "Complex Plot",
+     "Stylish Cinematography",
+     "Cult Classic"
+    ],
+    "keywords": [
+     "infidelity",
+     "suicide",
+     "corruption",
+     "police",
+     "cat",
+     "detective",
+     "greed",
+     "mission of murder",
+     "penthouse apartment",
+     "police operation",
+     "usa–mexico border",
+     "alcoholism"
+    ],
+    "credits": {
+     "directors": [
+      "Robert Altman"
+     ],
+     "writers": [
+      "Leigh Brackett",
+      "Raymond Chandler"
+     ],
+     "cast": [
+      "Elliott Gould",
+      "Nina van Pallandt",
+      "Sterling Hayden",
+      "Mark Rydell",
+      "Henry Gibson"
+     ],
+     "companies": [
+      "United Artists",
+      "Lion's Gate Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000022615,
+    "title": "Kiss Kiss (Bang Bang)",
+    "year": 2001,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime"
+    ],
+    "essence_text": "A darkly humorous crime thriller with a neo-noir edge, set against the backdrop of Los Angeles. The film's sharp dialogue and cynical wit are its defining features, creating a self-aware and convoluted plot. Quirky characters and unexpected twists add to the intrigue, making for a rewatchable and entertaining experience. While the plot can be complex, the witty banter and stylish direction keep the audience engaged.",
+    "tags": [
+     "Cynical Humor",
+     "Crime Thriller",
+     "Sharp Dialogue",
+     "Neo-Noir",
+     "Los Angeles Setting",
+     "Quirky Characters",
+     "Convoluted Plot",
+     "Self-Aware"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Stewart Sugg"
+     ],
+     "writers": [
+      "Stewart Sugg"
+     ],
+     "cast": [
+      "Stellan Skarsgård",
+      "Chris Penn",
+      "Paul Bettany",
+      "Allan Corduner",
+      "Jacqueline McKenzie"
+     ],
+     "companies": [
+      "M & M Productions",
+      "Pagoda Film",
+      "Television Production Company (TPC)"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "ppl-13",
+  "query": "denis villeneuve atmosphere",
+  "intent": "Style query: some Villeneuve films welcome, but mostly other brooding, slow, visually vast and tense sci-fi or thrillers.",
+  "items": [
+   {
+    "pid": 1000000146233,
+    "title": "Prisoners",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "A relentlessly tense and morally complex psychological thriller that plunges into the darkest corners of human desperation. It explores the terrifying nightmare of a missing child, pushing a father to extreme measures in a desperate search for truth. The film builds agonizing suspense through its intricate mystery and explores the blurred lines between justice and vengeance. Prepare for a gripping, unsettling experience that will challenge perceptions and linger long after viewing.",
+    "tags": [
+     "Gritty Thriller",
+     "Psychological Suspense",
+     "Kidnapping Mystery",
+     "Vigilante Justice",
+     "Parental Despair",
+     "Bleak & Intense",
+     "Moral Ambiguity",
+     "Exceptional Acting",
+     "Atmospheric Cinematography"
+    ],
+    "keywords": [
+     "pennsylvania, usa",
+     "kidnapping",
+     "hostage",
+     "detective",
+     "maze",
+     "symbolism",
+     "investigation",
+     "georgia",
+     "beating",
+     "god",
+     "revenge",
+     "vigilante"
+    ],
+    "credits": {
+     "directors": [
+      "Denis Villeneuve"
+     ],
+     "writers": [
+      "Aaron Guzikowski"
+     ],
+     "cast": [
+      "Hugh Jackman",
+      "Jake Gyllenhaal",
+      "Viola Davis",
+      "Maria Bello",
+      "Terrence Howard"
+     ],
+     "companies": [
+      "Alcon Entertainment",
+      "8:38 Productions",
+      "Madhouse Entertainment"
+     ]
+    }
+   },
+   {
+    "pid": 1000000367584,
+    "title": "Wonderland",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A gripping and disturbing portrayal of societal breakdown in the face of an environmental catastrophe. The film creates a palpable sense of tension and dread as it explores the darker aspects of human nature when pushed to the brink. Visually arresting and sonically immersive, it paints a bleak picture of a world descending into chaos, prompting reflection on contemporary anxieties and the fragility of social order. It's a thought-provoking experience that lingers long after the credits roll.",
+    "tags": [
+     "Dystopian Disaster",
+     "Social Breakdown",
+     "Psychological Tension",
+     "Bleak Realism",
+     "Political Commentary",
+     "Visceral Experience",
+     "Immersive Sound Design",
+     "Moral Dilemmas",
+     "Contemporary Fears"
+    ],
+    "keywords": [
+     "immigrant",
+     "politics",
+     "switzerland",
+     "woman director"
+    ],
+    "credits": {
+     "directors": [
+      "Michael Krummenacher",
+      "Lisa Blatter",
+      "Gregor Frei"
+     ],
+     "writers": [],
+     "cast": [
+      "Luna Arzoni",
+      "Nicolas Bachmann",
+      "Egon Betschart",
+      "Soumeya Ferro-Luzzi",
+      "Morgane Ferru"
+     ],
+     "companies": [
+      "2:1 Film",
+      "Contrast Film",
+      "Passanten Filmproduktion"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "ppl-11",
+  "query": "like david lynch but less weird",
+  "intent": "Style query: Lynch's dreamy small-town darkness and mystery, but accessible and coherent. His most surreal films are wrong; Twin Peaks-like mysteries by others are ideal.",
+  "items": [
+   {
+    "pid": 1000000852485,
+    "title": "She Will",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Drama",
+     "Thriller"
+    ],
+    "essence_text": "This film delivers a haunting and introspective psychological thriller centered on an aging actress's traumatic past and supernatural revenge. It masterfully builds a creeping sense of dread through its deliberate slow burn and dreamlike atmosphere, set against the stark beauty of the Scottish highlands. The narrative delves deep into themes of female agency, trauma, and the industry's historical exploitation, offering a visually rich and emotionally resonant experience. It's a journey into...",
+    "tags": [
+     "Psychological Revenge Thriller",
+     "Ethereal Horror",
+     "Trauma & Healing",
+     "Scottish Folkloric",
+     "Visually Evocative",
+     "Female-Centric Narrative",
+     "Dreamlike Atmosphere",
+     "Slow-Burn Tension",
+     "Disturbing Imagery"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Charlotte Colbert"
+     ],
+     "writers": [
+      "Charlotte Colbert",
+      "Kitty Percy"
+     ],
+     "cast": [
+      "Alice Krige",
+      "Kota Eberhardt",
+      "Malcolm McDowell",
+      "Rupert Everett",
+      "Amy Manson"
+     ],
+     "companies": [
+      "Popcorn Group",
+      "Pressman Film",
+      "Intermission Film"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000445,
+    "title": "Caché",
+    "year": 2005,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "Drama",
+     "Thriller"
+    ],
+    "essence_text": "An intellectually stimulating psychological thriller that slowly unravels a web of secrets and paranoia. The film masterfully builds tension through subtle cues and ambiguous imagery, leaving the viewer questioning the characters' motives and perceptions. Its strength lies in its complex narrative structure and character-driven exploration of guilt, memory, and social injustice. This is a film that demands close attention and rewards multiple viewings, prompting reflection on its profound...",
+    "tags": [
+     "Psychological Thriller",
+     "Mystery",
+     "French Cinema",
+     "Social Commentary",
+     "Slow Burn",
+     "Intellectual",
+     "Unsettling",
+     "Ambiguous",
+     "Character Study"
+    ],
+    "keywords": [
+     "dreams",
+     "paris, france",
+     "upper class",
+     "suppressed past",
+     "paranoia",
+     "anonymous letter",
+     "confidence",
+     "menace",
+     "lie",
+     "algerian",
+     "intellectual",
+     "hidden camera"
+    ],
+    "credits": {
+     "directors": [
+      "Michael Haneke"
+     ],
+     "writers": [
+      "Michael Haneke"
+     ],
+     "cast": [
+      "Daniel Auteuil",
+      "Juliette Binoche",
+      "Annie Girardot",
+      "Bernard Le Coq",
+      "Daniel Duval"
+     ],
+     "companies": [
+      "Les Films du Losange",
+      "Wega Film",
+      "Bavaria Film"
+     ]
+    }
+   },
+   {
+    "pid": 1000000009063,
+    "title": "The Element of Crime",
+    "year": 1984,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Science Fiction"
+    ],
+    "essence_text": "A visually striking and atmospheric noir crime thriller. The film delves into the psychological depths of a detective as he investigates a series of murders. Its bleak atmosphere and stylized cinematography create a sense of unease and moral ambiguity. Expect a slow-burn narrative that demands patience but rewards with intrigue.",
+    "tags": [
+     "Noir Crime Thriller",
+     "Psychological Investigation",
+     "European Arthouse",
+     "Visually Striking",
+     "Bleak Atmosphere",
+     "Stylized Cinematography",
+     "Mystery and Intrigue",
+     "Slow-Burn Narrative",
+     "Moral Ambiguity"
+    ],
+    "keywords": [
+     "cairo",
+     "journey in the past",
+     "hypnosis",
+     "murder",
+     "police officer"
+    ],
+    "credits": {
+     "directors": [
+      "Lars von Trier"
+     ],
+     "writers": [
+      "Lars von Trier",
+      "Niels Vørsel"
+     ],
+     "cast": [
+      "Michael Elphick",
+      "Esmond Knight",
+      "Me Me Lai",
+      "Jerold Wells",
+      "Ahmed El Shenawi"
+     ],
+     "companies": [
+      "Det Danske Filminstitut",
+      "Per Holst Filmproduktion",
+      "Asta Film"
+     ]
+    }
+   },
+   {
+    "pid": 1000000076760,
+    "title": "Labyrinth of Dreams",
+    "year": 1997,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Mystery",
+     "Romance"
+    ],
+    "essence_text": "A haunting and dreamlike journey through the complexities of love and suspicion. The film weaves a surreal tapestry of romance and mystery, set against a backdrop of unsettling beauty. Character psychology and emotional depth are at the forefront, drawing viewers into a world where reality and fantasy blur. It's a visually arresting experience, steeped in melancholy and punctuated by moments of profound unease. The film's ambiguity lingers long after the credits roll.",
+    "tags": [
+     "Japanese Arthouse",
+     "Surrealist Mystery",
+     "Melancholy Romance",
+     "Psychological Thriller",
+     "Dreamlike Atmosphere",
+     "Unsettling & Eerie",
+     "Visually Haunting",
+     "Complex Characters",
+     "Historical Setting"
+    ],
+    "keywords": [
+     "serial killer",
+     "bus conductor"
+    ],
+    "credits": {
+     "directors": [
+      "Gakuryu Ishii"
+     ],
+     "writers": [
+      "Gakuryu Ishii",
+      "Kyūsaku Yumeno"
+     ],
+     "cast": [
+      "Tadanobu Asano",
+      "Rena Komine",
+      "Kotomi Kyōno",
+      "Tomoka Kurotani",
+      "Kirina Mano"
+     ],
+     "companies": [
+      "KSS"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000635,
+    "title": "Angel Heart",
+    "year": 1987,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Mystery"
+    ],
+    "essence_text": "A dark and atmospheric neo-noir thriller that plunges into a world of occult mystery and moral decay. The film follows a detective's descent into a terrifying investigation, blurring the lines between reality and nightmare. Its unsettling tone, graphic imagery, and powerful performances create a lingering sense of dread. This is a stylish and disturbing exploration of guilt, fate, and the dark side of human nature.",
+    "tags": [
+     "Neo-Noir",
+     "Psychological Thriller",
+     "Occult Mystery",
+     "Atmospheric",
+     "Bleak & Disturbing",
+     "Moral Descent",
+     "Supernatural Horror",
+     "New Orleans Setting",
+     "Jazz Soundtrack"
+    ],
+    "keywords": [
+     "new york city",
+     "amnesia",
+     "heart",
+     "southern usa",
+     "voodoo",
+     "detective",
+     "drug addiction",
+     "new orleans, louisiana",
+     "investigation",
+     "neurosis",
+     "sanatorium",
+     "surrealism"
+    ],
+    "credits": {
+     "directors": [
+      "Alan Parker"
+     ],
+     "writers": [
+      "Alan Parker",
+      "William Hjortsberg"
+     ],
+     "cast": [
+      "Mickey Rourke",
+      "Robert De Niro",
+      "Lisa Bonet",
+      "Charlotte Rampling",
+      "Stocker Fontelieu"
+     ],
+     "companies": [
+      "Winkast Film Productions",
+      "Union",
+      "Carolco Pictures"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "ppl-10",
+  "query": "wes anderson style",
+  "intent": "Style query: one or two Wes Anderson films welcome, but mostly other whimsical, symmetrical, deadpan and pastel-hued films by others.",
+  "items": [
+   {
+    "pid": 1000001114873,
+    "title": "Riddle of Fire",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Adventure",
+     "Comedy"
+    ],
+    "essence_text": "A whimsical and enchanting adventure that feels like a modern fairytale. The film follows the escapades of mischievous children on a quest, blending elements of fantasy with a contemporary setting. Its youthful energy and sense of wonder evoke a feeling of nostalgic delight. This is a charming and visually appealing experience, perfect for those seeking a lighthearted and heartwarming escape.",
+    "tags": [
+     "Whimsical Adventure",
+     "Modern Fairytale",
+     "Childhood Quests",
+     "Magical Realism",
+     "Youthful Mischief",
+     "Charming and Delightful",
+     "Visually Appealing",
+     "Nostalgic Undertones"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Weston Razooli"
+     ],
+     "writers": [
+      "Weston Razooli"
+     ],
+     "cast": [
+      "Lio Tipton",
+      "Charles Halford",
+      "Charlie Stover",
+      "Skyler Peters",
+      "Phoebe Ferro"
+     ],
+     "companies": [
+      "ANAXIA",
+      "FullDawa Films"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ }
+]

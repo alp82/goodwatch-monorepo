@@ -342,3 +342,251 @@ Production's grades on the losing queries are correct, so the exception doesn't 
 - ho2-21 "dystopain deth game series" (fast −0.20): "deth" isn't corrected, and without Crate Squid Game drops to #5
   under video-game adaptations.
 Round 4 did fix ho2-04 "western with samurai" (r3 −0.20 / −0.43 → +0.06). Guardrail: The Expanse #1 everywhere.
+
+## Round 5 (2026-09-23): cast, crew and studio matching
+
+Tuned on `dev` (12 new `ppl-*` queries plus the earlier dev queries); `holdout` and `holdout2` used only as
+regression checks. The `holdout3` split was not read, run or scored. Code: `harness/entities.py` (detection and
+intent), `harness/rankers5.py` (hyb5), `harness/run5.py`. 341 new pairs graded (A/B quadratic weighted kappa 0.900
+on 340, 1 more pair in agreement, no pair 2+ apart, so no assessor C), merged add-only (3,073 → 3,414). From this
+round on, packets carry a `credits` field (contract note). Details: `round5/metrics-dev.md`.
+
+| ranker | ppl-dev (12) | dev (all) | dev (pre-round-5) | holdout | holdout2 | bad5 ppl-dev | good10 ppl-dev |
+|---|---|---|---|---|---|---|---|
+| r5 | 0.864 | 0.833 | 0.823 | 0.761 | 0.734 | 3 | 8.50 |
+| r4-combo-fast | 0.643 | 0.777 | 0.820 | 0.761 | 0.722 | 10 | 6.08 |
+| prod | 0.277 | 0.508 | 0.582 | 0.450 | 0.515 | 13 | 2.58 |
+
+Detection (`entities.detect`, local, p50 0.02 ms / p95 0.15 ms after warm-up):
+- Persons: full and original names of kept people (titles ≥ 2; shared names go to the highest votes_sum), surnames
+  when one person dominates the surname (lead score = votes over main-role titles, director / creator 2x; ≥ 500k and
+  ≥ 3x the next person), sibling teams ("coen brothers", "wachowskis"), style suffixes (-esque, -like, -ian), fuzzy
+  full names (rapidfuzz ratio ≥ 90) and surnames (edit distance 1, 7+ letters), only for short queries with a word
+  outside the catalog vocabulary.
+- Studios: companies and networks grouped by alias (suffixes stripped, "studio ghibli" → "ghibli", "hbo max" → "hbo"),
+  ≥ 8 eligible titles.
+- Guards: a single word must not be a common word (lowercase in ≥ 20 essence texts, any case in ≥ 250, or a title
+  word in ≥ 15 titles, the last not for studios); a single-word studio alias that is also a word ("marvel") needs a
+  big group and a film word next to it ("marvel movies"); non-English queries only match multi-word full names.
+- Result on every non-holdout3 query: all 12 ppl dev queries detected with the intended entity; 3 earlier queries
+  are legitimate person queries (lab-01 "tarkovsky", ho2-15 "terry gilliam", ho2-16 "jackie chan movies"); **zero
+  false detections** on the other 88. Fixed on the way: "lighthouse keeper" (Lighthouse Pictures), "Des gens" (Xavier
+  Gens), "Krieg" (Jim Krieg), "snipers" (fuzzy Wesley Snipes), "British" (British Screen), German "das".
+- Intent: style markers (vibes, style, atmosphere, humor, like X, -esque, ...) → style; film words, other content words,
+  "early"/"late", or a studio → filmography; a bare person name → both (6 credited titles first, then style).
+
+What changed on dev (sweeps: `run5.py sweep`, all rankers identical to r4-combo-fast on non-entity queries):
+- Filmography boost 4.0 × credit weight beats 2.5 (+0.009) and 1.5 (−0.05): the credited titles have to lead.
+  Cast weights are flat for the first four billed (Snatch and Burn After Reading bill Brad Pitt 4th-5th).
+- Style: at most 4 own titles in the top 10 (+0.013 over 3), own-title boost 0.3, centroid of 20 top titles.
+- Both: head of 6 own titles (+0.016 over 4; 8 gives the same ndcg with more unjudged).
+- Centroid fingerprint (0.3) matters: without it −0.03 (and 12 unjudged).
+- People fields in BM25: removing them for entity queries changes nothing, so they stay (one sparse vector, no
+  second index).
+- "less X" as a fingerprint direction (`less_fp`) did not help (−0.01); the "less weird" clause only joins the
+  negation penalty (0.3).
+- Losses vs r4-combo-fast: ppl-15 "miyazaki-like" −0.23, ppl-09 "tarantino vibes" −0.20, ppl-20 "edgar wright"
+  −0.10. The graders give his own films 3, so r4's lists of only his films score higher; the cap is the user's
+  decision (a mix of own titles and similar titles by others), so it stays. ppl-11 "like david lynch but less weird"
+  stays weak (0.44): the centroid is Lynch's surreal films, which the intent rates 0.
+
+Latency and cost: no paid calls. Detection < 0.2 ms; the credited titles come from an in-memory person / studio →
+titles map; the centroid is one more dense list in the Qdrant batch (query by vector, top 500) and one more
+fingerprint cosine in the in-process scan. Estimated +3-6 ms p50 on entity queries only (≈ 0.1 ms on others);
+r5 ≈ 35-50 ms after the reading, p95 of the whole search unchanged at ~0.55 s. Offline, the entity path is faster
+than hyb4 (21 vs 40 ms median) because it skips facet coverage.
+
+### r5 config (frozen before holdout3)
+
+`run5.FINAL["r5"]` = r4-combo-fast (`run4.FINAL["r4-combo-fast"]`, blend unchanged) + `rankers5.DEFAULTS5`:
+`ent True, fil_boost 4.0, sty_boost 0.3, sty_cap 4, head_style 6, head_actor 6, mix_style 0.7, mix_fil 0.3,
+cen_k 20, cen_fp 0.3, cen_fp_fil 0.0, ent_sparse_people True, early_frac 0.4, era_off 0.35, ent_facet True,
+cen_top 500, sty_prior 1.0, less_neg 0.3, less_fp 0.0`; entities.py constants `SURNAME_VOTES 500k,
+SURNAME_DOMINANCE 3, STUDIO_MIN_TITLES 8, COMMON_LOWER_DF 20, COMMON_TITLE_DF 15, COMMON_ANY_DF 250,
+RARE_LOWER_DF 2, FUZZY_NAME_CUTOFF 90, FUZZY_MAX_WORDS 5`. On entity queries the blend's title-word bonus (`kind`)
+is off. No code or config changes after this point.
+
+## Holdout 3 (2026-09-23): frozen r5 on the person and studio split
+
+Frozen `run5.FINAL["r5"]`, no code or config changed after the freeze (`run5.py holdout3`, `holdout3-metrics`).
+Detection on the 12 holdout3 queries: all 12 found the intended entity (incl. the typo "leonardo dicapro" by fuzzy
+match, "coen brothers" as a team, "kubrick-esque" by surname plus suffix, A24 and HBO by studio alias). 271 new pairs
+graded (A/B quadratic weighted kappa 0.854, 2 pairs 2+ apart settled by a blind assessor C: Forrest Gump for "tom hanks
+war movies" 1, Quay for "christopher nolan" 2), merged add-only (3,414 → 3,685). Details: `round5/metrics.md`.
+
+| ranker | holdout3 ndcg10 | good10 | bad5 | dev (all) | holdout | holdout2 |
+|---|---|---|---|---|---|---|
+| r5 | 0.831 | 7.42 | 3 | 0.833 | 0.761 | 0.734 |
+| r4-combo-fast | 0.724 | 6.92 | 2 | 0.777 | 0.761 | 0.722 |
+| prod | 0.388 | 4.25 | 10 | 0.508 | 0.450 | 0.515 |
+
+Verdict: **r5 does not win under the contract.** It beats r4-combo-fast by +0.107 on holdout3 (needs +0.05) and
+doesn't drop on any earlier split (dev +0.056, dev without the ppl queries +0.003, holdout ±0, holdout2 +0.012), but
+its bad5 is 3 against 2. All three grade-0 top-5 titles come from style queries whose centroid pulls in popular
+neighbours: "kubrick-esque" puts Apocalypse Now at #1 and Apocalypse Now Redux at #4 (neighbours of Full Metal Jacket
+and 2001 in the centroid), and "tom hanks war movies" has Charlie Wilson's War at #5 (a Hanks film the graders don't
+count as war). r4-combo-fast's two are The Matrix (#3, kubrick-esque) and Captain Phillips (#5).
+
+Per query: filmography queries gain a lot (a24 horror +0.65, tom hanks war movies +0.32, keanu reeves action +0.29,
+hbo prestige drama +0.29, leonardo dicapro thrillers +0.27); "both" is about even (christopher nolan +0.02, jim carrey
+−0.02); style queries lose (guy ritchie −0.27, kubrick-esque −0.22, wes anderson style −0.04, coen brothers humor
+±0). The same pattern showed on dev (tarantino vibes −0.20, miyazaki-like −0.23): the style centroid's non-own
+neighbours are often generic popular titles (Pulp Fiction, Kill Bill, Sherlock for Guy Ritchie), while r4's text match
+on the name already returns the person's own films, which the graders rate 3.
+
+What it means (not a contract outcome): r5's filmography and studio path is a clear win (+0.29 mean on the six
+holdout3 filmography queries); the style path is the weak part. A next round could keep the filmography / both path and
+rethink style (e.g. drop the prior on style queries, pick neighbours that share tags or keywords with the centroid
+titles rather than cosine to their mean, and let own titles fill the gaps).
+
+## Round 6 (2026-09-23): style neighbours and alternate cuts
+
+Tuned on the `dev` style / both queries (ppl-09, 11, 13, 15, 17, 20), with every earlier split (dev, holdout,
+holdout2, holdout3) as a regression check. `holdout4` (sty-*) was not read, run or scored. Code: `harness/cuts.py`,
+`harness/rankers6.py` (hyb6), `harness/run6.py`, `harness/grade6.py`, `harness/regrade_effect.py`; metrics in
+`harness/metrics.py` (`graded_query6`, `own10`). Details: `round6/metrics-dev.md`.
+
+Grading (contract note, round 6):
+- `GRADER.md` has a "Style queries (round 6)" section. Packets of `person_intent` style / both queries carry
+  `"rubric": "style"`.
+- Re-grade: the 290 existing pairs of the dev and holdout3 style / both queries (ppl-09 to ppl-18, ppl-20, ppl-24)
+  were graded again under the new rubric by two sonnet assessors (quadratic weighted kappa 0.901). One pair was 2+
+  apart and went to a blind assessor C (The Man Who Wasn't There for "coen brothers humor": 2). The re-grade
+  replaced those grades. 77 of 290 changed: 27 went from 2 to 3 (similar titles by others), and 20 went down to 0 or 1
+  (generic or off-style titles). The old grades are in `grading/pre-r6-style-grades.json`. lab-01 and ho2-15 have no
+  `person_intent` field, so they were not re-graded (strict reading of the note).
+- New pairs (add-only): batch p1 had 135 pairs (kappa 0.825, none 2+ apart). Batch p2 had 19 pairs (kappa 0.609, one
+  pair 2+ apart: Eddington for "vince gilligan", C: 2). grades.json went from 3,685 to 3,839.
+- Cut rule, in metrics rather than in grades: a title in the top 10 that is an alternate cut of a title ranked above it
+  counts as grade 0 for ndcg10, good10 and bad5. The ideal DCG keeps only the best-graded title of each set of cuts.
+- own10: the number of the entity's own titles in the top 10. Own means credit weight >= 0.8: director or co-director,
+  creator, Writing-department writer, top-4 billed cast, or one of the studio's first companies. A 2nd cut doesn't
+  count again. The contract's mean own10 is taken over `person_intent: style` queries. For `both` queries own10 is
+  reported, but the head of 6 own titles is by design.
+
+Effect of the re-grade and the cut rule on the saved round-5 lists (`regrade_effect.py`):
+
+| ranker | dev-style (old → re-graded → + cut rule) | holdout3 (same) | holdout3 bad5 |
+|---|---|---|---|
+| r5 | 0.783 → 0.765 → 0.737 | 0.831 → 0.817 → 0.815 | 3 → 1 → 2 |
+| r4-combo-fast | 0.788 → 0.783 → 0.739 | 0.724 → 0.752 → 0.752 | 2 → 3 → 3 |
+| prod | 0.335 → 0.295 → 0.295 | 0.388 → 0.404 → 0.404 | 10 → 11 → 11 |
+
+(The dev-style column covers the 6 dev style / both queries. Later batches changed the ideals a little more; the
+current numbers are below.)
+
+Alternate cuts (`cuts.py`): the relation is pairwise, not a partition. Two titles are linked when:
+- one is the other plus a cut suffix (Redux, Extended / "- Extended Version", Director's Cut, Final Cut, Special /
+  Ultimate / Deluxe Edition, Uncut, The Whole Bloody Affair, Unrated, Re-Edit, ...) or a director's possessive prefix
+  ("Zack Snyder's Justice League"), and they share a director;
+- the suffix-stripped base is the other title minus a part marker (The Whole Bloody Affair links to Kill Bill Vol. 1
+  and to Vol. 2, but Vol. 1 and Vol. 2 are not linked to each other);
+- or they have the same normalized title, their years differ by at most 1, and they share a director (or exactly one
+  of them has no director credits). This catches duplicate records such as Reservoir Dogs 1991 / 1992 and the four
+  Hateful Eight Extended entries.
+
+About 780 eligible titles are linked. `fold` keeps the first title of each set and drops later ones. r6 folds every
+list after the blend, so it applies to all queries. It changes the top 10 of 4 earlier queries: ppl-09, ppl-12,
+ppl-16 and ho2-22 (a duplicate Battlestar Galactica 2003 / 2004). ho2-03 +0.066. No title_lookup guardrail changes.
+
+Style path (hyb6, only for entity queries with intent style or both; everything else is hyb5 plus folding). Every
+signal is z-scored over the candidates:
+- fp centroid: cosine to the log-votes-weighted fingerprint centroid of the entity's top 20 main-role titles (w 0.8);
+- emb centroid: the same centroid for the bge embedding (w 0.6);
+- term profile: stemmed terms and bigrams of the tags, keywords, tropes and essence text of those titles that at
+  least 2 of them share, weighted by the share of titles × IDF, top 40, scored with the BM25 body index (w 0.3).
+  Removing it costs about −0.08 on dev-style;
+- peers: similar directors, creators or studios. Centroids are precomputed for 2,339 directors / creators (≥ 3
+  eligible main-crew titles, ≥ 200k votes) and for the studio groups. The entity's 15 nearest by fingerprint centroid
+  are its peers (e.g. Tarantino: Drew Goddard, Guy Ritchie, the Coens, De Palma, de la Iglesia, Kitano, Suzuki,
+  Vaughn; Tarkovsky: Malick, Sokurov, Dreyer, Herzog, Angelopoulos). Their top 8 titles get the peer's similarity
+  (w 0.3). Using the fingerprint only for peers beats adding the embedding: +0.01 dev-style, +0.07 ho3-style;
+- agreement min(z fp, z emb, z terms) (w 0.2), name mentions in other titles' body text (w 0.1), the Jev reading's
+  fingerprint sum (w 0.4), the residual query (w 0.3), negation as r5;
+- popularity damping: −0.2 z(log votes) on titles that aren't the entity's own; the goodwatch-score half of the prior
+  stays (0.1). Stronger damping (0.4, 0.6) hurt;
+- own titles: +1.0, then 3 to 6 own titles in the top 10 (pulled up to interleaved slots if fewer than 3, the extras
+  moved below rank 10), re-checked after the blend and the folding. Cuts are folded before the slots are filled.
+  `both` keeps r5's head of 6 own titles.
+
+What did not help: own_max 5 (−0.034 dev-style, −0.012 ho3-style; own10 5.0 instead of 6.0), more damping, more
+profile terms (80) or more peer titles (15), mention weight 0.3, and for "like david lynch but less weird" capping
+own titles at 3 or doubling the negation weight. Both cost ndcg on dev because Lynch's surreal films still rank on the
+centroids, and his accessible own titles (Twin Peaks) left with the cap.
+
+### r6 config (frozen before holdout4)
+
+`run6.FINAL["r6"]` = `run5.FINAL["r5"]` with `rankers6.DEFAULTS6`: `s6 True, w_fp 0.8, w_emb 0.6, w_terms 0.3,
+w_mention 0.1, w_peer 0.3, w_agree 0.2, w_jev 0.4, w_res 0.3, damp 0.2, gw 0.1, own_w 0.8, own_boost 1.0, own_min 3,
+own_max 6, own_slots (0, 2, 4, 6, 8), cen6_k 20, terms_n 40, terms_min_df 2, peer_k 15, peer_titles 8, peer_emb 0.0,
+k_cen 500, k_terms 300, fold True` (neg_own_* and neg_w unset). The blend is r5's (title-word bonus off on entity
+queries). Alternate cuts are folded after the blend (`cuts.fold`), then `run6.cap_own` applies (own_max for style
+queries). No code or config changes after this point.
+
+Dev and regression numbers (round-6 metrics, current grades):
+
+| ranker | dev-style (6) | ho3-style (6) | dev (all) | holdout | holdout2 | holdout3 | bad5 dev-style | own10 dev style |
+|---|---|---|---|---|---|---|---|---|
+| r6 | 0.812 | 0.884 | 0.836 | 0.761 | 0.728 | 0.893 | 4 | 6.00 |
+| r5 | 0.709 | 0.675 | 0.823 | 0.761 | 0.727 | 0.788 | 5 | 3.50 |
+| r4-combo-fast | 0.714 | 0.789 | 0.767 | 0.761 | 0.716 | 0.720 | 5 | 7.50 |
+| prod | 0.293 | 0.473 | 0.501 | 0.450 | 0.514 | 0.392 | 12 | 3.00 |
+
+Per query vs r5: tarantino vibes +0.31, miyazaki-like +0.23, edgar wright +0.08, villeneuve +0.06, kubrick-esque
++0.49, guy ritchie +0.43, christopher nolan +0.12, wes anderson +0.13, coen humor +0.09. Losses: terry gilliam −0.04
+(Alice in Wonderland and Holy Motors, both graded 1, enter the top 10), lynch less weird −0.03, vince gilligan −0.03
+(Hancock and Home Fries are own titles through writer credits and get graded 0 / 1).
+
+Latency: no paid calls. The peer and cut indexes are built offline (about 2 s here, in memory). Per style query: two
+centroid scans (bge 768-d and fingerprint 74-d) as Qdrant query-by-vector lists, one BM25 profile query (40 terms) and
+one name-mention query in the same batch, plus < 5 ms in process (peers, slots, folding). Offline median 42 ms for the
+style path (r5: 21 ms). Estimated +5-10 ms p50 on style queries only. Whole-search p95 stays at ~0.55 s.
+
+Holdout4 finalists (frozen): `r6`, compared with `r4-combo-fast` and `r5` under the round-6 note's criteria.
+
+## Holdout 4 (2026-09-23): frozen r6 on the style split
+
+The frozen `run6.FINAL["r6"]` was run with no code or config changes after the freeze (`run6.py holdout4`,
+`holdout4-metrics`). Detection found the intended entity in all 12 queries (e.g. "fincher" by surname, "aardman" and
+"blumhouse" by studio alias, French "à la jean-pierre jeunet" by full name). Intent differs from the query's
+`person_intent` on 3 queries: "something darren aronofsky would direct" was read as filmography, "danny boyle movies
+and stuff like them" and "cartoons with matt groening humor" as style instead of both. 329 new pairs were graded by
+two sonnet assessors (quadratic weighted kappa 0.878). 4 pairs were 2+ apart and went to a blind assessor C: Wild
+Zero 2, Koala Man 1, Death of a Unicorn 1, Ju-on: The Beginning of the End 2. Merged add-only (3,839 → 4,168).
+Details: `round6/metrics.md`.
+
+| ranker | holdout4 ndcg10 | bad5 | own10 (9 style queries) | dev (all) | holdout | holdout2 | holdout3 |
+|---|---|---|---|---|---|---|---|
+| r6 | 0.837 | 2 | 6.00 | 0.836 | 0.761 | 0.728 | 0.893 |
+| r5 | 0.709 | 2 | 3.78 | 0.823 | 0.761 | 0.727 | 0.788 |
+| r4-combo-fast | 0.704 | 1 | 4.67 | 0.767 | 0.761 | 0.716 | 0.720 |
+| prod | 0.379 | 20 | 2.56 | 0.501 | 0.450 | 0.514 | 0.392 |
+
+Criteria (round-6 note), applied mechanically:
+- ndcg10: r6 − r4-combo-fast +0.132 and r6 − r5 +0.127 (both need ≥ +0.05): pass.
+- bad5: r6 has 2, against 1 for r4-combo-fast and 2 for r5 (it must not be higher than either): **FAIL**.
+- mean own10: 6.00 (must be 3 to 6): pass, at the upper edge. The per-query values are 6 everywhere except fincher
+  3, jeunet 5 and aronofsky 10; aronofsky was read as a filmography query, so no cap applied.
+- earlier splits, r6 − r5 (no drop over 0.01): dev +0.013, holdout +0.000, holdout2 +0.001, holdout3 +0.105: pass.
+- Verdict: **r6 does not win.**
+
+Both r6 grade-0 titles in the top 5 come from "fincher vibes but a series": Love, Death & Robots (#3) and Voir (#5).
+Both are Fincher's own series through a director or producer credit, and the own-title boost (+1.0) pulled them up.
+r4-combo-fast's single grade-0 title is Animaniacs (#3) for "aardman humor".
+
+Per query vs r5, r6 gains on 9 of 12: danny boyle +0.30, blumhouse +0.29, jeunet +0.27, aardman +0.24, nicolas cage
++0.15, fincher series +0.13, kaufman +0.12, mel brooks +0.09, gilliam +0.03. It loses on matt groening −0.06 (after
+The Simpsons, Futurama and Disenchantment, the neighbours are kids' cartoons, all graded 0: The Weekenders, The Proud
+Family and Kappa Mikey. The fingerprint and peers match "animated family comedy", not the satire) and jackie chan
+−0.02. aronofsky is ±0.
+Latency: holdout4 r6 median 34 ms offline, no added cost.
+
+What it means (not a contract outcome): the style signals work. The biggest dev and holdout gains come from the
+fingerprint centroid with fingerprint-only peers, the IDF term profile, and cut folding. The remaining failure is the
+own-title rule: a person's weakest own credits (a producer credit on a series, an animated anthology, a
+voice-cast credit) are boosted like the core filmography. A next step would rank own titles by style fit instead of a
+flat boost, or require a main crew role (director / creator) for the boost and the slots. Another would add a satire
+or tone term to the neighbour score for animation queries.
+
+Playground: r6 was added as a column (`playground/serve.py`, `index.html`), but it doesn't carry the winner tag,
+which stays on r4-combo-fast.

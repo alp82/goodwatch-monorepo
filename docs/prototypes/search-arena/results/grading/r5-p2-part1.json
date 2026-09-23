@@ -1,0 +1,65 @@
+[
+ {
+  "query_id": "ppl-05",
+  "query": "early spielberg",
+  "intent": "Films directed by Steven Spielberg in the 1970s and 1980s first. His later films are loosely relevant; other directors' films are weak.",
+  "items": [
+   {
+    "pid": 1000000015301,
+    "title": "Twilight Zone: The Movie",
+    "year": 1983,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Fantasy",
+     "Science Fiction"
+    ],
+    "essence_text": "An unsettling anthology film that reimagines classic 'Twilight Zone' tales, blending science fiction, horror, and psychological intrigue. Each segment delivers a distinct, eerie atmosphere and a thought-provoking premise, often culminating in a signature twist. The film excels at creating an uncanny sense of dread and exploring moral complexities, making it a compelling watch for those who appreciate suspenseful, narrative-driven horror with a cerebral edge. It's a journey into the...",
+    "tags": [
+     "Sci-Fi Horror Anthology",
+     "Psychological Thriller",
+     "Twist Endings",
+     "Eerie Atmosphere",
+     "Moral Dilemmas",
+     "Unsettling",
+     "Classic Remakes",
+     "Supernatural Elements",
+     "Thought-Provoking"
+    ],
+    "keywords": [
+     "nazi",
+     "anthology",
+     "remake",
+     "mysterious",
+     "zone",
+     "wistful",
+     "suspenseful",
+     "foreboding"
+    ],
+    "credits": {
+     "directors": [
+      "Steven Spielberg",
+      "Joe Dante",
+      "John Landis"
+     ],
+     "writers": [
+      "John Landis",
+      "George Clayton Johnson",
+      "Melissa Mathison"
+     ],
+     "cast": [
+      "Dan Aykroyd",
+      "Albert Brooks",
+      "Scatman Crothers",
+      "John Lithgow",
+      "Vic Morrow"
+     ],
+     "companies": [
+      "Warner Bros. Pictures",
+      "Amblin Entertainment"
+     ]
+    }
+   }
+  ]
+ }
+]

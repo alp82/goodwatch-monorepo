@@ -3921,5 +3921,1628 @@
    "avoid": []
   },
   "origin": "new"
+ },
+ {
+  "id": "ppl-01",
+  "query": "funny brad pitt movies",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Comedies starring Brad Pitt first (dark or caper comedy counts). His serious dramas are loosely relevant; comedies without him are only loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Burn After Reading",
+     "year": 2008,
+     "tmdb_id": 4944,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Snatch",
+     "year": 2000,
+     "tmdb_id": 107,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Bullet Train",
+     "year": 2022,
+     "tmdb_id": 718930,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Se7en",
+     "year": 1995,
+     "tmdb_id": 807,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-02",
+  "query": "keanu reeves action",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Action films starring Keanu Reeves first. Other action films with a similar feel are loosely relevant; his non-action roles are weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Matrix",
+     "year": 1999,
+     "tmdb_id": 603,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "John Wick",
+     "year": 2014,
+     "tmdb_id": 245891,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Speed",
+     "year": 1994,
+     "tmdb_id": 1637,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Point Break",
+     "year": 1991,
+     "tmdb_id": 1089,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-03",
+  "query": "bill murray deadpan comedies",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Comedies where Bill Murray plays his dry, deadpan persona first. Other deadpan comedies without him are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Groundhog Day",
+     "year": 1993,
+     "tmdb_id": 137,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Lost in Translation",
+     "year": 2003,
+     "tmdb_id": 153,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Life Aquatic with Steve Zissou",
+     "year": 2004,
+     "tmdb_id": 421,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Broken Flowers",
+     "year": 2005,
+     "tmdb_id": 308,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-04",
+  "query": "tom hanks war movies",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "War films and series with Tom Hanks in the cast first. War films without him are loosely relevant; his non-war films are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Saving Private Ryan",
+     "year": 1998,
+     "tmdb_id": 857,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Greyhound",
+     "year": 2020,
+     "tmdb_id": 516486,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Toy Story",
+     "year": 1995,
+     "tmdb_id": 862,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Cast Away",
+     "year": 2000,
+     "tmdb_id": 8358,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-05",
+  "query": "early spielberg",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Films directed by Steven Spielberg in the 1970s and 1980s first. His later films are loosely relevant; other directors' films are weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Jaws",
+     "year": 1975,
+     "tmdb_id": 578,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Close Encounters of the Third Kind",
+     "year": 1977,
+     "tmdb_id": 840,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Raiders of the Lost Ark",
+     "year": 1981,
+     "tmdb_id": 85,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Duel",
+     "year": 1971,
+     "tmdb_id": 839,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Ready Player One",
+     "year": 2018,
+     "tmdb_id": 333339,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "West Side Story",
+     "year": 2021,
+     "tmdb_id": 511809,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-06",
+  "query": "leonardo dicapro thrillers",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Typo for Leonardo DiCaprio: thrillers starring him first. His romances and period dramas are weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Shutter Island",
+     "year": 2010,
+     "tmdb_id": 11324,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "The Departed",
+     "year": 2006,
+     "tmdb_id": 1422,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Inception",
+     "year": 2010,
+     "tmdb_id": 27205,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Titanic",
+     "year": 1997,
+     "tmdb_id": 597,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-07",
+  "query": "stephen chow's kung fu comedies",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Kung-fu comedies directed by or starring Stephen Chow first. Other kung-fu comedies (e.g. Jackie Chan) are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Kung Fu Hustle",
+     "year": 2004,
+     "tmdb_id": 9470,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Shaolin Soccer",
+     "year": 2001,
+     "tmdb_id": 11770,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "The God of Cookery",
+     "year": 1996,
+     "tmdb_id": 41343,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-08",
+  "query": "lustige Filme mit Bud Spencer und Terence Hill",
+  "type": "person",
+  "split": "dev",
+  "familiar": false,
+  "person_intent": "filmography",
+  "intent": "German: comedic brawler westerns and action comedies with the Bud Spencer and Terence Hill duo first. Films with only one of them come next.",
+  "anchors": {
+   "must": [
+    {
+     "title": "They Call Me Trinity",
+     "year": 1970,
+     "tmdb_id": 9394,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Trinity Is Still My Name",
+     "year": 1971,
+     "tmdb_id": 11829,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Watch Out, We're Mad",
+     "year": 1974,
+     "tmdb_id": 6916,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Odds and Evens",
+     "year": 1978,
+     "tmdb_id": 11367,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-09",
+  "query": "tarantino vibes",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Tarantino films welcome, but mostly other films with his feel: stylized violence, pop-culture talk, crime ensembles, nonlinear plots.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Pulp Fiction",
+     "year": 1994,
+     "tmdb_id": 680,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "True Romance",
+     "year": 1993,
+     "tmdb_id": 319,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Lucky Number Slevin",
+     "year": 2006,
+     "tmdb_id": 186,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Seven Psychopaths",
+     "year": 2012,
+     "tmdb_id": 86838,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-10",
+  "query": "wes anderson style",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: one or two Wes Anderson films welcome, but mostly other whimsical, symmetrical, deadpan and pastel-hued films by others.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Grand Budapest Hotel",
+     "year": 2014,
+     "tmdb_id": 120467,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Amélie",
+     "year": 2001,
+     "tmdb_id": 194,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Moonrise Kingdom",
+     "year": 2012,
+     "tmdb_id": 83666,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-11",
+  "query": "like david lynch but less weird",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: Lynch's dreamy small-town darkness and mystery, but accessible and coherent. His most surreal films are wrong; Twin Peaks-like mysteries by others are ideal.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Twin Peaks",
+     "year": 1990,
+     "tmdb_id": 1920,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Blue Velvet",
+     "year": 1986,
+     "tmdb_id": 793,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Fargo",
+     "year": 1996,
+     "tmdb_id": 275,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Eraserhead",
+     "year": 1977,
+     "tmdb_id": 985,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Inland Empire",
+     "year": 2006,
+     "tmdb_id": 1730,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-12",
+  "query": "something in the style of guy ritchie",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Guy Ritchie films welcome, but mostly other fast, witty British crime capers with ensembles of crooks.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Snatch",
+     "year": 2000,
+     "tmdb_id": 107,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Layer Cake",
+     "year": 2004,
+     "tmdb_id": 4836,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "In Bruges",
+     "year": 2008,
+     "tmdb_id": 8321,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Lucky Number Slevin",
+     "year": 2006,
+     "tmdb_id": 186,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-13",
+  "query": "denis villeneuve atmosphere",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Villeneuve films welcome, but mostly other brooding, slow, visually vast and tense sci-fi or thrillers.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Arrival",
+     "year": 2016,
+     "tmdb_id": 329865,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Blade Runner 2049",
+     "year": 2017,
+     "tmdb_id": 335984,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Annihilation",
+     "year": 2018,
+     "tmdb_id": 300668,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Ex Machina",
+     "year": 2015,
+     "tmdb_id": 264660,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-14",
+  "query": "coen brothers humor",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Coen brothers comedies welcome, but mostly other dark, deadpan comedies about hapless people and botched crimes.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Big Lebowski",
+     "year": 1998,
+     "tmdb_id": 115,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Burn After Reading",
+     "year": 2008,
+     "tmdb_id": 4944,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "In Bruges",
+     "year": 2008,
+     "tmdb_id": 8321,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Fargo",
+     "year": 2014,
+     "tmdb_id": 60622,
+     "media_type": "show",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-15",
+  "query": "miyazaki-like",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Miyazaki films welcome, but mostly other hand-drawn, gentle, nature-loving fantasy animation by others.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Princess Mononoke",
+     "year": 1997,
+     "tmdb_id": 128,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Wolf Children",
+     "year": 2012,
+     "tmdb_id": 110420,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Secret World of Arrietty",
+     "year": 2010,
+     "tmdb_id": 51739,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Song of the Sea",
+     "year": 2014,
+     "tmdb_id": 110416,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-16",
+  "query": "kubrick-esque",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Kubrick films welcome, but mostly other cold, meticulous, unsettling films with striking symmetric imagery.",
+  "anchors": {
+   "must": [
+    {
+     "title": "2001: A Space Odyssey",
+     "year": 1968,
+     "tmdb_id": 62,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "There Will Be Blood",
+     "year": 2007,
+     "tmdb_id": 7345,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Under the Skin",
+     "year": 2013,
+     "tmdb_id": 698232,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-17",
+  "query": "vince gilligan",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Shows and films created or written by Vince Gilligan first, then tense, morally grey crime dramas in his style.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Breaking Bad",
+     "year": 2008,
+     "tmdb_id": 1396,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Better Call Saul",
+     "year": 2015,
+     "tmdb_id": 60059,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "El Camino: A Breaking Bad Movie",
+     "year": 2019,
+     "tmdb_id": 559969,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Pluribus",
+     "year": 2025,
+     "tmdb_id": 225171,
+     "media_type": "show",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-18",
+  "query": "christopher nolan",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Films directed by Christopher Nolan first, then cerebral, puzzle-box blockbusters in his style.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Interstellar",
+     "year": 2014,
+     "tmdb_id": 157336,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Inception",
+     "year": 2010,
+     "tmdb_id": 27205,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Memento",
+     "year": 2000,
+     "tmdb_id": 77,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "The Dark Knight",
+     "year": 2008,
+     "tmdb_id": 155,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-19",
+  "query": "jim carrey",
+  "type": "person",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Films starring Jim Carrey first, both rubber-faced comedies and his dramatic turns. Similar comedies without him are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Truman Show",
+     "year": 1998,
+     "tmdb_id": 37165,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Eternal Sunshine of the Spotless Mind",
+     "year": 2004,
+     "tmdb_id": 38,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Ace Ventura: Pet Detective",
+     "year": 1994,
+     "tmdb_id": 3049,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Mask",
+     "year": 1994,
+     "tmdb_id": 854,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-20",
+  "query": "edgar wright",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Films directed by Edgar Wright first, then kinetic, genre-mashing British comedies in his style.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Hot Fuzz",
+     "year": 2007,
+     "tmdb_id": 4638,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Shaun of the Dead",
+     "year": 2004,
+     "tmdb_id": 747,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Baby Driver",
+     "year": 2017,
+     "tmdb_id": 339403,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Scott Pilgrim vs. the World",
+     "year": 2010,
+     "tmdb_id": 22538,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-21",
+  "query": "studio ghibli",
+  "type": "studio",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Studio Ghibli films first. Similar Japanese fantasy animation from other studios is loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Spirited Away",
+     "year": 2001,
+     "tmdb_id": 129,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "My Neighbor Totoro",
+     "year": 1988,
+     "tmdb_id": 8392,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Princess Mononoke",
+     "year": 1997,
+     "tmdb_id": 128,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Howl's Moving Castle",
+     "year": 2004,
+     "tmdb_id": 4935,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-22",
+  "query": "a24 horror",
+  "type": "studio",
+  "split": "holdout3",
+  "familiar": false,
+  "person_intent": "filmography",
+  "intent": "Horror films released by A24 first. Other elevated, slow-burn arthouse horror is relevant; mainstream slasher franchises are weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Hereditary",
+     "year": 2018,
+     "tmdb_id": 493922,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Midsommar",
+     "year": 2019,
+     "tmdb_id": 530385,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Witch",
+     "year": 2015,
+     "tmdb_id": 526667,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "X",
+     "year": 2022,
+     "tmdb_id": 760104,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-23",
+  "query": "pixar",
+  "type": "studio",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Pixar feature films first. Animated films from other studios (DreamWorks, Blue Sky) are only loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Inside Out",
+     "year": 2015,
+     "tmdb_id": 150540,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Toy Story",
+     "year": 1995,
+     "tmdb_id": 862,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Up",
+     "year": 2009,
+     "tmdb_id": 14160,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Ratatouille",
+     "year": 2007,
+     "tmdb_id": 2062,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Shrek",
+     "year": 2001,
+     "tmdb_id": 808,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Ice Age",
+     "year": 2002,
+     "tmdb_id": 425,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "ppl-24",
+  "query": "hbo prestige drama",
+  "type": "studio",
+  "split": "holdout3",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Acclaimed HBO drama series first. Prestige dramas from other networks in the same vein are relevant but lower.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Sopranos",
+     "year": 1999,
+     "tmdb_id": 1398,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "The Wire",
+     "year": 2002,
+     "tmdb_id": 1438,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Chernobyl",
+     "year": 2019,
+     "tmdb_id": 87108,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Band of Brothers",
+     "year": 2001,
+     "tmdb_id": 4613,
+     "media_type": "show",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-01",
+  "query": "feels like a terry gilliam film",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Terry Gilliam films welcome, but mostly other dark, surreal, visually baroque fantasies and dystopias with absurd humor.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Twelve Monkeys",
+     "year": 1995,
+     "tmdb_id": 63,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Brazil",
+     "year": 1985,
+     "tmdb_id": 68,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Fall",
+     "year": 2006,
+     "tmdb_id": 14784,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Delicatessen",
+     "year": 1991,
+     "tmdb_id": 892,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-02",
+  "query": "charlie kaufman-esque",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some films written or directed by Charlie Kaufman welcome, but mostly other mind-bending, melancholic, meta comedies and dramas about identity and memory.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Being John Malkovich",
+     "year": 1999,
+     "tmdb_id": 492,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Eternal Sunshine of the Spotless Mind",
+     "year": 2004,
+     "tmdb_id": 38,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Stranger Than Fiction",
+     "year": 2006,
+     "tmdb_id": 1262,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Mr. Nobody",
+     "year": 2009,
+     "tmdb_id": 31011,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-03",
+  "query": "nicolas cage energy",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query (actor as style): some unhinged Nicolas Cage performances welcome, but mostly other over-the-top, gonzo action and thrillers with manic, scenery-chewing leads. His quiet dramas are weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Face/Off",
+     "year": 1997,
+     "tmdb_id": 754,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Mandy",
+     "year": 2018,
+     "tmdb_id": 460885,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Crank",
+     "year": 2006,
+     "tmdb_id": 1948,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Shoot 'Em Up",
+     "year": 2007,
+     "tmdb_id": 4141,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "The Notebook",
+     "year": 2004,
+     "tmdb_id": 11036,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-04",
+  "query": "in the vein of mel brooks",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Mel Brooks films welcome, but mostly other genre parodies and spoofs with rapid-fire gags and slapstick.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Spaceballs",
+     "year": 1987,
+     "tmdb_id": 957,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Robin Hood: Men in Tights",
+     "year": 1993,
+     "tmdb_id": 8005,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Airplane!",
+     "year": 1980,
+     "tmdb_id": 813,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "The Naked Gun: From the Files of Police Squad!",
+     "year": 1988,
+     "tmdb_id": 37136,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "The Hangover",
+     "year": 2009,
+     "tmdb_id": 18785,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-05",
+  "query": "aardman humor",
+  "type": "studio",
+  "split": "holdout4",
+  "familiar": false,
+  "person_intent": "style",
+  "intent": "Style query (studio): some Aardman films welcome, but mostly other gentle, dry, very British family comedies and stop-motion with sight gags and whimsy.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Chicken Run",
+     "year": 2000,
+     "tmdb_id": 7443,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Wallace & Gromit: The Curse of the Were-Rabbit",
+     "year": 2005,
+     "tmdb_id": 533,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Fantastic Mr. Fox",
+     "year": 2009,
+     "tmdb_id": 10315,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Paddington 2",
+     "year": 2017,
+     "tmdb_id": 346648,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Minions",
+     "year": 2015,
+     "tmdb_id": 211672,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-06",
+  "query": "fincher vibes but a series",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query, series only: shows with David Fincher's feel: cold, meticulous, dark procedural crime and psychological tension. His series welcome; films are weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "MINDHUNTER",
+     "year": 2017,
+     "tmdb_id": 67744,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "True Detective",
+     "year": 2014,
+     "tmdb_id": 46648,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Mr. Robot",
+     "year": 2015,
+     "tmdb_id": 62560,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Ozark",
+     "year": 2017,
+     "tmdb_id": 69740,
+     "media_type": "show",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Criminal Minds",
+     "year": 2005,
+     "tmdb_id": 4057,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-07",
+  "query": "cartoons with matt groening humor",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Animated series created by Matt Groening first, then other satirical adult animated sitcoms in his style.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Simpsons",
+     "year": 1989,
+     "tmdb_id": 456,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Futurama",
+     "year": 1999,
+     "tmdb_id": 615,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Family Guy",
+     "year": 1999,
+     "tmdb_id": 1434,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Bob's Burgers",
+     "year": 2011,
+     "tmdb_id": 32726,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "The Big Bang Theory",
+     "year": 2007,
+     "tmdb_id": 1418,
+     "media_type": "show",
+     "source": "user-taste"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-08",
+  "query": "un film à la jean-pierre jeunet",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "French: style query. Some Jeunet films welcome, but mostly other whimsical, quirky, visually inventive (often French) fantasies and dark fairy tales.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Amélie",
+     "year": 2001,
+     "tmdb_id": 194,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Delicatessen",
+     "year": 1991,
+     "tmdb_id": 892,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "The Science of Sleep",
+     "year": 2006,
+     "tmdb_id": 300,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Mood Indigo",
+     "year": 2013,
+     "tmdb_id": 157820,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-09",
+  "query": "something darren aronofsky would direct",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Aronofsky films welcome, but mostly other intense, claustrophobic psychological dramas about obsession, addiction and mental unraveling.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Requiem for a Dream",
+     "year": 2000,
+     "tmdb_id": 641,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Black Swan",
+     "year": 2010,
+     "tmdb_id": 44214,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "The Machinist",
+     "year": 2004,
+     "tmdb_id": 4553,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Jacob's Ladder",
+     "year": 1990,
+     "tmdb_id": 2291,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-10",
+  "query": "danny boyle movies and stuff like them",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Films directed by Danny Boyle first, then other kinetic, energetic films with pulsing soundtracks and gritty, restless camerawork.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Trainspotting",
+     "year": 1996,
+     "tmdb_id": 627,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Slumdog Millionaire",
+     "year": 2008,
+     "tmdb_id": 12405,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "28 Days Later",
+     "year": 2002,
+     "tmdb_id": 170,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "City of God",
+     "year": 2002,
+     "tmdb_id": 598,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Run Lola Run",
+     "year": 1998,
+     "tmdb_id": 104,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-11",
+  "query": "jackie chan style stunts and slapstick",
+  "type": "person",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query (actor as style): some Jackie Chan films welcome, but mostly other martial-arts action comedies with inventive practical stunts and physical comedy.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Legend of Drunken Master",
+     "year": 1994,
+     "tmdb_id": 12207,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Police Story",
+     "year": 1985,
+     "tmdb_id": 9056,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Kung Fu Hustle",
+     "year": 2004,
+     "tmdb_id": 9470,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "Ong Bak",
+     "year": 2003,
+     "tmdb_id": 9316,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Fast & Furious",
+     "year": 2009,
+     "tmdb_id": 13804,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "sty-12",
+  "query": "blumhouse-type horror",
+  "type": "studio",
+  "split": "holdout4",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Horror films produced by Blumhouse first, then other lean, low-budget, high-concept horror (found footage, home invasion, supernatural jump scares).",
+  "anchors": {
+   "must": [
+    {
+     "title": "Get Out",
+     "year": 2017,
+     "tmdb_id": 419430,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Insidious",
+     "year": 2011,
+     "tmdb_id": 49018,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Saw",
+     "year": 2004,
+     "tmdb_id": 176,
+     "media_type": "movie",
+     "source": "user-taste"
+    },
+    {
+     "title": "[REC]",
+     "year": 2007,
+     "tmdb_id": 8329,
+     "media_type": "movie",
+     "source": "user-taste"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
  }
 ]

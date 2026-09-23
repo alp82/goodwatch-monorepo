@@ -69,6 +69,51 @@ def graded_query(ids, grades):
     }
 
 
+def graded_query6(ids, grades):
+    """Round-6 metrics (contract note, round 6): graded_query with alternate cuts counted once. A title in the top 10
+    that is a cut of a title ranked above it (cuts.second_cuts) counts as grade 0 for ndcg10, good10 and bad5, and
+    the ideal DCG keeps only the best-graded title of each set of cuts."""
+    import cuts
+    gain = lambda g: 2 ** g - 1
+    second = set(cuts.second_cuts(ids, 10))
+    eff = [0 if i in second else grades.get(pid, 0) for i, pid in enumerate(ids[:10])]
+    dcg = sum(gain(g) / math.log2(i + 2) for i, g in enumerate(eff))
+    ranked = sorted(grades, key=lambda p: -grades[p])
+    ideal = [grades[p] for p in cuts.fold(ranked)][:10]
+    idcg = sum(gain(g) / math.log2(i + 2) for i, g in enumerate(ideal))
+    return {
+        "ndcg10": dcg / idcg if idcg else 0.0,
+        "good10": sum(1 for g in eff if g >= 2),
+        "bad5": sum(1 for i, pid in enumerate(ids[:5]) if (pid in grades and grades[pid] == 0) or i in second),
+        "unj10": sum(1 for i, pid in enumerate(ids[:10]) if pid not in grades and i not in second),
+        "cuts10": len(second),
+    }
+
+
+OWN_MIN_W = 0.8   # director / co-director, creator, Writing-department writer, top-4 billed cast, studio company
+
+
+def own_ids(query):
+    """Point ids of the detected entities' own titles (credit weight >= OWN_MIN_W; entities.title_weights), or None."""
+    import entities as E
+    det = E.detect(query)
+    if not det:
+        return None
+    cat = C.load()
+    return {int(cat.ids[r]) for r, w in E.title_weights(det, cat).items() if w >= OWN_MIN_W}
+
+
+def own10(ids, query):
+    """Round 6: the count of the entity's own titles in the top 10 (after folding alternate cuts: a 2nd cut of an
+    own title doesn't count again). None when no entity is detected."""
+    import cuts
+    own = own_ids(query)
+    if own is None:
+        return None
+    second = set(cuts.second_cuts(ids, 10))
+    return sum(1 for i, pid in enumerate(ids[:10]) if pid in own and i not in second)
+
+
 def title_guardrail(ctxs, lists, split):
     ok, n = 0, 0
     for ctx in ctxs:

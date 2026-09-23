@@ -2,8 +2,9 @@
 
     .venv/bin/python playground/serve.py [--port 8765]
 
-POST /search {"q": "..."} -> production list (from the capture), r4-combo-fast and r4-combo (run4.FINAL), top 20
-each, with the Jev reading chips, timings and per-title score components.
+POST /search {"q": "..."} -> production list (from the capture), r6 (run6.FINAL: r5 with style neighbours for person /
+studio style queries and alternate cuts folded), r5 (run5.FINAL: r4-combo-fast plus person and studio boosts),
+r4-combo-fast and r4-combo (run4.FINAL), top 20 each, with the Jev reading chips, timings and per-title score components.
 
 Captures: a query from queries.json (matched by normalized text) uses data/captures/<id>.json. Any other query
 uses data/captures/adhoc/<hash>.json, and on a miss runs goodwatch-webapp/scripts/arena-capture.ts --adhoc once
@@ -27,14 +28,20 @@ import catalog as C  # noqa: E402
 import context as X  # noqa: E402
 import metrics as M  # noqa: E402
 import qemb  # noqa: E402
+import entities as ENT  # noqa: E402
 import rankers4 as R4  # noqa: E402
+import rankers5 as R5  # noqa: E402
+import rankers6 as R6  # noqa: E402
+import cuts  # noqa: E402
 import run4  # noqa: E402
+import run5  # noqa: E402
+import run6  # noqa: E402
 
 WEBAPP = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(ARENA))), "goodwatch-webapp")
 ADHOC = os.path.join(X.CAPTURES, "adhoc")
 CACHE = os.path.join(HERE, "cache")
 TOP = 20
-RANKERS = ["r4-combo-fast", "r4-combo"]
+RANKERS = ["r6", "r5", "r4-combo-fast", "r4-combo"]
 CAPTURE_TIMEOUT_S = 90
 
 
@@ -214,6 +221,9 @@ def startup():
     SP.index(dict(R4.BODY))  # facet-coverage index (body fields only)
     R4._title_index(run4.FINAL["r4-combo-fast"][0].get("ref_votes", R4.DEFAULTS["ref_votes"]))
     R4._df()
+    ENT.warm()
+    R6.peer_index({**R6.DEFAULTS6, **run6.FINAL["r6"][0]}["emb"])
+    cuts.edges()
     t = mark("sparse index + warm-up ranking", t)
     S.lock = threading.Lock()
     S.session_usd = 0.0
@@ -272,18 +282,36 @@ def get_capture(q):
 # --- ranking -----------------------------------------------------------------------------------
 
 COMP_LABELS = {"dense": "emb", "fp": "fp", "text": "sparse/text", "facet": "facet", "cov": "coverage",
-               "agree": "ref agree", "prior": "prior"}
+               "agree": "ref agree / style agree", "prior": "prior", "entity": "person/studio boost", "neg": "negation",
+               "style_fp": "style fp centroid", "style_emb": "style emb centroid", "style_terms": "style term profile",
+               "mention": "name mention", "peer": "similar people"}
 
 
 def rank(ctx, qid):
     out = {}
     for name in RANKERS:
-        kw, bk = run4.FINAL[name]
         info = {}
         t = time.perf_counter()
-        disc = R4.hyb4(ctx, debug=info, **kw)
+        if name == "r6":
+            kw, bk = run6.FINAL[name]
+            disc = R6.hyb6(ctx, debug=info, **kw)
+            bk = {**bk, **(dict(kind=False) if info.get("entity") else {})}  # as run6.run
+        elif name == "r5":
+            kw, bk = run5.FINAL[name]
+            disc = R5.hyb5(ctx, debug=info, **kw)
+            bk = {**bk, **(dict(kind=False) if info.get("entity") else {})}  # as run5.run
+        else:
+            kw, bk = run4.FINAL[name]
+            disc = R4.hyb4(ctx, debug=info, **kw)
+            bk = {**run4.STRICT, **bk}
         blended = blend_debug(ctx, [(pid, i + 1, s) for i, (pid, s, _) in enumerate(disc)],
-                              exclude=info.get("exclude"), **{**run4.STRICT, **bk})
+                              exclude=info.get("exclude"), **bk)
+        if name == "r6":  # alternate cuts folded and the own-title cap re-applied (run6.run)
+            keep = set(cuts.fold([x["id"] for x in blended]))
+            blended = [x for x in blended if x["id"] in keep]
+            ent = info.get("entity")
+            if ent and ent.get("intent") == "style" and ent.get("own_max") is not None:
+                blended = run6.cap_own(blended, ent["own_ids"], ent["own_max"])
         ms = (time.perf_counter() - t) * 1000
         pos = {int(r): i for i, r in enumerate(info["cand"])}
         comp, total = info["comp"], info["score"]
@@ -295,6 +323,9 @@ def rank(ctx, qid):
             if j is not None:
                 parts = {COMP_LABELS.get(k, k): round(float(v[j]), 3) for k, v in comp.items()}
                 resid = float(total[j]) - sum(float(v[j]) for v in comp.values())
+                ent = info.get("entity")
+                if ent and ent["intent"] != "filmography":
+                    resid = 0.0  # style / both: the discovery score is the capped order, not a sum
                 if abs(resid) > 1e-3:
                     parts["era/neg"] = round(resid, 3)
                 d = dict(parts=parts, disc_score=round(float(total[j]), 3))
@@ -315,6 +346,7 @@ def rank(ctx, qid):
                 coverage_units=info.get("units"), candidates=info.get("n_cand"),
                 reference=dict(title=ref[0], span=ref[1], modifier=ref[2]) if ref else None,
                 excluded=[f"{describe(p)['title']} ({describe(p)['year']})" for p in excl][:12],
+                entity={k: v for k, v in info["entity"].items() if k != "own_ids"} if info.get("entity") else None,
             ),
         )
     return out

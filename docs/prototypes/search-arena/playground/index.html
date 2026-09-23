@@ -38,8 +38,9 @@ button:disabled { opacity: .5; cursor: wait; }
 .chip.avoid { text-decoration: line-through; }
 .label { color: var(--muted); margin-right: 2px; }
 #err { color: var(--g0); padding: 0 16px; }
-main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 4px 16px 40px; }
-@media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+main { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 4px 16px 40px; }
+@media (max-width: 1200px) { main { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { main { grid-template-columns: 1fr; } }
 .col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
 .col h2 { font-size: 14px; margin: 0; padding: 10px 12px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
 .col h2 .win { color: var(--win); font-weight: 500; font-size: 12px; }
@@ -80,7 +81,7 @@ details > summary::-webkit-details-marker { display: none; }
 <div id="reading"></div>
 <main id="cols"></main>
 <script>
-const COLS = [["prod", "Production", ""], ["r4-combo-fast", "r4-combo-fast", "winner"], ["r4-combo", "r4-combo", ""]];
+const COLS = [["prod", "Production", ""], ["r6", "r6 (style neighbours)", ""], ["r5", "r5 (people + studios)", ""], ["r4-combo-fast", "r4-combo-fast", "winner"], ["r4-combo", "r4-combo", ""]];
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 let spend = null, startup = null;
@@ -160,6 +161,7 @@ function render(d) {
 function queryDebug(q) {
   const out = [`${q.candidates} candidates`];
   if (q.reference) out.push(`reference <b>${esc(q.reference.title)}</b>${q.reference.modifier ? ` + “${esc(q.reference.modifier)}”` : ""}; excluded: ${esc(q.excluded.join(", "))}`);
+  if (q.entity) out.push(`entity <b>${esc(q.entity.names.join(" + "))}</b> (${esc(q.entity.match.join(", "))}) · intent ${esc(q.entity.intent)}${q.entity.intent === "both" ? ` (${esc(q.entity.lean)} lean)` : ""}${q.entity.residual ? ` · residual “${esc(q.entity.residual)}”` : ""}${q.entity.negated?.length ? ` · less: ${esc(q.entity.negated.join(", "))}` : ""}${q.entity.era ? ` · ${esc(q.entity.era)} career` : ""} · ${q.entity.n_titles} credited titles · centroid: ${esc(q.entity.centroid.slice(0, 5).join(", "))}${q.entity.peers?.length ? ` · peers: ${esc(q.entity.peers.slice(0, 6).map((p) => p[0]).join(", "))}` : ""}${q.entity.terms?.length ? ` · profile terms: ${esc(q.entity.terms.slice(0, 8).join(", "))}` : ""}`);
   if (q.coverage_units?.length) out.push(`coverage units: ${esc(q.coverage_units.join(" · "))}`);
   if (q.spell_fixes?.length) out.push(`spell: ${esc(JSON.stringify(q.spell_fixes))}`);
   if (q.era) out.push(`era: ${esc(JSON.stringify(q.era))}`);

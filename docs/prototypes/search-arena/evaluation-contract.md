@@ -74,3 +74,34 @@ A finalist wins when, on the `holdout` split:
   queries, written without looking at any ranker output, is the confirmation
   set. The win criteria stay the same, applied to `holdout2`. Round 4
   finalists are frozen before `holdout2` is scored.
+- 2026-09-23, person and studio round: 24 new queries (`ppl-*`), 12 `dev`
+  and 12 `holdout3`, written blind to rankers. The baseline is the accepted
+  winner `r4-combo-fast`. The round-5 candidate is frozen before `holdout3`
+  is scored. It wins when, on `holdout3`, it beats `r4-combo-fast` by at
+  least 0.05 `ndcg10` with `bad5` not higher, and on all earlier splits
+  (dev, holdout, holdout2) its `ndcg10` drops by no more than 0.01 against
+  `r4-combo-fast`. People and studios are boosts, never filters (user
+  decision). For style queries, a mix of the person's own titles and similar
+  titles by others is wanted.
+- 2026-09-23, round 5, before any round-5 grading: packets graded in round 5
+  (all splits, including holdout3) also carry a `credits` field (up to 3
+  directors, creators and writers, the top 5 billed cast, the first 3
+  production companies and the networks), because person and studio
+  relevance can't be judged from the essence text. Earlier grades stay as
+  they are (add-only).
+- 2026-09-23, round 6 (style queries and alternate cuts), set before any
+  round-6 grading:
+  - Grading rubric for `person_intent` style or both: grade by fit to the
+    person's or studio's style. A genuinely similar title by someone else can
+    earn 3, the same as the person's own films. Generic popular titles that
+    share only a genre get 0 or 1. The rubric change applies to new pairs;
+    style-query pairs graded before this note are re-graded under it.
+  - A new metric `own10`: the count of the entity's own titles in the top 10
+    for style queries. The user wants a mix, so the target range is 3 to 6.
+  - Alternate cuts of one film (Redux, Extended, Director's Cut, "The Whole
+    Bloody Affair") count once. A second cut in the top 10 is graded 0.
+  - Confirmation split `holdout4`: about 12 new style and both queries,
+    written blind. Round 6 wins when, on `holdout4`, it beats
+    `r4-combo-fast` and `r5` by at least 0.05 `ndcg10`, `bad5` is not higher
+    than either, the mean `own10` is within 3 to 6, and earlier splits drop
+    by no more than 0.01 against `r5`.

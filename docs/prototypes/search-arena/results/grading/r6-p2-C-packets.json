@@ -1,0 +1,68 @@
+[
+ {
+  "query_id": "ppl-17",
+  "query": "vince gilligan",
+  "intent": "Shows and films created or written by Vince Gilligan first, then tense, morally grey crime dramas in his style.",
+  "items": [
+   {
+    "pid": 1000000648878,
+    "title": "Eddington",
+    "year": 2025,
+    "media_type": "movie",
+    "genres": [
+     "Western",
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A tense and character-driven thriller set in a small town rife with simmering conflict. The film explores the dark underbelly of society through a lens of crime and political intrigue, creating a sense of unease and paranoia. Expect a slow-burn narrative with complex characters and a focus on psychological tension, as neighbor turns against neighbor. The bleakness and social commentary underscore a story of moral decay and the disintegration of community.",
+    "tags": [
+     "Small Town Tension",
+     "Crime and Suspense",
+     "Psychological Thriller",
+     "Political Intrigue",
+     "Social Decay",
+     "Character Driven",
+     "Dark and Gritty",
+     "Slow Burn Mystery",
+     "Contemporary Western"
+    ],
+    "keywords": [
+     "small town",
+     "sheriff",
+     "husband wife relationship",
+     "new mexico",
+     "mayor",
+     "dark comedy",
+     "protest",
+     "satire",
+     "murder",
+     "shootout",
+     "neo-western",
+     "satirical"
+    ],
+    "credits": {
+     "directors": [
+      "Ari Aster"
+     ],
+     "writers": [
+      "Ari Aster"
+     ],
+     "cast": [
+      "Joaquin Phoenix",
+      "Deirdre O'Connell",
+      "Emma Stone",
+      "Micheal Ward",
+      "Pedro Pascal"
+     ],
+     "companies": [
+      "A24",
+      "Square Peg",
+      "828 Productions"
+     ]
+    }
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ }
+]

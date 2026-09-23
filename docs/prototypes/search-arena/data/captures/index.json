@@ -1,11 +1,11 @@
 {
- "generatedAt": "2026-09-23T08:21:58.219Z",
- "jevUsdTotal": 0.025893,
+ "generatedAt": "2026-09-23T17:02:50.339Z",
+ "jevUsdTotal": 0.037732,
  "anchorTotals": {
-  "queries": 87,
-  "must": 314,
-  "top10": 54,
-  "top50": 93
+  "queries": 123,
+  "must": 451,
+  "top10": 66,
+  "top50": 120
  },
  "queries": {
   "lab-00": {
@@ -2749,6 +2749,1115 @@
     "top50": 1,
     "ranks": {
      "The Expanse": 1
+    }
+   }
+  },
+  "ppl-01": {
+   "query": "funny brad pitt movies",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000335,
+   "prodTop10": [
+    "Jim Gaffigan: Quality Time (2019)",
+    "Jim Gaffigan: Cinco (2017)",
+    "Jim Gaffigan: Obsessed (2014)",
+    "¡Three Amigos! (1986)",
+    "Popstar: Never Stop Never Stopping (2016)",
+    "Die Hart (2023)",
+    "Billy Crystal: 700 Sundays (2014)",
+    "Nate Bargatze: The Tennessee Kid (2019)",
+    "A Christmas Carol Goes Wrong (2017)",
+    "Louis C.K.: Oh My God (2013)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Burn After Reading": null,
+     "Snatch": null,
+     "Bullet Train": null
+    }
+   }
+  },
+  "ppl-02": {
+   "query": "keanu reeves action",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Brawn: The Impossible Formula 1 Story (2023)",
+    "The Hunted (2003)",
+    "2.0 (2018)",
+    "Eve of Destruction (1991)",
+    "Rachcha (2012)",
+    "No Tears for the Dead (2014)",
+    "Hollow Point (1996)",
+    "Strike Back (2010)",
+    "Side by Side (2012)",
+    "Maari (2015)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Matrix": null,
+     "John Wick": null,
+     "Speed": null,
+     "Point Break": null
+    }
+   }
+  },
+  "ppl-03": {
+   "query": "bill murray deadpan comedies",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Mystery Team (2009)",
+    "Scrooged (1988)",
+    "Between Two Ferns with Zach Galifianakis (2008)",
+    "A Very Murray Christmas (2015)",
+    "Asteroid City (2023)",
+    "At Home with Amy Sedaris (2017)",
+    "Norm Macdonald: Hitler's Dog, Gossip & Trickery (2017)",
+    "Clark and Michael (2007)",
+    "The Life Aquatic with Steve Zissou (2004)",
+    "The George Burns and Gracie Allen Show (1950)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Groundhog Day": null,
+     "Lost in Translation": null,
+     "The Life Aquatic with Steve Zissou": 9,
+     "Broken Flowers": null
+    }
+   }
+  },
+  "ppl-04": {
+   "query": "tom hanks war movies",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000335,
+   "prodTop10": [
+    "Fantasy Mission Force (1983)",
+    "The Guns of Navarone (1961)",
+    "The Battle of the Rails (1946)",
+    "The Dirty Dozen: The Deadly Mission (1987)",
+    "Flyboys (2006)",
+    "Commandos (1968)",
+    "The Man Who Never Was (1956)",
+    "Kong: Skull Island (2017)",
+    "Justice League: The New Frontier (2008)",
+    "Small Soldiers (1998)"
+   ],
+   "anchors": {
+    "must": 2,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Saving Private Ryan": null,
+     "Greyhound": null
+    }
+   }
+  },
+  "ppl-05": {
+   "query": "early spielberg",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Amblin' (1968)",
+    "Spielberg (2017)",
+    "Jaws @ 50: The Definitive Inside Story (2025)",
+    "Ray Harryhausen: Special Effects Titan (2012)",
+    "Tales from the Script (2009)",
+    "Avatar: The Last Airbender (2005)",
+    "Gurren Lagann the Movie: The Lights in the Sky Are Stars (2009)",
+    "The Wizard of Oz (1939)",
+    "Harry Potter and the Deathly Hallows: Part 2 (2011)",
+    "Dragon Ball Z (1989)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Jaws": null,
+     "Close Encounters of the Third Kind": 65,
+     "Raiders of the Lost Ark": null,
+     "Duel": null
+    }
+   }
+  },
+  "ppl-06": {
+   "query": "leonardo dicapro thrillers",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.00033,
+   "prodTop10": [
+    "The Chaser (2008)",
+    "Midnight FM (2010)",
+    "Pagan Peak (2019)",
+    "Hunt (2022)",
+    "Trackers (2019)",
+    "The Witch: Part 1. The Subversion (2018)",
+    "The Terminal List (2022)",
+    "You Cannot Hide (2019)",
+    "Identity (2003)",
+    "Empire of the Wolves (2005)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Shutter Island": null,
+     "The Departed": null,
+     "Inception": null
+    }
+   }
+  },
+  "ppl-07": {
+   "query": "stephen chow's kung fu comedies",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Forbidden City Cop (1996)",
+    "Hail the Judge (1994)",
+    "The God of Cookery (1996)",
+    "Sixty Million Dollar Man (1995)",
+    "A Chinese Odyssey Part Two: Cinderella (1995)",
+    "Justice, My Foot! (1992)",
+    "The Mad Monk (1993)",
+    "The Mermaid (2016)",
+    "Legend of the Dragon (1991)",
+    "Lawyer Lawyer (1997)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "Kung Fu Hustle": 11,
+     "Shaolin Soccer": null,
+     "The God of Cookery": 3
+    }
+   }
+  },
+  "ppl-08": {
+   "query": "lustige Filme mit Bud Spencer und Terence Hill",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "vector-only",
+   "errors": [],
+   "jevUsd": 0.000359,
+   "prodTop10": [
+    "Abbott and Costello Meet the Keystone Kops (1955)",
+    "Singin' in the Rain (1952)",
+    "Way Out West (1937)",
+    "Peter Pan Goes Wrong (2016)",
+    "Pecos Pest (1955)",
+    "SNL50: The Anniversary Special (2025)",
+    "The Muppet Movie (1979)",
+    "A Film Johnnie (1914)",
+    "Shall We Dance (1937)",
+    "The Play House (1921)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "They Call Me Trinity": null,
+     "Trinity Is Still My Name": null,
+     "Watch Out, We're Mad": null,
+     "Odds and Evens": null
+    }
+   }
+  },
+  "ppl-09": {
+   "query": "tarantino vibes",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Grosse Pointe Blank (1997)",
+    "2 Days in the Valley (1996)",
+    "Jackie Brown (1997)",
+    "Feeling Minnesota (1996)",
+    "Django & Django: Sergio Corbucci Unchained (2021)",
+    "Don't (2007)",
+    "QT8: The First Eight (2019)",
+    "My Best Friend's Birthday (1987)",
+    "Pulp Fiction (1994)",
+    "Kill Bill: Vol. 1 (2003)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "Pulp Fiction": 9,
+     "True Romance": 34,
+     "Lucky Number Slevin": null,
+     "Seven Psychopaths": null
+    }
+   }
+  },
+  "ppl-10": {
+   "query": "wes anderson style",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "The Life Aquatic with Steve Zissou (2004)",
+    "The Wonderful Story of Henry Sugar (2023)",
+    "American Express: My Life. My Card. (2006)",
+    "Moonrise Kingdom (2012)",
+    "Asteroid City (2023)",
+    "Castello Cavalcanti (2013)",
+    "The Darjeeling Limited (2007)",
+    "The Grand Budapest Hotel (2014)",
+    "The French Dispatch (2021)",
+    "Isle of Dogs (2018)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "The Grand Budapest Hotel": 8,
+     "Amélie": null,
+     "Moonrise Kingdom": 4
+    }
+   }
+  },
+  "ppl-11": {
+   "query": "like david lynch but less weird",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Lynch/Oz (2023)",
+    "Twin Peaks: The Missing Pieces (2014)",
+    "David Lynch: The Art Life (2017)",
+    "Mulholland Dr. (1999)",
+    "Side by Side (2012)",
+    "My Name Is 'A' by Anonymous (2012)",
+    "Dune (1984)",
+    "DumbLand (2001)",
+    "On the Air (1992)",
+    "The Elephant Man (1980)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Twin Peaks": null,
+     "Blue Velvet": null,
+     "Fargo": null
+    }
+   }
+  },
+  "ppl-12": {
+   "query": "something in the style of guy ritchie",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.00033,
+   "prodTop10": [
+    "RocknRolla (2008)",
+    "Keen Eddie (2003)",
+    "Snatch (2017)",
+    "Sherlock Holmes (2010)",
+    "Pulp Fiction (1994)",
+    "Kill Bill: The Whole Bloody Affair (2011)",
+    "Sherlock (2010)",
+    "Kill Bill: Vol. 1 (2003)",
+    "Hot Fuzz (2007)",
+    "Sin City (2005)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 2,
+    "ranks": {
+     "Snatch": 30,
+     "Layer Cake": null,
+     "In Bruges": null,
+     "Lucky Number Slevin": 38
+    }
+   }
+  },
+  "ppl-13": {
+   "query": "denis villeneuve atmosphere",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.00033,
+   "prodTop10": [
+    "Torchwood (2006)",
+    "Land of the Lustrous (2017)",
+    "Casshern Sins (2008)",
+    "Annihilation (2018)",
+    "Jordskott (2015)",
+    "Hannibal (2013)",
+    "The Haunting of Hill House (2018)",
+    "Monster (2004)",
+    "World on a Wire (1973)",
+    "Dead Mountain: The Dyatlov Pass Incident (2020)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Arrival": null,
+     "Blade Runner 2049": null,
+     "Annihilation": 4,
+     "Ex Machina": null
+    }
+   }
+  },
+  "ppl-14": {
+   "query": "coen brothers humor",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Miller's Crossing (1990)",
+    "Raising Arizona (1987)",
+    "Hail, Caesar! (2016)",
+    "The Ladykillers (2004)",
+    "The Hudsucker Proxy (1994)",
+    "Barton Fink (1991)",
+    "Blood Simple (1985)",
+    "The Ballad of Buster Scruggs (2018)",
+    "The Man Who Wasn't There (2001)",
+    "A Serious Man (2009)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Big Lebowski": null,
+     "Burn After Reading": null,
+     "In Bruges": null,
+     "Fargo": null
+    }
+   }
+  },
+  "ppl-15": {
+   "query": "miyazaki-like",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000315,
+   "prodTop10": [
+    "Gurren Lagann (2007)",
+    "Spirited Away (2001)",
+    "Your Name. (2016)",
+    "Belle (2021)",
+    "The Tale of The Princess Kaguya (2013)",
+    "Night on the Galactic Railroad (1985)",
+    "Gurren Lagann the Movie: The Lights in the Sky Are Stars (2009)",
+    "Howl's Moving Castle (2004)",
+    "Weathering with You (2019)",
+    "Evangelion: 3.0+1.0 Thrice Upon a Time (2021)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Princess Mononoke": null,
+     "Wolf Children": 51,
+     "The Secret World of Arrietty": null,
+     "Song of the Sea": null
+    }
+   }
+  },
+  "ppl-16": {
+   "query": "kubrick-esque",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Westworld (2016)",
+    "Evangelion: 1.0 You Are (Not) Alone (2007)",
+    "Mulholland Drive (2001)",
+    "Lost Highway (1997)",
+    "Neon Genesis Evangelion: The End of Evangelion (1997)",
+    "Neon Genesis Evangelion: Death and Rebirth (1997)",
+    "Evangelion: 3.0+1.0 Thrice Upon a Time (2021)",
+    "Serial Experiments Lain (1998)",
+    "Twin Peaks: Fire Walk with Me (1992)",
+    "Inland Empire (2006)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "2001: A Space Odyssey": 29,
+     "There Will Be Blood": null,
+     "Under the Skin": null
+    }
+   }
+  },
+  "ppl-17": {
+   "query": "vince gilligan",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Vince Gilligan ()",
+    "The Road to El Camino: Behind the Scenes of El Camino: A Breaking Bad Movie (2019)",
+    "Mafia Inc. (2020)",
+    "Fear in the Night (1947)",
+    "Veronica Guerin (2003)",
+    "Tape (2001)",
+    "Trespass (1992)",
+    "Kill Me Again (1989)",
+    "Suture (1993)",
+    "The In-Laws (1979)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Breaking Bad": null,
+     "Better Call Saul": null,
+     "El Camino: A Breaking Bad Movie": null,
+     "Pluribus": null
+    }
+   }
+  },
+  "ppl-18": {
+   "query": "christopher nolan",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Christopher Nolan ()",
+    "Christopher Nolan ()",
+    "Christopher Nolan ()",
+    "Christopher Nolan ()",
+    "Inside Christopher Nolan's Oppenheimer (2023)",
+    "The Director's Notebook: The Cinematic Sleight of Hand of Christopher Nolan (2007)",
+    "The Christopher Nolan Experience (2025)",
+    "Christopher Nolan & Richard Donner: A Conversation (2013)",
+    "Christopher Patrick Nolan ()",
+    "Quay (2015)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Interstellar": null,
+     "Inception": null,
+     "Memento": null,
+     "The Dark Knight": null
+    }
+   }
+  },
+  "ppl-19": {
+   "query": "jim carrey",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Jim Carrey ()",
+    "Jim Carrey ()",
+    "Jim Carrey ()",
+    "Jim Carrey: America Unmasked (2021)",
+    "The Many Faces of Jim Carrey (2023)",
+    "Jim Carrey: Unnatural Act (1991)",
+    "A Conversation with Jim Carrey and Director Michel Gondry (2004)",
+    "Cold Dead Hand with Jim Carrey (2013)",
+    "Downtime on the Set of Yes Man with Jim Carrey (2009)",
+    "Jim Carrey: Extreme Yes Man (2009)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "The Truman Show": null,
+     "Eternal Sunshine of the Spotless Mind": null,
+     "Ace Ventura: Pet Detective": 12,
+     "The Mask": null
+    }
+   }
+  },
+  "ppl-20": {
+   "query": "edgar wright",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Edgar Wright ()",
+    "Hot Fuzz (2007)",
+    "The World's End (2013)",
+    "The Trixxer (2004)",
+    "Don't (2007)",
+    "The Matador (2005)",
+    "Ace Attorney (2012)",
+    "Kappa Mikey (2006)",
+    "House of Usher (1960)",
+    "The Steam Engines of Oz (2018)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Hot Fuzz": 2,
+     "Shaun of the Dead": null,
+     "Baby Driver": null,
+     "Scott Pilgrim vs. the World": 75
+    }
+   }
+  },
+  "ppl-21": {
+   "query": "studio ghibli",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "25th Anniversary Studio Ghibli Concert (2008)",
+    "2399 Days with Hayao Miyazaki & Studio Ghibli (2023)",
+    "The Songs of Studio Ghibli (2019)",
+    "The Birth of Studio Ghibli (2003)",
+    "Joe Hisaishi Symphonic Concert: Music from the Studio Ghibli Films of Hayao Miyazaki (2017)",
+    "Coleção Studio Ghibli ()",
+    "A Influência da Psicologia das Cores nas Produções do Studio Ghibli (2025)",
+    "The Kingdom of Dreams and Madness (2013)",
+    "The Tale of The Princess Kaguya (2013)",
+    "Howl's Moving Castle (2004)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 3,
+    "ranks": {
+     "Spirited Away": 29,
+     "My Neighbor Totoro": 25,
+     "Princess Mononoke": null,
+     "Howl's Moving Castle": 10
+    }
+   }
+  },
+  "ppl-22": {
+   "query": "a24 horror",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Untitled A24 Horror Film ()",
+    "Swamp Thing (2019)",
+    "The Beyond (1981)",
+    "28 Years Later (2025)",
+    "Pupa (2014)",
+    "Immaculate (2024)",
+    "Ju-on: The Beginning of the End (2014)",
+    "Ragini MMS Returns (2017)",
+    "Wolf Creek (2016)",
+    "Junji Ito Maniac: Japanese Tales of the Macabre (2023)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Hereditary": null,
+     "Midsommar": null,
+     "The Witch": null,
+     "X": null
+    }
+   }
+  },
+  "ppl-23": {
+   "query": "pixar",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "LEGO Pixar: BrickToons (2024)",
+    "Pixar Popcorn (2021)",
+    "The Pixar Story (2007)",
+    "Inside Pixar (2020)",
+    "Pixar 2021 Disney+ Day Special (2021)",
+    "Pixar Short Films Collection: Volume 2 (2012)",
+    "Pixar Short Films Collection: Volume 1 (2007)",
+    "Pixar Short Films Collection: Volume 3 (2018)",
+    "The Pixar Shorts: A Short History (2007)",
+    "Pixar 25 Magic Moments (2011)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Inside Out": null,
+     "Toy Story": 45,
+     "Up": 55,
+     "Ratatouille": null
+    }
+   }
+  },
+  "ppl-24": {
+   "query": "hbo prestige drama",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Silk (2011)",
+    "The Crown (2016)",
+    "A Man in Full (2024)",
+    "Top Chef Masters (2009)",
+    "Prisoner (2023)",
+    "The Bear (2022)",
+    "Tsunami: The Aftermath (2006)",
+    "The Goes Wrong Show (2019)",
+    "Heeramandi (2024)",
+    "Epitaphs (2004)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 2,
+    "ranks": {
+     "The Sopranos": 33,
+     "The Wire": 34,
+     "Chernobyl": null,
+     "Band of Brothers": null
+    }
+   }
+  },
+  "sty-01": {
+   "query": "feels like a terry gilliam film",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "A Liar's Autobiography: The Untrue Story of Monty Python's Graham Chapman (2012)",
+    "Ray Harryhausen: Special Effects Titan (2012)",
+    "The Imaginarium of Doctor Parnassus (2009)",
+    "The Honeymoon Machine (1961)",
+    "Lost in La Mancha (2002)",
+    "Mo' Better Blues (1990)",
+    "Faust (1994)",
+    "The Holy Mountain (1973)",
+    "Mad God (2021)",
+    "Revolutionary Girl Utena: The Movie (1999)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Twelve Monkeys": null,
+     "Brazil": 17,
+     "The Fall": null,
+     "Delicatessen": null
+    }
+   }
+  },
+  "sty-02": {
+   "query": "charlie kaufman-esque",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Adaptation. (2002)",
+    "Man on the Moon (1999)",
+    "Jim & Andy: The Great Beyond (2017)",
+    "Inherent Vice (2014)",
+    "How TV Ruined Your Life (2011)",
+    "Newswipe with Charlie Brooker (2009)",
+    "Charlie Brooker's Screenwipe (2006)",
+    "Charlie Brooker's Weekly Wipe (2013)",
+    "Prison (1949)",
+    "Wild in Blue (2014)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Being John Malkovich": null,
+     "Eternal Sunshine of the Spotless Mind": null,
+     "Stranger Than Fiction": null,
+     "Mr. Nobody": null
+    }
+   }
+  },
+  "sty-03": {
+   "query": "nicolas cage energy",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "The Unbearable Weight of Massive Talent (2022)",
+    "History of Swear Words (2021)",
+    "RuPaul's Drag Race UK vs The World (2022)",
+    "Madonna: Rebel Heart Tour (2016)",
+    "JoJo's Bizarre Adventure (1993)",
+    "Wild Zero (1999)",
+    "Shooting Stars (1993)",
+    "Drag Race Philippines (2022)",
+    "Helluva Boss (2020)",
+    "Panty & Stocking with Garterbelt (2010)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Face/Off": null,
+     "Mandy": null,
+     "Crank": 30,
+     "Shoot 'Em Up": null
+    }
+   }
+  },
+  "sty-04": {
+   "query": "in the vein of mel brooks",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Robin Hood: Men in Tights (1993)",
+    "Young Frankenstein (1974)",
+    "Dracula: Dead and Loving It (1995)",
+    "The Producers (1968)",
+    "Get Smart (1965)",
+    "High Anxiety (1977)",
+    "Spaceballs (1987)",
+    "Paws of Fury: The Legend of Hank (2022)",
+    "Blazing Saddles (1974)",
+    "South Park: Bigger, Longer & Uncut (1999)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Spaceballs": 7,
+     "Robin Hood: Men in Tights": 1,
+     "Airplane!": 59,
+     "The Naked Gun: From the Files of Police Squad!": null
+    }
+   }
+  },
+  "sty-05": {
+   "query": "aardman humor",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "The Wonderful World of Mickey Mouse (2020)",
+    "The Amazing World of Gumball (2011)",
+    "SpongeBob SquarePants (1999)",
+    "Animaniacs (1993)",
+    "Uncle Grandpa (2013)",
+    "SpongeBob's Atlantis SquarePantis (2007)",
+    "My Deer Friend Nokotan (2024)",
+    "The Wonderfully Weird World of Gumball (2025)",
+    "Wallace & Gromit's Cracking Contraptions (2002)",
+    "Cloudy with a Chance of Meatballs (2009)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Chicken Run": null,
+     "Wallace & Gromit: The Curse of the Were-Rabbit": 64,
+     "Fantastic Mr. Fox": null,
+     "Paddington 2": null
+    }
+   }
+  },
+  "sty-06": {
+   "query": "fincher vibes but a series",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Hannibal (2013)",
+    "Twin Peaks (1990)",
+    "Monster (2004)",
+    "Dark (2017)",
+    "True Detective (2014)",
+    "Jordskott (2015)",
+    "Texhnolyze (2003)",
+    "Utopia (2013)",
+    "1899 (2022)",
+    "Breaking Bad (2008)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "MINDHUNTER": null,
+     "True Detective": 5,
+     "Mr. Robot": null,
+     "Ozark": null
+    }
+   }
+  },
+  "sty-07": {
+   "query": "cartoons with matt groening humor",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Animaniacs (1993)",
+    "The Bugs Bunny Show (1960)",
+    "Harvey Birdman, Attorney at Law (2000)",
+    "Space Ghost Coast to Coast (1994)",
+    "Lil' Bush (2007)",
+    "Villainous (2017)",
+    "Our Cartoon President (2018)",
+    "Trailer Park Boys: The Animated Series (2019)",
+    "Eek! The Cat (1992)",
+    "Frisky Dingo (2006)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Simpsons": null,
+     "Futurama": null,
+     "Family Guy": null,
+     "Bob's Burgers": null
+    }
+   }
+  },
+  "sty-08": {
+   "query": "un film à la jean-pierre jeunet",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.00033,
+   "prodTop10": [
+    "Goodbye to Language (2014)",
+    "Dear Mother (2020)",
+    "Nouvelle Vague (2025)",
+    "Aria (1987)",
+    "Actors (2000)",
+    "A Cop (1972)",
+    "The River (1951)",
+    "Little Nicholas: Happy As Can Be (2022)",
+    "Downtown '81 (2001)",
+    "JCVD (2008)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Amélie": null,
+     "Delicatessen": null,
+     "The Science of Sleep": null,
+     "Mood Indigo": null
+    }
+   }
+  },
+  "sty-09": {
+   "query": "something darren aronofsky would direct",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Pompo the Cinephile (2021)",
+    "The Last: Naruto the Movie (2014)",
+    "Secret Girlfriend (2009)",
+    "Twin Peaks: Fire Walk with Me (1992)",
+    "Mulholland Drive (2001)",
+    "Inland Empire (2006)",
+    "Lost Highway (1997)",
+    "Neon Genesis Evangelion: The End of Evangelion (1997)",
+    "Begotten (1991)",
+    "Beau (2011)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Requiem for a Dream": 90,
+     "Black Swan": null,
+     "The Machinist": null,
+     "Jacob's Ladder": 11
+    }
+   }
+  },
+  "sty-10": {
+   "query": "danny boyle movies and stuff like them",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000341,
+   "prodTop10": [
+    "Scream (1996)",
+    "Devil's Double Next Level (2025)",
+    "Monster Brawl (2011)",
+    "Stepsister from Planet Weird (2000)",
+    "Forbidden World (1982)",
+    "Fast Getaway (1991)",
+    "Remote Control (1988)",
+    "Deep Blue Sea 2 (2018)",
+    "Action Jackson (1988)",
+    "Death Proof (2007)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Trainspotting": null,
+     "Slumdog Millionaire": null,
+     "28 Days Later": null,
+     "City of God": null,
+     "Run Lola Run": null
+    }
+   }
+  },
+  "sty-11": {
+   "query": "jackie chan style stunts and slapstick",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000342,
+   "prodTop10": [
+    "Operation Condor (1991)",
+    "Armour of God (1986)",
+    "Looking for Jackie (2009)",
+    "Kung Fu Yoga (2017)",
+    "Who Am I? (1998)",
+    "Project A (1983)",
+    "The Young Master (1980)",
+    "Dragons Forever (1988)",
+    "Mr. Nice Guy (1997)",
+    "Police Story (1985)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "The Legend of Drunken Master": 19,
+     "Police Story": 10,
+     "Kung Fu Hustle": null,
+     "Ong Bak": null
+    }
+   }
+  },
+  "sty-12": {
+   "query": "blumhouse-type horror",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Into the Dark (2018)",
+    "28 Years Later (2025)",
+    "Swamp Thing (2019)",
+    "Ragini MMS Returns (2017)",
+    "The Beyond (1981)",
+    "Ju-on: The Beginning of the End (2014)",
+    "Macabre (2009)",
+    "Pupa (2014)",
+    "Wolf Creek (2016)",
+    "V/H/S (2012)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Get Out": null,
+     "Insidious": null,
+     "Saw": null,
+     "[REC]": null
     }
    }
   }

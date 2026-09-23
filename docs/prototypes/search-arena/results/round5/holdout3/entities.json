@@ -1,0 +1,467 @@
+{
+ "ppl-02": {
+  "names": [
+   "Keanu Reeves"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "filmography",
+  "lean": "filmography",
+  "residual": "action",
+  "negated": [],
+  "era": null,
+  "n_titles": 78,
+  "centroid": [
+   "The Matrix",
+   "John Wick",
+   "The Matrix Reloaded",
+   "The Matrix Revolutions",
+   "John Wick: Chapter 2",
+   "John Wick: Chapter 3 - Parabellum",
+   "Speed",
+   "Constantine",
+   "The Devil's Advocate",
+   "John Wick: Chapter 4",
+   "The Matrix Resurrections",
+   "Bram Stoker's Dracula",
+   "Point Break",
+   "The Lake House",
+   "47 Ronin",
+   "The Day the Earth Stood Still",
+   "Something's Gotta Give",
+   "Bill & Ted's Excellent Adventure",
+   "A Scanner Darkly",
+   "Street Kings"
+  ],
+  "detect_ms": 4283.043
+ },
+ "ppl-04": {
+  "names": [
+   "Tom Hanks"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "filmography",
+  "lean": "filmography",
+  "residual": "war",
+  "negated": [],
+  "era": null,
+  "n_titles": 76,
+  "centroid": [
+   "Forrest Gump",
+   "Saving Private Ryan",
+   "The Green Mile",
+   "Catch Me If You Can",
+   "Toy Story",
+   "Toy Story 3",
+   "Cast Away",
+   "Toy Story 2",
+   "Captain Phillips",
+   "Band of Brothers",
+   "The Terminal",
+   "The Da Vinci Code",
+   "Cloud Atlas",
+   "Toy Story 4",
+   "Bridge of Spies",
+   "Apollo 13",
+   "Sully",
+   "Angels & Demons",
+   "Road to Perdition",
+   "Philadelphia"
+  ],
+  "detect_ms": 0.072
+ },
+ "ppl-06": {
+  "names": [
+   "Leonardo DiCaprio"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "fuzzy"
+  ],
+  "intent": "filmography",
+  "lean": "filmography",
+  "residual": "thrillers",
+  "negated": [],
+  "era": null,
+  "n_titles": 44,
+  "centroid": [
+   "Inception",
+   "Django Unchained",
+   "The Wolf of Wall Street",
+   "Shutter Island",
+   "The Departed",
+   "Titanic",
+   "Catch Me If You Can",
+   "The Revenant",
+   "Once Upon a Time... in Hollywood",
+   "Blood Diamond",
+   "The Great Gatsby",
+   "Don't Look Up",
+   "Gangs of New York",
+   "The Aviator",
+   "Killers of the Flower Moon",
+   "What's Eating Gilbert Grape",
+   "The Beach",
+   "Body of Lies",
+   "Revolutionary Road",
+   "Romeo + Juliet"
+  ],
+  "detect_ms": 0.529
+ },
+ "ppl-07": {
+  "names": [
+   "Stephen Chow"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "filmography",
+  "lean": "filmography",
+  "residual": "kung fu comedies",
+  "negated": [],
+  "era": null,
+  "n_titles": 43,
+  "centroid": [
+   "Kung Fu Hustle",
+   "Shaolin Soccer",
+   "A Chinese Odyssey Part Two: Cinderella",
+   "A Chinese Odyssey Part One: Pandora's Box",
+   "From Beijing with Love",
+   "King of Comedy",
+   "Flirting Scholar",
+   "Fight Back to School",
+   "Hail the Judge",
+   "King of Beggars",
+   "Royal Tramp",
+   "Love on Delivery",
+   "God of Gamblers II",
+   "Justice, My Foot!",
+   "Fight Back to School 2",
+   "Royal Tramp 2",
+   "Tricky Brains",
+   "Sixty Million Dollar Man",
+   "Out of the Dark",
+   "All's Well, Ends Well"
+  ],
+  "detect_ms": 0.089
+ },
+ "ppl-10": {
+  "names": [
+   "Wes Anderson"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 23,
+  "centroid": [
+   "The Grand Budapest Hotel",
+   "Moonrise Kingdom",
+   "The Royal Tenenbaums",
+   "Fantastic Mr. Fox",
+   "Rushmore",
+   "The Darjeeling Limited",
+   "The Life Aquatic with Steve Zissou",
+   "Isle of Dogs",
+   "The French Dispatch",
+   "Asteroid City",
+   "Bottle Rocket",
+   "The Wonderful Story of Henry Sugar and Three More",
+   "Castello Cavalcanti",
+   "The Wonderful Story of Henry Sugar",
+   "Come Together: A Fashion Picture in Motion",
+   "The Phoenician Scheme",
+   "Hotel Chevalier",
+   "Prada: Candy",
+   "Poison",
+   "The Swan"
+  ],
+  "detect_ms": 0.052
+ },
+ "ppl-12": {
+  "names": [
+   "Guy Ritchie"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 22,
+  "centroid": [
+   "Snatch",
+   "Sherlock Holmes",
+   "Lock, Stock and Two Smoking Barrels",
+   "Sherlock Holmes: A Game of Shadows",
+   "The Gentlemen",
+   "Aladdin",
+   "The Man from U.N.C.L.E.",
+   "RocknRolla",
+   "King Arthur: Legend of the Sword",
+   "Wrath of Man",
+   "Guy Ritchie's The Covenant",
+   "The Gentlemen",
+   "The Ministry of Ungentlemanly Warfare",
+   "Operation Fortune: Ruse de Guerre",
+   "Revolver",
+   "Star",
+   "Fountain of Youth",
+   "Swept Away"
+  ],
+  "detect_ms": 0.075
+ },
+ "ppl-14": {
+  "names": [
+   "Joel Coen & Ethan Coen"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "team"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 32,
+  "centroid": [
+   "No Country for Old Men",
+   "The Big Lebowski",
+   "Fargo",
+   "True Grit",
+   "Burn After Reading",
+   "O Brother, Where Art Thou?",
+   "Bridge of Spies",
+   "Unbroken",
+   "Inside Llewyn Davis",
+   "The Ballad of Buster Scruggs",
+   "Raising Arizona",
+   "A Serious Man",
+   "Hail, Caesar!",
+   "Miller's Crossing",
+   "Barton Fink",
+   "Blood Simple",
+   "The Man Who Wasn't There",
+   "Intolerable Cruelty",
+   "The Ladykillers",
+   "Paris Je T'aime"
+  ],
+  "detect_ms": 0.058
+ },
+ "ppl-16": {
+  "names": [
+   "Stanley Kubrick"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "surname"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 18,
+  "centroid": [
+   "The Shining",
+   "A Clockwork Orange",
+   "Full Metal Jacket",
+   "2001: A Space Odyssey",
+   "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+   "Eyes Wide Shut",
+   "Paths of Glory",
+   "Barry Lyndon",
+   "Spartacus",
+   "Lolita",
+   "The Killing",
+   "Flying Padre",
+   "Killer's Kiss",
+   "Fear and Desire"
+  ],
+  "detect_ms": 0.058
+ },
+ "ppl-18": {
+  "names": [
+   "Christopher Nolan"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "both",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 19,
+  "centroid": [
+   "The Dark Knight",
+   "Inception",
+   "Interstellar",
+   "Batman Begins",
+   "The Prestige",
+   "Memento",
+   "The Dark Knight Rises",
+   "Oppenheimer",
+   "Dunkirk",
+   "Tenet",
+   "Insomnia",
+   "Following",
+   "The Odyssey"
+  ],
+  "detect_ms": 0.057
+ },
+ "ppl-19": {
+  "names": [
+   "Jim Carrey"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "both",
+  "lean": "filmography",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 44,
+  "centroid": [
+   "The Truman Show",
+   "Eternal Sunshine of the Spotless Mind",
+   "Bruce Almighty",
+   "Dumb and Dumber",
+   "The Mask",
+   "Ace Ventura: Pet Detective",
+   "Yes Man",
+   "Liar Liar",
+   "How the Grinch Stole Christmas",
+   "Kick-Ass 2",
+   "Batman Forever",
+   "Ace Ventura: When Nature Calls",
+   "The Number 23",
+   "Me, Myself & Irene",
+   "Sonic the Hedgehog",
+   "Lemony Snicket's A Series of Unfortunate Events",
+   "The Cable Guy",
+   "Fun with Dick and Jane",
+   "Dumb and Dumber To",
+   "Horton Hears a Who!"
+  ],
+  "detect_ms": 0.048
+ },
+ "ppl-22": {
+  "names": [
+   "A24"
+  ],
+  "kinds": [
+   "studio"
+  ],
+  "match": [
+   "alias"
+  ],
+  "intent": "filmography",
+  "lean": "style",
+  "residual": "horror",
+  "negated": [],
+  "era": null,
+  "n_titles": 99,
+  "centroid": [
+   "Uncut Gems",
+   "Moonlight",
+   "Euphoria",
+   "The Whale",
+   "X",
+   "Heretic",
+   "Past Lives",
+   "BEEF",
+   "Pearl",
+   "The Zone of Interest",
+   "The Green Knight",
+   "The Iron Claw",
+   "It Comes at Night",
+   "The Idol",
+   "Problemista",
+   "Dream Scenario",
+   "Eighth Grade",
+   "The Sympathizer",
+   "mid90s",
+   "Bodies Bodies Bodies"
+  ],
+  "detect_ms": 0.069
+ },
+ "ppl-24": {
+  "names": [
+   "HBO"
+  ],
+  "kinds": [
+   "studio"
+  ],
+  "match": [
+   "alias"
+  ],
+  "intent": "filmography",
+  "lean": "style",
+  "residual": "prestige drama",
+  "negated": [],
+  "era": null,
+  "n_titles": 303,
+  "centroid": [
+   "Game of Thrones",
+   "Chernobyl",
+   "True Detective",
+   "The Last of Us",
+   "Band of Brothers",
+   "Westworld",
+   "The Sopranos",
+   "House of the Dragon",
+   "The Wire",
+   "Succession",
+   "The White Lotus",
+   "Euphoria",
+   "True Blood",
+   "Big Little Lies",
+   "The Penguin",
+   "Boardwalk Empire",
+   "Mare of Easttown",
+   "Rome",
+   "The Night Of",
+   "Peacemaker"
+  ],
+  "detect_ms": 0.064
+ }
+}

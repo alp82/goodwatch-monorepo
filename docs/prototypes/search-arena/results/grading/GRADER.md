@@ -25,3 +25,24 @@ Rules:
 
 Output: a JSON object `{query_id: {pid: grade}}` with every pid of your part,
 written with a script (not by hand-editing huge JSON), then verify the count.
+
+## Style queries (round 6)
+
+Packets with `"rubric": "style"` belong to queries whose `person_intent` is `style` or `both`: the query names a
+person or studio and asks for their style ("tarantino vibes", "kubrick-esque", "edgar wright", "hbo prestige
+drama"). For these, grade by fit to that person's or studio's style as the intent describes it (tone, mood, form,
+recurring themes), not by who made the title. The `credits` field shows who made each title.
+
+- 3: a top pick for the style. The person's or studio's own typical titles earn 3 unless the intent rules them out
+  (for example Lynch's most surreal films in "like david lynch but less weird"). A title by someone else that
+  genuinely shares the style also earns 3, the same as the person's own titles.
+- 2: clearly shares much of the style, but not all of it.
+- 1: shares only a genre or one surface element.
+- 0: no real style fit, or contradicts the intent.
+- Generic popular titles that share only a genre with the person's work get 0 or 1, however famous they are.
+- An atypical title of the person's own (a minor credit, a documentary about them, a film far from the style the
+  intent describes) is graded by fit like any other title.
+- For `both` queries the intent puts the person's own titles first. That is an ordering preference: still grade
+  each title by style fit, so a genuinely similar title by someone else can earn 3.
+- Alternate cuts of one film (Redux, Extended, Director's Cut, ...): grade each by itself. The metrics count only
+  the first cut in a list.
