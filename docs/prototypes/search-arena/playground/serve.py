@@ -257,8 +257,13 @@ def get_capture(q):
     qd = dict(id=f"adhoc/{h}", query=q.strip(), type="adhoc", split="adhoc", intent="", anchors={})
     if os.path.exists(path):
         cap = json.load(open(path))
-        qd["query"] = cap["query"]
-        return cap, qd, dict(kind="adhoc", id=h, fresh=False, ms=0)
+        if not (cap.get("reading") or {}).get("source"):
+            # The Jev reading failed when this was captured (for example a 529 from the provider). Such failures
+            # are transient, so capture again instead of serving the fallback forever.
+            os.remove(path)
+        else:
+            qd["query"] = cap["query"]
+            return cap, qd, dict(kind="adhoc", id=h, fresh=False, ms=0)
     os.makedirs(ADHOC, exist_ok=True)
     t = time.perf_counter()
     cmd = [os.path.join(WEBAPP, "node_modules", ".bin", "vite-node"), "--config", "scripts/arena-vite.config.mjs",
