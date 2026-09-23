@@ -590,3 +590,15 @@ or tone term to the neighbour score for animation queries.
 
 Playground: r6 was added as a column (`playground/serve.py`, `index.html`), but it doesn't carry the winner tag,
 which stays on r4-combo-fast.
+
+## Human calibration (2026-09-23)
+
+The user graded 11 of the 40 calibration pairs (the rest were unknown titles).
+Against the final agent grades: 7 exact, 10 within one grade, mean
+human − agent −0.36. Two findings:
+- "something short to watch after work": The Yogi Bear Show got 0 from the
+  user and 3 from both agents. Agents read vague queries too literally.
+- "like groundhog day": the user graded Groundhog Day itself 3. Round 4
+  excludes the reference title in "like X" queries, which goes against this.
+Too few pairs for a kappa; direction only. Grades in
+`grading/human-calibration-grades.json`.
