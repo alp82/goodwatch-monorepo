@@ -1,0 +1,875 @@
+[
+ {
+  "query_id": "lab-01",
+  "query": "tarkovsky",
+  "intent": "Ambiguous: films directed by Andrei Tarkovsky first, then contemplative, poetic, spiritual cinema in his style.",
+  "items": [
+   {
+    "pid": 1000000001398,
+    "title": "Stalker",
+    "year": 1979,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Drama"
+    ],
+    "essence_text": "A profoundly philosophical and visually haunting science fiction journey, inviting viewers into an enigmatic post-apocalyptic landscape. Its deliberate slow pace and dense atmosphere foster a deep sense of psychological immersion and existential contemplation. The film's strength lies in its ambiguity, compelling audiences to ponder its complex themes and the nature of human desire. It's a challenging yet deeply rewarding experience that lingers long after viewing, a true masterpiece of...",
+    "tags": [
+     "Philosophical Sci-Fi",
+     "Meditative & Ambiguous",
+     "Post-Apocalyptic Journey",
+     "Existential Drama",
+     "Visually Striking",
+     "Slow-Burn Mystery",
+     "Melancholy & Haunting",
+     "Aesthetic Masterpiece",
+     "World-Immersive"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "guard",
+     "wish",
+     "stalker",
+     "alien",
+     "strugatsky",
+     "writer",
+     "soldier",
+     "existentialism",
+     "zone",
+     "beautifully filmed"
+    ]
+   },
+   {
+    "pid": 1000000000422,
+    "title": "8½",
+    "year": 1963,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A groundbreaking masterpiece that delves into the existential and creative crisis of a film director. It masterfully blurs the lines between reality, memory, and fantasy, creating a dreamlike and introspective journey. The film is a meta-cinematic exploration of the creative process and personal anxieties, offering a rich, complex character study. Its innovative narrative structure and visual poetry invite multiple viewings and deep contemplation.",
+    "tags": [
+     "Meta-Cinema Masterpiece",
+     "Existential Director's Crisis",
+     "Dreamlike Psychological Drama",
+     "Autobiographical Fantasy",
+     "Art House Landmark",
+     "Visually Poetic",
+     "Complex Character Study",
+     "Surreal & Philosophical",
+     "Influential Narrative"
+    ],
+    "keywords": [
+     "dying and death",
+     "adultery",
+     "depression",
+     "individual",
+     "unsociability",
+     "screenplay",
+     "suicide attempt",
+     "missile",
+     "scapegoat",
+     "movie business",
+     "allegory",
+     "difficult childhood"
+    ]
+   },
+   {
+    "pid": 1000000000062,
+    "title": "2001: A Space Odyssey",
+    "year": 1968,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Mystery",
+     "Adventure"
+    ],
+    "essence_text": "A monumental work of philosophical science fiction, this film is a visually stunning and audibly immersive journey through human evolution and the cosmic unknown. It's a slow-burn experience, prioritizing visual storytelling and sound design over dialogue to evoke a profound sense of wonder and existential introspection. The narrative is deliberately ambiguous, inviting viewers to ponder the nature of intelligence, technology, and humanity's place in the universe. A truly unique and...",
+    "tags": [
+     "Philosophical Sci-Fi",
+     "Existential Exploration",
+     "Groundbreaking Visuals",
+     "AI & Humanity",
+     "Slow Burn Mystery",
+     "Ambiguous & Abstract",
+     "Space Odyssey",
+     "Immersive Soundscape",
+     "Meditative Cinema"
+    ],
+    "keywords": [
+     "man vs machine",
+     "moon",
+     "jupiter",
+     "artificial intelligence (a.i.)",
+     "based on novel or book",
+     "technology",
+     "super computer",
+     "space travel",
+     "space mission",
+     "moon base",
+     "astronaut",
+     "evolution"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-06",
+  "query": "furious",
+  "intent": "Ambiguous mood vs title lookup: rage-driven, ferocious, high-intensity titles; the Fast & Furious franchise is a plausible title reading.",
+  "items": [
+   {
+    "pid": 1000000781732,
+    "title": "Animal",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "This film is a visceral and explosive saga of revenge, driven by intense family dynamics and a relentless pursuit of retribution. It offers an experience of immense spectacle and high adrenaline, with a powerful, often operatic musical score that underscores its emotional weight. The narrative is fast-paced and uncompromisingly violent, making it a compelling watch for those seeking a grand-scale action-drama. It explores themes of loyalty, betrayal, and the cyclical nature of violence...",
+    "tags": [
+     "Action-Packed Revenge",
+     "Intense Violence",
+     "Family Saga",
+     "High Spectacle",
+     "Crime Thriller",
+     "Emotional & Dramatic",
+     "Epic Scope",
+     "Dominant Score",
+     "Underworld Conflict"
+    ],
+    "keywords": [
+     "fistfight",
+     "shootout",
+     "held at gunpoint",
+     "machine gun",
+     "hand to hand combat",
+     "action hero",
+     "father son conflict",
+     "complex relationship"
+    ]
+   },
+   {
+    "pid": 1000000697843,
+    "title": "Extraction 2",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "A relentlessly paced and explosive action thriller that plunges viewers into a world of high-stakes mercenary operations. Featuring incredibly visceral combat and a truly impressive display of choreographed action, it delivers pure adrenaline. The film is a masterclass in cinematic spectacle, designed to keep audiences on the edge of their seats with its non-stop intensity. It's an ideal watch for those seeking a hardcore, no-holds-barred action experience.",
+    "tags": [
+     "High-Octane Action",
+     "Relentless Thriller",
+     "Elite Mercenary",
+     "Visceral Combat",
+     "Intense Rescue Mission",
+     "Adrenaline-Fueled Spectacle",
+     "Global Operations",
+     "Gritty Realism",
+     "Cinematic Long Takes"
+    ],
+    "keywords": [
+     "explosive",
+     "mercenary",
+     "rescue mission",
+     "sequel",
+     "revenge",
+     "georgia europe",
+     "criminal underworld",
+     "based on graphic novel",
+     "behind enemy lines",
+     "gritty",
+     "violence",
+     "survival instinct"
+    ]
+   },
+   {
+    "pid": 1000000617502,
+    "title": "Jolt",
+    "year": 2021,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "An electrifying and brutally intense action thriller centered on a protagonist fueled by a unique anger management issue. The film plunges viewers into a relentless rampage, showcasing visceral fight sequences and high-stakes confrontations. Its appeal lies in its raw energy and a strong lead performance that drives the chaotic, revenge-driven plot. This is a pure adrenaline rush for those seeking non-stop, no-nonsense action with a gritty edge.",
+    "tags": [
+     "High-Octane Action",
+     "Revenge Thriller",
+     "Anger Management Themes",
+     "Relentless Pacing",
+     "Vigilante Justice",
+     "Strong Female Lead",
+     "Urban Mayhem",
+     "Visceral Fight Sequences",
+     "Gritty Atmosphere"
+    ],
+    "keywords": [
+     "homicide",
+     "dark comedy",
+     "crime boss",
+     "female protagonist",
+     "electro shock",
+     "duringcreditsstinger",
+     "woman director",
+     "anger management",
+     "anger issues",
+     "revenge thriller",
+     "one person army"
+    ]
+   },
+   {
+    "pid": 1000000047327,
+    "title": "Drive Angry",
+    "year": 2011,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Thriller",
+     "Action",
+     "Crime"
+    ],
+    "essence_text": "'Drive Angry' is a gloriously over-the-top, hyper-violent grindhouse thrill ride fueled by supernatural revenge and pure adrenaline. It revels in its campy aesthetic and audacious action sequences, making no apologies for its extreme content and audacious style. The film offers pure escapism with a relentless pace and a visually striking world, appealing to viewers who appreciate a genre-bending, no-holds-barred cinematic experience. It's a wild, explicit, and darkly humorous journey to hell...",
+    "tags": [
+     "Grindhouse Action",
+     "Supernatural Revenge",
+     "Extreme Violence",
+     "Over-the-Top Spectacle",
+     "Cult Classic Potential",
+     "Campy & Self-Aware",
+     "Demonic Thriller",
+     "Stylized Visuals",
+     "Road Trip Mayhem"
+    ],
+    "keywords": [
+     "race against time",
+     "kidnapping",
+     "surrealism",
+     "satanic cult",
+     "escaped from hell",
+     "good versus evil"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-08",
+  "query": "sunglasses",
+  "intent": "Sunglasses are a notable visual element or plot device (They Live, The Matrix, Men in Black).",
+  "items": [
+   {
+    "pid": 1000000122081,
+    "title": "Spring Breakers",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A visually audacious and audibly immersive crime drama that plunges into the dark side of youth hedonism, set against a neon-drenched spring break. The film is less about plot and more about atmosphere, using its bold aesthetic and relentless soundtrack to craft a hypnotic, dreamlike experience. It serves as a provocative social commentary on materialism and the allure of criminality, leaving viewers with a sense of unsettling melancholy and a vivid, unforgettable impression of its...",
+    "tags": [
+     "Sensory Crime Drama",
+     "Neon-Noir Aesthetic",
+     "Youth Rebellion",
+     "Existential Thriller",
+     "Hedonistic Exploitation",
+     "Social Satire",
+     "Hypnotic Pacing",
+     "Controversial Cinema",
+     "Pop Culture Critique"
+    ],
+    "keywords": [
+     "drug dealer",
+     "florida",
+     "robbery",
+     "gangster",
+     "rapper",
+     "materialism",
+     "female friendship",
+     "shootout",
+     "drugs",
+     "threesome",
+     "hedonism",
+     "spring break"
+    ]
+   },
+   {
+    "pid": 1000000414906,
+    "title": "The Batman",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Mystery",
+     "Thriller"
+    ],
+    "essence_text": "This film plunges viewers into a bleak, rain-soaked Gotham, presenting a grounded and gritty take on the caped crusader as a troubled detective. Its meticulously crafted atmosphere and stunning cinematography create a truly immersive world of urban decay and moral ambiguity. The narrative weaves a complex mystery with a strong emphasis on psychological depth and the pervasive corruption that plagues the city. It's a dark and intense experience, demanding full attention to unravel its...",
+    "tags": [
+     "Gritty Neo-Noir",
+     "Detective Thriller",
+     "Psychological Character Study",
+     "Stylized Visuals",
+     "Dark & Brooding Tone",
+     "Urban Crime Saga",
+     "Social Corruption Theme",
+     "Vigilante Justice",
+     "Riddler Mystery"
+    ],
+    "keywords": [
+     "police",
+     "psychopath",
+     "secret identity",
+     "crime fighter",
+     "superhero",
+     "nightclub",
+     "politician",
+     "based on comic",
+     "vigilante",
+     "organized crime",
+     "serial killer",
+     "millionaire"
+    ]
+   },
+   {
+    "pid": 1000000000680,
+    "title": "Pulp Fiction",
+    "year": 1994,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Crime",
+     "Comedy"
+    ],
+    "essence_text": "A highly influential crime film celebrated for its non-linear narrative, stylized violence, and witty dialogue. The film pieces together seemingly disparate storylines that coalesce into a larger, darkly comedic whole. Its impact on pop culture is undeniable, and its rewatchability stems from its intricate plot and memorable characters. It blends elements of neo-noir, black comedy, and homage to classic genre films, making it a uniquely entertaining and thought-provoking experience.",
+    "tags": [
+     "Crime Caper",
+     "Non-linear Narrative",
+     "Stylized Violence",
+     "Witty Dialogue",
+     "Pop Culture References",
+     "Black Comedy",
+     "Ensemble Cast",
+     "Neo-Noir",
+     "Homage to Genre Films"
+    ],
+    "keywords": [
+     "drug dealer",
+     "drug crime",
+     "gangster",
+     "dark comedy",
+     "stolen money",
+     "crime boss",
+     "redemption",
+     "los angeles, california",
+     "theft",
+     "couple",
+     "nonlinear timeline",
+     "multiple storylines"
+    ]
+   },
+   {
+    "pid": 2000000001396,
+    "title": "Breaking Bad",
+    "year": 2008,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A meticulously crafted descent into moral darkness that transforms a sympathetic underdog into a terrifying antagonist. The series relies on unbearable tension and complex character psychology rather than gratuitous action, though its violence is visceral when it occurs. It offers a profound exploration of ego, pride, and the corrosive nature of power within the framework of a realistic crime drama. Every plot thread is tightly woven, creating an addictive binge-watching experience that...",
+    "tags": [
+     "Moral Decay Character Study",
+     "High-Stakes Crime Drama",
+     "Psychological Thriller",
+     "New Mexico Noir",
+     "Tragic Anti-Hero Arc",
+     "Family Dysfunction",
+     "Methodical Tension",
+     "Cinematic Storytelling",
+     "Dark Humor",
+     "Consequence-Driven Narrative"
+    ],
+    "keywords": [
+     "new mexico",
+     "drug dealer",
+     "narcissism",
+     "psychopath",
+     "terminal illness",
+     "outlaw",
+     "dark comedy",
+     "cancer",
+     "tragedy",
+     "drugs",
+     "criminal",
+     "meth lab"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-19",
+  "query": "cozy",
+  "intent": "Comforting, gentle, low-stakes titles (warm animation, feel-good comedy).",
+  "items": [
+   {
+    "pid": 2000000100412,
+    "title": "The Baby-Sitters Club",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Kids"
+    ],
+    "essence_text": "A truly wholesome and heartwarming adaptation that captures the spirit of friendship, entrepreneurship, and everyday childhood adventures. The series excels in its portrayal of realistic, diverse characters navigating relatable challenges, making it an ideal comfort watch for families. With its bright, optimistic tone and subtle contemporary updates, it offers both a nostalgic trip for fans of the original books and an accessible, positive experience for new young viewers. It's an optimistic...",
+    "tags": [
+     "Heartwarming Kids Show",
+     "Friendship & Entrepreneurship",
+     "Contemporary Adaptation",
+     "Slice-of-Life Drama",
+     "Positive Role Models",
+     "Family-Friendly Comedy",
+     "Relatable Childhood",
+     "Modern Nostalgia",
+     "Community Focused"
+    ],
+    "keywords": [
+     "small town",
+     "babysitter",
+     "friendship",
+     "family relationships",
+     "teenage girl",
+     "inspirational",
+     "hopeful"
+    ]
+   },
+   {
+    "pid": 2000000001974,
+    "title": "The Bob Newhart Show",
+    "year": 1972,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A beloved classic sitcom known for its gentle, observational humor and the understated comedic genius of Bob Newhart. It centers on a psychologist's amusing interactions with his quirky patients and colleagues, creating a warm, wholesome viewing experience. The show's strength lies in its sharp dialogue and well-developed characters, offering a comforting and endlessly rewatchable slice of 1970s television. It's a perfect background-friendly option that appeals to a broad audience.",
+    "tags": [
+     "Classic Sitcom",
+     "Gentle Humor",
+     "Character-Driven Comedy",
+     "Observational Wit",
+     "Wholesome Entertainment",
+     "Therapy-Focused",
+     "70s Aesthetic",
+     "Psychological Comedy",
+     "Subtle Humor"
+    ],
+    "keywords": [
+     "chicago, illinois",
+     "psychologist",
+     "sitcom",
+     "mental health professional"
+    ]
+   },
+   {
+    "pid": 1000000300778,
+    "title": "Garage Sale Mystery: All That Glitters",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "Family",
+     "TV Movie"
+    ],
+    "essence_text": "This is a classic cozy mystery, designed for comfortable, low-stakes viewing. The focus is on the light-hearted puzzle of the whodunit, led by a charming amateur sleuth who is an expert in antiques. Expect a formulaic plot, gentle suspense, and a guaranteed resolution where everything is tidied up by the end. It's the perfect film for a quiet afternoon, offering simple intrigue without any intense violence or emotional weight.",
+    "tags": [
+     "Cozy Mystery",
+     "Amateur Sleuth",
+     "Made-for-TV Movie",
+     "Lighthearted Investigation",
+     "Small Town Crime",
+     "Formulaic Whodunit",
+     "Comfort Watch",
+     "Antiques & Collectibles"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 2000000007154,
+    "title": "The No. 1 Ladies' Detective Agency",
+    "year": 2009,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Crime",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This series offers a gentle, heartwarming escape into the vibrant landscapes and community spirit of Botswana. Centered on the intuitive and compassionate Mma Ramotswe, the narrative prioritizes human connection and moral clarity over high-stakes action or complex plotting. The pacing is deliberately slow and soothing, allowing the beauty of the setting and the warmth of the characters to take center stage. It serves as an ideal comfort watch, delivering a sense of hope and decency through...",
+    "tags": [
+     "Cozy Mystery",
+     "African Cultural Portrait",
+     "Heartwarming Drama",
+     "Female Empowerment",
+     "Gentle Humor",
+     "Community-Centric Storytelling",
+     "Slow-Paced Narrative",
+     "Visually Scenic",
+     "Wholesome Entertainment"
+    ],
+    "keywords": [
+     "sibling relationship",
+     "based on novel or book",
+     "south africa",
+     "botswana",
+     "dark comedy",
+     "female protagonist",
+     "female detective",
+     "detective agency",
+     "comedy mystery"
+    ]
+   },
+   {
+    "pid": 2000000000484,
+    "title": "Murder, She Wrote",
+    "year": 1984,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "This quintessential cozy mystery series invites viewers into a world of charming small towns and intricate puzzles, led by an unassuming but sharp-witted mystery writer. Each episode delivers a self-contained whodunit, characterized by its wholesome tone and clever plot twists. It's the ultimate comfort watch for fans of lighthearted crime fiction, offering consistent intrigue and a sense of nostalgic familiarity that encourages rewatching and casual drop-ins.",
+    "tags": [
+     "Cozy Mystery",
+     "Amateur Sleuth",
+     "Classic Television",
+     "Wholesome",
+     "Intriguing Plots",
+     "Character-Driven",
+     "Episodic",
+     "Nostalgic",
+     "Murder Investigation"
+    ],
+    "keywords": [
+     "detective",
+     "writer",
+     "investigator",
+     "elderly",
+     "mystery writer",
+     "mysterious",
+     "criminal consultant",
+     "comforting",
+     "solve",
+     "sleuth"
+    ]
+   },
+   {
+    "pid": 2000000099962,
+    "title": "McDonald & Dodds",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery",
+     "Crime",
+     "Comedy"
+    ],
+    "essence_text": "This British detective series offers a delightful blend of engaging mysteries and charming character dynamics. It excels through the quirky, yet endearing, partnership of its two lead detectives, whose contrasting personalities provide much of the show's appeal. The investigations are intricate and satisfying, while the overarching tone remains warm and often humorous. It's an ideal comfort watch for anyone who enjoys well-crafted mysteries with a strong focus on character and wit.",
+    "tags": [
+     "British Cozy Mystery",
+     "Character-Driven Detective",
+     "Odd Couple Partnership",
+     "Contemporary Crime Drama",
+     "Witty Dialogue",
+     "Engaging Puzzles",
+     "Charming & Wholesome",
+     "Episodic Investigations",
+     "Enjoyable Comfort Watch"
+    ],
+    "keywords": [
+     "police detective",
+     "odd couple",
+     "murder mystery"
+    ]
+   },
+   {
+    "pid": 2000000079864,
+    "title": "Joe Pera Talks With You",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This series offers a uniquely gentle and comforting comedic experience, delving into mundane topics with profound and often humorous insight. Led by its endearing protagonist, it creates an atmosphere of quiet contemplation and wholesome eccentricity. The show’s slow, deliberate pace and observational humor make it an ideal comfort watch, providing a soothing escape from the everyday. It encourages viewers to find wonder in the simple things, delivering a truly original and quietly brilliant...",
+    "tags": [
+     "Gentle Comedy",
+     "Wholesome Slice of Life",
+     "Quirky Observations",
+     "Meditative & Calm",
+     "Midwestern Charm",
+     "Unconventional Humor",
+     "Comfort Watch",
+     "Thought-Provoking Mundanity",
+     "Unique Character Study",
+     "Slow Paced"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 2000000062557,
+    "title": "Peter Kay's Car Share",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A warm and witty British sitcom that thrives on the subtle chemistry and evolving relationship between two colleagues sharing a daily car ride. The humor is derived from relatable everyday situations and exceptionally well-written dialogue, which serves as the backbone of the series. It's a character-driven comedy that masterfully balances moments of quiet intimacy with genuine laughs. This show is a charming and rewatchable comfort watch, perfect for those who enjoy observational humor and...",
+    "tags": [
+     "British Sitcom",
+     "Character-Driven Comedy",
+     "Subtle Romance",
+     "Everyday Life Humor",
+     "Dialogue-Heavy",
+     "Observational Comedy",
+     "Comfort Watch",
+     "Relatable Characters",
+     "Feel-Good Entertainment"
+    ],
+    "keywords": [
+     "supermarket",
+     "road trip",
+     "driving",
+     "sitcom",
+     "manchester"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-21",
+  "query": "funny",
+  "intent": "Strong comedies; broad, so quality and popularity should matter.",
+  "items": [
+   {
+    "pid": 2000000002852,
+    "title": "That Mitchell and Webb Look",
+    "year": 2006,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A masterclass in British sketch comedy, showcasing the sharp wit and versatile performances of David Mitchell and Robert Webb. The series thrives on clever wordplay, absurd scenarios, and incisive satirical commentary on contemporary life. Its sketches often build into miniature narratives, offering both observational humor and delightfully surreal twists. It's a highly rewatchable show perfect for those who appreciate intelligent, character-driven comedy.",
+    "tags": [
+     "British Sketch Comedy",
+     "Witty Dialogue",
+     "Absurdist Humor",
+     "Satirical Commentary",
+     "Character-Driven",
+     "Intelligent Pacing",
+     "Slice-of-Life Skits",
+     "Rewatchable",
+     "Sharp Writing"
+    ],
+    "keywords": [
+     "satire",
+     "sketch comedy",
+     "self-referential",
+     "hobo"
+    ]
+   },
+   {
+    "pid": 1000000000813,
+    "title": "Airplane!",
+    "year": 1980,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A landmark in comedic filmmaking, this movie delivers a relentless barrage of absurd visual gags, rapid-fire puns, and irreverent one-liners. Its genius lies in its deadpan delivery of preposterous situations, constantly subverting expectations for uproarious laughter. It’s a quintessential pure escapism experience that remains endlessly rewatchable for its sheer density of jokes. Prepare for a non-stop, hilarious ride that redefined parody films.",
+    "tags": [
+     "Slapstick Comedy",
+     "Parody Film",
+     "Absurdist Humor",
+     "Rapid-Fire Gags",
+     "Iconic Dialogue",
+     "Cult Classic",
+     "Satirical",
+     "Irreverent",
+     "Zany Fun"
+    ],
+    "keywords": [
+     "chicago, illinois",
+     "post-traumatic stress disorder (ptsd)",
+     "airplane",
+     "cataclysm",
+     "nun",
+     "guitar",
+     "alcohol",
+     "stewardess",
+     "taxi driver",
+     "passenger",
+     "fear of flying",
+     "pilot"
+    ]
+   },
+   {
+    "pid": 2000000064489,
+    "title": "No Activity",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This is a brilliantly dry and dialogue-heavy comedy that finds humor in the mundane absurdity of police stakeouts and criminal hideouts. It thrives on awkward conversations, oversharing, and unexpected tangents, delivering laughs through its superb wit and character interactions rather than conventional plot. The show revels in its slow-burn pacing, allowing the eccentric personalities to shine through often-hilarious and highly quotable exchanges. It's a perfect choice for those who...",
+    "tags": [
+     "Absurdist Comedy",
+     "Dialogue-Driven",
+     "Workplace Comedy",
+     "Cringe Humor",
+     "Character-Focused",
+     "Slow-Burn Comedy",
+     "Improvised Feel",
+     "Deadpan Humor",
+     "Mundane Crime"
+    ],
+    "keywords": [
+     "australia",
+     "police",
+     "spoof"
+    ]
+   },
+   {
+    "pid": 2000000081974,
+    "title": "Baroness von Sketch Show",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This sharp and witty sketch comedy delivers incisive satire on the absurdities of modern life, offering a distinctly female perspective on everything from mundane daily routines to complex social and sexual politics. Its humor often derives from relatable awkwardness and clever wordplay, creating a highly rewatchable experience. The show thrives on its smart writing and strong performances, making it an ideal choice for viewers who appreciate intelligent comedy that also offers biting social...",
+    "tags": [
+     "Sketch Comedy",
+     "Social Satire",
+     "Observational Humor",
+     "Feminist Perspective",
+     "Modern Life Commentary",
+     "Witty Dialogue",
+     "Character-Driven Comedy",
+     "Relatable Awkwardness",
+     "Sharp & Clever"
+    ],
+    "keywords": [
+     "sketch comedy"
+    ]
+   },
+   {
+    "pid": 1000001035259,
+    "title": "The Naked Gun",
+    "year": 2025,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Action",
+     "Crime"
+    ],
+    "essence_text": "This film promises a riotous return to the anarchic, slapstick humor that defined its predecessors, delivering a barrage of visual gags, sharp wit, and absurd situations. Fans of the original will find comfort in its familiar yet refreshed comedic style. It's a vehicle for pure, unadulterated escapism, where plot takes a backseat to relentless laughter and irreverent parody. Expect a fast-paced, eccentric ride filled with homage and meta-commentary, making it a perfect watch for those...",
+    "tags": [
+     "Slapstick Comedy",
+     "Absurdist Farce",
+     "Parody Film",
+     "Rapid-Fire Gags",
+     "Witty Dialogue",
+     "Detective Comedy",
+     "Iconic Franchise Revival",
+     "Meta-Humor",
+     "Pure Escapism"
+    ],
+    "keywords": [
+     "sequel",
+     "slapstick comedy",
+     "reboot",
+     "aftercreditsstinger",
+     "duringcreditsstinger",
+     "action comedy",
+     "absurd",
+     "hilarious"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-22",
+  "query": "time loop",
+  "intent": "Repeating time is the central mechanism.",
+  "items": [
+   {
+    "pid": 1000000044090,
+    "title": "1000 Mabrouk",
+    "year": 2009,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This heartwarming comedy-drama uses the classic time loop trope to explore profound themes of self-reflection and the search for meaning. A man is forced to relive the same day, prompting him to confront his routines, reassess his relationships, and ultimately strive for personal growth. Blending clever humor with genuine emotional depth, it offers a hopeful and cathartic journey. The film encourages introspection while maintaining a lighthearted tone, making it a compelling and surprisingly...",
+    "tags": [
+     "Time Loop Narrative",
+     "Existential Comedy",
+     "Self-Discovery Journey",
+     "Relationship Drama",
+     "Philosophical Comedy",
+     "Urban Drama",
+     "Hopeful",
+     "Character-Driven",
+     "Rewatchable"
+    ],
+    "keywords": [
+     "egypt",
+     "deja vu",
+     "self-discovery",
+     "redemption",
+     "fate",
+     "time loop",
+     "car accident",
+     "family",
+     "second chance",
+     "death",
+     "repetition",
+     "existential crisis"
+    ]
+   },
+   {
+    "pid": 1000000787428,
+    "title": "Two Distant Strangers",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "This impactful short film traps its protagonist in a terrifying time loop, forcing him to repeatedly relive a deadly encounter with a police officer. It's a searing and urgent piece of social commentary, using its high-concept premise to explore themes of racial injustice and systemic violence. The relentless tension and sense of inescapable dread create a profoundly unsettling and thought-provoking experience, designed to leave a lasting emotional impact. Its grim narrative is a powerful...",
+    "tags": [
+     "Time Loop Drama",
+     "Social Commentary",
+     "Police Brutality",
+     "Racial Injustice",
+     "Gritty & Intense",
+     "Traumatic Repetition",
+     "Psychological Anguish",
+     "Contemporary Relevancy",
+     "Short Film"
+    ],
+    "keywords": [
+     "police brutality",
+     "cop",
+     "time loop",
+     "black lives matter",
+     "short film"
+    ]
+   }
+  ]
+ }
+]

@@ -1,0 +1,355 @@
+{
+ "title-kind": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.42,
+   "c": 0.18,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "crate",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": false,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": false,
+   "nonen_mix": 0.5,
+   "spell": false
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": true,
+   "cap": 0.65
+  }
+ },
+ "era": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.42,
+   "c": 0.18,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "crate",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": true,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": false,
+   "nonen_mix": 0.5,
+   "spell": false
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": false
+  }
+ },
+ "nonen": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.42,
+   "c": 0.18,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "crate",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": false,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": true,
+   "nonen_mix": 0.5,
+   "spell": false
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": false
+  }
+ },
+ "spell": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.42,
+   "c": 0.18,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "crate",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": false,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": false,
+   "nonen_mix": 0.5,
+   "spell": true
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": false
+  }
+ },
+ "reweight": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.5,
+   "b": 0.38,
+   "c": 0.12,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "crate",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": false,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": false,
+   "nonen_mix": 0.5,
+   "spell": false
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": false
+  }
+ },
+ "notext-r2": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.5,
+   "b": 0.5,
+   "c": 0,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "none",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": false,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": false,
+   "nonen_mix": 0.5,
+   "spell": false
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": false
+  }
+ },
+ "sparse": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.48,
+   "c": 0.12,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "sparse",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": false,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": false,
+   "nonen_mix": 0.5,
+   "spell": false
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": false
+  }
+ },
+ "sparse-fast": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.48,
+   "c": 0.12,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "sparse",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": {
+    "dense": 500,
+    "facet": 200,
+    "neg": 200,
+    "sparse": 300
+   },
+   "era": false,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": false,
+   "nonen_mix": 0.5,
+   "spell": false
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": false
+  }
+ },
+ "r3-combo": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.48,
+   "c": 0.12,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "both",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": null,
+   "era": true,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": true,
+   "nonen_mix": 0.5,
+   "spell": true
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": true,
+   "cap": 0.65
+  }
+ },
+ "r3-combo-fast": {
+  "discovery": {
+   "emb": "bgeb-notitle",
+   "a": 0.4,
+   "b": 0.48,
+   "c": 0.12,
+   "prior": [
+    0.1,
+    0.1
+   ],
+   "neg": 0.1,
+   "facet": 0.1,
+   "facet_source": "phrases",
+   "k_emb": 500,
+   "k_fp": 500,
+   "text": "sparse",
+   "sparse_w": null,
+   "sparse_k": 300,
+   "sparse_tf": "raw",
+   "sparse_bigram": 1.0,
+   "trunc": {
+    "dense": 500,
+    "facet": 200,
+    "neg": 200,
+    "sparse": 300
+   },
+   "era": true,
+   "era_mode": "filter",
+   "era_w": 0.3,
+   "nonen": true,
+   "nonen_mix": 0.5,
+   "spell": true
+  },
+  "blend": {
+   "strict": 0.9,
+   "fuzzy": 0.88,
+   "kind": true,
+   "cap": 0.65
+  }
+ }
+}

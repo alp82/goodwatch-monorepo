@@ -1,0 +1,155 @@
+[
+ {
+  "query_id": "new-23",
+  "query": "psycological thriler with a big twist",
+  "intent": "Misspelled \"psychological thriller\": mind-game thrillers built around a major twist.",
+  "items": [
+   {
+    "pid": 1000000488623,
+    "title": "Forgotten",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Mystery",
+     "Crime"
+    ],
+    "essence_text": "A relentlessly tense and intricately plotted psychological thriller that masterfully weaves a complex web of mystery and deception. The film thrives on its non-linear narrative and constant shifts in perspective, challenging viewers to piece together the truth. It delves deep into themes of memory, identity, and unsettling family dynamics, keeping you on the edge of your seat. This is a highly intriguing and thought-provoking experience, best approached with full attention.",
+    "tags": [
+     "Mind-Bending Mystery",
+     "Psychological Thriller",
+     "Non-Linear Storytelling",
+     "Memory & Identity",
+     "Family Secrets",
+     "High Tension",
+     "Unexpected Twists",
+     "Intriguing Narrative",
+     "Bleak Mood"
+    ],
+    "keywords": [
+     "hypnosis",
+     "revenge",
+     "murder",
+     "brother brother relationship"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-19",
+  "query": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.",
+  "intent": "Space-western / ragtag-crew adventures with humor and found family. Grim space horror is wrong.",
+  "items": [
+   {
+    "pid": 2000000001877,
+    "title": "Phineas and Ferb",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A brilliantly inventive and relentlessly cheerful animated series that consistently delivers creative, over-the-top summer projects and catchy musical numbers. Its unique blend of witty dialogue, physical comedy, and absurdist humor appeals across generations, making it a truly intergenerational comfort watch. Each episode is a standalone adventure filled with boundless imagination, clever gags, and a wholesome spirit. It's the quintessential animated show for pure, unadulterated escapism...",
+    "tags": [
+     "Inventive Kids' Comedy",
+     "Wholesome Family Fun",
+     "Catchy Musical Numbers",
+     "Absurdist Humor",
+     "Creative Problem-Solving",
+     "Sibling Dynamics",
+     "Summer Adventure",
+     "Cartoon Slapstick",
+     "Endlessly Rewatchable"
+    ],
+    "keywords": [
+     "secret agent",
+     "blended family",
+     "absurd",
+     "admiring",
+     "amused",
+     "excited",
+     "sincere"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-16",
+  "query": "whole movie takes place in one room",
+  "intent": "Single-location films (one room, apartment, booth) that sustain drama through dialogue or tension.",
+  "items": [
+   {
+    "pid": 1000000019170,
+    "title": "Mystery Street",
+    "year": 1950,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Thriller"
+    ],
+    "essence_text": "A classic film noir, steeped in mystery and intrigue, where forensic science plays a central role in solving a crime. The film takes place in Massachusetts during the 1950s, offering a nostalgic glimpse into the past. The tension builds as police and forensics work together to uncover the truth. This is a thought-provoking and suspenseful exploration of crime and justice.",
+    "tags": [
+     "Forensic Science",
+     "Massachusetts",
+     "Police Procedural",
+     "Film Noir",
+     "1950s Crime",
+     "Mystery & Suspense",
+     "Investigation",
+     "Justice"
+    ],
+    "keywords": [
+     "boston, massachusetts",
+     "blackmail",
+     "harvard university",
+     "film noir",
+     "murder",
+     "police detective",
+     "b-girl",
+     "cape cod",
+     "forensic science",
+     "landlady",
+     "murder investigation",
+     "devoted wife"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-15",
+  "query": "nonlinear storytelling",
+  "intent": "The story is told out of chronological order and the structure is part of the experience.",
+  "items": [
+   {
+    "pid": 1000000026689,
+    "title": "Retroactive",
+    "year": 1997,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Thriller",
+     "Action",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "A relentless and intense sci-fi thriller that traps its protagonist in a terrifying time loop, forcing her to repeatedly confront a brutal act of violence. The film offers a visceral experience of suspense and a race against the clock, as each iteration brings new challenges and dangers. It's a dark exploration of fate and the desperate struggle to alter a grim future, making for a high-stakes, mentally engaging watch for fans of time-bending narratives.",
+    "tags": [
+     "Time Loop Thriller",
+     "Relentless Suspense",
+     "Violent Confrontation",
+     "Sci-Fi Action",
+     "Psychological Drama",
+     "Nonlinear Storytelling",
+     "Race Against Time",
+     "Dark Themes",
+     "Intense"
+    ],
+    "keywords": [
+     "serial killer"
+    ]
+   }
+  ]
+ }
+]

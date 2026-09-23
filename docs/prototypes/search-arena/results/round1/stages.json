@@ -1,0 +1,64 @@
+{
+ "stages": {
+  "prod": [
+   "crate_text",
+   "qdrant_fp2000"
+  ],
+  "prod-replay": [
+   "crate_text",
+   "qdrant_fp2000"
+  ],
+  "fp-count": [
+   "crate_text",
+   "fp_full"
+  ],
+  "emb-e5s": [
+   "qemb",
+   "qdrant_emb"
+  ],
+  "emb-e5s-notitle": [
+   "qemb",
+   "qdrant_emb"
+  ],
+  "emb-bgeb": [
+   "qemb",
+   "qdrant_emb"
+  ],
+  "hyb-lin": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "hyb-rrf": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "emb-then-fp": [
+   "qemb",
+   "qdrant_emb",
+   "fp_payload"
+  ],
+  "nojev-knn": [
+   "qemb",
+   "qdrant_emb",
+   "fp_payload"
+  ],
+  "hyb-lin+prior": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ]
+ },
+ "stage_notes": {
+  "crate_text": "Crate text pool (phrase + word queries, fallbacks): prod p50 ~150 ms, worst ~450 ms",
+  "qdrant_fp2000": "Qdrant fingerprint prefetch of 2000 with payload: ~85 ms",
+  "fp_full": "fingerprint scan over ~50k eligible titles (in-process matrix 50k x 74, or Qdrant scroll cache): ~2-5 ms",
+  "qemb": "query embedding on app-server CPU: e5-small ~3-8 ms (ONNX/torch), bge-base ~9-20 ms",
+  "qdrant_emb": "Qdrant vector query on a new named vector (top 300-1000, ids + scores): ~10-20 ms",
+  "fp_payload": "fingerprint scores for the candidates (payload or local matrix): ~5-40 ms"
+ }
+}

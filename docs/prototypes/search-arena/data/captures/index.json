@@ -1,0 +1,2756 @@
+{
+ "generatedAt": "2026-09-23T08:21:58.219Z",
+ "jevUsdTotal": 0.025893,
+ "anchorTotals": {
+  "queries": 87,
+  "must": 314,
+  "top10": 54,
+  "top50": 93
+ },
+ "queries": {
+  "lab-00": {
+   "query": "complete nonsense",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Kung Fu Panda: The Dragon Knight (2022)",
+    "Mechanic: Resurrection (2016)",
+    "Hardwired (2009)",
+    "Monty Python's Fliegender Zirkus (1971)",
+    "Aqua Teen Hunger Force (2000)",
+    "Tim and Eric Awesome Show, Great Job! (2007)",
+    "Million Dollar Extreme Presents: World Peace (2016)",
+    "Strutter (2006)",
+    "Weird: The Al Yankovic Story (2022)",
+    "The Boys Presents: Diabolical (2022)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Monty Python's Flying Circus": null,
+     "Aqua Teen Hunger Force": 5,
+     "Tim and Eric Awesome Show, Great Job!": 6
+    }
+   }
+  },
+  "lab-01": {
+   "query": "tarkovsky",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Tarkovsky (2010)",
+    "Tarkovsky ()",
+    "Andrei Tarkovsky ()",
+    "Andrey Tarkovsky in Nostalghia (1984)",
+    "Directed by Andrei Tarkovsky (1988)",
+    "The Exile and Death of Andrei Tarkovsky (1988)",
+    "Tarkovsky's Andrei Rublev: A Journey (2018)",
+    "Andrei Tarkovsky: The Reminiscence (1996)",
+    "Tarkovsky: Time Within Time (2015)",
+    "A Letter to Tarkovsky (2016)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Stalker": 49,
+     "Solaris": 90,
+     "Mirror": null
+    }
+   }
+  },
+  "lab-02": {
+   "query": "feel good cooking show",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Cooku with Comali (2019)",
+    "Home Town (2016)",
+    "James May: Oh Cook! (2020)",
+    "The Drew Barrymore Show (2020)",
+    "My Kitchen Rules (2010)",
+    "Citizen Khan (2012)",
+    "Perfect Harmony (2019)",
+    "Gidget (1965)",
+    "The Great Pottery Throw Down (2015)",
+    "NEW GAME! (2016)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "Somebody Feed Phil": 20,
+     "The Great British Bake Off": 62,
+     "James May: Oh Cook!": 3
+    }
+   }
+  },
+  "lab-03": {
+   "query": "slow burn space horror",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Texhnolyze (2003)",
+    "Galaxy of Terror (1981)",
+    "The Dark Side of the Moon (1990)",
+    "Jordskott (2015)",
+    "Beyond the Black Rainbow (2010)",
+    "Quatermass and the Pit (1958)",
+    "Ad Vitam (2018)",
+    "The Chestnut Man (2021)",
+    "Skinamarink (2023)",
+    "Silo (2023)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Alien": null,
+     "Event Horizon": null,
+     "High Life": 68
+    }
+   }
+  },
+  "lab-04": {
+   "query": "tense heist thriller, not bleak",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Lift (2024)",
+    "Takers (2010)",
+    "Now You See Me (2013)",
+    "Now You See Me 2 (2016)",
+    "Lassiter (1984)",
+    "Inside Man (2006)",
+    "Money Heist: Korea - Joint Economic Area (2022)",
+    "Parker (2013)",
+    "Money Heist (2017)",
+    "Army of Thieves (2021)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Inside Man": 6,
+     "Now You See Me": 3,
+     "Ocean's Eleven": null
+    }
+   }
+  },
+  "lab-05": {
+   "query": "grief after losing a child",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Trial by Fire (2023)",
+    "Southcliffe (2013)",
+    "Without Sin (2022)",
+    "Dear Zachary: A Letter to a Son About His Father (2008)",
+    "Crash (2018)",
+    "Anne (2022)",
+    "The Missing (2014)",
+    "Our Boys (2019)",
+    "Pieces of a Woman (2020)",
+    "The Disappearance (2015)"
+   ],
+   "anchors": {
+    "must": 2,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Manchester by the Sea": 12,
+     "Rabbit Hole": 66
+    }
+   }
+  },
+  "lab-06": {
+   "query": "furious",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Furious (2026)",
+    "Furious (2017)",
+    "Furious (2011)",
+    "Furious (1984)",
+    "The Furious (2026)",
+    "Fast & Furious Presents: Hobbs & Shaw (2019)",
+    "Fast & Furious Spy Racers (2019)",
+    "Furious 7 (2015)",
+    "The Fate of the Furious (2017)",
+    "Kung Fu Panda: Secrets of the Furious Five (2008)"
+   ],
+   "anchors": null
+  },
+  "lab-07": {
+   "query": "craty",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Police Squad! (1982)",
+    "Monty Python's Fliegender Zirkus (1971)",
+    "The Tom Green Show (1998)",
+    "Bobobo-bo Bo-bobo (2005)",
+    "Pink Flamingos (1972)",
+    "Italian Spiderman (2007)",
+    "Monty Python's Fliegender Zirkus (1972)",
+    "At Home with Amy Sedaris (2017)",
+    "Danger 5 (2012)",
+    "Animaniacs (1993)"
+   ],
+   "anchors": null
+  },
+  "lab-08": {
+   "query": "melancholy lighthouse keeper mystery",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "The Vanishing (2019)",
+    "The Light Between Oceans (2016)",
+    "The Lighthouse (2019)",
+    "The Lighthouse (2016)",
+    "The Returned (2012)",
+    "Baptiste (2019)",
+    "The Light at the Edge of the World (1971)",
+    "The Disappearance (2015)",
+    "Platform 7 (2023)",
+    "Eric (2024)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "The Lighthouse": 3
+    }
+   }
+  },
+  "lab-09": {
+   "query": "scifi with cars",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Death Race (2008)",
+    "Knight Rider (2008)",
+    "The Car: Road to Revenge (2019)",
+    "Blood Drive (2017)",
+    "Knight Rider (1982)",
+    "Fast & Furious: Supercharged (2015)",
+    "Speed Racer (1967)",
+    "The Last Chase (1981)",
+    "Eureka (2006)",
+    "Knight Rider (2008)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Mad Max: Fury Road": null,
+     "Death Race": 1,
+     "The Fifth Element": null,
+     "Blade Runner": null
+    }
+   }
+  },
+  "lab-10": {
+   "query": "sunglasses at night",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Sunglasses at Night (2025)",
+    "Sunglasses at Night (2023)",
+    "They Live (1988)",
+    "Arabian Nights: Volume 2, The Desolate One (2015)",
+    "The Hungover Games (2014)",
+    "Madame Tutli-Putli (2007)",
+    "Night Is Short, Walk On Girl (2017)",
+    "The Kingdom (1994)",
+    "Arabian Nights (1974)",
+    "Fiancés on the Bridge (1961)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "They Live": 3,
+     "The Matrix": null,
+     "Blade": null
+    }
+   }
+  },
+  "lab-11": {
+   "query": "fantasy with dragons",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Rage of Bahamut (2014)",
+    "The Story of the Voyages (1983)",
+    "DOTA: Dragon's Blood (2021)",
+    "Age of the Dragons (2011)",
+    "Dragon Hunter (2008)",
+    "George and the Dragon (2004)",
+    "How to Train Your Dragon (2010)",
+    "The Hobbit: The Desolation of Smaug (2013)",
+    "Dragon Tales (1999)",
+    "The Hobbit: An Unexpected Journey (2012)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 1,
+    "top50": 4,
+    "ranks": {
+     "How to Train Your Dragon": 7,
+     "DragonHeart": 16,
+     "Eragon": 22,
+     "Game of Thrones": null,
+     "House of the Dragon": 25
+    }
+   }
+  },
+  "lab-12": {
+   "query": "like groundhog day",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Groundhog Day (1993)",
+    "Palm Springs (2020)",
+    "12 Days of Christmas Eve (2004)",
+    "Jack Frost (1979)",
+    "The Fare (2018)",
+    "About Time (2013)",
+    "The Map of Tiny Perfect Things (2021)",
+    "The Final Girls (2015)",
+    "Urusei Yatsura: Beautiful Dreamer (1984)",
+    "50 First Dates (2004)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 3,
+    "ranks": {
+     "Palm Springs": 2,
+     "Russian Doll": null,
+     "Edge of Tomorrow": 17,
+     "Happy Death Day": 28
+    }
+   }
+  },
+  "lab-13": {
+   "query": "time travel complex",
+   "readingSource": "cache",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0,
+   "prodTop10": [
+    "Predestination (2014)",
+    "Primer (2004)",
+    "Timecrimes (2007)",
+    "Looper (2012)",
+    "Vortex (2023)",
+    "JL50 (2020)",
+    "Plan B (2023)",
+    "Déjà Vu (2006)",
+    "The 7 Lives of Lea (2022)",
+    "Back to the Future Part II (1989)"
+   ],
+   "anchors": {
+    "must": 6,
+    "top10": 3,
+    "top50": 3,
+    "ranks": {
+     "Primer": 2,
+     "Dark": null,
+     "Predestination": 1,
+     "Timecrimes": 3,
+     "Twelve Monkeys": null,
+     "Tenet": null
+    }
+   }
+  },
+  "core-01": {
+   "query": "Inception",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Inception (2010)",
+    "Inception (1980)",
+    "Inception: The Cobol Job (2010)",
+    "Bikini Inception (2015)",
+    "The Crack: Inception (2019)",
+    "WWA The Inception (2001)",
+    "Insha Allah: An inception at closure ()",
+    "Syndrome Halla, the Inception of Croatian Professional Film – Born to Die (2017)",
+    "The Inception of Seeking (2025)",
+    "Inception: Music from the Motion Picture (2010)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Inception": 1
+    }
+   }
+  },
+  "core-02": {
+   "query": "Breaking Bad",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Breaking Bad (2008)",
+    "El Camino: A Breaking Bad Movie (2019)",
+    "The Road to El Camino: Behind the Scenes of El Camino: A Breaking Bad Movie (2019)",
+    "No Half Measures: Creating the Final Season of Breaking Bad (2013)",
+    "Breaking Bad Fortune Teller (2016)",
+    "Daniel Brühl: Breaking Bad (2023)",
+    "Snow Globe: A Breaking Bad Short (2020)",
+    "ISMO – Breaking Bad English (2024)",
+    "Breaking Bad Wolf ()",
+    "The Bad News Bears in Breaking Training (1977)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Breaking Bad": 1
+    }
+   }
+  },
+  "core-03": {
+   "query": "The Matrix",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "The Matrix (1999)",
+    "The Matrix (2004)",
+    "The Matrix ()",
+    "The Matrix Reloaded (2003)",
+    "The Matrix Resurrections (2021)",
+    "The Matrix Revisited (2001)",
+    "The Matrix Revolutions (2003)",
+    "Sex and the Matrix (2000)",
+    "The Matrix: Generation (2023)",
+    "The Matrix Revolutions Revisited (2004)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "The Matrix": 1
+    }
+   }
+  },
+  "core-04": {
+   "query": "Incepton",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Westworld (2016)",
+    "Mr. Robot (2015)",
+    "1899 (2022)",
+    "eXistenZ (1999)",
+    "Neon Genesis Evangelion: The End of Evangelion (1997)",
+    "Mulholland Drive (2001)",
+    "Inception (2010)",
+    "Lost Highway (1997)",
+    "Legion (2017)",
+    "Serial Experiments Lain (1998)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Inception": 7
+    }
+   }
+  },
+  "core-05": {
+   "query": "Spirited Away",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Spirited Away (2001)",
+    "The Art of 'Spirited Away' (2003)",
+    "Spirited Away: Live on Stage (2023)",
+    "The Nippon Television Special of Spirited Away (2001)",
+    "Stage 『Spirited Away』 (2024)",
+    "Crazy Kwai Boo: Sanxingdui Spirited Away (2022)",
+    "Spirited Away Flying to London (2024)",
+    "Uncovering Spirited Away (2024)",
+    "Weathering with You (2019)",
+    "The Boy and the Heron (2023)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Spirited Away": 1
+    }
+   }
+  },
+  "core-06": {
+   "query": "tense but not bleak",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000315,
+   "prodTop10": [
+    "Mission: Impossible - Rogue Nation (2015)",
+    "WrestleMania XL Sunday (2024)",
+    "WrestleMania XL Saturday (2024)",
+    "Chopped (2009)",
+    "EXIT (2019)",
+    "Baki Hanma VS Kengan Ashura (2024)",
+    "Safety Last! (1923)",
+    "Black Clover (2017)",
+    "Ninja Warrior (1997)",
+    "Days of Thunder (1990)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Knives Out": null,
+     "Wake Up Dead Man: A Knives Out Mystery": null,
+     "Inside Man": null
+    }
+   }
+  },
+  "core-07": {
+   "query": "car chases",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Hollywood's Hottest Car Chases (2010)",
+    "The Transporter Refueled (2015)",
+    "Transporter 2 (2005)",
+    "The Transporter (2002)",
+    "Transporter 3 (2008)",
+    "To Live and Die in L.A. (1985)",
+    "The Fast and the Furious: Tokyo Drift (2006)",
+    "Bullitt (1968)",
+    "The Chase (1994)",
+    "Taxi (1998)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 3,
+    "ranks": {
+     "Mad Max: Fury Road": 51,
+     "Ronin": 28,
+     "Baby Driver": 18,
+     "Bullitt": 8
+    }
+   }
+  },
+  "core-08": {
+   "query": "sunglasses",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Sunglasses (1980)",
+    "Yellow Sunglasses (2021)",
+    "SUNGLASSES I & II (2022)",
+    "A-Trak: Sunglasses is a Must (2006)",
+    "Through Sunglasses ()",
+    "Sunglasses at Night (2025)",
+    "Sunglasses at Night (2023)",
+    "They Live (1988)",
+    "Minority Report (2002)",
+    "Neon Genesis Evangelion: Death and Rebirth (1997)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "They Live": 8,
+     "The Matrix": null,
+     "Men in Black": 20
+    }
+   }
+  },
+  "core-09": {
+   "query": "unreliable narrator",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Unreliable Narrator (2025)",
+    "The Unreliable Narrator (2019)",
+    "The Unreliable Narrator (2014)",
+    "Fight Club (1999)",
+    "The Usual Suspects (1995)",
+    "Mulholland Dr. (1999)",
+    "Spider Forest (2004)",
+    "Ultrasound (2022)",
+    "Marble Hornets (2009)",
+    "Footprints on the Moon (1975)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Fight Club": 4,
+     "The Usual Suspects": 5,
+     "Shutter Island": null,
+     "American Psycho": null
+    }
+   }
+  },
+  "core-10": {
+   "query": "dark comedy about rich people",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000335,
+   "prodTop10": [
+    "Wonder Showzen (2005)",
+    "King of Stonks (2022)",
+    "Hunderby (2012)",
+    "Braunschlag (2012)",
+    "Heathers (2018)",
+    "Trigger Warning with Killer Mike (2019)",
+    "Sayonara Zetsubou Sensei (2007)",
+    "Summer Heights High (2007)",
+    "Mary Hartman, Mary Hartman (1976)",
+    "Review (2014)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Parasite": null,
+     "Knives Out": null,
+     "The Menu": null,
+     "Triangle of Sadness": null,
+     "Succession": null
+    }
+   }
+  },
+  "core-11": {
+   "query": "no anime, gritty crime show",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Gomorrah (2014)",
+    "Spiral (2005)",
+    "Suburræterna (2023)",
+    "Gangs of Oslo (2023)",
+    "Happy Valley (2014)",
+    "Spotless (2015)",
+    "The Octopus (1984)",
+    "Iron Reign (2024)",
+    "Mum Bhai (2020)",
+    "America's Most Wanted (1988)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Sopranos": null,
+     "Breaking Bad": null,
+     "The Wire": null
+    }
+   }
+  },
+  "core-12": {
+   "query": "with my parents",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "The Trip Back to Hometown with My Parents (2016)",
+    "In My Shoes: Stories of Youth with LGBT Parents (2005)",
+    "Hausu 2020: Locked Down with My Friends in My Parents’ Empty House During the First Wave of COVID-19 (2021)",
+    "The Joy of Painting (1983)",
+    "Teletubbies (1997)",
+    "Big Comfy Couch (1992)",
+    "Harvest Love (2017)",
+    "The Nine Lives of Christmas (2014)",
+    "A Godwink Christmas: Miracle of Love (2021)",
+    "Tweenies (1999)"
+   ],
+   "anchors": null
+  },
+  "core-13": {
+   "query": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000354,
+   "prodTop10": [
+    "Wie is de Mol? (1999)",
+    "Tenet (2020)",
+    "Inception (2010)",
+    "Quantico (2015)",
+    "Derren Brown: Sacrifice (2018)",
+    "Oxygen (2021)",
+    "Rokka: Braves of the Six Flowers (2015)",
+    "Mission: Impossible (1996)",
+    "Mission: Impossible - Rogue Nation (2015)",
+    "Alice in Borderland (2020)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Knives Out": null,
+     "Wake Up Dead Man: A Knives Out Mystery": null,
+     "Inside Man": null
+    }
+   }
+  },
+  "core-14": {
+   "query": "Rich people being absolutely awful to each other, preferably funny.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000365,
+   "prodTop10": [
+    "Swedes at Sea (1988)",
+    "The Snake (2006)",
+    "Miami Bici (2020)",
+    "Cartouche (1962)",
+    "Loaded (2017)",
+    "The Raspberry Reich (2004)",
+    "Crime Scene Cleaner (2011)",
+    "Dirty Sexy Money (2007)",
+    "The Devil Judge (2021)",
+    "Promise Me This (2007)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Parasite": null,
+     "Knives Out": null,
+     "The Menu": null,
+     "Triangle of Sadness": null,
+     "Succession": null
+    }
+   }
+  },
+  "core-15": {
+   "query": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000383,
+   "prodTop10": [
+    "Winter (2015)",
+    "America's Most Wanted (1988)",
+    "Vengeance Unlimited (1998)",
+    "Poacher (2024)",
+    "Ten Days in the Valley (2017)",
+    "Flex x Cop (2024)",
+    "CSI: Cyber (2015)",
+    "Beyond Scared Straight (2011)",
+    "Crossing Lines (2013)",
+    "Exhibit A (2019)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Sopranos": null,
+     "Breaking Bad": null,
+     "The Wire": null
+    }
+   }
+  },
+  "core-16": {
+   "query": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000377,
+   "prodTop10": [
+    "Spider (2002)",
+    "American Sports Story (2024)",
+    "A Perfect Enemy (2021)",
+    "Prizzi's Honor (1985)",
+    "Living with the Dead (2002)",
+    "Maharaja (2024)",
+    "Babylon (1980)",
+    "Words on Bathroom Walls (2020)",
+    "The Weeping Meadow (2004)",
+    "Star-Crossed (2014)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Fight Club": null,
+     "The Usual Suspects": 93,
+     "Shutter Island": null,
+     "American Psycho": null
+    }
+   }
+  },
+  "core-17": {
+   "query": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000366,
+   "prodTop10": [
+    "Baby Driver (2017)",
+    "Motorway (2012)",
+    "Hit & Run (2012)",
+    "Fast Five (2011)",
+    "To Live and Die in L.A. (1985)",
+    "The Driver (1978)",
+    "The Refuge (2019)",
+    "Ranam (2018)",
+    "Wheelman (2017)",
+    "Stuber (2019)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 2,
+    "top50": 4,
+    "ranks": {
+     "Baby Driver": 1,
+     "Drive": 12,
+     "The Driver": 6,
+     "Ronin": 22
+    }
+   }
+  },
+  "core-18": {
+   "query": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Moone Boy (2012)",
+    "Fever Pitch (1997)",
+    "Three Wise Men and a Baby (2022)",
+    "Himouto! Umaru-chan (2015)",
+    "Mister Roberts (1955)",
+    "Starstruck (2021)",
+    "Master Eder and his Pumuckl (1982)",
+    "The Grump (2014)",
+    "The Cosby Show (1984)",
+    "Crocodile Dundee (1986)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Paddington 2": null,
+     "The Grand Budapest Hotel": null,
+     "Ted Lasso": null,
+     "Little Miss Sunshine": null
+    }
+   }
+  },
+  "core-19": {
+   "query": "cozy",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Warm and Cozy (2015)",
+    "A Cozy Christmas Inn (2022)",
+    "Norwegian Cozy (2011)",
+    "ITZY COZY HOUSE (2022)",
+    "A Cozy Cottage (1963)",
+    "Cozy First Love (2023)",
+    "A Very Terry Christmas: Get Cozy With Terry Crews (2018)",
+    "Cozy Cole ()",
+    "Cozy Powell ()",
+    "Cozy Room Lofi Music (2023)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Paddington 2": null,
+     "Kiki's Delivery Service": null,
+     "Ted Lasso": null
+    }
+   }
+  },
+  "core-20": {
+   "query": "bleak",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Bleak House (2005)",
+    "Bleak House (1959)",
+    "Bleak House (1985)",
+    "The Bleak Old Shop of Stuff (2012)",
+    "Bleak: Who (2022)",
+    "In the Bleak Midwinter (1995)",
+    "Samuel Bleak (2011)",
+    "Bleak Moments (1972)",
+    "Bleak House (1920)",
+    "My Companions in the Bleak House (1992)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Requiem for a Dream": 38,
+     "Melancholia": null,
+     "Come and See": null
+    }
+   }
+  },
+  "core-21": {
+   "query": "funny",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Funny (2022)",
+    "Funny (1988)",
+    "Funny (1971)",
+    "Funny! (2022)",
+    "Funny Princes (2000)",
+    "Funny People (2009)",
+    "Funny Games (1997)",
+    "Funny Games (2008)",
+    "Funny or Die Presents (2010)",
+    "Funny Face (1957)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Hot Fuzz": null,
+     "Life of Brian": null,
+     "The Naked Gun: From the Files of Police Squad!": null
+    }
+   }
+  },
+  "core-22": {
+   "query": "time loop",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Time Loop (2026)",
+    "Time Loop (2020)",
+    "Time Loop (2019)",
+    "Time Loop (2000)",
+    "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy! (2024)",
+    "Time Loop Detective (2026)",
+    "i’m stuck in a time loop (2026)",
+    "I Think James is in a Time Loop (2025)",
+    "Not a Time Loop (2026)",
+    "Wedding Day Time Loop (2026)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 4,
+    "ranks": {
+     "Groundhog Day": 15,
+     "Edge of Tomorrow": 28,
+     "Palm Springs": 17,
+     "Russian Doll": 14
+    }
+   }
+  },
+  "core-23": {
+   "query": "slow atmospheric science fiction",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000335,
+   "prodTop10": [
+    "Stalker (1979)",
+    "Monsters (2010)",
+    "Charlie Jade (2005)",
+    "Tales from the Loop (2020)",
+    "Sweet Rain: Accuracy of Death (2008)",
+    "Code 46 (2003)",
+    "In the City of Sylvia (2007)",
+    "2046 (2004)",
+    "Mystery Road: Origin (2022)",
+    "Blanche (1972)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "Blade Runner": null,
+     "2001: A Space Odyssey": null,
+     "Arrival": null,
+     "Moon": 22,
+     "Stalker": 1
+    }
+   }
+  },
+  "core-24": {
+   "query": "a hopeful space adventure without horror",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Lightyear (2022)",
+    "Barbie: Star Light Adventure (2016)",
+    "Captain EO (1986)",
+    "Space Cowboys (2000)",
+    "Treasure Planet (2002)",
+    "Lost in Space (1965)",
+    "Flash Gordon (1936)",
+    "Dans une galaxie près de chez vous, le film (2004)",
+    "Star Trek (2009)",
+    "Star Trek Beyond (2016)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 2,
+    "ranks": {
+     "Star Trek: The Next Generation": null,
+     "Star Wars": 39,
+     "The Martian": null,
+     "Guardians of the Galaxy": 43
+    }
+   }
+  },
+  "core-25": {
+   "query": "something short to watch after work",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000335,
+   "prodTop10": [
+    "The Road Runner Show (1966)",
+    "Worst Week (2008)",
+    "Around the Horn (2002)",
+    "Hardcore Henry (2015)",
+    "Comedy Central Roast of Flavor Flav (2007)",
+    "Michael McIntyre: Showman (2020)",
+    "Scare PewDiePie (2016)",
+    "Micro Ventures (1968)",
+    "Dhar Mann (2018)",
+    "Trolls Band Together (2023)"
+   ],
+   "anchors": null
+  },
+  "core-26": {
+   "query": "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "vector-only",
+   "errors": [],
+   "jevUsd": 0.000384,
+   "prodTop10": [
+    "Wie is de Mol? (1999)",
+    "Inception (2010)",
+    "Tenet (2020)",
+    "Reset (2022)",
+    "Law School (2021)",
+    "Rokka: Braves of the Six Flowers (2015)",
+    "Oxygen (2021)",
+    "LIAR GAME (2007)",
+    "Alias (2001)",
+    "Blindspot (2015)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Knives Out": 86,
+     "Wake Up Dead Man: A Knives Out Mystery": null,
+     "Inside Man": null
+    }
+   }
+  },
+  "core-27": {
+   "query": "Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "vector-only",
+   "errors": [],
+   "jevUsd": 0.000384,
+   "prodTop10": [
+    "The Trials of Gabriel Fernandez (2020)",
+    "The Chestnut Man (2021)",
+    "Catch Me a Killer (2024)",
+    "Mare of Easttown (2021)",
+    "The Keepers (2017)",
+    "The Wire (2002)",
+    "The Killing Season (2016)",
+    "Ken and Barbie Killers: The Lost Murder Tapes (2021)",
+    "Those Who Kill (2014)",
+    "The Fox Hollow Murders: Playground of a Serial Killer (2025)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "The Sopranos": null,
+     "Breaking Bad": null,
+     "The Wire": 6
+    }
+   }
+  },
+  "core-28": {
+   "query": "Des gens riches qui se comportent horriblement entre eux, de préférence quelque chose de drôle.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "vector-only",
+   "errors": [],
+   "jevUsd": 0.000379,
+   "prodTop10": [
+    "1670 (2023)",
+    "The Prince (2021)",
+    "Borat: Cultural Learnings of America for Make Benefit Glorious Nation of Kazakhstan (2006)",
+    "Da Ali G Show (2000)",
+    "The Windsors (2016)",
+    "Borat Subsequent Moviefilm (2020)",
+    "Mr. Freedom (1969)",
+    "That Mitchell and Webb Look (2006)",
+    "Black and White in Color (1976)",
+    "Life of Brian (1979)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Parasite": null,
+     "Knives Out": null,
+     "The Menu": null,
+     "Triangle of Sadness": 83,
+     "Succession": null
+    }
+   }
+  },
+  "core-29": {
+   "query": "Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "vector-only",
+   "errors": [],
+   "jevUsd": 0.000374,
+   "prodTop10": [
+    "ChuckleVision (1987)",
+    "Pitch Meeting (2017)",
+    "The Bullwinkle Show (1959)",
+    "Chip Chilla (2023)",
+    "LOL: Last One Laughing Italy (2021)",
+    "Sid the Science Kid (2008)",
+    "The Electric Company (1971)",
+    "Forky Asks a Question (2019)",
+    "The George Burns and Gracie Allen Show (1950)",
+    "All That (1994)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Paddington 2": null,
+     "The Grand Budapest Hotel": null,
+     "Ted Lasso": null,
+     "Little Miss Sunshine": null
+    }
+   }
+  },
+  "core-30": {
+   "query": "spannend aber nicht düster",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "vector-only",
+   "errors": [],
+   "jevUsd": 0.000335,
+   "prodTop10": [
+    "WrestleMania XL Sunday (2024)",
+    "Mission: Impossible - Rogue Nation (2015)",
+    "WrestleMania XL Saturday (2024)",
+    "Chopped (2009)",
+    "Black Clover (2017)",
+    "Safety Last! (1923)",
+    "The Avengers (2012)",
+    "The King's Avatar (2017)",
+    "One Piece: Clockwork Island Adventure (2001)",
+    "The Adventures of Tintin (2011)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Knives Out": null,
+     "Wake Up Dead Man: A Knives Out Mystery": null,
+     "Inside Man": null
+    }
+   }
+  },
+  "new-01": {
+   "query": "heist on a train",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Robbery (1967)",
+    "Money Train (1995)",
+    "Red Sun (1971)",
+    "The 5-Man Army (1969)",
+    "Drop Zone (1994)",
+    "The Cimarron Kid (1952)",
+    "Von Ryan's Express (1965)",
+    "The First Great Train Robbery (1978)",
+    "Butch and Sundance: The Early Days (1979)",
+    "Takers (2010)"
+   ],
+   "anchors": {
+    "must": 2,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "The First Great Train Robbery": 8,
+     "Bullet Train": null
+    }
+   }
+  },
+  "new-02": {
+   "query": "two geniuses in a battle of wits",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Prodigy (2017)",
+    "A Star Is Born (2018)",
+    "One Outs (2008)",
+    "Sleuth (1972)",
+    "Death Note Relight 1: Visions of a God (2007)",
+    "Sanctuary (2023)",
+    "Primal Fear (1996)",
+    "Sleuth (2007)",
+    "36 Hours (1964)",
+    "Sherlock Holmes: A Game of Shadows (2011)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Death Note": null,
+     "Sherlock": null,
+     "The Prestige": null,
+     "Sleuth": 4
+    }
+   }
+  },
+  "new-03": {
+   "query": "satire about politics or big corporations",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "The Sympathizer (2024)",
+    "The Last Schnitzel (2017)",
+    "House Arrest (2018)",
+    "The Colbert Report (2005)",
+    "Wonder Showzen (2005)",
+    "Our Cartoon President (2018)",
+    "Absolute Power (2003)",
+    "This Hour Has 22 Minutes (1993)",
+    "The Simpsons (1989)",
+    "Bellas artes (2024)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Thank You for Smoking": null,
+     "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb": null,
+     "Idiocracy": null,
+     "Don't Look Up": null,
+     "Wag the Dog": null
+    }
+   }
+  },
+  "new-04": {
+   "query": "quiet and lonely in deep space",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000335,
+   "prodTop10": [
+    "High Life (2018)",
+    "Astronaut: The Last Push (2012)",
+    "3022 (2019)",
+    "A.I. Rising (2018)",
+    "Magnetic Rose (1995)",
+    "Alien: Covenant - Prologue: Phobos (2017)",
+    "Teleios (2017)",
+    "400 Days (2015)",
+    "Nightflyers (2018)",
+    "Jeanne Dielman, 23, quai du Commerce, 1080 Bruxelles (1976)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Moon": null,
+     "2001: A Space Odyssey": null,
+     "Ad Astra": null,
+     "Solaris": null,
+     "High Life": 1
+    }
+   }
+  },
+  "new-05": {
+   "query": "rainy neon cyberpunk city",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Bubblegum Crisis (1987)",
+    "The Car: Road to Revenge (2019)",
+    "Goku Midnight Eye (1989)",
+    "Texhnolyze (2003)",
+    "Cyber City Oedo 808 (1990)",
+    "Dominion Tank Police (1988)",
+    "Mars Express (2023)",
+    "Demon City (2025)",
+    "Appleseed (1988)",
+    "Batman Beyond: The Movie (1999)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 2,
+    "ranks": {
+     "Blade Runner": null,
+     "Ghost in the Shell": 28,
+     "Blade Runner 2049": null,
+     "Akira": null,
+     "Ghost in the Shell 2.0": 34
+    }
+   }
+  },
+  "new-06": {
+   "query": "kung fu comedy",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Return to the 36th Chamber (1980)",
+    "The Prodigal Son (1981)",
+    "King of Beggars (1992)",
+    "Drunken Master (1978)",
+    "Kids from Shaolin (1984)",
+    "Mad Monkey Kung Fu (1979)",
+    "Knockabout (1979)",
+    "The Cub Tiger from Kwang Tung (1973)",
+    "Kung Fu Hustle (2004)",
+    "The Magnificent Butcher (1979)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 2,
+    "top50": 3,
+    "ranks": {
+     "Kung Fu Hustle": 9,
+     "Shaolin Soccer": null,
+     "Drunken Master": 4,
+     "The Legend of Drunken Master": null,
+     "Kung Fu Panda": 13
+    }
+   }
+  },
+  "new-07": {
+   "query": "like The Matrix but anime",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Gurren Lagann (2007)",
+    "Neon Genesis Evangelion: The End of Evangelion (1997)",
+    "The Animatrix (2003)",
+    "Cyberpunk: Edgerunners (2022)",
+    "Evangelion: 1.0 You Are (Not) Alone (2007)",
+    "Mobile Suit Gundam Unicorn (2010)",
+    "Akira (1988)",
+    "Evangelion: 3.0 You Can (Not) Redo (2012)",
+    "Deca-Dence (2020)",
+    "Evangelion: 2.0 You Can (Not) Advance (2009)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Ghost in the Shell": null,
+     "The Animatrix": 3,
+     "Ergo Proxy": null,
+     "Serial Experiments Lain": null
+    }
+   }
+  },
+  "new-08": {
+   "query": "like Breaking Bad but a comedy",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "The Wrong Mans (2013)",
+    "How to Sell Drugs Online (Fast) (2019)",
+    "Minder (1979)",
+    "A Touch of Cloth (2012)",
+    "Murder in Successville (2015)",
+    "Studio 60 on the Sunset Strip (2006)",
+    "Chief Kim (2017)",
+    "Community Squad (2023)",
+    "Comedy Premium League (2021)",
+    "High Desert (2023)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Weeds": null,
+     "Barry": null,
+     "Good Girls": null
+    }
+   }
+  },
+  "new-09": {
+   "query": "80s sci-fi action",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.00033,
+   "prodTop10": [
+    "The Guyver: Bio-Booster Armor (1989)",
+    "Escape from New York (1981)",
+    "Dino-Riders (1988)",
+    "Arena (1989)",
+    "Starship Troopers (1997)",
+    "Star Trek Into Darkness (2013)",
+    "Bionic Showdown: The Six Million Dollar Man and the Bionic Woman (1989)",
+    "Halo Legends (2010)",
+    "Macross Zero (2002)",
+    "Terminator Zero (2024)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "The Terminator": 65,
+     "Aliens": null,
+     "RoboCop": 16,
+     "Predator": null
+    }
+   }
+  },
+  "new-10": {
+   "query": "90s crime movies with great dialogue",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000341,
+   "prodTop10": [
+    "Fast Getaway (1991)",
+    "King of Thieves (2018)",
+    "Finding Steve McQueen (2019)",
+    "Cop's Honor (1985)",
+    "Jade (1995)",
+    "Basic Instinct (1992)",
+    "Meka Suri (2020)",
+    "Love and a .45 (1994)",
+    "F/X2 (1991)",
+    "Operation Odessa (2018)"
+   ],
+   "anchors": {
+    "must": 6,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Pulp Fiction": null,
+     "The Usual Suspects": null,
+     "Reservoir Dogs": null,
+     "GoodFellas": null,
+     "Heat": null,
+     "Fargo": null
+    }
+   }
+  },
+  "new-11": {
+   "query": "comedy without romance",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "A Brutal Pact: The Murder of Daniella Perez (2022)",
+    "All Watched Over by Machines of Loving Grace (2011)",
+    "MegaStructures (2004)",
+    "Match of the Day (1964)",
+    "Trigger Warning with Killer Mike (2019)",
+    "The Deep Dark (2023)",
+    "Obi-Wan Kenobi: A Jedi's Return (2022)",
+    "Douglas Is Cancelled (2024)",
+    "Cursed Films (2020)",
+    "Savi (2024)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Life of Brian": null,
+     "Hot Fuzz": null,
+     "The Big Lebowski": null,
+     "Mr. Bean": null
+    }
+   }
+  },
+  "new-12": {
+   "query": "war movie that isn't about World War II",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Fantasy Mission Force (1983)",
+    "The Dirty Dozen: The Deadly Mission (1987)",
+    "The Battle of the Rails (1946)",
+    "The Guns of Navarone (1961)",
+    "Commandos (1968)",
+    "Flyboys (2006)",
+    "Kong: Skull Island (2017)",
+    "The Man Who Never Was (1956)",
+    "Archangel (1990)",
+    "Justice League: The New Frontier (2008)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Apocalypse Now": null,
+     "Full Metal Jacket": null,
+     "Waltz with Bashir": null,
+     "Platoon": null,
+     "Black Hawk Down": null
+    }
+   }
+  },
+  "new-13": {
+   "query": "smart sci-fi for adults",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Altered Carbon (2018)",
+    "Embryo (1976)",
+    "UFOs (2021)",
+    "Weird City (2019)",
+    "Paper Girls (2022)",
+    "Invaders from Mars (1953)",
+    "Fired on Mars (2023)",
+    "iBoy (2017)",
+    "Westworld (2016)",
+    "Battlestar Galactica (2003)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Arrival": null,
+     "Contact": null,
+     "Gattaca": null,
+     "Moon": null,
+     "Ex Machina": null
+    }
+   }
+  },
+  "new-14": {
+   "query": "good first anime for someone who never watched anime",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000353,
+   "prodTop10": [
+    "ZENSHU (2025)",
+    "Tada Never Falls in Love (2018)",
+    "Snow White with the Red Hair (2015)",
+    "From Me to You: Kimi ni Todoke (2009)",
+    "Campfire Cooking in Another World with My Absurd Skill (2023)",
+    "My Roommate is a Cat (2019)",
+    "Love After World Domination (2022)",
+    "TONIKAWA: Over the Moon for You (2020)",
+    "Real Girl (2018)",
+    "Aikatsu! (2012)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Spirited Away": null,
+     "Death Note": null,
+     "Fullmetal Alchemist: Brotherhood": null,
+     "Cowboy Bebop": null,
+     "Your Name.": null
+    }
+   }
+  },
+  "new-15": {
+   "query": "nonlinear storytelling",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "The Fall (2006)",
+    "Southcliffe (2013)",
+    "Ten Canoes (2006)",
+    "The Wonderful Story of Henry Sugar (2023)",
+    "Arabian Nights (2000)",
+    "Three Thousand Years of Longing (2022)",
+    "The Fallout (2021)",
+    "Tamasha (2015)",
+    "Are You Afraid of the Dark? (1992)",
+    "Cracks (2009)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 3,
+    "ranks": {
+     "Memento": 24,
+     "Pulp Fiction": 40,
+     "Eternal Sunshine of the Spotless Mind": 85,
+     "Cloud Atlas": null,
+     "Mr. Nobody": 42
+    }
+   }
+  },
+  "new-16": {
+   "query": "whole movie takes place in one room",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000347,
+   "prodTop10": [
+    "Bo Burnham: The Inside Outtakes (2022)",
+    "Sidewalls (2011)",
+    "Eve's Christmas (2004)",
+    "Royally Wrapped For Christmas (2021)",
+    "Sammohanam (2018)",
+    "Secret Beyond the Door (1947)",
+    "Debbie Macomber's A Mrs. Miracle Christmas (2021)",
+    "Christmas Wishes & Mistletoe Kisses (2019)",
+    "Military Academy (2007)",
+    "Faith, Hope & Love (2019)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "12 Angry Men": null,
+     "Carnage": null,
+     "The Man from Earth": null,
+     "Rope": null,
+     "Phone Booth": null
+    }
+   }
+  },
+  "new-17": {
+   "query": "mindbending",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Mulholland Drive (2001)",
+    "Lost Highway (1997)",
+    "Serial Experiments Lain (1998)",
+    "1899 (2022)",
+    "Takeshis' (2005)",
+    "Mr. Robot (2015)",
+    "Mulholland Dr. (1999)",
+    "Devil's Double Next Level (2025)",
+    "Inland Empire (2006)",
+    "The Prisoner (1967)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "Inception": 57,
+     "Mulholland Drive": 1,
+     "Being John Malkovich": null,
+     "Memento": 42,
+     "Primer": 75
+    }
+   }
+  },
+  "new-18": {
+   "query": "wholesome",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Wholesome (2026)",
+    "Caseworker's Diary: Constitutional Rights, The Minimum Standard of Wholesome and Cultured Living (2018)",
+    "Daniel Tiger's Neighborhood (2012)",
+    "Some Good News (2020)",
+    "Timmy Time (2009)",
+    "Gullah Gullah Island (1994)",
+    "Handy Manny (2006)",
+    "Little Bill (1999)",
+    "Tweenies (1999)",
+    "Oswald (2001)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Paddington 2": null,
+     "The Wild Robot": null,
+     "Kiki's Delivery Service": null,
+     "Ted Lasso": null
+    }
+   }
+  },
+  "new-19": {
+   "query": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000384,
+   "prodTop10": [
+    "Stewardess School (1986)",
+    "Ski Patrol (1990)",
+    "GLOW (2017)",
+    "Down Periscope (1996)",
+    "Guys & Balls (2004)",
+    "The IT Crowd (2006)",
+    "Paddington 2 (2017)",
+    "Lexx (1997)",
+    "The Ladykillers (2004)",
+    "Red Dwarf: The Promised Land (2020)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Firefly": 77,
+     "Serenity": null,
+     "Cowboy Bebop": null,
+     "Guardians of the Galaxy": null
+    }
+   }
+  },
+  "new-20": {
+   "query": "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000384,
+   "prodTop10": [
+    "Get the Girl (2017)",
+    "The Rehearsal (2022)",
+    "The Truman Show (1998)",
+    "The Dead Zone (1983)",
+    "The Innocents (2020)",
+    "The Human Stain (2003)",
+    "Fragment of Fear (1970)",
+    "Harry Potter and the Philosopher's Stone (2001)",
+    "Mudbrick (2024)",
+    "Taqdeer (2020)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "The Truman Show": 3,
+     "The Matrix": null,
+     "Dark City": null,
+     "The Thirteenth Floor": null
+    }
+   }
+  },
+  "new-21": {
+   "query": "un dessin animé drôle pour toute la famille",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000342,
+   "prodTop10": [
+    "Oswald (2001)",
+    "64 Zoo Lane (2001)",
+    "Daniel Tiger's Neighborhood (2012)",
+    "The Wombles (1973)",
+    "Kipper (1997)",
+    "Ask the Storybots (2016)",
+    "Mickey Mouse Clubhouse (2006)",
+    "Wow! Wow! Wubbzy! (2006)",
+    "The Berenstain Bears (1985)",
+    "Handy Manny (2006)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Twelve Tasks of Asterix": null,
+     "Asterix: The Mansions of the Gods": null,
+     "Ice Age": null,
+     "Zootopia": null
+    }
+   }
+  },
+  "new-22": {
+   "query": "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000353,
+   "prodTop10": [
+    "Mea Maxima Culpa: Silence in the House of God (2012)",
+    "Nineteen Eighty-Four (1984)",
+    "All Quiet on the Western Front (2022)",
+    "Night and Fog (1956)",
+    "Nazi Concentration Camps (1945)",
+    "Judgment at Nuremberg (1961)",
+    "The Look of Silence (2014)",
+    "Night Will Fall (2014)",
+    "The Eternal Jew (1940)",
+    "I Can't Breathe (God Forgive Them) (2022)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Das Boot": null,
+     "All Quiet on the Western Front": 3,
+     "Full Metal Jacket": null,
+     "Apocalypse Now": null,
+     "Paths of Glory": null
+    }
+   }
+  },
+  "new-23": {
+   "query": "psycological thriler with a big twist",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Pact of Silence (2023)",
+    "Doctor Prisoner (2019)",
+    "Deadstream (2022)",
+    "Tension (1949)",
+    "Barbarian (2022)",
+    "I See You (2019)",
+    "A Christmas Horror Story (2015)",
+    "The Usual Suspects (1995)",
+    "The Prestige (2006)",
+    "Behind Her Eyes (2021)"
+   ],
+   "anchors": {
+    "must": 5,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Fight Club": null,
+     "Shutter Island": null,
+     "The Sixth Sense": 18,
+     "The Machinist": null,
+     "Identity": null
+    }
+   }
+  },
+  "new-24": {
+   "query": "hunter x hunter",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000317,
+   "prodTop10": [
+    "Hunter x Hunter (1999)",
+    "Hunter x Hunter (2011)",
+    "Hunter x Hunter: Phantom Rouge (2013)",
+    "Hunter x Hunter: The Last Mission (2013)",
+    "Hunter x Hunter: The Nightmare of Zoldyck (2002)",
+    "HUNTER X HUNTER THE STAGE 3 (2025)",
+    "Musical Hunter x Hunter (2000)",
+    "HUNTER X HUNTER THE STAGE 2 (2024)",
+    "HUNTER X HUNTER THE STAGE (2023)",
+    "Hunter x Hunter: Real Stage (2004)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Hunter x Hunter": 2
+    }
+   }
+  },
+  "new-25": {
+   "query": "code geass",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Code Geass: Lelouch of the Rebellion (2006)",
+    "Code Geass: Rozé of the Recapture (2024)",
+    "Code Geass: Akito the Exiled 5: To Beloved Ones (2016)",
+    "Code Geass: Akito the Exiled 1: The Wyvern Arrives (2012)",
+    "Code Geass: Akito the Exiled 3: The Brightness Falls (2015)",
+    "Code Geass: Lelouch of the Re;surrection (2019)",
+    "Code Geass: Akito the Exiled 2: The Wyvern Divided (2013)",
+    "Code Geass: Akito the Exiled 4: Memories of Hatred (2015)",
+    "Code Geass: Lelouch of the Rebellion I - Initiation (2017)",
+    "Code Geass: Lelouch of the Rebellion II - Transgression (2018)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "Code Geass: Lelouch of the Rebellion": 1
+    }
+   }
+  },
+  "ho2-01": {
+   "query": "horror on a submarine",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Stinger (2005)",
+    "Gods of the Deep (2023)",
+    "Kraken (2025)",
+    "Octopus (2000)",
+    "The Rift (1990)",
+    "Swamp Thing (2019)",
+    "28 Years Later (2025)",
+    "The Beyond (1981)",
+    "Ju-on: The Beginning of the End (2014)",
+    "Ragini MMS Returns (2017)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Below": null,
+     "Leviathan": null,
+     "DeepStar Six": null
+    }
+   }
+  },
+  "ho2-02": {
+   "query": "comedy set in a prison",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Hard Cell (2022)",
+    "Prison Playbook (2017)",
+    "Porridge (1979)",
+    "Let's Go to Prison (2006)",
+    "Out of Tune (2019)",
+    "Sprung (2022)",
+    "Fanged Up (2017)",
+    "Old Men in New Cars: In China They Eat Dogs II (2002)",
+    "The Longest Yard (1974)",
+    "Chozen (2014)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "Porridge": 28,
+     "Stir Crazy": null,
+     "Let's Go to Prison": 4,
+     "Life": 93
+    }
+   }
+  },
+  "ho2-03": {
+   "query": "anime about pirates",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Black Lagoon (2006)",
+    "One Piece: Dead End Adventure (2003)",
+    "Fena: Pirate Princess (2021)",
+    "One Piece Film: Z (2012)",
+    "One Piece Log: Fish-Man Island Saga (2024)",
+    "One Piece: Episode of Chopper Plus: Bloom in the Winter, Miracle Cherry Blossom (2008)",
+    "One Piece Film: GOLD (2016)",
+    "Treasure Island (1978)",
+    "One Piece: The Movie (2000)",
+    "Space Pirate Captain Harlock (1978)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 1,
+    "top50": 3,
+    "ranks": {
+     "One Piece": 20,
+     "Space Pirate Captain Harlock": 10,
+     "Outlaw Star": 17
+    }
+   }
+  },
+  "ho2-04": {
+   "query": "western with samurai",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "Red Sun (1971)",
+    "Sukiyaki Western Django (2007)",
+    "Gintama (2017)",
+    "Prisoners of the Ghostland (2021)",
+    "The Challenge (1982)",
+    "The Magnificent Seven (1998)",
+    "Shogun Assassin (1980)",
+    "Samurai III: Duel at Ganryu Island (1956)",
+    "Samurai 7 (2004)",
+    "Gintama (2006)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Red Sun": 1,
+     "Sukiyaki Western Django": 2,
+     "The Warrior's Way": null
+    }
+   }
+  },
+  "ho2-05": {
+   "query": "war film about snipers",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "In Syria (2017)",
+    "Shot Through the Heart (1998)",
+    "Sniper: Ghost Shooter (2016)",
+    "American Sniper (2014)",
+    "Enemy at the Gates (2001)",
+    "Snipers (2022)",
+    "The Star (2002)",
+    "Sniper: The White Raven (2022)",
+    "Sniper: Special Ops (2016)",
+    "The Wall (2017)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 3,
+    "top50": 4,
+    "ranks": {
+     "Enemy at the Gates": 5,
+     "American Sniper": 4,
+     "The Wall": 10,
+     "Sniper": 47
+    }
+   }
+  },
+  "ho2-06": {
+   "query": "like Band of Brothers but about Vietnam",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "The Pacific (2010)",
+    "Band of Brothers (2001)",
+    "Gang Related (2014)",
+    "Tour of Duty (1987)",
+    "The Vietnam War (2017)",
+    "China Beach (1988)",
+    "Quarry (2016)",
+    "Berserk: The Golden Age Arc – Memorial Edition (2022)",
+    "Vietnam in HD (2011)",
+    "Vikings (2013)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Platoon": null,
+     "We Were Soldiers": null,
+     "Hamburger Hill": null,
+     "Full Metal Jacket": null
+    }
+   }
+  },
+  "ho2-07": {
+   "query": "like The Sopranos but in Italy",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000323,
+   "prodTop10": [
+    "The Sopranos (1999)",
+    "Breaking Bad (2008)",
+    "The Wire (2002)",
+    "Happy Valley (2014)",
+    "The Penguin (2024)",
+    "Top Boy (2011)",
+    "Gangs of London (2020)",
+    "Oz (1997)",
+    "Mare of Easttown (2021)",
+    "Brotherhood (2006)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Gomorrah": null,
+     "Suburra: Blood on Rome": null
+    }
+   }
+  },
+  "ho2-08": {
+   "query": "like Amélie",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "The Royal Tenenbaums (2001)",
+    "Moonrise Kingdom (2012)",
+    "The Taste of Tea (2004)",
+    "Amélie (2001)",
+    "Amen (2013)",
+    "Howl's Moving Castle (2004)",
+    "Bee and PuppyCat (2022)",
+    "Edward Scissorhands (1990)",
+    "ZENSHU (2025)",
+    "Amarcord (1973)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Delicatessen": null,
+     "Micmacs": null,
+     "Mood Indigo": null,
+     "The City of Lost Children": null
+    }
+   }
+  },
+  "ho2-09": {
+   "query": "space opera without aliens",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Valerian and the City of a Thousand Planets (2017)",
+    "Scavengers (2013)",
+    "Babylon 5 (1994)",
+    "Space Wars: Quest for the Deepstar (2023)",
+    "Wing Commander (1999)",
+    "Battle in Outer Space (1959)",
+    "Space Pirate Captain Harlock: Arcadia of My Youth (1982)",
+    "The New Adventures of Flash Gordon (1979)",
+    "Flash Gordon (2007)",
+    "Starship Troopers: Invasion (2012)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "The Expanse": 24,
+     "Firefly": null,
+     "Battlestar Galactica": null
+    }
+   }
+  },
+  "ho2-10": {
+   "query": "animated movie that is not for kids",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "The Barbie Diaries (2006)",
+    "The Happiness of the Katakuris (2002)",
+    "Ghost in the Shell: Arise - Border 4: Ghost Stands Alone (2014)",
+    "Batman: Assault on Arkham (2014)",
+    "A Cat in Paris (2010)",
+    "Justice League: The Flashpoint Paradox (2013)",
+    "Nausicaä of the Valley of the Wind (1984)",
+    "Batman and Harley Quinn (2017)",
+    "Ultramarines: A Warhammer 40,000 Movie (2010)",
+    "Daria in 'Is It College Yet?' (2002)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Persepolis": null,
+     "Waltz with Bashir": null,
+     "Mary and Max": null,
+     "Anomalisa": null
+    }
+   }
+  },
+  "ho2-11": {
+   "query": "claustrophobic thriller in the Arctic",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.00033,
+   "prodTop10": [
+    "The Deep (2010)",
+    "The Rig (2023)",
+    "Shuttle (2008)",
+    "Hunger (2009)",
+    "Till Death (2021)",
+    "Tower Block (2012)",
+    "Break (2019)",
+    "No Exit (2022)",
+    "Right at Your Door (2006)",
+    "Blind Alley (2011)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Thing": null,
+     "The Terror": null,
+     "Whiteout": null,
+     "The Thaw": null
+    }
+   }
+  },
+  "ho2-12": {
+   "query": "lazy sunny summer on the Italian coast",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000341,
+   "prodTop10": [
+    "Sun, Sand & Romance (2017)",
+    "Luca (2021)",
+    "Valentino: The Last Emperor (2008)",
+    "Walking on Sunshine (2014)",
+    "Bread, Love and Dreams (1953)",
+    "Taste of the Sea (1983)",
+    "My Voyage to Italy (1999)",
+    "Call Me by Your Name (2017)",
+    "Prisma (2022)",
+    "The Band of Honest Men (1956)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Call Me by Your Name": 8,
+     "Luca": 2,
+     "Enchanted April": null,
+     "Stealing Beauty": null
+    }
+   }
+  },
+  "ho2-13": {
+   "query": "70s paranoid conspiracy thrillers",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Control Factor (2003)",
+    "The Lady Vanishes (1938)",
+    "Utopia (2013)",
+    "Silo (2023)",
+    "Thoughtcrimes (2003)",
+    "History of the Occult (2020)",
+    "The Parallax View (1974)",
+    "Three Days of the Condor (1975)",
+    "Brass Target (1978)",
+    "Orphan Black (2013)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "The Conversation": null,
+     "Three Days of the Condor": 8,
+     "The Parallax View": 7,
+     "All the President's Men": null
+    }
+   }
+  },
+  "ho2-14": {
+   "query": "2000s British gangster comedies",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000337,
+   "prodTop10": [
+    "Get Carter (1971)",
+    "St George's Day (2012)",
+    "Rise of the Footsoldier 3: The Pat Tate Story (2017)",
+    "Cass (2008)",
+    "Brighton Rock (1948)",
+    "The Krays (1990)",
+    "Anuvahood (2011)",
+    "RocknRolla (2008)",
+    "Snatch (2000)",
+    "Analyze This (1999)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Snatch": 9,
+     "RocknRolla": 8,
+     "Layer Cake": null,
+     "In Bruges": null
+    }
+   }
+  },
+  "ho2-15": {
+   "query": "terry gilliam",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000324,
+   "prodTop10": [
+    "Terry Gilliam ()",
+    "Le cinéma de Terry Gilliam - L’imagination au pouvoir (2026)",
+    "Monty Python's Flying Circus—Terry Gilliam's Personal Best (2006)",
+    "The Man Who Killed Terry Gilliam (2024)",
+    "Cinématon n°601 : Terry Gilliam (1986)",
+    "Short cuts : L'Armée des 12 singes de Terry Gilliam (2026)",
+    "Terry Gilliam: It Is Extraordinary, But How Do You Describe It? (2021)",
+    "Terry Gilliam's Benvenuto Cellini - English National Opera (2014)",
+    "Directors: Terry Gilliam ()",
+    "A Liar's Autobiography: The Untrue Story of Monty Python's Graham Chapman (2012)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "Brazil": 28,
+     "Twelve Monkeys": null,
+     "Fear and Loathing in Las Vegas": null,
+     "Time Bandits": null
+    }
+   }
+  },
+  "ho2-16": {
+   "query": "jackie chan movies",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000329,
+   "prodTop10": [
+    "Police Story (1985)",
+    "Mr. Nice Guy (1997)",
+    "Police Story 4: First Strike (1996)",
+    "Jackie Chan: My Stunts (1999)",
+    "Rumble in the Bronx (1995)",
+    "Armour of God 3: Chinese Zodiac (2012)",
+    "Who Am I? (1998)",
+    "The Young Master (1980)",
+    "The Legend of Drunken Master (1994)",
+    "Project A (1983)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 2,
+    "top50": 2,
+    "ranks": {
+     "Drunken Master": null,
+     "Police Story": 1,
+     "The Legend of Drunken Master": 9,
+     "Rush Hour": null
+    }
+   }
+  },
+  "ho2-17": {
+   "query": "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000384,
+   "prodTop10": [
+    "Last Looks (2022)",
+    "Dublin Murders (2019)",
+    "Mais qui a tué Pamela Rose ? (2003)",
+    "Sharp Objects (2018)",
+    "The Alienist (2018)",
+    "Betibú (2014)",
+    "Deception (2013)",
+    "Scott & Bailey (2011)",
+    "The Teacher (2016)",
+    "Tattoo (2002)"
+   ],
+   "anchors": {
+    "must": 3,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "Fargo": null,
+     "Hot Fuzz": null
+    }
+   }
+  },
+  "ho2-18": {
+   "query": "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet, not an action movie.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000383,
+   "prodTop10": [
+    "Prisoners of War (2010)",
+    "Causeway (2022)",
+    "Yossi & Jagger (2002)",
+    "Johnny Got His Gun (1971)",
+    "Soldier Soldier (1991)",
+    "Life and Nothing But (1989)",
+    "Soldier's Girl (2003)",
+    "Dear America: Letters Home from Vietnam (1987)",
+    "Legacy (2010)",
+    "Violet Evergarden (2018)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 1,
+    "ranks": {
+     "The Best Years of Our Lives": null,
+     "Coming Home": null,
+     "Thank You for Your Service": 13,
+     "The Deer Hunter": null
+    }
+   }
+  },
+  "ho2-19": {
+   "query": "Una comedia absurda sobre la vida en la oficina, con personajes ridículos.",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "vector-only",
+   "errors": [],
+   "jevUsd": 0.000372,
+   "prodTop10": [
+    "MXC (2003)",
+    "Italian Spiderman (2007)",
+    "Monty Python's Fliegender Zirkus (1971)",
+    "Bobobo-bo Bo-bobo (2005)",
+    "Between Two Ferns with Zach Galifianakis (2008)",
+    "Bo' Selecta! (2002)",
+    "Harry Hill's TV Burp (2002)",
+    "The Filthy Frank Show (2011)",
+    "Aqua Teen Hunger Force Colon Movie Film for Theaters (2007)",
+    "Airplane! (1980)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Office": null,
+     "Stromberg": null,
+     "Office Space": null
+    }
+   }
+  },
+  "ho2-20": {
+   "query": "epic",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "Epic (2013)",
+    "Epic (1985)",
+    "Epic (2015)",
+    "Epic ()",
+    "Epic Rap Battles of History (2010)",
+    "The Epic Tales of Captain Underpants (2018)",
+    "Pop Team Epic (2018)",
+    "Captain Underpants: The First Epic Movie (2017)",
+    "Qin Dynasty Epic (2020)",
+    "Epic Movie (2007)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 0,
+    "top50": 0,
+    "ranks": {
+     "The Lord of the Rings: The Return of the King": 98,
+     "Gladiator": 93,
+     "Braveheart": 99,
+     "Lawrence of Arabia": null
+    }
+   }
+  },
+  "ho2-21": {
+   "query": "dystopain deth game series",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000336,
+   "prodTop10": [
+    "Danganronpa 3: The End of Hope's Peak High School (2016)",
+    "Castlevania (2017)",
+    "Manhunt (2017)",
+    "Big Brother (2000)",
+    "Squid Game (2021)",
+    "Dragon Age: Redemption (2011)",
+    "The Angry Joe Show (2008)",
+    "Tekken: Bloodline (2022)",
+    "Yu-Gi-Oh! Zexal (2011)",
+    "Deadman Wonderland (2011)"
+   ],
+   "anchors": {
+    "must": 4,
+    "top10": 1,
+    "top50": 2,
+    "ranks": {
+     "Squid Game": 5,
+     "Alice in Borderland": 11,
+     "Battle Royale": null,
+     "The Hunger Games": null
+    }
+   }
+  },
+  "ho2-22": {
+   "query": "the expanse",
+   "readingSource": "fresh",
+   "fallbackToBasic": false,
+   "path": "phrase",
+   "errors": [],
+   "jevUsd": 0.000314,
+   "prodTop10": [
+    "The Expanse (2015)",
+    "The Expanse: One Ship (2021)",
+    "Bridging the Expanse (2019)",
+    "The Boundless, The Expanse and The Unknown (2026)",
+    "A Cry Through the Expanse (2026)",
+    "Adam and the Infinite Expanse (2024)",
+    "Expanse: The Nannup Four ()",
+    "Westworld (2016)",
+    "Neon Genesis Evangelion: The End of Evangelion (1997)",
+    "Mobile Suit Gundam Unicorn (2010)"
+   ],
+   "anchors": {
+    "must": 1,
+    "top10": 1,
+    "top50": 1,
+    "ranks": {
+     "The Expanse": 1
+    }
+   }
+  }
+ }
+}

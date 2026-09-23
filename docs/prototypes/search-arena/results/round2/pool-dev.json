@@ -1,0 +1,224 @@
+[
+ {
+  "query_id": "lab-00",
+  "query": "complete nonsense",
+  "intent": "Deliberately absurd or surreal comedy where nonsense is the point (sketch shows, anti-humor). Generic family animation or merely bad films are wrong.",
+  "items": []
+ },
+ {
+  "query_id": "lab-01",
+  "query": "tarkovsky",
+  "intent": "Ambiguous: films directed by Andrei Tarkovsky first, then contemplative, poetic, spiritual cinema in his style.",
+  "items": []
+ },
+ {
+  "query_id": "lab-02",
+  "query": "feel good cooking show",
+  "intent": "Series centered on cooking or food with a warm, upbeat, low-conflict tone. Home renovation or dramas with incidental food are wrong.",
+  "items": []
+ },
+ {
+  "query_id": "lab-03",
+  "query": "slow burn space horror",
+  "intent": "Horror set in space or off-world with gradual, atmospheric dread rather than nonstop action.",
+  "items": []
+ },
+ {
+  "query_id": "lab-04",
+  "query": "tense heist thriller, not bleak",
+  "intent": "Suspenseful planned-theft thrillers with a playful or hopeful tone; relentlessly hopeless crime stories violate the exclusion.",
+  "items": []
+ },
+ {
+  "query_id": "lab-06",
+  "query": "furious",
+  "intent": "Ambiguous mood vs title lookup: rage-driven, ferocious, high-intensity titles; the Fast & Furious franchise is a plausible title reading.",
+  "items": []
+ },
+ {
+  "query_id": "lab-07",
+  "query": "craty",
+  "intent": "Unresolved typo (probably \"crazy\"); if read as crazy, eccentric or chaotic entertainment. Excluded from decisive scoring.",
+  "items": []
+ },
+ {
+  "query_id": "lab-10",
+  "query": "sunglasses at night",
+  "intent": "Literal clue: sunglasses worn at night are a notable feature (They Live, The Matrix), or cool nocturnal style; generic night imagery is weak.",
+  "items": []
+ },
+ {
+  "query_id": "lab-11",
+  "query": "fantasy with dragons",
+  "intent": "Fantasy where real dragons appear and matter. \"Dragon\" in a name or martial-arts metaphor is wrong.",
+  "items": []
+ },
+ {
+  "query_id": "lab-12",
+  "query": "like groundhog day",
+  "intent": "Other time-loop / repeating-day stories, ideally comedic or about personal growth. Groundhog Day itself is a reference hit, not a discovery.",
+  "items": []
+ },
+ {
+  "query_id": "lab-13",
+  "query": "time travel complex",
+  "intent": "Time travel with intricate causality, paradoxes or interlocking timelines; simple time-travel comedies are partial.",
+  "items": []
+ },
+ {
+  "query_id": "core-04",
+  "query": "Incepton",
+  "intent": "Misspelled title: Inception (2010) first.",
+  "items": []
+ },
+ {
+  "query_id": "core-06",
+  "query": "tense but not bleak",
+  "intent": "Suspenseful titles (thrillers, mysteries, competitions) that do not leave a hopeless aftertaste.",
+  "items": []
+ },
+ {
+  "query_id": "core-07",
+  "query": "car chases",
+  "intent": "Car chases are central to the experience: pursuit-driven action, getaway and road films.",
+  "items": []
+ },
+ {
+  "query_id": "core-08",
+  "query": "sunglasses",
+  "intent": "Sunglasses are a notable visual element or plot device (They Live, The Matrix, Men in Black).",
+  "items": []
+ },
+ {
+  "query_id": "core-11",
+  "query": "no anime, gritty crime show",
+  "intent": "Gritty, grounded crime series. Anime and movies are explicit exclusions.",
+  "items": []
+ },
+ {
+  "query_id": "core-13",
+  "query": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+  "intent": "Suspense and twists (mysteries, whodunits, clever thrillers) with a satisfying, not miserable, ending.",
+  "items": []
+ },
+ {
+  "query_id": "core-15",
+  "query": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+  "intent": "Grounded, gritty crime series; animation, supernatural detectives and movies are wrong.",
+  "items": []
+ },
+ {
+  "query_id": "core-17",
+  "query": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+  "intent": "Grounded getaway-driver and heist-driving films; superhero destruction spectacles are wrong.",
+  "items": []
+ },
+ {
+  "query_id": "core-19",
+  "query": "cozy",
+  "intent": "Comforting, gentle, low-stakes titles (warm animation, feel-good comedy).",
+  "items": []
+ },
+ {
+  "query_id": "core-21",
+  "query": "funny",
+  "intent": "Strong comedies; broad, so quality and popularity should matter.",
+  "items": []
+ },
+ {
+  "query_id": "core-22",
+  "query": "time loop",
+  "intent": "Repeating time is the central mechanism.",
+  "items": []
+ },
+ {
+  "query_id": "core-23",
+  "query": "slow atmospheric science fiction",
+  "intent": "Contemplative, slow-paced, mood-heavy science fiction; loud action sci-fi is wrong.",
+  "items": []
+ },
+ {
+  "query_id": "core-25",
+  "query": "something short to watch after work",
+  "intent": "Short, low-commitment viewing (short films, brisk movies, episodic comedy); no exact runtime assumed.",
+  "items": []
+ },
+ {
+  "query_id": "core-26",
+  "query": "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.",
+  "intent": "German: suspense and puzzles without a miserable finish.",
+  "items": []
+ },
+ {
+  "query_id": "core-27",
+  "query": "Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.",
+  "intent": "Spanish: grounded gritty crime series; no animation or magic detectives.",
+  "items": []
+ },
+ {
+  "query_id": "core-30",
+  "query": "spannend aber nicht düster",
+  "intent": "German: tension without darkness.",
+  "items": []
+ },
+ {
+  "query_id": "new-02",
+  "query": "two geniuses in a battle of wits",
+  "intent": "Cat-and-mouse between two brilliant opponents who outthink each other (detective vs criminal, rival magicians). A lone genius without a rival is weak.",
+  "items": []
+ },
+ {
+  "query_id": "new-04",
+  "query": "quiet and lonely in deep space",
+  "intent": "Contemplative sci-fi about isolation far from Earth: solitary astronauts, long voyages, stations. Loud space opera is wrong.",
+  "items": []
+ },
+ {
+  "query_id": "new-07",
+  "query": "like The Matrix but anime",
+  "intent": "Anime about simulated reality, cyberspace, or AI and identity. The live-action Matrix films themselves are not the answer.",
+  "items": []
+ },
+ {
+  "query_id": "new-09",
+  "query": "80s sci-fi action",
+  "intent": "Science-fiction action released in the 1980s. Modern remakes are wrong on era.",
+  "items": []
+ },
+ {
+  "query_id": "new-11",
+  "query": "comedy without romance",
+  "intent": "Comedies where no romance plot drives the story; romantic comedies violate the exclusion.",
+  "items": []
+ },
+ {
+  "query_id": "new-13",
+  "query": "smart sci-fi for adults",
+  "intent": "Idea-driven science fiction for grown-ups; kid-oriented or pure spectacle sci-fi is wrong.",
+  "items": []
+ },
+ {
+  "query_id": "new-15",
+  "query": "nonlinear storytelling",
+  "intent": "The story is told out of chronological order and the structure is part of the experience.",
+  "items": []
+ },
+ {
+  "query_id": "new-17",
+  "query": "mindbending",
+  "intent": "Reality-twisting, puzzle-box or surreal films that leave you rethinking what you saw.",
+  "items": []
+ },
+ {
+  "query_id": "new-19",
+  "query": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.",
+  "intent": "Space-western / ragtag-crew adventures with humor and found family. Grim space horror is wrong.",
+  "items": []
+ },
+ {
+  "query_id": "new-21",
+  "query": "un dessin animé drôle pour toute la famille",
+  "intent": "French: funny animated films for the whole family. Adult animation or animated war dramas are wrong.",
+  "items": []
+ }
+]

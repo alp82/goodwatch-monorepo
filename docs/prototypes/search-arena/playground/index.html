@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Arena Playground</title>
+<style>
+:root {
+  --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e2e0da;
+  --accent: #2f5d8a; --win: #2e7d4f; --only: #fff4d6; --only-line: #e7c35a;
+  --g0: #c94a3a; --g1: #d98b2b; --g2: #6f9f3a; --g3: #2e7d4f; --chip: #eef1f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #9c9a93; --line: #34332f;
+    --accent: #7fb0e0; --win: #6cc38f; --only: #3a3220; --only-line: #9c7e2a; --chip: #2a2d31;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #9c9a93; --line: #34332f;
+  --accent: #7fb0e0; --win: #6cc38f; --only: #3a3220; --only-line: #9c7e2a; --chip: #2a2d31;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { padding: 14px 16px 10px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+h1 { font-size: 16px; margin: 0 0 8px; font-weight: 600; }
+h1 small { font-weight: 400; color: var(--muted); margin-left: 8px; }
+form { display: flex; gap: 8px; flex-wrap: wrap; }
+input[type=text] { flex: 1 1 320px; padding: 8px 10px; font-size: 15px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+select, button { padding: 8px 10px; font-size: 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+select { max-width: 360px; }
+button { background: var(--accent); color: #fff; border: 0; cursor: pointer; }
+button:disabled { opacity: .5; cursor: wait; }
+#meta { margin-top: 8px; font-size: 12.5px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+#meta b { color: var(--ink); font-weight: 600; }
+#reading { padding: 10px 16px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 12.5px; }
+.chip { background: var(--chip); border-radius: 999px; padding: 2px 9px; }
+.chip.avoid { text-decoration: line-through; }
+.label { color: var(--muted); margin-right: 2px; }
+#err { color: var(--g0); padding: 0 16px; }
+main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 4px 16px 40px; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+.col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.col h2 { font-size: 14px; margin: 0; padding: 10px 12px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
+.col h2 .win { color: var(--win); font-weight: 500; font-size: 12px; }
+.col h2 small { color: var(--muted); font-weight: 400; }
+.qd { font-size: 11.5px; color: var(--muted); padding: 6px 12px; border-bottom: 1px solid var(--line); }
+ol { list-style: none; margin: 0; padding: 0; }
+ol > li { border-bottom: 1px solid var(--line); }
+ol > li.only { background: var(--only); box-shadow: inset 3px 0 0 var(--only-line); }
+details > summary { list-style: none; cursor: pointer; padding: 7px 12px; display: grid; grid-template-columns: 26px 1fr auto; gap: 6px; align-items: baseline; }
+details > summary::-webkit-details-marker { display: none; }
+.rk { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.tt { min-width: 0; }
+.tt .name { font-weight: 550; }
+.tt .sub { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { font-size: 11px; font-weight: 700; color: #fff; border-radius: 4px; padding: 1px 6px; font-variant-numeric: tabular-nums; }
+.badge.g0 { background: var(--g0); } .badge.g1 { background: var(--g1); } .badge.g2 { background: var(--g2); } .badge.g3 { background: var(--g3); }
+.badge.none { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 400; }
+.dbg { padding: 4px 12px 10px 44px; font-size: 12px; color: var(--muted); }
+.dbg table { border-collapse: collapse; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.dbg td { padding: 1px 10px 1px 0; }
+.dbg td.v { text-align: right; color: var(--ink); }
+.dbg .ess { color: var(--ink); margin-top: 4px; }
+.dbg ul { margin: 4px 0; padding-left: 16px; }
+.empty { padding: 20px 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Search arena playground <small>production vs round-4 finalists</small></h1>
+  <form id="f">
+    <input id="q" type="text" placeholder="Type any search, e.g. cyberpunk detective noir" autocomplete="off">
+    <select id="preset"><option value="">Preset queries…</option></select>
+    <button id="go" type="submit">Search</button>
+  </form>
+  <div id="meta"><span>loading…</span></div>
+</header>
+<div id="err"></div>
+<div id="reading"></div>
+<main id="cols"></main>
+<script>
+const COLS = [["prod", "Production", ""], ["r4-combo-fast", "r4-combo-fast", "winner"], ["r4-combo", "r4-combo", ""]];
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+let spend = null, startup = null;
+
+function metaLine(extra = "") {
+  const s = spend ? `Jev spend: <b>$${spend.session_usd.toFixed(4)}</b> this session (${spend.session_new} new captures), $${spend.adhoc_total_usd.toFixed(4)} all ad-hoc captures` : "";
+  $("#meta").innerHTML = [extra, s, startup != null ? `server startup ${startup}s` : ""].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
+}
+
+fetch("/presets").then((r) => r.json()).then((d) => {
+  spend = d.spend; startup = d.startup_s;
+  for (const [split, qs] of Object.entries(d.groups)) {
+    const g = document.createElement("optgroup");
+    g.label = `${split} (${qs.length})`;
+    for (const q of qs) {
+      const o = document.createElement("option");
+      o.value = q.query; o.textContent = `${q.id} · ${q.query}`;
+      g.appendChild(o);
+    }
+    $("#preset").appendChild(g);
+  }
+  metaLine();
+  const q0 = new URLSearchParams(location.search).get("q");
+  if (q0) { $("#q").value = q0; run(q0); }
+});
+$("#preset").addEventListener("change", (e) => { if (e.target.value) { $("#q").value = e.target.value; run(e.target.value); } });
+$("#f").addEventListener("submit", (e) => { e.preventDefault(); const q = $("#q").value.trim(); if (q) run(q); });
+
+async function run(q) {
+  $("#go").disabled = true; $("#err").textContent = "";
+  metaLine(`searching “${esc(q)}”… (a new query runs the production capture, ~5-15 s)`);
+  history.replaceState(null, "", `?q=${encodeURIComponent(q)}`);
+  try {
+    const r = await fetch("/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.statusText);
+    render(d);
+  } catch (e) { $("#err").textContent = String(e); metaLine(); }
+  finally { $("#go").disabled = false; }
+}
+
+function gradeBadge(g) {
+  return g == null ? "" : `<span class="badge g${g}" title="arena grade ${g}">${g}</span>`;
+}
+
+function render(d) {
+  spend = d.spend;
+  const c = d.capture, t = d.timings;
+  const src = c.kind === "arena" ? `arena capture <b>${esc(c.id)}</b>${d.arena ? ` (${d.arena.split}, ${d.arena.type})` : ""}`
+    : c.fresh ? `<b>new capture</b> ${c.ms} ms, Jev $${(c.usd || 0).toFixed(5)}` : `cached ad-hoc capture`;
+  metaLine(`${src} · reading: ${esc(c.reading_source || "none")}${c.reading_cache ? " (" + esc(c.reading_cache) + ")" : ""} · capture ${t.capture_ms} ms · rank ${t.rank_ms} ms` +
+    (t.per_ranker_ms ? ` (${Object.entries(t.per_ranker_ms).map(([k, v]) => `${k} ${Math.round(v)}`).join(", ")})` : "") +
+    (c.prod_total_ms ? ` · prod search when captured ${c.prod_total_ms} ms` : ""));
+  const chips = d.chips.map((x) => `<span class="chip ${x.kind === "avoid" ? "avoid" : ""}" title="${esc(x.kind)}">${esc(x.text)}</span>`).join("");
+  const phrases = d.phrases.map((p) => `<span class="chip">${esc(p.phrase)} ${p.probability.toFixed(2)}</span>`).join("");
+  $("#reading").innerHTML = (d.arena?.intent ? `<span class="label">intent:</span> ${esc(d.arena.intent)}<br>` : "") +
+    `<span class="label">reading:</span>${chips || "<i>none</i>"}` +
+    (phrases ? ` <span class="label">phrases:</span>${phrases}` : "") +
+    (d.concrete.length ? ` <span class="label">concrete:</span>${d.concrete.map((w) => `<span class="chip">${esc(w)}</span>`).join("")}` : "") +
+    (d.flags.length ? ` <span class="label">flags:</span>${d.flags.map((w) => `<span class="chip">${esc(w)}</span>`).join("")}` : "");
+  if (d.error) $("#err").textContent = d.error;
+  const lists = { prod: d.prod, ...Object.fromEntries(Object.entries(d.lists || {}).map(([k, v]) => [k, v.items])) };
+  const count = {};
+  for (const items of Object.values(lists)) for (const x of items) count[x.id] = (count[x.id] || 0) + 1;
+  $("#cols").innerHTML = COLS.map(([key, name, tag]) => {
+    const items = lists[key] || [];
+    const qd = d.lists?.[key]?.query_debug;
+    const graded = items.filter((x) => x.grade != null);
+    const gsum = graded.length ? ` · graded ${graded.length}/${items.length}, 2+: ${graded.filter((x) => x.grade >= 2).length}` : "";
+    return `<section class="col"><h2><span>${name} ${tag ? `<span class="win">${tag}</span>` : ""}</span><small>${items.length} shown${gsum}</small></h2>` +
+      (qd ? `<div class="qd">${queryDebug(qd)}</div>` : "") +
+      (items.length ? `<ol>${items.map((x) => item(x, count[x.id] === 1 && Object.keys(lists).length > 1)).join("")}</ol>` : `<div class="empty">no list</div>`) +
+      `</section>`;
+  }).join("");
+}
+
+function queryDebug(q) {
+  const out = [`${q.candidates} candidates`];
+  if (q.reference) out.push(`reference <b>${esc(q.reference.title)}</b>${q.reference.modifier ? ` + “${esc(q.reference.modifier)}”` : ""}; excluded: ${esc(q.excluded.join(", "))}`);
+  if (q.coverage_units?.length) out.push(`coverage units: ${esc(q.coverage_units.join(" · "))}`);
+  if (q.spell_fixes?.length) out.push(`spell: ${esc(JSON.stringify(q.spell_fixes))}`);
+  if (q.era) out.push(`era: ${esc(JSON.stringify(q.era))}`);
+  if (q.non_english) out.push("non-English path");
+  return out.join(" · ");
+}
+
+function item(x, only) {
+  const parts = x.debug?.parts || {};
+  const rows = Object.entries(parts).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="v">${typeof v === "number" ? v.toFixed(3) : esc(JSON.stringify(v))}</td></tr>`).join("");
+  const sub = [x.year, x.media_type, (x.genres || []).join(", ")].filter(Boolean).join(" · ");
+  return `<li class="${only ? "only" : ""}" title="${only ? "only in this column" : ""}"><details><summary>` +
+    `<span class="rk">${x.rank}</span><span class="tt"><div class="name">${esc(x.title)}</div><div class="sub">${esc(sub)}</div></span>${gradeBadge(x.grade)}</summary>` +
+    `<div class="dbg">` +
+    `score ${x.score}${x.debug?.disc_score != null ? ` · discovery ${x.debug.disc_score}` : ""}${x.disc_rank ? ` (#${x.disc_rank})` : ""} · source ${esc(x.source)}${x.votes ? ` · ${x.votes.toLocaleString()} votes` : ""}${only ? " · <b>only in this column</b>" : ""}` +
+    (rows ? `<table>${rows}</table>` : "") +
+    (x.reasons?.length ? `<ul>${x.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : "") +
+    (x.tags?.length ? `<div>tags: ${esc(x.tags.join(", "))}</div>` : "") +
+    (x.essence ? `<div class="ess">${esc(x.essence)}</div>` : "") +
+    `</div></details></li>`;
+}
+</script>
+</body>
+</html>
