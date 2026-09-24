@@ -87,7 +87,6 @@ def desired_payload_indexes() -> List[PayloadIndexSpec]:
         # Every search excludes adult titles with a must_not clause. Without an index that
         # clause scanned every point and cost about 500 ms per query.
         PayloadIndexSpec("adult", "bool"),
-        // placeholder
         PayloadIndexSpec("production_method", "keyword"),
     ]
 
