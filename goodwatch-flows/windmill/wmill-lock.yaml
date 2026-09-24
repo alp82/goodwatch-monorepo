@@ -105,6 +105,10 @@ locks:
   f/rotten_web/rotten_tomatoes_init_ratings/main: f2caa4c306efe66f585c0ecfc144c04d8d9e5dd9d3c1936401c6bb6a19f23fc6
   f/rotten_web/rotten_tomatoes_init_ratings/update: c22c942ed4f6820720147240919d74cc876b42e2c4929ac073be9da945836bd1
   f/scripts/counts: 8c534708ce26d8fd8481a9c4832d9f7f8c548ce4b17bc5606441e25a093149fa
+  f/search/embed_titles: 812001d4a65301ce89681787bdd7417f3d724f1ffea8f5d000e1f1e713102ba9
+  f/search/terms: 775c7459913b4b5e5420a8ff347545eb92e42141e8f37b8d32d7f07c29f47688
+  f/search/text_encoder: e12b54080b6622c970c524dfe05f04636d9725296ffa90c78166116dabc09940
+  f/search/title_text: 70712cf11b5f16b6659b43a27a38e9f2bd1cb414edfdc7254500640721b18df3
   f/stress/load_testing: 9c3d76afd2c0b13f369998da1324cdab8fa15b2b1e7a10697143e941e369589e
   f/sync/copy/all_ratings: d208051382678c5d96f48d3238d454e808da3bee83afdb930971355d322f4943
   f/sync/copy/dna_data: 4ee1f6629a18cd2ec9b38dec222224578b921aa77562c556230ad02548bf01e2

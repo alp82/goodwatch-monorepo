@@ -1,0 +1,45 @@
+summary: Embed titles for search
+description: Writes the text_en_v1, text_multi_v1 and terms_bm25f_v1 vectors of
+  media_fingerprint_v1 with local ONNX models. Incremental mode embeds titles
+  whose text changed since the last run and points that lack a vector; full mode
+  re-embeds every title and resumes from its checkpoint.
+lock: '!inline f/search/embed_titles.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - mode
+    - since
+    - restart
+    - max_minutes
+    - dry_run
+  properties:
+    dry_run:
+      type: boolean
+      description: Count what would be embedded and write nothing.
+      default: false
+    max_minutes:
+      type: number
+      description: Full only. Stop after the chunk that passes this many minutes; 0
+        means no limit.
+      default: 0
+    mode:
+      type: string
+      description: incremental or full.
+      default: incremental
+      enum:
+        - incremental
+        - full
+    restart:
+      type: boolean
+      description: Full only. Start over instead of resuming from the checkpoint.
+      default: false
+    since:
+      type: string
+      description: Incremental only. An ISO timestamp to start from instead of the
+        last run's checkpoint.
+      default: null
+      nullable: true
+  required: []
+tag: highperf

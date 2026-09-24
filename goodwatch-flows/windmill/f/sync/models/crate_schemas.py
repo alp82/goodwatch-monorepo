@@ -594,6 +594,37 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
     },
+    # ============================
+    # ===== Search embeddings (f/search/embed_titles) =====
+    # ============================
+    # The vocabulary of the terms_bm25f_v1 sparse vectors. A term keeps its id forever.
+    "search_terms": {
+        "columns": {
+            "term": "TEXT",
+            "id": "INTEGER",
+        },
+        "primary_key": ["term"],
+        "shards": 4,
+    },
+    # Each Qdrant point's embedding input hash, to skip titles whose text didn't change.
+    "search_embedding_inputs": {
+        "columns": {
+            "point_id": "BIGINT",
+            "input_hash": "TEXT",
+            "embedded_at": "TIMESTAMP",
+        },
+        "primary_key": ["point_id"],
+        "shards": 4,
+    },
+    # Checkpoints and the next term id, as JSON.
+    "search_embedding_state": {
+        "columns": {
+            "name": "TEXT",
+            "value": "TEXT",
+        },
+        "primary_key": ["name"],
+        "shards": 1,
+    },
 }
 
 
