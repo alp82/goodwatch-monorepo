@@ -1,9 +1,16 @@
 summary: Initialize Qdrant tables and indexes
-description: ''
+description: >-
+  Creates missing Qdrant collections and adds missing named vectors and payload
+  indexes, as f/sync/models/qdrant_schemas describes them. Without apply it only
+  prints the changes.
 lock: '!inline f/sync/init/qdrant.script.lock'
 kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
+  properties:
+    apply:
+      type: boolean
+      description: Make the changes. Without it the script only prints them.
+      default: false
   required: []

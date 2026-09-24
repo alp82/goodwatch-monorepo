@@ -1,11 +1,24 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from f.dna.models import CoreScores
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional, Tuple
 
 # ---- Constants ----
 MEDIA_COLLECTION = "media_fingerprint_v1"
+# One point per person, studio and team that search can refer to. Its vector names match
+# the media collection's, so a query can read a profile with `lookup_from` and the same
+# `using` vector name.
+REFERENCE_PROFILES_COLLECTION = "search_reference_profiles"
+
+# Vector names carry their version: a new model or fingerprint gets a new vector next
+# to the old one instead of changing it in place.
+FINGERPRINT_VECTOR = "fingerprint_v1"
+FINGERPRINT_RAW_VECTOR = "fingerprint_v1_raw"
+TEXT_EN_VECTOR = "text_en_v1"
+TEXT_MULTI_VECTOR = "text_multi_v1"
+TERMS_BM25F_VECTOR = "terms_bm25f_v1"
 
 VectorDistance = Literal["Cosine", "Dot", "Euclid"]
+VectorDatatype = Literal["float32", "float16", "uint8"]
 
 
 @dataclass(frozen=True)
@@ -13,20 +26,17 @@ class NamedVectorSpec:
     size: int
     distance: VectorDistance = "Cosine"
     on_disk: bool = False  # set True for large vectors if RAM tight
-    # You can extend with quantization if desired (e.g., Product, Scalar)
-    # quantization: Optional[dict] = None
+    datatype: VectorDatatype = "float32"
+    # Per-vector HNSW override on top of the collection's hnsw_config.
+    # {"m": 0} builds no graph, for vectors that are only searched with `exact: true`.
+    hnsw_config: Optional[dict] = None
 
 
 @dataclass(frozen=True)
-class CollectionSpec:
-    name: str
-    vectors: Dict[str, NamedVectorSpec]
-    # Qdrant sharding/replication
-    shards: int = 6
-    replication_factor: int = 1
-    write_consistency_factor: int = 1
-    optimizers_config: Optional[dict] = None
-    hnsw_config: Optional[dict] = None
+class SparseVectorSpec:
+    # None: the stored weights are scored as they are. "idf" makes Qdrant multiply them by
+    # its own per-shard IDF.
+    modifier: Optional[Literal["idf"]] = None
 
 
 @dataclass(frozen=True)
@@ -36,14 +46,48 @@ class PayloadIndexSpec:
     # For arrays you still declare by element type; Qdrant handles arrays.
 
 
+@dataclass(frozen=True)
+class CollectionSpec:
+    name: str
+    vectors: Dict[str, NamedVectorSpec]
+    sparse_vectors: Dict[str, SparseVectorSpec] = field(default_factory=dict)
+    payload_indexes: Tuple[PayloadIndexSpec, ...] = ()
+    # Qdrant sharding/replication
+    shards: int = 6
+    replication_factor: int = 1
+    write_consistency_factor: int = 1
+    optimizers_config: Optional[dict] = None
+    hnsw_config: Optional[dict] = None
+
+
+def desired_collections() -> List[CollectionSpec]:
+    """Every Qdrant collection, as `f/sync/init/qdrant` creates or extends it."""
+    return [desired_media_collection(), desired_reference_profiles_collection()]
+
+
 def desired_media_collection() -> CollectionSpec:
     return CollectionSpec(
         name=MEDIA_COLLECTION,
         vectors={
-            "fingerprint_v1": NamedVectorSpec(
-                size=74, distance="Cosine", on_disk=False
-            ),
+            # Written by the fingerprint publish (f/sync/copy/vector_data), from the same scores.
+            FINGERPRINT_VECTOR: NamedVectorSpec(size=74, distance="Cosine"),
+            # The 74 raw 0-10 scores in CoreScores order. Search scores it with a weighted
+            # sum whose weights can be negative, where approximate search loses results, so
+            # it is only searched exactly and needs no HNSW graph.
+            FINGERPRINT_RAW_VECTOR: NamedVectorSpec(size=74, distance="Dot", hnsw_config={"m": 0}),
+            # Written by the embed-titles flow. See docs/adr/0002-local-text-embeddings-for-search.md.
+            # bge-base-en-v1.5, the text without the title.
+            TEXT_EN_VECTOR: NamedVectorSpec(size=768, distance="Cosine", datatype="float16"),
+            # multilingual-e5-small, the text with the title.
+            TEXT_MULTI_VECTOR: NamedVectorSpec(size=384, distance="Cosine", datatype="float16"),
         },
+        sparse_vectors={
+            # Each title's saturated, field-weighted BM25F term weights. The query sends IDF
+            # times the query term weight, so the dot product is the BM25F score. Qdrant's IDF
+            # modifier counts per shard and over all titles, so it stays off.
+            TERMS_BM25F_VECTOR: SparseVectorSpec(modifier=None),
+        },
+        payload_indexes=tuple(desired_payload_indexes()),
         shards=6,
         replication_factor=1,
         write_consistency_factor=1,
@@ -150,6 +194,31 @@ def desired_payload_indexes() -> List[PayloadIndexSpec]:
                for name in CoreScores.model_fields)
 
     return idx
+
+
+def desired_reference_profiles_collection() -> CollectionSpec:
+    """Search reference profiles, rebuilt by the build-search-indexes flow.
+
+    One point per person, studio and team, with the log-vote-weighted, L2-normalized
+    centroids of its seed titles' vectors. The ranker scores a reference by the cosine
+    to these centroids, and only uses the English text vector for it, also for
+    non-English queries. Payload:
+
+    - `kind`: "person", "studio" or "team"
+    - `name`: display name
+    - `terms`: the top 40 profile terms as [{"term", "weight"}], sorted by weight and
+      then by term
+    """
+    return CollectionSpec(
+        name=REFERENCE_PROFILES_COLLECTION,
+        vectors={
+            FINGERPRINT_VECTOR: NamedVectorSpec(size=74, distance="Cosine"),
+            TEXT_EN_VECTOR: NamedVectorSpec(size=768, distance="Cosine", datatype="float16"),
+        },
+        payload_indexes=(PayloadIndexSpec("kind", "keyword"),),
+        # Small: one point per referable person, studio and team.
+        shards=1,
+    )
 
 
 def main():
