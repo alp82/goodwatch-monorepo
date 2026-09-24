@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import wmill
 from qdrant_client import QdrantClient, models as qm  # pin: qdrant-client==1.19.1
@@ -138,61 +138,7 @@ class QdrantConnector:
             else:
                 raise
 
-    # ---- Upsert / search ----
-
-    def upsert_points(
-        self,
-        collection: str,
-        items: List[Tuple[int, Dict[str, Any], Dict[str, List[float]]]],
-        *,
-        batch_size: int = 500,
-        parallel: int = 8,
-        max_retries: int = 2,
-        wait: bool = True,
-    ) -> None:
-        """
-        High-throughput uploader backed by `QdrantClient.upload_collection`.
-
-        Args:
-            collection: Qdrant collection name
-            items: list of (point_id:int, payload:dict, vectors_dict: {name -> list[float]})
-                   Example vectors_dict: {"fingerprint_v1": [...]}
-            batch_size: per-request batch size for `upload_collection`
-            parallel: parallel processes used by `upload_collection` (1 = no multiprocessing)
-            max_retries: retries per batch inside `upload_collection`
-            wait: if True, wait for each update to be applied on server (slower)
-        """
-        if not items:
-            return
-
-        # Build parallel lists
-        ids: List[int] = []
-        payloads: List[Dict[str, Any]] = []
-        vectors_list: List[Dict[str, List[float]]] = []
-
-        for pid, payload, vectors in items:
-            if not isinstance(vectors, dict):
-                raise TypeError(
-                    f"Expected dict[name -> list[float]] for vectors of point {pid}, got {type(vectors)}"
-                )
-            # Qdrant requires int/UUID ids; enforce int
-            ids.append(int(pid))
-            payloads.append(payload)
-            # Ensure floats & non-None lists
-            named = {name: [float(x) for x in (vals or [])] for name, vals in vectors.items()}
-            vectors_list.append(named)
-
-        # Let the helper stream this chunk in sub-batches
-        self.client.upload_collection(
-            collection_name=collection,
-            ids=ids,
-            payload=payloads,
-            vectors=vectors_list,
-            batch_size=batch_size,   # per-request size inside the helper
-            parallel=parallel,       # use 1 unless you really want multiprocessing
-            max_retries=max_retries,
-            wait=wait,
-        )
+    # ---- Search ----
 
     def search(
         self,
