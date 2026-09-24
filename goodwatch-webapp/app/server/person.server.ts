@@ -451,6 +451,15 @@ async function collaborators(
 
 // --- Entry point ---
 
+/** The name alone, for redirects that need the canonical slug without loading a profile. */
+export async function getPersonName(personId: number): Promise<string | null> {
+	const [person] = await query<{ name: string }>(
+		"SELECT name FROM person WHERE tmdb_id = ?",
+		[personId],
+	)
+	return person?.name ?? null
+}
+
 export async function getPersonProfile(
 	personId: number,
 ): Promise<PersonProfile | null> {
