@@ -9,7 +9,7 @@ import Streaming from "~/ui/streaming/Streaming"
 import { extractRatings } from "~/utils/ratings"
 import type { Section, SectionProps } from "~/utils/scroll"
 import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
-import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
+import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import DetailsRelated from "~/ui/details/DetailsRelated"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
@@ -66,6 +66,9 @@ export default function DetailsContent({
 			</div>
 			<div {...sectionProps.media}>
 				<Media videos={videos || []} />
+			</div>
+			<div {...sectionProps.faq}>
+				<DetailsQuestions media={media} country={country} />
 			</div>
 		</div>
 	)

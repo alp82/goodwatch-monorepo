@@ -11,10 +11,10 @@ export const sections = {
 	// 	id: "streaming",
 	// 	label: "Streaming",
 	// },
-	// fingerprint: {
-	// 	id: "fingerprint",
-	// 	label: "Fingerprint",
-	// },
+	fingerprint: {
+		id: "fingerprint",
+		label: "Fingerprint",
+	},
 	about: {
 		id: "about",
 		label: "About",
@@ -38,6 +38,10 @@ export const sections = {
 	media: {
 		id: "media",
 		label: "Media",
+	},
+	faq: {
+		id: "faq",
+		label: "Q&A",
 	},
 }
 
