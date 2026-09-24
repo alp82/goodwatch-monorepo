@@ -5,6 +5,7 @@ import "swiper/css"
 import "swiper/css/navigation"
 import ListSwiper from "~/ui/ListSwiper"
 import type { Actor } from "~/server/types/details-types"
+import { personPath } from "~/utils/helpers"
 
 export interface CastProps {
 	actors: Actor[]
@@ -42,7 +43,7 @@ export default function Actors({ actors }: CastProps) {
 					return (
 						<SwiperSlide key={actor.id}>
 							<Link
-								to={`/discover/all?withCast=${actor.id}`}
+								to={personPath(actor.id, actor.name)}
 								prefetch="intent"
 								className="flex flex-col items-center group px-2"
 							>

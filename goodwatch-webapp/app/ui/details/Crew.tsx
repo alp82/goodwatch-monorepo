@@ -4,8 +4,10 @@ import {
 	MusicalNoteIcon,
 	PencilSquareIcon,
 } from "@heroicons/react/24/solid"
+import { Link } from "@remix-run/react"
 import React from "react"
 import type { Crew as CrewType } from "~/server/types/details-types"
+import { personPath } from "~/utils/helpers"
 
 export interface CrewProps {
 	crew: CrewType[]
@@ -32,7 +34,15 @@ export default function Crew({ crew }: CrewProps) {
 	const producers = filterCrew(crew, "Producer", "Production")
 	const composers = filterCrew(crew, "Original Music Composer", "Sound")
 
-	const RenderInfo = ({ title, Icon, people }) => {
+	const RenderInfo = ({
+		title,
+		Icon,
+		people,
+	}: {
+		title: string
+		Icon: React.ComponentType<{ className?: string }>
+		people: CrewType[]
+	}) => {
 		if (people.length === 0) return null
 
 		return (
@@ -42,7 +52,18 @@ export default function Crew({ crew }: CrewProps) {
 					{title}:{" "}
 				</div>
 				<div className="font-semibold flex-1">
-					{people.map((person) => person.name).join(", ")}
+					{people.map((person, index) => (
+						<React.Fragment key={person.credit_id}>
+							{index > 0 && ", "}
+							<Link
+								to={personPath(person.id, person.name)}
+								prefetch="intent"
+								className="underline decoration-gray-600 underline-offset-4 hover:text-amber-300 hover:decoration-amber-300"
+							>
+								{person.name}
+							</Link>
+						</React.Fragment>
+					))}
 				</div>
 			</div>
 		)
