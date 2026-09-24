@@ -94,7 +94,7 @@ export function ScoreRing({ media, size = 56, label = true }: { media: Media; si
 }
 
 // External ratings as small linked chips. `tone` picks a dark or brand style.
-export function RatingChips({ media, tone = "dark", size = "sm" }: { media: Media; tone?: "dark" | "brand"; size?: "sm" | "md" }) {
+export function RatingChips({ media, tone = "dark", size = "sm", fill = false }: { media: Media; tone?: "dark" | "brand"; size?: "sm" | "md"; fill?: boolean }) {
 	const r = useRatings(media)
 	const h = size === "md" ? "h-9" : "h-7"
 	const pair = (critics: string | null, audience: string | null) => (
@@ -110,7 +110,7 @@ export function RatingChips({ media, tone = "dark", size = "sm" }: { media: Medi
 			target="_blank"
 			rel="noreferrer"
 			title={title}
-			className={`${h} inline-flex items-center gap-1.5 rounded-md px-2 text-sm font-semibold tabular-nums ${
+			className={`${h} inline-flex items-center gap-1.5 rounded-md px-2 text-sm font-semibold tabular-nums ${fill ? "justify-center" : ""} ${
 				tone === "brand" ? brand : "bg-white/8 text-gray-100 hover:bg-white/15"
 			} ${href ? "" : "opacity-50 pointer-events-none"}`}
 		>
@@ -119,7 +119,7 @@ export function RatingChips({ media, tone = "dark", size = "sm" }: { media: Medi
 		</a>
 	)
 	return (
-		<div className="flex flex-wrap items-center gap-1.5">
+		<div className={fill ? "grid grid-cols-3 gap-1.5" : "flex flex-wrap items-center gap-1.5"}>
 			{chip(r.imdbUrl, imdbLogo, "IMDb", r.imdb ?? "–", "bg-imdb text-black")}
 			{chip(
 				r.mcUrl,
@@ -719,8 +719,8 @@ export function StreamingTiles({
 
 	return (
 		<div id="streaming" ref={ref} className="relative min-w-0">
-			<div className="flex flex-wrap items-center gap-2">
-				{title && <h2 className="whitespace-nowrap text-sm font-semibold text-gray-200">{title}</h2>}
+			<div className="flex items-center gap-2">
+				{title && <h2 className="whitespace-nowrap text-sm font-semibold text-gray-200 max-[430px]:sr-only">{title}</h2>}
 				<div role="tablist" aria-label="Offer type" className="flex rounded-full bg-white/8 p-0.5 text-xs">
 					{(["flatrate", "rent", "buy"] as const).map((t) => (
 						<button
@@ -735,7 +735,7 @@ export function StreamingTiles({
 						</button>
 					))}
 				</div>
-				<div className="ml-auto flex items-center gap-3 text-xs">
+				<div className="ml-auto flex shrink-0 items-center gap-3 text-xs">
 					{anyOwned ? (
 						<span className="inline-flex items-center gap-1 text-green-300">
 							<span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-black">

@@ -395,7 +395,11 @@ function Switcher({ t, Detail }: { t: F.TitleInput; Detail: (props: ViewProps) =
 		else if (last) boxRef.current?.querySelector<HTMLButtonElement>(`[data-pillar-open="${last}"]`)?.focus({ preventScroll: true })
 		if (phone && (open || last)) {
 			const el = open ? boxRef.current : boxRef.current?.querySelector<HTMLElement>(`[data-pillar-open="${last}"]`)?.closest<HTMLElement>(".group")
-			el?.scrollIntoView({ block: "start" })
+			// Land just below the sticky header, whatever its current height.
+			if (el) {
+				const header = document.querySelector("[data-details-header]")?.getBoundingClientRect().bottom ?? 0
+				window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - header - 12 })
+			}
 		}
 	}, [open, last])
 	const select = (p: Pillar) => {
