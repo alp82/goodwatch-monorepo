@@ -121,6 +121,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 				url,
 				image: image || undefined,
 				jobTitle: p.known_for_department,
+				// The person table has no IMDb or social ids, so TMDB is the one profile to link.
+				sameAs: [`https://www.themoviedb.org/person/${p.tmdb_id}`],
 			},
 		},
 	]
