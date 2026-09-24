@@ -299,8 +299,10 @@ suite in the webapp.
 1. **Fix the Qdrant recommendation load.** Since Qdrant restarted on September 22, 2026, it has handled about 47,000
    related-title recommendation calls. They average 970 ms, and 1,353 of them hit the 60-second timeout. The new ranker
    makes 2 to 3 heavier Qdrant requests per search. Fix or measure this before switching.
-2. **Apply the prototype fixes and re-score.** Add the term tie-break (design rule 7) and the non-English union and
-   rescore (design rule 5) to `simp_combo.py`. Re-run `evalsimp.py table` to confirm the scores hold.
+2. **Apply the prototype fixes and re-score.** Done (#137). `FINAL["combo-safe-v3"]` now has the term tie-break
+   (design rule 7) and the non-English union and rescore (design rule 5). The top 10 is unchanged on every graded
+   query, so every split scores the same. The version without the fixes is `combo-safe-v3-scan`. See "Port fixes" in
+   the [arena log](../../prototypes/search-arena/results/LOG.md).
 
 ## Known gaps and follow-ups
 

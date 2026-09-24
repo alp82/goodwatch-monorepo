@@ -1,0 +1,2 @@
+regular splits: 138 {'terms': 51, 'terms_diff': 4, 'mix': 10, 'mix_diff': 1} mix recall@500 mean/min 0.9996 0.996
+holdout5: 30 {'terms': 6, 'terms_diff': 1, 'mix': 2, 'mix_diff': 0} mix recall@500 mean/min 1.0 1.0

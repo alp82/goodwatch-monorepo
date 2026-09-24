@@ -1,0 +1,12 @@
+{
+ "summary": null,
+ "latency": {
+  "median_ms": 40.95169098582119,
+  "p95_ms": 98.4994419850409,
+  "mean_ms": 46.647356962785125,
+  "max_ms": 109.44016597932205,
+  "style_median_ms": 28.30513648223132,
+  "n": 30
+ },
+ "grades": "grades.json"
+}

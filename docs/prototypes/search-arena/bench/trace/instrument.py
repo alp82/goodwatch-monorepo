@@ -414,8 +414,7 @@ def _w_term_scores(seeds, cfg):
         dfo = np.asarray((Xr[ii] > 0).sum(0)).ravel()
         w = dfo / len(ii) * idf
         w[dfo < min(cfg["terms_min_df"], len(ii))] = 0
-        cols = np.argsort(-w)[: cfg["terms_n"]]
-        terms = [[inv[int(c)], round(float(w[c]), 6)] for c in cols[w[cols] > 0]]
+        terms = [[inv[int(c)], round(float(w[c]), 6)] for c in SC.top_terms(w, cfg)]
     REC.tables.add("bm25_term_stats")
     ov.__exit__()
     return tracked(out, dict(kind="bm25", fields=_fields(cfg["body"]), terms=terms, deps=[fetch], encodes=[],

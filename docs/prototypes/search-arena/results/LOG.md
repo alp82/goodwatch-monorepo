@@ -924,3 +924,42 @@ movie that isn't about World War II" +0.286; losses "funny will ferrell
 shows" −0.163 and "seth rogen comedy series" −0.072 (shows they only
 produced no longer count as theirs). The user tested the playground and
 is happy with the results.
+
+## Port fixes (2026-09-24, issue #137): term tie-break, non-English union and rescore
+
+The benchmark (`results/bench/sparse.json`, `results/bench/replay.json`) found two places where the port can't
+reproduce the prototype. Both are now in `simp_combo.py`, as config keys on `FINAL["combo-safe-v3"]`. The round-6
+entry without them is kept as `combo-safe-v3-scan`.
+
+- `terms_tiebreak=True`: the top 40 reference profile terms are sorted by (−weight, term) (`top_terms`). numpy's
+  order for exact ties at the 40th weight can't be reproduced in TypeScript.
+- `nonen_union_k=2000`: a non-English query's mixed dense list (z(me5s) and z(bge on Jev's English chips)) takes its
+  candidates from the union of each cosine's top 2,000, scored with both, instead of scanning every filtered title.
+  The z statistics still cover every filtered title (precomputed per filter in the port). This is the replay's
+  `--mix=pre-rescore --mixk=2000` variant.
+
+Effect on intermediate lists (`results/simplify/port-fixes/fixdiag.py`): the tie-break changes the term set of 4 of 51
+reference profiles on the regular splits and 1 of 6 on holdout5. The union changes 1 of 10 non-English top-500 lists
+(recall against the full scan: mean 0.9996, min 0.996) and none of 2 on holdout5.
+
+Effect on the ranking: the top 10 is identical on every query, and ranks 11 to 50 differ on 5 queries (lab-12,
+new-07, ho2-07, ho2-08, h5-21). No new titles reach the top 10, so no grading was needed. Scores
+(`results/simplify/port-fixes/`):
+
+| grades | ranker | dev | dsty | ho | ho2 | ho3 | ho4 | holdout5 | bad5 |
+|---|---|---|---|---|---|---|---|---|---|
+| grades.json | combo-safe-v3-scan | .827 | .810 | .780 | .754 | .911 | .872 | .794 | 40 (+15 ho5) |
+| grades.json | combo-safe-v3 | .827 | .810 | .780 | .754 | .911 | .872 | .794 | 40 (+15 ho5) |
+| overlay | combo-safe-v3-scan | .796 | .810 | .746 | .758 | .911 | .872 | | 52 |
+| overlay | combo-safe-v3 | .796 | .810 | .746 | .758 | .911 | .872 | | 52 |
+
+Uncached latency (`evalsimp.py latency ... --uncached --reps=5`, 138 queries, machine load average about 40 from other
+work), p50 / p95 ms:
+
+| run | r6 | combo-safe-v3-scan | combo-safe-v3 |
+|---|---|---|---|
+| 1 | 190.0 / 661.4 | 127.4 / 561.0 | 125.7 / 568.4 |
+| 2 | 187.8 / 644.5 | 138.4 / 566.2 | 134.4 / 566.5 |
+
+The fixes don't make the prototype slower. In-process, the union costs two extra partial sorts over the filtered rows;
+the port's gain is the Qdrant plan, which the replay measured.

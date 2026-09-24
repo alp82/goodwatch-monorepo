@@ -57,6 +57,8 @@ DEFAULTS = dict(
     k_part=300,               # candidates per partial list (BM25, facet, coverage unit, term profile)
     body=BODY,                # BM25 field weights (main query, coverage units, term profile)
     nonen_mix=0.5,            # non-English: share of z(bge on Jev's English chips) in the dense signal
+    nonen_union_k=0,          # n > 0: the mixed list's candidates are the union of each cosine's top n, scored with
+                              # both (the port's Qdrant plan); 0: the top of the mixed score over every filtered row
     # --- facets and coverage ----------------------------------------------------------------------------------------
     facet_min_n=1,            # facets need at least this many searched phrases
     cov_beta=0.5,             # coverage unit score = z(dense) + cov_beta * z(BM25 body)
@@ -81,6 +83,8 @@ DEFAULTS = dict(
     w_fp=0.8, w_emb=0.6,      # profile: cosine to the fingerprint / embedding centroid of the seeds
     w_terms=0.3,              # profile: BM25 of the seeds' shared terms
     terms_n=40, terms_min_df=2,
+    terms_tiebreak=False,     # True: the top terms_n are sorted by (-weight, term), so exact ties at the cut are
+                              # reproducible outside numpy (False: numpy's argsort order)
     w_peer=0.3,               # profile: titles of similar people / studios (0: off)
     peer_k=15, peer_titles=8,
     w_mention=0.1,            # profile: BM25 of a person's / studio's name in other titles' texts (0: off)
@@ -155,7 +159,11 @@ FINAL = {
     # ... or one encode serves both: the intent's me5s vector is also the dense query of every person / studio query
     "combo-safe-v2-wcred-me5s": variant(**dict(SAFE, **dict(V2, entity_dense="intent"), credits_file="credits-v2.jsonl.gz")),
     # round 6: the round-5 candidate plus the lexical negation penalty (titles labelled with the negated thing)
-    "combo-safe-v3": variant(**dict(SAFE, **V2, credits_file="credits-v2.jsonl.gz", intent_thread=1, neg_lex=2.0)),
+    "combo-safe-v3-scan": variant(**dict(SAFE, **V2, credits_file="credits-v2.jsonl.gz", intent_thread=1, neg_lex=2.0)),
+    # the ranker to port (#137): combo-safe-v3-scan with the benchmark's two fixes, profile terms tie-broken by term
+    # and the non-English mixed list from the union of each cosine's top 2,000
+    "combo-safe-v3": variant(**dict(SAFE, **V2, credits_file="credits-v2.jsonl.gz", intent_thread=1, neg_lex=2.0,
+                                    terms_tiebreak=True, nonen_union_k=2000)),
 }
 
 
@@ -951,12 +959,18 @@ def rank_query(ctx, cfg, non_en, ref):
     elif dense_text and ent_dense == "residual":
         e_all = sims(emb_main, dense_text)
     if e_all is not None:
+        e_rows = rows
         if non_en:
             en_pos, en_neg = english_from_chips(ctx)
             if en_pos:
-                e_all = mix_z(e_all, sims(cfg["emb"], en_pos), rows, cfg["nonen_mix"])
+                e_en = sims(cfg["emb"], en_pos)
+                if cfg["nonen_union_k"]:
+                    # the mixed list's candidates: each cosine's top n (the z still uses every filtered row)
+                    n = cfg["nonen_union_k"]
+                    e_rows = np.union1d(top(rows, e_all[rows], n)[0], top(rows, e_en[rows], n)[0])
+                e_all = mix_z(e_all, e_en, rows, cfg["nonen_mix"])
                 extra_neg = [sims(cfg["emb"], n) for n in en_neg]
-        parts.append(top(rows, e_all[rows], km)[0])
+        parts.append(top(e_rows, e_all[e_rows], km)[0])
 
     s_all = None
     if not non_en and positive:
@@ -1083,11 +1097,21 @@ def term_scores(seeds, cfg):
     dfo = np.asarray((Xr[ii] > 0).sum(0)).ravel()
     w = dfo / len(ii) * idf
     w[dfo < min(cfg["terms_min_df"], len(ii))] = 0
-    cols = np.argsort(-w)[: cfg["terms_n"]]
-    cols = cols[w[cols] > 0]
+    cols = top_terms(w, cfg)
     if len(cols):
         out[rows_idx] = X[:, cols] @ w[cols]
     return out
+
+
+def top_terms(w, cfg):
+    """Columns of the top terms_n positive weights, highest first."""
+    if not cfg["terms_tiebreak"]:
+        cols = np.argsort(-w)[: cfg["terms_n"]]
+        return cols[w[cols] > 0]
+    vocab = S.index(cfg["body"])[1]
+    inv = cached("term_names", lambda: {j: t for t, j in vocab.items()})
+    nz = np.flatnonzero(w > 0)
+    return np.array(sorted(nz, key=lambda j: (-w[j], inv[j]))[: cfg["terms_n"]], dtype=np.int64)
 
 
 def mention_scores(det, cfg):
