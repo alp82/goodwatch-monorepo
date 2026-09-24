@@ -15,7 +15,7 @@ const regionName = (code: string) => {
 
 // JustWatch lists add-on channels as separate services; keep the main brands.
 const isChannel = (name: string) => /channel/i.test(name)
-const cleanName = (name: string) => name.replace(/\s+(Essential|Premium)$/i, "").replace(/\s+Plus$/i, "+").replace(/\s+Plus\b/i, "+")
+const cleanName = (name: string) => name.replace(/\s+(Standard|Basic)\s+with\s+Ads$/i, "").replace(/\s+(Essential|Premium)$/i, "").replace(/\s+Plus$/i, "+").replace(/\s+Plus\b/i, "+")
 
 function streamingAnswer(media: MovieResult | ShowResult, country: string) {
 	const T = media.details.title
@@ -60,12 +60,17 @@ function receptionAnswer(media: MovieResult | ShowResult) {
 	return `${verdict}, with a GoodWatch score of ${score}/100${others.length ? ` (${list(others)})` : ""}. The GoodWatch score combines critic and audience ratings.`
 }
 
-function ageAnswer(media: MovieResult | ShowResult, country: string) {
+export function ageInfo(media: MovieResult | ShowResult, country: string) {
 	const certs = media.details.age_certifications ?? []
 	const find = (cc: string) => certs.find((c) => c.startsWith(`${cc}_`))?.split("_")[1]
 	const cc = find(country) ? country : "US"
 	const cert = find(cc)
 	const advisories = ((media.details as unknown as { content_advisories?: string[] }).content_advisories ?? []).map((a) => a.toLowerCase())
+	return { cc, cert, advisories }
+}
+
+function ageAnswer(media: MovieResult | ShowResult, country: string) {
+	const { cc, cert, advisories } = ageInfo(media, country)
 	if (!cert && !advisories.length) return null
 	const parts: string[] = []
 	if (cert) parts.push(`It's rated ${cert} in ${cc === "US" ? "the United States" : regionName(cc)}.`)
@@ -98,14 +103,16 @@ function sourceAnswer(media: MovieResult | ShowResult) {
 	return null
 }
 
-export function factFaqs(media: MovieResult | ShowResult, country: string): Faq[] {
+export type FaqId = "stream" | "worth" | "rated" | "length" | "source"
+
+export function factFaqs(media: MovieResult | ShowResult, country: string): (Faq & { id: FaqId })[] {
 	const T = media.details.title
-	const rows: [string, string | null][] = [
-		[`Where can I stream ${T} legally?`, streamingAnswer(media, country)],
-		[`Is ${T} worth watching?`, receptionAnswer(media)],
-		[`What is ${T} rated?`, ageAnswer(media, country)],
-		[media.mediaType === "movie" ? `How long is ${T}?` : `How many seasons does ${T} have?`, lengthAnswer(media)],
-		[`Is ${T} based on a true story?`, sourceAnswer(media)],
+	const rows: [FaqId, string, string | null][] = [
+		["stream", `Where can I stream ${T} legally?`, streamingAnswer(media, country)],
+		["worth", `Is ${T} worth watching?`, receptionAnswer(media)],
+		["rated", `What is ${T} rated?`, ageAnswer(media, country)],
+		["length", media.mediaType === "movie" ? `How long is ${T}?` : `How many seasons does ${T} have?`, lengthAnswer(media)],
+		["source", `Is ${T} based on a true story?`, sourceAnswer(media)],
 	]
-	return rows.filter((r): r is [string, string] => !!r[1]).map(([q, a]) => ({ q, a }))
+	return rows.filter((r): r is [FaqId, string, string] => !!r[2]).map(([id, q, a]) => ({ id, q, a }))
 }

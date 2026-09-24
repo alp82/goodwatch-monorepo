@@ -19,6 +19,7 @@ import SkippedAction from "~/ui/user/actions/SkippedAction"
 import ToWatchAction from "~/ui/user/actions/ToWatchAction"
 import WatchHistoryAction from "~/ui/user/actions/WatchHistoryAction"
 import ScoreSelector from "~/ui/user/ScoreSelector"
+import ScoreAction from "~/ui/user/actions/ScoreAction"
 import { extractRatings, scoreLabels } from "~/utils/ratings"
 import type { Section } from "~/utils/scroll"
 import {
@@ -41,6 +42,7 @@ export function useRatings(media: Media) {
 		imdb: r.imdb_user_score_original ? r.imdb_user_score_original.toFixed(1) : null,
 		imdbUrl: r.imdb_url,
 		mc: r.metacritic_meta_score_original ? Math.floor(r.metacritic_meta_score_original) : null,
+		mcUser: r.metacritic_user_score_original ? r.metacritic_user_score_original.toFixed(1) : null,
 		mcUrl: r.metacritic_url,
 		rt: r.rotten_tomatoes_tomato_score_original ? Math.floor(r.rotten_tomatoes_tomato_score_original) : null,
 		rtAudience: r.rotten_tomatoes_audience_score_original ? Math.floor(r.rotten_tomatoes_audience_score_original) : null,
@@ -80,10 +82,11 @@ export function ScoreRing({ media, size = 56, label = true }: { media: Media; si
 				</span>
 			</div>
 			{label && (
-				<span className="text-xs leading-tight text-gray-400">
-					GoodWatch
-					<br />
-					score
+				<span className="flex flex-col leading-tight">
+					<span className="text-base font-semibold" style={gw == null ? undefined : { color: `var(--color-vibe-${vibe})` }}>
+						{gw == null ? "Not rated yet" : scoreLabels[Math.max(1, Math.round(gw / 10))]}
+					</span>
+					<span className="text-xs text-gray-300">GoodWatch score</span>
 				</span>
 			)}
 		</div>
@@ -94,11 +97,19 @@ export function ScoreRing({ media, size = 56, label = true }: { media: Media; si
 export function RatingChips({ media, tone = "dark", size = "sm" }: { media: Media; tone?: "dark" | "brand"; size?: "sm" | "md" }) {
 	const r = useRatings(media)
 	const h = size === "md" ? "h-9" : "h-7"
-	const chip = (href: string, logo: string, alt: string, value: React.ReactNode, brand: string) => (
+	const pair = (critics: string | null, audience: string | null) => (
+		<>
+			<span>{critics ?? "–"}</span>
+			<span aria-hidden="true" className="h-3.5 w-px bg-current opacity-40" />
+			<span className="font-medium opacity-90">{audience ?? "–"}</span>
+		</>
+	)
+	const chip = (href: string, logo: string, alt: string, value: React.ReactNode, brand: string, title?: string) => (
 		<a
 			href={href || undefined}
 			target="_blank"
 			rel="noreferrer"
+			title={title}
 			className={`${h} inline-flex items-center gap-1.5 rounded-md px-2 text-sm font-semibold tabular-nums ${
 				tone === "brand" ? brand : "bg-white/8 text-gray-100 hover:bg-white/15"
 			} ${href ? "" : "opacity-50 pointer-events-none"}`}
@@ -110,13 +121,21 @@ export function RatingChips({ media, tone = "dark", size = "sm" }: { media: Medi
 	return (
 		<div className="flex flex-wrap items-center gap-1.5">
 			{chip(r.imdbUrl, imdbLogo, "IMDb", r.imdb ?? "–", "bg-imdb text-black")}
-			{chip(r.mcUrl, metacriticLogoIcon, "Metacritic", r.mc ?? "–", "bg-metacritic text-white")}
+			{chip(
+				r.mcUrl,
+				metacriticLogoIcon,
+				"Metacritic",
+				pair(r.mc == null ? null : String(r.mc), r.mcUser),
+				"bg-metacritic text-white",
+				`Metacritic: critics ${r.mc ?? "–"}, audience ${r.mcUser ?? "–"}`,
+			)}
 			{chip(
 				r.rtUrl,
 				rottenLogoIcon,
 				"Rotten Tomatoes",
-				r.rt == null ? "–" : `${r.rt}%`,
+				pair(r.rt == null ? null : `${r.rt}%`, r.rtAudience == null ? null : `${r.rtAudience}%`),
 				"bg-rotten text-white",
+				`Rotten Tomatoes: critics ${r.rt ?? "–"}%, audience ${r.rtAudience ?? "–"}%`,
 			)}
 		</div>
 	)
@@ -428,20 +447,91 @@ export function RateButton({ media, look = "solid", className = "" }: { media: M
 				type="button"
 				onClick={() => setOpen(!open)}
 				aria-expanded={open}
+				aria-haspopup="dialog"
 				className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-bold shadow-lg shadow-black/30 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${cls}`}
 			>
 				<StarIcon className="h-5 w-5" />
 				{score ? `Your score: ${score}` : "Rate this"}
 			</button>
 			{open && (
-				<div className="hidden md:block absolute z-50 top-full mt-2 right-0 w-[34rem] rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
-					<ScoreSelector media={media} onCancel={() => setOpen(false)} />
+				<div
+					role="dialog"
+					aria-label={`Rate ${media.details.title}`}
+					className="hidden md:block absolute z-50 top-full right-0 mt-3 w-[26rem] rounded-2xl border border-white/10 bg-stone-900 p-5 shadow-2xl shadow-black/70"
+				>
+					<span aria-hidden="true" className="absolute -top-1.5 right-8 h-3 w-3 rotate-45 border-l border-t border-white/10 bg-stone-900" />
+					<ScorePicker media={media} onDone={() => setOpen(false)} />
 				</div>
 			)}
 			<div className="md:hidden">
 				<Drawer open={open} onClose={() => setOpen(false)}>
-					<ScoreSelector media={media} onCancel={() => setOpen(false)} />
+					<div className="p-2">
+						<ScorePicker media={media} onDone={() => setOpen(false)} />
+					</div>
 				</Drawer>
+			</div>
+		</div>
+	)
+}
+
+// Ten bars that grow with the score, in the score colors. Hover previews the
+// label; clicking saves through the existing ScoreAction.
+function ScorePicker({ media, onDone }: { media: Media; onDone: () => void }) {
+	const current = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
+	const [hover, setHover] = useState<number | null>(null)
+	const shown = hover ?? current
+	return (
+		<div>
+			<div className="flex items-baseline justify-between gap-4">
+				<h3 className="text-sm font-semibold text-gray-300">Your score for {media.details.title}</h3>
+				{current && (
+					<ScoreAction media={media} score={null} onChange={onDone}>
+						<button type="button" className="text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white cursor-pointer">
+							Clear
+						</button>
+					</ScoreAction>
+				)}
+			</div>
+			<p className="mt-2 flex h-9 items-baseline gap-2">
+				{shown ? (
+					<>
+						<span className="text-3xl font-bold tabular-nums" style={{ color: `var(--color-vibe-${shown * 10})` }}>
+							{shown}
+						</span>
+						<span className="text-lg font-semibold text-white">{scoreLabels[shown]}</span>
+					</>
+				) : (
+					<span className="text-lg text-gray-400">Pick a score from 1 to 10</span>
+				)}
+			</p>
+			<div className="mt-4 flex h-24 items-end gap-1.5" onPointerLeave={() => setHover(null)}>
+				{Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+					const lit = shown != null && n <= shown
+					return (
+						<ScoreAction key={n} media={media} score={n as never} onChange={onDone}>
+							<button
+								type="button"
+								aria-label={`${n}, ${scoreLabels[n]}`}
+								aria-pressed={current === n}
+								onPointerEnter={() => setHover(n)}
+								onFocus={() => setHover(n)}
+								className="flex h-full flex-1 cursor-pointer items-end rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+							>
+								<span
+									className="block w-full rounded-md transition-[height,background-color] duration-150 motion-reduce:transition-none"
+									style={{
+										height: `${28 + n * 7.2}%`,
+										background: lit ? `var(--color-vibe-${n * 10})` : "rgba(255,255,255,.1)",
+									}}
+								/>
+							</button>
+						</ScoreAction>
+					)
+				})}
+			</div>
+			<div className="mt-1.5 flex justify-between text-[11px] text-gray-500">
+				<span>1 Unwatchable</span>
+				<span>10 Masterpiece</span>
 			</div>
 		</div>
 	)
@@ -621,8 +711,8 @@ export function StreamingTiles({
 
 	return (
 		<div id="streaming" ref={ref} className="relative min-w-0">
-			<div className="flex items-center gap-2">
-				{title && <h2 className="text-sm font-semibold text-gray-200">{title}</h2>}
+			<div className="flex flex-wrap items-center gap-2">
+				{title && <h2 className="whitespace-nowrap text-sm font-semibold text-gray-200">{title}</h2>}
 				<div role="tablist" aria-label="Offer type" className="flex rounded-full bg-white/8 p-0.5 text-xs">
 					{(["flatrate", "rent", "buy"] as const).map((t) => (
 						<button
@@ -650,17 +740,30 @@ export function StreamingTiles({
 							Set your services
 						</RemixLink>
 					)}
-					<button
-						type="button"
-						onClick={() => setPopover(popover === "country" ? "none" : "country")}
-						aria-expanded={popover === "country"}
-						aria-label="Change country"
-						className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-gray-300 hover:bg-white/10 cursor-pointer"
-					>
-						{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
-						{country || "Country"}
-						<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
-					</button>
+					<div className="relative">
+						<button
+							type="button"
+							onClick={() => setPopover(popover === "country" ? "none" : "country")}
+							aria-expanded={popover === "country"}
+							aria-label="Change country"
+							className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-gray-300 hover:bg-white/10 cursor-pointer"
+						>
+							{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
+							{country || "Country"}
+							<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
+						</button>
+						{popover === "country" && (
+							<div className="absolute z-40 top-full right-0 mt-2 w-72 rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
+								<h3 className="mb-2 text-xs font-semibold text-gray-400">Show services in</h3>
+								<CountrySelector
+									mediaType={media.mediaType}
+									countryCodes={media.details.streaming_country_codes}
+									currentCountryCode={country}
+									navigateToSection={navigateToSection}
+								/>
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 			<div
@@ -687,18 +790,9 @@ export function StreamingTiles({
 					</button>
 				)}
 			</div>
-			{popover !== "none" && (
-				<div className="absolute z-40 top-full mt-2 left-0 right-0 max-w-lg rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
-					{popover === "country" ? (
-						<CountrySelector
-							mediaType={media.mediaType}
-							countryCodes={media.details.streaming_country_codes}
-							currentCountryCode={country}
-							navigateToSection={navigateToSection}
-						/>
-					) : (
-						<div className="flex flex-wrap gap-2 pt-1">{links.map(tile)}</div>
-					)}
+			{popover === "all" && (
+				<div className="absolute z-40 bottom-0 left-0 right-0 max-w-2xl translate-y-[calc(100%+0.5rem)] rounded-xl border border-white/10 bg-stone-900/95 p-3 shadow-2xl backdrop-blur-xl">
+					<div className="flex flex-wrap gap-2 pt-1">{links.map(tile)}</div>
 				</div>
 			)}
 		</div>
@@ -770,7 +864,7 @@ export function TrailerDialog({ media, open, onClose }: { media: Media; open: bo
 }
 
 // Poster as one big trailer button. Without a trailer it is a plain image.
-export function PosterTrailer({ media, className = "" }: { media: Media; className?: string }) {
+export function PosterTrailer({ media, className = "", compact = false }: { media: Media; className?: string; compact?: boolean }) {
 	const [open, setOpen] = useState(false)
 	const hasTrailer = !!media.videos?.trailers?.[0]?.key
 	const img = (
@@ -792,6 +886,14 @@ export function PosterTrailer({ media, className = "" }: { media: Media; classNa
 			>
 				{img}
 				<span aria-hidden="true" className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/35 motion-reduce:transition-none" />
+				{compact ? (
+					<span
+						aria-hidden="true"
+						className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-red-600 shadow-[0_0_0_1px_rgba(0,0,0,.4),0_6px_16px_rgba(0,0,0,.6)]"
+					>
+						<PlayIcon className="h-5 w-5 translate-x-px" />
+					</span>
+				) : (
 				<span
 					aria-hidden="true"
 					className="absolute left-1/2 top-1/2 inline-flex h-12 -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-white px-5 font-bold text-black shadow-[0_0_0_1px_rgba(0,0,0,.4),0_8px_24px_rgba(0,0,0,.6)] transition-transform group-hover:scale-105 motion-reduce:transition-none"
@@ -801,6 +903,7 @@ export function PosterTrailer({ media, className = "" }: { media: Media; classNa
 					</span>
 					Play trailer
 				</span>
+				)}
 			</button>
 			<TrailerDialog media={media} open={open} onClose={() => setOpen(false)} />
 		</>

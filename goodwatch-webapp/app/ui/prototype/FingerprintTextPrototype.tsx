@@ -9,7 +9,9 @@ import React, { useEffect, useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { FP_VARIANTS, type FpVariant } from "~/ui/prototype/FingerprintBlocks"
 import { HERO_VARIANTS, type HeroVariant } from "~/ui/prototype/HeroVariants"
-import { factFaqs } from "~/ui/prototype/fact-faqs"
+import { BookOpenIcon, ClockIcon, ShieldCheckIcon, StarIcon, TvIcon } from "@heroicons/react/24/outline"
+import { ScoreRing, useStreamingLinks } from "~/ui/prototype/detail-parts"
+import { type FaqId, ageInfo, factFaqs } from "~/ui/prototype/fact-faqs"
 import * as F from "~/ui/prototype/fingerprint-text"
 
 type Media = MovieResult | ShowResult
@@ -63,16 +65,14 @@ export function FingerprintFaqSection({ media, country }: { media: Media; countr
 		mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 	}
 	return (
-		<section className="max-w-4xl">
-			<h2 className="text-2xl font-bold">{media.details.title}: questions and answers</h2>
-			<dl className="mt-4 divide-y divide-white/10 border-y border-white/10">
+		<section>
+			<h2 className="text-2xl font-bold">Questions about {media.details.title}</h2>
+			<p className="mt-1 text-gray-400">Quick answers from GoodWatch data.</p>
+			<div className="mt-6 grid gap-4 md:grid-cols-2">
 				{faqs.map((f) => (
-					<div key={f.q} className="py-3 sm:grid sm:grid-cols-[18rem_1fr] sm:gap-6">
-						<dt className="font-semibold">{f.q}</dt>
-						<dd className="mt-1 sm:mt-0 text-gray-300">{f.a}</dd>
-					</div>
+					<FaqCard key={f.id} media={media} country={country} faq={f} />
 				))}
-			</dl>
+			</div>
 			<script
 				type="application/ld+json"
 				// biome-ignore lint/security/noDangerouslySetInnerHtml: prototype JSON-LD
@@ -80,6 +80,78 @@ export function FingerprintFaqSection({ media, country }: { media: Media; countr
 			/>
 		</section>
 	)
+}
+
+const FAQ_ICON: Record<FaqId, React.ComponentType<{ className?: string }>> = {
+	stream: TvIcon,
+	worth: StarIcon,
+	rated: ShieldCheckIcon,
+	length: ClockIcon,
+	source: BookOpenIcon,
+}
+
+function FaqCard({ media, country, faq }: { media: Media; country: string; faq: { id: FaqId; q: string; a: string } }) {
+	const Icon = FAQ_ICON[faq.id]
+	return (
+		<article className={`flex gap-4 rounded-2xl border border-white/8 bg-white/4 p-5 sm:p-6 ${faq.id === "stream" ? "md:col-span-2" : ""}`}>
+			<span className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-300/15 text-amber-200">
+				<Icon className="h-5 w-5" />
+			</span>
+			<div className="min-w-0 grow">
+				<h3 className="text-lg font-semibold leading-snug">{faq.q}</h3>
+				<FaqVisual media={media} country={country} id={faq.id} />
+				<p className="mt-3 text-gray-300 leading-relaxed">{faq.a}</p>
+			</div>
+		</article>
+	)
+}
+
+function FaqVisual({ media, country, id }: { media: Media; country: string; id: FaqId }) {
+	const links = useStreamingLinks(media, country, ["flatrate", "flatrate_and_buy", "free", "ads"])
+	if (id === "stream" && links.length > 0)
+		return (
+			<div className="mt-4 flex flex-wrap gap-2">
+				{links.slice(0, 8).map((l) => (
+					<a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="flex h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/5 pr-3 hover:bg-white/10">
+						<img src={l.logo} alt="" className="h-full aspect-square rounded-md" />
+						<span className="text-sm font-medium">{l.name}</span>
+					</a>
+				))}
+			</div>
+		)
+	if (id === "worth")
+		return (
+			<div className="mt-4">
+				<ScoreRing media={media} size={52} />
+			</div>
+		)
+	if (id === "rated") {
+		const { cert, advisories } = ageInfo(media, country)
+		return (
+			<div className="mt-4 flex flex-wrap items-center gap-2">
+				{cert && <span className="rounded-md border-2 border-white/60 px-2.5 py-0.5 text-lg font-bold">{cert}</span>}
+				{advisories.map((a) => (
+					<span key={a} className="rounded-full bg-rose-400/15 px-2.5 py-1 text-sm text-rose-100">
+						{a.charAt(0).toUpperCase() + a.slice(1)}
+					</span>
+				))}
+			</div>
+		)
+	}
+	if (id === "length") {
+		const d = media.details as unknown as Record<string, unknown>
+		const rt = d.runtime as number | null
+		const figure =
+			media.mediaType === "movie"
+				? rt
+					? `${Math.floor(rt / 60)} h ${rt % 60} min`
+					: null
+				: d.number_of_seasons
+					? `${d.number_of_seasons} season${d.number_of_seasons === 1 ? "" : "s"}`
+					: null
+		return figure ? <p className="mt-3 text-3xl font-bold tracking-tight">{figure}</p> : null
+	}
+	return null
 }
 
 // Floating switcher, not part of the design. ← → cycles the hero,

@@ -1,8 +1,9 @@
-// PROTOTYPE - throwaway. Round 6: three close variants of round 5's spec
-// sheet (fp 1). Selecting a pillar swaps the whole block for a detailed view
-// of that pillar at exactly the same height, so nothing below moves; Back
-// returns to the overview. Every view stays in the HTML for crawlers.
-// Round 5's blocks are in fe46f1ea.
+// PROTOTYPE - throwaway. Round 7: round 6's fp 1. Selecting a row swaps the
+// rows for a detailed view of that area at exactly the same height, so
+// nothing below moves; "Back to fingerprint" returns to the rows. Every view
+// stays in the HTML for crawlers. The interface avoids the word "pillar", and
+// the find-more links use the Discover filter the filter bar can show.
+// Round 6 is in 70688d27.
 
 import { Link } from "@remix-run/react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
@@ -15,9 +16,7 @@ import * as F from "~/ui/prototype/fingerprint-text"
 
 export const FP_VARIANTS = {
 	"0": "Current card",
-	"1": "Detail with pillar tabs",
-	"2": "Detail with previous / next",
-	"3": "Detail with pillar rail",
+	"1": "Rows with same-height detail",
 } as const
 export type FpVariant = keyof typeof FP_VARIANTS
 
@@ -184,7 +183,7 @@ type Trait = { key: string; score: number }
 
 function Bars({ traits, color, showMeaning = false }: { traits: Trait[]; color: string; showMeaning?: boolean }) {
 	return (
-		<ul className="space-y-2">
+		<ul className="space-y-3">
 			{traits.map((d) => {
 				const meta = getFingerprintMeta(d.key)
 				return (
@@ -202,25 +201,29 @@ function Bars({ traits, color, showMeaning = false }: { traits: Trait[]; color: 
 	)
 }
 
+// "More like this" goes to Discover with the pillar filter the filter bar
+// shows, plus the mood pages whose rules use this area's traits.
+const FILTER_WORD: Record<number, string> = { 1: "low", 2: "medium", 3: "high" }
+
 function MoreLinks({ t, p }: { t: F.TitleInput; p: Pillar }) {
-	const { own } = F.pillarTraits(t, p)
+	const tier = t.fingerprint.pillars[p]
 	const moods = F.moodsForKeys(t, [...F.PILLAR_KEYS[p], ...F.RELATED_KEYS[p]])
 	const kind = t.mediaType === "movie" ? "movies" : "shows"
-	const topTrait = own[0]
+	const minTier = Math.min(3, tier)
 	const clean = (l: string) => l.replace(/\s*\p{Extended_Pictographic}.*$/u, "")
 	return (
 		<div className="flex flex-wrap gap-2">
-			{topTrait.score >= 6 && (
+			{tier >= 2 && (
 				<Link
-					to={F.discoverUrl(t, topTrait.key)}
-					className="rounded-full px-3 py-1 text-sm font-medium text-black hover:brightness-110"
+					to={`/discover/${kind}?fingerprintPillars=${p}&fingerprintPillarMinTier=${minTier}`}
+					className="rounded-full px-3.5 py-1.5 text-sm font-semibold text-black hover:brightness-110"
 					style={{ background: HEX[p] }}
 				>
-					More {kind} high in {getFingerprintMeta(topTrait.key).label.toLowerCase()}
+					More {kind} with {FILTER_WORD[minTier]} {p.toLowerCase()}
 				</Link>
 			)}
 			{moods.map((m) => (
-				<Link key={m.url} to={m.url} className="rounded-full border border-white/20 px-3 py-1 text-sm hover:border-white/60 hover:bg-white/5">
+				<Link key={m.url} to={m.url} className="rounded-full border border-white/20 px-3.5 py-1.5 text-sm hover:border-white/60 hover:bg-white/5">
 					{clean(m.label)} {kind}
 				</Link>
 			))}
@@ -242,13 +245,13 @@ function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => v
 	const tiers = t.fingerprint.pillars
 	return (
 		<div>
-			<div className="divide-y divide-white/10 border-y border-white/10">
+			<div className="divide-y divide-white/8 border-y border-white/8">
 				{PILLARS.map((p) => (
 					// biome-ignore lint/a11y/useKeyWithClickEvents: the "See all" button handles keyboard
 					<div
 						key={p}
 						onClick={() => onSelect(p)}
-						className="group grid cursor-pointer gap-3 py-4 md:grid-cols-[11rem_1fr_16rem_2rem] md:items-center md:gap-8 hover:bg-white/3"
+						className="group grid cursor-pointer gap-4 rounded-xl px-2 py-6 md:-mx-2 md:grid-cols-[12rem_1fr_17rem_2rem] md:items-center md:gap-10 hover:bg-white/3"
 					>
 						<div className="flex items-center justify-between md:block">
 							<PillarName p={p} />
@@ -266,8 +269,9 @@ function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => v
 								e.stopPropagation()
 								onSelect(p)
 							}}
-							className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-white/10 group-hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300"
+							className="flex h-8 items-center justify-center gap-1 justify-self-start rounded-full text-sm text-gray-300 hover:bg-white/10 group-hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300 md:w-8"
 						>
+							<span className="md:hidden">See all traits</span>
 							<ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
 						</button>
 					</div>
@@ -286,7 +290,7 @@ function BackButton({ onBack, backRef }: { onBack: () => void; backRef: ViewProp
 			className="inline-flex h-9 items-center gap-1 rounded-full bg-white/10 pl-2 pr-3.5 text-sm font-semibold hover:bg-white/20 cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300"
 		>
 			<ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-			All pillars
+			Back to fingerprint
 		</button>
 	)
 }
@@ -319,18 +323,18 @@ function BigPillar({ t, p }: { t: F.TitleInput; p: Pillar }) {
 function TraitGrid({ t, p, meaning = true }: { t: F.TitleInput; p: Pillar; meaning?: boolean }) {
 	const { own, related } = F.pillarTraits(t, p)
 	return (
-		<div className="space-y-6">
+		<div className="space-y-8">
 			<div>
-				<h4 className="mb-3 text-sm font-semibold text-gray-300">All {p.toLowerCase()} traits</h4>
-				<div className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+				<h4 className="mb-4 text-sm font-semibold text-gray-300">All {p.toLowerCase()} traits</h4>
+				<div className="grid gap-x-10 gap-y-3 sm:grid-cols-2">
 					<Bars traits={own.slice(0, Math.ceil(own.length / 2))} color={HEX[p]} showMeaning={meaning} />
 					<Bars traits={own.slice(Math.ceil(own.length / 2))} color={HEX[p]} showMeaning={meaning} />
 				</div>
 			</div>
 			{related.length > 0 && (
 				<div>
-					<h4 className="mb-3 text-sm font-semibold text-gray-300">Related traits</h4>
-					<div className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+					<h4 className="mb-4 text-sm font-semibold text-gray-300">Related traits</h4>
+					<div className="grid gap-x-10 gap-y-3 sm:grid-cols-2">
 						<Bars traits={related.slice(0, Math.ceil(related.length / 2))} color="#a8a29e" showMeaning={meaning} />
 						<Bars traits={related.slice(Math.ceil(related.length / 2))} color="#a8a29e" showMeaning={meaning} />
 					</div>
@@ -347,10 +351,10 @@ const tint = (p: Pillar, pct = 9) => ({
 // 1: back button and pillar tabs on top; verdict left, all traits right.
 function Detail1({ t, p, onBack, onSelect, backRef }: ViewProps) {
 	return (
-		<div className="flex min-h-full flex-col rounded-2xl border border-white/10 p-4 sm:p-6" style={tint(p)}>
+		<div className="flex min-h-full flex-col rounded-2xl border border-white/10 p-5 sm:p-8" style={tint(p)}>
 			<div className="flex flex-wrap items-center gap-3">
 				<BackButton onBack={onBack} backRef={backRef} />
-				<div role="tablist" aria-label="Pillars" className="flex flex-wrap gap-1.5">
+				<div role="tablist" aria-label="Fingerprint areas" className="flex flex-wrap gap-1.5">
 					{PILLARS.map((q) => (
 						<button
 							key={q}
@@ -366,103 +370,8 @@ function Detail1({ t, p, onBack, onSelect, backRef }: ViewProps) {
 					))}
 				</div>
 			</div>
-			<div className="mt-8 grid min-h-0 content-start gap-10 lg:grid-cols-[5fr_7fr] [&>*]:min-w-0">
-				<div className="space-y-6">
-					<BigPillar t={t} p={p} />
-					<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
-					<MoreLinks t={t} p={p} />
-				</div>
-				<TraitGrid t={t} p={p} />
-			</div>
-		</div>
-	)
-}
-
-// 2: back and previous / next on top; a trait list with score tiles.
-function Detail2({ t, p, onBack, onSelect, backRef }: ViewProps) {
-	const i = PILLARS.indexOf(p)
-	const prev = PILLARS[(i + PILLARS.length - 1) % PILLARS.length]
-	const next = PILLARS[(i + 1) % PILLARS.length]
-	const { own, related } = F.pillarTraits(t, p)
-	const nav = (q: Pillar, dir: "prev" | "next") => (
-		<button
-			type="button"
-			onClick={() => onSelect(q)}
-			className="inline-flex h-9 items-center gap-1 rounded-full bg-white/5 px-3 text-sm text-gray-300 hover:bg-white/10 cursor-pointer"
-		>
-			{dir === "prev" && <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />}
-			{PILLAR_CONFIG[q].emoji} {q}
-			{dir === "next" && <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />}
-		</button>
-	)
-	const tile = (d: Trait, color: string) => {
-		const meta = getFingerprintMeta(d.key)
-		return (
-			<div key={d.key} className="grid grid-cols-[2.5rem_1fr] items-start gap-3">
-				<span
-					className="flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold tabular-nums"
-					style={{ background: `color-mix(in srgb, ${color} ${10 + d.score * 5}%, transparent)` }}
-				>
-					{d.score}
-				</span>
-				<span>
-					<span className="block font-semibold text-gray-100">{meta.label}</span>
-					<span className="block text-sm text-gray-400">{meta.description}</span>
-				</span>
-			</div>
-		)
-	}
-	return (
-		<div className="flex min-h-full flex-col rounded-2xl border border-white/10 p-4 sm:p-6" style={tint(p, 11)}>
-			<div className="flex items-center gap-3">
-				<BackButton onBack={onBack} backRef={backRef} />
-				<div className="ml-auto flex gap-2">
-					{nav(prev, "prev")}
-					{nav(next, "next")}
-				</div>
-			</div>
-			<div className="mt-8 grid content-start gap-10 lg:grid-cols-[1fr_1.3fr] [&>*]:min-w-0">
-				<div className="space-y-6">
-					<BigPillar t={t} p={p} />
-					<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
-					<MoreLinks t={t} p={p} />
-				</div>
-				<div className="grid content-start gap-4 sm:grid-cols-2">
-					{own.map((d) => tile(d, HEX[p]))}
-					{related.map((d) => tile(d, "#a8a29e"))}
-				</div>
-			</div>
-		</div>
-	)
-}
-
-// 3: a compact rail of all pillars on the left, the detail beside it.
-function Detail3({ t, p, onBack, onSelect, backRef }: ViewProps) {
-	const tiers = t.fingerprint.pillars
-	return (
-		<div className="grid min-h-full content-start gap-6 rounded-2xl border border-white/10 p-4 md:grid-cols-[14rem_1fr]" style={tint(p, 7)}>
-			<nav aria-label="Pillars" className="flex flex-col gap-1 md:border-r md:border-white/10 md:pr-4">
-				<div className="mb-3">
-					<BackButton onBack={onBack} backRef={backRef} />
-				</div>
-				{PILLARS.map((q) => (
-					<button
-						key={q}
-						type="button"
-						aria-current={q === p ? "true" : undefined}
-						onClick={() => onSelect(q)}
-						className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left cursor-pointer ${q === p ? "bg-white/10" : "hover:bg-white/5"}`}
-					>
-						<span className={`flex items-center gap-2 text-sm ${q === p ? "font-semibold text-white" : "text-gray-300"}`}>
-							<span aria-hidden="true">{PILLAR_CONFIG[q].emoji}</span>
-							{q}
-						</span>
-						<Meter tier={tiers[q]} p={q} />
-					</button>
-				))}
-			</nav>
-			<div className="grid min-w-0 content-start gap-8 p-2 lg:grid-cols-[1fr_1.2fr] [&>*]:min-w-0">
-				<div className="space-y-6">
+			<div className="mt-10 grid min-h-0 content-start gap-12 lg:grid-cols-[5fr_7fr] lg:gap-16 [&>*]:min-w-0">
+				<div className="space-y-7">
 					<BigPillar t={t} p={p} />
 					<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
 					<MoreLinks t={t} p={p} />
@@ -517,17 +426,17 @@ export function FingerprintBlock({ variant, media, sectionProps }: { variant: Fp
 		genres: media.details.genres,
 		fingerprint: media.fingerprint,
 	}
-	const Detail = { "1": Detail1, "2": Detail2, "3": Detail3 }[variant]
+	const Detail = Detail1
 	return (
 		<section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 			<div {...sectionProps} id="fingerprint" className={sectionProps?.className}>
 				<Head t={t} />
 				<Switcher t={t} Detail={Detail} />
-				<div className="mt-8">
+				<div className="mt-12">
 					<Audience t={t} />
 				</div>
 				<p className="mt-8 text-xs text-gray-500">
-					Based on the GoodWatch fingerprint: our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}. Select a pillar to see all of its traits.
+					Based on the GoodWatch fingerprint: our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}. Select a row to see all of its traits.
 				</p>
 			</div>
 		</section>
