@@ -5544,5 +5544,1727 @@
    "avoid": []
   },
   "origin": "new"
+ },
+ {
+  "id": "h5-01",
+  "query": "somthing to cheer me up",
+  "type": "short_vague",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Warm, funny, uplifting titles that reliably lift a bad mood. Bleak, heavy or cynical titles are wrong; merely light but mean-spirited comedy is weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Paddington 2",
+     "year": 2017,
+     "tmdb_id": 346648,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Ted Lasso",
+     "year": 2020,
+     "tmdb_id": 97546,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Parks and Recreation",
+     "year": 2009,
+     "tmdb_id": 8592,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Little Miss Sunshine",
+     "year": 2006,
+     "tmdb_id": 773,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-02",
+  "query": "date night",
+  "type": "audience",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Something a couple can enjoy together: charming romance, romantic comedy or a crowd-pleasing film with chemistry. Grim, gory or kids-only titles are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Crazy, Stupid, Love.",
+     "year": 2011,
+     "tmdb_id": 50646,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "About Time",
+     "year": 2013,
+     "tmdb_id": 122906,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "La La Land",
+     "year": 2016,
+     "tmdb_id": 313369,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Big Sick",
+     "year": 2017,
+     "tmdb_id": 416477,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-03",
+  "query": "something to fall asleep to",
+  "type": "short_vague",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Calm, gentle, low-stakes viewing you can doze off to (soothing nature documentaries, cozy competition or craft shows). Tense, loud or plot-heavy titles are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Great British Bake Off",
+     "year": 2010,
+     "tmdb_id": 34549,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Joy of Painting",
+     "year": 1983,
+     "tmdb_id": 10382,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Planet Earth",
+     "year": 2006,
+     "tmdb_id": 1044,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-04",
+  "query": "rainy sunday afternoon",
+  "type": "setting_mood",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Cozy, comforting films to curl up with on a rainy day: warm, gentle and a bit nostalgic. Harsh thrillers or horror are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Princess Bride",
+     "year": 1987,
+     "tmdb_id": 2493,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Little Women",
+     "year": 2019,
+     "tmdb_id": 331482,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Paddington",
+     "year": 2014,
+     "tmdb_id": 116149,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-05",
+  "query": "i need a good cry",
+  "type": "short_vague",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Emotional dramas built to make you cry (loss, sacrifice, love), ideally cathartic. Comedies and cold or detached films are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Green Mile",
+     "year": 1999,
+     "tmdb_id": 497,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Up",
+     "year": 2009,
+     "tmdb_id": 14160,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Manchester by the Sea",
+     "year": 2016,
+     "tmdb_id": 334541,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-06",
+  "query": "adrenaline rush",
+  "type": "short_vague",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Relentless, high-energy action with big stunts and chases that keeps the pulse up. Slow dramas or talky thrillers are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Mad Max: Fury Road",
+     "year": 2015,
+     "tmdb_id": 76341,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "John Wick",
+     "year": 2014,
+     "tmdb_id": 245891,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Speed",
+     "year": 1994,
+     "tmdb_id": 1637,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Top Gun: Maverick",
+     "year": 2022,
+     "tmdb_id": 361743,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-07",
+  "query": "background show while cooking",
+  "type": "audience",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Easy, episodic comfort sitcoms or light shows you can half-watch without losing the plot. Dense serialized dramas, subtitled prestige TV or films that demand attention are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Friends",
+     "year": 1994,
+     "tmdb_id": 1668,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Office",
+     "year": 2005,
+     "tmdb_id": 2316,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Seinfeld",
+     "year": 1989,
+     "tmdb_id": 1400,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Brooklyn Nine-Nine",
+     "year": 2013,
+     "tmdb_id": 48891,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-08",
+  "query": "halloween night with friends",
+  "type": "audience",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Fun, crowd-pleasing horror or horror-comedy to watch in a group on Halloween: scary but entertaining. Bleak arthouse horror is weak; non-horror is wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Scream",
+     "year": 1996,
+     "tmdb_id": 4232,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Shaun of the Dead",
+     "year": 2004,
+     "tmdb_id": 747,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Cabin in the Woods",
+     "year": 2012,
+     "tmdb_id": 22970,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Tucker and Dale vs. Evil",
+     "year": 2010,
+     "tmdb_id": 46838,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-09",
+  "query": "con artists pulling off elaborate scams",
+  "type": "subject_object",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Stories about swindlers and grifters running clever cons, often with a twist. Plain heist or bank-robbery films with guns are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Catch Me If You Can",
+     "year": 2002,
+     "tmdb_id": 640,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Sting",
+     "year": 1973,
+     "tmdb_id": 9277,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Matchstick Men",
+     "year": 2003,
+     "tmdb_id": 7270,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-10",
+  "query": "robot who wants to be human",
+  "type": "subject_object",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Science fiction about an android or AI that longs to become (or be accepted as) human, exploring what makes us human. Killer-robot action is only loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Bicentennial Man",
+     "year": 1999,
+     "tmdb_id": 2277,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "A.I. Artificial Intelligence",
+     "year": 2001,
+     "tmdb_id": 644,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Ex Machina",
+     "year": 2015,
+     "tmdb_id": 264660,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-11",
+  "query": "survivors after a plane crash",
+  "type": "subject_object",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Survival stories after a plane crash leaves people stranded in the wilderness or on an island. Airplane disaster thrillers set mid-flight are only loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Alive",
+     "year": 1993,
+     "tmdb_id": 7305,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Yellowjackets",
+     "year": 2021,
+     "tmdb_id": 117488,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Lost",
+     "year": 2004,
+     "tmdb_id": 4607,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Grey",
+     "year": 2012,
+     "tmdb_id": 75174,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-12",
+  "query": "complicated mother daughter relationship",
+  "type": "subject_object",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Dramas or dramedies centered on a loving but difficult mother-daughter bond. Stories where family is only background are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Lady Bird",
+     "year": 2017,
+     "tmdb_id": 391713,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Terms of Endearment",
+     "year": 1983,
+     "tmdb_id": 11050,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Gilmore Girls",
+     "year": 2000,
+     "tmdb_id": 4586,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-13",
+  "query": "journalists uncovering a cover up",
+  "type": "subject_object",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Investigative journalism dramas where reporters expose a scandal or institutional cover-up. Generic political thrillers without journalists are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Spotlight",
+     "year": 2015,
+     "tmdb_id": 314365,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "All the President's Men",
+     "year": 1976,
+     "tmdb_id": 891,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Post",
+     "year": 2017,
+     "tmdb_id": 446354,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-14",
+  "query": "revenge planned for years",
+  "type": "subject_object",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Revenge stories where the avenger patiently plans payback over a long time, often after imprisonment or betrayal. Quick action-movie vengeance is loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Oldboy",
+     "year": 2003,
+     "tmdb_id": 670,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Count of Monte Cristo",
+     "year": 2002,
+     "tmdb_id": 11362,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Kill Bill: Vol. 1",
+     "year": 2003,
+     "tmdb_id": 24,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-15",
+  "query": "anime without robots",
+  "type": "negation",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Anime (series or films) with no mecha or robots. Mecha anime like Evangelion or Gundam contradict the constraint; live-action is wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Death Note",
+     "year": 2006,
+     "tmdb_id": 13916,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Your Name.",
+     "year": 2016,
+     "tmdb_id": 372058,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Spirited Away",
+     "year": 2001,
+     "tmdb_id": 129,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Neon Genesis Evangelion",
+     "year": 1995,
+     "tmdb_id": 890,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Mobile Suit Gundam",
+     "year": 1979,
+     "tmdb_id": 21731,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-16",
+  "query": "horror without jump scares",
+  "type": "negation",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Horror that builds dread through atmosphere and slow tension rather than jump scares. Jump-scare-driven haunted-house franchises contradict the request.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Others",
+     "year": 2001,
+     "tmdb_id": 1933,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Witch",
+     "year": 2016,
+     "tmdb_id": 310131,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Rosemary's Baby",
+     "year": 1968,
+     "tmdb_id": 805,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Insidious",
+     "year": 2011,
+     "tmdb_id": 49018,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Conjuring",
+     "year": 2013,
+     "tmdb_id": 138843,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-17",
+  "query": "miniseries i can finish in a weekend",
+  "type": "structural",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Short, complete limited series (a handful of episodes, one season) that are bingeable in a weekend. Long-running multi-season shows contradict the request; films are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Chernobyl",
+     "year": 2019,
+     "tmdb_id": 87108,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Queen's Gambit",
+     "year": 2020,
+     "tmdb_id": 87739,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Mare of Easttown",
+     "year": 2021,
+     "tmdb_id": 115004,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Grey's Anatomy",
+     "year": 2005,
+     "tmdb_id": 1416,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-18",
+  "query": "funny movie under 90 minutes",
+  "type": "structural",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Short comedy films of roughly 90 minutes or less. Long comedies are weak; series are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Airplane!",
+     "year": 1980,
+     "tmdb_id": 813,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Borat: Cultural Learnings of America for Make Benefit Glorious Nation of Kazakhstan",
+     "year": 2006,
+     "tmdb_id": 496,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Naked Gun: From the Files of Police Squad!",
+     "year": 1988,
+     "tmdb_id": 37136,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-19",
+  "query": "harry potter but for adults",
+  "type": "like_x_but_y",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Magic-school or wizard fantasy with the appeal of Harry Potter but darker, more mature and aimed at grown-ups. The Harry Potter films themselves are wrong (that is the thing being swapped out); children's fantasy is weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Magicians",
+     "year": 2015,
+     "tmdb_id": 64432,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Jonathan Strange & Mr Norrell",
+     "year": 2015,
+     "tmdb_id": 62717,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "A Discovery of Witches",
+     "year": 2018,
+     "tmdb_id": 77236,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Harry Potter and the Philosopher's Stone",
+     "year": 2001,
+     "tmdb_id": 671,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-20",
+  "query": "like interstellar",
+  "type": "like_x_but_y",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Ambitious, emotional, science-grounded space or first-contact films in the vein of Interstellar. Interstellar itself is fine but not required at the top; space fantasy and shoot-em-ups are weak.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Contact",
+     "year": 1997,
+     "tmdb_id": 686,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Arrival",
+     "year": 2016,
+     "tmdb_id": 329865,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Martian",
+     "year": 2015,
+     "tmdb_id": 286217,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-21",
+  "query": "like john wick but a tv show",
+  "type": "like_x_but_y",
+  "split": "holdout5",
+  "familiar": false,
+  "intent": "Series only: violent, stylish, fight-heavy action shows with a lone lethal protagonist, like John Wick. John Wick films are weak (films, not series); talky crime dramas are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Banshee",
+     "year": 2013,
+     "tmdb_id": 41727,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Reacher",
+     "year": 2022,
+     "tmdb_id": 108978,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Marvel's Daredevil",
+     "year": 2015,
+     "tmdb_id": 61889,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Warrior",
+     "year": 2019,
+     "tmdb_id": 73544,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-22",
+  "query": "meryl streep movies",
+  "type": "person",
+  "split": "holdout5",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Films starring Meryl Streep first. Similar dramas without her are only loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Kramer vs. Kramer",
+     "year": 1979,
+     "tmdb_id": 12102,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Devil Wears Prada",
+     "year": 2006,
+     "tmdb_id": 350,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Mamma Mia!",
+     "year": 2008,
+     "tmdb_id": 11631,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Sophie's Choice",
+     "year": 1982,
+     "tmdb_id": 15764,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-23",
+  "query": "sofia copola vibes",
+  "type": "person",
+  "split": "holdout5",
+  "familiar": true,
+  "person_intent": "style",
+  "intent": "Style query: some Sofia Coppola films welcome, but mostly other dreamy, melancholic, understated films about loneliness and drifting young women, with a strong soundtrack and pastel look.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Lost in Translation",
+     "year": 2003,
+     "tmdb_id": 153,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Virgin Suicides",
+     "year": 2000,
+     "tmdb_id": 1443,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Marie Antoinette",
+     "year": 2006,
+     "tmdb_id": 1887,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-24",
+  "query": "ridley scott",
+  "type": "person",
+  "split": "holdout5",
+  "familiar": true,
+  "person_intent": "both",
+  "intent": "Films directed by Ridley Scott first, then large-scale, visually rich historical epics and science fiction in his style.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Alien",
+     "year": 1979,
+     "tmdb_id": 348,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Blade Runner",
+     "year": 1982,
+     "tmdb_id": 78,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Gladiator",
+     "year": 2000,
+     "tmdb_id": 98,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Martian",
+     "year": 2015,
+     "tmdb_id": 286217,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-25",
+  "query": "dreamworks animation",
+  "type": "studio",
+  "split": "holdout5",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "DreamWorks Animation feature films first. Animated films from other studios (Pixar, Disney) are only loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Shrek",
+     "year": 2001,
+     "tmdb_id": 808,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "How to Train Your Dragon",
+     "year": 2010,
+     "tmdb_id": 10191,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Kung Fu Panda",
+     "year": 2008,
+     "tmdb_id": 9502,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-26",
+  "query": "düstere serie über ein geheimnis in einer kleinstadt",
+  "type": "non_english",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "German: a dark series about a secret in a small town. Moody mystery series with small-town secrets; films and light comedies are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Dark",
+     "year": 2017,
+     "tmdb_id": 70523,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Twin Peaks",
+     "year": 1990,
+     "tmdb_id": 1920,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Stranger Things",
+     "year": 2016,
+     "tmdb_id": 66732,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-27",
+  "query": "una peli romántica que no sea cursi",
+  "type": "non_english",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Spanish: a romantic film that is not cheesy. Honest, clever or bittersweet romances; sugary formula rom-coms contradict the request.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Before Sunrise",
+     "year": 1995,
+     "tmdb_id": 76,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Eternal Sunshine of the Spotless Mind",
+     "year": 2004,
+     "tmdb_id": 38,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "(500) Days of Summer",
+     "year": 2009,
+     "tmdb_id": 19913,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Her",
+     "year": 2013,
+     "tmdb_id": 152601,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-28",
+  "query": "ailecek izlenecek komik film",
+  "type": "non_english",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Turkish: a funny film to watch together as a family. Family comedies and animated films that work for kids and adults; adult-only comedy is wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Paddington",
+     "year": 2014,
+     "tmdb_id": 116149,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Toy Story",
+     "year": 1995,
+     "tmdb_id": 862,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Incredibles",
+     "year": 2004,
+     "tmdb_id": 9806,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Home Alone",
+     "year": 1990,
+     "tmdb_id": 771,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-29",
+  "query": "80s teen moives",
+  "type": "era_genre",
+  "split": "holdout5",
+  "familiar": true,
+  "intent": "Teen comedies and coming-of-age films from the 1980s. Teen films from other decades are loosely relevant; 80s films not about teens are loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Breakfast Club",
+     "year": 1985,
+     "tmdb_id": 2108,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Ferris Bueller's Day Off",
+     "year": 1986,
+     "tmdb_id": 9377,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Sixteen Candles",
+     "year": 1984,
+     "tmdb_id": 15144,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Back to the Future",
+     "year": 1985,
+     "tmdb_id": 105,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "h5-30",
+  "query": "film noir from the 40s",
+  "type": "era_genre",
+  "split": "holdout5",
+  "familiar": false,
+  "intent": "Classic black-and-white film noir from the 1940s: detectives, femmes fatales, crime and fatalism. Modern neo-noir is only loosely relevant.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Double Indemnity",
+     "year": 1944,
+     "tmdb_id": 996,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Maltese Falcon",
+     "year": 1941,
+     "tmdb_id": 963,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Big Sleep",
+     "year": 1946,
+     "tmdb_id": 910,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Out of the Past",
+     "year": 1947,
+     "tmdb_id": 678,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev5-01",
+  "query": "funny brad pitt shows",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Funny TV shows. Brad Pitt has no comedy series of his own, so shows without him are fine; his Plan B-produced dramas (Adolescence, The OA, 3 Body Problem, The Third Day, Outer Range) are wrong and never belong in the list.",
+  "anchors": {
+   "must": [],
+   "avoid": [
+    {
+     "title": "Adolescence",
+     "year": 2025,
+     "tmdb_id": 249042,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "The OA",
+     "year": 2016,
+     "tmdb_id": 69061,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "3 Body Problem",
+     "year": 2024,
+     "tmdb_id": 108545,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev5-02",
+  "query": "funny will ferrell shows",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Comedy series first, ideally with Will Ferrell or his absurd, deadpan humor (series he stars in or appears in). Dramas and thrillers he only executive-produced are not what is asked for.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Spoils of Babylon",
+     "year": 2014,
+     "tmdb_id": 50132,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Eastbound & Down",
+     "year": 2009,
+     "tmdb_id": 8624,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Motherland: Fort Salem",
+     "year": 2020,
+     "tmdb_id": 91977,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev5-03",
+  "query": "lighthearted ridley scott series",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Lighthearted, easygoing series. Ridley Scott has no lighthearted series; the grim dramas he executive-produced (The Terror, Taboo, Raised by Wolves, The Man in the High Castle) are wrong.",
+  "anchors": {
+   "must": [],
+   "avoid": [
+    {
+     "title": "The Terror",
+     "year": 2018,
+     "tmdb_id": 75191,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Taboo",
+     "year": 2017,
+     "tmdb_id": 65708,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Raised by Wolves",
+     "year": 2020,
+     "tmdb_id": 85723,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev5-04",
+  "query": "feel-good reese witherspoon shows",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Warm, feel-good series. Reese Witherspoon's starring dramas (Big Little Lies, The Morning Show, Little Fires Everywhere) are only loosely relevant; thrillers she only produced (Surface, The Last Thing He Told Me) are wrong.",
+  "anchors": {
+   "must": [],
+   "avoid": [
+    {
+     "title": "Surface",
+     "year": 2022,
+     "tmdb_id": 127641,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Last Thing He Told Me",
+     "year": 2023,
+     "tmdb_id": 201289,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev5-05",
+  "query": "seth rogen comedy series",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Comedy series Seth Rogen created, wrote or stars in first (The Studio, Platonic), then other comedies, including ones he produced (Future Man). His producer-only action and drama series (Preacher, The Boys) are loosely relevant at best.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Studio",
+     "year": 2025,
+     "tmdb_id": 247767,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Platonic",
+     "year": 2023,
+     "tmdb_id": 112211,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Future Man",
+     "year": 2017,
+     "tmdb_id": 73157,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Preacher",
+     "year": 2016,
+     "tmdb_id": 64230,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev5-06",
+  "query": "funny ricky gervais shows",
+  "type": "person",
+  "split": "dev",
+  "familiar": true,
+  "person_intent": "filmography",
+  "intent": "Control: comedy series Ricky Gervais created, wrote and stars in first (The Office UK, Extras, After Life, Derek, Life's Too Short), then similar British cringe comedies.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Office",
+     "year": 2001,
+     "tmdb_id": 2996,
+     "media_type": "show",
+     "source": "user-taste"
+    },
+    {
+     "title": "Extras",
+     "year": 2005,
+     "tmdb_id": 2693,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "After Life",
+     "year": 2019,
+     "tmdb_id": 79410,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Life's Too Short",
+     "year": 2011,
+     "tmdb_id": 38294,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": []
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev6-01",
+  "query": "fantasy series without dragons",
+  "type": "negation",
+  "split": "dev",
+  "familiar": true,
+  "intent": "Fantasy TV series (magic, other worlds, myth) with no dragons in them. Dragon-centred shows contradict the constraint.",
+  "anchors": {
+   "must": [
+    {
+     "title": "The Wheel of Time",
+     "year": 2021,
+     "tmdb_id": 71914,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Shadow and Bone",
+     "year": 2021,
+     "tmdb_id": 85720,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "His Dark Materials",
+     "year": 2019,
+     "tmdb_id": 68507,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Good Omens",
+     "year": 2019,
+     "tmdb_id": 71915,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "House of the Dragon",
+     "year": 2022,
+     "tmdb_id": 94997,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Game of Thrones",
+     "year": 2011,
+     "tmdb_id": 1399,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Dragon Prince",
+     "year": 2018,
+     "tmdb_id": 81046,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev6-02",
+  "query": "zombie movie without gore",
+  "type": "negation",
+  "split": "dev",
+  "familiar": true,
+  "intent": "Zombie films that stay light on blood and viscera: romance, comedy, drama or family takes on zombies. Splatter and gore-heavy zombie horror is wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Warm Bodies",
+     "year": 2013,
+     "tmdb_id": 82654,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Maggie",
+     "year": 2015,
+     "tmdb_id": 287424,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "ParaNorman",
+     "year": 2012,
+     "tmdb_id": 77174,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Braindead",
+     "year": 1992,
+     "tmdb_id": 763,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Day of the Dead",
+     "year": 1985,
+     "tmdb_id": 8408,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Dawn of the Dead",
+     "year": 1978,
+     "tmdb_id": 923,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev6-03",
+  "query": "detective show with no murders",
+  "type": "negation",
+  "split": "dev",
+  "familiar": true,
+  "intent": "Detective or investigation TV shows whose cases are not murders: cons, thefts, fraud, mysteries, kid sleuths. Murder and serial-killer procedurals are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "White Collar",
+     "year": 2009,
+     "tmdb_id": 21510,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Scooby-Doo, Where Are You!",
+     "year": 1969,
+     "tmdb_id": 926,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Lupin",
+     "year": 2021,
+     "tmdb_id": 96677,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Midsomer Murders",
+     "year": 1997,
+     "tmdb_id": 764,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "True Detective",
+     "year": 2014,
+     "tmdb_id": 46648,
+     "media_type": "show",
+     "source": "reasoning"
+    },
+    {
+     "title": "Broadchurch",
+     "year": 2013,
+     "tmdb_id": 1427,
+     "media_type": "show",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev6-04",
+  "query": "sci-fi movie without robots",
+  "type": "negation",
+  "split": "dev",
+  "familiar": true,
+  "intent": "Science-fiction films with no robots, androids or AI machines as characters: first contact, space, time, biology, society. Robot and android films are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Arrival",
+     "year": 2016,
+     "tmdb_id": 329865,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Contact",
+     "year": 1997,
+     "tmdb_id": 686,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Gattaca",
+     "year": 1997,
+     "tmdb_id": 782,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Close Encounters of the Third Kind",
+     "year": 1977,
+     "tmdb_id": 840,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "The Terminator",
+     "year": 1984,
+     "tmdb_id": 218,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "I, Robot",
+     "year": 2004,
+     "tmdb_id": 2048,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "RoboCop",
+     "year": 1987,
+     "tmdb_id": 5548,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Ex Machina",
+     "year": 2015,
+     "tmdb_id": 264660,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
+ },
+ {
+  "id": "dev6-05",
+  "query": "Krimi ohne Mord",
+  "type": "negation",
+  "split": "dev",
+  "familiar": true,
+  "intent": "German: a crime story without murder (heists, cons, fraud, thefts). Murder mysteries and serial-killer thrillers are wrong.",
+  "anchors": {
+   "must": [
+    {
+     "title": "Ocean's Eleven",
+     "year": 2001,
+     "tmdb_id": 161,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Catch Me If You Can",
+     "year": 2002,
+     "tmdb_id": 640,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "The Sting",
+     "year": 1973,
+     "tmdb_id": 9277,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Inside Man",
+     "year": 2006,
+     "tmdb_id": 388,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ],
+   "avoid": [
+    {
+     "title": "Se7en",
+     "year": 1995,
+     "tmdb_id": 807,
+     "media_type": "movie",
+     "source": "reasoning"
+    },
+    {
+     "title": "Zodiac",
+     "year": 2007,
+     "tmdb_id": 1949,
+     "media_type": "movie",
+     "source": "reasoning"
+    }
+   ]
+  },
+  "origin": "new"
  }
 ]

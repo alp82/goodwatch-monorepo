@@ -1,0 +1,20 @@
+== dev-sty
+  ppl-09   tarantino vibes                               r6=6 combo=7 combo-v2=6 combo-safe-v2=6
+  ppl-11   like david lynch but less weird               r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  ppl-13   denis villeneuve atmosphere                   r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  ppl-15   miyazaki-like                                 r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+== ho3-sty
+  ppl-10   wes anderson style                            r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  ppl-12   something in the style of guy ritchie         r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  ppl-14   coen brothers humor                           r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  ppl-16   kubrick-esque                                 r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+== holdout4
+  sty-01   feels like a terry gilliam film               r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  sty-02   charlie kaufman-esque                         r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  sty-03   nicolas cage energy                           r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  sty-04   in the vein of mel brooks                     r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  sty-05   aardman humor                                 r6=6 combo=6 combo-v2=6 combo-safe-v2=6
+  sty-06   fincher vibes but a series                    r6=3 combo=1 combo-v2=1 combo-safe-v2=1
+  sty-08   un film à la jean-pierre jeunet               r6=5 combo=5 combo-v2=5 combo-safe-v2=5
+  sty-09   something darren aronofsky would direct       r6=10 combo=6 combo-v2=6 combo-safe-v2=6
+  sty-11   jackie chan style stunts and slapstick        r6=6 combo=6 combo-v2=6 combo-safe-v2=6

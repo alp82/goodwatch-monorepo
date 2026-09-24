@@ -105,3 +105,30 @@ A finalist wins when, on the `holdout` split:
     `r4-combo-fast` and `r5` by at least 0.05 `ndcg10`, `bad5` is not higher
     than either, the mean `own10` is within 3 to 6, and earlier splits drop
     by no more than 0.01 against `r5`.
+- 2026-09-23, simplification loop (branch `proto/search-simplify`), set before
+  round 1 of that loop. Baseline: `r6` as frozen after round 6, reproduced
+  exactly by the flat module `harness/simp.py`. Scoring tool:
+  `harness/evalsimp.py`.
+  - Simplicity score S = tunables + hand-written rules + regular expressions
+    + separate query-type paths, unweighted. On/off switches are not
+    tunables; a word list is one rule; a regex is not also a rule. Lines of
+    code are reported separately. Counting rules and the r6 baseline
+    (S = 394) are in `results/simplify/baseline-complexity.md`.
+  - Win: S at most 236 (40% below r6); `ndcg10` no more than 0.01 below
+    r6 on each of dev, holdout, holdout2, holdout3 and holdout4; total
+    `bad5` not higher than r6; `own10` on style queries within 3 to 6; the
+    `title_lookup` guardrail unchanged; p50 and p95 ranking latency after
+    the Jev reading not higher than r6 measured in the same run; no new paid
+    calls at query time.
+  - Confirmation: a fresh `holdout5`, written blind, scored once for the
+    frozen candidate against r6. There aren't enough real production
+    searches yet (157 rows, most from local development), so unless the user
+    decides otherwise, `holdout5` is about 30 agent-written queries that
+    cover vague and mood queries, non-English queries and the open failure
+    types. The candidate wins when it meets the criteria listed under Win on
+    `holdout5` as well, against r6.
+  - Grader rubric: `GRADER.md` gets a section for vague and mood queries
+    (human calibration, "The Yogi Bear Show"). Re-grades of existing pairs
+    go to an overlay file, `results/simplify/rubric/overlay.json`, never into
+    `grades.json`. When the overlay is used, r6 is re-scored with the same
+    overlay, and both numbers are reported.

@@ -1,0 +1,6215 @@
+[
+ {
+  "query_id": "ppl-05",
+  "query": "early spielberg",
+  "intent": "Films directed by Steven Spielberg in the 1970s and 1980s first. His later films are loosely relevant; other directors' films are weak.",
+  "items": [
+   {
+    "pid": 1000000000839,
+    "title": "Duel",
+    "year": 1971,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "TV Movie"
+    ],
+    "essence_text": "An everyman is terrorized by an unseen assailant in a relentless, high-stakes game of cat and mouse. The film masterfully builds tension, creating a sense of claustrophobia and dread as the protagonist is pushed to his psychological limits. Its brilliance lies in its simplicity, transforming an ordinary road trip into an existential nightmare. This is a visceral thriller that stays with you long after the credits roll.",
+    "tags": [
+     "Road Rage",
+     "Psychological Thriller",
+     "Cat and Mouse",
+     "Existential Dread",
+     "Isolation",
+     "Male Vulnerability",
+     "Early Spielberg",
+     "Trucks"
+    ],
+    "keywords": [
+     "california",
+     "panic",
+     "chase",
+     "gas station",
+     "falsely accused",
+     "cliff",
+     "deputy",
+     "car crash",
+     "truck",
+     "salesman",
+     "stalking",
+     "cowardliness"
+    ],
+    "credits": {
+     "directors": [
+      "Steven Spielberg"
+     ],
+     "writers": [
+      "Richard Matheson"
+     ],
+     "cast": [
+      "Dennis Weaver",
+      "Jacqueline Scott",
+      "Eddie Firestone",
+      "Lou Frizzell",
+      "Gene Dynarski"
+     ],
+     "companies": [
+      "Universal Television"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "ppl-17",
+  "query": "vince gilligan",
+  "intent": "Shows and films created or written by Vince Gilligan first, then tense, morally grey crime dramas in his style.",
+  "items": [
+   {
+    "pid": 2000000067697,
+    "title": "Search Party",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "This dark comedy masterfully blends genuine mystery with biting millennial satire, as a group of self-absorbed friends gets entangled in a disturbing disappearance. It excels in delivering sharp, witty dialogue and deeply flawed yet compelling characters, all while maintaining a palpable sense of tension and unease. The series cleverly uses cringe humor and absurdity to highlight its poignant social commentary, offering a thought-provoking and endlessly intriguing viewing experience. It's a...",
+    "tags": [
+     "Millennial Satire",
+     "Dark Mystery Comedy",
+     "Character-Driven Intrigue",
+     "Existential Dread",
+     "Cringe Humor",
+     "Psychological Thriller Elements",
+     "Social Commentary",
+     "New York Setting",
+     "Obsessive Quest"
+    ],
+    "keywords": [
+     "dark comedy",
+     "missing person",
+     "twenty something",
+     "search party"
+    ],
+    "credits": {
+     "directors": [
+      "Sarah-Violet Bliss",
+      "Charles Rogers",
+      "John Lee"
+     ],
+     "creators": [
+      "Michael Showalter",
+      "Sarah-Violet Bliss"
+     ],
+     "writers": [
+      "Sarah-Violet Bliss",
+      "Charles Rogers",
+      "Starlee Kine"
+     ],
+     "cast": [
+      "Alia Shawkat",
+      "John Reynolds",
+      "John Early",
+      "Meredith Hagner",
+      "Brandon Micheal Hall"
+     ],
+     "companies": [
+      "Jax Media",
+      "Semi-Formal Productions",
+      "Studio T"
+     ],
+     "networks": [
+      "TBS",
+      "HBO Max"
+     ]
+    }
+   },
+   {
+    "pid": 2000000061676,
+    "title": "Battle Creek",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This series offers a fresh take on the buddy cop genre, centered on the delightful friction between two diametrically opposed law enforcement officers. Its sharp dialogue and engaging character dynamics drive the humor, making each episode a witty and entertaining mystery to solve. While packed with intriguing crime plots, the show's true charm lies in the unlikely bond and constant bickering between its lead characters, providing a comfortable and binge-friendly viewing experience.",
+    "tags": [
+     "Buddy Cop Comedy",
+     "Mismatched Duo",
+     "Crime Procedural",
+     "Sharp Dialogue",
+     "Character-Driven Humor",
+     "Police Drama",
+     "Midwestern Setting",
+     "Fast-Paced Episodes",
+     "Intriguing Cases"
+    ],
+    "keywords": [
+     "michigan",
+     "fbi",
+     "police detective",
+     "murder investigation",
+     "buddy cop"
+    ],
+    "credits": {
+     "directors": [
+      "Andrew Bernstein",
+      "Bryan Singer",
+      "Daniel Sackheim"
+     ],
+     "creators": [
+      "Mark Johnson",
+      "Bryan Singer"
+     ],
+     "writers": [
+      "David Shore",
+      "Thomas L. Moran",
+      "Garrett Lerner"
+     ],
+     "cast": [
+      "Josh Duhamel",
+      "Dean Winters",
+      "Janet McTeer",
+      "Kal Penn",
+      "Aubrey Dollar"
+     ],
+     "companies": [
+      "Shore Z Productions",
+      "Gran Via Productions"
+     ],
+     "networks": [
+      "CBS"
+     ]
+    }
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-02",
+  "query": "charlie kaufman-esque",
+  "intent": "Style query: some films written or directed by Charlie Kaufman welcome, but mostly other mind-bending, melancholic, meta comedies and dramas about identity and memory.",
+  "items": [
+   {
+    "pid": 1000001029955,
+    "title": "Kinds of Kindness",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "A darkly comedic triptych that delves into the human psyche through interconnected tales of control, identity, and destiny. Expect a blend of absurdist humor and psychological exploration, challenging viewers with its unconventional narrative and ambiguous themes. The film subtly critiques societal norms while maintaining an intriguing sense of mystery. It is a character-driven experience where strong performances enhance the overall sense of unease and intrigue.",
+    "tags": [
+     "Triptych Narrative",
+     "Darkly Comedic",
+     "Psychological Exploration",
+     "Social Critique",
+     "Absurdist Humor",
+     "Unconventional Storytelling",
+     "Intriguing Mystery",
+     "Character-Driven"
+    ],
+    "keywords": [
+     "husband wife relationship",
+     "dark comedy",
+     "anthology",
+     "sexual violence",
+     "mental illness",
+     "questioning",
+     "moral dilemma",
+     "shocking",
+     "dramedy",
+     "absurdism",
+     "victim blaming",
+     "self-harm"
+    ],
+    "credits": {
+     "directors": [
+      "Yorgos Lanthimos"
+     ],
+     "writers": [
+      "Yorgos Lanthimos",
+      "Efthimis Filippou"
+     ],
+     "cast": [
+      "Emma Stone",
+      "Jesse Plemons",
+      "Willem Dafoe",
+      "Margaret Qualley",
+      "Hong Chau"
+     ],
+     "companies": [
+      "Searchlight Pictures",
+      "Film4 Productions",
+      "TSG Entertainment"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-04",
+  "query": "in the vein of mel brooks",
+  "intent": "Style query: some Mel Brooks films welcome, but mostly other genre parodies and spoofs with rapid-fire gags and slapstick.",
+  "items": [
+   {
+    "pid": 1000000391710,
+    "title": "A Futile and Stupid Gesture",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A satirical and meta-narrative take on the life of Doug Kenney, co-founder of National Lampoon, blending biographical elements with over-the-top comedy. The film lovingly spoofs the 1970s comedy scene and the creation of a cultural phenomenon. Nostalgia and dark humor intermingle as it explores the triumphs and failures behind the comedic genius. It's a wild ride through a pivotal era of pop culture.",
+    "tags": [
+     "Biographical Comedy",
+     "Satirical Homage",
+     "Pop Culture History",
+     "Showbiz Satire",
+     "Meta-Narrative",
+     "Nostalgic 70s",
+     "Dark Humor",
+     "Cult Film Inspiration"
+    ],
+    "keywords": [
+     "biography"
+    ],
+    "credits": {
+     "directors": [
+      "David Wain"
+     ],
+     "writers": [
+      "John Aboud",
+      "Michael Colton",
+      "Josh Karp"
+     ],
+     "cast": [
+      "Will Forte",
+      "Domhnall Gleeson",
+      "Martin Mull",
+      "Neil Casey",
+      "Jon Daly"
+     ],
+     "companies": [
+      "Abominable Pictures",
+      "Principato-Young Entertainment"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-06",
+  "query": "fincher vibes but a series",
+  "intent": "Style query, series only: shows with David Fincher's feel: cold, meticulous, dark procedural crime and psychological tension. His series welcome; films are weak.",
+  "items": [
+   {
+    "pid": 2000000064840,
+    "title": "Signal",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Mystery",
+     "Sci-Fi & Fantasy",
+     "Drama"
+    ],
+    "essence_text": "A gripping crime thriller that transcends time, weaving together past and present through a mysterious walkie-talkie. Detectives from different eras collaborate to solve long-unsolved cases, confronting moral dilemmas and the complexities of justice. The series maintains a high level of tension and intrigue, delving into the psychological impact of crime and its ripple effects through time. Its tightly plotted narrative and strong character development create a compelling and...",
+    "tags": [
+     "Crime Investigation",
+     "Time Travel",
+     "Walkie-Talkie",
+     "Unsolved Cases",
+     "Suspenseful",
+     "Psychological Thriller",
+     "Police Procedural",
+     "Moral Dilemmas",
+     "Social Justice"
+    ],
+    "keywords": [
+     "corruption",
+     "investigation",
+     "murder",
+     "tragic past",
+     "signal",
+     "changing the past or future",
+     "butterfly effect",
+     "dark",
+     "suspense",
+     "thriller",
+     "awestruck"
+    ],
+    "credits": {
+     "directors": [
+      "Kim Won-suk",
+      "An Tae-jin"
+     ],
+     "creators": [
+      "Kim Eun-hee",
+      "Jinnie Choi"
+     ],
+     "writers": [
+      "Kim Eun-hee"
+     ],
+     "cast": [
+      "Lee Je-hoon",
+      "Kim Hye-soo",
+      "Cho Jin-woong",
+      "Jang Hyun-sung",
+      "Jung Hae-kyun"
+     ],
+     "companies": [
+      "AStory",
+      "Studio Dragon",
+      "BA Entertainment"
+     ],
+     "networks": [
+      "tvN"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-07",
+  "query": "cartoons with matt groening humor",
+  "intent": "Animated series created by Matt Groening first, then other satirical adult animated sitcoms in his style.",
+  "items": [
+   {
+    "pid": 2000000118546,
+    "title": "Clone High",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "This animated series is a sharp, irreverent satire brimming with absurdist humor and rapid-fire wit. It masterfully parodies high school tropes while delivering incisive social commentary through its cast of historical clones. The updated series injects contemporary themes and pop culture references, keeping its unique blend of cleverness and outright silliness fresh. It's a highly rewatchable show driven by memorable characters and consistently clever writing, perfect for those who...",
+    "tags": [
+     "Absurdist Satire",
+     "Adult Animated Comedy",
+     "Pop Culture References",
+     "Character-Driven Humor",
+     "Social Commentary",
+     "High School Drama Parody",
+     "Quirky & Hilarious",
+     "Witty Dialogue",
+     "Contemporary Relevance"
+    ],
+    "keywords": [
+     "clone",
+     "historical figure",
+     "high school",
+     "conspiracy",
+     "reboot"
+    ],
+    "credits": {
+     "directors": [
+      "Mark Ackland",
+      "Jack Shih",
+      "Kristen Morrison"
+     ],
+     "creators": [
+      "Alexander Bulkley",
+      "Corey Campodonico"
+     ],
+     "writers": [
+      "Dannah Feinglass Phirman",
+      "Danielle Schneider",
+      "Judah Miller"
+     ],
+     "cast": [
+      "Nicole Sullivan",
+      "Mitra Jouhari",
+      "Will Forte",
+      "Christopher Miller",
+      "Vicci Martinez"
+     ],
+     "companies": [
+      "MTV Entertainment Studios",
+      "ShadowMachine",
+      "Lord Miller"
+     ],
+     "networks": [
+      "Max"
+     ]
+    }
+   },
+   {
+    "pid": 2000000098198,
+    "title": "Central Park",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "An animated musical comedy overflowing with catchy songs, vibrant visuals, and quirky humor. Set against the backdrop of Central Park, the show delivers an optimistic and lighthearted experience suitable for all ages. It balances family-friendly entertainment with gentle social commentary, exploring themes of community and class conflict through satire. This is a feel-good series that offers both pure escapism and a heartwarming message, making it a perfect comfort watch for viewers of any...",
+    "tags": [
+     "Animated Musical Comedy",
+     "Family-Friendly",
+     "Central Park Setting",
+     "Quirky Humor",
+     "Optimistic",
+     "Catchy Songs",
+     "Class Conflict Satire",
+     "Vibrant Visuals"
+    ],
+    "keywords": [
+     "work",
+     "musical",
+     "adult animation"
+    ],
+    "credits": {
+     "directors": [
+      "Corey Barnes"
+     ],
+     "creators": [
+      "Josh Gad",
+      "Loren Bouchard"
+     ],
+     "writers": [
+      "Josh Gad",
+      "Loren Bouchard",
+      "Nora Smith"
+     ],
+     "cast": [
+      "Josh Gad",
+      "Leslie Odom Jr.",
+      "Kristen Bell",
+      "Tituss Burgess",
+      "Daveed Diggs"
+     ],
+     "companies": [
+      "Bento Box Entertainment",
+      "Wilo Productions",
+      "Brillstein Entertainment Partners"
+     ],
+     "networks": [
+      "Apple TV"
+     ]
+    }
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ },
+ {
+  "query_id": "sty-09",
+  "query": "something darren aronofsky would direct",
+  "intent": "Style query: some Aronofsky films welcome, but mostly other intense, claustrophobic psychological dramas about obsession, addiction and mental unraveling.",
+  "items": [
+   {
+    "pid": 1000000426487,
+    "title": "The Lighthouse",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "History",
+     "Horror"
+    ],
+    "essence_text": "A descent into madness unfolds within the confines of a remote, storm-battered lighthouse.  The film creates a suffocating atmosphere through its stark black and white cinematography and oppressive sound design.  Two keepers are trapped together and their sanity erodes, blurring the line between reality and nightmare.  A psychological horror story unfolds, exploring themes of isolation, paranoia, and the supernatural. This is a visually striking, intense experience that lingers long after...",
+    "tags": [
+     "Psychological Horror",
+     "Atmospheric Tension",
+     "Claustrophobic Setting",
+     "Supernatural Elements",
+     "Isolation and Madness",
+     "Period Piece",
+     "Intense Performances",
+     "Black and White Cinematography",
+     "Unreliable Narrator"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Chris Crow"
+     ],
+     "writers": [
+      "Michael Jibson",
+      "Chris Crow",
+      "Paul Bryant"
+     ],
+     "cast": [
+      "Mark Lewis Jones",
+      "Michael Jibson",
+      "Ian Virgo",
+      "Jason May",
+      "Stephen McDade"
+     ],
+     "companies": [
+      "Dogs Of Annwn"
+     ]
+    }
+   },
+   {
+    "pid": 1000000021832,
+    "title": "Neon Genesis Evangelion: Death and Rebirth",
+    "year": 1997,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Drama",
+     "Science Fiction"
+    ],
+    "essence_text": "Serving as a bridge between the television phenomenon and its dramatic cinematic climax, this release offers an intense psychological reflection on trauma, human isolation, and existential horror. The experience blends rapid experimental montage editing with magnificent classical music to evoke a mood of haunting beauty and mounting dread. Viewers are plunged into a labyrinthine narrative where internal neuroses collide with cosmic apocalyptic destruction. It stands as a challenging,...",
+    "tags": [
+     "Psychological Anime",
+     "Existential Dread",
+     "Mecha Deconstruction",
+     "Classical Music Score",
+     "Apocalyptic Surrealism",
+     "Intricate Recaps",
+     "Complex Character Trauma",
+     "Dark Sci-Fi Legend"
+    ],
+    "keywords": [
+     "surrealism",
+     "mecha",
+     "giant robot",
+     "piloted robot",
+     "compilation",
+     "edited from tv series",
+     "anime",
+     "philosophical",
+     "complex",
+     "based on tv series"
+    ],
+    "credits": {
+     "directors": [
+      "Tensai Okamura",
+      "Hideaki Anno",
+      "Kazuya Tsurumaki"
+     ],
+     "writers": [
+      "Akio Satsukawa",
+      "Hideaki Anno",
+      "Shinji Higuchi"
+     ],
+     "cast": [
+      "Megumi Ogata",
+      "Megumi Hayashibara",
+      "Yuko Miyamura",
+      "Kotono Mitsuishi",
+      "Fumihiko Tachiki"
+     ],
+     "companies": [
+      "GAINAX",
+      "Production I.G",
+      "Tatsunoko Production"
+     ]
+    }
+   }
+  ],
+  "person_intent": "style",
+  "rubric": "style"
+ },
+ {
+  "query_id": "dev5-01",
+  "query": "funny brad pitt shows",
+  "intent": "Funny TV shows. Brad Pitt has no comedy series of his own, so shows without him are fine; his Plan B-produced dramas (Adolescence, The OA, 3 Body Problem, The Third Day, Outer Range) are wrong and never belong in the list.",
+  "items": [
+   {
+    "pid": 2000000001400,
+    "title": "Seinfeld",
+    "year": 1989,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This legendary sitcom redefined television comedy with its unique \"show about nothing\" premise, masterfully exploring the mundane absurdities and social faux pas of everyday life. Driven by razor-sharp dialogue and a cast of hilariously neurotic characters, it excels in creating cringe-worthy yet highly relatable situations. It's a quintessential comfort watch that consistently rewards viewers with its observational wit and timeless humor, proving endlessly rewatchable for its intricate...",
+    "tags": [
+     "Observational Comedy",
+     "Cringe Humor",
+     "Witty Dialogue",
+     "Iconic Sitcom",
+     "Neurotic Characters",
+     "Everyday Absurdity",
+     "90s Nostalgia",
+     "Social Etiquette",
+     "Show About Nothing"
+    ],
+    "keywords": [
+     "new york city",
+     "observational comedy",
+     "manhattan, new york city",
+     "sitcom",
+     "stand-up comedian",
+     "embarrassed",
+     "joyful"
+    ],
+    "credits": {
+     "directors": [
+      "Andy Ackerman",
+      "Tom Cherones",
+      "David Steinberg"
+     ],
+     "creators": [
+      "Andrew Scheinman",
+      "Larry David"
+     ],
+     "writers": [
+      "Larry David",
+      "Peter Mehlman",
+      "Jerry Seinfeld"
+     ],
+     "cast": [
+      "Jerry Seinfeld",
+      "Jason Alexander",
+      "Michael Richards",
+      "Julia Louis-Dreyfus"
+     ],
+     "companies": [
+      "Castle Rock Entertainment",
+      "West/Shapiro Productions",
+      "Fred Barron Productions"
+     ],
+     "networks": [
+      "NBC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000090259,
+    "title": "The Third Day",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Drama",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This miniseries masterfully builds a pervasive sense of dread and unease, immersing viewers in the strange, isolated world of a mysterious island. It's a deeply psychological journey exploring themes of grief, tradition, and belief, told through two distinct but interconnected narratives. The oppressive atmosphere and unsettling rituals create a bleak, thought-provoking experience that is both beautiful and disturbing. It's a slow-burn mystery that rewards patient viewers with its intense...",
+    "tags": [
+     "Psychological Horror",
+     "Folk Horror",
+     "Island Mystery",
+     "Atmospheric & Eerie",
+     "Grief & Trauma",
+     "Cultish Rituals",
+     "Slow Burn Suspense",
+     "Visually Striking",
+     "Mind-Bending Narrative",
+     "Existential Dread"
+    ],
+    "keywords": [
+     "island",
+     "trauma",
+     "quest",
+     "isolated island"
+    ],
+    "credits": {
+     "directors": [
+      "Philippa Lowthorpe",
+      "Marc Munden"
+     ],
+     "creators": [
+      "Brad Pitt",
+      "Dede Gardner"
+     ],
+     "writers": [
+      "Dennis Kelly",
+      "Kit de Waal",
+      "Dean O'Loughlin"
+     ],
+     "cast": [
+      "Jude Law",
+      "Katherine Waterston",
+      "Freya Allan",
+      "John Dagleish",
+      "Mark Lewis Jones"
+     ],
+     "companies": [
+      "Plan B Entertainment",
+      "Punchdrunk",
+      "Sky Studios"
+     ],
+     "networks": [
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 2000000004608,
+    "title": "30 Rock",
+    "year": 2006,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A fast-paced workplace comedy set behind the scenes of a fictional television show. It balances sharp, witty dialogue with situational humor and cringe-worthy moments. Expect satirical takes on show business, pop culture, and contemporary life. A strong ensemble cast drives the comedic narrative, making it an easy and enjoyable watch.",
+    "tags": [
+     "Workplace Comedy",
+     "Satirical",
+     "Showbiz",
+     "Fast-Paced",
+     "Witty Dialogue",
+     "Ensemble Cast",
+     "Pop Culture References",
+     "Cringe Humor",
+     "Contemporary"
+    ],
+    "keywords": [
+     "new york city",
+     "writing",
+     "parody",
+     "female protagonist",
+     "writer",
+     "sketch comedy",
+     "employer employee relationship",
+     "sitcom",
+     "lighthearted",
+     "joyful"
+    ],
+    "credits": {
+     "directors": [
+      "Don Scardino",
+      "Beth McCarthy-Miller",
+      "John Riggi"
+     ],
+     "creators": [
+      "Lorne Michaels",
+      "Tina Fey"
+     ],
+     "writers": [
+      "Tina Fey",
+      "Robert Carlock",
+      "Jack Burditt"
+     ],
+     "cast": [
+      "Tina Fey",
+      "Alec Baldwin",
+      "Tracy Morgan",
+      "Jane Krakowski",
+      "Jack McBrayer"
+     ],
+     "companies": [
+      "Broadway Video",
+      "Little Stranger",
+      "Universal Television"
+     ],
+     "networks": [
+      "NBC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000063593,
+    "title": "Documentary Now!",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This ingenious series offers loving and meticulously crafted parodies of celebrated documentaries, showcasing an unparalleled commitment to detail and comedic brilliance. Each episode ingeniously adopts the stylistic nuances of its target, creating a unique and often uncanny viewing experience that is both hilarious and impressively accurate. It's a masterclass in satire and homage, featuring a rotating cast of comedic talents delivering pitch-perfect performances. Fans of documentaries and...",
+    "tags": [
+     "Brilliant Parody",
+     "Meta-Comedy",
+     "Documentary Homage",
+     "Sharp Satire",
+     "Episodic Brilliance",
+     "Comedic Acting Showcase",
+     "Genre-Bending",
+     "Witty & Clever",
+     "Visually Inventive"
+    ],
+    "keywords": [
+     "parody",
+     "mockumentary",
+     "spoof"
+    ],
+    "credits": {
+     "directors": [
+      "Alexander Buono",
+      "Rhys Thomas",
+      "Micah Gardner"
+     ],
+     "creators": [
+      "Bill Hader",
+      "Lorne Michaels"
+     ],
+     "writers": [
+      "Seth Meyers",
+      "Bill Hader",
+      "Fred Armisen"
+     ],
+     "cast": [
+      "Fred Armisen",
+      "Bill Hader",
+      "Helen Mirren"
+     ],
+     "companies": [
+      "Broadway Video",
+      "EMU Films"
+     ],
+     "networks": [
+      "IFC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000108545,
+    "title": "3 Body Problem",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Mystery",
+     "Drama"
+    ],
+    "essence_text": "This is a monumental science fiction series that masterfully weaves a sprawling narrative across decades and continents, revolving around an existential threat to humanity. It's a highly complex and intriguing mystery, grounded in scientific principles while exploring profound philosophical and technological themes. The series demands full attention due to its intricate plot and numerous compelling characters, offering a deeply immersive and often unsettling viewing experience for those who...",
+    "tags": [
+     "Epic Sci-Fi Drama",
+     "Existential Threat",
+     "Complex Narrative",
+     "Mind-Bending Mystery",
+     "Philosophical Exploration",
+     "Humanity's Future",
+     "Global Stakes",
+     "Intellectually Challenging",
+     "Bleak Outlook",
+     "Thought-Provoking"
+    ],
+    "keywords": [
+     "china",
+     "based on novel or book",
+     "scientist",
+     "alien invasion",
+     "alien contact",
+     "alien civilization",
+     "imaginative",
+     "cerebral",
+     "absurd",
+     "thriller",
+     "cliché"
+    ],
+    "credits": {
+     "directors": [
+      "Minkie Spiro",
+      "Jeremy Podeswa",
+      "Derek Tsang Kwok-Cheung"
+     ],
+     "creators": [
+      "Brad Pitt",
+      "David Benioff"
+     ],
+     "writers": [
+      "Liu Cixin",
+      "David Benioff",
+      "D. B. Weiss"
+     ],
+     "cast": [
+      "Jovan Adepo",
+      "Rosalind Chao",
+      "Liam Cunningham",
+      "Eiza González",
+      "Jess Hong"
+     ],
+     "companies": [
+      "Plan B Entertainment",
+      "Primitive Streak",
+      "T-Street"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000208061,
+    "title": "High School",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "An intimate and authentic coming-of-age story that beautifully captures the complexities of adolescence and self-discovery through the unique bond of twin sisters. Set against a vibrant backdrop of 90s grunge and rave culture, the series deeply integrates music into its narrative fabric, enhancing its nostalgic appeal. It's an empathetic and thoughtful exploration of finding one's identity, especially when so closely intertwined with another. This makes for a deeply felt, character-driven...",
+    "tags": [
+     "90s Nostalgia",
+     "Twin Sister Drama",
+     "Coming-of-Age Story",
+     "Music-Driven Narrative",
+     "Identity Exploration",
+     "Authentic Portrayal",
+     "Youthful Self-Discovery",
+     "Autobiographical Adaptation",
+     "Indie Sensibility"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Clea DuVall",
+      "Rebecca Asher"
+     ],
+     "creators": [
+      "Brad Pitt",
+      "Clea DuVall"
+     ],
+     "writers": [
+      "Tegan Quin",
+      "Sara Quin",
+      "Clea DuVall"
+     ],
+     "cast": [
+      "Railey Gilliland",
+      "Seazynn Gilliland",
+      "Cobie Smulders",
+      "Kyle Bornheimer",
+      "Amanda Fix"
+     ],
+     "companies": [
+      "Amazon Studios",
+      "Plan B Entertainment",
+      "Reunion Pacific Entertainment"
+     ],
+     "networks": [
+      "Amazon Freevee"
+     ]
+    }
+   },
+   {
+    "pid": 2000000061222,
+    "title": "BoJack Horseman",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A darkly comedic animated series that explores the life of a washed-up sitcom star grappling with existential angst and personal demons. Set against the backdrop of Hollywood excess and superficiality, the show blends sharp satire with moments of genuine pathos. It's a character-driven narrative that delves into themes of addiction, depression, and the search for meaning in a cynical world. Despite its heavy themes, the show maintains a witty and engaging tone, offering both laughs and...",
+    "tags": [
+     "Animated Sitcom",
+     "Dark Humor",
+     "Hollywood Satire",
+     "Character-Driven",
+     "Existential Themes",
+     "Melancholy Comedy",
+     "Showbiz Parody",
+     "Alcoholism & Addiction",
+     "Talking Animals"
+    ],
+    "keywords": [
+     "drug abuse",
+     "show business",
+     "depression",
+     "nihilism",
+     "horse",
+     "cynicism",
+     "alcoholism",
+     "satire",
+     "adult humor",
+     "anthropomorphism",
+     "hollywood",
+     "adult animation"
+    ],
+    "credits": {
+     "directors": [
+      "Amy Winfrey",
+      "JC Gonzalez",
+      "Aaron Long"
+     ],
+     "creators": [
+      "Aaron Paul",
+      "Raphael Bob-Waksberg"
+     ],
+     "writers": [
+      "Raphael Bob-Waksberg",
+      "Elijah Aron",
+      "Peter Knight"
+     ],
+     "cast": [
+      "Lisa Kudrow",
+      "Hong Chau"
+     ],
+     "companies": [
+      "The Tornante Company",
+      "ShadowMachine",
+      "Boxer vs. Raptor"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002759,
+    "title": "The Day Today",
+    "year": 1994,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A groundbreaking and hilariously dark satire that mercilessly parodies contemporary news broadcasting. Its genius lies in its absurd humor, razor-sharp wit, and an unsettlingly accurate portrayal of media sensationalism and manipulation. The show’s distinctive visual and narrative style creates a world that is both bizarre and chillingly familiar. It's a highly influential, thought-provoking comedy that remains incisively relevant to this day.",
+    "tags": [
+     "News Satire",
+     "Absurdist Comedy",
+     "Media Parody",
+     "British Cult Classic",
+     "Darkly Humorous",
+     "Cutting Social Commentary",
+     "Unique Visual Style",
+     "Cringe Humor",
+     "Surreal"
+    ],
+    "keywords": [
+     "surreal",
+     "satire",
+     "parody",
+     "current affairs"
+    ],
+    "credits": {
+     "directors": [
+      "Andrew Gillman"
+     ],
+     "creators": [
+      "David Schneider",
+      "Steve Coogan"
+     ],
+     "writers": [
+      "David Schneider",
+      "Steve Coogan",
+      "Peter Baynham"
+     ],
+     "cast": [
+      "Chris Morris",
+      "Patrick Marber",
+      "Doon Mackichan",
+      "Steve Coogan",
+      "Rebecca Front"
+     ],
+     "companies": [
+      "TalkBack Productions",
+      "BBC"
+     ],
+     "networks": [
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000082,
+    "title": "Animaniacs",
+    "year": 1993,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Kids",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A wildly energetic and irreverent cartoon that masters both physical comedy and rapid-fire wit. The show is a joyous explosion of absurdism and pop culture satire, delivered by its iconic, mischievous characters. It masterfully blends clever dialogue, catchy musical numbers, and meta-narrative elements, making it highly rewatchable for all ages. It's pure, unadulterated escapism that balances nostalgic charm with surprisingly sharp humor.",
+    "tags": [
+     "Zany Cartoon Comedy",
+     "Slapstick & Wordplay",
+     "Pop Culture Satire",
+     "Meta-Humor",
+     "Family-Friendly Chaos",
+     "Musical & Catchy",
+     "Fast-Paced Gags",
+     "Nostalgic Animation",
+     "Witty & Clever"
+    ],
+    "keywords": [
+     "sibling relationship",
+     "parody",
+     "world domination",
+     "false history",
+     "talking animal",
+     "genetically modified creature",
+     "absurd"
+    ],
+    "credits": {
+     "directors": [
+      "Dave Marshall",
+      "Alfred Gimeno",
+      "Rusty Mills"
+     ],
+     "creators": [
+      "Steven Spielberg",
+      "Peter Hastings"
+     ],
+     "writers": [
+      "Tom Ruegger",
+      "Peter Hastings",
+      "Paul Rugg"
+     ],
+     "cast": [
+      "Rob Paulsen",
+      "Jess Harnell",
+      "Tress MacNeille",
+      "Maurice LaMarche",
+      "Sherri Stoner"
+     ],
+     "companies": [
+      "Amblin Television",
+      "Warner Bros. Television"
+     ],
+     "networks": [
+      "The WB",
+      "Fox Kids"
+     ]
+    }
+   },
+   {
+    "pid": 2000000116768,
+    "title": "Pitch Meeting",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A brilliantly witty and novel web series that hilariously deconstructs the logical flaws and peculiar decisions behind popular movies and shows. Presented as a fictionalized pitch meeting, it thrives on sharp dialogue and a consistent comedic premise that spotlights common storytelling tropes. The show's strength lies in its meta-commentary and clever wordplay, making it a highly rewatchable and enjoyable critique for anyone with a love for cinema. It's a testament to how creative writing...",
+    "tags": [
+     "Satirical Comedy",
+     "Pop Culture Critique",
+     "Meta-Commentary",
+     "Witty Dialogue",
+     "Film Analysis",
+     "Online Series",
+     "Humorous Deconstruction",
+     "Scriptwriting Humor",
+     "Clever Concept"
+    ],
+    "keywords": [
+     "movie business",
+     "comedian",
+     "parody"
+    ],
+    "credits": {
+     "directors": [
+      "Ryan George"
+     ],
+     "creators": [
+      "Ryan George"
+     ],
+     "writers": [
+      "Ryan George"
+     ],
+     "cast": [
+      "Ryan George"
+     ],
+     "companies": [],
+     "networks": [
+      "YouTube"
+     ]
+    }
+   },
+   {
+    "pid": 2000000069061,
+    "title": "The OA",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Mystery",
+     "Drama"
+    ],
+    "essence_text": "A profoundly unique and enigmatic series that blends sci-fi, mystery, and spiritual drama into a captivating narrative. It delves into themes of identity, reality, and the afterlife with a deliberate, slow-burn pace, demanding viewer engagement. The show is rich with ambiguity and surreal elements, inviting deep thought and discussion. Its emotional depth and innovative storytelling create an immersive experience unlike any other, perfect for those seeking a truly unconventional journey.",
+    "tags": [
+     "Sci-Fi Mystery",
+     "Spiritual Drama",
+     "Existential",
+     "Thought-Provoking",
+     "Non-Linear Narrative",
+     "Unique & Ambitious",
+     "Found Family",
+     "Trauma & Resilience",
+     "Ambiguous",
+     "Surreal"
+    ],
+    "keywords": [
+     "alternate dimension",
+     "surrealism",
+     "disappearance",
+     "blind",
+     "dimensional travel",
+     "near-death experience"
+    ],
+    "credits": {
+     "directors": [
+      "Zal Batmanglij",
+      "Andrew Haigh",
+      "Anna Rose Holmer"
+     ],
+     "creators": [
+      "Brad Pitt",
+      "Dede Gardner"
+     ],
+     "writers": [
+      "Brit Marling",
+      "Zal Batmanglij",
+      "Dominic Orlando"
+     ],
+     "cast": [
+      "Brit Marling",
+      "Jason Isaacs",
+      "Emory Cohen",
+      "Kingsley Ben-Adir",
+      "Phyllis Smith"
+     ],
+     "companies": [
+      "Plan B Entertainment",
+      "Anonymous Content"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000073107,
+    "title": "Barry",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "A darkly comedic and relentlessly tense series following a hitman's desperate attempt to embrace a new life in the acting world. The show masterfully blends brutal violence with cringe-inducing humor and profound psychological exploration. It's a character study steeped in moral ambiguity, offering sharp satire of the entertainment industry and the cyclical nature of violence. Viewers are taken on an unpredictable and often bleak journey through one man's increasingly desperate pursuit of...",
+    "tags": [
+     "Darkly Humorous",
+     "Psychological Crime Thriller",
+     "Hitman Comedy",
+     "Existential Dread",
+     "Hollywood Satire",
+     "Character-Driven",
+     "Unpredictable",
+     "Black Comedy",
+     "Intense",
+     "Original"
+    ],
+    "keywords": [
+     "assassin",
+     "hitman",
+     "betrayal",
+     "dark comedy",
+     "los angeles, california",
+     "psychotic",
+     "gun violence",
+     "showbiz",
+     "shocking",
+     "dramedy",
+     "drama class",
+     "reflective"
+    ],
+    "credits": {
+     "directors": [
+      "Bill Hader",
+      "Alec Berg",
+      "Hiro Murai"
+     ],
+     "creators": [
+      "Bill Hader",
+      "Alec Berg"
+     ],
+     "writers": [
+      "Bill Hader",
+      "Alec Berg",
+      "Elizabeth Sarnoff"
+     ],
+     "cast": [
+      "Bill Hader",
+      "Sarah Goldberg",
+      "Anthony Carrigan",
+      "Henry Winkler",
+      "Stephen Root"
+     ],
+     "companies": [
+      "Alec Berg Productions",
+      "Hanarply"
+     ],
+     "networks": [
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 2000000113985,
+    "title": "Outer Range",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A slow-burn neo-western that blends family drama with elements of cosmic horror and metaphysical mystery. Set against the backdrop of the untamed Wyoming wilderness, the series explores themes of family, legacy, and the unknown. An air of brooding mystery permeates the show, drawing viewers into a world where the natural and supernatural collide. It offers a visually stunning and thought-provoking experience.",
+    "tags": [
+     "Neo-Western",
+     "Supernatural Mystery",
+     "Family Drama",
+     "Existential Themes",
+     "Cosmic Horror",
+     "Ranching",
+     "Unexplained Phenomenon",
+     "Secrets and Lies",
+     "Spiritual Quest"
+    ],
+    "keywords": [
+     "wyoming, usa",
+     "wilderness",
+     "time travel",
+     "time hole",
+     "time loop",
+     "multiple time frames",
+     "family feud",
+     "land war",
+     "alternative reality",
+     "anomaly",
+     "buffalo herd",
+     "land struggle"
+    ],
+    "credits": {
+     "directors": [
+      "Deborah Kampmeier",
+      "Lawrence Trilling",
+      "Amy Seimetz"
+     ],
+     "creators": [
+      "Brad Pitt",
+      "Josh Brolin"
+     ],
+     "writers": [
+      "Brian Watkins",
+      "Zev Borow",
+      "Lucy Thurber"
+     ],
+     "cast": [
+      "Josh Brolin",
+      "Imogen Poots",
+      "Lili Taylor",
+      "Tom Pelphrey",
+      "Tamara Podemski"
+     ],
+     "companies": [
+      "Plan B Entertainment",
+      "Flame Ventures",
+      "Amazon Studios"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   },
+   {
+    "pid": 2000000249042,
+    "title": "Adolescence",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A harrowing and meticulously crafted crime drama that centers on the psychological unraveling of a family after their son is accused of murder. The series relies heavily on exceptional acting performances to convey deep emotional trauma, moral ambiguity, and the crushing weight of systemic failure. It eschews sensationalism for a grounded, realistic portrayal of police procedure and juvenile justice, creating an atmosphere of suffocating tension. Viewers are invited into intimate,...",
+    "tags": [
+     "Gripping Crime Drama",
+     "Intense Family Psychological Thriller",
+     "Masterclass in Acting",
+     "Realistic Depiction of Juvenile Justice",
+     "Emotionally Devastating",
+     "Slow-Burn Mystery",
+     "Societal Commentary on Youth",
+     "Tense Interrogation Dynamics",
+     "Grounded Contemporary Setting",
+     "Profound Character Study"
+    ],
+    "keywords": [
+     "england",
+     "murder",
+     "family relationships",
+     "miniseries",
+     "parenting",
+     "teenage boy",
+     "blunt",
+     "mental health",
+     "british school system",
+     "shocking",
+     "single take",
+     "teenage killer"
+    ],
+    "credits": {
+     "directors": [
+      "Philip Barantini"
+     ],
+     "creators": [
+      "Brad Pitt",
+      "Stephen Graham"
+     ],
+     "writers": [
+      "Stephen Graham",
+      "Jack Thorne"
+     ],
+     "cast": [],
+     "companies": [
+      "Warp Films",
+      "Matriarch Productions",
+      "Plan B Entertainment"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000124101,
+    "title": "Hacks",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A sharply written, character-driven comedy exploring the dark side of show business and the unlikely bond between a legendary comedian and her young, struggling writer. The series thrives on its witty dialogue, complex characters, and nuanced performances. It offers a satirical look at fame, ambition, and the generational divides within the entertainment industry. Hacks balances humor with pathos, making it both a comforting and thought-provoking watch.",
+    "tags": [
+     "Showbiz Satire",
+     "Dark Comedy",
+     "Mentorship",
+     "Character-Driven",
+     "Las Vegas",
+     "Generational Conflict",
+     "Female Protagonists",
+     "Sharp Dialogue",
+     "Pop Culture"
+    ],
+    "keywords": [
+     "las vegas",
+     "entertainment industry",
+     "generational divide"
+    ],
+    "credits": {
+     "directors": [
+      "Lucia Aniello",
+      "Paul W. Downs",
+      "Desiree Akhavan"
+     ],
+     "creators": [
+      "David Miner",
+      "Michael Schur"
+     ],
+     "writers": [
+      "Jen Statsky",
+      "Lucia Aniello",
+      "Paul W. Downs"
+     ],
+     "cast": [
+      "Jean Smart",
+      "Hannah Einbinder",
+      "Carl Clemons-Hopkins",
+      "Paul W. Downs",
+      "Megan Stalter"
+     ],
+     "companies": [
+      "Universal Television",
+      "3 Arts Entertainment",
+      "First Thought Productions"
+     ],
+     "networks": [
+      "HBO Max",
+      "Max"
+     ]
+    }
+   },
+   {
+    "pid": 2000000039756,
+    "title": "Drunk History",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This unique comedy series cleverly blends historical education with uproarious, drunken storytelling and celebrity reenactments. Its humor is rooted in absurdism, wit, and a delightfully campy take on history, making often dry subjects surprisingly engaging and funny. The show is highly rewatchable and perfect for casual viewing, offering quick, self-contained bursts of comedic genius. It's an eccentric, highly original concept that delivers consistent laughs and fascinating historical tidbits.",
+    "tags": [
+     "Historical Comedy",
+     "Absurdist Humor",
+     "Celebrity Cameos",
+     "Educational Entertainment",
+     "Drunken Storytelling",
+     "Satirical Reenactment",
+     "Improv Comedy",
+     "Quirky & Hilarious",
+     "Pop Culture References"
+    ],
+    "keywords": [
+     "drunk"
+    ],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [],
+     "companies": [],
+     "networks": [
+      "YouTube"
+     ]
+    }
+   },
+   {
+    "pid": 2000000080039,
+    "title": "The Underground Railroad",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This series offers a harrowing and deeply moving re-imagining of American history, blending brutal realism with a unique fantastical element. It is a visually breathtaking and emotionally resonant journey, depicting the desperate pursuit of freedom with unflinching honesty. The show masterfully handles themes of systemic cruelty and human resilience, forcing viewers to confront a painful past through a truly singular lens. It is a thought-provoking and essential watch, albeit one that...",
+    "tags": [
+     "Harrowing Historical Drama",
+     "Magical Realism",
+     "Socially Incisive",
+     "Escape & Survival",
+     "Visually Stunning",
+     "Bleak & Powerful",
+     "Character-Driven Journey",
+     "Trauma & Resilience",
+     "Antebellum South"
+    ],
+    "keywords": [
+     "slavery",
+     "historical",
+     "atmospheric",
+     "underground railroad",
+     "escape from slavery",
+     "historical revisionism"
+    ],
+    "credits": {
+     "directors": [
+      "Barry Jenkins"
+     ],
+     "creators": [
+      "Brad Pitt",
+      "Dede Gardner"
+     ],
+     "writers": [
+      "Colson Whitehead",
+      "Barry Jenkins",
+      "Nathan Parker"
+     ],
+     "cast": [
+      "Thuso Mbedu",
+      "Chase W. Dillon",
+      "Joel Edgerton",
+      "Kylee D. Allen"
+     ],
+     "companies": [
+      "Plan B Entertainment",
+      "Amazon Studios",
+      "PASTEL"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   },
+   {
+    "pid": 2000000017287,
+    "title": "Party Down",
+    "year": 2009,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A darkly comedic series centered around a group of struggling actors working for a catering company in Hollywood. The show blends situational comedy with a biting satire of the entertainment industry and class dynamics. While consistently funny, there's an undercurrent of melancholy as the characters grapple with their unfulfilled dreams and the harsh realities of their circumstances. The show's sharp writing and strong ensemble cast make it a cult favorite.",
+    "tags": [
+     "Dark Comedy",
+     "Catering",
+     "Ensemble Cast",
+     "Hollywood",
+     "Melancholy",
+     "Satire",
+     "Struggling Actors",
+     "Deadpan",
+     "Cult Classic"
+    ],
+    "keywords": [
+     "hollywood",
+     "food industry",
+     "caterer",
+     "aspiring actor",
+     "sitcom",
+     "workplace comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Bryan Gordon",
+      "Fred Savage",
+      "Ken Marino"
+     ],
+     "creators": [
+      "Paul Rudd",
+      "John Enbom"
+     ],
+     "writers": [
+      "John Enbom",
+      "Rob Thomas",
+      "Paul Rudd"
+     ],
+     "cast": [
+      "Adam Scott",
+      "Ken Marino",
+      "Lizzy Caplan",
+      "Jane Lynch",
+      "Ryan Hansen"
+     ],
+     "companies": [],
+     "networks": [
+      "STARZ"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev5-02",
+  "query": "funny will ferrell shows",
+  "intent": "Comedy series first, ideally with Will Ferrell or his absurd, deadpan humor (series he stars in or appears in). Dramas and thrillers he only executive-produced are not what is asked for.",
+  "items": [
+   {
+    "pid": 2000000076331,
+    "title": "Succession",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "A darkly comedic and relentlessly cynical portrayal of wealth, power, and family dysfunction. The series dissects the lives of a media dynasty with sharp dialogue and complex characters, revealing their vulnerabilities and moral decay. It's a slow-burn drama fueled by tension and intrigue, exploring themes of ambition, loyalty, and the corrosive effects of unchecked privilege. Expect a bleak and thought-provoking experience that lingers long after viewing.",
+    "tags": [
+     "Dysfunctional Family",
+     "Media Conglomerate",
+     "Dark Satire",
+     "Wealth & Power",
+     "Character-Driven Drama",
+     "Sharp Dialogue",
+     "Bleak",
+     "Prestige Television",
+     "Contemporary Realism"
+    ],
+    "keywords": [
+     "new york city",
+     "sibling relationship",
+     "media tycoon",
+     "businessman",
+     "dysfunctional family",
+     "wealth",
+     "sibling",
+     "white collar criminal",
+     "failed marriage"
+    ],
+    "credits": {
+     "directors": [
+      "Mark Mylod",
+      "Andrij Parekh",
+      "Lorene Scafaria"
+     ],
+     "creators": [
+      "Will Ferrell",
+      "Adam McKay"
+     ],
+     "writers": [
+      "Jesse Armstrong",
+      "Georgia Pritchett",
+      "Tony Roche"
+     ],
+     "cast": [
+      "Jeremy Strong",
+      "Hiam Abbass",
+      "Kieran Culkin",
+      "Sarah Snook",
+      "Brian Cox"
+     ],
+     "companies": [
+      "Gary Sanchez Productions",
+      "Hyperobject Industries",
+      "Project Zeus"
+     ],
+     "networks": [
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 2000000074317,
+    "title": "No Activity",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Animation",
+     "Drama"
+    ],
+    "essence_text": "A workplace comedy that riffs on the police procedural genre, characterized by its dry wit and character-driven humor. The show thrives on its improvised dialogue and the awkward interactions between its cast of eccentric characters. Its understated style and low-stakes scenarios create a comfortable, background-friendly viewing experience. The humor is found in the mundane and the absurd, offering a refreshing and satirical take on crime dramas.",
+    "tags": [
+     "Workplace Comedy",
+     "Police Procedural Parody",
+     "Character-Driven Humor",
+     "Improvised Dialogue",
+     "Understated",
+     "Deadpan",
+     "Sitcom",
+     "Low-Stakes"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Will Ferrell",
+      "Adam McKay"
+     ],
+     "writers": [],
+     "cast": [
+      "Tim Meadows",
+      "Patrick Brammall",
+      "Jason Mantzoukas",
+      "Sunita Mani",
+      "Amy Sedaris"
+     ],
+     "companies": [
+      "Gary Sanchez Productions",
+      "Funny or Die",
+      "CBS Studios"
+     ],
+     "networks": [
+      "CBS All Access",
+      "Paramount+"
+     ]
+    }
+   },
+   {
+    "pid": 2000000050132,
+    "title": "The Spoils of Babylon",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A brilliant, over-the-top parody of epic miniseries, 'The Spoils of Babylon' delves into the dysfunctional saga of two siblings whose intense and destructive love affects everyone around them. It's a masterclass in absurdist humor and satire, featuring star-studded performances delivering deliberately melodramatic lines. The show thrives on its campy aesthetic and ironic tone, offering a unique blend of dark comedy and a bizarre family drama that's both hilarious and unsettling. This is a...",
+    "tags": [
+     "Melodrama Parody",
+     "Absurdist Comedy",
+     "Dark Family Saga",
+     "Star-Studded Spoof",
+     "Campy & Ironic",
+     "Wealth & Ruin",
+     "Self-Referential Humor",
+     "Over-The-Top Storytelling",
+     "Cult Classic Potential"
+    ],
+    "keywords": [
+     "epic",
+     "miniseries",
+     "spoof",
+     "period drama"
+    ],
+    "credits": {
+     "directors": [
+      "Matt Piedmont"
+     ],
+     "writers": [
+      "Matt Piedmont",
+      "Harper Steele"
+     ],
+     "cast": [
+      "Tobey Maguire",
+      "Kristen Wiig",
+      "Tim Robbins",
+      "Will Ferrell",
+      "Jessica Alba"
+     ],
+     "companies": [
+      "Funny or Die",
+      "Gary Sanchez Productions"
+     ],
+     "networks": [
+      "IFC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002841,
+    "title": "The State",
+    "year": 1994,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A foundational sketch comedy series of the 90s, 'The State' thrives on its distinct brand of absurdist humor and eccentric characters. It's a fast-paced, irreverent ride, renowned for its unpredictable scenarios and memorable recurring bits. The show excels in crafting bizarre, yet strangely endearing, sketches that often border on the surreal. It remains a highly rewatchable experience for those who appreciate unconventional and boundary-pushing comedy.",
+    "tags": [
+     "Sketch Comedy",
+     "Absurdist Humor",
+     "Cult Classic",
+     "90s Nostalgia",
+     "Quirky Characters",
+     "Fast-Paced Gags",
+     "Surreal Scenarios",
+     "Innovative Comedy",
+     "Physical Comedy"
+    ],
+    "keywords": [
+     "sketch comedy",
+     "skit"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Michael Showalter"
+     ],
+     "writers": [
+      "Michael Showalter"
+     ],
+     "cast": [
+      "Kevin Allison",
+      "Michael Ian Black",
+      "Robert Ben Garant",
+      "Todd Holoubek",
+      "Michael Patrick Jann"
+     ],
+     "companies": [],
+     "networks": [
+      "MTV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000081357,
+    "title": "Dead to Me",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A darkly comedic psychological thriller about grief, friendship, and the secrets we keep. The series draws viewers into a web of intrigue and suspense, led by compelling performances. Exploring themes of loss and healing, it blends moments of levity with underlying tension, creating a captivating and emotionally resonant experience. It's a character-driven story with complex relationships and unexpected twists.",
+    "tags": [
+     "Dark Comedy",
+     "Psychological Thriller",
+     "Mystery",
+     "Crime Drama",
+     "Female Friendship",
+     "Grief and Healing",
+     "Secrets and Lies",
+     "Suburban Noir",
+     "Character-Driven"
+    ],
+    "keywords": [
+     "widow",
+     "female friendship",
+     "friendship",
+     "hit-and-run",
+     "murder",
+     "grief",
+     "dark comedy",
+     "parenthood",
+     "miscarriage",
+     "dramedy",
+     "tragicomedy"
+    ],
+    "credits": {
+     "directors": [
+      "Tamra Davis",
+      "Kat Coiro",
+      "Abe Sylvia"
+     ],
+     "creators": [
+      "Christina Applegate",
+      "Will Ferrell"
+     ],
+     "writers": [
+      "Liz Feldman",
+      "Kelly Hutchinson",
+      "Abe Sylvia"
+     ],
+     "cast": [
+      "Christina Applegate",
+      "Linda Cardellini",
+      "James Marsden",
+      "Max Jenkins",
+      "Luke Roessler"
+     ],
+     "companies": [
+      "Gloria Sanchez Productions",
+      "CBS Studios",
+      "Visualized"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002548,
+    "title": "Second City Television",
+    "year": 1976,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A pioneering sketch comedy show that helped launch the careers of many comedic icons. Its fast-paced, satirical sketches blend wit and improvisation to create a unique brand of Canadian humor. The show's influence on subsequent comedy programs is undeniable, and it remains a nostalgic favorite for many. It serves as a time capsule of pop culture trends and societal observations from the late 1970s and early 1980s.",
+    "tags": [
+     "Sketch Comedy",
+     "Satire",
+     "Improvisational",
+     "Canadian Humor",
+     "Pop Culture",
+     "Ensemble Cast",
+     "Parody",
+     "Showbiz",
+     "Nostalgic"
+    ],
+    "keywords": [
+     "parody",
+     "sketch comedy"
+    ],
+    "credits": {
+     "directors": [
+      "George Bloomfield"
+     ],
+     "writers": [],
+     "cast": [
+      "John Candy",
+      "Robin Duke",
+      "Joe Flaherty",
+      "Eugene Levy",
+      "Rick Moranis"
+     ],
+     "companies": [
+      "Old Firehall Productions",
+      "Second City Entertainment"
+     ],
+     "networks": [
+      "CBC Television",
+      "Global TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000111838,
+    "title": "The Woman in the House Across the Street from the Girl in the Window",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Crime",
+     "Comedy"
+    ],
+    "essence_text": "A darkly comedic and highly satirical take on psychological thrillers, following an unreliable, wine-addled protagonist who believes she witnessed a murder across the street. The show brilliantly skewers genre tropes with its absurd humor and relentless self-awareness, making for a uniquely cringeworthy yet compelling mystery. It's a binge-friendly series that thrives on its eccentric characters and the escalating absurdity of its whodunit plot.",
+    "tags": [
+     "Satirical Thriller",
+     "Dark Comedy",
+     "Unreliable Narrator",
+     "Suburban Mystery",
+     "Psychological Parody",
+     "Existential Cringe",
+     "Genre Deconstruction",
+     "Alcoholic Protagonist",
+     "Whodunit Twist",
+     "Meta-Commentary"
+    ],
+    "keywords": [
+     "window",
+     "parody",
+     "dark comedy",
+     "spoof",
+     "murder mystery"
+    ],
+    "credits": {
+     "directors": [
+      "Michael Lehmann"
+     ],
+     "creators": [
+      "Will Ferrell",
+      "Kristen Bell"
+     ],
+     "writers": [],
+     "cast": [
+      "Kristen Bell",
+      "Tom Riley"
+     ],
+     "companies": [
+      "Gloria Sanchez Productions"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000082,
+    "title": "Animaniacs",
+    "year": 1993,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Kids",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A wildly energetic and irreverent cartoon that masters both physical comedy and rapid-fire wit. The show is a joyous explosion of absurdism and pop culture satire, delivered by its iconic, mischievous characters. It masterfully blends clever dialogue, catchy musical numbers, and meta-narrative elements, making it highly rewatchable for all ages. It's pure, unadulterated escapism that balances nostalgic charm with surprisingly sharp humor.",
+    "tags": [
+     "Zany Cartoon Comedy",
+     "Slapstick & Wordplay",
+     "Pop Culture Satire",
+     "Meta-Humor",
+     "Family-Friendly Chaos",
+     "Musical & Catchy",
+     "Fast-Paced Gags",
+     "Nostalgic Animation",
+     "Witty & Clever"
+    ],
+    "keywords": [
+     "sibling relationship",
+     "parody",
+     "world domination",
+     "false history",
+     "talking animal",
+     "genetically modified creature",
+     "absurd"
+    ],
+    "credits": {
+     "directors": [
+      "Dave Marshall",
+      "Alfred Gimeno",
+      "Rusty Mills"
+     ],
+     "creators": [
+      "Steven Spielberg",
+      "Peter Hastings"
+     ],
+     "writers": [
+      "Tom Ruegger",
+      "Peter Hastings",
+      "Paul Rugg"
+     ],
+     "cast": [
+      "Rob Paulsen",
+      "Jess Harnell",
+      "Tress MacNeille",
+      "Maurice LaMarche",
+      "Sherri Stoner"
+     ],
+     "companies": [
+      "Amblin Television",
+      "Warner Bros. Television"
+     ],
+     "networks": [
+      "The WB",
+      "Fox Kids"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002207,
+    "title": "Fawlty Towers",
+    "year": 1975,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A masterclass in farcical British comedy, 'Fawlty Towers' thrives on the chaotic misadventures of its eccentric hotelier, Basil Fawlty. The humor is derived from relentless physical comedy, sharp wit, and cringe-inducing social awkwardness, making for an incredibly rewatchable experience. Its tight writing and brilliant performances create a timeless comedic world. This series is a perfect pure escapism, delivering consistent laughs through its heightened reality and unforgettable characters.",
+    "tags": [
+     "Classic British Sitcom",
+     "Farce",
+     "Slapstick Comedy",
+     "Character-Driven Humor",
+     "Cringe Comedy",
+     "Hotel Setting",
+     "Iconic Performances",
+     "Fast-Paced Absurdity",
+     "Enduring Humor",
+     "Cult Classic"
+    ],
+    "keywords": [
+     "hotel",
+     "waitress",
+     "married couple",
+     "slapstick comedy",
+     "chef",
+     "waiter",
+     "sitcom",
+     "angry",
+     "paranoid",
+     "torquay",
+     "workplace comedy",
+     "devon"
+    ],
+    "credits": {
+     "directors": [
+      "John Howard Davies",
+      "Bob Spiers"
+     ],
+     "creators": [
+      "John Cleese",
+      "Connie Booth"
+     ],
+     "writers": [
+      "John Cleese",
+      "Connie Booth"
+     ],
+     "cast": [
+      "John Cleese",
+      "Prunella Scales",
+      "Connie Booth",
+      "Andrew Sachs",
+      "Ballard Berkeley"
+     ],
+     "companies": [
+      "BBC"
+     ],
+     "networks": [
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002995,
+    "title": "MXC",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "This show takes footage from a Japanese game show and transforms it into a riotously funny, intentionally over-the-top parody of extreme sports commentary. Its genius lies in the incredibly witty and absurd re-voicing that accompanies physical slapstick and contestant failures. A masterclass in comedic editing and writing, it creates a unique, endlessly rewatchable experience that's pure, unadulterated escapism. Expect non-stop laughs from its eccentric characters and relentless pace.",
+    "tags": [
+     "Absurdist Comedy",
+     "Game Show Parody",
+     "Slapstick Humor",
+     "Witty Commentary",
+     "Cult Classic",
+     "Fast-Paced & Relentless",
+     "Hilariously Dubbed",
+     "Intentional Camp",
+     "Physical Challenges"
+    ],
+    "keywords": [
+     "game show"
+    ],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Mary Scheer",
+      "Takeshi Kitano",
+      "John Cervenka",
+      "Sonemanma Higashi",
+      "Christopher Darga"
+     ],
+     "companies": [
+      "TBS",
+      "RC Entertainment Inc."
+     ],
+     "networks": [
+      "Spike"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002568,
+    "title": "The Oblongs",
+    "year": 2001,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "This adult animated series plunges viewers into a world of darkly humorous social satire, centered on a family living in a heavily polluted and bizarre environment. Its defining features are its grotesque visual style and its unapologetic use of absurdist and black comedy to critique societal norms. Despite their physical deformities, the Oblongs are a tight-knit family, offering a twisted yet oddly heartwarming take on family dynamics. It's a unique and unconventional viewing experience,...",
+    "tags": [
+     "Adult Animated Comedy",
+     "Dark Satire",
+     "Grotesque & Macabre",
+     "Absurdist Humor",
+     "Social Critique",
+     "Dysfunctional Family",
+     "Visually Distinctive",
+     "Cult Classic",
+     "Environmental Themes"
+    ],
+    "keywords": [
+     "radiation",
+     "pollution",
+     "poverty",
+     "family",
+     "disabled",
+     "adult animation",
+     "radiation sickness",
+     "social class",
+     "physical deformity",
+     "toxic waste",
+     "inspired by novel or book",
+     "poor family"
+    ],
+    "credits": {
+     "directors": [
+      "Monte Young",
+      "Vincent Waller",
+      "Joe Horne"
+     ],
+     "creators": [
+      "Scott Buck",
+      "Joey Soloway"
+     ],
+     "writers": [
+      "Scott Buck",
+      "Joey Soloway",
+      "Jace Richdale"
+     ],
+     "cast": [
+      "Jean Smart",
+      "Will Ferrell",
+      "Pamela Adlon",
+      "Lea DeLaria",
+      "Jeannie Elias"
+     ],
+     "companies": [
+      "Oblong Productions",
+      "Warner Bros. Television",
+      "Jobsite Productions"
+     ],
+     "networks": [
+      "The WB",
+      "Adult Swim"
+     ]
+    }
+   },
+   {
+    "pid": 2000000279299,
+    "title": "SNL50: Beyond Saturday Night",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Documentary"
+    ],
+    "essence_text": "A comprehensive and celebratory docuseries that delves into the enduring legacy of a comedic institution. It offers a fascinating behind-the-scenes look at the creative process and pivotal moments that shaped a cultural phenomenon. Engaging interviews and classic clips provide both insightful commentary and nostalgic entertainment. This is a must-watch for fans of comedy, pop culture, and television history, revealing the genius and chaos that defined an era.",
+    "tags": [
+     "Docuseries",
+     "Comedy History",
+     "Pop Culture Chronicle",
+     "Show Business Insight",
+     "Iconic Sketch Comedy",
+     "Behind-the-Scenes",
+     "Cultural Phenomenon",
+     "Celebratory Tribute",
+     "Archival Footage"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Marshall Curry",
+      "Neil Berkeley",
+      "Jason Zeldes"
+     ],
+     "creators": [
+      "Morgan Neville",
+      "Caitrin Rogers"
+     ],
+     "writers": [],
+     "cast": [
+      "Lorne Michaels",
+      "Tina Fey",
+      "Amy Poehler",
+      "Will Ferrell",
+      "Tracy Morgan"
+     ],
+     "companies": [
+      "Tremolo Productions"
+     ],
+     "networks": [
+      "Peacock"
+     ]
+    }
+   },
+   {
+    "pid": 2000000060783,
+    "title": "Bad Judge",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This comedic series centers on a wild, hard-partying judge whose chaotic personal life constantly clashes with her professional duties. It excels in delivering sharp, dialogue-driven humor stemming from her eccentric behavior and the surprising bond she forms with a young boy. While lighthearted and entertaining, the show also explores themes of unexpected mentorship and the possibility of personal growth. It's a quick-witted, binge-friendly watch for those seeking a blend of adult comedy...",
+    "tags": [
+     "Legal Comedy",
+     "Reckless Protagonist",
+     "Character Redemption",
+     "Sitcom Humor",
+     "Adult Relationships",
+     "Found Family",
+     "Workplace Shenanigans",
+     "Contemporary Setting",
+     "Dialogue-Driven"
+    ],
+    "keywords": [
+     "sitcom",
+     "workplace comedy"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Anne Heche",
+      "Will Ferrell"
+     ],
+     "writers": [],
+     "cast": [
+      "Kate Walsh",
+      "Tone Bell",
+      "Ryan Hansen",
+      "John Ducey",
+      "Miguel Sandoval"
+     ],
+     "companies": [
+      "Gary Sanchez Productions",
+      "Universal Television"
+     ],
+     "networks": [
+      "NBC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000102540,
+    "title": "The Shrink Next Door",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "Inspired by a bewildering true story, this series plunges into a decades-long saga of psychological manipulation and distorted power dynamics. It's a masterclass in cringeworthy humor mixed with unsettling tension, driven by exceptional performances. The narrative unfolds as a slow-burn character study, exploring themes of boundaries, control, and the erosion of self. Viewers will find it a compelling, albeit often uncomfortable, look at a bizarre real-life scenario.",
+    "tags": [
+     "Psychological Manipulation",
+     "True Story Adaptation",
+     "Cringe Comedy",
+     "Darkly Humorous",
+     "Character Study",
+     "Slow-Burn Drama",
+     "Unsettling Relationships",
+     "Narcissistic Abuse",
+     "Compelling Acting"
+    ],
+    "keywords": [
+     "new york city",
+     "therapist",
+     "brainwashing",
+     "narcissist",
+     "shocking",
+     "textile company",
+     "hamptons",
+     "insidious",
+     "based on podcast",
+     "jewish",
+     "psychological manipulation",
+     "based on real events"
+    ],
+    "credits": {
+     "directors": [
+      "Michael Showalter"
+     ],
+     "creators": [
+      "Michael Showalter",
+      "Paul Rudd"
+     ],
+     "writers": [
+      "Joe Nocera",
+      "Georgia Pritchett"
+     ],
+     "cast": [
+      "Paul Rudd",
+      "Will Ferrell",
+      "Kathryn Hahn",
+      "Casey Wilson",
+      "Cornell Womack"
+     ],
+     "companies": [
+      "Gloria Sanchez Productions",
+      "MRC",
+      "Semi-Formal Productions"
+     ],
+     "networks": [
+      "Apple TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000063023,
+    "title": "The Spoils Before Dying",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A hilariously self-aware and deeply satirical journey into a 1950s jazz noir mystery, framed by the flamboyant meta-commentary of a fictional auteur. The show thrives on its sharp wit, over-the-top performances, and meticulous parody of classic film tropes. It's a masterclass in comedic pastiche, offering a unique blend of intrigue and irreverent humor. Ideal for those who appreciate a truly eccentric and intelligent comedy that playfully breaks the fourth wall.",
+    "tags": [
+     "Satirical Comedy",
+     "Meta-Narrative",
+     "1950s Jazz Noir Parody",
+     "Celebrity Mockery",
+     "Witty Dialogue",
+     "Deliberately Campy",
+     "Showbiz Satire",
+     "Homage-Driven",
+     "Absurdist Humor"
+    ],
+    "keywords": [
+     "jazz",
+     "amateur detective",
+     "murder",
+     "murder mystery",
+     "1950s"
+    ],
+    "credits": {
+     "directors": [
+      "Matt Piedmont"
+     ],
+     "creators": [
+      "Matt Piedmont",
+      "Harper Steele"
+     ],
+     "writers": [
+      "Matt Piedmont",
+      "Harper Steele"
+     ],
+     "cast": [
+      "Michael Kenneth Williams",
+      "Kristen Wiig",
+      "Maya Rudolph",
+      "Bérénice Marlohe",
+      "Chin Han"
+     ],
+     "companies": [
+      "Gary Sanchez Productions",
+      "Funny or Die"
+     ],
+     "networks": [
+      "IFC"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev5-03",
+  "query": "lighthearted ridley scott series",
+  "intent": "Lighthearted, easygoing series. Ridley Scott has no lighthearted series; the grim dramas he executive-produced (The Terror, Taboo, Raised by Wolves, The Man in the High Castle) are wrong.",
+  "items": [
+   {
+    "pid": 2000000065708,
+    "title": "Taboo",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A dark and brooding period drama set in 19th-century London, thick with atmosphere and intrigue. The series explores themes of revenge, family secrets, and political corruption, all wrapped in a gothic mystery. Defined by its slow-burn pacing and psychological complexity, the show immerses viewers in a world of moral ambiguity and hidden agendas. The strong performances and intricate plot create a captivating and unsettling experience.",
+    "tags": [
+     "Gothic Mystery",
+     "Revenge Drama",
+     "19th Century London",
+     "Political Intrigue",
+     "Family Secrets",
+     "Atmospheric & Brooding",
+     "Psychological Complexity",
+     "Dark & Gritty",
+     "Class Warfare"
+    ],
+    "keywords": [
+     "london, england",
+     "africa",
+     "corruption",
+     "blackmail",
+     "british empire",
+     "greed",
+     "investigation",
+     "revenge",
+     "murder",
+     "betrayal",
+     "conspiracy",
+     "incest overtones"
+    ],
+    "credits": {
+     "directors": [
+      "Kristoffer Nyholm",
+      "Anders Engström"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Tom Hardy"
+     ],
+     "writers": [
+      "Steven Knight",
+      "Chips Hardy",
+      "Ben Hervey"
+     ],
+     "cast": [
+      "Tom Hardy",
+      "David Hayman",
+      "Jonathan Pryce",
+      "Oona Chaplin",
+      "Richard Dixon"
+     ],
+     "companies": [
+      "Hardy Son & Baker",
+      "Scott Free Productions"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000204698,
+    "title": "Sprung",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A charming and optimistic comedy set against the backdrop of the early pandemic, following an ex-con's journey to redemption. It celebrates the power of unlikely friendships and second chances as a group of former inmates hilariously use their unique skills for good. The show offers a feel-good, comfort-watch experience, blending situational humor with heartwarming themes of found family and personal growth. It's a lighthearted escape perfect for a casual watch.",
+    "tags": [
+     "Lighthearted Comedy",
+     "Found Family",
+     "Redemption Story",
+     "Pandemic Setting",
+     "Criminals for Good",
+     "Ensemble Cast",
+     "Situational Humor",
+     "Feel-Good",
+     "Second Chances"
+    ],
+    "keywords": [
+     "release from prison",
+     "redemption"
+    ],
+    "credits": {
+     "directors": [
+      "Greg Garcia"
+     ],
+     "creators": [
+      "Michael Rotenberg",
+      "Garret Dillahunt"
+     ],
+     "writers": [
+      "Greg Garcia",
+      "Timothy Stack"
+     ],
+     "cast": [
+      "Garret Dillahunt",
+      "Martha Plimpton",
+      "Shakira Barrera",
+      "Phillip Garcia",
+      "James Earl"
+     ],
+     "companies": [
+      "3 Arts Entertainment",
+      "Amazon Studios"
+     ],
+     "networks": [
+      "Amazon Freevee"
+     ]
+    }
+   },
+   {
+    "pid": 2000000048891,
+    "title": "Brooklyn Nine-Nine",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A delightfully wholesome and fast-paced ensemble comedy that blends sharp wit with endearing characters. It delivers consistent laughs through its clever situational humor and rapid-fire dialogue, creating a feel-good atmosphere. The series is a brilliant comfort watch, perfect for pure escapism and easy rewatching. Despite its premise within a police precinct, the focus is firmly on the hilarious dynamics and evolving relationships of its lovable cast, making it widely accessible and...",
+    "tags": [
+     "Ensemble Comedy",
+     "Wholesome Humor",
+     "Police Procedural Parody",
+     "Character-Driven",
+     "Witty Dialogue",
+     "Fast-Paced",
+     "Heartwarming",
+     "Optimistic Tone",
+     "Rewatchable",
+     "Workplace Comedy"
+    ],
+    "keywords": [
+     "new york city",
+     "detective",
+     "police",
+     "workplace",
+     "big city",
+     "brooklyn, new york city",
+     "nypd",
+     "sitcom",
+     "workplace comedy",
+     "sharp"
+    ],
+    "credits": {
+     "directors": [
+      "Michael McDonald",
+      "Claire Scanlon",
+      "Linda Mendoza"
+     ],
+     "creators": [
+      "David Miner",
+      "Michael Schur"
+     ],
+     "writers": [
+      "Luke Del Tredici",
+      "David Phillips",
+      "Daniel J. Goor"
+     ],
+     "cast": [
+      "Andy Samberg",
+      "Melissa Fumero",
+      "Terry Crews",
+      "Joe Lo Truglio",
+      "Stephanie Beatriz"
+     ],
+     "companies": [
+      "Dr. Goor Productions",
+      "Universal Television",
+      "3 Arts Entertainment"
+     ],
+     "networks": [
+      "NBC",
+      "FOX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000062017,
+    "title": "The Man in the High Castle",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama"
+    ],
+    "essence_text": "A suspenseful and thought-provoking alternate history series that explores a dystopian world where the Axis powers won World War II. The show is marked by political intrigue, complex characters, and a pervasive sense of dread. It offers a dark and unsettling vision of a divided America. The series raises profound questions about identity, resistance, and the consequences of historical choices.",
+    "tags": [
+     "Alternate History",
+     "Dystopian",
+     "Suspenseful",
+     "Political Intrigue",
+     "World War II",
+     "Thought-Provoking",
+     "Dark",
+     "Complex Narrative"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "resistance",
+     "nazi",
+     "dystopia",
+     "alternate history",
+     "post world war ii",
+     "alternative reality",
+     "antagonistic"
+    ],
+    "credits": {
+     "directors": [
+      "David Semel",
+      "Daniel Percival",
+      "John Fawcett"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Frank Spotnitz"
+     ],
+     "writers": [
+      "Philip K. Dick",
+      "Frank Spotnitz",
+      "Wesley Strick"
+     ],
+     "cast": [
+      "Alexa Davalos",
+      "Rufus Sewell",
+      "Joel de la Fuente",
+      "Jason O'Mara",
+      "Brennan Brown"
+     ],
+     "companies": [
+      "Amazon Studios",
+      "Electric Shepherd Productions",
+      "Headline Pictures"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   },
+   {
+    "pid": 2000000156902,
+    "title": "Kaleidoscope",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "Kaleidoscope is a unique, high-stakes heist thriller defined by its revolutionary non-linear viewing experience, allowing audiences to watch episodes in almost any order. The series is packed with intense tension and intricate plotting as a master thief and his crew attempt a daring $7 billion dollar robbery. It's a gripping tale of betrayal, greed, and complex character dynamics, best suited for those who enjoy psychological puzzles and adrenaline-fueled crime sagas.",
+    "tags": [
+     "Heist Thriller",
+     "Non-Linear Narrative",
+     "Crime Drama",
+     "High Stakes",
+     "Ensemble Cast",
+     "Betrayal & Intrigue",
+     "Strategic Planning",
+     "Revenge Plot",
+     "Suspenseful"
+    ],
+    "keywords": [
+     "heist",
+     "miniseries"
+    ],
+    "credits": {
+     "directors": [
+      "Russell Lee Fine",
+      "Robert Townsend",
+      "Everardo Gout"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Russell Lee Fine"
+     ],
+     "writers": [
+      "Eric Garcia",
+      "Garrett Lerner",
+      "Kate Barnow"
+     ],
+     "cast": [
+      "Giancarlo Esposito",
+      "Paz Vega",
+      "Rufus Sewell",
+      "Tati Gabrielle",
+      "Peter Mark Kendall"
+     ],
+     "companies": [
+      "Automatik Entertainment",
+      "Nano Chameleon",
+      "Scott Free Productions"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000045013,
+    "title": "Wander Over Yonder",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This vibrant animated series follows the eternally optimistic Wander and his loyal steed Sylvia as they spread cheer across the galaxy. It's a whimsical and fast-paced adventure brimming with absurdist humor, physical comedy, and genuinely heartwarming moments. The show's colorful visuals and energetic storytelling make it a pure escapist delight suitable for all ages. Underlying the madcap antics is a strong emphasis on friendship, kindness, and the power of positivity, making it a truly...",
+    "tags": [
+     "Optimistic Space Adventure",
+     "Whimsical Animated Comedy",
+     "Friendship-Centric",
+     "Fast-Paced & Energetic",
+     "Colorful Visuals",
+     "All-Ages Entertainment",
+     "Absurdist Humor",
+     "Do-Gooder Protagonist",
+     "Intergalactic Exploration",
+     "Slapstick Fun"
+    ],
+    "keywords": [
+     "space",
+     "alien planet"
+    ],
+    "credits": {
+     "directors": [
+      "Eddie Trigueros",
+      "Dave Thomas",
+      "Benjamin Balistreri"
+     ],
+     "creators": [
+      "Ben Joseph",
+      "Francisco Angones"
+     ],
+     "writers": [
+      "Craig McCracken",
+      "Amy Higgins",
+      "Francisco Angones"
+     ],
+     "cast": [
+      "Jack McBrayer",
+      "April Winchell",
+      "Keith Ferguson",
+      "Tom Kenny",
+      "Noël Wells"
+     ],
+     "companies": [
+      "Disney Television Animation"
+     ],
+     "networks": [
+      "Disney XD"
+     ]
+    }
+   },
+   {
+    "pid": 2000000214609,
+    "title": "Smiley",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This is a charming and lighthearted romantic comedy set in Barcelona, centered around the often-awkward search for love. It excels in its witty dialogue and relatable character dynamics, navigating the modern dating landscape with humor and warmth. The series offers a feel-good, optimistic viewing experience, making it perfect for those seeking pure escapism. It's a binge-friendly show that celebrates love and connection with an endearing authenticity.",
+    "tags": [
+     "Romantic Comedy",
+     "Contemporary Barcelona",
+     "LGBTQ+ Relationships",
+     "Character-Driven",
+     "Lighthearted & Charming",
+     "Modern Dating",
+     "Feel-Good Romance",
+     "Humorous Misunderstandings",
+     "Slice of Life"
+    ],
+    "keywords": [
+     "new year's eve",
+     "romcom",
+     "romance",
+     "lgbt",
+     "christmas",
+     "cultural identity",
+     "gay theme",
+     "boys' love (bl)"
+    ],
+    "credits": {
+     "directors": [
+      "Marta Pahissa"
+     ],
+     "creators": [
+      "Guillem Clua"
+     ],
+     "writers": [
+      "Guillem Clua"
+     ],
+     "cast": [
+      "Carlos Cuevas",
+      "Miki Esparbé",
+      "Pepón Nieto",
+      "Meritxell Calvo",
+      "Cedrick Mugisha"
+     ],
+     "companies": [
+      "Minoria Absoluta"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000079650,
+    "title": "Al Waseya",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A delightfully lighthearted comedy that centers on a son's adventurous quest to fulfill his late father's eccentric will. The series thrives on its episodic challenges and the dynamic between the protagonist and his friend, leading to a succession of humorous and often absurd situations. It's a fast-paced, feel-good watch, perfect for those seeking pure escapism and laughs. The show is driven by clever scenarios and the chemistry of its leads.",
+    "tags": [
+     "Lighthearted Comedy",
+     "Buddy Adventure",
+     "Inheritance Quest",
+     "Situational Humor",
+     "Fast-Paced Fun",
+     "Feel-Good Entertainment",
+     "Episodic Challenges",
+     "Friendship Focus"
+    ],
+    "keywords": [
+     "will"
+    ],
+    "credits": {
+     "directors": [
+      "Khaled Al-Halafawi"
+     ],
+     "creators": [
+      "Ahmed Saad",
+      "Ayman Wattar"
+     ],
+     "writers": [
+      "Ahmed Saad",
+      "Ayman Wattar",
+      "Mustafa Helmy"
+     ],
+     "cast": [
+      "Akram Hosni",
+      "Ahmed Amin",
+      "Reem Mostafa",
+      "Khaled Kamal",
+      "Arefa Abdul Rasoul"
+     ],
+     "companies": [
+      "KMEDIA"
+     ],
+     "networks": [
+      "CBCDrama",
+      "ART Hekayat"
+     ]
+    }
+   },
+   {
+    "pid": 2000000090302,
+    "title": "You Are Everywhere",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A charming and lighthearted romantic comedy that thrives on the classic 'enemies-to-lovers' dynamic. It delivers plenty of laughs through its clever situational humor, as two strong-willed individuals find themselves sharing not just a home but also a workplace. The series offers a delightful and hopeful escapism, focusing on the developing romance and the comedic clashes between its endearing leads. It's a highly binge-friendly watch perfect for those seeking warmth and a feel-good narrative.",
+    "tags": [
+     "Romantic Comedy",
+     "Workplace Romance",
+     "Forced Proximity",
+     "Stubborn Protagonists",
+     "Lighthearted",
+     "Charming",
+     "Contemporary Turkish Drama",
+     "Character-Driven Comedy",
+     "Feel-Good"
+    ],
+    "keywords": [
+     "romance"
+    ],
+    "credits": {
+     "directors": [
+      "Ender Mıhlar"
+     ],
+     "creators": [
+      "Deniz Yeşilgün",
+      "Esra Çetek Yılmazer"
+     ],
+     "writers": [
+      "Deniz Yeşilgün",
+      "Esra Çetek Yılmazer"
+     ],
+     "cast": [
+      "Furkan Andıç",
+      "Aybüke Pusat",
+      "Ali Yağcı",
+      "Aslıhan Malbora",
+      "Ali Gözüşirin"
+     ],
+     "companies": [
+      "Karga Seven Pictures"
+     ],
+     "networks": [
+      "FOX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000003022,
+    "title": "Rugrats",
+    "year": 1991,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Animation",
+     "Kids",
+     "Comedy"
+    ],
+    "essence_text": "This beloved children's cartoon whisks viewers into the imaginative world of toddlers, transforming everyday experiences into grand adventures. It's a consistently wholesome and lighthearted comedy, brimming with physical gags and a unique visual style. The show masterfully captures the innocent wonder of childhood, making it a perfect comfort watch for families. Its enduring charm and simple, engaging narratives make it highly rewatchable and a source of nostalgic joy for many.",
+    "tags": [
+     "Classic Kids' Cartoon",
+     "Wholesome Comedy",
+     "Imaginative Adventures",
+     "Toddler's Perspective",
+     "Family-Friendly Fun",
+     "Nostalgic Viewing",
+     "Distinctive Animation",
+     "Simple & Engaging",
+     "Humorous Antics"
+    ],
+    "keywords": [
+     "baby",
+     "friendship",
+     "toddler",
+     "nostalgic",
+     "playful",
+     "lighthearted"
+    ],
+    "credits": {
+     "directors": [
+      "Jim Duffy",
+      "Norton Virgien",
+      "Rick Bugental"
+     ],
+     "creators": [
+      "Gábor Csupó",
+      "Arlene Klasky"
+     ],
+     "writers": [
+      "Jill Gorey",
+      "Barbara Herndon",
+      "Peter Gaffney"
+     ],
+     "cast": [
+      "E. G. Daily",
+      "Christine Cavanaugh",
+      "Kath Soucie",
+      "Cheryl Chase",
+      "Dionne Quan"
+     ],
+     "companies": [
+      "Klasky-Csupo",
+      "Nickelodeon Animation Studio",
+      "Games Animation"
+     ],
+     "networks": [
+      "Nickelodeon"
+     ]
+    }
+   },
+   {
+    "pid": 2000000069158,
+    "title": "The Good Fight",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "This series is a sharp, witty legal drama that masterfully weaves timely social commentary into its compelling narratives. It thrives on its excellent dialogue, intricate plots, and nuanced characters, maintaining a high level of intrigue throughout. The show engages directly with contemporary political and societal issues, often with a satirical edge. It's a deeply thought-provoking and adult-oriented experience, best for those who appreciate intelligent writing and a critical look at the...",
+    "tags": [
+     "Legal Drama",
+     "Political Satire",
+     "Sharp Dialogue",
+     "Social Commentary",
+     "Contemporary Issues",
+     "Character-Driven",
+     "Intrigue-Filled",
+     "Adult Themes",
+     "Thought-Provoking",
+     "Courtroom Drama"
+    ],
+    "keywords": [
+     "chicago, illinois",
+     "investigation",
+     "government",
+     "lawyer",
+     "courtroom",
+     "law firm",
+     "case of the week"
+    ],
+    "credits": {
+     "directors": [
+      "Brooke Kennedy",
+      "Robert King",
+      "Jim McKay"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Liz Glotzer"
+     ],
+     "writers": [
+      "Michelle King",
+      "Robert King",
+      "Jonathan Tolins"
+     ],
+     "cast": [
+      "Christine Baranski",
+      "Sarah Steele",
+      "Nyambi Nyambi",
+      "Michael Boatman",
+      "Audra McDonald"
+     ],
+     "companies": [
+      "King Size Productions",
+      "CBS Studios",
+      "Scott Free Productions"
+     ],
+     "networks": [
+      "CBS All Access",
+      "Paramount+"
+     ]
+    }
+   },
+   {
+    "pid": 2000000208730,
+    "title": "Romantic Killer",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "This anime offers a delightful and fast-paced romantic comedy, turning a protagonist's aversion to love into a hilarious and charming adventure. It thrives on its clever situational humor and whimsical fantasy elements, making for a consistently entertaining watch. The show excels as a pure escapist comfort, with a lighthearted tone and a cast of endearing characters navigating their unexpected romantic entanglements. It's a perfect binge for those seeking feel-good laughs and sweet romance.",
+    "tags": [
+     "Romantic Comedy",
+     "Anime",
+     "Slice of Life",
+     "Humorous",
+     "Wholesome",
+     "Fantasy Elements",
+     "Female Protagonist",
+     "Fast-Paced",
+     "Lighthearted",
+     "Isekai-Lite"
+    ],
+    "keywords": [
+     "based on comic",
+     "romcom",
+     "romance",
+     "matchmaking",
+     "teenage girl",
+     "group of friends",
+     "wizard",
+     "anime",
+     "original net animation (ona)"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Rui Kyo",
+      "Aya Matsuda"
+     ],
+     "writers": [
+      "Wataru Momose"
+     ],
+     "cast": [
+      "Rie Takahashi",
+      "Mikako Komatsu",
+      "Yuuichirou Umehara",
+      "Gakuto Kajiwara",
+      "Natsuki Hanae"
+     ],
+     "companies": [
+      "domerica",
+      "Netflix"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000244288,
+    "title": "Jab Mila Tu",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "This series offers a fast-paced, feel-good romp about unexpected cohabitation leading to hilarious chaos and unpredictable adventures. It's a charming romantic comedy driven by the chemistry of its eccentric characters and their endearing, often comical, misadventures. The show serves as pure escapism, perfect for viewers looking for a lighthearted and comforting watch. With its wholesome tone and binge-friendly narrative, it's an enjoyable dive into youthful friendships and budding romances.",
+    "tags": [
+     "Romantic Comedy",
+     "Slice of Life",
+     "Chaotic Roommates",
+     "Youthful Adventures",
+     "Lighthearted & Fun",
+     "Character Chemistry",
+     "Unpredictable Escapades",
+     "Contemporary Setting",
+     "Feel-Good"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Lalit Mohan"
+     ],
+     "writers": [],
+     "cast": [
+      "Pratik Sehajpal",
+      "Mohsin Khan",
+      "Alisha Chopra",
+      "Eisha Singh",
+      "Anupam K. Sinha"
+     ],
+     "companies": [
+      "Two Nice Men Media Works"
+     ],
+     "networks": [
+      "JioCinema"
+     ]
+    }
+   },
+   {
+    "pid": 2000000157972,
+    "title": "Great Expectations",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A dark and visceral adaptation of the classic novel, this series plunges into a psychologically dense coming-of-age narrative. Its strength lies in its meticulous character development and the pervasive sense of melancholy and tension. The oppressive atmosphere and exploration of societal injustices make for a thought-provoking, albeit often bleak, viewing experience. This is a powerful, character-driven drama that demands attention and rewards deep engagement.",
+    "tags": [
+     "Gritty Period Drama",
+     "Psychological Coming-of-Age",
+     "Dickensian Adaptation",
+     "Dark & Melancholic",
+     "Social Class Critique",
+     "Character-Driven",
+     "Atmospheric & Immersive",
+     "Destructive Relationships",
+     "Moral Ambiguity",
+     "Bleak Realism"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "coming of age",
+     "miniseries",
+     "period piece"
+    ],
+    "credits": {
+     "directors": [
+      "Lucy Forbes"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Tom Hardy"
+     ],
+     "writers": [
+      "Charles Dickens",
+      "Steven Knight"
+     ],
+     "cast": [
+      "Olivia Colman",
+      "Fionn Whitehead",
+      "Ashley Thomas",
+      "Johnny Harris",
+      "Shalom Brune-Franklin"
+     ],
+     "companies": [
+      "FX Productions",
+      "BBC",
+      "Hardy Son & Baker"
+     ],
+     "networks": [
+      "BBC One",
+      "Hulu"
+     ]
+    }
+   },
+   {
+    "pid": 2000000005314,
+    "title": "The Company",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Drama"
+    ],
+    "essence_text": "A gripping Cold War espionage series that meticulously explores the morally ambiguous world of CIA agents living double lives. It masterfully builds tension through intricate political maneuvering and deep psychological character studies, making every decision feel weighty and fraught with consequence. The narrative is complex, requiring attention as it delves into themes of loyalty, betrayal, and the cost of power. This is a thought-provoking, slow-burn thriller for those who appreciate...",
+    "tags": [
+     "Cold War Espionage",
+     "Political Thriller",
+     "Historical Drama",
+     "Psychological Intrigue",
+     "Character-Driven",
+     "High Stakes",
+     "Moral Ambiguity",
+     "Slow Burn Spy Series",
+     "Global Conspiracy"
+    ],
+    "keywords": [
+     "spy",
+     "central intelligence agency (cia)",
+     "based on novel or book",
+     "cold war",
+     "miniseries"
+    ],
+    "credits": {
+     "directors": [
+      "Mikael Salomon"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Tony Scott"
+     ],
+     "writers": [
+      "Robert Littell",
+      "Ken Nolan",
+      "Ken Nolan"
+     ],
+     "cast": [
+      "Chris O'Donnell",
+      "Michael Keaton",
+      "Rory Cochrane",
+      "Tom Hollander",
+      "Derek Aasland"
+     ],
+     "companies": [
+      "John Calley Productions",
+      "Sony Pictures Television",
+      "Mid Atlantic Films"
+     ],
+     "networks": [
+      "TNT"
+     ]
+    }
+   },
+   {
+    "pid": 2000000033234,
+    "title": "The Pillars of the Earth",
+    "year": 2010,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A sprawling and immersive historical epic that transports viewers to 12th-century England, amidst an era of relentless conflict and ambition. This miniseries masterfully weaves together intricate political intrigue, religious strife, and deeply personal struggles against the backdrop of a grand architectural endeavor. It's a journey through treachery, violence, and passion, driven by richly developed characters and a compelling narrative that vividly recreates a brutal yet fascinating period...",
+    "tags": [
+     "Medieval Epic",
+     "Historical Drama",
+     "Political Intrigue",
+     "Religious Conflict",
+     "Family Sagas",
+     "Grand Scale",
+     "Treachery & Violence",
+     "Character-Driven",
+     "Architectural Ambition",
+     "Sweeping Narrative"
+    ],
+    "keywords": [
+     "monk",
+     "england",
+     "based on novel or book",
+     "cathedral",
+     "kingdom",
+     "royalty",
+     "religion",
+     "miniseries",
+     "period drama",
+     "historical",
+     "political intrigue ",
+     "middle ages (476-1453)"
+    ],
+    "credits": {
+     "directors": [
+      "Sergio Mimica-Gezzan"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Tony Scott"
+     ],
+     "writers": [
+      "John Pielmeier",
+      "Ken Follett"
+     ],
+     "cast": [
+      "Robert Bathurst",
+      "Donald Sutherland",
+      "Matthew Macfadyen",
+      "Rufus Sewell",
+      "Ian McShane"
+     ],
+     "companies": [
+      "Tandem Communications",
+      "Muse Entertainment",
+      "Movie Central"
+     ],
+     "networks": [
+      "STARZ"
+     ]
+    }
+   },
+   {
+    "pid": 2000000246381,
+    "title": "Prime Target",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "A relentless, high-stakes thriller that thrusts a brilliant student into a dangerous conspiracy, forcing him to fight for his life. The series promises constant tension and a rapid-fire plot as secrets are slowly unraveled. It's an immersive experience for those who enjoy intricate mysteries and adrenaline-fueled action, offering a gripping narrative designed for binge-watching. The focus is on the intellectual puzzle combined with intense physical peril.",
+    "tags": [
+     "High-Stakes Thriller",
+     "Conspiracy Mystery",
+     "Action-Packed",
+     "Intellectual Protagonist",
+     "Government Intrigue",
+     "Fast-Paced Plot",
+     "Suspenseful",
+     "Modern Espionage",
+     "Unraveling Secrets"
+    ],
+    "keywords": [
+     "mathematician",
+     "graduate student",
+     "nsa agent",
+     "gay theme",
+     "breakthrough",
+     "conspiracy thriller"
+    ],
+    "credits": {
+     "directors": [
+      "Brady Hood"
+     ],
+     "creators": [
+      "Arnon Milchan",
+      "Ridley Scott"
+     ],
+     "writers": [
+      "Steve Thompson",
+      "Thomas Martin",
+      "Selina Lim"
+     ],
+     "cast": [
+      "Leo Woodall",
+      "Quintessa Swindell",
+      "Sidse Babett Knudsen",
+      "Stephen Rea",
+      "Fra Fee"
+     ],
+     "companies": [
+      "Scott Free Productions",
+      "New Regency"
+     ],
+     "networks": [
+      "Apple TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000209876,
+    "title": "Dope Thief",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "\"Dope Thief\" is a high-octane crime thriller plunging viewers into the dangerous world of two friends whose illicit grift goes dangerously wrong. The series promises intense tension and graphic violence as their scheme unravels, forcing them into a fight for survival against a powerful narcotics enterprise. It's a gritty, character-driven narrative that explores loyalty and the dire consequences of criminal ambition in a contemporary urban setting. This show is designed for adult audiences...",
+    "tags": [
+     "Gritty Crime Thriller",
+     "Anti-Heroes",
+     "High-Stakes Heist",
+     "Urban Underworld",
+     "Friendship Dynamics",
+     "Escalating Conflict",
+     "Dark Consequences",
+     "Philadelphia Setting",
+     "Morally Grey",
+     "Intense"
+    ],
+    "keywords": [
+     "philadelphia, pennsylvania",
+     "robbery",
+     "based on novel or book",
+     "police impersonator",
+     "miniseries",
+     "dea agent",
+     "narcotics",
+     "thieves"
+    ],
+    "credits": {
+     "directors": [
+      "Marcela Said",
+      "Jonathan van Tulleken",
+      "Ridley Scott"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Tanya Hamilton"
+     ],
+     "writers": [
+      "Peter Craig",
+      "Dennis Tafoya"
+     ],
+     "cast": [
+      "Brian Tyree Henry",
+      "Wagner Moura",
+      "Marin Ireland",
+      "Amir Arison",
+      "Nesta Cooper"
+     ],
+     "companies": [
+      "Apple Studios",
+      "Scott Free Productions",
+      "Night Owl Stories"
+     ],
+     "networks": [
+      "Apple TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000063328,
+    "title": "Grandfathered",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This sitcom offers a lighthearted take on unexpected family bonds, centered on a suave bachelor's sudden transition to grandfatherhood. It delivers consistent laughs through its charming characters and relatable family dynamics, providing a feel-good and easily digestible viewing experience. The humor is primarily situational, with plenty of wit and a wholesome tone that makes it suitable for a wide range of audiences. It's an amiable show perfect for unwinding and enjoying some genuine smiles.",
+    "tags": [
+     "Lighthearted Sitcom",
+     "Family Comedy",
+     "Unexpected Parenthood",
+     "Intergenerational Humor",
+     "Character-Driven Comedy",
+     "Feel-Good",
+     "Relationship Focus",
+     "Coming-of-Age for Adults"
+    ],
+    "keywords": [
+     "parent child relationship",
+     "bachelor",
+     "grandfather",
+     "coming of age",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "Ken Whittingham"
+     ],
+     "creators": [
+      "Dan Fogelman",
+      "John Stamos"
+     ],
+     "writers": [
+      "Jeremy Hall"
+     ],
+     "cast": [
+      "John Stamos",
+      "Paget Brewster",
+      "Josh Peck",
+      "Christina Milian",
+      "Kelly Jenrette"
+     ],
+     "companies": [
+      "ABC Studios",
+      "Rhode Island Ave. Productions",
+      "Consolidated Chunworks"
+     ],
+     "networks": [
+      "FOX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000067497,
+    "title": "Jean-Claude Van Johnson",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A brilliantly self-aware meta-comedy that casts Jean-Claude Van Damme as a fictionalized, washed-up version of himself, blending his signature action prowess with a deeply satirical take on celebrity and the spy genre. The series is defined by its sharp wit, unexpected absurdity, and the surprisingly endearing performance from Van Damme himself. It’s a unique, genre-bending experience that delivers both genuine laughs and thrilling spy antics, perfect for those who appreciate unconventional...",
+    "tags": [
+     "Meta-Comedy",
+     "Action Spoof",
+     "Self-Aware Humor",
+     "Celebrity Parody",
+     "Spy Thriller Twist",
+     "Absurdist Comedy",
+     "JCVD Vehicle",
+     "Satirical Action",
+     "Cult Classic Potential"
+    ],
+    "keywords": [
+     "martial arts"
+    ],
+    "credits": {
+     "directors": [
+      "Peter Atencio"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "David Callaham"
+     ],
+     "writers": [
+      "David Callaham"
+     ],
+     "cast": [
+      "Jean-Claude Van Damme",
+      "Kat Foster",
+      "Bar Paly",
+      "Phylicia Rashād",
+      "Moisés Arias"
+     ],
+     "companies": [
+      "Scott Free Productions",
+      "Amazon Studios"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   },
+   {
+    "pid": 2000000057389,
+    "title": "Klondike",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Western"
+    ],
+    "essence_text": "This historical miniseries plunges viewers into the brutal realities of the 1890s Klondike Gold Rush. It's a gripping tale of survival, friendship, and the darker aspects of human nature amidst an unforgiving natural landscape. The series balances thrilling adventure with a keen social commentary on greed and the impact of colonization, creating an immersive and often perilous period experience.",
+    "tags": [
+     "Historical Adventure",
+     "Gold Rush Era",
+     "Man vs. Nature",
+     "Frontier Drama",
+     "Greed & Survival",
+     "Social Commentary",
+     "Intense & Gripping",
+     "Untamed Wilderness",
+     "Period Thriller"
+    ],
+    "keywords": [
+     "gold rush",
+     "miniseries",
+     "yukon, canada",
+     "klondike gold rush",
+     "19th century",
+     "northern canada"
+    ],
+    "credits": {
+     "directors": [
+      "Simon Cellan Jones"
+     ],
+     "creators": [
+      "Ridley Scott",
+      "Paul T. Scheuring"
+     ],
+     "writers": [
+      "Paul T. Scheuring",
+      "Joshua Goldin",
+      "Rachel Abramowitz"
+     ],
+     "cast": [
+      "Richard Madden",
+      "Augustus Prew",
+      "Abbie Cornish",
+      "Conor Leslie",
+      "Marton Csokas"
+     ],
+     "companies": [
+      "E1 Entertainment U.S.",
+      "Nomadic Pictures",
+      "Discovery"
+     ],
+     "networks": [
+      "Discovery"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev5-04",
+  "query": "feel-good reese witherspoon shows",
+  "intent": "Warm, feel-good series. Reese Witherspoon's starring dramas (Big Little Lies, The Morning Show, Little Fires Everywhere) are only loosely relevant; thrillers she only produced (Surface, The Last Thing He Told Me) are wrong.",
+  "items": [
+   {
+    "pid": 2000000215720,
+    "title": "Queen of Tears",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "A Korean romantic drama that explores a married couple's journey through a marital crisis and their eventual rediscovery of love. The series excels in its emotional depth and well-developed characters, set against a backdrop of wealth and family dynamics. The narrative is engaging and filled with intrigue, balancing moments of heartache with heartwarming reconciliation. It's a compelling story about relationships, resilience, and the complexities of love, making it both thought-provoking and...",
+    "tags": [
+     "Korean Romantic Drama",
+     "Marital Crisis & Reconciliation",
+     "Family-Oriented",
+     "Wealth & Power Dynamics",
+     "Emotional & Engaging",
+     "Strong Character Development",
+     "Intriguing Plot Twists",
+     "Heartwarming Moments",
+     "Contemporary Setting"
+    ],
+    "keywords": [
+     "romance",
+     "slice of life",
+     "rich",
+     "illness",
+     "married life",
+     "married man",
+     "rich family",
+     "loving",
+     "chaebol",
+     "second chance romance",
+     "black comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Jang Young-woo",
+      "Kim Hee-won"
+     ],
+     "creators": [
+      "Park Ji-eun"
+     ],
+     "writers": [
+      "Park Ji-eun"
+     ],
+     "cast": [
+      "Kim Soo-hyun",
+      "Kim Ji-won",
+      "Park Sung-hoon",
+      "Kwak Dong-yeon",
+      "Lee Ju-bin"
+     ],
+     "companies": [
+      "Culture Depot",
+      "Studio Dragon",
+      "Show Runners"
+     ],
+     "networks": [
+      "tvN"
+     ]
+    }
+   },
+   {
+    "pid": 2000000154825,
+    "title": "Business Proposal",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This K-drama is a delightful and charming romantic comedy, brimming with classic tropes and feel-good moments. Its humor stems from hilarious misunderstandings and the undeniable chemistry between its leads, making for a highly engaging watch. The series offers a wholesome and comforting escape, perfectly blending romance with amusing situational comedy. It's an excellent choice for those seeking a lighthearted story with a strong emphasis on character development and heartfelt connections.",
+    "tags": [
+     "Romantic Comedy",
+     "Office Romance",
+     "Fake Dating Trope",
+     "Wholesome & Charming",
+     "Humorous Misunderstandings",
+     "Lighthearted",
+     "Contemporary Korean Drama",
+     "Engaging Chemistry",
+     "Feel-Good Story",
+     "Cinderella Story"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "fake identity",
+     "businessman",
+     "blind date",
+     "romance",
+     "heir",
+     "employer employee relationship",
+     "office romance",
+     "rich man poor woman",
+     "secondary couple",
+     "charming",
+     "chaebol"
+    ],
+    "credits": {
+     "directors": [
+      "Park Seon-ho"
+     ],
+     "creators": [
+      "Park Seon-ho",
+      "Hong Bo-hee",
+      "Han Sul-hee"
+     ],
+     "writers": [
+      "Hong Bo-hee",
+      "Han Sul-hee"
+     ],
+     "cast": [
+      "Ahn Hyo-seop",
+      "Kim Se-jeong",
+      "Kim Min-gue",
+      "Seorina",
+      "Lee Duck-hwa"
+     ],
+     "companies": [
+      "Studio S",
+      "Kross Pictures",
+      "Kakao Entertainment"
+     ],
+     "networks": [
+      "SBS"
+     ]
+    }
+   },
+   {
+    "pid": 2000000063161,
+    "title": "Crazy Ex-Girlfriend",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A quirky and unconventional musical comedy about a woman who moves across the country for love. The series blends humor and heart, exploring themes of mental health, identity, and the search for happiness. Expect catchy original songs, witty dialogue, and a cast of eccentric characters. It's a unique and engaging series that offers both laughs and emotional depth.",
+    "tags": [
+     "Musical Comedy",
+     "Romantic Comedy",
+     "Character-Driven",
+     "Neurotic Protagonist",
+     "Quirky",
+     "Pop Culture References",
+     "West Covina",
+     "Mental Health",
+     "Strong Female Lead"
+    ],
+    "keywords": [
+     "california",
+     "ex-lover",
+     "musical",
+     "relationship",
+     "searching for love"
+    ],
+    "credits": {
+     "directors": [
+      "Stuart McDonald",
+      "Kabir Akhtar",
+      "Erin Ehrlich"
+     ],
+     "creators": [
+      "Aline Brosh McKenna",
+      "Marc Webb"
+     ],
+     "writers": [
+      "Aline Brosh McKenna",
+      "Rachel Bloom",
+      "Rachel Specter"
+     ],
+     "cast": [
+      "Rachel Bloom",
+      "Santino Fontana",
+      "Donna Lynne Champlin",
+      "Vincent Rodriguez III",
+      "Pete Gardner"
+     ],
+     "companies": [
+      "Black Lamb",
+      "Sunnyside Entertainment",
+      "Warner Bros. Television"
+     ],
+     "networks": [
+      "The CW"
+     ]
+    }
+   },
+   {
+    "pid": 2000000042916,
+    "title": "Toradora!",
+    "year": 2008,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A heartwarming and humorous anime series centered around the unlikely friendship and developing romance between two high school students. The show is characterized by its situational comedy and focus on character growth as they navigate the challenges of adolescence and their feelings for one another. Expect a sweet and engaging story with moments of both levity and emotional depth. This anime is a comforting and rewatchable exploration of friendship, love, and self-discovery.",
+    "tags": [
+     "High School",
+     "Romantic Comedy",
+     "Tsundere",
+     "Character Growth",
+     "Emotional Development",
+     "Unlikely Friendship",
+     "Heartwarming",
+     "Japanese Animation"
+    ],
+    "keywords": [
+     "delinquent",
+     "friendship",
+     "high school",
+     "slapstick comedy",
+     "love",
+     "romcom",
+     "growing up",
+     "romance",
+     "slice of life",
+     "unrequited love",
+     "coming of age",
+     "school"
+    ],
+    "credits": {
+     "directors": [
+      "Katsushi Sakurabi",
+      "Kenichi Kasai",
+      "Tohru Ishida"
+     ],
+     "creators": [
+      "Mari Okada",
+      "Tatsuto Higuchi"
+     ],
+     "writers": [
+      "Yuyuko Takemiya",
+      "Yasu",
+      "Mari Okada"
+     ],
+     "cast": [
+      "Rie Kugimiya",
+      "Junji Majima",
+      "Yui Horie",
+      "Eri Kitamura",
+      "Hirofumi Nojima"
+     ],
+     "companies": [
+      "J.C.STAFF"
+     ],
+     "networks": [
+      "TV Tokyo",
+      "TV Osaka"
+     ]
+    }
+   },
+   {
+    "pid": 2000000094796,
+    "title": "Crash Landing on You",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "This captivating K-drama masterfully blends heartwarming romance with comedic fish-out-of-water scenarios and poignant drama. It draws viewers into a compelling narrative of forbidden love, set against a backdrop of geopolitical tension, while still offering abundant comfort and charming character interactions. The series excels in delivering emotional highs and lows, bolstered by strong performances and an unforgettable soundtrack. It's an immensely bingeable and cathartic journey that...",
+    "tags": [
+     "Cross-Border Romance",
+     "Romantic Comedy-Drama",
+     "Heartwarming & Emotional",
+     "Fish-Out-of-Water",
+     "Political Intrigue (Soft)",
+     "Found Family Theme",
+     "High Production Value",
+     "Compelling Characters",
+     "Bingeable K-Drama",
+     "Emotional Rollercoaster"
+    ],
+    "keywords": [
+     "love triangle",
+     "spy",
+     "con man",
+     "romance",
+     "tension",
+     "fate",
+     "soldier",
+     "heiress",
+     "paragliding",
+     "star crossed lovers",
+     "accident",
+     "accidental love"
+    ],
+    "credits": {
+     "directors": [
+      "Lee Jeong-hyo",
+      "Kim Hee-won"
+     ],
+     "creators": [
+      "Park Ji-eun",
+      "Jang Young-woo"
+     ],
+     "writers": [
+      "Park Ji-eun"
+     ],
+     "cast": [
+      "Hyun Bin",
+      "Son Ye-jin",
+      "Seo Ji-hye",
+      "Kim Jung-hyun",
+      "Yang Kyung-won"
+     ],
+     "companies": [
+      "Studio Dragon",
+      "Culture Depot"
+     ],
+     "networks": [
+      "tvN"
+     ]
+    }
+   },
+   {
+    "pid": 2000000037636,
+    "title": "Secret Garden",
+    "year": 2010,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A beloved Korean drama that masterfully blends fantasy and romance, centering on a wealthy heir and a tenacious stuntwoman whose souls inexplicably swap. The series beautifully navigates their contrasting worlds and personalities, using the magical premise to explore themes of identity, social class, and love. It's a highly engaging and emotionally resonant watch, filled with humor, poignant moments, and an unforgettable journey of self-discovery and connection.",
+    "tags": [
+     "Korean Romance Drama",
+     "Fantasy Elements",
+     "Body Swap Trope",
+     "Opposites Attract",
+     "Wealth & Class Differences",
+     "Emotional Journey",
+     "Character Transformation",
+     "K-Drama Classic",
+     "Heartwarming & Humorous"
+    ],
+    "keywords": [
+     "love triangle",
+     "romance",
+     "family relationships",
+     "eccentric",
+     "body-swap",
+     "rich man poor woman",
+     "chaebol",
+     "gentle"
+    ],
+    "credits": {
+     "directors": [
+      "Kwon Hyuk-chan",
+      "Shin Woo-chul"
+     ],
+     "creators": [
+      "Kim Eun-sook",
+      "Yoon Ha-lim"
+     ],
+     "writers": [
+      "Kim Eun-sook"
+     ],
+     "cast": [
+      "Hyun Bin",
+      "Ha Ji-won",
+      "Yoon Sang-hyun",
+      "Kim Sa-rang",
+      "Lee Philip"
+     ],
+     "companies": [
+      "Hwa&Dam Pictures",
+      "Seoul Broadcasting System"
+     ],
+     "networks": [
+      "SBS"
+     ]
+    }
+   },
+   {
+    "pid": 2000000108268,
+    "title": "Get Organized with The Home Edit",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Reality"
+    ],
+    "essence_text": "A delightfully wholesome reality series dedicated to the art of decluttering and organizing, offering a visually satisfying escape into meticulously arranged spaces. With a focus on practical tips and aesthetically pleasing transformations, it’s a feel-good show that appeals to anyone seeking inspiration for their own home. It features celebrity clients, adding a touch of aspirational lifestyle, while remaining light, optimistic, and effortlessly binge-friendly for a relaxed viewing experience.",
+    "tags": [
+     "Home Organization",
+     "Reality Series",
+     "Lifestyle & Decor",
+     "Wholesome Entertainment",
+     "Celebrity Homes",
+     "Design Inspiration",
+     "Practical Advice",
+     "Visually Satisfying",
+     "Comfort Watch"
+    ],
+    "keywords": [
+     "makeover",
+     "home makeover"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Molly Sims",
+      "Reese Witherspoon"
+     ],
+     "writers": [],
+     "cast": [
+      "Clea Shearer",
+      "Joanna Teplin"
+     ],
+     "companies": [
+      "Hello Sunshine",
+      "Critical Content"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000216646,
+    "title": "Friends",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This series offers a heartwarming and wholesome look at a group of young individuals forming an unconventional family as they pursue a shared dream. It's a comforting slice-of-life drama focusing on the bonds of friendship and the challenges of building something new. The narrative provides a gentle escape into contemporary daily life, emphasizing positive growth and collaboration, perfect for a relaxed viewing experience.",
+    "tags": [
+     "Found Family Drama",
+     "Entrepreneurial Journey",
+     "Slice of Life",
+     "Contemporary Chinese",
+     "Heartwarming",
+     "Character-Driven",
+     "Friendship Themes",
+     "Lighthearted Comedy",
+     "Culinary Focus",
+     "Aspirational"
+    ],
+    "keywords": [
+     "friendship",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "Songlin Zhou"
+     ],
+     "writers": [],
+     "cast": [
+      "Gao Yuer",
+      "Guo Yan",
+      "Wu Jiacheng",
+      "Ben Li"
+     ],
+     "companies": [],
+     "networks": [
+      "Sohu Video",
+      "iQiyi"
+     ]
+    }
+   },
+   {
+    "pid": 2000000066008,
+    "title": "You Me Her",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This series explores the complexities of a polyamorous relationship with a grounded, indie rom-com sensibility. It focuses on the emotional dynamics and challenges faced by the characters as they navigate their unconventional arrangement. The strength of the series lies in its relatable characters, sharp dialogue, and exploration of modern romance. While the premise is unique, the series maintains a focus on the universal aspects of love, commitment, and personal growth.",
+    "tags": [
+     "Polyamorous Relationship",
+     "Romantic Comedy",
+     "Suburban Drama",
+     "Relationship Dynamics",
+     "Complex Characters",
+     "Character-Driven",
+     "Dialogue-Heavy",
+     "Modern Romance",
+     "Indie Sensibility"
+    ],
+    "keywords": [
+     "love triangle",
+     "free love",
+     "sexual identity",
+     "roommates",
+     "infidelity",
+     "small town",
+     "lifestyle",
+     "coming out",
+     "portland, oregon",
+     "architect",
+     "feminism",
+     "married couple"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "John Scott Shepherd"
+     ],
+     "writers": [
+      "John Scott Shepherd"
+     ],
+     "cast": [
+      "Greg Poehler",
+      "Rachel Blanchard",
+      "Priscilla Faia",
+      "Melanie Papalia",
+      "Jarod Joseph"
+     ],
+     "companies": [
+      "Entertainment One",
+      "JSS Entertainment",
+      "Entertainment One Television"
+     ],
+     "networks": [
+      "Audience"
+     ]
+    }
+   },
+   {
+    "pid": 2000000085267,
+    "title": "How I Met Your Mother",
+    "year": 2010,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This Russian adaptation captures the heartwarming charm and signature narrative structure of its American predecessor, telling a long-form story of a man recounting his youth and the search for his wife. It's a highly rewatchable sitcom built on relatable characters, witty dialogue, and the enduring bonds of friendship. The series masterfully blends humor with moments of genuine pathos and nostalgic reflection. It's a feel-good journey through the trials and tribulations of young adulthood...",
+    "tags": [
+     "Romantic Sitcom",
+     "Friendship Comedy",
+     "Nostalgic Narrative",
+     "Non-Linear Storytelling",
+     "Coming-of-Age",
+     "Found Family",
+     "Urban Life",
+     "Heartwarming",
+     "Rewatchable",
+     "Pop Culture References"
+    ],
+    "keywords": [
+     "foreign language adaptation"
+    ],
+    "credits": {
+     "directors": [
+      "Fyodor Stukov",
+      "Ivan Kitaev",
+      "Ovanez Petyan"
+     ],
+     "creators": [
+      "Maksim Filipiev"
+     ],
+     "writers": [
+      "Maksim Filipiev",
+      "Carter Bays",
+      "Craig Thomas"
+     ],
+     "cast": [
+      "Alexandr Smirnov",
+      "Aleksandr Seteykin",
+      "Daria Schyogoleva",
+      "Aleksandr Ratnikov",
+      "Tatyana Fedorovskaya"
+     ],
+     "companies": [
+      "Good Story Media"
+     ],
+     "networks": [
+      "STS"
+     ]
+    }
+   },
+   {
+    "pid": 2000000207717,
+    "title": "From Scratch",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A deeply emotional and heartwarming romance that navigates the complexities of love, loss, and resilience across continents. Based on a true story, it explores the profound journey of a couple facing life's greatest challenges, anchored by strong performances. The series offers a blend of cultural immersion and a poignant reflection on the enduring power of family and hope. It's a journey that will move viewers, leaving them with a sense of both sadness and upliftment.",
+    "tags": [
+     "Heartfelt Romance",
+     "Emotional Drama",
+     "Cross-Cultural Journey",
+     "Resilience & Hope",
+     "Family & Grief",
+     "Real-Life Inspiration",
+     "Food & Culture",
+     "Contemporary Relationships",
+     "Poignant Storytelling"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "romance"
+    ],
+    "credits": {
+     "directors": [
+      "Nzingha Stewart"
+     ],
+     "creators": [
+      "Reese Witherspoon",
+      "Jason Coffey"
+     ],
+     "writers": [
+      "Jason Coffey",
+      "Attica Locke",
+      "Amy Wang"
+     ],
+     "cast": [
+      "Zoe Saldaña",
+      "Eugenio Mastrandrea",
+      "Danielle Deadwyler",
+      "Judith Scott",
+      "Kellita Smith"
+     ],
+     "companies": [
+      "3 Arts Entertainment",
+      "Hello Sunshine"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002822,
+    "title": "Felicity",
+    "year": 1998,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Soap"
+    ],
+    "essence_text": "This series captures the intense emotional landscape of young adulthood, following a thoughtful protagonist through the trials and triumphs of college life in New York City. It’s a deeply character-driven romantic drama, exploring the complexities of first loves, friendships, and self-discovery with authenticity. The narrative thoughtfully examines the pivotal decisions that shape one's future, creating a resonant and often poignant viewing experience perfect for those who appreciate...",
+    "tags": [
+     "Romantic Drama",
+     "College Experience",
+     "Coming-of-Age Journey",
+     "Character-Driven",
+     "Relatable Relationships",
+     "Nostalgic Charm",
+     "Thought-Provoking Choices",
+     "Dialogue-Heavy",
+     "Emotional Depth"
+    ],
+    "keywords": [
+     "love triangle",
+     "new york city",
+     "college",
+     "romance",
+     "university",
+     "young adult",
+     "casual"
+    ],
+    "credits": {
+     "directors": [
+      "Lawrence Trilling",
+      "Harry Winer",
+      "Keith Samples"
+     ],
+     "creators": [
+      "J.J. Abrams",
+      "Matt Reeves"
+     ],
+     "writers": [
+      "J.J. Abrams",
+      "Jennifer Levin",
+      "Andrea Newman"
+     ],
+     "cast": [
+      "Keri Russell",
+      "Scott Speedman",
+      "Amy Jo Johnson",
+      "Tangi Miller",
+      "Amanda Foreman"
+     ],
+     "companies": [
+      "Touchstone Television",
+      "Imagine Television Studios"
+     ],
+     "networks": [
+      "The WB"
+     ]
+    }
+   },
+   {
+    "pid": 2000000229380,
+    "title": "Love in Fairhope",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Reality"
+    ],
+    "essence_text": "A tender romantic drama that delves into the lives and loves of five real women across four generations in the enchanting town of Fairhope, Alabama. The series offers a heartfelt and authentic portrayal of contemporary relationships, family bonds, and personal journeys. It's a warm, character-driven experience, perfect for those seeking a comforting escape that resonates with genuine emotion and the charm of small-town life.",
+    "tags": [
+     "Romantic Drama",
+     "Small Town Charm",
+     "Generational Stories",
+     "Female-Centric",
+     "Real-Life Relationships",
+     "Contemporary Southern Life",
+     "Intimate Character Study",
+     "Sweet & Heartfelt",
+     "Community Focus"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Reese Witherspoon",
+      "Joe Kingsley"
+     ],
+     "writers": [],
+     "cast": [],
+     "companies": [
+      "Evolution Media",
+      "Hello Sunshine",
+      "Tremont Road"
+     ],
+     "networks": [
+      "Hulu"
+     ]
+    }
+   },
+   {
+    "pid": 2000000004581,
+    "title": "Friends",
+    "year": 2002,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "This drama offers a gentle, heartwarming exploration of a burgeoning romance across cultural divides, set against the backdrop of Hong Kong. It delicately portrays the nuances of friendship and love as two individuals from different worlds connect. The series emphasizes hope and positive human connection, making for a pleasant and engaging watch. It's a character-driven narrative that excels in its portrayal of contemporary relationships and cross-cultural understanding.",
+    "tags": [
+     "Cross-Cultural Romance",
+     "Contemporary Drama",
+     "Heartwarming & Hopeful",
+     "Interpersonal Relationships",
+     "Gentle Pacing",
+     "Slice-of-Life",
+     "Character-Driven",
+     "Hong Kong Setting",
+     "Co-production Landmark"
+    ],
+    "keywords": [
+     "tourist",
+     "romance",
+     "interracial relationship",
+     "coincidence",
+     "bilingual",
+     "entertainment industry"
+    ],
+    "credits": {
+     "directors": [
+      "Nobuhiro Doi",
+      "Han Cheol-soo"
+     ],
+     "writers": [
+      "Yoshikazu Okada",
+      "Hwang Sun-young"
+     ],
+     "cast": [
+      "Won Bin",
+      "Han Hye-jin",
+      "Lee Dong-gun",
+      "Kyoko Fukada",
+      "Lee Ho-jae"
+     ],
+     "companies": [],
+     "networks": [
+      "MBC",
+      "TBS"
+     ]
+    }
+   },
+   {
+    "pid": 2000000039279,
+    "title": "Hart of Dixie",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A feel-good dramedy about a New York doctor adjusting to life in a small Southern town. The show thrives on its charming characters and situational humor, creating a heartwarming atmosphere. Romance and family dynamics are central themes, making it an easy and enjoyable watch. It's a comforting and escapist series that celebrates small-town life.",
+    "tags": [
+     "Small-Town Charm",
+     "Fish-Out-of-Water",
+     "Romantic Comedy",
+     "Situational Humor",
+     "Character-Driven",
+     "Heartwarming",
+     "Feel-Good",
+     "Contemporary Setting",
+     "Southern Culture"
+    ],
+    "keywords": [
+     "southern usa",
+     "small town",
+     "alabama",
+     "womanizer",
+     "dramedy",
+     "rural"
+    ],
+    "credits": {
+     "directors": [
+      "David Paymer",
+      "Tim Matheson",
+      "Bethany Rooney"
+     ],
+     "creators": [
+      "Leila Gerstein",
+      "Alex Taub"
+     ],
+     "writers": [
+      "Leila Gerstein",
+      "Alex Taub",
+      "Donald Todd"
+     ],
+     "cast": [
+      "Rachel Bilson",
+      "Jaime King",
+      "Cress Williams",
+      "Wilson Bethel",
+      "Tim Matheson"
+     ],
+     "companies": [
+      "Warner Bros. Television",
+      "Fake Empire Productions",
+      "CBS Studios"
+     ],
+     "networks": [
+      "The CW"
+     ]
+    }
+   },
+   {
+    "pid": 2000000062320,
+    "title": "Grace and Frankie",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A comedy-drama centered on two older women forging an unlikely friendship after their husbands come out as gay and leave them for each other. The show explores themes of aging, love, loss, and reinvention with a mix of humor and pathos. It's a contemporary story about finding new purpose and connection in later life. The series benefits from strong performances and witty dialogue.",
+    "tags": [
+     "Comedy-Drama",
+     "Senior Friendship",
+     "LGBTQ+ Themes",
+     "Relationship Comedy",
+     "Second Chapter",
+     "Contemporary",
+     "Character-Driven",
+     "Comfort Watch",
+     "Family Dynamics"
+    ],
+    "keywords": [
+     "divorce",
+     "family",
+     "beach house",
+     "lgbt",
+     "elderly",
+     "frenemies",
+     "senescence",
+     "gay theme",
+     "excited"
+    ],
+    "credits": {
+     "directors": [
+      "Rebecca Asher",
+      "Ken Whittingham",
+      "Marta Kauffman"
+     ],
+     "creators": [
+      "Marcy Ross",
+      "John Hoffman"
+     ],
+     "writers": [
+      "Marta Kauffman",
+      "Howard J. Morris",
+      "Billy Finnegan"
+     ],
+     "cast": [
+      "Jane Fonda",
+      "Lily Tomlin",
+      "Martin Sheen",
+      "Sam Waterston",
+      "June Diane Raphael"
+     ],
+     "companies": [
+      "Skydance Television"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev5-05",
+  "query": "seth rogen comedy series",
+  "intent": "Comedy series Seth Rogen created, wrote or stars in first (The Studio, Platonic), then other comedies, including ones he produced (Future Man). His producer-only action and drama series (Preacher, The Boys) are loosely relevant at best.",
+  "items": [
+   {
+    "pid": 2000000114925,
+    "title": "Pam & Tommy",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This series offers a surprisingly nuanced and often humorous look into a notorious 90s celebrity scandal, exploring themes of privacy, exploitation, and the nascent digital age. It masterfully blends cringe comedy with moments of genuine pathos, inviting viewers to reconsider the narrative around Pamela Anderson and Tommy Lee. Stellar performances anchor the story, creating a compelling and often uncomfortable viewing experience. It's a sharp piece of social commentary wrapped in a...",
+    "tags": [
+     "Biographical Comedy-Drama",
+     "Celebrity Scandal",
+     "90s Pop Culture",
+     "Privacy Invasion",
+     "Exploitation & Media",
+     "Character Study",
+     "Humorous & Empathetic",
+     "Behind-the-Scenes Hollywood",
+     "Legal & Ethical Dilemmas",
+     "Adult Themed"
+    ],
+    "keywords": [
+     "based on true story",
+     "sex tape",
+     "celebrity sextape",
+     "1990s"
+    ],
+    "credits": {
+     "directors": [
+      "Craig Gillespie",
+      "Lake Bell",
+      "Gwyneth Horder-Payton"
+     ],
+     "creators": [
+      "D.V. DeVincentis",
+      "Robert D. Siegel"
+     ],
+     "writers": [
+      "D.V. DeVincentis",
+      "Robert D. Siegel",
+      "Matthew Bass"
+     ],
+     "cast": [
+      "Lily James",
+      "Sebastian Stan",
+      "Seth Rogen",
+      "Nick Offerman",
+      "Taylor Schilling"
+     ],
+     "companies": [
+      "Point Grey Pictures",
+      "Limelight",
+      "Annapurna Television"
+     ],
+     "networks": [
+      "Hulu"
+     ]
+    }
+   },
+   {
+    "pid": 2000000073157,
+    "title": "Future Man",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This series offers a high-octane blend of sci-fi action and irreverent comedy, plunging viewers into a chaotic time-travel adventure. It expertly balances intense futuristic battles with a relentless barrage of pop culture references and absurd situations. The show's appeal lies in its quick wit, energetic pace, and the unlikely bond formed between its eccentric protagonists, promising pure escapist fun for fans of outlandish premises.",
+    "tags": [
+     "Sci-Fi Action Comedy",
+     "Time Travel",
+     "Video Game Culture",
+     "Irreverent Humor",
+     "Fast-Paced",
+     "Buddy Comedy",
+     "Pop Culture References",
+     "Absurdist Plot",
+     "Nostalgic Tones"
+    ],
+    "keywords": [
+     "time travel",
+     "dystopia",
+     "coming of age",
+     "genetic engineering",
+     "unintended consequences"
+    ],
+    "credits": {
+     "directors": [
+      "Wendey Stanzler",
+      "Seth Rogen",
+      "Kevin Bray"
+     ],
+     "creators": [
+      "Seth Rogen",
+      "Evan Goldberg"
+     ],
+     "writers": [
+      "Ariel Shaffir",
+      "Joel Church-Cooper",
+      "Kyle Hunter"
+     ],
+     "cast": [
+      "Josh Hutcherson",
+      "Eliza Coupe",
+      "Derek Wilson",
+      "Ed Begley Jr.",
+      "Glenne Headly"
+     ],
+     "companies": [
+      "Sony Pictures Television",
+      "Point Grey Pictures",
+      "Matt Tolmach Productions"
+     ],
+     "networks": [
+      "Hulu"
+     ]
+    }
+   },
+   {
+    "pid": 2000000102349,
+    "title": "Middleditch & Schwartz",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "An exhilarating showcase of improvisational comedy, this series features two masters of the craft turning simple audience suggestions into hilariously elaborate narratives. The brilliance lies in their lightning-fast wit, incredible chemistry, and fearless commitment to absurd scenarios, resulting in consistently fresh and unpredictable humor. It’s a pure escapist delight that highlights the spontaneous genius of live performance, perfect for a relaxed and uncritical viewing experience.",
+    "tags": [
+     "Improv Comedy",
+     "Dynamic Duo",
+     "Absurdist Humor",
+     "Witty Dialogue",
+     "Spontaneous Storytelling",
+     "Audience Interaction",
+     "Live Performance",
+     "Pure Entertainment",
+     "Physical Comedy"
+    ],
+    "keywords": [
+     "improvisation",
+     "comedy routine",
+     "absurd",
+     "improv",
+     "hilarious",
+     "comedy special"
+    ],
+    "credits": {
+     "directors": [
+      "Ryan Polito"
+     ],
+     "writers": [],
+     "cast": [
+      "Thomas Middleditch",
+      "Ben Schwartz"
+     ],
+     "companies": [
+      "Irwin Entertainment"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002548,
+    "title": "Second City Television",
+    "year": 1976,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A pioneering sketch comedy show that helped launch the careers of many comedic icons. Its fast-paced, satirical sketches blend wit and improvisation to create a unique brand of Canadian humor. The show's influence on subsequent comedy programs is undeniable, and it remains a nostalgic favorite for many. It serves as a time capsule of pop culture trends and societal observations from the late 1970s and early 1980s.",
+    "tags": [
+     "Sketch Comedy",
+     "Satire",
+     "Improvisational",
+     "Canadian Humor",
+     "Pop Culture",
+     "Ensemble Cast",
+     "Parody",
+     "Showbiz",
+     "Nostalgic"
+    ],
+    "keywords": [
+     "parody",
+     "sketch comedy"
+    ],
+    "credits": {
+     "directors": [
+      "George Bloomfield"
+     ],
+     "writers": [],
+     "cast": [
+      "John Candy",
+      "Robin Duke",
+      "Joe Flaherty",
+      "Eugene Levy",
+      "Rick Moranis"
+     ],
+     "companies": [
+      "Old Firehall Productions",
+      "Second City Entertainment"
+     ],
+     "networks": [
+      "CBC Television",
+      "Global TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000112211,
+    "title": "Platonic",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A feel-good and lighthearted show about the rekindling of a platonic friendship. The series focuses on situational humor and relatable characters navigating midlife challenges. With a blend of wit and warmth, it explores the complexities of relationships and the importance of connection. It's an easy and comforting watch, perfect for unwinding and enjoying the simple joys of friendship.",
+    "tags": [
+     "Midlife Friendship",
+     "Relationship Comedy",
+     "Situational Humor",
+     "Character-Driven",
+     "Contemporary Setting",
+     "Relatable Characters",
+     "Feel-Good Show",
+     "Lighthearted"
+    ],
+    "keywords": [
+     "romcom",
+     "brewery",
+     "sitcom",
+     "social comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Nicholas Stoller"
+     ],
+     "creators": [
+      "Rose Byrne",
+      "Seth Rogen"
+     ],
+     "writers": [
+      "Nicholas Stoller",
+      "Francesca Delbanco",
+      "Brittany Ann Miller"
+     ],
+     "cast": [
+      "Rose Byrne",
+      "Seth Rogen",
+      "Luke Macfarlane",
+      "Tre Hale",
+      "Andrew Lopez"
+     ],
+     "companies": [
+      "Sony Pictures Television",
+      "Stoller Global Solutions",
+      "Point Grey Pictures"
+     ],
+     "networks": [
+      "Apple TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000080230,
+    "title": "Black Monday",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A satirical and darkly humorous look at the excesses and greed of 1980s Wall Street, told through the lens of a group of outsiders who inadvertently trigger the infamous Black Monday stock market crash. The show blends fast-paced plotting with sharp social commentary, exploring themes of class, race, and ambition. It's a stylish, nostalgia-infused ride that revels in the outrageousness of the era, offering a cynical yet entertaining take on financial power and corruption. Expect strong...",
+    "tags": [
+     "1980s Wall Street",
+     "Greed & Excess",
+     "Satirical Comedy",
+     "Financial Crime",
+     "Cultural Commentary",
+     "Fast-Paced",
+     "Ensemble Cast",
+     "Dark Humor",
+     "Nostalgic Vibes"
+    ],
+    "keywords": [
+     "cocaine",
+     "wall street",
+     "stockbroker",
+     "stock market crash",
+     "1980s",
+     "black monday"
+    ],
+    "credits": {
+     "directors": [
+      "Payman Benz",
+      "Tiffany Johnson",
+      "Reginald Hudlin"
+     ],
+     "creators": [
+      "Don Cheadle",
+      "Seth Rogen"
+     ],
+     "writers": [
+      "Daniel Libman",
+      "Matthew Libman",
+      "Amelie Gillette"
+     ],
+     "cast": [
+      "Don Cheadle",
+      "Andrew Rannells",
+      "Regina Hall",
+      "Paul Scheer",
+      "Casey Wilson"
+     ],
+     "companies": [
+      "Showtime Networks",
+      "Sony Pictures Television",
+      "Point Grey Pictures"
+     ],
+     "networks": [
+      "Showtime"
+     ]
+    }
+   },
+   {
+    "pid": 2000000103214,
+    "title": "Santa Inc.",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Animation"
+    ],
+    "essence_text": "This adult animated series delivers a sharp, irreverent satire on classic Christmas tropes, infusing holiday cheer with biting dark humor and social commentary. It’s driven by a premise that deconstructs familiar festive narratives through a contemporary, cynical lens, resulting in a show that is anything but wholesome. The humor often leans into cringe and absurdity, offering a provocative, and sometimes shocking, viewing experience. Expect a bold, no-holds-barred take on the North Pole,...",
+    "tags": [
+     "Adult Animated Satire",
+     "Dark Comedy",
+     "Anti-Christmas Spirit",
+     "Corporate Critique",
+     "Feminist Themes",
+     "Cringeworthy Humor",
+     "Irreverent",
+     "Modern Fantasy",
+     "Voice Acting Showcase",
+     "Taboo-Breaking"
+    ],
+    "keywords": [
+     "adult animation"
+    ],
+    "credits": {
+     "directors": [
+      "Harry Chaskin"
+     ],
+     "creators": [
+      "Sarah Silverman",
+      "Seth Green"
+     ],
+     "writers": [
+      "Alexandra Rushfield",
+      "Rachna Fruchbom"
+     ],
+     "cast": [
+      "Sarah Silverman",
+      "Seth Rogen",
+      "Maria Bamford",
+      "Joel Kim Booster",
+      "Leslie Grossman"
+     ],
+     "companies": [
+      "Point Grey Pictures",
+      "Lionsgate Television",
+      "Rushfield Productions"
+     ],
+     "networks": [
+      "HBO Max"
+     ]
+    }
+   },
+   {
+    "pid": 2000000004417,
+    "title": "Da Ali G Show",
+    "year": 2000,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Talk"
+    ],
+    "essence_text": "A groundbreaking satirical series, 'Da Ali G Show' masterfully employs cringe humor and absurdism to expose societal absurdities through unsuspecting real-life interviews. Sacha Baron Cohen's transformative character work creates highly uncomfortable yet brilliantly comedic situations. The show functions as biting social commentary, pushing boundaries with its unique format and fearless approach. It is a defining piece of early 2000s British comedy, both hilarious and thought-provoking.",
+    "tags": [
+     "Satirical Mockumentary",
+     "Cringe Comedy",
+     "Character Performance",
+     "Social Commentary",
+     "Absurdist Humor",
+     "Uncomfortable Interviews",
+     "British Comedy",
+     "Subversive",
+     "Political Humor",
+     "Culture Clash"
+    ],
+    "keywords": [
+     "satire"
+    ],
+    "credits": {
+     "directors": [
+      "James Bobin"
+     ],
+     "creators": [
+      "Sacha Baron Cohen",
+      "Anthony Hines"
+     ],
+     "writers": [
+      "Sacha Baron Cohen",
+      "Anthony Hines",
+      "Dan Mazer"
+     ],
+     "cast": [
+      "Sacha Baron Cohen",
+      "Daniel DiCriscio"
+     ],
+     "companies": [
+      "Four by Two Films",
+      "Talkback"
+     ],
+     "networks": [
+      "Channel 4",
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 2000000152483,
+    "title": "The Boys Presents: Diabolical",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Action & Adventure"
+    ],
+    "essence_text": "This animated anthology plunges headfirst into the darker, more unhinged corners of 'The Boys' universe, delivering a series of irreverent and often shocking short films. It's a masterclass in dark humor and brutal satire, using extreme violence and adult themes to amplify its biting social commentary. Each episode offers a visually distinct and wildly inventive take on superhero lore, guaranteeing a wildly unpredictable and frequently jaw-dropping experience. This is not for the faint of...",
+    "tags": [
+     "Adult Animated Anthology",
+     "Ultra-Violent Satire",
+     "Dark Superhero Parody",
+     "Irreverent & Shocking",
+     "Social Commentary",
+     "Absurdist Humor",
+     "Visually Experimental",
+     "Unflinching & Explicit",
+     "Comic Book Adaptation"
+    ],
+    "keywords": [
+     "anthology",
+     "superhero",
+     "adult animation"
+    ],
+    "credits": {
+     "directors": [
+      "Giancarlo Volpe",
+      "Crystal Chesney",
+      "Derek Lee Thompson"
+     ],
+     "creators": [
+      "Garth Ennis",
+      "Neal H. Moritz"
+     ],
+     "writers": [
+      "Garth Ennis",
+      "Darick Robertson",
+      "Seth Rogen"
+     ],
+     "cast": [],
+     "companies": [
+      "Sony Pictures Television",
+      "Point Grey Pictures",
+      "Amazon Studios"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002693,
+    "title": "Extras",
+    "year": 2005,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This sharp British sitcom masterfully employs cringe humor and biting satire to dissect the often-absurd world of show business and the desperate pursuit of fame. Anchored by a deeply nuanced performance, it delves into the relatable struggles of a struggling actor alongside a parade of celebrity cameos. The series excels in its clever dialogue and social commentary, delivering uncomfortable yet hilarious scenarios that resonate with contemporary realism. It's a thought-provoking and...",
+    "tags": [
+     "British Sitcom",
+     "Cringe Comedy",
+     "Showbiz Satire",
+     "Celebrity Cameos",
+     "Character-Driven",
+     "Dark Humor",
+     "Social Commentary",
+     "Realistic Portrayal",
+     "Dialogue-Heavy"
+    ],
+    "keywords": [
+     "celebrity",
+     "satire",
+     "movie star",
+     "aspiring actor",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "creators": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "writers": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "cast": [
+      "Ricky Gervais",
+      "Ashley Jensen",
+      "Stephen Merchant",
+      "Shaun Williamson",
+      "Shaun Pye"
+     ],
+     "companies": [
+      "BBC",
+      "HBO"
+     ],
+     "networks": [
+      "HBO",
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 2000000003948,
+    "title": "Undeclared",
+    "year": 2001,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A charming and often cringeworthy snapshot of early 2000s college life, this sitcom masterfully blends coming-of-age anxieties with classic situational humor. The series is particularly notable for its relatable portrayal of awkward social interactions and burgeoning relationships. It's an easy, comforting binge that captures the unique blend of independence and parental attachment that defines the freshman experience. Perfect for those seeking a nostalgic, lighthearted escape.",
+    "tags": [
+     "College Sitcom",
+     "Coming-of-Age Comedy",
+     "Awkward Humor",
+     "Father-Son Dynamics",
+     "Early 2000s Nostalgia",
+     "Ensemble Cast",
+     "Relatable Experiences",
+     "Relationship Comedy",
+     "Slice-of-Life"
+    ],
+    "keywords": [
+     "california",
+     "college",
+     "university",
+     "sitcom",
+     "young adult"
+    ],
+    "credits": {
+     "directors": [
+      "Greg Mottola",
+      "John Hamburg",
+      "Judd Apatow"
+     ],
+     "creators": [
+      "Judd Apatow"
+     ],
+     "writers": [
+      "Judd Apatow",
+      "Seth Rogen",
+      "Nicholas Stoller"
+     ],
+     "cast": [
+      "Jay Baruchel",
+      "Carla Gallo",
+      "Charlie Hunnam",
+      "Monica Keena",
+      "Seth Rogen"
+     ],
+     "companies": [
+      "DreamWorks Television",
+      "Apatow Productions"
+     ],
+     "networks": [
+      "FOX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000247767,
+    "title": "The Studio",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A satirical look at the inner workings of a Hollywood movie studio, blending sharp wit with keen observations about the entertainment industry. The show explores the power dynamics, creative clashes, and corporate pressures that shape the films we see. With a fast-paced narrative and strong dialogue, it offers a glimpse into the world of showbiz, where ambition and artistry collide. It's a smart and engaging commentary on pop culture and the pursuit of fame.",
+    "tags": [
+     "Hollywood Satire",
+     "Showbiz Culture",
+     "Workplace Dynamics",
+     "Power Struggles",
+     "Pop Culture Commentary",
+     "Sharp Dialogue",
+     "Industry Insight",
+     "Fast-Paced"
+    ],
+    "keywords": [
+     "hollywood",
+     "los angeles, california",
+     "movie studio",
+     "film industry",
+     "hilarious",
+     "intense"
+    ],
+    "credits": {
+     "directors": [
+      "Seth Rogen",
+      "Evan Goldberg"
+     ],
+     "creators": [
+      "Seth Rogen",
+      "Evan Goldberg"
+     ],
+     "writers": [
+      "Alex Gregory",
+      "Peter Huyck",
+      "Seth Rogen"
+     ],
+     "cast": [
+      "Seth Rogen",
+      "Catherine O'Hara",
+      "Ike Barinholtz",
+      "Chase Sui Wonders",
+      "Kathryn Hahn"
+     ],
+     "companies": [
+      "Point Grey Pictures",
+      "Lionsgate Television",
+      "Coytesville Productions"
+     ],
+     "networks": [
+      "Apple TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000064230,
+    "title": "Preacher",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Mystery",
+     "Drama"
+    ],
+    "essence_text": "A wildly irreverent and visually striking blend of religious satire and supernatural horror that treats theology with the same casual brutality as a bar fight. The series is defined by its pitch-black humor, extreme graphic violence, and surreal narrative leaps, creating an experience that is equal parts hilarious and disturbing. It explores profound questions about faith, free will, and divine abandonment through the lens of eccentric characters who refuse to take anything seriously except...",
+    "tags": [
+     "Religious Satire",
+     "Gore-Filled Dark Comedy",
+     "Surreal Supernatural Road Trip",
+     "Provocative Theological Debate",
+     "Stylized Graphic Violence",
+     "Irreverent & Absurd",
+     "Cult Comic Adaptation",
+     "Morally Ambiguous Anti-Heroes"
+    ],
+    "keywords": [
+     "texas",
+     "vampire",
+     "supernatural",
+     "god",
+     "based on comic",
+     "demon",
+     "preacher",
+     "supernatural power"
+    ],
+    "credits": {
+     "directors": [
+      "Michael Slovis",
+      "Seth Rogen",
+      "Evan Goldberg"
+     ],
+     "creators": [
+      "Neal H. Moritz",
+      "Seth Rogen"
+     ],
+     "writers": [
+      "Garth Ennis",
+      "Steve Dillon",
+      "Sam Catlin"
+     ],
+     "cast": [
+      "Dominic Cooper",
+      "Ruth Negga",
+      "Joseph Gilgun",
+      "Anatol Yusef",
+      "Tom Brooke"
+     ],
+     "companies": [
+      "Point Grey Pictures",
+      "Short Drive Entertainment",
+      "Original Film"
+     ],
+     "networks": [
+      "AMC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000216087,
+    "title": "Paul T. Goldman",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "A truly singular and baffling experience, this series brilliantly blurs the lines between reality and fiction, acting as a meta-narrative about a filmmaker trying to adapt a bizarre true crime story. It thrives on uncomfortable cringe humor and the unpredictable eccentricity of its central figure, keeping viewers constantly questioning what is real. The show is an intricate puzzle box, offering sharp social commentary through its self-referential storytelling and profound character study.",
+    "tags": [
+     "Meta-Narrative Comedy",
+     "Docu-Fiction Hybrid",
+     "Unpredictable True Crime",
+     "Eccentric Character Study",
+     "Cringe-Inducing Humor",
+     "Reality-Bending Narrative",
+     "Satirical Commentary",
+     "Filmmaking Process",
+     "Psychological Intrigue"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "fraud",
+     "miniseries",
+     "criminal"
+    ],
+    "credits": {
+     "directors": [
+      "Jason Woliner"
+     ],
+     "creators": [
+      "Seth Rogen",
+      "Evan Goldberg"
+     ],
+     "writers": [
+      "Paul T. Goldman"
+     ],
+     "cast": [
+      "Paul T. Goldman",
+      "Melinda McGraw"
+     ],
+     "companies": [
+      "Point Grey Pictures",
+      "Annapurna Television",
+      "Caviar"
+     ],
+     "networks": [
+      "Peacock"
+     ]
+    }
+   },
+   {
+    "pid": 2000000213249,
+    "title": "Sausage Party: Foodtopia",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Action & Adventure",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This animated series plunges into a bizarre, post-apocalyptic world where food items attempt to build a utopia after humanity's demise. It's a no-holds-barred experience, leveraging extreme violence, explicit humor, and grotesque visuals for its unique brand of satire. The show is driven by its audacious premise and willingness to shock, offering a relentlessly irreverent take on societal structures and philosophical questions. Expect a deeply unconventional and polarizing viewing...",
+    "tags": [
+     "Adult Animated Comedy",
+     "Extreme Satire",
+     "Absurdist Humor",
+     "Post-Apocalyptic",
+     "Philosophical Farce",
+     "Societal Critique",
+     "Visually Disturbing",
+     "Grotesque & Vulgar",
+     "Unconventional Premise"
+    ],
+    "keywords": [
+     "food",
+     "spin off",
+     "adult animation",
+     "based on movie"
+    ],
+    "credits": {
+     "directors": [
+      "Conrad Vernon"
+     ],
+     "creators": [
+      "Conrad Vernon",
+      "Seth Rogen"
+     ],
+     "writers": [
+      "Kyle Hunter",
+      "Ariel Shaffir",
+      "Dewayne Perkins"
+     ],
+     "cast": [
+      "Seth Rogen",
+      "Kristen Wiig",
+      "Edward Norton",
+      "Michael Cera"
+     ],
+     "companies": [
+      "Point Grey Pictures",
+      "Annapurna Television",
+      "Sony Pictures Television"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   },
+   {
+    "pid": 2000000076479,
+    "title": "The Boys",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Action & Adventure"
+    ],
+    "essence_text": "A darkly humorous and cynical take on the superhero genre, filled with excessive violence and morally ambiguous characters. The series satirizes corrupt institutions and explores the dark side of power. It's an intense and action-packed drama, driven by a bleak worldview and a willingness to push boundaries. The show offers a thought-provoking commentary on society and the superhero mythos.",
+    "tags": [
+     "Superhero satire",
+     "Dark humor",
+     "Excessive violence",
+     "Cynical worldview",
+     "Corrupt institutions",
+     "Social commentary",
+     "Action-packed",
+     "Intense drama",
+     "Morally ambiguous"
+    ],
+    "keywords": [
+     "corruption",
+     "satire",
+     "superhero",
+     "based on comic",
+     "gore",
+     "tragedy",
+     "evil corporation",
+     "super power",
+     "superhero team",
+     "violence",
+     "hilarious"
+    ],
+    "credits": {
+     "directors": [
+      "Philip Sgriccia",
+      "Karen Gaviola",
+      "Sarah Boyd"
+     ],
+     "creators": [
+      "Neal H. Moritz",
+      "Seth Rogen"
+     ],
+     "writers": [
+      "Garth Ennis",
+      "Darick Robertson",
+      "David Reed"
+     ],
+     "cast": [
+      "Karl Urban",
+      "Jack Quaid",
+      "Antony Starr",
+      "Erin Moriarty",
+      "Jessie T. Usher"
+     ],
+     "companies": [
+      "Amazon Studios",
+      "Original Film",
+      "Sony Pictures Television"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev5-06",
+  "query": "funny ricky gervais shows",
+  "intent": "Control: comedy series Ricky Gervais created, wrote and stars in first (The Office UK, Extras, After Life, Derek, Life's Too Short), then similar British cringe comedies.",
+  "items": [
+   {
+    "pid": 2000000002316,
+    "title": "The Office",
+    "year": 2005,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This iconic series is a masterclass in cringe humor and character-driven workplace comedy, presented in a distinctive mockumentary style. It brilliantly captures the mundane yet hilarious realities of office life, offering both laugh-out-loud moments and surprisingly heartfelt character arcs. The show's strength lies in its unforgettable cast and their nuanced relationships, making it incredibly rewatchable and a go-to comfort watch. It subtly comments on corporate culture and human...",
+    "tags": [
+     "Workplace Comedy",
+     "Mockumentary Style",
+     "Cringe Humor",
+     "Iconic Characters",
+     "Relationship-Driven",
+     "Heartfelt Moments",
+     "Rewatchable",
+     "Situational Comedy",
+     "Social Satire"
+    ],
+    "keywords": [
+     "office",
+     "work",
+     "boss",
+     "remake",
+     "mockumentary",
+     "employer employee relationship",
+     "sitcom",
+     "employment",
+     "workplace comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Randall Einhorn",
+      "Paul Feig",
+      "Ken Kwapis"
+     ],
+     "creators": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "writers": [
+      "Mindy Kaling",
+      "Paul Lieberstein",
+      "Gene Stupnitsky"
+     ],
+     "cast": [
+      "Steve Carell",
+      "Rainn Wilson",
+      "John Krasinski",
+      "Jenna Fischer",
+      "B.J. Novak"
+     ],
+     "companies": [
+      "Universal Television",
+      "Deedle-Dee Productions",
+      "Reveille Productions"
+     ],
+     "networks": [
+      "NBC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000035305,
+    "title": "The Ricky Gervais Show",
+    "year": 2010,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Animation"
+    ],
+    "essence_text": "An ingenious animated adaptation of the popular podcasts, 'The Ricky Gervais Show' offers a uniquely visual spin on Gervais, Stephen Merchant, and Karl Pilkington's unscripted conversations. The charm lies in the trio's natural banter and Karl's wonderfully bizarre worldview, brought to life through literal, Hanna-Barbera-esque animation. It's a goldmine of quotable moments and genuine laughs, perfect for those seeking absurd, dialogue-driven comedy that's both endlessly rewatchable and...",
+    "tags": [
+     "Absurdist Comedy",
+     "Podcast Adaptation",
+     "Animated Sitcom",
+     "Witty Banter",
+     "Observational Humor",
+     "Karl Pilkington's Peculiarities",
+     "Background Friendly",
+     "Unique Visual Style",
+     "Cult Following"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Bob Higgins",
+      "Glyn Hughes"
+     ],
+     "writers": [],
+     "cast": [
+      "Stephen Merchant",
+      "Ricky Gervais",
+      "Karl Pilkington"
+     ],
+     "companies": [
+      "Wildbrain Entertainment",
+      "MRC",
+      "HBO"
+     ],
+     "networks": [
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 2000000060655,
+    "title": "Derek",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A heartwarming yet unsparing comedy-drama set in a nursing home, 'Derek' balances poignant moments with Ricky Gervais' signature brand of observational humor and cringe comedy. The series thrives on its authentic characters and their genuine connections, offering a compassionate look at the elderly and those who care for them. It's a character-driven show that provides both laughs and tears, challenging perceptions while highlighting the quiet heroism of everyday kindness. Ideal for viewers...",
+    "tags": [
+     "Heartwarming Comedy-Drama",
+     "Workplace Dynamics",
+     "Socially Observant",
+     "Compassionate & Humorous",
+     "Slice-of-Life",
+     "Character-Driven",
+     "Authentic Dialogue",
+     "British Comedy",
+     "Aging & Care"
+    ],
+    "keywords": [
+     "mockumentary",
+     "nursing home",
+     "elderly",
+     "workplace comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Ricky Gervais"
+     ],
+     "creators": [
+      "Ricky Gervais"
+     ],
+     "writers": [
+      "Ricky Gervais"
+     ],
+     "cast": [
+      "Ricky Gervais",
+      "Kerry Godliman",
+      "David Earl",
+      "Karl Pilkington",
+      "Barry Martin"
+     ],
+     "companies": [
+      "Derek Productions"
+     ],
+     "networks": [
+      "Channel 4"
+     ]
+    }
+   },
+   {
+    "pid": 2000000034014,
+    "title": "An Idiot Abroad",
+    "year": 2010,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Documentary"
+    ],
+    "essence_text": "Follows the hilariously reluctant Karl Pilkington as he's sent to visit the Seven Wonders of the World, offering his uniquely cynical and often clueless perspective. The humor stems from his candid reactions to new cultures and experiences, masterfully orchestrated by Ricky Gervais and Stephen Merchant. It's an insightful, albeit unconventional, look at travel and human nature, often resulting in genuine laughter and surprising observations. A perfect watch for those who enjoy...",
+    "tags": [
+     "Reluctant Travelogue",
+     "Observational Comedy",
+     "British Humor",
+     "Eccentric Protagonist",
+     "Cultural Clash",
+     "Documentary Series",
+     "Unscripted Journeys",
+     "Fish-out-of-Water",
+     "Global Exploration"
+    ],
+    "keywords": [
+     "travel"
+    ],
+    "credits": {
+     "directors": [
+      "Luke Campbell"
+     ],
+     "creators": [
+      "Richard Yee"
+     ],
+     "writers": [],
+     "cast": [
+      "Karl Pilkington",
+      "Ricky Gervais",
+      "Stephen Merchant",
+      "Warwick Davis"
+     ],
+     "companies": [
+      "Sky",
+      "Me + You Productions",
+      "RiSK Productions"
+     ],
+     "networks": [
+      "Sky One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002693,
+    "title": "Extras",
+    "year": 2005,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This sharp British sitcom masterfully employs cringe humor and biting satire to dissect the often-absurd world of show business and the desperate pursuit of fame. Anchored by a deeply nuanced performance, it delves into the relatable struggles of a struggling actor alongside a parade of celebrity cameos. The series excels in its clever dialogue and social commentary, delivering uncomfortable yet hilarious scenarios that resonate with contemporary realism. It's a thought-provoking and...",
+    "tags": [
+     "British Sitcom",
+     "Cringe Comedy",
+     "Showbiz Satire",
+     "Celebrity Cameos",
+     "Character-Driven",
+     "Dark Humor",
+     "Social Commentary",
+     "Realistic Portrayal",
+     "Dialogue-Heavy"
+    ],
+    "keywords": [
+     "celebrity",
+     "satire",
+     "movie star",
+     "aspiring actor",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "creators": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "writers": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "cast": [
+      "Ricky Gervais",
+      "Ashley Jensen",
+      "Stephen Merchant",
+      "Shaun Williamson",
+      "Shaun Pye"
+     ],
+     "companies": [
+      "BBC",
+      "HBO"
+     ],
+     "networks": [
+      "HBO",
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000713,
+    "title": "Chappelle's Show",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This seminal sketch comedy show delivers sharp, often provocative social commentary through Dave Chappelle's unique comedic lens. It masterfully blends stand-up with a rapid-fire series of memorable sketches, unafraid to tackle sensitive topics with dark humor and biting satire. The show is known for its iconic characters and quotable lines, offering an instantly recognizable and highly rewatchable experience. It's a comedic powerhouse that pushes boundaries and leaves a lasting cultural impact.",
+    "tags": [
+     "Sketch Comedy",
+     "Dave Chappelle",
+     "Social Satire",
+     "Pop Culture Commentary",
+     "Dark Humor",
+     "Witty & Provocative",
+     "Iconic Characters",
+     "Cringe Humor",
+     "Cult Classic",
+     "Fast-Paced"
+    ],
+    "keywords": [
+     "sketch comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Rusty Cundieff"
+     ],
+     "creators": [
+      "Dave Chappelle",
+      "Neal Brennan"
+     ],
+     "writers": [
+      "Dave Chappelle",
+      "Neal Brennan",
+      "Norman Lear"
+     ],
+     "cast": [
+      "Yasiin Bey",
+      "Dave Chappelle"
+     ],
+     "companies": [
+      "Pilot Boy Productions",
+      "Marobru Productions"
+     ],
+     "networks": [
+      "Comedy Central"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002759,
+    "title": "The Day Today",
+    "year": 1994,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A groundbreaking and hilariously dark satire that mercilessly parodies contemporary news broadcasting. Its genius lies in its absurd humor, razor-sharp wit, and an unsettlingly accurate portrayal of media sensationalism and manipulation. The show’s distinctive visual and narrative style creates a world that is both bizarre and chillingly familiar. It's a highly influential, thought-provoking comedy that remains incisively relevant to this day.",
+    "tags": [
+     "News Satire",
+     "Absurdist Comedy",
+     "Media Parody",
+     "British Cult Classic",
+     "Darkly Humorous",
+     "Cutting Social Commentary",
+     "Unique Visual Style",
+     "Cringe Humor",
+     "Surreal"
+    ],
+    "keywords": [
+     "surreal",
+     "satire",
+     "parody",
+     "current affairs"
+    ],
+    "credits": {
+     "directors": [
+      "Andrew Gillman"
+     ],
+     "creators": [
+      "David Schneider",
+      "Steve Coogan"
+     ],
+     "writers": [
+      "David Schneider",
+      "Steve Coogan",
+      "Peter Baynham"
+     ],
+     "cast": [
+      "Chris Morris",
+      "Patrick Marber",
+      "Doon Mackichan",
+      "Steve Coogan",
+      "Rebecca Front"
+     ],
+     "companies": [
+      "TalkBack Productions",
+      "BBC"
+     ],
+     "networks": [
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000082,
+    "title": "Animaniacs",
+    "year": 1993,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Kids",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A wildly energetic and irreverent cartoon that masters both physical comedy and rapid-fire wit. The show is a joyous explosion of absurdism and pop culture satire, delivered by its iconic, mischievous characters. It masterfully blends clever dialogue, catchy musical numbers, and meta-narrative elements, making it highly rewatchable for all ages. It's pure, unadulterated escapism that balances nostalgic charm with surprisingly sharp humor.",
+    "tags": [
+     "Zany Cartoon Comedy",
+     "Slapstick & Wordplay",
+     "Pop Culture Satire",
+     "Meta-Humor",
+     "Family-Friendly Chaos",
+     "Musical & Catchy",
+     "Fast-Paced Gags",
+     "Nostalgic Animation",
+     "Witty & Clever"
+    ],
+    "keywords": [
+     "sibling relationship",
+     "parody",
+     "world domination",
+     "false history",
+     "talking animal",
+     "genetically modified creature",
+     "absurd"
+    ],
+    "credits": {
+     "directors": [
+      "Dave Marshall",
+      "Alfred Gimeno",
+      "Rusty Mills"
+     ],
+     "creators": [
+      "Steven Spielberg",
+      "Peter Hastings"
+     ],
+     "writers": [
+      "Tom Ruegger",
+      "Peter Hastings",
+      "Paul Rugg"
+     ],
+     "cast": [
+      "Rob Paulsen",
+      "Jess Harnell",
+      "Tress MacNeille",
+      "Maurice LaMarche",
+      "Sherri Stoner"
+     ],
+     "companies": [
+      "Amblin Television",
+      "Warner Bros. Television"
+     ],
+     "networks": [
+      "The WB",
+      "Fox Kids"
+     ]
+    }
+   },
+   {
+    "pid": 2000000038294,
+    "title": "Life's Too Short",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Documentary"
+    ],
+    "essence_text": "This British mockumentary sitcom delivers a masterclass in cringe humor, following the often-humiliating life of a fictionalized Warwick Davis navigating the eccentricities of showbiz. It expertly blends satirical commentary on celebrity culture with a relentless stream of awkward encounters and sharp, witty dialogue. Fans of Ricky Gervais and Stephen Merchant's signature style will find a deeply uncomfortable yet uproariously funny experience. The show thrives on its unique blend of comedic...",
+    "tags": [
+     "Mockumentary Sitcom",
+     "Cringe Comedy",
+     "Showbiz Satire",
+     "Celebrity Cameos",
+     "British Humor",
+     "Awkward Situations",
+     "Darkly Comedic",
+     "Self-Deprecating Humor",
+     "Character-Driven Comedy"
+    ],
+    "keywords": [
+     "mockumentary",
+     "struggling actor",
+     "sitcom",
+     "dwarfism"
+    ],
+    "credits": {
+     "directors": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "creators": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "writers": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "cast": [
+      "Warwick Davis",
+      "Ricky Gervais",
+      "Stephen Merchant",
+      "Jo Enright",
+      "Steve Brody"
+     ],
+     "companies": [
+      "Backlash Productions"
+     ],
+     "networks": [
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002996,
+    "title": "The Office",
+    "year": 2001,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A British sitcom classic that mines humor from the mundane realities of office life. The show's mockumentary style amplifies the cringe comedy and awkward interactions between its eccentric characters. Expect sharp dialogue, relatable scenarios, and a heavy dose of situational humor. It offers a comforting, easily rewatchable experience with a touch of social satire.",
+    "tags": [
+     "British Sitcom",
+     "Office Comedy",
+     "Workplace Humor",
+     "Cringe Comedy",
+     "Mockumentary Style",
+     "Character-Driven",
+     "Contemporary Realism",
+     "Social Satire",
+     "Dialogue-Heavy"
+    ],
+    "keywords": [
+     "office",
+     "employer employee relationship",
+     "sitcom",
+     "employment",
+     "workplace comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "creators": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "writers": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "cast": [
+      "Ricky Gervais",
+      "Martin Freeman",
+      "Mackenzie Crook",
+      "Lucy Davis",
+      "Stirling Gallacher"
+     ],
+     "companies": [
+      "BBC"
+     ],
+     "networks": [
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 2000000004589,
+    "title": "Arrested Development",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A satirical comedy that dissects the lives of a wealthy, dysfunctional family. The show is defined by its witty dialogue, cringe-worthy situations, and dark humor. It delivers sharp social commentary through its portrayal of class and capitalism. Though farcical, there's an endearing quality that gives it rewatchability.",
+    "tags": [
+     "Dysfunctional Family",
+     "Satirical Comedy",
+     "Cult Classic",
+     "Witty Dialogue",
+     "Social Commentary",
+     "Dark Humor",
+     "Ensemble Cast",
+     "Nostalgic",
+     "Cringe Comedy"
+    ],
+    "keywords": [
+     "prison",
+     "narration",
+     "dysfunctional family",
+     "dark comedy",
+     "family relationships",
+     "sexual humor",
+     "mockumentary",
+     "psychotic",
+     "fake documentary",
+     "orange county, california",
+     "sitcom",
+     "deadpan"
+    ],
+    "credits": {
+     "directors": [
+      "Troy Miller",
+      "Mitchell Hurwitz",
+      "Joe Russo"
+     ],
+     "creators": [
+      "Brian Grazer",
+      "Ron Howard"
+     ],
+     "writers": [
+      "Mitchell Hurwitz",
+      "Jim Vallely",
+      "Dean Lorey"
+     ],
+     "cast": [
+      "Jason Bateman",
+      "Portia De Rossi",
+      "Will Arnett",
+      "Michael Cera",
+      "Alia Shawkat"
+     ],
+     "companies": [
+      "Imagine Television Studios",
+      "The Hurwitz Company",
+      "20th Century Fox Television"
+     ],
+     "networks": [
+      "FOX",
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000079410,
+    "title": "After Life",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A darkly comedic drama that explores grief and loss with a cynical yet poignant touch. The series delves into the existential struggles of its protagonist, using sharp dialogue and character depth to create an introspective experience. While bleak, it offers moments of catharsis and unexpected humor. The strong performances and social commentary add layers to this character-driven series.",
+    "tags": [
+     "Dark Comedy-Drama",
+     "Grief and Loss",
+     "Existential",
+     "Cynical Humor",
+     "Character-Driven",
+     "British",
+     "Introspective",
+     "Contemporary",
+     "Bleak"
+    ],
+    "keywords": [
+     "suicide",
+     "depression",
+     "husband wife relationship",
+     "sadness",
+     "grief",
+     "dark comedy",
+     "grieving widower",
+     "widower",
+     "newspaper office",
+     "calm",
+     "grieving man",
+     "death of a loved one"
+    ],
+    "credits": {
+     "directors": [
+      "Ricky Gervais"
+     ],
+     "creators": [
+      "Ricky Gervais"
+     ],
+     "writers": [
+      "Ricky Gervais"
+     ],
+     "cast": [
+      "Ricky Gervais",
+      "Tom Basden",
+      "Kerry Godliman",
+      "David Bradley",
+      "Joe Wilkinson"
+     ],
+     "companies": [
+      "Derek Productions"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   }
+  ]
+ }
+]

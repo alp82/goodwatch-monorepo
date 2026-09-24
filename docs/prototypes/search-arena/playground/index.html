@@ -81,7 +81,7 @@ details > summary::-webkit-details-marker { display: none; }
 <div id="reading"></div>
 <main id="cols"></main>
 <script>
-const COLS = [["prod", "Production", ""], ["r6", "r6 (style neighbours)", ""], ["r5", "r5 (people + studios)", ""], ["r4-combo-fast", "r4-combo-fast", "winner"], ["r4-combo", "r4-combo", ""]];
+const COLS = [["prod", "Production", ""], ["simplified", "Simplified (combo-safe-v3)", "candidate"], ["r6", "r6 (baseline)", ""], ["r4-combo-fast", "r4-combo-fast", "winner"]];
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 let spend = null, startup = null;

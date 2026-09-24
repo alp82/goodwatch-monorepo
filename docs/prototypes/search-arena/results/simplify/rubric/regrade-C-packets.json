@@ -1,0 +1,76 @@
+[
+ {
+  "query_id": "lab-06",
+  "query": "furious",
+  "intent": "Ambiguous mood vs title lookup: rage-driven, ferocious, high-intensity titles; the Fast & Furious franchise is a plausible title reading.",
+  "items": [],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "lab-06",
+  "query": "furious",
+  "intent": "Ambiguous mood vs title lookup: rage-driven, ferocious, high-intensity titles; the Fast & Furious franchise is a plausible title reading.",
+  "items": [
+   {
+    "pid": 1000000001271,
+    "title": "300",
+    "year": 2007,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "War"
+    ],
+    "essence_text": "A visually arresting and hyper-masculine historical fantasy, defined by its stylized slow-motion violence and over-the-top spectacle. The film presents a highly romanticized and graphic depiction of ancient warfare. Driven by adrenaline and political machinations, the narrative explores themes of sacrifice and heroism. Its distinctive visual style creates a world of epic proportions, making it a visceral and immersive experience.",
+    "tags": [
+     "Visually Striking",
+     "Stylized Violence",
+     "Historical Fantasy",
+     "Epic Warfare",
+     "Hyper-Masculine",
+     "Slow-Motion Action",
+     "Political Intrigue",
+     "Graphic Novel Adaptation",
+     "Over-the-Top Spectacle"
+    ],
+    "keywords": [
+     "army",
+     "narration",
+     "grave",
+     "gore",
+     "based on true story",
+     "based on comic",
+     "sword fight",
+     "massacre",
+     "ancient world",
+     "based on graphic novel",
+     "ancient greece",
+     "warrior"
+    ],
+    "credits": {
+     "directors": [
+      "Zack Snyder"
+     ],
+     "writers": [
+      "Zack Snyder",
+      "Kurt Johnstad",
+      "Michael B. Gordon"
+     ],
+     "cast": [
+      "Gerard Butler",
+      "Lena Headey",
+      "Dominic West",
+      "David Wenham",
+      "Vincent Regan"
+     ],
+     "companies": [
+      "Virtual Studios",
+      "Legendary Pictures",
+      "Hollywood Gang Productions"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ }
+]

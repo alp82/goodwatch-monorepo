@@ -10,6 +10,9 @@ Only SELECTs through scripts/readonly_stores.py. Raw query results are cached in
 (delete it to re-pull).
 
 Usage: .venv/bin/python scripts/pull_credits.py
+       .venv/bin/python scripts/pull_credits.py --writer-creators   # data/credits-v2.jsonl.gz only (from the raw
+           cache): a show without a Creator credit falls back to people with a script credit (Writer, Teleplay,
+           Screenplay), those who are also Executive Producer first, then by episodes; pure producers never
 """
 import gzip, json, os, pickle, sys, time
 from collections import Counter, defaultdict
@@ -28,6 +31,8 @@ WRITER_JOBS = ("Writer", "Screenplay", "Story", "Novel", "Original Story", "Thea
                "Scenario Writer", "Adaptation", "Dialogue", "Original Concept", "Graphic Novel")
 CAST_N = 15
 MAX_DIRECTORS, MAX_WRITERS, MAX_CREATORS = 5, 8, 4
+SCRIPT_JOBS = ("Writer", "Teleplay", "Screenplay")
+WRITER_CREATORS = "--writer-creators" in sys.argv
 KEEP_POPULARITY = 5.0   # people with a single eligible credit are kept when popularity >= this
 
 
@@ -87,6 +92,8 @@ def main():
         by_type[cat.media_type(r)].append(int(cat.tmdb_id[r]))
     if os.path.exists(RAW):
         raw = pickle.load(gzip.open(RAW, "rb"))
+    elif WRITER_CREATORS:
+        raise SystemExit(f"--writer-creators rebuilds from the raw cache only: {RAW} is missing")
     else:
         raw = pull(by_type)
         pickle.dump(raw, gzip.open(RAW, "wb"))
@@ -130,7 +137,15 @@ def main():
         # (as scripts/pull_people.py does); movies: none (use directors)
         cp = sorted({p for p, job, _ in cr if job == "Creator"})
         src = "creator" if cp else None
-        if not cp and mt == "show":
+        if not cp and mt == "show" and WRITER_CREATORS:
+            best, jobs = Counter(), defaultdict(set)
+            for p, job, ep in cr:
+                if job == "Executive Producer" or job in SCRIPT_JOBS:
+                    best[p] = max(best[p], ep)
+                    jobs[p].add("ep" if job == "Executive Producer" else "script")
+            cp = sorted((p for p in best if "script" in jobs[p]), key=lambda p: (-len(jobs[p]), -best[p], p))[:2]
+            src = "fallback_writer" if cp else None
+        elif not cp and mt == "show":
             best = Counter()
             for p, job, ep in cr:
                 if job in ("Executive Producer", "Writer"):
@@ -146,9 +161,13 @@ def main():
         credits.append({"id": int(cat.ids[r]), "media_type": mt, "tmdb_id": m, "title": cat.title[r],
                         "year": int(cat.year[r]) or None, "votes": int(cat.votes[r]), "directors": d, "writers": w,
                         "creators": c, "creator_source": src, "cast": ca[:CAST_N]})
-    with gzip.open(os.path.join(C.DATA, "credits.jsonl.gz"), "wt", encoding="utf-8") as f:
+    with gzip.open(os.path.join(C.DATA, "credits-v2.jsonl.gz" if WRITER_CREATORS else "credits.jsonl.gz"), "wt",
+                   encoding="utf-8") as f:
         for x in credits:
             f.write(json.dumps(x, ensure_ascii=False) + "\n")
+    if WRITER_CREATORS:
+        print("shows with a fallback creator", sum(x["creator_source"] == "fallback_writer" for x in credits))
+        return
 
     # coverage
     cov = {"titles": len(credits)}

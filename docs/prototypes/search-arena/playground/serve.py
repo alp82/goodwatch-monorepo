@@ -36,12 +36,14 @@ import cuts  # noqa: E402
 import run4  # noqa: E402
 import run5  # noqa: E402
 import run6  # noqa: E402
+import simp_combo  # noqa: E402
 
 WEBAPP = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(ARENA))), "goodwatch-webapp")
 ADHOC = os.path.join(X.CAPTURES, "adhoc")
 CACHE = os.path.join(HERE, "cache")
 TOP = 20
-RANKERS = ["r6", "r5", "r4-combo-fast", "r4-combo"]
+RANKERS = ["simplified", "r6", "r4-combo-fast"]
+SIMPLIFIED = "combo-safe-v3"  # simp_combo.FINAL: round 6 candidate
 CAPTURE_TIMEOUT_S = 90
 
 
@@ -297,6 +299,14 @@ def rank(ctx, qid):
     for name in RANKERS:
         info = {}
         t = time.perf_counter()
+        if name == "simplified":
+            ranked = simp_combo.FINAL[SIMPLIFIED](ctx)
+            ms = (time.perf_counter() - t) * 1000
+            items = [dict(**describe(x["id"], x), rank=i + 1, score=round(float(x["score"]), 3), source=x.get("source"),
+                          disc_rank=x.get("disc_rank"), title_bonus=x.get("lexical"), match=x.get("match"), debug={},
+                          reasons=[], grade=grade(qid, x["id"])) for i, x in enumerate(ranked[:TOP])]
+            out[name] = dict(items=items, ms=round(ms, 1), query_debug={})
+            continue
         if name == "r6":
             kw, bk = run6.FINAL[name]
             disc = R6.hyb6(ctx, debug=info, **kw)

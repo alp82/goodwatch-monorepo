@@ -1,0 +1,101 @@
+--- a/harness/evalsimp.py	2026-09-23 22:16:51.215196885 +0200
++++ b/harness/evalsimp.py	2026-09-23 22:16:51.222649293 +0200
+@@ -7,6 +7,9 @@
+   harness/evalsimp.py table [<name> ...]                   # the table again from saved lists (no timing)
+   harness/evalsimp.py compare <A> <B>                      # per-query ndcg10 deltas and top-10 diffs
+   harness/evalsimp.py pool <tag> <name> [<name> ...]       # ungraded top-10 pairs -> grading packets
++  --overlay[=path]   (score, table, compare) apply a re-grade overlay on top of results/grades.json, in memory only
++                     (default results/simplify/rubric/overlay.json: {"grades": {qid: {pid: grade}}, ...}). Off by
++                     default; grades.json is never written. Saved scores record which grades they used.
+ 
+ Candidate specs:
+   prod, r4-combo-fast, r5, r6          built in (prod is the captured production list, no latency)
+@@ -77,9 +80,31 @@
+ BAD5_GROUPS = ("dev", "holdout", "holdout2", "holdout3", "holdout4")
+ OWN_GROUPS = ("dev-sty", "ho3-sty", "holdout4")
+ TOP = 50
++OVERLAY = os.path.join(OUT, "rubric", "overlay.json")
+ REF = "r6"
+ WARMUP = ("ppl-09", "sty-01", "lab-01", "ppl-01")  # style, style, generic, filmography: loads every lazy index
+ 
++# --- grades ---------------------------------------------------------------------------------------
++
++_overlay = None   # path of the re-grade overlay to apply, set by --overlay
++
++
++def load_grades():
++    """results/grades.json as metrics.load_grades returns it, with the --overlay re-grades replacing their pairs."""
++    g = M.load_grades()
++    if _overlay:
++        ov = json.load(open(_overlay))["grades"]
++        for q, d in ov.items():
++            g.setdefault(q, {}).update({int(p): int(x) for p, x in d.items()})
++        print(f"grades: results/grades.json + overlay {os.path.relpath(_overlay, C.ARENA)} "
++              f"({sum(map(len, ov.values()))} pairs replaced)")
++    return g
++
++
++def grades_label():
++    return f"grades.json+{os.path.relpath(_overlay, C.ARENA)}" if _overlay else "grades.json"
++
++
+ # --- queries --------------------------------------------------------------------------------------
+ 
+ _ctxs = None
+@@ -317,7 +342,7 @@
+     os.makedirs(LISTS, exist_ok=True)
+     os.makedirs(SCORES, exist_ok=True)
+     json.dump(lists, open(os.path.join(LISTS, _fname(name) + ".json"), "w"), ensure_ascii=False)
+-    json.dump(dict(summary=s, latency=lat), open(os.path.join(SCORES, _fname(name) + ".json"), "w"), indent=1)
++    json.dump(dict(summary=s, latency=lat, grades=grades_label()), open(os.path.join(SCORES, _fname(name) + ".json"), "w"), indent=1)
+ 
+ 
+ def load_lists(name):
+@@ -331,7 +356,7 @@
+     """{name: entry or rank callable} -> {name: (summary, latency)}; prints the table."""
+     t0 = time.time()
+     ctxs = contexts()
+-    grades = M.load_grades()
++    grades = load_grades()
+     cands = {n: as_rank(e) for n, e in cands.items()}
+     if ref and REF not in cands:
+         cands = {REF: as_rank(run6.FINAL[REF]), **cands}
+@@ -352,7 +377,7 @@
+ 
+ def table(names=None):
+     ctxs = contexts()
+-    grades = M.load_grades()
++    grades = load_grades()
+     names = names or sorted(f[:-5] for f in os.listdir(LISTS) if f.endswith(".json"))
+     lines = [header()]
+     for n in names:
+@@ -384,7 +409,7 @@
+ 
+ def compare(a, b):
+     ctxs = contexts()
+-    grades = M.load_grades()
++    grades = load_grades()
+     ls = _lists_for([a, b], ctxs)
+     pa, pb = per_query(ctxs, ls[a], grades), per_query(ctxs, ls[b], grades)
+     gs = groups(ctxs)
+@@ -419,7 +444,7 @@
+     """Ungraded (query id, point id) pairs in the top 10 of the named candidates -> grade6 packets. 2nd alternate
+     cuts are skipped: the metrics count them 0 whatever their grade."""
+     ctxs = contexts()
+-    grades = M.load_grades()
++    grades = load_grades()
+     ls = _lists_for(names, ctxs)
+     qs = {q["id"]: q for q in grade6.load_queries(SPLITS)}
+     fb = X.outside_names()
+@@ -448,7 +473,11 @@
+     if not argv or argv[0] in ("-h", "--help"):
+         print(__doc__)
+         return
++    global _overlay
+     cmd, args = argv[0], argv[1:]
++    for a in [a for a in args if a == "--overlay" or a.startswith("--overlay=")]:
++        _overlay = a.split("=", 1)[1] if "=" in a else OVERLAY
++        args.remove(a)
+     if cmd == "score":
+         ref = "--no-ref" not in args
+         reps = next((int(a.split("=", 1)[1]) for a in args if a.startswith("--reps=")), 3)

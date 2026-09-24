@@ -1,0 +1,633 @@
+[
+ {
+  "query_id": "h5-01",
+  "query": "somthing to cheer me up",
+  "intent": "Warm, funny, uplifting titles that reliably lift a bad mood. Bleak, heavy or cynical titles are wrong; merely light but mean-spirited comedy is weak.",
+  "items": [
+   {
+    "pid": 1000000035830,
+    "title": "The Most Wonderful Time of the Year",
+    "year": 2008,
+    "media_type": "movie",
+    "genres": [
+     "TV Movie",
+     "Drama",
+     "Romance"
+    ],
+    "essence_text": "This is a quintessential heartwarming Christmas romance, brimming with holiday cheer and an uplifting message about opening one's heart. It's a feel-good film centered on a family's journey to rediscover the spirit of Christmas, complete with gentle humor and endearing characters. Perfect for a cozy viewing, it promises a hopeful narrative and reinforces the magic of the holiday season. The story is designed to inspire belief and bring joy to all ages.",
+    "tags": [
+     "Christmas Romance",
+     "Heartwarming Family Story",
+     "Uplifting & Inspiring",
+     "Holiday Cheer",
+     "Feel-Good Comedy",
+     "Miracles & Belief",
+     "Seasonal Comfort Watch",
+     "Character Transformation",
+     "Hopeful Narrative"
+    ],
+    "keywords": [
+     "holiday",
+     "romance",
+     "family",
+     "christmas"
+    ],
+    "credits": {
+     "directors": [
+      "Michael M. Scott"
+     ],
+     "writers": [
+      "Bruce Graham"
+     ],
+     "cast": [
+      "Brooke Burns",
+      "Henry Winkler",
+      "Warren Christie",
+      "Connor Christopher Levins",
+      "Woody Jeffreys"
+     ],
+     "companies": [
+      "KZ Productions",
+      "Dan Wigutow Productions",
+      "Hallmark Entertainment"
+     ]
+    }
+   },
+   {
+    "pid": 1000000737778,
+    "title": "On the 12th Date of Christmas",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "TV Movie",
+     "Romance"
+    ],
+    "essence_text": "A cozy and lighthearted holiday romantic comedy that delivers pure seasonal comfort. Following two contrasting game designers who must collaborate on a festive city-wide scavenger hunt, the narrative hinges on predictable charm and growing mutual warmth. Bright, cheerful, and resolutely optimistic, it offers a relaxing escape filled with festive decorations and gentle romantic banter.",
+    "tags": [
+     "Festive Romantic Comedy",
+     "Holiday Cheer",
+     "Cozy Warmth",
+     "Opposites Attract",
+     "Interactive Game Design",
+     "Lighthearted Romance",
+     "Feel-Good Holiday",
+     "Christmas Scavenger Hunt"
+    ],
+    "keywords": [
+     "christmas"
+    ],
+    "credits": {
+     "directors": [
+      "Gary Yates"
+     ],
+     "writers": [
+      "Christine Conradt",
+      "Jamie Pachino"
+     ],
+     "cast": [
+      "Mallory Jansen",
+      "Tyler Hynes",
+      "Cherissa Richards",
+      "Clare Filipow",
+      "Jan Skene"
+     ],
+     "companies": [
+      "The Cartel",
+      "Hallmark Media"
+     ]
+    }
+   },
+   {
+    "pid": 1000000447061,
+    "title": "Red Nose Day Actually",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "TV Movie",
+     "Comedy",
+     "Romance"
+    ],
+    "essence_text": "A heartwarming and nostalgic return to beloved characters, this short film serves as a feel-good romantic comedy. It delivers a collection of interconnected vignettes, emphasizing the enduring presence of love and connection in everyday life. The humor is gentle and the overall tone is one of comfort and hopeful optimism. Perfect for fans of the original seeking a dose of familiar charm and an uplifting message.",
+    "tags": [
+     "Feel-Good Comedy",
+     "Romantic Reunion",
+     "Charity Special",
+     "Nostalgic Sequel",
+     "Interconnected Stories",
+     "Heartwarming Moments",
+     "British Humor",
+     "Hopeful Outlook",
+     "Lighthearted"
+    ],
+    "keywords": [
+     "romcom",
+     "time",
+     "sequel",
+     "love",
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Mat Whitecross",
+      "Richard Curtis"
+     ],
+     "writers": [
+      "Richard Curtis"
+     ],
+     "cast": [
+      "Hugh Grant",
+      "Liam Neeson",
+      "Colin Firth",
+      "Laura Linney",
+      "Andrew Lincoln"
+     ],
+     "companies": [
+      "Portobello Studios",
+      "BBC Film",
+      "NBC Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000000026990,
+    "title": "The Perfect Holiday",
+    "year": 2007,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Romance",
+     "Family"
+    ],
+    "essence_text": "A heartwarming and feel-good Christmas movie about a single mother who rediscovers love during the holiday season. Filled with wholesome moments and a touch of situational comedy, the film emphasizes the importance of family and second chances. Expect a lighthearted and uplifting viewing experience, perfect for those seeking holiday cheer and a sweet romantic story. It is a comforting and predictable tale that embodies the spirit of Christmas.",
+    "tags": [
+     "Feel-Good Christmas Movie",
+     "Romantic Comedy",
+     "Family-Oriented",
+     "Heartwarming",
+     "Holiday Cheer",
+     "Uplifting",
+     "Divorced Mother",
+     "Mall Santa",
+     "Second Chance Romance"
+    ],
+    "keywords": [
+     "singer",
+     "dating",
+     "falling in love",
+     "single mother",
+     "family",
+     "divorcee",
+     "singer-songwriter",
+     "ex-husband ex-wife relationship",
+     "mall santa",
+     "christmas music",
+     "christmas spirit",
+     "struggling career"
+    ],
+    "credits": {
+     "directors": [
+      "Lance Rivera"
+     ],
+     "writers": [
+      "Nat Mauldin",
+      "Lance Rivera",
+      "Jeff Stein"
+     ],
+     "cast": [
+      "Morris Chestnut",
+      "Gabrielle Union",
+      "Faizon Love",
+      "Terrence Howard",
+      "Queen Latifah"
+     ],
+     "companies": [
+      "Yari Film Group",
+      "Destination Films",
+      "Truenorth Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000001028541,
+    "title": "Three Wise Men and a Baby",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "TV Movie",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A warm and lighthearted festive comedy that delivers classic holiday cheer with genuine heart. Centered on three estranged brothers forced to care for an infant over the holidays, the narrative mixes light slapstick with sincere emotional growth. Its appeal lies in the funny, endearing chemistry among the leads and the satisfying arc of familial reconciliation. Ideal for casual, cozy viewing that reinforces the comforting, festive themes of love and connection.",
+    "tags": [
+     "Holiday Romantic Comedy",
+     "Brotherly Bonding",
+     "Heartwarming Family Drama",
+     "Cozy Christmas Charm",
+     "Unexpected Responsibility",
+     "Feel-Good Redemption",
+     "Lighthearted Humor",
+     "Festive Spirit"
+    ],
+    "keywords": [
+     "christmas",
+     "lighthearted"
+    ],
+    "credits": {
+     "directors": [
+      "Terry Ingram"
+     ],
+     "writers": [
+      "Paul Campbell",
+      "Kimberley Sustad"
+     ],
+     "cast": [
+      "Paul Campbell",
+      "Tyler Hynes",
+      "Andrew W. Walker",
+      "Margaret Colin",
+      "Ali Liebert"
+     ],
+     "companies": [
+      "Lighthouse Pictures",
+      "Hallmark Media"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "h5-04",
+  "query": "rainy sunday afternoon",
+  "intent": "Cozy, comforting films to curl up with on a rainy day: warm, gentle and a bit nostalgic. Harsh thrillers or horror are wrong.",
+  "items": [
+   {
+    "pid": 1000000000380,
+    "title": "Rain Man",
+    "year": 1988,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "Rain Man is a profoundly moving drama centered on an unexpected brotherhood forged during a cross-country road trip. The film masterfully explores themes of acceptance, love, and the complexities of family dynamics through its rich character development and powerful performances. It's an emotional journey that balances humor with deep pathos, offering a hopeful and ultimately cathartic experience. This thought-provoking narrative highlights the profound impact human connection can have on...",
+    "tags": [
+     "Heartwarming Drama",
+     "Road Trip Narrative",
+     "Brotherhood Story",
+     "Character Study",
+     "Emotional Journey",
+     "Transformative Experience",
+     "Savant Syndrome",
+     "Family Reconciliation",
+     "Academy Award Winner"
+    ],
+    "keywords": [
+     "mentally disabled",
+     "individual",
+     "loss of loved one",
+     "yuppie",
+     "autism",
+     "car dealer",
+     "egocentrism",
+     "convertible",
+     "road trip",
+     "blackjack",
+     "cincinnati",
+     "travel"
+    ],
+    "credits": {
+     "directors": [
+      "Barry Levinson"
+     ],
+     "writers": [
+      "Barry Morrow",
+      "Ronald Bass"
+     ],
+     "cast": [
+      "Dustin Hoffman",
+      "Tom Cruise",
+      "Valeria Golino",
+      "Gerald R. Molen",
+      "Jack Murdock"
+     ],
+     "companies": [
+      "United Artists",
+      "Star Partners II",
+      "The Guber-Peters Company"
+     ]
+    }
+   },
+   {
+    "pid": 1000000045967,
+    "title": "One Wonderful Sunday",
+    "year": 1947,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Romance"
+    ],
+    "essence_text": "A tender and bittersweet tale of a young couple navigating the challenges of post-war Tokyo, finding joy in small moments amidst hardship. It's a quietly powerful film that champions the resilience of the human spirit and the strength found in love and optimism. The narrative, while simple, is deeply empathetic and leaves viewers with a profound sense of hope. It's a comforting yet poignant watch that highlights the beauty of perseverance.",
+    "tags": [
+     "Post-War Drama",
+     "Slice-of-Life",
+     "Romantic Melodrama",
+     "Optimistic Humanism",
+     "Poignant & Simple",
+     "Everyday Struggles",
+     "Hopeful Love Story",
+     "Black & White Classic"
+    ],
+    "keywords": [
+     "breaking the fourth wall",
+     "tokyo, japan",
+     "poverty",
+     "fiancé fiancée relationship",
+     "post war japan",
+     "occupation"
+    ],
+    "credits": {
+     "directors": [
+      "Akira Kurosawa"
+     ],
+     "writers": [
+      "Akira Kurosawa",
+      "Keinosuke Uekusa"
+     ],
+     "cast": [
+      "Isao Numasaki",
+      "Chieko Nakakita",
+      "Atsushi Watanabe",
+      "Zeko Nakamura",
+      "Toppa Utsumi"
+     ],
+     "companies": [
+      "TOHO"
+     ]
+    }
+   },
+   {
+    "pid": 1000000499028,
+    "title": "Be with You",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Romance",
+     "Drama",
+     "Fantasy"
+    ],
+    "essence_text": "A deeply moving and tender romantic drama that explores themes of loss, memory, and unconditional love. It masterfully intertwines profound sadness with moments of heartwarming joy, anchored by a miraculous premise. This film is designed to evoke strong emotions, offering a cathartic experience for viewers willing to embrace its poignant narrative. Its gentle pace and beautiful cinematography enhance the emotional journey of a family reunited under extraordinary circumstances.",
+    "tags": [
+     "Heartbreaking Romance",
+     "Emotional Family Drama",
+     "Supernatural Reunion",
+     "Poignant Loss",
+     "Comforting & Hopeful",
+     "Korean Melodrama",
+     "Soul-Stirring",
+     "Memory & Grief",
+     "Time-Bending Love Story",
+     "Beautifully Scored"
+    ],
+    "keywords": [
+     "amnesia",
+     "based on novel or book",
+     "resurrection",
+     "remake",
+     "bromance",
+     "tearjerker",
+     "first love",
+     "calm",
+     "mother son relationship",
+     "death of a loved one",
+     "earnest",
+     "gentle"
+    ],
+    "credits": {
+     "directors": [
+      "Lee Jang-hoon"
+     ],
+     "writers": [
+      "Kang Su-Jin",
+      "Lee Jang-hoon",
+      "Takuji Ichikawa"
+     ],
+     "cast": [
+      "So Ji-sub",
+      "Son Ye-jin",
+      "Kim Ji-hwan",
+      "Ko Chang-seok",
+      "Lee Jun-hyeok"
+     ],
+     "companies": [
+      "Lotte Entertainment",
+      "Movierock",
+      "Studio By The Library"
+     ]
+    }
+   },
+   {
+    "pid": 1000000042102,
+    "title": "A Sunday in the Country",
+    "year": 1984,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Family"
+    ],
+    "essence_text": "Set in pre-WWI France, this film delicately portrays the Sunday visit of an old painter's children. It's an intimist chronicle, focusing on unspoken emotions and subtle family dynamics. The film evokes a strong sense of nostalgia and melancholy, capturing the quiet beauty of the countryside and the complexities of human relationships. It's a character-driven narrative that encourages reflection on life's expectations and artistic expression.",
+    "tags": [
+     "Pre-WWI France",
+     "Sunday Family Visit",
+     "Intimist Chronicle",
+     "Subtle Emotions",
+     "Painter and Children",
+     "Nostalgic Atmosphere",
+     "Character Expectations",
+     "Artistic Expression"
+    ],
+    "keywords": [
+     "countryside",
+     "insect",
+     "sunday",
+     "painter",
+     "family relationships",
+     "old man",
+     "rural area",
+     "1910s",
+     "elderly man",
+     "father daughter relationship"
+    ],
+    "credits": {
+     "directors": [
+      "Bertrand Tavernier"
+     ],
+     "writers": [
+      "Bertrand Tavernier",
+      "Colo Tavernier O'Hagan",
+      "Pierre Bost"
+     ],
+     "cast": [
+      "Sabine Azéma",
+      "Louis Ducreux",
+      "Michel Aumont",
+      "Monique Chaumette",
+      "Geneviève Mnich"
+     ],
+     "companies": [
+      "Little Bear",
+      "Films A2",
+      "Sara Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000198375,
+    "title": "The Garden of Words",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Drama",
+     "Romance"
+    ],
+    "essence_text": "A visually stunning and emotionally resonant anime film that explores themes of love, longing, and personal growth. Set against the backdrop of a rainy season in Japan, the film weaves a melancholic tale of two individuals finding solace and connection in each other's company. With its introspective tone and thoughtful dialogue, the film invites viewers to reflect on their own experiences of love and loss. The beautiful animation and evocative music enhance the film's emotional impact,...",
+    "tags": [
+     "Melancholic Romance",
+     "Coming-of-Age",
+     "Visually Stunning",
+     "Emotional Resonance",
+     "Introspective",
+     "Thoughtful Dialogue",
+     "Rainy Day Aesthetic",
+     "Japanese Animation",
+     "Slow-Burn",
+     "Bittersweet"
+    ],
+    "keywords": [
+     "chocolate",
+     "age difference",
+     "garden",
+     "rain",
+     "alcoholism",
+     "coming of age",
+     "tokyo, japan",
+     "cityscape",
+     "high school student",
+     "teacher student relationship",
+     "high school teacher",
+     "rainstorm"
+    ],
+    "credits": {
+     "directors": [
+      "Makoto Shinkai"
+     ],
+     "writers": [
+      "Makoto Shinkai"
+     ],
+     "cast": [
+      "Miyu Irino",
+      "Kana Hanazawa",
+      "Fumi Hirano",
+      "Takeshi Maeda",
+      "Yuka Terasaki"
+     ],
+     "companies": [
+      "CoMix Wave Films"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "h5-15",
+  "query": "anime without robots",
+  "intent": "Anime (series or films) with no mecha or robots. Mecha anime like Evangelion or Gundam contradict the constraint; live-action is wrong.",
+  "items": [
+   {
+    "pid": 1000000037433,
+    "title": "Neo Tokyo",
+    "year": 1989,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Animation",
+     "Adventure",
+     "Fantasy"
+    ],
+    "essence_text": "This anime anthology delivers three distinct, visually stunning tales, ranging from surreal dreamscapes to intense futuristic thrillers. Each segment showcases unique artistic styles and thematic depth, offering a compelling blend of wonder, action, and unsettling sci-fi. It's a journey into the imaginative and often bizarre corners of animation, challenging viewers with its novelty and immersive world-building. Prepare for a thought-provoking and often exhilarating experience that lingers...",
+    "tags": [
+     "Anime Anthology",
+     "Surreal & Experimental",
+     "Sci-Fi Action",
+     "Fantasy & Wonder",
+     "Visually Stunning",
+     "Distinct Artistic Styles",
+     "Psychological Thriller",
+     "Existential Horror",
+     "Technological Dystopia",
+     "Cult Classic"
+    ],
+    "keywords": [
+     "future",
+     "cat",
+     "clown",
+     "swamp",
+     "anthology",
+     "reporter",
+     "robot",
+     "construction",
+     "future sport",
+     "adult animation",
+     "flood",
+     "desolation"
+    ],
+    "credits": {
+     "directors": [
+      "Katsuhiro Otomo",
+      "Yoshiaki Kawajiri",
+      "Rintaro"
+     ],
+     "writers": [
+      "Taku Mayumura",
+      "Katsuhiro Otomo",
+      "Yoshiaki Kawajiri"
+     ],
+     "cast": [
+      "Banjo Ginga",
+      "Masane Tsukayama",
+      "Hideko Yoshida",
+      "Iemasa Kayumi",
+      "Hiroshi Otake"
+     ],
+     "companies": [
+      "Project Team Argos",
+      "Madhouse",
+      "KADOKAWA Shoten"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "h5-24",
+  "query": "ridley scott",
+  "intent": "Films directed by Ridley Scott first, then large-scale, visually rich historical epics and science fiction in his style.",
+  "items": [
+   {
+    "pid": 1000001139421,
+    "title": "Untitled Ridley Scott/Kieran Fitzgerald Project",
+    "year": "",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   }
+  ],
+  "person_intent": "both",
+  "rubric": "style"
+ }
+]

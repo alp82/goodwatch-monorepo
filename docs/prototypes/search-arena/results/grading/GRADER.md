@@ -17,6 +17,8 @@ Grade every item on this scale:
 Rules:
 - Judge relevance to the query, not general quality or popularity. A famous
   title that doesn't fit gets 0 or 1. An obscure title that fits exactly gets 3.
+  Exception: vague and mood queries, where being a good pick is part of the
+  fit (see the section below).
 - You may use your own knowledge of well-known titles, but the packet wins when
   they conflict.
 - Media type matters only when the query implies one.
@@ -46,3 +48,35 @@ recurring themes), not by who made the title. The `credits` field shows who made
   each title by style fit, so a genuinely similar title by someone else can earn 3.
 - Alternate cuts of one film (Redux, Extended, Director's Cut, ...): grade each by itself. The metrics count only
   the first cut in a list.
+
+## Vague and mood queries
+
+Packets with `"rubric": "vague"` belong to queries that name a mood or an occasion but no subject, setting,
+person or structure: "cozy", "funny", "bleak", "epic", "mindbending", "wholesome", "complete nonsense",
+"something short to watch after work", "with my parents", "brain's fried, something warm and funny", "good first
+anime". The ids so far: lab-00, lab-06, core-12, core-18, core-19, core-20, core-21, core-25, core-29, new-14,
+new-17, new-18, ho2-20, and in holdout5 (set before any ranker ran on it) h5-01 to h5-08 and h5-28.
+Apply this section to them even when a packet lacks the flag.
+
+The user is an adult asking "what should I watch now?". Grade whether the title is a good pick for that moment,
+not whether a word of the query appears in its packet.
+
+- 3: a pick you would recommend to most adults for that mood or occasion: it delivers the mood strongly and is
+  good and broadly appealing (well made, well liked, easy to get into).
+- 2: fits the mood or occasion well, but is a weaker pick: uneven, niche, dated, or appealing to a narrower
+  audience.
+- 1: matches one surface feature only: a word, a tag, a runtime, a genre, with little of the mood.
+- 0: a poor pick for the occasion even if it matches literally, or it contradicts the intent.
+- A literal match on one word is not enough. "Short" is satisfied by a sitcom or a brisk 90-minute film, not by
+  any short; "furious" or "nonsense" in a title or tag earns nothing by itself.
+- Quality and broad appeal count here, unlike the general rule above: of two titles with the same mood, the
+  better and more widely enjoyed one gets the higher grade. Obscure, low-rated or amateur-feeling titles
+  rarely earn 3. Packets carry no ratings: use your knowledge of well-known titles, and for a title you don't
+  know, don't give 3 on mood words in its packet alone.
+- Shows made for young children (kids' cartoons, preschool series) are poor picks for an adult, usually 0 or 1,
+  unless the query asks for kids ("with my parents" means two generations of adults). Family films adults enjoy
+  too (Pixar, Ghibli, Paddington) are graded by mood like anything else. Example for "something short to watch
+  after work": an old kids' cartoon with short episodes is 0, a dialogue-free horror short is 1 (short, but not
+  an after-work pick), a well-liked sitcom or brisk crowd-pleasing comedy is 2 or 3.
+- The query's intent still wins where it is explicit (for example lab-06 allows the Fast & Furious reading;
+  core-21 says quality and popularity matter).

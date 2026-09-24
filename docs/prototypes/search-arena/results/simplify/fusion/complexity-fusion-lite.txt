@@ -1,0 +1,14 @@
+simp_fusion.FINAL['fusion-lite'] over 127 queries (dev, holdout, holdout2, holdout3, holdout4)
+LOC (non-comment, non-blank, no docstrings; data layer excluded): functions entered 1449, executed statements 1381
+  catalog.py         functions   58  executed   41  module defs  27  (data layer, not counted)
+  context.py         functions    0  executed    4  module defs   0  (data layer, not counted)
+  cuts.py            functions   10  executed   10  module defs   1
+  qemb.py            functions   18  executed   11  module defs   1  (data layer, not counted)
+  simp_fusion.py     functions 1319  executed 1251  module defs 171
+  sparse.py          functions  120  executed  120  module defs  11
+regexes: 33 sites, 29 distinct patterns
+config keys: 78 read of 91
+numeric module constants: 14 names, 23 numeric leaves
+word lists: 15 (509 entries)
+numeric literals in executed statements (candidates): 120; default-argument literals of entered functions: 8
+proxy score (config read + constant leaves + literals + regex sites + word lists): 269

@@ -1,0 +1,15 @@
+simp_entity.FINAL['entity-lean-nofuzzy'] over 127 queries (dev, holdout, holdout2, holdout3, holdout4)
+LOC (non-comment, non-blank, no docstrings; data layer excluded): functions entered 1359, executed statements 1287
+  blend.py           functions    5  executed    5  module defs   1
+  catalog.py         functions   58  executed   41  module defs  27  (data layer, not counted)
+  context.py         functions    0  executed    4  module defs   0  (data layer, not counted)
+  cuts.py            functions   93  executed   93  module defs   7
+  qemb.py            functions   18  executed   11  module defs   1  (data layer, not counted)
+  simp_entity.py     functions 1141  executed 1069  module defs 157
+  sparse.py          functions  120  executed  120  module defs  11
+regexes: 31 sites, 27 distinct patterns
+config keys: 84 read of 87
+numeric module constants: 5 names, 14 numeric leaves
+word lists: 10 (461 entries)
+numeric literals in executed statements (candidates): 77; default-argument literals of entered functions: 7
+proxy score (config read + constant leaves + literals + regex sites + word lists): 216

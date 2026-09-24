@@ -1,0 +1,35 @@
+def cover_units(ctx, negated, cfg):
+    """Coverage units: every one of them should match. [] when fewer than cover_min.
+    "r6": content units of Jev's phrases (facet_units).
+    "words": the content words of Jev's searched phrases, spell-corrected, not negated, not stop or generic words.
+    "concrete": Jev's concrete query words, spell-corrected, not negated, not stopwords.
+    "phrases": Jev's searched phrases without negated words.
+    With cov_concrete, "r6" and "words" need a Jev-concrete word among the units."""
+    if cfg["cover"] == "r6":
+        units = facet_units(ctx, negated, cfg)
+    else:
+        banned = {w for n in negated for w in words(n)}
+        units = []
+        if cfg["cover"] == "phrases":
+            units = [p["phrase"] for p in ctx.reading.get("searchedPhrases") or []
+                     if not (set(words(p["phrase"])) & banned)]
+        elif cfg["cover"] == "words":
+            for p in ctx.reading.get("searchedPhrases") or []:
+                for w in words(p["phrase"]):
+                    u = correct_word(w, cfg["spell_mode"]) if cfg["spell"] else w
+                    if u not in S.STOP and u not in _GENERIC and u not in banned and len(u) > 1 and \
+                            not u[0].isdigit() and u not in units:
+                        units.append(u)
+        else:
+            for w in (ctx.reading.get("concreteWords") or []):
+                u = correct_word(w["word"].lower(), cfg["spell_mode"]) if cfg["spell"] else w["word"].lower()
+                if w.get("isConcrete") and u not in banned and u not in S.STOP and u not in units:
+                    units.append(u)
+        if cfg["cover_max"] and len(units) > cfg["cover_max"]:
+            units = []
+    if cfg["cover"] in ("r6", "words") and cfg["cov_concrete"] and \
+            not any(set(u.split()) & concrete_words(ctx) for u in units):
+        return []
+    return units if len(units) >= cfg["cover_min"] else []
+
+

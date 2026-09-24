@@ -1,0 +1,3598 @@
+[
+ {
+  "query_id": "new-12",
+  "query": "war movie that isn't about World War II",
+  "intent": "War films about Vietnam, WWI, Lebanon, modern conflicts, etc. WWII films violate the exclusion.",
+  "items": [
+   {
+    "pid": 1000000011778,
+    "title": "The Deer Hunter",
+    "year": 1978,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "War"
+    ],
+    "essence_text": "A harrowing and emotionally brutal epic that delves into the profound psychological scars of the Vietnam War on a group of working-class friends. The film is an intense examination of camaraderie, loss, and the devastating impact of combat, culminating in unforgettable and deeply disturbing sequences. It demands emotional investment, offering a powerful, albeit bleak, commentary on the human spirit's breaking point. The outstanding performances anchor this monumental cinematic experience.",
+    "tags": [
+     "Epic War Drama",
+     "Psychological Trauma",
+     "Vietnam War",
+     "Friendship & Betrayal",
+     "Human Cost of Conflict",
+     "Devastating Performances",
+     "Emotional Endurance Test",
+     "Unforgettable Scenes",
+     "Classic American Cinema"
+    ],
+    "keywords": [
+     "vietnam war",
+     "vietnam veteran",
+     "small town",
+     "suicide",
+     "vietnam",
+     "post-traumatic stress disorder (ptsd)",
+     "escape",
+     "pennsylvania, usa",
+     "saigon",
+     "friends",
+     "russian roulette",
+     "wedding"
+    ],
+    "credits": {
+     "directors": [
+      "Michael Cimino"
+     ],
+     "writers": [
+      "Deric Washburn",
+      "Michael Cimino",
+      "Quinn K. Redeker"
+     ],
+     "cast": [
+      "Robert De Niro",
+      "Christopher Walken",
+      "John Cazale",
+      "John Savage",
+      "Meryl Streep"
+     ],
+     "companies": [
+      "Universal Pictures",
+      "EMI Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000049046,
+    "title": "All Quiet on the Western Front",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "War",
+     "History",
+     "Drama"
+    ],
+    "essence_text": "All Quiet on the Western Front is a devastatingly brutal and unflinching depiction of World War I, immersing viewers in the psychological and physical horrors faced by young soldiers. It stands as a powerful anti-war epic, meticulously recreating the grim realities of trench warfare with stunning historical accuracy and visceral detail. The film offers a profound, heartbreaking portrayal of lost innocence and the soul-destroying impact of conflict. It's an intensely bleak and...",
+    "tags": [
+     "Anti-War Epic",
+     "Historical Drama",
+     "Brutal Realism",
+     "Psychological Trauma",
+     "Immersive Warfare",
+     "Coming-of-Age Tragedy",
+     "Viscerally Intense",
+     "Bleak & Unflinching",
+     "Masterful Cinematography"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "world war i",
+     "tank",
+     "battle",
+     "period drama",
+     "german soldier",
+     "1910s",
+     "aircraft",
+     "trench warfare",
+     "bitter"
+    ],
+    "credits": {
+     "directors": [
+      "Edward Berger"
+     ],
+     "writers": [
+      "Edward Berger",
+      "Lesley Paterson",
+      "Ian Stokell"
+     ],
+     "cast": [
+      "Felix Kammerer",
+      "Albrecht Schuch",
+      "Aaron Hilmer",
+      "Moritz Klaus",
+      "Adrian Grünewald"
+     ],
+     "companies": [
+      "Amusement Park Films",
+      "Gunpowder Films"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "ho2-09",
+  "query": "space opera without aliens",
+  "intent": "Space-set adventure or drama with human-only (or robot/AI) antagonists and no alien species. Titles built around alien races contradict the constraint.",
+  "items": [
+   {
+    "pid": 1000000001895,
+    "title": "Star Wars: Episode III - Revenge of the Sith",
+    "year": 2005,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Action",
+     "Science Fiction"
+    ],
+    "essence_text": "The tragic climax of a legendary saga, filled with epic space battles and political machinations. A dark and operatic tale of betrayal, the film showcases the fall of a heroic figure to the dark side. Its grand scale is matched by a memorable score and stunning visuals, creating an immersive experience. The film explores themes of power, destiny, and the corrupting influence of fear, leaving audiences with a sense of wonder and sorrow.",
+    "tags": [
+     "Epic Space Opera",
+     "Tragedy & Betrayal",
+     "Galactic Warfare",
+     "Political Intrigue",
+     "Visually Spectacular",
+     "Iconic Score",
+     "Dark Hero's Fall",
+     "Technological Dystopia",
+     "Mythic Themes"
+    ],
+    "keywords": [
+     "showdown",
+     "lava",
+     "fight",
+     "politics",
+     "volcano",
+     "chosen one",
+     "sequel",
+     "romance",
+     "prequel",
+     "tragedy",
+     "cult figure",
+     "tragic hero"
+    ],
+    "credits": {
+     "directors": [
+      "George Lucas"
+     ],
+     "writers": [
+      "George Lucas"
+     ],
+     "cast": [
+      "Hayden Christensen",
+      "Ewan McGregor",
+      "Natalie Portman",
+      "Ian McDiarmid",
+      "Samuel L. Jackson"
+     ],
+     "companies": [
+      "Lucasfilm Ltd."
+     ]
+    }
+   },
+   {
+    "pid": 1000000001892,
+    "title": "Return of the Jedi",
+    "year": 1983,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Action",
+     "Science Fiction"
+    ],
+    "essence_text": "The climactic chapter of the original Star Wars trilogy, this film delivers a satisfying blend of grand space battles and deeply personal character arcs. It culminates the heroic journey with powerful themes of redemption, family, and the ultimate triumph of good over evil. Featuring unforgettable creatures and iconic sequences, it provides both thrilling spectacle and profound emotional catharsis. It's a foundational piece of popular culture, offering a hopeful and endlessly rewatchable...",
+    "tags": [
+     "Epic Space Opera",
+     "Hero's Journey Finale",
+     "Good vs. Evil",
+     "Redemption Story",
+     "Iconic Characters",
+     "Galactic Warfare",
+     "Sci-Fi Fantasy",
+     "Hopeful & Triumphant",
+     "Comfort Watch"
+    ],
+    "keywords": [
+     "spacecraft",
+     "sibling relationship",
+     "rebel",
+     "emperor",
+     "space battle",
+     "matter of life and death",
+     "forest",
+     "desert",
+     "space opera",
+     "amused"
+    ],
+    "credits": {
+     "directors": [
+      "Richard Marquand"
+     ],
+     "writers": [
+      "George Lucas",
+      "Lawrence Kasdan"
+     ],
+     "cast": [
+      "Mark Hamill",
+      "Harrison Ford",
+      "Carrie Fisher",
+      "Billy Dee Williams",
+      "Anthony Daniels"
+     ],
+     "companies": [
+      "Lucasfilm Ltd."
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev6-01",
+  "query": "fantasy series without dragons",
+  "intent": "Fantasy TV series (magic, other worlds, myth) with no dragons in them. Dragon-centred shows contradict the constraint.",
+  "items": [
+   {
+    "pid": 2000000071809,
+    "title": "The Dark Crystal: Age of Resistance",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Action & Adventure",
+     "Family"
+    ],
+    "essence_text": "A breathtaking return to the beloved world of Thra, this series delivers a visually stunning and emotionally resonant dark fantasy epic through exquisite stop-motion animation. It masterfully expands upon the original lore, crafting a rich, immersive world filled with wonder, danger, and deeply sympathetic characters. The narrative builds intense tension and explores themes of corruption and rebellion, often veering into disturbing imagery and pathos. This is a must-watch for fans of...",
+    "tags": [
+     "Dark Fantasy Epic",
+     "Stunning Stop-Motion",
+     "Immersive World-Building",
+     "Heroic Quest",
+     "Nostalgic Prequel",
+     "Intriguing Lore",
+     "Environmental Themes",
+     "Visual Spectacle",
+     "Character-Driven Drama"
+    ],
+    "keywords": [
+     "resistance",
+     "emperor",
+     "castle",
+     "surreal",
+     "prequel",
+     "rebellion",
+     "puppetry",
+     "fantasy world",
+     "dark fantasy",
+     "based on myths, legends or folklore",
+     "high fantasy",
+     "imaginative"
+    ],
+    "credits": {
+     "directors": [
+      "Louis Leterrier"
+     ],
+     "creators": [
+      "Louis Leterrier",
+      "Lisa Henson"
+     ],
+     "writers": [
+      "J.M. Lee",
+      "David Odell",
+      "Jim Henson"
+     ],
+     "cast": [
+      "Taron Egerton",
+      "Anya Taylor-Joy",
+      "Nathalie Emmanuel",
+      "Donna Kimball",
+      "Jason Isaacs"
+     ],
+     "companies": [
+      "The Jim Henson Company"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000071914,
+    "title": "The Wheel of Time",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama"
+    ],
+    "essence_text": "An epic fantasy series revolving around a world-saving journey filled with magic, prophecy, and political intrigue. The story follows a strong female lead as she guides a group of young individuals who may hold the key to either saving or destroying humanity. Expect a visually stunning world, complex characters, and a narrative that keeps you guessing. This series is a blend of classic fantasy tropes with modern sensibilities, making it a compelling watch for fans of the genre.",
+    "tags": [
+     "Epic Fantasy",
+     "Heroic Quest",
+     "Magic and Prophecy",
+     "Good vs Evil",
+     "Intrigue and Mystery",
+     "Political Intrigue",
+     "Strong Female Lead",
+     "World-Saving Journey",
+     "Visually Stunning"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "magic",
+     "reincarnation",
+     "quest",
+     "high fantasy",
+     "good versus evil",
+     "power",
+     "arrogant"
+    ],
+    "credits": {
+     "directors": [
+      "Ciarán Donnelly",
+      "Sanaa Hamri",
+      "Thomas Napper"
+     ],
+     "creators": [
+      "Darren Lemke",
+      "Rafe Judkins"
+     ],
+     "writers": [
+      "Robert Jordan",
+      "Rafe Judkins",
+      "Dave Hill"
+     ],
+     "cast": [
+      "Rosamund Pike",
+      "Daniel Henney",
+      "Josha Stradowski",
+      "Zoë Robins",
+      "Madeleine Madden"
+     ],
+     "companies": [
+      "Sony Pictures Television",
+      "Radar Pictures",
+      "Amazon Studios"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   },
+   {
+    "pid": 2000000060654,
+    "title": "Magi",
+    "year": 2012,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Action & Adventure",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "An enchanting shonen anime series that plunges viewers into a vibrant, magic-filled world inspired by 'One Thousand and One Nights.' It follows the journey of a young Magi as he seeks to shape the fate of the world by choosing righteous kings. The show excels in its expansive world-building, intricate lore, and a cast of memorable characters. It offers a captivating blend of adventure, humor, and moments of genuine emotional depth, making it a compelling watch for those seeking a grand...",
+    "tags": [
+     "Shonen Adventure",
+     "Fantasy World-Building",
+     "Arabian Nights Inspired",
+     "Magical Journey",
+     "Destiny & Fate",
+     "Character Development",
+     "Epic Quest",
+     "Friendship Themes",
+     "Action-Packed"
+    ],
+    "keywords": [
+     "middle east",
+     "magic",
+     "friendship",
+     "djinn",
+     "based on manga",
+     "dungeon",
+     "arabian nights",
+     "shounen",
+     "anime",
+     "fantasy",
+     "adventure"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Shinobu Otaka"
+     ],
+     "writers": [
+      "Shinobu Otaka"
+     ],
+     "cast": [
+      "Kaori Ishihara",
+      "Yuki Kaji",
+      "Ryohei Kimura",
+      "Haruka Tomatsu",
+      "Toshiyuki Morikawa"
+     ],
+     "companies": [
+      "Aniplex",
+      "A-1 Pictures",
+      "MBS"
+     ],
+     "networks": [
+      "MBS",
+      "TBS"
+     ]
+    }
+   },
+   {
+    "pid": 2000000282247,
+    "title": "Power of Paanch",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Kids",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "Embark on an exhilarating journey into a world brimming with mystical powers and ancient secrets. This action-packed fantasy series follows a protagonist's quest to uncover family secrets and battle dark forces with the help of friends who wield elemental abilities. It’s a classic tale of good versus evil, emphasizing the strength of friendship and courage. Expect a vibrant, high-energy adventure perfect for those seeking pure escapism and thrilling spectacle.",
+    "tags": [
+     "Epic Fantasy",
+     "Mystical Powers",
+     "Action-Adventure",
+     "Good vs Evil",
+     "Friendship & Loyalty",
+     "Magical World",
+     "Heroic Journey",
+     "Supernatural Conflict",
+     "Youthful Protagonist"
+    ],
+    "keywords": [
+     "superhero",
+     "investigative",
+     "suspense",
+     "fantasy"
+    ],
+    "credits": {
+     "directors": [
+      "Iqbal Rizvi",
+      "Jeetu Arora"
+     ],
+     "creators": [
+      "Ekta Kapoor"
+     ],
+     "writers": [
+      "Ekta Kapoor"
+     ],
+     "cast": [
+      "Urvashi Dholakia",
+      "Barkha Bisht",
+      "Riva Arora",
+      "Tanvi Gadkari",
+      "Bianca Arora"
+     ],
+     "companies": [],
+     "networks": [
+      "Disney+ Hotstar",
+      "JioHotstar"
+     ]
+    }
+   },
+   {
+    "pid": 2000000094997,
+    "title": "House of the Dragon",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "A high-fantasy series steeped in political intrigue and family drama, set in a richly realized historical world. The show explores the complex dynamics of power, loyalty, and ambition. The series is characterized by its intricate plotlines, nuanced characters, and large-scale warfare, creating a viewing experience that is both immersive and thought-provoking. With a slow-burn narrative that emphasizes tension and character development, it offers a deep dive into a world of dragons and...",
+    "tags": [
+     "Fantasy",
+     "Political Intrigue",
+     "Family Drama",
+     "Warfare",
+     "Dragons",
+     "Complex Characters",
+     "Historical",
+     "Tension",
+     "Mature Themes"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "knight",
+     "giant monster",
+     "dragon",
+     "king",
+     "fantasy world",
+     "admiring",
+     "fire & blood"
+    ],
+    "credits": {
+     "directors": [
+      "Clare Kilner",
+      "Miguel Sapochnik",
+      "Greg Yaitanes"
+     ],
+     "creators": [
+      "Ron Schmidt",
+      "Vince Gerardis"
+     ],
+     "writers": [
+      "George R.R. Martin",
+      "Ryan J. Condal",
+      "Sara Hess"
+     ],
+     "cast": [
+      "Matt Smith",
+      "Olivia Cooke",
+      "Rhys Ifans",
+      "Patrick Sass"
+     ],
+     "companies": [
+      "HBO",
+      "Bastard Sword",
+      "1:26 Pictures"
+     ],
+     "networks": [
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 2000000112398,
+    "title": "Heaven Official's Blessing",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This series is a visually stunning and emotionally rich fantasy epic, immersing viewers in a vibrant world of gods, demons, and intricate celestial politics. It weaves a compelling mystery around a banished deity, exploring themes of destiny, devotion, and the nature of good and evil. The narrative is driven by deep character relationships and a sense of profound wonder, complemented by exquisite animation and a powerful musical score. It's a captivating and deeply immersive experience...",
+    "tags": [
+     "Xianxia Fantasy",
+     "Chinese Mythology",
+     "Heavenly Bureaucracy",
+     "Epic Romance",
+     "Spiritual Journey",
+     "Mystery & Intrigue",
+     "Character Redemption",
+     "Stunning Animation",
+     "Divine & Demonic",
+     "World-Building"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "friendship",
+     "god",
+     "bromance",
+     "ghost",
+     "anime",
+     "boys' love (bl)",
+     "fantasy",
+     "danmei",
+     "donghua",
+     "romantic",
+     "gentle"
+    ],
+    "credits": {
+     "directors": [
+      "Li Haoling"
+     ],
+     "creators": [
+      "Zhang Shengyan",
+      "Yanyan Luo"
+     ],
+     "writers": [],
+     "cast": [
+      "Jiang Guangtao",
+      "Ma Zhengyang",
+      "Zhao Yi",
+      "Tu Xiongfei",
+      "Lei Wu"
+     ],
+     "companies": [
+      "Haoliners Animation",
+      "Pb Animation"
+     ],
+     "networks": [
+      "bilibili"
+     ]
+    }
+   },
+   {
+    "pid": 2000000111819,
+    "title": "TSUKIMICHI -Moonlit Fantasy-",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Sci-Fi & Fantasy",
+     "Action & Adventure",
+     "Comedy"
+    ],
+    "essence_text": "An isekai anime where an ordinary student is summoned to another world but cast aside by its goddess, forcing him to find his own path. The series emphasizes world-building and the protagonist's interactions with diverse non-human tribes, highlighting his extraordinary magical powers. It blends adventure with political intrigue and social commentary, as the protagonist strives to improve the world despite being rejected by humans and gods. The anime is an engaging experience that balances...",
+    "tags": [
+     "Isekai Fantasy",
+     "Summoned Hero",
+     "World-Building",
+     "Magical Powers",
+     "Adventure",
+     "Political Intrigue",
+     "Social Commentary",
+     "Action"
+    ],
+    "keywords": [
+     "hero",
+     "magic",
+     "harem",
+     "god",
+     "survival",
+     "dragon",
+     "creature",
+     "fantasy world",
+     "summons",
+     "anime",
+     "isekai",
+     "based on light novel"
+    ],
+    "credits": {
+     "directors": [
+      "Hiro Ohki",
+      "Yusuke Onoda",
+      "Ayumu Uwano"
+     ],
+     "creators": [
+      "Kenta Ihara"
+     ],
+     "writers": [
+      "Kenta Ihara"
+     ],
+     "cast": [
+      "Natsuki Hanae",
+      "Ayane Sakura",
+      "Akari Kito",
+      "Saori Hayami",
+      "Shinpachi Tsuji"
+     ],
+     "companies": [
+      "C2C",
+      "Nichion",
+      "MBS"
+     ],
+     "networks": [
+      "Tokyo MX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000015785,
+    "title": "Hatim",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A beloved Indian fantasy adventure series that transports viewers to a world of wonder, magic, and heroic quests. Based on ancient Persian tales, it follows the virtuous Hatim on his journey through fantastical lands, battling evil and solving riddles. The show embodies a classic good-versus-evil narrative with strong moral undertones, making it a wholesome and engaging viewing experience. It's a journey filled with mythological creatures, sorcery, and captivating escapism for all ages.",
+    "tags": [
+     "Fantasy Adventure",
+     "Mythological Epic",
+     "Good vs. Evil",
+     "Heroic Journey",
+     "Magical Realms",
+     "Ancient Tales",
+     "Family-Friendly Fantasy",
+     "Indian Television Classic",
+     "Quest Narrative"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Rahil Azam",
+      "Kiku Sharda",
+      "Nirmal Pandey",
+      "Pooja Rawal"
+     ],
+     "companies": [],
+     "networks": [
+      "StarPlus"
+     ]
+    }
+   },
+   {
+    "pid": 2000000090802,
+    "title": "The Sandman",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "A visually rich and dreamlike adaptation of the acclaimed comic series, exploring themes of power, responsibility, and the nature of dreams. The series immerses viewers in a dark fantasy world filled with mythological elements and complex characters. A sense of wonder permeates the narrative, driven by intrigue and mystery. This is a thought-provoking and binge-friendly journey through the realms of the subconscious.",
+    "tags": [
+     "Dark Fantasy Adaptation",
+     "Mythological Drama",
+     "Dreamlike Atmosphere",
+     "Intriguing Mystery",
+     "Complex Characters",
+     "Visually Rich",
+     "Spiritual Themes",
+     "Literary Adaptation",
+     "Epic Scope"
+    ],
+    "keywords": [
+     "dreams",
+     "mythology",
+     "nightmare",
+     "superhero",
+     "based on comic",
+     "based on graphic novel",
+     "witchcraft",
+     "raven",
+     "dark fantasy",
+     "imaginative",
+     "dark",
+     "fantasy"
+    ],
+    "credits": {
+     "directors": [
+      "Jamie Childs",
+      "Andrés Baiz",
+      "Louise Hooper"
+     ],
+     "creators": [
+      "David S. Goyer",
+      "Neil Gaiman"
+     ],
+     "writers": [
+      "Neil Gaiman",
+      "Sam Kieth",
+      "Mike Dringenberg"
+     ],
+     "cast": [
+      "Tom Sturridge",
+      "Gwendoline Christie",
+      "Mason Alexander Park",
+      "Boyd Holbrook",
+      "Vivienne Acheampong"
+     ],
+     "companies": [
+      "Warner Bros. Television",
+      "DC Entertainment",
+      "Purepop"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000071912,
+    "title": "The Witcher",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "A gritty dark fantasy epic that plunges viewers into a world teeming with monsters, magic, and political unrest. It weaves together multiple character journeys, exploring themes of destiny and the often-wicked nature of humanity. Known for its visceral action, compelling character dynamics, and immersive world-building, it delivers a high-stakes adventure experience. The series features memorable musical elements and a blend of grim realism with fantastical spectacle.",
+    "tags": [
+     "Dark Fantasy Epic",
+     "Monster Hunting Action",
+     "Destiny & Prophecy",
+     "Sword & Sorcery",
+     "Political Intrigue",
+     "Found Family Dynamics",
+     "Rich World-Building",
+     "Visceral Combat",
+     "Character-Driven Adventure"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "monster",
+     "mutant",
+     "magic",
+     "mutation",
+     "fantasy world",
+     "dark fantasy"
+    ],
+    "credits": {
+     "directors": [
+      "Stephen Surjik",
+      "Alik Sakharov",
+      "Charlotte Brändström"
+     ],
+     "creators": [
+      "Sean Daniel",
+      "Tomek Bagiński"
+     ],
+     "writers": [
+      "Andrzej Sapkowski",
+      "David French",
+      "Danusia Stok"
+     ],
+     "cast": [
+      "Henry Cavill",
+      "Liam Hemsworth",
+      "Anya Chalotra",
+      "Freya Allan",
+      "Joey Batey"
+     ],
+     "companies": [
+      "Sean Daniel Company",
+      "Platige Image",
+      "Hivemind"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000062104,
+    "title": "The Seven Deadly Sins",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Animation",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This anime series plunges viewers into a vibrant high-fantasy world brimming with magical powers, epic quests, and dynamic battles. It delivers a fast-paced, action-packed adventure centered on a band of outcast heroes fighting to reclaim their kingdom. The narrative is driven by a compelling mix of character development, strategic combat, and unfolding mysteries. It's an immersive escapist journey perfect for fans of grand fantasy narratives and powerful, supernatural showdowns.",
+    "tags": [
+     "Fantasy Adventure",
+     "Shonen Anime",
+     "Magical Powers",
+     "Epic Quest",
+     "Good vs. Evil",
+     "Fast-Paced Action",
+     "Supernatural Elements",
+     "Character-Driven Battles",
+     "Redemption Arc",
+     "World-Building Rich"
+    ],
+    "keywords": [
+     "amnesia",
+     "magic",
+     "narration",
+     "fairy",
+     "immortality",
+     "friendship",
+     "supernatural",
+     "god",
+     "betrayal",
+     "based on manga",
+     "fighting",
+     "demon"
+    ],
+    "credits": {
+     "directors": [
+      "Toshimasa Ishii",
+      "Hiroshi Kimura",
+      "Akihiro Nagao"
+     ],
+     "creators": [
+      "Tomonori Ochikoshi",
+      "Hiroyuki Shimizu"
+     ],
+     "writers": [
+      "Nakaba Suzuki",
+      "Rintaro Ikeda",
+      "Shoutarou Suga"
+     ],
+     "cast": [
+      "Yuki Kaji",
+      "Sora Amamiya",
+      "Tatsuhisa Suzuki",
+      "Misaki Kuno",
+      "Aoi Yuuki"
+     ],
+     "companies": [
+      "A-1 Pictures",
+      "Studio Deen"
+     ],
+     "networks": [
+      "tv asahi",
+      "MBS"
+     ]
+    }
+   },
+   {
+    "pid": 2000000084773,
+    "title": "The Lord of the Rings: The Rings of Power",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Sci-Fi & Fantasy",
+     "Drama"
+    ],
+    "essence_text": "This series offers an ambitious return to Middle-earth, unfolding an epic fantasy narrative set during a time of relative peace before the major conflicts. It excels in its expansive world-building, immersing viewers in visually stunning landscapes and a rich tapestry of characters. As various species confront the re-emergence of an ancient evil, the show builds a pervasive sense of tension and wonder. It's a grand spectacle that delves into the political and mythic origins of Tolkien's...",
+    "tags": [
+     "Epic Fantasy",
+     "Expansive World-Building",
+     "Mythic Adventure",
+     "High Stakes Drama",
+     "Political Intrigue",
+     "Stunning Visuals",
+     "Threat of Evil",
+     "Character Journeys",
+     "Historical Prequel",
+     "Grand Spectacle"
+    ],
+    "keywords": [
+     "elves",
+     "dwarf",
+     "based on novel or book",
+     "prequel",
+     "troll",
+     "battle",
+     "fantasy world",
+     "mysterious stranger",
+     "high fantasy",
+     "sword and sorcery",
+     "dramatic",
+     "adoring"
+    ],
+    "credits": {
+     "directors": [
+      "Charlotte Brändström",
+      "Louise Hooper",
+      "Wayne Che Yip"
+     ],
+     "creators": [
+      "Callum Greene",
+      "Gennifer Hutchison"
+     ],
+     "writers": [
+      "J. R. R. Tolkien",
+      "John D. Payne",
+      "Patrick McKay"
+     ],
+     "cast": [
+      "Morfydd Clark",
+      "Charlie Vickers",
+      "Robert Aramayo",
+      "Charles Edwards",
+      "Owain Arthur"
+     ],
+     "companies": [
+      "Amazon Studios",
+      "New Line Cinema"
+     ],
+     "networks": [
+      "Prime Video"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev6-02",
+  "query": "zombie movie without gore",
+  "intent": "Zombie films that stay light on blood and viscera: romance, comedy, drama or family takes on zombies. Splatter and gore-heavy zombie horror is wrong.",
+  "items": [
+   {
+    "pid": 1000000082654,
+    "title": "Warm Bodies",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Comedy",
+     "Romance"
+    ],
+    "essence_text": "A surprisingly charming and unique take on the zombie genre, blending romantic comedy with post-apocalyptic themes. The film offers a hopeful and surprisingly wholesome narrative, driven by a quirky central romance. It provides pure escapism with its novel premise and engaging characters, subverting expectations with warmth and humor. This is a feel-good watch, perfect for those seeking a lighthearted and endearing story with a fantastical twist.",
+    "tags": [
+     "Zombie Romance",
+     "Post-Apocalyptic Comedy",
+     "Quirky & Charming",
+     "Unique Premise",
+     "Hopeful Narrative",
+     "Feel-Good Horror",
+     "Character-Driven",
+     "Romantic Comedy",
+     "Redemptive Story"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "dystopia",
+     "post-apocalyptic future",
+     "zombie",
+     "shakespeare in modern dress",
+     "zombie apocalypse",
+     "interspecies romance",
+     "based on young adult novel"
+    ],
+    "credits": {
+     "directors": [
+      "Jonathan Levine"
+     ],
+     "writers": [
+      "Jonathan Levine",
+      "Isaac Marion"
+     ],
+     "cast": [
+      "Nicholas Hoult",
+      "Teresa Palmer",
+      "Lio Tipton",
+      "John Malkovich",
+      "Dave Franco"
+     ],
+     "companies": [
+      "Summit Entertainment",
+      "Mandeville Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000599521,
+    "title": "Z-O-M-B-I-E-S 2",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Romance",
+     "TV Movie"
+    ],
+    "essence_text": "This film is an energetic and wholesome teen musical centered on themes of unity and acceptance, set against a backdrop of fantastical high school life. It's a bright, optimistic experience driven by catchy songs and a charming romance. The story explores the challenges of integrating different groups in a fun, accessible way, making it a perfect comfort watch for younger audiences and families. Expect a lighthearted and hopeful adventure with plenty of musical numbers.",
+    "tags": [
+     "Teen Musical",
+     "Family-Friendly Fantasy",
+     "High School Drama",
+     "Inclusion & Acceptance",
+     "Upbeat & Wholesome",
+     "Romance",
+     "Zombies & Werewolves",
+     "Optimistic & Hopeful",
+     "Catchy Songs"
+    ],
+    "keywords": [
+     "love triangle",
+     "musical",
+     "cheerleading",
+     "love",
+     "zombie",
+     "werewolf",
+     "family"
+    ],
+    "credits": {
+     "directors": [
+      "Paul Hoen"
+     ],
+     "writers": [
+      "David Light",
+      "Joseph Raso"
+     ],
+     "cast": [
+      "Meg Donnelly",
+      "Milo Manheim",
+      "Chandler Kinney",
+      "Trevor Tordjman",
+      "Kylee Russell"
+     ],
+     "companies": [
+      "Bloor Street Productions",
+      "Disney Channels Worldwide"
+     ]
+    }
+   },
+   {
+    "pid": 1000000552504,
+    "title": "Zoo",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Drama",
+     "Horror",
+     "Romance"
+    ],
+    "essence_text": "Amidst the chaos of a zombie apocalypse, a couple fights to save not only their lives but also their failing marriage. The film blends horror and relationship drama, creating an intense and emotional experience. The zombies provide a backdrop for exploring themes of survival, love, and the challenges of maintaining a connection in the face of overwhelming adversity. It's a bleak and suspenseful journey into the depths of human relationships during extreme circumstances.",
+    "tags": [
+     "Zombie Apocalypse",
+     "Relationship Drama",
+     "Survival",
+     "Intense",
+     "Emotional",
+     "Contemporary",
+     "Bleak",
+     "Suspenseful",
+     "Family Dynamics"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Antonio Tublén"
+     ],
+     "writers": [
+      "Antonio Tublén"
+     ],
+     "cast": [
+      "Zoë Tapper",
+      "Ed Speleers",
+      "Antonia Campbell-Hughes",
+      "Jan Bijvoet",
+      "Lukas Loughran"
+     ],
+     "companies": [
+      "PingPongFilm",
+      "Logical Pictures",
+      "Film i Skåne"
+     ]
+    }
+   },
+   {
+    "pid": 1000000039507,
+    "title": "The Dead",
+    "year": 1987,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A nuanced adaptation of James Joyce's short story, capturing the melancholic atmosphere of a holiday gathering in Dublin. The film explores themes of love, loss, and the complexities of human connection through its rich dialogue and character-driven narrative. It evokes a sense of nostalgia and longing, inviting viewers to reflect on the past and the unspoken emotions that linger beneath the surface. A subtle and beautifully rendered exploration of the human condition.",
+    "tags": [
+     "James Joyce Adaptation",
+     "Literary Adaptation",
+     "Irish Culture",
+     "Holiday Gathering",
+     "Relationship Drama",
+     "Melancholic",
+     "Dialogue-Driven",
+     "Period Piece",
+     "Character-Driven"
+    ],
+    "keywords": [
+     "dublin, ireland",
+     "based on short story",
+     "dinner party",
+     "1900s"
+    ],
+    "credits": {
+     "directors": [
+      "John Huston"
+     ],
+     "writers": [
+      "Tony Huston",
+      "James Joyce"
+     ],
+     "cast": [
+      "Anjelica Huston",
+      "Donal McCann",
+      "Dan O'Herlihy",
+      "Helena Carroll",
+      "Cathleen Delany"
+     ],
+     "companies": [
+      "Liffey Films",
+      "Vestron Pictures",
+      "Zenith Entertainment"
+     ]
+    }
+   },
+   {
+    "pid": 1000000796499,
+    "title": "Army of Thieves",
+    "year": 2021,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Comedy"
+    ],
+    "essence_text": "This film delivers a high-octane heist thriller, blending tense bank robberies with unexpected moments of comedy. It's a fast-paced, character-driven adventure centered on a charmingly eccentric safe-cracker. The narrative is full of intrigue and high stakes, offering a fun and engaging escapist experience. It expands on a beloved character with style and wit, making for a compelling ride.",
+    "tags": [
+     "Heist Thriller",
+     "Action Comedy",
+     "Prequel Spin-off",
+     "Character-Driven",
+     "High Stakes",
+     "Bank Robbery",
+     "German Focus",
+     "Suspenseful",
+     "Eccentric Protagonist"
+    ],
+    "keywords": [
+     "europe",
+     "interpol",
+     "prequel",
+     "zombie",
+     "safecracker",
+     "bank teller"
+    ],
+    "credits": {
+     "directors": [
+      "Matthias Schweighöfer"
+     ],
+     "writers": [
+      "Shay Hatten",
+      "Zack Snyder"
+     ],
+     "cast": [
+      "Matthias Schweighöfer",
+      "Nathalie Emmanuel",
+      "Ruby O. Fee",
+      "Stuart Martin",
+      "Guz Khan"
+     ],
+     "companies": [
+      "Pantaleon Films",
+      "The Stone Quarry",
+      "Film United"
+     ]
+    }
+   },
+   {
+    "pid": 1000000396535,
+    "title": "Train to Busan",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Horror",
+     "Thriller",
+     "Adventure"
+    ],
+    "essence_text": "'Train to Busan' is a relentlessly paced, emotionally charged zombie horror film that innovates within its genre. Trapping its characters on a bullet train, it builds unbearable tension and delivers brutal, impactful action sequences. Beyond the scares, the film powerfully explores themes of self-sacrifice, corporate greed, and human compassion amidst chaos. It's a visceral, heartbreaking, and ultimately cathartic experience that grips you from start to finish.",
+    "tags": [
+     "Zombie Horror",
+     "Korean Cinema",
+     "Relentless Action",
+     "Survival Thriller",
+     "Emotional Depth",
+     "Social Commentary",
+     "Contained Setting",
+     "Family Bonds",
+     "Fast-Paced"
+    ],
+    "keywords": [
+     "halloween",
+     "zombie",
+     "train",
+     "survival horror",
+     "pandemic",
+     "busan, south korea",
+     "south korea"
+    ],
+    "credits": {
+     "directors": [
+      "Yeon Sang-ho"
+     ],
+     "writers": [
+      "Park Joo-suk",
+      "Yeon Sang-ho"
+     ],
+     "cast": [
+      "Gong Yoo",
+      "Kim Su-an",
+      "Jung Yu-mi",
+      "Don Lee",
+      "Choi Woo-shik"
+     ],
+     "companies": [
+      "Next Entertainment World",
+      "RedPeter Films",
+      "Contents Panda"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000585,
+    "title": "Monsters, Inc.",
+    "year": 2001,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "This beloved animated film delivers a heartwarming and hilarious journey into a vibrant monster world, where the scariest creatures discover the power of laughter over screams. It's a charming buddy comedy filled with inventive characters and clever gags, exploring themes of friendship, responsibility, and prejudice. The film offers a perfect blend of genuine emotion and imaginative spectacle, making it a truly wholesome and entertaining experience for all ages. Its enduring appeal lies in...",
+    "tags": [
+     "Heartwarming Animation",
+     "Imaginative World-Building",
+     "Buddy Comedy",
+     "Family Adventure",
+     "Overcoming Fear",
+     "Childlike Wonder",
+     "Wholesome Fun",
+     "Emotional Resonance",
+     "Pixar Classic"
+    ],
+    "keywords": [
+     "monster",
+     "panic",
+     "cheating",
+     "kidnapping",
+     "door",
+     "infant",
+     "villain",
+     "portal",
+     "rivalry",
+     "energy supply",
+     "friends",
+     "hijinks"
+    ],
+    "credits": {
+     "directors": [
+      "Pete Docter",
+      "Lee Unkrich",
+      "David Silverman"
+     ],
+     "writers": [
+      "Andrew Stanton",
+      "Daniel Gerson",
+      "Jill Culton"
+     ],
+     "cast": [
+      "John Goodman",
+      "Billy Crystal",
+      "Mary Gibbs",
+      "Steve Buscemi",
+      "James Coburn"
+     ],
+     "companies": [
+      "Pixar"
+     ]
+    }
+   },
+   {
+    "pid": 1000000523777,
+    "title": "Next Gen",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Action",
+     "Adventure",
+     "Comedy",
+     "Family",
+     "Science Fiction"
+    ],
+    "essence_text": "This animated adventure delivers a vibrant, action-packed story centered on the heartwarming friendship between a lonely girl and a powerful, top-secret robot. Set in a sleek futuristic world, it explores themes of connection, belonging, and battling inner and outer bullies. With its fast pace and engaging characters, the film provides pure escapism and a hopeful message about the bond between humans and technology, suitable for a broad family audience.",
+    "tags": [
+     "Animated Sci-Fi Adventure",
+     "Robot Friendship Story",
+     "Childhood Bullying Themes",
+     "Futuristic City Setting",
+     "Heartwarming & Action-Packed",
+     "Family-Friendly Entertainment",
+     "Technology & Connection",
+     "Coming-of-Age Journey",
+     "Vibrant Visuals",
+     "Underdog Story"
+    ],
+    "keywords": [
+     "friendship",
+     "protection",
+     "bully",
+     "memory",
+     "female protagonist",
+     "robot",
+     "buddy comedy",
+     "3d animation",
+     "based on webcomic or webtoon",
+     "based on manhua"
+    ],
+    "credits": {
+     "directors": [
+      "Joe Ksander",
+      "Kevin R. Adams"
+     ],
+     "writers": [
+      "Ryan W. Smith",
+      "Wang Nima"
+     ],
+     "cast": [
+      "John Krasinski",
+      "Lo Mutuc",
+      "Jason Sudeikis",
+      "Michael Peña",
+      "David Cross"
+     ],
+     "companies": [
+      "Baozou Manhua",
+      "Tangent Animation",
+      "Alibaba Pictures Group"
+     ]
+    }
+   },
+   {
+    "pid": 1000001243341,
+    "title": "Z-O-M-B-I-E-S 4: Dawn of the Vampires",
+    "year": 2025,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Music",
+     "Romance",
+     "Adventure",
+     "Family",
+     "Comedy",
+     "TV Movie"
+    ],
+    "essence_text": "A vibrant and energetic musical adventure, perfect for a young audience, that continues the whimsical story of Zed and Addison. It blends elements of fantasy with catchy pop songs, focusing on themes of unity, friendship, and acceptance among diverse monster factions. The film offers a bright, pure escapism with its colorful characters and straightforward narrative. It's a comforting and fun watch suitable for the whole family, emphasizing positive messages through song and dance.",
+    "tags": [
+     "Kids Musical",
+     "Teen Fantasy Adventure",
+     "Monster Mash-up",
+     "Family-Friendly",
+     "Uplifting Themes",
+     "Pop Music",
+     "Friendship Story",
+     "Coming-of-Age",
+     "Lighthearted"
+    ],
+    "keywords": [
+     "vampire",
+     "college",
+     "musical",
+     "road trip",
+     "sequel",
+     "zombie",
+     "summer vacation",
+     "teenage romance",
+     "interspecies romance",
+     "tv movie"
+    ],
+    "credits": {
+     "directors": [
+      "Paul Hoen"
+     ],
+     "writers": [
+      "Josh A. Cagan",
+      "David Light",
+      "Joseph Raso"
+     ],
+     "cast": [
+      "Milo Manheim",
+      "Meg Donnelly",
+      "Chandler Kinney",
+      "Kylee Russell",
+      "Malachi Barton"
+     ],
+     "companies": [
+      "Bloor Street Productions",
+      "Night Zone Productions",
+      "Disney Branded Television"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000747,
+    "title": "Shaun of the Dead",
+    "year": 2004,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Comedy"
+    ],
+    "essence_text": "A brilliantly executed horror-comedy that blends genuine scares and gore with sharp wit and hilarious situational humor. It grounds its apocalyptic premise in mundane British life, following a slacker who must rise to the occasion to save his loved ones from the zombie horde. The film is a masterclass in genre parody, offering both thrilling action and surprisingly heartfelt character moments. Highly rewatchable, it's a perfect blend of laughs and thrills for fans of both comedy and horror.",
+    "tags": [
+     "Zombie Comedy",
+     "British Humor",
+     "Horror Parody",
+     "Apocalyptic Survival",
+     "Friendship Focus",
+     "Cult Classic",
+     "Action-Comedy",
+     "Deadpan Wit",
+     "Everyday Heroes"
+    ],
+    "keywords": [
+     "london, england",
+     "dark comedy",
+     "satire",
+     "surrey",
+     "parody",
+     "slacker",
+     "friends",
+     "survival",
+     "zombie",
+     "cynical",
+     "survival horror",
+     "british pub"
+    ],
+    "credits": {
+     "directors": [
+      "Edgar Wright"
+     ],
+     "writers": [
+      "Edgar Wright",
+      "Simon Pegg"
+     ],
+     "cast": [
+      "Simon Pegg",
+      "Nick Frost",
+      "Kate Ashfield",
+      "Lucy Davis",
+      "Dylan Moran"
+     ],
+     "companies": [
+      "WT² Productions",
+      "Big Talk Studios"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev6-03",
+  "query": "detective show with no murders",
+  "intent": "Detective or investigation TV shows whose cases are not murders: cons, thefts, fraud, mysteries, kid sleuths. Murder and serial-killer procedurals are wrong.",
+  "items": [
+   {
+    "pid": 2000000273687,
+    "title": "The Return of Sherlock Holmes",
+    "year": 1986,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "This series offers a meticulously crafted journey into the world of Arthur Conan Doyle's iconic detective, delivering intricate mysteries and rich character studies. It excels with its sharp dialogue, the compelling intellectual challenges presented by each case, and the strong performances of its lead actors. The show masterfully recreates Victorian London, drawing viewers into an immersive world of intrigue and deduction. It is a comforting and engaging watch for fans of classic detective...",
+    "tags": [
+     "Classic British Mystery",
+     "Deductive Reasoning",
+     "Period Drama",
+     "Intellectual Thriller",
+     "Character-Driven",
+     "Victorian Era",
+     "Masterful Acting",
+     "Literary Adaptation",
+     "Problem-Solving",
+     "Atmospheric"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "David Carson"
+     ],
+     "writers": [],
+     "cast": [
+      "Jeremy Brett",
+      "Edward Hardwicke"
+     ],
+     "companies": []
+    }
+   },
+   {
+    "pid": 2000000062707,
+    "title": "Byomkesh Bakshi",
+    "year": 1993,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Mystery"
+    ],
+    "essence_text": "This classic Indian detective series centers on Byomkesh Bakshi, an exceptionally intelligent investigator who solves complex mysteries using only his wit and observation. Set in Kolkata, each episode presents a compelling puzzle that challenges both the protagonist and the viewer. The show is rich in clever dialogue and intricate plots, making it a cerebral treat for fans of traditional crime fiction. It offers a satisfying blend of mystery, character depth, and cultural immersion from a...",
+    "tags": [
+     "Classic Detective Series",
+     "Indian Mystery",
+     "Kolkata Setting",
+     "Deductive Reasoning",
+     "Intellectual Puzzles",
+     "Crime Solving",
+     "Character-Driven Investigations",
+     "Period Charm",
+     "Unarmed Protagonist"
+    ],
+    "keywords": [
+     "detective",
+     "amateur detective",
+     "murder",
+     "india",
+     "calcutta"
+    ],
+    "credits": {
+     "directors": [
+      "Basu Chatterjee"
+     ],
+     "creators": [
+      "Basu Chatterjee",
+      "Sharadindu Bandyopadhyay"
+     ],
+     "writers": [
+      "Basu Chatterjee",
+      "Sharadindu Bandyopadhyay"
+     ],
+     "cast": [
+      "Rajit Kapoor",
+      "K.K. Raina",
+      "Kartik Dutta",
+      "Sukanya Kulkarni"
+     ],
+     "companies": [],
+     "networks": [
+      "DD National"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000873,
+    "title": "Columbo",
+    "year": 1971,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "A classic detective series known for its distinctive, talkative protagonist and intricate murder mysteries. The show thrives on its psychological cat-and-mouse game between Columbo and the clever killers he pursues, with each episode offering a satisfyingly complex plot. The brilliance lies in Columbo's ability to be underestimated, while his astute observations gradually unravel the truth. It provides a comforting yet engaging viewing experience, emphasizing character depth and clever...",
+    "tags": [
+     "Quirky Detective",
+     "Murder Mystery",
+     "Psychological Cat-and-Mouse",
+     "Intriguing Plots",
+     "Detailed Character Study",
+     "Episodic Format",
+     "Classic TV",
+     "Shrewd Investigation",
+     "Talkative Protagonist"
+    ],
+    "keywords": [
+     "detective",
+     "affectation",
+     "murder",
+     "police detective",
+     "basset hound",
+     "raincoat",
+     "criminal investigation",
+     "murder investigation",
+     "homicide detective",
+     "peugeot",
+     "homicide investigation",
+     "solved"
+    ],
+    "credits": {
+     "directors": [
+      "Vincent McEveety",
+      "James Frawley",
+      "Patrick McGoohan"
+     ],
+     "creators": [
+      "Roland Kibbee",
+      "Richard Alan Simmons"
+     ],
+     "writers": [
+      "Jackson Gillis",
+      "Peter S. Fischer",
+      "Richard Levinson"
+     ],
+     "cast": [
+      "Peter Falk"
+     ],
+     "companies": [
+      "Universal Television",
+      "Studios USA",
+      "Universal Television Entertainment"
+     ],
+     "networks": [
+      "ABC",
+      "NBC"
+     ]
+    }
+   },
+   {
+    "pid": 2000000063915,
+    "title": "The Adventures of Sherlock Holmes and Dr. Watson",
+    "year": 1980,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Mystery",
+     "Crime"
+    ],
+    "essence_text": "This highly acclaimed Soviet adaptation masterfully captures the essence of Conan Doyle's original Sherlock Holmes stories, prioritizing clever deduction and rich character interactions over action. It's a deeply atmospheric and intellectually engaging mystery series, featuring iconic performances that define the titular characters. With its impeccable period detail and strong narrative construction, it offers a comfortingly familiar yet perpetually intriguing viewing experience, perfect for...",
+    "tags": [
+     "Classic Detective",
+     "Victorian Mystery",
+     "Brilliant Deductions",
+     "Character Chemistry",
+     "Atmospheric Period Piece",
+     "Intellectual Intrigue",
+     "Wholesome & Engaging",
+     "Iconic Portrayal",
+     "Rewatchable Classic"
+    ],
+    "keywords": [
+     "detective",
+     "based on novel or book"
+    ],
+    "credits": {
+     "directors": [
+      "Igor Maslennikov",
+      "Viktor Sergeev",
+      "Arkadiy Tigay"
+     ],
+     "creators": [
+      "Yuli Dunsky"
+     ],
+     "writers": [
+      "Yuli Dunsky",
+      "Arthur Conan Doyle",
+      "Igor Maslennikov"
+     ],
+     "cast": [
+      "Boris Klyuev",
+      "Boryslav Brondukov",
+      "Vasiliy Livanov",
+      "Vitali Solomin",
+      "Rina Zelyonaya"
+     ],
+     "companies": [
+      "Lenfilm",
+      "Gosteleradio USSR"
+     ],
+     "networks": [
+      "Central Television USSR"
+     ]
+    }
+   },
+   {
+    "pid": 2000000047730,
+    "title": "Miss Marple: Nemesis",
+    "year": 1987,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Mystery"
+    ],
+    "essence_text": "A quintessential British mystery, this adaptation delivers a gentle yet intricate whodunit, centered around the keen observations of Miss Marple. It thrives on clever dialogue and a slow-burn narrative that gradually unpeels layers of secrets, offering a comforting and nostalgic viewing experience. The intrigue builds subtly, drawing viewers into a world of hidden motives and unexpected revelations, making it a satisfying watch for fans of classic detective stories.",
+    "tags": [
+     "Classic British Mystery",
+     "Gentle Whodunit",
+     "Character-Driven Detective",
+     "Cozy Period Drama",
+     "Clever Puzzles",
+     "Nostalgic Atmosphere",
+     "Intriguing Premise",
+     "Agatha Christie Adaptation",
+     "Thoughtful Pace"
+    ],
+    "keywords": [
+     "detective",
+     "based on novel or book",
+     "amateur detective",
+     "miniseries"
+    ],
+    "credits": {
+     "directors": [
+      "David Tucker"
+     ],
+     "creators": [
+      "T.R. Bowen",
+      "Guy Slater"
+     ],
+     "writers": [
+      "T.R. Bowen",
+      "Agatha Christie"
+     ],
+     "cast": [
+      "Joan Hickson",
+      "Peter Tilbury",
+      "Frank Gatliff",
+      "Barbara Franceschi",
+      "Bruce Payne"
+     ],
+     "companies": [
+      "BBC",
+      "A+E Studios",
+      "Seven Network"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000006560,
+    "title": "Sherlock Holmes",
+    "year": 1954,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Drama"
+    ],
+    "essence_text": "This classic American television adaptation faithfully brings the iconic detective Sherlock Holmes and Dr. Watson to life, focusing on intricate mysteries and clever deduction. Each episode presents a self-contained puzzle, relying heavily on sharp dialogue and the brilliant intellect of its protagonist. Set in a charming period atmosphere, it offers a comfortingly familiar yet consistently engaging viewing experience. It's a quintessential detective series that emphasizes logic and...",
+    "tags": [
+     "Classic Mystery",
+     "Detective Procedural",
+     "Period Drama",
+     "Intellectual Puzzles",
+     "Character-Focused",
+     "British Literature Adaptation",
+     "Episodic Narrative",
+     "Clever Dialogue",
+     "Mid-Century Television"
+    ],
+    "keywords": [
+     "detective",
+     "sherlock holmes"
+    ],
+    "credits": {
+     "directors": [
+      "Sheldon Reynolds",
+      "Jack Gage",
+      "Steve Previn"
+     ],
+     "creators": [
+      "Kay Krausse"
+     ],
+     "writers": [
+      "Kay Krausse"
+     ],
+     "cast": [
+      "Howard Marion-Crawford",
+      "Ronald Howard",
+      "Richard Larke"
+     ],
+     "companies": [
+      "Guild Films"
+     ]
+    }
+   },
+   {
+    "pid": 2000000019885,
+    "title": "Sherlock",
+    "year": 2010,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A brilliantly reimagined detective series that catapults Sherlock Holmes into the 21st century with razor-sharp wit and intricate plotting. It's a high-stakes intellectual thriller, driven by exceptional performances and incredibly fast-paced, clever dialogue. Each episode is a labyrinthine mystery, offering a dense, thought-provoking, and often darkly humorous viewing experience that rewards close attention and rewatchability.",
+    "tags": [
+     "Modern Mystery",
+     "Intellectual Thriller",
+     "Witty Dialogue",
+     "Character-Driven Drama",
+     "Deductive Brilliance",
+     "Urban Crime",
+     "British Series",
+     "High Tension",
+     "Complex Plotting"
+    ],
+    "keywords": [
+     "london, england",
+     "detective",
+     "based on novel or book",
+     "workaholic",
+     "investigation",
+     "friendship",
+     "police",
+     "genius",
+     "murder",
+     "whodunit",
+     "doctor",
+     "private detective"
+    ],
+    "credits": {
+     "directors": [
+      "Paul McGuigan",
+      "Nick Hurran",
+      "Rachel Talalay"
+     ],
+     "creators": [
+      "Mark Gatiss",
+      "Beryl Vertue"
+     ],
+     "writers": [
+      "Arthur Conan Doyle",
+      "Mark Gatiss",
+      "Steven Moffat"
+     ],
+     "cast": [
+      "Benedict Cumberbatch",
+      "Martin Freeman",
+      "Una Stubbs",
+      "Rupert Graves",
+      "Louise Brealey"
+     ],
+     "companies": [
+      "Hartswood Films",
+      "BBC Cymru Wales",
+      "Masterpiece"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000115260,
+    "title": "Feluda Pherot",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Crime"
+    ],
+    "essence_text": "This series faithfully brings the beloved Bengali private detective Feluda to life, delivering engaging mysteries with a strong sense of intrigue and character. It's a classic whodunit, rich in dialogue and narrative structure, making for a compelling watch. The show offers wholesome adventure and clever problem-solving, appealing to fans of traditional detective stories and those seeking a culturally immersive mystery.",
+    "tags": [
+     "Detective Mystery",
+     "Crime Drama",
+     "Classic Adaptation",
+     "Character-Driven",
+     "Intriguing Plot",
+     "Wholesome Adventure",
+     "Bengali Culture",
+     "Problem-Solving",
+     "Nostalgic Appeal"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Tota Roy Chowdhury",
+      "Dhritiman Chatterjee",
+      "Anirban Chakrabarti",
+      "Kalpan Mitra",
+      "Arun Guhatharkurta"
+     ],
+     "companies": [],
+     "networks": [
+      "addatimes"
+     ]
+    }
+   },
+   {
+    "pid": 2000000001205,
+    "title": "A Nero Wolfe Mystery",
+    "year": 2001,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy",
+     "Crime",
+     "Mystery"
+    ],
+    "essence_text": "This series transports viewers into the refined world of a genius detective, Nero Wolfe, and his sharp-witted assistant, Archie Goodwin. It excels in delivering intricate, dialogue-driven mysteries that challenge the intellect and reward close attention. The show perfectly captures the essence of classic whodunits with its deliberate pacing and rich characterizations. An ideal watch for fans of intelligent crime-solving and a compelling master-apprentice dynamic.",
+    "tags": [
+     "Classic Mystery",
+     "Intellectual Whodunit",
+     "Period Piece",
+     "Character-Driven",
+     "Witty Dialogue",
+     "Deductive Reasoning",
+     "Crime Solving",
+     "Master Detective",
+     "Intricate Plots"
+    ],
+    "keywords": [
+     "detective",
+     "criminal"
+    ],
+    "credits": {
+     "directors": [
+      "Timothy Hutton"
+     ],
+     "creators": [
+      "Timothy Hutton",
+      "Michael Jaffe"
+     ],
+     "writers": [
+      "Rex Stout",
+      "Michael Jaffe"
+     ],
+     "cast": [
+      "Maury Chaykin",
+      "Timothy Hutton",
+      "Colin Fox",
+      "Bill Smitrovich"
+     ],
+     "companies": [
+      "Jaffe/Braunstein Films",
+      "Pearson Television International",
+      "NW Productions Services"
+     ],
+     "networks": [
+      "A&E"
+     ]
+    }
+   },
+   {
+    "pid": 2000000021510,
+    "title": "White Collar",
+    "year": 2009,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A charming con artist provides his expertise to the FBI, leading to a stylish and intriguing cat-and-mouse game. The series balances crime-solving with character-driven relationships, creating a compelling dynamic. The fast-paced plots and clever dialogue keep viewers engaged, while the underlying mysteries add depth to the narrative. It's a clever and entertaining show that blends crime with wit.",
+    "tags": [
+     "Con Artist",
+     "FBI",
+     "White-Collar Crime",
+     "Cat and Mouse",
+     "Charming",
+     "Intrigue",
+     "Mystery",
+     "Stylish",
+     "Fast-Paced"
+    ],
+    "keywords": [
+     "new york city",
+     "fbi",
+     "con man",
+     "art thief",
+     "ex-con",
+     "gentleman thief",
+     "white collar criminal",
+     "forger",
+     "criminal consultant",
+     "colleague"
+    ],
+    "credits": {
+     "directors": [
+      "John T. Kretchmer",
+      "Russell Lee Fine",
+      "Paul Holahan"
+     ],
+     "creators": [
+      "Jeff Eastin",
+      "Nick Thiel"
+     ],
+     "writers": [
+      "Jeff Eastin",
+      "Joe Henderson",
+      "Mark Goffman"
+     ],
+     "cast": [
+      "Matt Bomer",
+      "Tim DeKay",
+      "Diahann Carroll",
+      "Willie Garson",
+      "Tiffani-Amber Thiessen"
+     ],
+     "companies": [
+      "Fox Television Studios",
+      "Jeff Eastin & Warrior George Productions"
+     ],
+     "networks": [
+      "USA Network"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000790,
+    "title": "Agatha Christie's Poirot",
+    "year": 1989,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A classic British crime drama centered around the brilliant yet eccentric detective Hercule Poirot. Set against elegant backdrops, the series weaves intricate mysteries that challenge the viewer to decipher alongside Poirot. The show is defined by its sharp dialogue, well-developed characters, and slow-burn pacing that builds suspense gradually. It offers a comforting blend of intellectual engagement and character-driven storytelling, making it both thought-provoking and escapist.",
+    "tags": [
+     "Classic Detective",
+     "British Crime Drama",
+     "Intricate Puzzles",
+     "Eccentric Detective",
+     "Period Setting",
+     "Dialogue-Driven",
+     "Slow-Burn Mystery",
+     "Character-Focused"
+    ],
+    "keywords": [
+     "detective",
+     "based on novel or book",
+     "private investigator",
+     "period drama",
+     "private detective",
+     "united kingdom",
+     "belgian",
+     "murder mystery",
+     "1930s"
+    ],
+    "credits": {
+     "directors": [
+      "Andrew Grieve",
+      "Edward Bennett",
+      "Renny Rye"
+     ],
+     "creators": [
+      "Nick Elliott",
+      "Linda Agran"
+     ],
+     "writers": [
+      "Agatha Christie",
+      "Clive Exton",
+      "Anthony Horowitz"
+     ],
+     "cast": [
+      "David Suchet",
+      "Tom Riley",
+      "Pauline Moran",
+      "Hugh Fraser",
+      "Lawrence McGrandles Jr."
+     ],
+     "companies": [
+      "The Computer Film Company",
+      "Picture Partnership Productions",
+      "Carnival Films"
+     ],
+     "networks": [
+      "ITV1"
+     ]
+    }
+   },
+   {
+    "pid": 2000000076461,
+    "title": "Miss Marple: The Moving Finger",
+    "year": 1985,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Mystery"
+    ],
+    "essence_text": "A quintessential British cozy mystery, this adaptation of Agatha Christie's work invites viewers into a seemingly idyllic village shattered by anonymous, venomous letters. Miss Marple's gentle yet astute investigation unravels a complex web of secrets and lies, offering a satisfying puzzle-solving experience. It’s a charming and intriguing watch, perfect for those who enjoy classic whodunits with a focus on character and clever deduction, set against a backdrop of quaint English life.",
+    "tags": [
+     "Cozy Mystery",
+     "British Whodunit",
+     "Village Intrigue",
+     "Classic Detective",
+     "Character-Driven Mystery",
+     "Agatha Christie Adaptation",
+     "Gentle Suspense",
+     "Puzzle Solving",
+     "Period Charm",
+     "Social Observation"
+    ],
+    "keywords": [
+     "detective",
+     "based on novel or book",
+     "amateur detective",
+     "miniseries"
+    ],
+    "credits": {
+     "directors": [
+      "Roy Boulting"
+     ],
+     "creators": [
+      "Julia Jones"
+     ],
+     "writers": [
+      "Julia Jones",
+      "Agatha Christie"
+     ],
+     "cast": [
+      "Joan Hickson",
+      "Michael Culver",
+      "Sandra Payne",
+      "Richard Pearson",
+      "Andrew Bicknell"
+     ],
+     "companies": [
+      "BBC",
+      "Seven Network",
+      "A+E Studios"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000030983,
+    "title": "Detective Conan",
+    "year": 1996,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Crime",
+     "Mystery",
+     "Comedy"
+    ],
+    "essence_text": "A classic, long-running detective anime where a shrunken genius detective solves mysteries. It balances suspenseful cases with high school settings and interpersonal drama. The series is known for its intricate plots, charismatic characters, and satisfying resolutions, making it a staple in the detective anime genre. Its episodic nature is balanced with gradual character development and overarching plot threads.",
+    "tags": [
+     "Detective",
+     "Mystery",
+     "Shonen",
+     "Case-solving",
+     "Suspense",
+     "High School",
+     "Episodic",
+     "Ongoing Series",
+     "Classic Anime"
+    ],
+    "keywords": [
+     "japan",
+     "detective",
+     "secret identity",
+     "secret organization",
+     "cop",
+     "based on manga",
+     "vexed",
+     "shounen",
+     "anime",
+     "japanese high school",
+     "age change",
+     "adventure"
+    ],
+    "credits": {
+     "directors": [
+      "Akira Yoshimura",
+      "Masato Sato",
+      "Nobuharu Kamanaka"
+     ],
+     "creators": [
+      "Akatsuki Yamatoya",
+      "Hiroshi Kashiwabara"
+     ],
+     "writers": [
+      "Gosho Aoyama",
+      "Akatsuki Yamatoya",
+      "Hiroshi Kashiwabara"
+     ],
+     "cast": [
+      "Minami Takayama",
+      "Kappei Yamaguchi",
+      "Wakana Yamazaki",
+      "Akemi Okamura",
+      "Akira Kamiya"
+     ],
+     "companies": [
+      "TMS Entertainment",
+      "Kyokuichi-Tokyo Movie"
+     ],
+     "networks": [
+      "YTV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000041956,
+    "title": "Death in Paradise",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "Set against the stunning backdrop of a fictional Caribbean island, this show offers a delightful blend of intricate murder mysteries and gentle humor. Its strength lies in its charismatic, often eccentric, detective protagonists and the clever, satisfying resolutions to each baffling case. The series provides a consistently warm and comforting viewing experience, perfect for those who enjoy character-driven puzzles with a scenic escape. It's an ideal choice for unwinding and a reliable...",
+    "tags": [
+     "Cozy Mystery",
+     "British Whodunit",
+     "Caribbean Setting",
+     "Police Procedural",
+     "Lighthearted Drama",
+     "Charming Characters",
+     "Episodic",
+     "Intriguing Puzzles",
+     "Feel-Good Crime",
+     "Optimistic"
+    ],
+    "keywords": [
+     "detective",
+     "island",
+     "investigation",
+     "police",
+     "murder",
+     "whodunit",
+     "investigator",
+     "police detective",
+     "murder investigation",
+     "caribbean sea",
+     "murder mystery",
+     "antilles"
+    ],
+    "credits": {
+     "directors": [
+      "Richard Signy",
+      "Alrick Riley",
+      "Stewart Svaasand"
+     ],
+     "creators": [
+      "James Hall",
+      "Robert Thorogood"
+     ],
+     "writers": [
+      "James Hall",
+      "Robert Thorogood",
+      "Emma Goodwin"
+     ],
+     "cast": [
+      "Kris Marshall",
+      "Ben Miller",
+      "Sara Martins",
+      "Don Warrington",
+      "Élisabeth Bourgine"
+     ],
+     "companies": [
+      "Red Planet Pictures",
+      "Atlantique Productions",
+      "Kudos"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000076463,
+    "title": "Miss Marple: A Pocketful of Rye",
+    "year": 1985,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "This adaptation of an Agatha Christie classic delivers a quintessential British whodunit, centered around Miss Marple's astute observations. The series excels in its intricate plotting and clever dialogue, immersing viewers in a carefully constructed mystery where every clue counts. It provides a comforting yet intellectually stimulating experience, as the iconic detective unravels a complex crime with a charmingly sinister nursery rhyme connection. Perfect for fans of classic,...",
+    "tags": [
+     "Classic Mystery",
+     "British Whodunit",
+     "Agatha Christie Adaptation",
+     "Cozy Crime",
+     "Intricate Plot",
+     "Period Drama",
+     "Deductive Reasoning",
+     "Nursery Rhyme Motif",
+     "Character-Rich"
+    ],
+    "keywords": [
+     "detective",
+     "based on novel or book",
+     "amateur detective",
+     "miniseries"
+    ],
+    "credits": {
+     "directors": [
+      "Guy Slater"
+     ],
+     "writers": [
+      "T.R. Bowen",
+      "Agatha Christie"
+     ],
+     "cast": [
+      "Joan Hickson",
+      "Timothy West",
+      "Tom Wilkinson",
+      "Peter Davison",
+      "Clive Merrison"
+     ],
+     "companies": [
+      "BBC",
+      "A+E Studios",
+      "Seven Network"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev6-04",
+  "query": "sci-fi movie without robots",
+  "intent": "Science-fiction films with no robots, androids or AI machines as characters: first contact, space, time, biology, society. Robot and android films are wrong.",
+  "items": [
+   {
+    "pid": 1000000054138,
+    "title": "Star Trek Into Darkness",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Science Fiction"
+    ],
+    "essence_text": "A high-octane sci-fi action film that plunges the Enterprise crew into a complex moral dilemma with galactic stakes. It delivers explosive spectacle and intense emotional beats, challenging the bonds of friendship and family within the iconic Starfleet universe. The narrative balances thrilling action sequences with thematic explorations of terrorism and justice. It's a visually grand and propulsive entry in the modern Star Trek saga that will resonate with fans of both classic and...",
+    "tags": [
+     "Sci-Fi Action",
+     "Space Opera",
+     "High Stakes Thriller",
+     "Iconic Characters",
+     "Moral Dilemmas",
+     "Explosive Spectacle",
+     "Futuristic Conflict",
+     "Loyalty & Betrayal",
+     "Blockbuster Entertainment",
+     "Homage-Driven"
+    ],
+    "keywords": [
+     "spacecraft",
+     "friendship",
+     "sequel",
+     "alien",
+     "futuristic",
+     "space",
+     "mysterious force",
+     "space opera",
+     "terrorist bombing",
+     "new beginning"
+    ],
+    "credits": {
+     "directors": [
+      "J.J. Abrams"
+     ],
+     "writers": [
+      "Alex Kurtzman",
+      "Roberto Orci",
+      "Damon Lindelof"
+     ],
+     "cast": [
+      "Chris Pine",
+      "Zachary Quinto",
+      "Zoe Saldaña",
+      "Benedict Cumberbatch",
+      "Karl Urban"
+     ],
+     "companies": [
+      "Bad Robot",
+      "Paramount Pictures",
+      "Skydance Media"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000018,
+    "title": "The Fifth Element",
+    "year": 1997,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Action",
+     "Adventure"
+    ],
+    "essence_text": "A dazzling and utterly unique sci-fi spectacle, this film plunges viewers into a vibrantly imagined future with non-stop action and an unmistakable visual flair. Its blend of high-stakes adventure, quirky humor, and memorable characters creates a pure escapist experience. The film is a feast for the eyes and ears, marked by its distinctive aesthetic and a captivating central performance, making it a beloved cult classic.",
+    "tags": [
+     "Visually Stunning Sci-Fi",
+     "Action-Packed Adventure",
+     "Galactic Space Opera",
+     "Eccentric Characters",
+     "Vibrant World-Building",
+     "Fast-Paced Thriller",
+     "Heroic Journey",
+     "Cult Classic",
+     "Humorous"
+    ],
+    "keywords": [
+     "new york city",
+     "flying car",
+     "taxi",
+     "egypt",
+     "race against time",
+     "saving the world",
+     "cyborg",
+     "dystopia",
+     "anti hero",
+     "stowaway",
+     "space travel",
+     "chosen one"
+    ],
+    "credits": {
+     "directors": [
+      "Luc Besson"
+     ],
+     "writers": [
+      "Luc Besson",
+      "Robert Mark Kamen"
+     ],
+     "cast": [
+      "Bruce Willis",
+      "Milla Jovovich",
+      "Gary Oldman",
+      "Ian Holm",
+      "Chris Tucker"
+     ],
+     "companies": [
+      "Gaumont"
+     ]
+    }
+   },
+   {
+    "pid": 1000000019995,
+    "title": "Avatar",
+    "year": 2009,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Action",
+     "Adventure"
+    ],
+    "essence_text": "A visually stunning science fiction epic, renowned for its groundbreaking CGI and immersive world-building. The film combines action-packed sequences with a romantic subplot and deeper themes of environmentalism and cultural clash. Its greatest strength lies in its ability to transport viewers to an alien world, creating a sense of wonder and spectacle. Though the narrative is familiar, the execution is innovative, making it a visually arresting and emotionally engaging experience.",
+    "tags": [
+     "Visually Stunning",
+     "Sci-Fi Epic",
+     "Groundbreaking CGI",
+     "Environmental Themes",
+     "Action-Packed",
+     "Romantic Subplot",
+     "World Immersion",
+     "Technological Advancement",
+     "Cultural Clash"
+    ],
+    "keywords": [
+     "paraplegic",
+     "attachment to nature",
+     "culture clash",
+     "indigenous",
+     "space travel",
+     "space colony",
+     "tribe",
+     "alien planet",
+     "distant future",
+     "marine",
+     "battle",
+     "love affair"
+    ],
+    "credits": {
+     "directors": [
+      "James Cameron"
+     ],
+     "writers": [
+      "James Cameron"
+     ],
+     "cast": [
+      "Sam Worthington",
+      "Zoe Saldaña",
+      "Sigourney Weaver",
+      "Stephen Lang",
+      "Michelle Rodriguez"
+     ],
+     "companies": [
+      "Dune Entertainment",
+      "Lightstorm Entertainment",
+      "20th Century Fox"
+     ]
+    }
+   },
+   {
+    "pid": 1000000566038,
+    "title": "Last and First Men",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Science Fiction"
+    ],
+    "essence_text": "A visually striking and deeply philosophical film that contemplates the future of humanity with a tone of profound melancholy. Through its monumental visuals and haunting score, the film creates an immersive, almost dreamlike experience. The slow pace allows for reflection on existential themes, while the narrative explores both the potential for transcendence and the inevitability of decline. It’s a journey through time and space, leaving the audience with a sense of awe and a lingering...",
+    "tags": [
+     "Meditative Sci-Fi",
+     "Philosophical Exploration",
+     "Dystopian Future",
+     "Monumental Visuals",
+     "Existential Themes",
+     "Bleak & Poetic",
+     "Slow-Paced",
+     "Otherworldly Cinematography",
+     "Haunting Score"
+    ],
+    "keywords": [
+     "human evolution",
+     "based on novel or book",
+     "dystopia",
+     "distant future",
+     "space exploration",
+     "meditative",
+     "somber",
+     "reflective",
+     "message from the future",
+     "human extinction",
+     "serene"
+    ],
+    "credits": {
+     "directors": [
+      "Jóhann Jóhannsson"
+     ],
+     "writers": [
+      "Jóhann Jóhannsson",
+      "José Enrique Macián",
+      "Olaf Stapledon"
+     ],
+     "cast": [
+      "Tilda Swinton"
+     ],
+     "companies": [
+      "Zik Zak Filmworks"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000563,
+    "title": "Starship Troopers",
+    "year": 1997,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Action",
+     "Thriller",
+     "Science Fiction"
+    ],
+    "essence_text": "A quintessential sci-fi action film that marries spectacular creature effects with sharp, biting satire of militarism and propaganda. It delivers relentless, over-the-top violence and exhilarating action sequences, creating a truly unique and memorable cinematic experience. While outwardly a straightforward bug-hunt, its underlying commentary on fascism and societal control makes it surprisingly thought-provoking. This film is a loud, chaotic, and often hilarious ride, perfect for those...",
+    "tags": [
+     "Sci-Fi Action Classic",
+     "Political Satire",
+     "Extreme Violence",
+     "Bug War",
+     "Military Propaganda",
+     "Darkly Humorous",
+     "Cult Classic",
+     "Visually Gory",
+     "Over-the-Top Spectacle"
+    ],
+    "keywords": [
+     "spacecraft",
+     "space marine",
+     "army",
+     "moon",
+     "based on novel or book",
+     "asteroid",
+     "intelligence",
+     "dystopia",
+     "buenos aires, argentina",
+     "space battle",
+     "satire",
+     "giant insect"
+    ],
+    "credits": {
+     "directors": [
+      "Paul Verhoeven"
+     ],
+     "writers": [
+      "Edward Neumeier",
+      "Robert A. Heinlein"
+     ],
+     "cast": [
+      "Casper Van Dien",
+      "Dina Meyer",
+      "Denise Richards",
+      "Jake Busey",
+      "Neil Patrick Harris"
+     ],
+     "companies": [
+      "TriStar Pictures",
+      "Touchstone Pictures",
+      "Jon Davison Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000199,
+    "title": "Star Trek: First Contact",
+    "year": 1996,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Action",
+     "Adventure",
+     "Thriller"
+    ],
+    "essence_text": "A high-octane sci-fi action movie that pits humanity's future against a relentless existential threat in a thrilling time-travel narrative. The film masterfully balances intense combat sequences with moments of character-driven tension, showcasing iconic heroes and terrifying villains. It's a spectacle of futuristic warfare, steeped in philosophical questions about technological assimilation and human identity. This is a definitive entry in its franchise, delivering both adrenaline-pumping...",
+    "tags": [
+     "Sci-Fi Action",
+     "Time Travel Thriller",
+     "Humanity vs. AI",
+     "Intense Space Battle",
+     "Iconic Villains",
+     "Heroic Leadership",
+     "Tense & Suspenseful",
+     "High Stakes",
+     "Visually Impressive"
+    ],
+    "keywords": [
+     "spacecraft",
+     "teleportation",
+     "inventor",
+     "starship",
+     "resistance",
+     "borg",
+     "enterprise-e",
+     "cyborg",
+     "montana",
+     "repayment",
+     "obsession",
+     "time travel"
+    ],
+    "credits": {
+     "directors": [
+      "Jonathan Frakes"
+     ],
+     "writers": [
+      "Ronald D. Moore",
+      "Brannon Braga",
+      "Rick Berman"
+     ],
+     "cast": [
+      "Patrick Stewart",
+      "Jonathan Frakes",
+      "Brent Spiner",
+      "LeVar Burton",
+      "Michael Dorn"
+     ],
+     "companies": [
+      "Paramount Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000157336,
+    "title": "Interstellar",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Drama",
+     "Science Fiction"
+    ],
+    "essence_text": "A grand sci-fi spectacle that balances awe-inspiring cosmic exploration with an intimately emotional story of paternal devotion. Driven by magnificent visuals and Hans Zimmer's iconic organ-driven score, the narrative confronts human survival, relativistic physics, and the enduring power of love across spacetime. The film evokes deep existential wonder and intense suspense, creating a transcendent cinematic experience.",
+    "tags": [
+     "Epic Sci-Fi",
+     "Cosmic Wonder",
+     "Father-Daughter Bond",
+     "Time Dilation",
+     "Hans Zimmer Score",
+     "Visually Stunning",
+     "Philosophical Exploration",
+     "Space Exploration",
+     "Emotional Catharsis"
+    ],
+    "keywords": [
+     "spacecraft",
+     "race against time",
+     "artificial intelligence (a.i.)",
+     "nasa",
+     "time warp",
+     "dystopia",
+     "expedition",
+     "time travel",
+     "space travel",
+     "wormhole",
+     "famine",
+     "hibernation"
+    ],
+    "credits": {
+     "directors": [
+      "Christopher Nolan"
+     ],
+     "writers": [
+      "Christopher Nolan",
+      "Jonathan Nolan"
+     ],
+     "cast": [
+      "Matthew McConaughey",
+      "Anne Hathaway",
+      "Michael Caine",
+      "Jessica Chastain",
+      "Casey Affleck"
+     ],
+     "companies": [
+      "Legendary Pictures",
+      "Syncopy",
+      "Lynda Obst Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000000010681,
+    "title": "WALL·E",
+    "year": 2008,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Science Fiction"
+    ],
+    "essence_text": "This is a heartwarming and visually stunning animated journey, telling a poignant robot love story in a post-apocalyptic future. Despite minimal dialogue, the film conveys profound emotional depth and tackles themes of environmentalism and humanity's future with grace. It's a truly beautiful and hopeful experience that captivates audiences of all ages. The world-building and music are particularly outstanding, creating an immersive and unforgettable cinematic event.",
+    "tags": [
+     "Heartwarming Sci-Fi",
+     "Post-Apocalyptic Romance",
+     "Environmental Commentary",
+     "Robot Love Story",
+     "Visually Stunning",
+     "Minimalist Dialogue",
+     "Emotional Journey",
+     "Family Friendly Adventure",
+     "Hopeful & Uplifting"
+    ],
+    "keywords": [
+     "garbage",
+     "dystopia",
+     "space travel",
+     "distant future",
+     "loneliness",
+     "robot",
+     "aftercreditsstinger",
+     "duringcreditsstinger",
+     "dystopian sci-fi"
+    ],
+    "credits": {
+     "directors": [
+      "Andrew Stanton"
+     ],
+     "writers": [
+      "Andrew Stanton",
+      "Jim Reardon",
+      "Pete Docter"
+     ],
+     "cast": [
+      "Ben Burtt",
+      "Elissa Knight",
+      "Jeff Garlin",
+      "Fred Willard",
+      "John Ratzenberger"
+     ],
+     "companies": [
+      "Pixar"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000603,
+    "title": "The Matrix",
+    "year": 1999,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Science Fiction"
+    ],
+    "essence_text": "A landmark cyberpunk thriller that redefined action cinema through its revolutionary visual effects and philosophical depth. The film immerses viewers in a stark, green-tinted simulation where reality is questioned and physical laws are bent by digital code. It balances intense, choreographed martial arts sequences with dense dialogue exploring free will, perception, and the nature of existence. This experience remains visually stunning and intellectually provocative, cementing its status as...",
+    "tags": [
+     "Cyberpunk Action Thriller",
+     "Philosophical Sci-Fi",
+     "Groundbreaking Visual Effects",
+     "Matrix Simulation Reality",
+     "High-Octane Kung Fu Choreography",
+     "Existential Crisis Narrative",
+     "Cultural Phenomenon",
+     "Stylized Green-Tinted Aesthetic",
+     "Rebellion Against AI Oppression"
+    ],
+    "keywords": [
+     "man vs machine",
+     "martial arts",
+     "kung fu",
+     "dreams",
+     "artificial intelligence (a.i.)",
+     "saving the world",
+     "hacker",
+     "self sacrifice",
+     "virtual reality",
+     "fight",
+     "prophecy",
+     "truth"
+    ],
+    "credits": {
+     "directors": [
+      "Lilly Wachowski",
+      "Lana Wachowski"
+     ],
+     "writers": [
+      "Lilly Wachowski",
+      "Lana Wachowski"
+     ],
+     "cast": [
+      "Keanu Reeves",
+      "Laurence Fishburne",
+      "Carrie-Anne Moss",
+      "Hugo Weaving",
+      "Gloria Foster"
+     ],
+     "companies": [
+      "Village Roadshow Pictures",
+      "Groucho II Film Partnership",
+      "Silver Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000137113,
+    "title": "Edge of Tomorrow",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Science Fiction"
+    ],
+    "essence_text": "A brilliantly conceived and executed sci-fi action film that masterfully utilizes its time-loop premise for relentless thrills and clever character development. The narrative is fast-paced and packed with adrenaline, constantly evolving despite its repetitive structure. It blends high-stakes action with surprising moments of humor, delivering both spectacle and strong performances. This is a highly rewatchable and immensely satisfying blockbuster experience.",
+    "tags": [
+     "Sci-Fi Action",
+     "Time Loop",
+     "High Adrenaline",
+     "Clever Premise",
+     "Intelligent Blockbuster",
+     "Visually Dynamic",
+     "Repetitive Action",
+     "Intriguing Mystery",
+     "Engaging Characters"
+    ],
+    "keywords": [
+     "deja vu",
+     "based on novel or book",
+     "restart",
+     "military officer",
+     "dystopia",
+     "affectation",
+     "time travel",
+     "training",
+     "alien",
+     "time loop",
+     "soldier",
+     "alien invasion"
+    ],
+    "credits": {
+     "directors": [
+      "Doug Liman"
+     ],
+     "writers": [
+      "Christopher McQuarrie",
+      "Jez Butterworth",
+      "John-Henry Butterworth"
+     ],
+     "cast": [
+      "Tom Cruise",
+      "Emily Blunt",
+      "Brendan Gleeson",
+      "Bill Paxton",
+      "Jonas Armstrong"
+     ],
+     "companies": [
+      "RatPac Entertainment",
+      "Village Roadshow Pictures",
+      "VIZ Media"
+     ]
+    }
+   },
+   {
+    "pid": 1000000070981,
+    "title": "Prometheus",
+    "year": 2012,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Adventure",
+     "Mystery"
+    ],
+    "essence_text": "This visually stunning sci-fi horror film builds intense tension and intrigue through its exploration of humanity's origins and a terrifying alien threat. It's a journey into the unknown that blends cosmic mystery with unsettling creature horror and philosophical questions. The film prioritizes world immersion and spectacle, drawing viewers into its complex, ambiguous narrative. It's a thought-provoking and often frightening experience for fans of cerebral science fiction.",
+    "tags": [
+     "Sci-Fi Horror",
+     "Existential Mystery",
+     "Visually Stunning",
+     "Philosophical Themes",
+     "Alien Origins",
+     "Intense Thriller",
+     "Body Horror Elements",
+     "Creepy Atmosphere",
+     "Technological Wonder"
+    ],
+    "keywords": [
+     "android",
+     "alien",
+     "space",
+     "creature",
+     "spin off",
+     "creation",
+     "emergency surgery",
+     "archaeological dig",
+     "stasis",
+     "god complex",
+     "cave drawing",
+     "prometheus"
+    ],
+    "credits": {
+     "directors": [
+      "Ridley Scott"
+     ],
+     "writers": [
+      "Damon Lindelof",
+      "Jon Spaihts",
+      "Dan O'Bannon"
+     ],
+     "cast": [
+      "Noomi Rapace",
+      "Michael Fassbender",
+      "Charlize Theron",
+      "Idris Elba",
+      "Guy Pearce"
+     ],
+     "companies": [
+      "Dune Entertainment",
+      "20th Century Fox",
+      "Brandywine Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000861,
+    "title": "Total Recall",
+    "year": 1990,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Science Fiction"
+    ],
+    "essence_text": "A landmark in sci-fi action, this film thrusts viewers into a mind-bending conspiracy where reality is constantly questioned. Its blend of innovative visual effects, visceral violence, and philosophical intrigue creates a truly unforgettable and highly rewatchable experience. The film is a relentless ride of twists and turns, powered by a magnetic lead performance and a uniquely grotesque futuristic aesthetic that solidified its cult status.",
+    "tags": [
+     "Mind-Bending Sci-Fi",
+     "High-Octane Action",
+     "Reality-Bending Thriller",
+     "Conspiracy & Espionage",
+     "Visceral Violence",
+     "Technological Existentialism",
+     "Practical Effects Spectacle",
+     "Unreliable Narrative",
+     "Cult Classic"
+    ],
+    "keywords": [
+     "double life",
+     "planet mars",
+     "based on novel or book",
+     "oxygen",
+     "resistance",
+     "telepathy",
+     "falsely accused",
+     "dystopia",
+     "villainess",
+     "mutant",
+     "hologram",
+     "space travel"
+    ],
+    "credits": {
+     "directors": [
+      "Paul Verhoeven"
+     ],
+     "writers": [
+      "Dan O'Bannon",
+      "Ronald Shusett",
+      "Gary Goldman"
+     ],
+     "cast": [
+      "Arnold Schwarzenegger",
+      "Rachel Ticotin",
+      "Sharon Stone",
+      "Ronny Cox",
+      "Michael Ironside"
+     ],
+     "companies": [
+      "Carolco Pictures",
+      "Ronald Shusett/Gary Goldman Productions"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev6-05",
+  "query": "Krimi ohne Mord",
+  "intent": "German: a crime story without murder (heists, cons, fraud, thefts). Murder mysteries and serial-killer thrillers are wrong.",
+  "items": [
+   {
+    "pid": 1000001197964,
+    "title": "Der Zürich-Krimi: Borchert und der Mord ohne Sühne",
+    "year": "2023",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 2000000240253,
+    "title": "Conflict",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Drama",
+     "War & Politics"
+    ],
+    "essence_text": "Konflikti is a gripping Nordic thriller that plunges a peaceful town into a nightmare of high-stakes survival. The series masterfully builds intense tension and intrigue as an unknown enemy takes an entire area hostage. It's a fast-paced and often bleak exploration of human endurance under extreme duress, featuring visceral action and a strong contemporary realism. Viewers can expect a suspenseful, edge-of-your-seat experience.",
+    "tags": [
+     "Nordic Thriller",
+     "Hostage Drama",
+     "High Stakes",
+     "Tension-Filled",
+     "Suspenseful",
+     "Crime & Survival",
+     "Contemporary Setting",
+     "Gritty Atmosphere",
+     "Bleak Outlook"
+    ],
+    "keywords": [
+     "attack",
+     "conflict",
+     "soldier",
+     "finland",
+     "geopolitics",
+     "hybrid war"
+    ],
+    "credits": {
+     "directors": [
+      "Aku Louhimies"
+     ],
+     "creators": [
+      "Aku Louhimies",
+      "Jari Rantala"
+     ],
+     "writers": [
+      "Aku Louhimies",
+      "Jari Rantala",
+      "Andrei Alén"
+     ],
+     "cast": [
+      "Sara Soulié",
+      "Peter Franzén",
+      "Pirkka-Pekka Petelius",
+      "Julia Korpinen",
+      "Salah Isse Mohamed"
+     ],
+     "companies": [
+      "Backmann & Hoderoff",
+      "C More",
+      "MTV"
+     ],
+     "networks": [
+      "MTV Katsomo"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000238,
+    "title": "The Godfather",
+    "year": 1972,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A landmark of cinematic storytelling, this film immerses viewers in the complex world of a mafia family, exploring themes of power, loyalty, and betrayal. Its deliberate pacing and intricate plot create a palpable sense of tension. The film is a masterclass in character development, with each role contributing to a larger tapestry of ambition and morality. It is a dark and compelling vision of the American dream corrupted, leaving a lasting impact on the viewer.",
+    "tags": [
+     "Mafia Family Saga",
+     "Organized Crime Epic",
+     "Power & Betrayal",
+     "American Dream Corruption",
+     "Epic Scope",
+     "Morality & Loyalty",
+     "Cinematic Masterpiece",
+     "Brilliant Performances",
+     "Gangster Film"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "loss of loved one",
+     "love at first sight",
+     "italy",
+     "gangster",
+     "symbolism",
+     "patriarch",
+     "europe",
+     "organized crime",
+     "mafia",
+     "religion",
+     "revenge motive"
+    ],
+    "credits": {
+     "directors": [
+      "Francis Ford Coppola"
+     ],
+     "writers": [
+      "Francis Ford Coppola",
+      "Mario Puzo"
+     ],
+     "cast": [
+      "Marlon Brando",
+      "Al Pacino",
+      "James Caan",
+      "Robert Duvall",
+      "Richard S. Castellano"
+     ],
+     "companies": [
+      "Paramount Pictures",
+      "Alfran Productions",
+      "Albert S. Ruddy Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000000009633,
+    "title": "Dead Eyes of London",
+    "year": 1961,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Thriller",
+     "Drama"
+    ],
+    "essence_text": "A chilling classic of German crime cinema, this film plunges into a sinister mystery involving insurance fraud and a grotesque killer. It's a suspenseful, atmospheric thriller that relies on methodical detective work and a pervasive sense of dread rather than explicit gore. The black-and-white cinematography enhances its gothic tone, making it an intriguing watch for fans of vintage murder mysteries and unsettling psychological tension.",
+    "tags": [
+     "Classic German Krimi",
+     "Mystery Thriller",
+     "Gothic Crime",
+     "Black & White Aesthetic",
+     "Sinister & Suspenseful",
+     "Disfigured Killer",
+     "Detective Story",
+     "Insurance Fraud Plot",
+     "Atmospheric & Intriguing"
+    ],
+    "keywords": [
+     "blindness and impaired vision",
+     "nurse"
+    ],
+    "credits": {
+     "directors": [
+      "Alfred Vohrer"
+     ],
+     "writers": [
+      "Wolfgang Lukschy",
+      "Egon Eis",
+      "Edgar Wallace"
+     ],
+     "cast": [
+      "Joachim Fuchsberger",
+      "Karin Baal",
+      "Eddi Arent",
+      "Wolfgang Lukschy",
+      "Dieter Borsche"
+     ],
+     "companies": [
+      "Rialto Film"
+     ]
+    }
+   },
+   {
+    "pid": 2000000001396,
+    "title": "Breaking Bad",
+    "year": 2008,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A meticulously crafted descent into moral darkness that transforms a sympathetic underdog into a terrifying antagonist. The series relies on unbearable tension and complex character psychology rather than gratuitous action, though its violence is visceral when it occurs. It offers a profound exploration of ego, pride, and the corrosive nature of power within the framework of a realistic crime drama. Every plot thread is tightly woven, creating an addictive binge-watching experience that...",
+    "tags": [
+     "Moral Decay Character Study",
+     "High-Stakes Crime Drama",
+     "Psychological Thriller",
+     "New Mexico Noir",
+     "Tragic Anti-Hero Arc",
+     "Family Dysfunction",
+     "Methodical Tension",
+     "Cinematic Storytelling",
+     "Dark Humor",
+     "Consequence-Driven Narrative"
+    ],
+    "keywords": [
+     "new mexico",
+     "drug dealer",
+     "narcissism",
+     "psychopath",
+     "terminal illness",
+     "outlaw",
+     "dark comedy",
+     "cancer",
+     "tragedy",
+     "drugs",
+     "criminal",
+     "meth lab"
+    ],
+    "credits": {
+     "directors": [
+      "Michelle MacLaren",
+      "Adam Bernstein",
+      "Vince Gilligan"
+     ],
+     "creators": [
+      "Mark Johnson",
+      "Vince Gilligan"
+     ],
+     "writers": [
+      "Vince Gilligan",
+      "Peter Gould",
+      "George Mastras"
+     ],
+     "cast": [
+      "Bryan Cranston",
+      "Aaron Paul",
+      "Anna Gunn",
+      "RJ Mitte",
+      "Dean Norris"
+     ],
+     "companies": [
+      "Sony Pictures Television",
+      "High Bridge Productions",
+      "Gran Via Productions"
+     ],
+     "networks": [
+      "AMC"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000550,
+    "title": "Fight Club",
+    "year": 1999,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Thriller"
+    ],
+    "essence_text": "A visceral and intellectually provocative exploration of modern alienation, consumer culture, and fractured masculinity. The film utilizes a non-linear narrative and an unreliable narrator to build mounting tension that culminates in a shocking psychological reveal. Its dialogue is sharp, quotable, and deeply cynical, driving the story forward with relentless energy. Visually stylized and sonically aggressive, it creates a gritty, immersive atmosphere that feels both dangerous and hypnotic....",
+    "tags": [
+     "Psychological Thriller",
+     "Anti-Corporate Satire",
+     "Masculinity Crisis",
+     "Unreliable Narrator",
+     "Stylized Violence",
+     "Cult Classic",
+     "Philosophical Nihilism",
+     "Edgy Humor",
+     "Twist Ending Masterpiece"
+    ],
+    "keywords": [
+     "dual identity",
+     "rage and hate",
+     "based on novel or book",
+     "nihilism",
+     "fight",
+     "support group",
+     "dystopia",
+     "insomnia",
+     "alter ego",
+     "breaking the fourth wall",
+     "split personality",
+     "quitting a job"
+    ],
+    "credits": {
+     "directors": [
+      "David Fincher"
+     ],
+     "writers": [
+      "Jim Uhls",
+      "Chuck Palahniuk"
+     ],
+     "cast": [
+      "Edward Norton",
+      "Brad Pitt",
+      "Helena Bonham Carter",
+      "Meat Loaf",
+      "Jared Leto"
+     ],
+     "companies": [
+      "Fox 2000 Pictures",
+      "Regency Enterprises",
+      "Linson Entertainment"
+     ]
+    }
+   },
+   {
+    "pid": 1000000414906,
+    "title": "The Batman",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Mystery",
+     "Thriller"
+    ],
+    "essence_text": "This film plunges viewers into a bleak, rain-soaked Gotham, presenting a grounded and gritty take on the caped crusader as a troubled detective. Its meticulously crafted atmosphere and stunning cinematography create a truly immersive world of urban decay and moral ambiguity. The narrative weaves a complex mystery with a strong emphasis on psychological depth and the pervasive corruption that plagues the city. It's a dark and intense experience, demanding full attention to unravel its...",
+    "tags": [
+     "Gritty Neo-Noir",
+     "Detective Thriller",
+     "Psychological Character Study",
+     "Stylized Visuals",
+     "Dark & Brooding Tone",
+     "Urban Crime Saga",
+     "Social Corruption Theme",
+     "Vigilante Justice",
+     "Riddler Mystery"
+    ],
+    "keywords": [
+     "police",
+     "psychopath",
+     "secret identity",
+     "crime fighter",
+     "superhero",
+     "nightclub",
+     "politician",
+     "based on comic",
+     "vigilante",
+     "organized crime",
+     "serial killer",
+     "millionaire"
+    ],
+    "credits": {
+     "directors": [
+      "Matt Reeves"
+     ],
+     "writers": [
+      "Matt Reeves",
+      "Peter Craig",
+      "Mattson Tomlin"
+     ],
+     "cast": [
+      "Robert Pattinson",
+      "Zoë Kravitz",
+      "Jeffrey Wright",
+      "Colin Farrell",
+      "Paul Dano"
+     ],
+     "companies": [
+      "6th & Idaho Motion Picture Company",
+      "Dylan Clark Productions",
+      "DC Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000240,
+    "title": "The Godfather Part II",
+    "year": 1974,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A sprawling and operatic crime saga that delves into the corrosive effects of power and the complexities of family. Its masterful direction and nuanced performances create a world of moral ambiguity, inviting viewers to contemplate the characters' choices and their devastating consequences. The film explores the dark side of the American Dream through the lens of a criminal empire. It's a bleak but captivating exploration of ambition, loyalty, and the human cost of corruption.",
+    "tags": [
+     "Epic Crime Saga",
+     "Intergenerational Family Drama",
+     "Political Intrigue",
+     "Masterful Direction",
+     "Complex Characters",
+     "American Dream Corruption",
+     "Gangster Epic",
+     "Moral Ambiguity",
+     "Operatic Scope"
+    ],
+    "keywords": [
+     "new year's eve",
+     "new york city",
+     "based on novel or book",
+     "italian american",
+     "cuba",
+     "italy",
+     "gangster",
+     "praise",
+     "blackmail",
+     "symbolism",
+     "senator",
+     "revenge"
+    ],
+    "credits": {
+     "directors": [
+      "Francis Ford Coppola"
+     ],
+     "writers": [
+      "Francis Ford Coppola",
+      "Mario Puzo"
+     ],
+     "cast": [
+      "Al Pacino",
+      "Robert Duvall",
+      "Diane Keaton",
+      "Robert De Niro",
+      "John Cazale"
+     ],
+     "companies": [
+      "Paramount Pictures",
+      "The Coppola Company"
+     ]
+    }
+   },
+   {
+    "pid": 1000000001422,
+    "title": "The Departed",
+    "year": 2006,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "An electrifying and intensely gripping crime thriller, `The Departed` plunges viewers into a high-stakes game of cat and mouse between the police and the Irish mob. Its relentless pace and labyrinthine plot keep tension at an unbearable high, as two moles on opposing sides navigate a world of constant paranoia and betrayal. Anchored by phenomenal performances and sharp, hard-hitting dialogue, this film is a brutal exploration of identity, loyalty, and the corrupting nature of power, leading...",
+    "tags": [
+     "Gritty Crime Thriller",
+     "Psychological Tension",
+     "Undercover Operations",
+     "Moral Ambiguity",
+     "Fast-Paced & Intense",
+     "Exceptional Acting Ensemble",
+     "Violent & Bleak",
+     "Boston Mafia",
+     "Betrayal & Paranoia"
+    ],
+    "keywords": [
+     "police",
+     "undercover",
+     "boston, massachusetts",
+     "gangster",
+     "irish-american",
+     "crime boss",
+     "friends",
+     "remake",
+     "mobster",
+     "organized crime",
+     "mafia",
+     "undercover cop"
+    ],
+    "credits": {
+     "directors": [
+      "Martin Scorsese"
+     ],
+     "writers": [
+      "William Monahan"
+     ],
+     "cast": [
+      "Leonardo DiCaprio",
+      "Matt Damon",
+      "Jack Nicholson",
+      "Mark Wahlberg",
+      "Martin Sheen"
+     ],
+     "companies": [
+      "Warner Bros. Pictures",
+      "Plan B Entertainment",
+      "Initial Entertainment Group"
+     ]
+    }
+   },
+   {
+    "pid": 1000000001663,
+    "title": "The Squeaker",
+    "year": 1963,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Mystery"
+    ],
+    "essence_text": "A classic German Krimi that delivers a tightly wound whodunit centered around a series of bizarre snake venom murders. The film thrives on intricate plot twists and palpable tension, drawing viewers deep into a complex police investigation. It's a testament to classic mystery storytelling, full of deductive reasoning and shadowy characters. Expect a suspenseful and intriguing experience, where every clue leads deeper into a dark criminal underworld.",
+    "tags": [
+     "Classic German Krimi",
+     "Whodunit Mystery",
+     "Police Procedural",
+     "Murder Investigation",
+     "Suspenseful Thriller",
+     "Intricate Plot",
+     "Psychological Intrigue",
+     "Dark Atmosphere",
+     "Detective Story",
+     "Venom Poisoning"
+    ],
+    "keywords": [
+     "london, england"
+    ],
+    "credits": {
+     "directors": [
+      "Alfred Vohrer"
+     ],
+     "writers": [
+      "Harald G. Petersson",
+      "Edgar Wallace"
+     ],
+     "cast": [
+      "Heinz Drache",
+      "Barbara Rütting",
+      "Günter Pfitzmann",
+      "Agnes Windeck",
+      "Eddi Arent"
+     ],
+     "companies": [
+      "Les Films Jacques Willemetz",
+      "Rialto Film"
+     ]
+    }
+   }
+  ]
+ }
+]

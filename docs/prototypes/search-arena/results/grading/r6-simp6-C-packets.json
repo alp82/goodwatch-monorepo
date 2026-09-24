@@ -1,0 +1,74 @@
+[
+ {
+  "query_id": "dev6-01",
+  "query": "fantasy series without dragons",
+  "intent": "Fantasy TV series (magic, other worlds, myth) with no dragons in them. Dragon-centred shows contradict the constraint.",
+  "items": [
+   {
+    "pid": 2000000111819,
+    "title": "TSUKIMICHI -Moonlit Fantasy-",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Sci-Fi & Fantasy",
+     "Action & Adventure",
+     "Comedy"
+    ],
+    "essence_text": "An isekai anime where an ordinary student is summoned to another world but cast aside by its goddess, forcing him to find his own path. The series emphasizes world-building and the protagonist's interactions with diverse non-human tribes, highlighting his extraordinary magical powers. It blends adventure with political intrigue and social commentary, as the protagonist strives to improve the world despite being rejected by humans and gods. The anime is an engaging experience that balances...",
+    "tags": [
+     "Isekai Fantasy",
+     "Summoned Hero",
+     "World-Building",
+     "Magical Powers",
+     "Adventure",
+     "Political Intrigue",
+     "Social Commentary",
+     "Action"
+    ],
+    "keywords": [
+     "hero",
+     "magic",
+     "harem",
+     "god",
+     "survival",
+     "dragon",
+     "creature",
+     "fantasy world",
+     "summons",
+     "anime",
+     "isekai",
+     "based on light novel"
+    ],
+    "credits": {
+     "directors": [
+      "Hiro Ohki",
+      "Yusuke Onoda",
+      "Ayumu Uwano"
+     ],
+     "creators": [
+      "Kenta Ihara"
+     ],
+     "writers": [
+      "Kenta Ihara"
+     ],
+     "cast": [
+      "Natsuki Hanae",
+      "Ayane Sakura",
+      "Akari Kito",
+      "Saori Hayami",
+      "Shinpachi Tsuji"
+     ],
+     "companies": [
+      "C2C",
+      "Nichion",
+      "MBS"
+     ],
+     "networks": [
+      "Tokyo MX"
+     ]
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,19 @@
+grades: grades.json
+  r6                         dev53 n49 0.834 cond 0.834 unj 0 bad5 10 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.743 cond 0.743 unj 60 bad5 10
+  combo-safe-v2              dev53 n49 0.845 cond 0.845 unj 0 bad5 7 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.753 cond 0.753 unj 60 bad5 7
+  combo-safe-v2-wcred        dev53 n49 0.843 cond 0.845 unj 2 bad5 7 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.751 cond 0.753 unj 62 bad5 7
+  combo-safe-v2-wcred-par    dev53 n49 0.843 cond 0.845 unj 2 bad5 7 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.751 cond 0.753 unj 62 bad5 7
+  combo-safe-v2-wcred-me5s   dev53 n49 0.839 cond 0.844 unj 4 bad5 7 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.748 cond 0.752 unj 64 bad5 7
+    dev5-01 r6=0.000 fe-v2=0.000 wcred=0.000 d-par=0.000 -me5s=0.000
+    dev5-02 r6=0.000 fe-v2=0.000 wcred=0.000 d-par=0.000 -me5s=0.000
+    dev5-03 r6=0.000 fe-v2=0.000 wcred=0.000 d-par=0.000 -me5s=0.000
+    dev5-04 r6=0.000 fe-v2=0.000 wcred=0.000 d-par=0.000 -me5s=0.000
+    dev5-05 r6=0.000 fe-v2=0.000 wcred=0.000 d-par=0.000 -me5s=0.000
+    dev5-06 r6=0.000 fe-v2=0.000 wcred=0.000 d-par=0.000 -me5s=0.000
+grades: results/grades.json + overlay results/simplify/rubric/overlay.json (472 pairs replaced)
+grades: grades.json+results/simplify/rubric/overlay.json
+  r6                         dev53 n49 0.799 cond 0.799 unj 0 bad5 19 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.712 cond 0.712 unj 60 bad5 19
+  combo-safe-v2              dev53 n49 0.807 cond 0.807 unj 0 bad5 17 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.719 cond 0.719 unj 60 bad5 17
+  combo-safe-v2-wcred        dev53 n49 0.806 cond 0.807 unj 2 bad5 17 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.718 cond 0.719 unj 62 bad5 17
+  combo-safe-v2-wcred-par    dev53 n49 0.806 cond 0.807 unj 2 bad5 17 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.718 cond 0.719 unj 62 bad5 17
+  combo-safe-v2-wcred-me5s   dev53 n49 0.802 cond 0.807 unj 4 bad5 17 | dev5 n6 0.000 cond 0.000 unj 60 bad5 0 | dev-all n55 0.714 cond 0.719 unj 64 bad5 17

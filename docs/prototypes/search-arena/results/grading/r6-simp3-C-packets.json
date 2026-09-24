@@ -1,0 +1,109 @@
+[
+ {
+  "query_id": "new-16",
+  "query": "whole movie takes place in one room",
+  "intent": "Single-location films (one room, apartment, booth) that sustain drama through dialogue or tension.",
+  "items": [
+   {
+    "pid": 1000001242907,
+    "title": "Days, Months, Years and Nothing Else",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [
+     "psychedelic",
+     "short film",
+     "experimental",
+     "experimental film",
+     "internal monologue"
+    ],
+    "credits": {
+     "directors": [
+      "Emin Hüseynov"
+     ],
+     "writers": [
+      "Emin Hüseynov"
+     ],
+     "cast": [
+      "Emin Hüseynov"
+     ],
+     "companies": [
+      "Bir Zamanlar Kinoteatrda"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "ppl-06",
+  "query": "leonardo dicapro thrillers",
+  "intent": "Typo for Leonardo DiCaprio: thrillers starring him first. His romances and period dramas are weak.",
+  "items": [
+   {
+    "pid": 2000000106388,
+    "title": "Shining Girls",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery",
+     "Crime"
+    ],
+    "essence_text": "A chilling psychological thriller that expertly crafts a constantly shifting reality, pulling viewers into the disorienting world of its protagonist. The series is a captivating mystery, driven by a woman's quest to understand her past trauma while investigating a linked murder. Its strength lies in its complex narrative structure and the compelling performances that immerse you in a dark and unsettling atmosphere. This is a thought-provoking and intense experience that rewards close attention.",
+    "tags": [
+     "Psychological Thriller",
+     "Time-Shifting Mystery",
+     "Serial Killer Investigation",
+     "Trauma & Memory",
+     "Non-Linear Storytelling",
+     "Journalistic Crime Drama",
+     "Unsettling Atmosphere",
+     "Character-Driven Suspense"
+    ],
+    "keywords": [
+     "chicago, illinois",
+     "based on novel or book",
+     "serial killer",
+     "newspaper reporter",
+     "traumatized woman",
+     "thriller"
+    ],
+    "credits": {
+     "directors": [
+      "Daina Reid",
+      "Michelle MacLaren",
+      "Elisabeth Moss"
+     ],
+     "creators": [
+      "Leonardo DiCaprio",
+      "Michelle MacLaren"
+     ],
+     "writers": [
+      "Lauren Beukes",
+      "Silka Luisa",
+      "Naledi Jackson"
+     ],
+     "cast": [
+      "Elisabeth Moss",
+      "Wagner Moura",
+      "Phillipa Soo",
+      "Chris Chalk",
+      "Amy Brenneman"
+     ],
+     "companies": [
+      "MRC",
+      "Love & Squalor Pictures",
+      "Appian Way"
+     ],
+     "networks": [
+      "Apple TV"
+     ]
+    }
+   }
+  ]
+ }
+]

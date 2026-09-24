@@ -1,0 +1,4 @@
+| candidate | p50 ms | p95 ms | mean ms | max ms | top-10 lists |
+|---|---|---|---|---|---|
+| combo-safe-v2-wcred-par | 47.3 | 173.9 | 71.2 | 384.1 | 30/30 |
+30 holdout5 queries x 1 candidates in 27 s; no metrics computed. Lists: /home/alp/dev/projects/goodwatch/goodwatch-monorepo/.claude/worktrees/search-simplify/docs/prototypes/search-arena/results/simplify/holdout5/lists

@@ -602,3 +602,325 @@ human − agent −0.36. Two findings:
   excludes the reference title in "like X" queries, which goes against this.
 Too few pairs for a kappa; direction only. Grades in
 `grading/human-calibration-grades.json`.
+
+## Simplification loop, round 0 and round 1 (2026-09-23)
+
+Branch `proto/search-simplify`, handoff in `HANDOFF.md`. Contract note added
+(simplify note, S target 236).
+
+Round 0, setup:
+- `harness/evalsimp.py` scores any config or module on every split, with
+  unjudged@10, condensed NDCG, and latency measured against r6 in the same
+  run. It reproduces r6, r5, r4-combo-fast and prod exactly.
+- `results/simplify/baseline-complexity.md` and `harness/complexity.py`:
+  r6 S = 394 (tunables 187, rules 164, regexes 35, paths 8), about 1,600 to
+  1,750 lines. Person and studio detection is 104 of it.
+- `harness/simp.py`: flat r6, identical top-50 lists on all 127 queries,
+  p50 41 ms against r6's 44 ms in the same run, proxy 277 against 306. It
+  adds off switches for the 15 rules that had none and no longer reads
+  other queries' capture files.
+- Real production search history can't feed `holdout5` yet: 157 rows, 117
+  of them local development traffic under the dev key.
+
+Round 1, leave-one-out ablation (62 single and grouped ablations,
+`results/simplify/round1-ablation.md`):
+- Individually safe drops add up to S 52, but together they lose dev
+  −0.009 and dev-style −0.020. A subset without the title-word bonus and
+  the early/late career rule (S 39) keeps every split within −0.005.
+- `ref_mix` and `ref_facet` interact on "like Breaking Bad but a comedy"; drop
+  or keep them as a pair.
+- Clear keeps: entity detection, the style path, facets plus coverage
+  (holdout −0.053), era, BM25, negation, spell, fuzzy title.
+- Conclusion: pruning reaches about 10% of S. The 40% goal needs mechanisms
+  replaced, not removed. Round 2 runs four builders in parallel: entity
+  detection and intent, one reference mechanism, the text rules, and fitted
+  fusion weights. A fifth agent prepares the rubric overlay.
+- The 139-pair ablation grading pool (`r6-simp1`) is held back and merged
+  with round 2's pool.
+
+## Simplification loop, round 2 (2026-09-23): four areas in parallel
+
+Four builders, each on a copy of `simp.py`, plus the rubric fix. Reports are
+in `results/simplify/<area>/REPORT.md`. The numbers below are before grading;
+"c" is condensed NDCG, which skips ungraded titles.
+
+| area | module, recommended variant | area S before → after | whole-ranker S | worst split vs r6 (plain / condensed) | bad5 |
+|---|---|---|---|---|---|
+| entity detection and intent | `simp_entity`, `entity-resolver` (`entity-lean`) | 123 → 47 (39) | 315 (304) | ho4 −0.037 / +0.037, 16 unjudged | 40 |
+| reference ("like X", person and studio style) | `simp_ref`, `ref-merge` (`ref-lean`) | 109 → 77 (53) | 360 (336) | ho3 −0.027 / −0.001 | 38 |
+| text rules | `simp_text`, `text-cons` | 103 → 51 | 342 | ho −0.006 / +0.007 | 36 |
+| fusion, BM25, title rules | `simp_fusion`, `fusion-shared` | 59 → 34 | 358 | dsty −0.009 | 39 |
+
+- Entity: one name index for people and studios with one ambiguity test;
+  intent from 39 example phrases in the multilingual embedding; two credit
+  classes. Entities match r6 on all 127 queries. Intent matches the gold
+  label on 32 of 36 queries, against 30 for r6. False positives on the tag
+  probes fall from 36 to 10.
+- Reference: one `rank_query` for "like X", filmography and style; one
+  `bound_own` step for own titles. A "like X" title may appear once, not at
+  #1 (human calibration). The Fincher producer-credit problem is fixed, but
+  sty-07 (Groening) drops −0.101. Without peers, `ref-lean` loses graded
+  style quality.
+- Text: negation from one marker-word list, no regexes; "less X" merged into
+  negation; era as a filter only; facets and coverage from Jev's
+  `searchedPhrases`. Regex sites fall from 35 to 21. Jev's avoid chips as
+  the only negation lost ho −0.018 and were rejected. Still open: "space
+  opera without aliens" and "deth".
+- Fusion: one weight of 0.1 for 7 secondary signals. Fitted weights
+  (5-fold CV by query) reach 0.809 against 0.804 for hand weights, not
+  worth the extra tunables. Fitting on condensed NDCG pulls toward ungraded
+  titles, so fitting uses plain NDCG.
+- Latency: every recommended variant is at or below r6 in the same run.
+- Rubric: `GRADER.md` has a "Vague and mood queries" section. 13 vague or
+  mood queries were identified; 472 of their existing pairs are being
+  re-graded into the overlay (`evalsimp.py --overlay`).
+
+The area savings sum to S 199 to 234, which would give S 160 to 195 if
+they compose. Round 3 merges them into `harness/simp_combo.py`, then one
+grading pool covers the round 1, round 2 and round 3 candidates.
+
+### Rubric overlay for vague and mood queries (2026-09-23)
+
+The 472 existing pairs of the 13 vague or mood queries were re-graded under
+the new `GRADER.md` section by two sonnet assessors (quadratic weighted kappa
+0.829, 1 pair 2+ apart, decided by a blind third: "300" for "furious" = 3).
+246 grades changed, mostly kids' shows on "wholesome" (Hey Duggee, Tweenies,
+Handy Manny 3 → 0). Grades go to `results/simplify/rubric/overlay.json`, not
+`grades.json`; `evalsimp.py table --overlay` applies them.
+
+Human calibration pairs on these queries: 4 of 5 exact (was 2 of 5), all
+within one grade. The Yogi Bear Show 3 → 0 (user 0), The Prisoner 3 → 2
+(user 2), Return 2 → 1 (user 1), Naked Gun 33⅓ 2 → 3 (user 2).
+
+| ranker | dev | holdout | other splits | bad5 total |
+|---|---|---|---|---|
+| r6 | 0.836 → 0.801 | 0.761 → 0.729 | unchanged | 40 → 51 |
+| r5 | 0.823 → 0.788 | 0.761 → 0.729 | unchanged | 42 → 53 |
+| r4-combo-fast | 0.767 → 0.733 | 0.761 → 0.729 | holdout2 0.716 | 47 → 58 |
+| prod | 0.501 → 0.473 | 0.450 → 0.405 | holdout2 0.514 → 0.513 | 151 → 166 |
+
+From here on, candidates are reported under both grade sets, and the win
+criteria must hold under both.
+
+## Simplification loop, round 3 (2026-09-23): combined module
+
+`harness/simp_combo.py` ports all four round-2 areas plus the round-1 safe
+drops onto `simp.py`, and deletes replaced r6 code instead of switching it
+off: 1,229 lines against 1,592, one ranking function for every query, 5 to 6
+regex sites against 35. Full report: `results/simplify/combo/REPORT.md`.
+
+| variant | S | dev | ho | ho2 | ho3 | ho4 (plain / condensed, unjudged) | bad5 | p50 / p95 vs r6 |
+|---|---|---|---|---|---|---|---|---|
+| r6 | 394 | .836 | .761 | .728 | .893 | .837 | 40 | 44.0 / 116.8 |
+| combo-safe | 213 | .833 | .764 | .747 | .887 | .800 / .886, 21 | 31 | 40.9 / 83.3 |
+| combo | 198 | .831 | .763 | .754 | .892 | .805 / .887, 22 | 32 | 43.6 / 84.2 |
+| combo-lean | 174 | .824 | .759 | .755 | .861 | .782 / .883 | 35 | 47.2 / 87.6 |
+| combo-lean-peers | 185 | .827 | .759 | .752 | .864 | .777 / .887 | 34 | 45.5 / 83.2 |
+
+- `combo` breaks down as 39 config tunables, 35 magic numbers, 116 rules, 5
+  regexes and 3 paths (general, non-English, reference). Intent only selects
+  numbers now.
+- Early/late career: text dropped the era prior that ref reused. `combo`
+  drops the career rule ("early spielberg" −0.174); `combo-safe` keeps a
+  one-term version.
+- Graded losses in `combo`: "animated movie that is not for kids" −0.193,
+  "a hopeful space adventure without horror" −0.141 (both fixed in
+  `combo-safe` by coverage weight 0.3 and facets from 2 phrases), and
+  "something darren aronofsky would direct" −0.146 (6 own titles plus 4
+  similar ones instead of 10 own, the mix the style rubric asks for).
+  Fixed: "cartoons with matt groening humor" 0.542 → 0.781.
+- Open before any verdict: holdout4 misses on plain NDCG only (22 unjudged
+  titles), and dev-style `own10` is 6.25 because the metric still uses r6's
+  credit weights (Sin City counts as a Tarantino title). The metric is not
+  changed to suit the candidate.
+- The lean variants fail holdout3 even condensed and are slower than r6 on
+  p50; kept as references only.
+
+Grading pool `r6-simp3`: 100 pairs over 57 queries for `combo`, `combo-safe`
+and `combo-lean-peers`. `holdout5` (30 blind agent-written queries) is being
+written in parallel by an agent that sees no ranker output.
+
+### Round 3 grading
+
+Pool `r6-simp3`: 100 pairs, kappa 0.863, 2 pairs decided by a blind third
+assessor. `grades.json` 4,168 → 4,268. All variants but `combo-lean` now
+have 0 unjudged titles. The new grades also move r6's ideals slightly.
+
+| grades | ranker | S | dev | ho | ho2 | ho3 | ho4 | bad5 | own10 dsty/h3sty/ho4 |
+|---|---|---|---|---|---|---|---|---|---|
+| grades.json | r6 | 394 | .834 | .754 | .712 | .888 | .828 | 40 | 6.00/6.00/6.00 |
+| grades.json | combo-safe | 213 | .845 | .769 | .758 | .911 | .867 | 31 | 6.25/6.00/5.33 |
+| grades.json | combo | 198 | .839 | .775 | .769 | .915 | .869 | 32 | 6.25/6.00/5.33 |
+| grades.json | combo-lean-peers | 185 | .840 | .771 | .768 | .885 | .871 | 34 | 6.00/6.00/5.33 |
+| overlay | r6 | 394 | .799 | .722 | .711 | .888 | .828 | 51 | |
+| overlay | combo-safe | 213 | .808 | .735 | .761 | .911 | .867 | 43 | |
+| overlay | combo | 198 | .802 | .746 | .773 | .915 | .869 | 44 | |
+
+`combo` and `combo-safe` beat r6 on every split under both grade sets. Open:
+dev-style `own10` 6.25 (one query at 7 under the metric's r6 credit
+weights), a thin p50 margin for `combo` (43.6 against 44.0 ms), and one
+uncached intent encode per entity query that the benchmark hides. Round 4
+addresses these three before a freeze. `combo-lean-peers` (S 185) misses
+holdout3 by 0.003 and is the fallback if round 4 wants a lower S.
+
+## Simplification loop, round 4 (2026-09-24): the three blockers
+
+Files: `results/simplify/round4/` (explore*.txt, final-score-run1/2.txt, latency-uncached-run1/2.txt,
+final-table-overlay.txt, own10-per-query.txt, complexity-combo*-v2.*). New FINAL entries in `harness/simp_combo.py`:
+`combo-v2`, `combo-safe-v2` (= the round-3 variant + `bound_codirected` + `entity_dense="reuse"`).
+
+- **own10:** the bounds now also count a person's co-directed films as own titles (the metric's definition), so
+  "tarantino vibes" keeps 6 own titles (Sin City out, Freeway in: 1.000 → 0.964). Every style query is ≤ 6; means
+  6.00/6.00/5.33. Rejected: co-directors as main credits everywhere (edgar wright −0.072, early spielberg −0.068),
+  style max 5 (dsty −0.014, ho3 −0.021).
+- **Intent encode:** no reuse keeps intent accuracy for English. Gold agreement on the 36 labelled queries: r6 30,
+  me5s on the "X" query 32, bge on the same text 26 (best bge variant 29). Using the me5s vector as the dense query
+  (ho3 −0.041) or dropping the entity dense signal (ho3 −0.045) costs ndcg. Kept: non-English entity queries reuse
+  the intent vector (same model, one encode fewer); English entity queries still pay one me5s encode (~6 ms).
+  Every variant now encodes a text once per query (`sims` memo; rankings unchanged).
+- **Honest latency:** `evalsimp.py latency <specs> --uncached --reps=5` (qemb.NO_CACHE: every query encode timed).
+  Load average 28–44 during the runs, so absolute uncached numbers are inflated.
+
+| ranker | S | p50/p95 cached run1 | run2 | p50/p95 uncached run1 | run2 | encodes/query |
+|---|---|---|---|---|---|---|
+| r6 | 394 | 44.5/112.2 | 46.3/107.4 | 193.0/649.4 | 192.7/646.6 | 2.61 |
+| combo-v2 | 200 | 41.5/92.1 | 40.8/86.1 | 192.9/562.2 | 191.5/561.6 | 2.64 |
+| combo-safe-v2 | 215 | 41.0/85.5 | 39.6/84.8 | 187.1/564.8 | 184.2/560.4 | 2.43 |
+
+ndcg10 (grades.json / overlay): combo-safe-v2 dev .845/.807, ho .769/.735, ho2 .758/.761, ho3 .911/.911,
+ho4 .867/.867, bad5 31/43, 0 unjudged, title@1 6/7 (r6: .834/.799, .754/.722, .712/.711, .888/.888, .828/.828,
+40/51). combo-v2 ties r6 on uncached p50 (margin 0.1 and 1.2 ms; round-3 `combo` was 0.2 ms above r6 in run 2).
+Recommendation: freeze `combo-safe-v2`.
+
+## Freeze before holdout5 (2026-09-24)
+
+Frozen candidate: `simp_combo.FINAL["combo-safe-v2"]` (S 215). Hashes (sha256,
+first 16): `simp_combo.py` f384c5e71ac87ed1, `qemb.py` 4a08e3e7a3d47452, `cuts.py` + `sparse.py` +
+`catalog.py` 4b1135269e279154. No code or config changes after this point. It is
+compared against r6 on `holdout5` under the simplify note's criteria;
+production's captured list is scored for reference. `combo-v2` (S 200) is
+not a finalist: its uncached p50 margin (0.1 to 1.2 ms) is inside noise.
+
+## Holdout 5 (2026-09-24): frozen combo-safe-v2 against r6
+
+Hashes checked against the freeze before any list was made. 30 blind
+agent-written queries (h5-01 to h5-30). Pool of r6, `combo-safe-v2` and prod
+top 10s: 570 pairs, two sonnet assessors (kappa 0.880), 12 pairs 2+ apart
+decided by a blind third. `grades.json` 4,268 → 4,838. The overlay touches
+no holdout5 pair, so both grade sets give the same numbers.
+
+| ranker | S | holdout5 ndcg10 | style + both (2) | bad5 | own10, style query | p50 / p95 ms, ranking | p50 / p95 ms, uncached |
+|---|---|---|---|---|---|---|---|
+| r6 | 394 | 0.764 | 0.799 | 16 | 2 | 49.3 / 98.4 | 217.0 / 565.9 |
+| combo-safe-v2 | 215 | 0.794 | 0.914 | 15 | 5 | 38.3 / 81.5 | 166.6 / 558.4 |
+| prod | – | 0.511 | 0.109 | 42 | 0 | – | – |
+
+own10 is computed with the corrected name "sofia coppola": the metric's
+detector (r6's) doesn't resolve the typo "sofia copola", which is also why
+r6 ranks only 2 of her films.
+
+Criteria (simplify note), applied mechanically:
+- S 215 ≤ 236: pass.
+- ndcg10 not more than 0.01 below r6 on every split: dev .845, holdout .769,
+  holdout2 .758, holdout3 .911, holdout4 .867 (r6 .834, .754, .712, .888,
+  .828); overlay dev .807, holdout .735 (r6 .799, .722); holdout5 +0.030:
+  pass.
+- bad5: 31 against 40 (overlay 43 against 51), holdout5 15 against 16: pass.
+- own10 on style queries: 6.00 / 6.00 / 5.33, holdout5 5: pass.
+- title@1 6/7, unchanged: pass.
+- Latency not higher than r6 in the same run, ranking only and uncached,
+  on dev to holdout4 (two runs) and holdout5: pass.
+- Cost: no new paid calls: pass.
+- Verdict: **combo-safe-v2 wins.**
+
+Per query: gains on "like john wick but a tv show" +0.269, "sofia copola
+vibes" +0.235 (typo resolved, 5 own titles plus similar ones), "funny movie
+under 90 minutes" +0.153, "adrenaline rush" +0.115, "like interstellar"
++0.095 (Interstellar itself at #2, per the human calibration). Losses:
+"journalists uncovering a cover up" −0.083, "somthing to cheer me up" and
+"revenge planned for years" −0.025.
+
+Still open, shared with r6 or new:
+- "harry potter but for adults" scores 0.000 for both: the franchise in "X
+  but Y" still pulls in Harry Potter titles.
+- "una peli romántica que no sea cursi" ≈ 0.52 for both: production routes
+  the Spanish and Turkish queries as English, so negation there relies on
+  the English path.
+- Encodes per query: mean 3.35 against 2.41 for r6 on holdout5, max 41 on one
+  query (facet phrases). p50 and p95 are still lower, but the port should
+  batch those encodes or cap the phrase count.
+- `holdout5` is agent-written. Real production queries should confirm it
+  once there is traffic.
+
+## Simplification loop, round 5 (2026-09-24): user review, producers as creators
+
+The user compared the rankers in the playground (port 8766, new column
+"Simplified (combo-safe-v2)") and found one failure: "funny brad pitt shows"
+returned Adolescence, The OA, 3 Body Problem and 4 more Plan B dramas.
+
+Cause: shows without a TMDB Creator credit (8,642 of about 9,200) got their
+creators from `pull_credits.py`'s fallback, the top 2 Executive Producers or
+Writers by episode count. Brad Pitt is executive producer on every episode of
+those 7 shows. `combo-safe-v2` counts every creator as a main credit and adds
+the filmography boost (4.0 × weight). r6 has the same failure (weight 0.8).
+
+Fix (`combo-safe-v2-wcred`): `pull_credits.py --writer-creators` rebuilds
+`data/credits-v2.jsonl.gz` from the raw cache. A fallback creator must have a
+script credit (Writer, Teleplay, Screenplay); writer-producers come first;
+pure executive producers never qualify. 4,610 shows lose a fallback creator
+(most often Rebecca Eaton, Brian Grazer, Greg Berlanti, Steven Spielberg).
+Counting fallback creators as minor credits instead (`fbminor`) breaks
+"cartoons with matt groening humor" (0.840 → 0.165) and was rejected.
+Scaling the filmography boost by fit was not needed.
+
+Six dev regression queries were added (dev5-01 to dev5-06: "funny brad pitt
+shows", "funny will ferrell shows", "lighthearted ridley scott series",
+"feel-good reese witherspoon shows", "seth rogen comedy series", control
+"funny ricky gervais shows"). Before grading, wcred is within 0.01 of
+`combo-safe-v2` on every old split (ho4 .858, condensed .877, 5 unjudged).
+`holdout5`, run again as a regression check only (it is no longer blind for
+this change): 0.794, unchanged. S stays 215.
+
+Latency finding: with the dev5 person queries included, `combo-safe-v2`'s
+uncached p50 is above r6 (about 188 against 143 to 153 ms). The intent step
+encodes every English person or studio query once more with
+multilingual-e5-small, about 70 ms under the current machine load.
+`holdout5` had only 4 person queries, so the earlier pass hid this. The
+freeze's latency result therefore does not hold on the larger set. A latency
+fix and the grading of pool `simp5` (108 pairs) are in progress.
+
+## Simplification loop, round 6 (2026-09-24): latency fix, concrete negation, final candidate
+
+- Latency (`intent_thread=1`): the intent encode runs in a worker thread with
+  1 torch thread, overlapping the residual and facet encodes. Lists are
+  identical; uncached p50 and p95 are at or below r6 in both runs with the
+  dev5 person queries. Reusing an existing vector for intent was worse than
+  r6 (bge 31 of 42, lexical 31 to 33, me5s 37, r6 35).
+- Concrete negation (`neg_lex=2.0`, `label_negation`): for each negated
+  clause, titles whose keyword or essence-tag labels hold all of its stems
+  lose up to 2 z. No regexes, no new encodes, +3 S.
+- User-reported "space opera without aliens" (ho2-09) stays at 0: Star Wars
+  and Guardians of the Galaxy carry no alien keyword or tag. A trope rule
+  ("Absent Aliens" as positive evidence) fixes it but no other query (only
+  "aliens" has an absence trope among 38,314 trope names) and was not
+  adopted; `harness/simp_trope.py`, variant `trope-abs`, +2 S.
+- New dev queries dev6-01 to dev6-05 (concrete negation). Pools `simp5`
+  (108 pairs, kappa 0.822) and `simp6` (63 pairs, kappa 0.934) graded;
+  `grades.json` 5,009.
+
+Final candidate `combo-safe-v3` (S 218) against r6, 0 unjudged:
+
+| grades | ranker | dev (65) | dsty | ho | ho2 | ho3 | ho4 | bad5 |
+|---|---|---|---|---|---|---|---|---|
+| grades.json | r6 | .788 | .812 | .754 | .712 | .888 | .828 | 62 |
+| grades.json | combo-safe-v3 | .827 | .810 | .780 | .754 | .911 | .872 | 40 |
+| overlay | r6 | .760 | .812 | .722 | .711 | .888 | .828 | 73 |
+| overlay | combo-safe-v3 | .796 | .810 | .746 | .758 | .911 | .872 | 52 |
+
+holdout5 (regression check, no longer blind): 0.794 against r6 0.764.
+Against `combo-safe-v2`: "lighthearted ridley scott series" +0.892, "funny
+brad pitt shows" +0.732, "detective show with no murders" +0.323, "war
+movie that isn't about World War II" +0.286; losses "funny will ferrell
+shows" −0.163 and "seth rogen comedy series" −0.072 (shows they only
+produced no longer count as theirs). The user tested the playground and
+is happy with the results.

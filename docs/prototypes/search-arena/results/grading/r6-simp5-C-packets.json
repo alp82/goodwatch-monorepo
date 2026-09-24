@@ -1,0 +1,353 @@
+[
+ {
+  "query_id": "dev5-02",
+  "query": "funny will ferrell shows",
+  "intent": "Comedy series first, ideally with Will Ferrell or his absurd, deadpan humor (series he stars in or appears in). Dramas and thrillers he only executive-produced are not what is asked for.",
+  "items": [
+   {
+    "pid": 2000000081357,
+    "title": "Dead to Me",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A darkly comedic psychological thriller about grief, friendship, and the secrets we keep. The series draws viewers into a web of intrigue and suspense, led by compelling performances. Exploring themes of loss and healing, it blends moments of levity with underlying tension, creating a captivating and emotionally resonant experience. It's a character-driven story with complex relationships and unexpected twists.",
+    "tags": [
+     "Dark Comedy",
+     "Psychological Thriller",
+     "Mystery",
+     "Crime Drama",
+     "Female Friendship",
+     "Grief and Healing",
+     "Secrets and Lies",
+     "Suburban Noir",
+     "Character-Driven"
+    ],
+    "keywords": [
+     "widow",
+     "female friendship",
+     "friendship",
+     "hit-and-run",
+     "murder",
+     "grief",
+     "dark comedy",
+     "parenthood",
+     "miscarriage",
+     "dramedy",
+     "tragicomedy"
+    ],
+    "credits": {
+     "directors": [
+      "Tamra Davis",
+      "Kat Coiro",
+      "Abe Sylvia"
+     ],
+     "creators": [
+      "Christina Applegate",
+      "Will Ferrell"
+     ],
+     "writers": [
+      "Liz Feldman",
+      "Kelly Hutchinson",
+      "Abe Sylvia"
+     ],
+     "cast": [
+      "Christina Applegate",
+      "Linda Cardellini",
+      "James Marsden",
+      "Max Jenkins",
+      "Luke Roessler"
+     ],
+     "companies": [
+      "Gloria Sanchez Productions",
+      "CBS Studios",
+      "Visualized"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev5-03",
+  "query": "lighthearted ridley scott series",
+  "intent": "Lighthearted, easygoing series. Ridley Scott has no lighthearted series; the grim dramas he executive-produced (The Terror, Taboo, Raised by Wolves, The Man in the High Castle) are wrong.",
+  "items": [
+   {
+    "pid": 2000000003022,
+    "title": "Rugrats",
+    "year": 1991,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Animation",
+     "Kids",
+     "Comedy"
+    ],
+    "essence_text": "This beloved children's cartoon whisks viewers into the imaginative world of toddlers, transforming everyday experiences into grand adventures. It's a consistently wholesome and lighthearted comedy, brimming with physical gags and a unique visual style. The show masterfully captures the innocent wonder of childhood, making it a perfect comfort watch for families. Its enduring charm and simple, engaging narratives make it highly rewatchable and a source of nostalgic joy for many.",
+    "tags": [
+     "Classic Kids' Cartoon",
+     "Wholesome Comedy",
+     "Imaginative Adventures",
+     "Toddler's Perspective",
+     "Family-Friendly Fun",
+     "Nostalgic Viewing",
+     "Distinctive Animation",
+     "Simple & Engaging",
+     "Humorous Antics"
+    ],
+    "keywords": [
+     "baby",
+     "friendship",
+     "toddler",
+     "nostalgic",
+     "playful",
+     "lighthearted"
+    ],
+    "credits": {
+     "directors": [
+      "Jim Duffy",
+      "Norton Virgien",
+      "Rick Bugental"
+     ],
+     "creators": [
+      "Gábor Csupó",
+      "Arlene Klasky"
+     ],
+     "writers": [
+      "Jill Gorey",
+      "Barbara Herndon",
+      "Peter Gaffney"
+     ],
+     "cast": [
+      "E. G. Daily",
+      "Christine Cavanaugh",
+      "Kath Soucie",
+      "Cheryl Chase",
+      "Dionne Quan"
+     ],
+     "companies": [
+      "Klasky-Csupo",
+      "Nickelodeon Animation Studio",
+      "Games Animation"
+     ],
+     "networks": [
+      "Nickelodeon"
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "query_id": "dev5-05",
+  "query": "seth rogen comedy series",
+  "intent": "Comedy series Seth Rogen created, wrote or stars in first (The Studio, Platonic), then other comedies, including ones he produced (Future Man). His producer-only action and drama series (Preacher, The Boys) are loosely relevant at best.",
+  "items": [
+   {
+    "pid": 2000000102349,
+    "title": "Middleditch & Schwartz",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "An exhilarating showcase of improvisational comedy, this series features two masters of the craft turning simple audience suggestions into hilariously elaborate narratives. The brilliance lies in their lightning-fast wit, incredible chemistry, and fearless commitment to absurd scenarios, resulting in consistently fresh and unpredictable humor. It’s a pure escapist delight that highlights the spontaneous genius of live performance, perfect for a relaxed and uncritical viewing experience.",
+    "tags": [
+     "Improv Comedy",
+     "Dynamic Duo",
+     "Absurdist Humor",
+     "Witty Dialogue",
+     "Spontaneous Storytelling",
+     "Audience Interaction",
+     "Live Performance",
+     "Pure Entertainment",
+     "Physical Comedy"
+    ],
+    "keywords": [
+     "improvisation",
+     "comedy routine",
+     "absurd",
+     "improv",
+     "hilarious",
+     "comedy special"
+    ],
+    "credits": {
+     "directors": [
+      "Ryan Polito"
+     ],
+     "writers": [],
+     "cast": [
+      "Thomas Middleditch",
+      "Ben Schwartz"
+     ],
+     "companies": [
+      "Irwin Entertainment"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002548,
+    "title": "Second City Television",
+    "year": 1976,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A pioneering sketch comedy show that helped launch the careers of many comedic icons. Its fast-paced, satirical sketches blend wit and improvisation to create a unique brand of Canadian humor. The show's influence on subsequent comedy programs is undeniable, and it remains a nostalgic favorite for many. It serves as a time capsule of pop culture trends and societal observations from the late 1970s and early 1980s.",
+    "tags": [
+     "Sketch Comedy",
+     "Satire",
+     "Improvisational",
+     "Canadian Humor",
+     "Pop Culture",
+     "Ensemble Cast",
+     "Parody",
+     "Showbiz",
+     "Nostalgic"
+    ],
+    "keywords": [
+     "parody",
+     "sketch comedy"
+    ],
+    "credits": {
+     "directors": [
+      "George Bloomfield"
+     ],
+     "writers": [],
+     "cast": [
+      "John Candy",
+      "Robin Duke",
+      "Joe Flaherty",
+      "Eugene Levy",
+      "Rick Moranis"
+     ],
+     "companies": [
+      "Old Firehall Productions",
+      "Second City Entertainment"
+     ],
+     "networks": [
+      "CBC Television",
+      "Global TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000004417,
+    "title": "Da Ali G Show",
+    "year": 2000,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Talk"
+    ],
+    "essence_text": "A groundbreaking satirical series, 'Da Ali G Show' masterfully employs cringe humor and absurdism to expose societal absurdities through unsuspecting real-life interviews. Sacha Baron Cohen's transformative character work creates highly uncomfortable yet brilliantly comedic situations. The show functions as biting social commentary, pushing boundaries with its unique format and fearless approach. It is a defining piece of early 2000s British comedy, both hilarious and thought-provoking.",
+    "tags": [
+     "Satirical Mockumentary",
+     "Cringe Comedy",
+     "Character Performance",
+     "Social Commentary",
+     "Absurdist Humor",
+     "Uncomfortable Interviews",
+     "British Comedy",
+     "Subversive",
+     "Political Humor",
+     "Culture Clash"
+    ],
+    "keywords": [
+     "satire"
+    ],
+    "credits": {
+     "directors": [
+      "James Bobin"
+     ],
+     "creators": [
+      "Sacha Baron Cohen",
+      "Anthony Hines"
+     ],
+     "writers": [
+      "Sacha Baron Cohen",
+      "Anthony Hines",
+      "Dan Mazer"
+     ],
+     "cast": [
+      "Sacha Baron Cohen",
+      "Daniel DiCriscio"
+     ],
+     "companies": [
+      "Four by Two Films",
+      "Talkback"
+     ],
+     "networks": [
+      "Channel 4",
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002693,
+    "title": "Extras",
+    "year": 2005,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This sharp British sitcom masterfully employs cringe humor and biting satire to dissect the often-absurd world of show business and the desperate pursuit of fame. Anchored by a deeply nuanced performance, it delves into the relatable struggles of a struggling actor alongside a parade of celebrity cameos. The series excels in its clever dialogue and social commentary, delivering uncomfortable yet hilarious scenarios that resonate with contemporary realism. It's a thought-provoking and...",
+    "tags": [
+     "British Sitcom",
+     "Cringe Comedy",
+     "Showbiz Satire",
+     "Celebrity Cameos",
+     "Character-Driven",
+     "Dark Humor",
+     "Social Commentary",
+     "Realistic Portrayal",
+     "Dialogue-Heavy"
+    ],
+    "keywords": [
+     "celebrity",
+     "satire",
+     "movie star",
+     "aspiring actor",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "creators": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "writers": [
+      "Ricky Gervais",
+      "Stephen Merchant"
+     ],
+     "cast": [
+      "Ricky Gervais",
+      "Ashley Jensen",
+      "Stephen Merchant",
+      "Shaun Williamson",
+      "Shaun Pye"
+     ],
+     "companies": [
+      "BBC",
+      "HBO"
+     ],
+     "networks": [
+      "HBO",
+      "BBC Two"
+     ]
+    }
+   }
+  ]
+ }
+]
