@@ -32,7 +32,7 @@ import {
 } from "~/server/person.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
-import { personPath, titleToDashed } from "~/utils/helpers"
+import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 
@@ -101,10 +101,11 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const image = p.profile_path
 		? `https://image.tmdb.org/t/p/h632${p.profile_path}`
 		: ""
+	const counts = titleCounts(p.stats.movies, p.stats.shows)
 	const tags = buildMeta({
 		pageMeta: {
 			title: `${p.name}: ${p.known_for_department === "Acting" ? "Movies and TV Shows" : "Filmography"} | GoodWatch`,
-			description: `${p.name}'s ${role}: ${p.stats.movies} movies and ${p.stats.shows} TV shows${top ? `, including ${top}` : ""}. See what their work feels like, who they work with, and their best-rated titles.`,
+			description: `${p.name}'s ${role}${counts ? `: ${counts}` : ""}${top ? `, including ${top}` : ""}. See what their work feels like, who they work with, and their best-rated titles.`,
 			url,
 			image,
 			alt: `Portrait of ${p.name}`,
@@ -133,15 +134,18 @@ export default function PersonPage() {
 				<Facts data={data} />
 			</Hero>
 			<div className="mx-auto max-w-7xl space-y-12 px-4 pt-4">
-				<Section
-					title="What stands out"
-					note={`Compared with the average well-known movie, over ${data.profile.signature.basedOn} of their titles. Select a trait to filter titles.`}
-				>
-					<div className="grid items-start gap-8 lg:grid-cols-[320px_1fr]">
-						<Radar data={data} />
-						<TraitCards data={data} />
-					</div>
-				</Section>
+				{/* Fewer than three rated titles give no signature, so there is nothing to compare. */}
+				{data.profile.signature.pillars.length > 0 && (
+					<Section
+						title="What stands out"
+						note={`Compared with the average well-known movie, over ${data.profile.signature.basedOn} of their titles. Select a trait to filter titles.`}
+					>
+						<div className="grid items-start gap-8 lg:grid-cols-[320px_1fr]">
+							<Radar data={data} />
+							<TraitCards data={data} />
+						</div>
+					</Section>
+				)}
 				<GenresAndTags data={data} />
 				<Section
 					title="Works often with"
@@ -167,6 +171,15 @@ const img = (path: string | null, size = "w300_and_h450_bestv2") =>
 const AMBER = "#fbbf24" // more than the catalog average
 const SKY = "#38bdf8" // less than the catalog average
 const MUTED = "#6b7280"
+
+/** Movie and TV show counts in words, leaving out a zero part: "18 movies", "4 movies and 1 TV show". */
+const titleCounts = (movies: number, shows: number) =>
+	[
+		movies > 0 && pluralize(movies, "movie"),
+		shows > 0 && pluralize(shows, "TV show"),
+	]
+		.filter(Boolean)
+		.join(" and ")
 
 /** Builds a link to this page with some filters changed; `null` removes a filter. */
 function useFilterHref() {
@@ -386,22 +399,28 @@ function Facts({ data }: { data: Data }) {
 	const s = data.profile.stats
 	const href = useFilterHref()
 	const director = s.directed > s.leading
+	// A zero count is left out, unless there are no titles at all.
+	const kinds = [
+		{ n: s.movies, one: "movie", many: "movies", Icon: FilmIcon },
+		{ n: s.shows, one: "TV show", many: "TV shows", Icon: TvIcon },
+	].filter((k, i) => k.n > 0 || (i === 0 && !s.shows))
 	return (
 		<div className="mt-6 grid grid-cols-2 divide-white/10 rounded-xl border border-white/10 bg-gray-900/70 backdrop-blur sm:grid-cols-3 lg:grid-cols-5 lg:divide-x">
 			<Fact label="Titles" href={href({ type: null }, "#titles")}>
 				<div className="flex items-center gap-4 text-lg font-semibold">
-					<span className="flex items-center gap-1.5">
-						<FilmIcon className="h-5 w-5 text-gray-400" aria-hidden />
-						{s.movies}
-						<span className="sr-only">movies</span>
-					</span>
-					<span className="flex items-center gap-1.5">
-						<TvIcon className="h-5 w-5 text-gray-400" aria-hidden />
-						{s.shows}
-						<span className="sr-only">TV shows</span>
-					</span>
+					{kinds.map(({ n, one, many, Icon }) => (
+						<span key={one} className="flex items-center gap-1.5">
+							<Icon className="h-5 w-5 text-gray-400" aria-hidden />
+							{n}
+							<span className="sr-only">{n === 1 ? one : many}</span>
+						</span>
+					))}
 				</div>
-				<div className="text-xs text-gray-400">movies and TV shows</div>
+				<div className="text-xs text-gray-400" aria-hidden>
+					{kinds
+						.map(({ n, one, many }) => (n === 1 ? one : many))
+						.join(" and ")}
+				</div>
 			</Fact>
 			<Fact label="Career">
 				<CareerSparkline stats={s} />
@@ -425,7 +444,9 @@ function Facts({ data }: { data: Data }) {
 					</span>
 				</div>
 				<div className="text-xs text-gray-400">
-					{director ? "titles as director" : "top three billing"}
+					{director
+						? `${s.directed === 1 ? "title" : "titles"} as director`
+						: "top three billing"}
 				</div>
 			</Fact>
 			<Fact label="Average score">
@@ -993,7 +1014,7 @@ function Titles({ data }: { data: Data }) {
 								<h3 className="text-3xl font-black">{g.label}</h3>
 							)}
 							<span className="text-sm text-gray-400">
-								{g.total} titles
+								{pluralize(g.total, "title")}
 								{data.filters.group === "decade" &&
 									g.key !== "upcoming" &&
 									g.avgScore != null &&
