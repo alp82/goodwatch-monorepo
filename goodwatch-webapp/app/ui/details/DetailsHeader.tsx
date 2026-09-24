@@ -25,6 +25,8 @@ interface DetailsHeaderProps {
 	onHeightChange: (height: number) => void
 	activeSections: string[]
 	navigateToSection: (section: Section) => void
+	// PROTOTYPE: hero variant 3 docks score and actions here
+	extra?: React.ReactNode
 }
 
 const DetailsHeader: React.FC<DetailsHeaderProps> = ({
@@ -33,6 +35,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	activeSections,
 	onHeightChange,
 	navigateToSection,
+	extra,
 }) => {
 	const headerRef = useRef<HTMLDivElement>(null)
 	useEffect(() => {
@@ -153,6 +156,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						{/*>*/}
 						{/*	<HandThumbUpIcon className="h-7 w-7 stroke-blue-400" />*/}
 						{/*</button>*/}
+						{extra}
 						<ShareButton />
 					</div>
 				</div>
