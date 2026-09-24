@@ -1,0 +1,14 @@
+{
+  "name": "search-arena-bench-encoders",
+  "private": true,
+  "type": "module",
+  "description": "CPU benchmark and parity check of the query encoders (bge-base-en-v1.5, multilingual-e5-small) in onnxruntime-node",
+  "scripts": {
+    "perf": "node perf.mjs",
+    "parity": "node parity.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.0",
+    "onnxruntime-node": "^1.30.0"
+  }
+}

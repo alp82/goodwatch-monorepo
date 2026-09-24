@@ -1,0 +1,15 @@
+simp.FINAL['simp'] over 127 queries (dev, holdout, holdout2, holdout3, holdout4)
+LOC (non-comment, non-blank, no docstrings; data layer excluded): functions entered 1458, executed statements 1413
+  blend.py           functions    5  executed    5  module defs   1
+  catalog.py         functions   58  executed   41  module defs  27  (data layer, not counted)
+  context.py         functions    0  executed    4  module defs   0  (data layer, not counted)
+  cuts.py            functions   93  executed   93  module defs   7
+  qemb.py            functions   18  executed   11  module defs   1  (data layer, not counted)
+  simp.py            functions 1240  executed 1195  module defs 151
+  sparse.py          functions  120  executed  120  module defs  11
+regexes: 35 sites, 30 distinct patterns
+config keys: 80 read of 81
+numeric module constants: 14 names, 23 numeric leaves
+word lists: 13 (492 entries)
+numeric literals in executed statements (candidates): 126; default-argument literals of entered functions: 8
+proxy score (config read + constant leaves + literals + regex sites + word lists): 277

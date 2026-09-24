@@ -1,0 +1,1303 @@
+{
+ "parity": {
+  "method": {
+   "query_texts": "queries.json queries plus every text in the harness query cache for the model; reference = cached vector (harness), or SentenceTransformer CPU fp32 with the query prefix on a cache miss",
+   "catalog_texts": "2,000 random catalog rows (seed 0), text as the catalog embedding was built; reference = the row of the catalog .npy (built on GPU, stored as float16)",
+   "overlap": "top-500 catalog neighbors by dot product over the full matrix, Node vs reference query vector, first 100 queries of queries.json",
+   "flags": "cosine < 0.99, overlap < 0.95"
+  },
+  "models": {
+   "bge": {
+    "hf": "BAAI/bge-base-en-v1.5",
+    "catalog_file": "emb-bge-base-en-v1.5-notitle.npy",
+    "query_prefix": "Represent this sentence for searching relevant passages: ",
+    "cache_vs_st_cpu": {
+     "n": 588,
+     "min": 1,
+     "p1": 1,
+     "p5": 1,
+     "median": 1,
+     "mean": 1
+    },
+    "fp32": {
+     "query_cosine_all": {
+      "n": 618,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "query_cosine_queries_json": {
+      "n": 168,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "query_cosine_vs_st_cpu": {
+      "n": 618,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "catalog_cosine": {
+      "n": 2000,
+      "min": 0.999999,
+      "p1": 0.999999,
+      "p5": 0.999999,
+      "median": 1,
+      "mean": 1
+     },
+     "top500_overlap": {
+      "n": 100,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "top10_overlap": {
+      "n": 100,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "query_texts_below_cos_flag": 0,
+     "catalog_texts_below_cos_flag": 0,
+     "queries_below_overlap_flag": 0,
+     "worst_query_texts": [
+      {
+       "cos": 1,
+       "text": "sci-fi movie"
+      },
+      {
+       "cos": 1,
+       "text": "sci"
+      },
+      {
+       "cos": 1,
+       "text": "guy"
+      }
+     ],
+     "worst_overlap": [
+      {
+       "overlap": 1,
+       "text": "2000s British gangster comedies"
+      },
+      {
+       "overlap": 1,
+       "text": "70s paranoid conspiracy thrillers"
+      },
+      {
+       "overlap": 1,
+       "text": "80s sci-fi action"
+      },
+      {
+       "overlap": 1,
+       "text": "90s crime movies with great dialogue"
+      },
+      {
+       "overlap": 1,
+       "text": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim."
+      },
+      {
+       "overlap": 1,
+       "text": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers."
+      },
+      {
+       "overlap": 1,
+       "text": "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals."
+      },
+      {
+       "overlap": 1,
+       "text": "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet, not an action movie."
+      },
+      {
+       "overlap": 1,
+       "text": "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it."
+      },
+      {
+       "overlap": 1,
+       "text": "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist"
+      }
+     ],
+     "pass": true
+    },
+    "int8": {
+     "query_cosine_all": {
+      "n": 618,
+      "min": 0.951693,
+      "p1": 0.969051,
+      "p5": 0.976048,
+      "median": 0.985903,
+      "mean": 0.98511
+     },
+     "query_cosine_queries_json": {
+      "n": 168,
+      "min": 0.972995,
+      "p1": 0.978066,
+      "p5": 0.980128,
+      "median": 0.987556,
+      "mean": 0.986855
+     },
+     "query_cosine_vs_st_cpu": {
+      "n": 618,
+      "min": 0.951693,
+      "p1": 0.969051,
+      "p5": 0.976048,
+      "median": 0.985903,
+      "mean": 0.98511
+     },
+     "catalog_cosine": {
+      "n": 2000,
+      "min": 0.981677,
+      "p1": 0.984328,
+      "p5": 0.986313,
+      "median": 0.990038,
+      "mean": 0.989771
+     },
+     "top500_overlap": {
+      "n": 100,
+      "min": 0.718,
+      "p1": 0.74374,
+      "p5": 0.7897,
+      "median": 0.886,
+      "mean": 0.87868
+     },
+     "top10_overlap": {
+      "n": 100,
+      "min": 0.5,
+      "p1": 0.599,
+      "p5": 0.7,
+      "median": 0.9,
+      "mean": 0.852
+     },
+     "query_texts_below_cos_flag": 561,
+     "catalog_texts_below_cos_flag": 980,
+     "queries_below_overlap_flag": 97,
+     "worst_query_texts": [
+      {
+       "cos": 0.9517,
+       "text": "tv show"
+      },
+      {
+       "cos": 0.9668,
+       "text": "anime"
+      },
+      {
+       "cos": 0.9677,
+       "text": "pathos"
+      },
+      {
+       "cos": 0.9681,
+       "text": "deep"
+      },
+      {
+       "cos": 0.9683,
+       "text": "but less weird"
+      },
+      {
+       "cos": 0.9689,
+       "text": "halfway through"
+      },
+      {
+       "cos": 0.969,
+       "text": "vietnam"
+      },
+      {
+       "cos": 0.9691,
+       "text": "hbo"
+      },
+      {
+       "cos": 0.9698,
+       "text": "italian"
+      },
+      {
+       "cos": 0.9707,
+       "text": "serie policial"
+      }
+     ],
+     "worst_overlap": [
+      {
+       "overlap": 0.718,
+       "text": "terry gilliam"
+      },
+      {
+       "overlap": 0.744,
+       "text": "cozy"
+      },
+      {
+       "overlap": 0.776,
+       "text": "Inception"
+      },
+      {
+       "overlap": 0.78,
+       "text": "The Matrix"
+      },
+      {
+       "overlap": 0.784,
+       "text": "mindbending"
+      },
+      {
+       "overlap": 0.79,
+       "text": "like groundhog day"
+      },
+      {
+       "overlap": 0.796,
+       "text": "Incepton"
+      },
+      {
+       "overlap": 0.802,
+       "text": "lustige Filme mit Bud Spencer und Terence Hill"
+      },
+      {
+       "overlap": 0.806,
+       "text": "bill murray deadpan comedies"
+      },
+      {
+       "overlap": 0.81,
+       "text": "Spirited Away"
+      }
+     ],
+     "pass": false
+    }
+   },
+   "me5s": {
+    "hf": "intfloat/multilingual-e5-small",
+    "catalog_file": "emb-multilingual-e5-small.npy",
+    "query_prefix": "query: ",
+    "cache_vs_st_cpu": {
+     "n": 61,
+     "min": 1,
+     "p1": 1,
+     "p5": 1,
+     "median": 1,
+     "mean": 1
+    },
+    "fp32": {
+     "query_cosine_all": {
+      "n": 218,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "query_cosine_queries_json": {
+      "n": 168,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "query_cosine_vs_st_cpu": {
+      "n": 218,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "catalog_cosine": {
+      "n": 2000,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "top500_overlap": {
+      "n": 100,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "top10_overlap": {
+      "n": 100,
+      "min": 1,
+      "p1": 1,
+      "p5": 1,
+      "median": 1,
+      "mean": 1
+     },
+     "query_texts_below_cos_flag": 0,
+     "catalog_texts_below_cos_flag": 0,
+     "queries_below_overlap_flag": 0,
+     "worst_query_texts": [
+      {
+       "cos": 1,
+       "text": "something in the style of guy ritchie"
+      },
+      {
+       "cos": 1,
+       "text": "vince gilligan"
+      },
+      {
+       "cos": 1,
+       "text": "policial realista"
+      }
+     ],
+     "worst_overlap": [
+      {
+       "overlap": 1,
+       "text": "2000s British gangster comedies"
+      },
+      {
+       "overlap": 1,
+       "text": "70s paranoid conspiracy thrillers"
+      },
+      {
+       "overlap": 1,
+       "text": "80s sci-fi action"
+      },
+      {
+       "overlap": 1,
+       "text": "90s crime movies with great dialogue"
+      },
+      {
+       "overlap": 1,
+       "text": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim."
+      },
+      {
+       "overlap": 1,
+       "text": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers."
+      },
+      {
+       "overlap": 1,
+       "text": "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals."
+      },
+      {
+       "overlap": 1,
+       "text": "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet, not an action movie."
+      },
+      {
+       "overlap": 1,
+       "text": "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it."
+      },
+      {
+       "overlap": 1,
+       "text": "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist"
+      }
+     ],
+     "pass": true
+    },
+    "int8": {
+     "query_cosine_all": {
+      "n": 218,
+      "min": 0.990289,
+      "p1": 0.992588,
+      "p5": 0.993958,
+      "median": 0.996359,
+      "mean": 0.996119
+     },
+     "query_cosine_queries_json": {
+      "n": 168,
+      "min": 0.990289,
+      "p1": 0.99265,
+      "p5": 0.994024,
+      "median": 0.996345,
+      "mean": 0.996066
+     },
+     "query_cosine_vs_st_cpu": {
+      "n": 218,
+      "min": 0.990289,
+      "p1": 0.992588,
+      "p5": 0.993958,
+      "median": 0.996359,
+      "mean": 0.996119
+     },
+     "catalog_cosine": {
+      "n": 2000,
+      "min": 0.989862,
+      "p1": 0.991399,
+      "p5": 0.992729,
+      "median": 0.99504,
+      "mean": 0.994891
+     },
+     "top500_overlap": {
+      "n": 100,
+      "min": 0.762,
+      "p1": 0.76992,
+      "p5": 0.7959,
+      "median": 0.87,
+      "mean": 0.8652
+     },
+     "top10_overlap": {
+      "n": 100,
+      "min": 0.5,
+      "p1": 0.5,
+      "p5": 0.6,
+      "median": 0.9,
+      "mean": 0.833
+     },
+     "query_texts_below_cos_flag": 0,
+     "catalog_texts_below_cos_flag": 1,
+     "queries_below_overlap_flag": 99,
+     "worst_query_texts": [
+      {
+       "cos": 0.9903,
+       "text": "wholesome"
+      },
+      {
+       "cos": 0.9915,
+       "text": "comportent horriblement"
+      },
+      {
+       "cos": 0.9926,
+       "text": "lazy sunny summer on the Italian coast"
+      }
+     ],
+     "worst_overlap": [
+      {
+       "overlap": 0.762,
+       "text": "bill murray deadpan comedies"
+      },
+      {
+       "overlap": 0.77,
+       "text": "craty"
+      },
+      {
+       "overlap": 0.79,
+       "text": "the expanse"
+      },
+      {
+       "overlap": 0.792,
+       "text": "tarkovsky"
+      },
+      {
+       "overlap": 0.794,
+       "text": "wholesome"
+      },
+      {
+       "overlap": 0.796,
+       "text": "epic"
+      },
+      {
+       "overlap": 0.81,
+       "text": "Inception"
+      },
+      {
+       "overlap": 0.81,
+       "text": "hunter x hunter"
+      },
+      {
+       "overlap": 0.81,
+       "text": "two geniuses in a battle of wits"
+      },
+      {
+       "overlap": 0.812,
+       "text": "dystopain deth game series"
+      }
+     ],
+     "pass": false
+    }
+   }
+  }
+ },
+ "machine": {
+  "cpu_model": "AMD Ryzen 9 9950X3D 16-Core Processor",
+  "cores_per_socket": "16",
+  "threads_per_core": "2",
+  "max_mhz": "5756.4521",
+  "l3": "128 MiB (2 instances)",
+  "logical_cpus": 32,
+  "avx512": true,
+  "avx512_vnni": true,
+  "node": "v26.9.0",
+  "onnxruntime_node": "1.30.0",
+  "note": "busy workstation during the run (other sessions were bulk-loading Qdrant and running benchmarks; see loadavg_1m per run); each configuration ran 3 times in its own Node process pinned with taskset to the least busy physical cores, as many as intra-op threads; the least disturbed round is kept"
+ },
+ "perf": {
+  "method": {
+   "models": "Xenova ONNX exports: onnx/model.onnx (fp32), onnx/model_quantized.onnx (int8 dynamic quantization)",
+   "session": "onnxruntime-node CPU EP, intraOpNumThreads = threads, interOpNumThreads 1, sequential, graph optimization all",
+   "latency": "tokenize + run + pool + normalize, warm (20 warm-up runs per size), 200 runs per batch size; batch 1 = \"fantasy with dragons\", larger batches = facet-like phrases from the harness query caches (3-60 chars), with the query prefix",
+   "cold_start": "load_ms = tokenizer + InferenceSession.create from local disk (page cache warm); first_encode_ms = first short query",
+   "memory": "RSS in MB: base = Node + libraries before any model, loaded = after session create, warm = after warm-up of every batch size, model = warm - base",
+   "concurrency": "200 requests of 10 phrases on one session: serial, then 4 in flight at once (async session.run)"
+  },
+  "runs": [
+   {
+    "model": "bge",
+    "precision": "fp32",
+    "threads": 2,
+    "rss_base_mb": 101,
+    "bge": {
+     "load_ms": 290.72,
+     "tokenizer_ms": 28.27,
+     "session_ms": 262.34,
+     "first_encode_ms": 16.9,
+     "rss_tokenizer_mb": 15,
+     "rss_session_mb": 721
+    },
+    "rss_loaded_mb": 837,
+    "rss_warm_mb": 872,
+    "rss_model_mb": 771,
+    "latency": {
+     "1": {
+      "p50": 11.19,
+      "p95": 14.6,
+      "mean": 11.55
+     },
+     "5": {
+      "p50": 39.36,
+      "p95": 41.51,
+      "mean": 39.59
+     },
+     "10": {
+      "p50": 72.32,
+      "p95": 74.85,
+      "mean": 72.65
+     },
+     "20": {
+      "p50": 139.86,
+      "p95": 150.57,
+      "mean": 141.53
+     },
+     "41": {
+      "p50": 295.19,
+      "p95": 322.38,
+      "mean": 297.45
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 14.43,
+      "p50": 66.75,
+      "p95": 88.35
+     },
+     "concurrent_4": {
+      "rps": 14.47,
+      "p50": 269.14,
+      "p95": 352.45
+     }
+    },
+    "rss_peak_mb": 856,
+    "taskset": "5,6",
+    "round": 2,
+    "loadavg_1m": [
+     8.76,
+     11.64
+    ],
+    "rounds_batch10_p50": [
+     99.86,
+     79.77,
+     72.32
+    ],
+    "rounds_loadavg_1m": [
+     [
+      35.84,
+      10.87
+     ],
+     [
+      12.68,
+      14.09
+     ],
+     [
+      8.76,
+      11.64
+     ]
+    ]
+   },
+   {
+    "model": "bge",
+    "precision": "int8",
+    "threads": 2,
+    "rss_base_mb": 96,
+    "bge": {
+     "load_ms": 133.53,
+     "tokenizer_ms": 33.8,
+     "session_ms": 99.63,
+     "first_encode_ms": 6.19,
+     "rss_tokenizer_mb": 18,
+     "rss_session_mb": 199
+    },
+    "rss_loaded_mb": 313,
+    "rss_warm_mb": 410,
+    "rss_model_mb": 314,
+    "latency": {
+     "1": {
+      "p50": 2.78,
+      "p95": 3.61,
+      "mean": 2.95
+     },
+     "5": {
+      "p50": 13.2,
+      "p95": 16.29,
+      "mean": 13.61
+     },
+     "10": {
+      "p50": 24.29,
+      "p95": 27.05,
+      "mean": 24.73
+     },
+     "20": {
+      "p50": 47.98,
+      "p95": 52.68,
+      "mean": 48.57
+     },
+     "41": {
+      "p50": 95.53,
+      "p95": 104.45,
+      "mean": 96.83
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 47.25,
+      "p50": 20.03,
+      "p95": 27.74
+     },
+     "concurrent_4": {
+      "rps": 47.54,
+      "p50": 82.72,
+      "p95": 104.21
+     }
+    },
+    "rss_peak_mb": 412,
+    "taskset": "6,7",
+    "round": 2,
+    "loadavg_1m": [
+     11.64,
+     7.44
+    ],
+    "rounds_batch10_p50": [
+     35.54,
+     24.89,
+     24.29
+    ],
+    "rounds_loadavg_1m": [
+     [
+      10.32,
+      9.07
+     ],
+     [
+      14.09,
+      9.88
+     ],
+     [
+      11.64,
+      7.44
+     ]
+    ]
+   },
+   {
+    "model": "me5s",
+    "precision": "fp32",
+    "threads": 2,
+    "rss_base_mb": 96,
+    "me5s": {
+     "load_ms": 722.67,
+     "tokenizer_ms": 429.85,
+     "session_ms": 292.67,
+     "first_encode_ms": 5.23,
+     "rss_tokenizer_mb": 268,
+     "rss_session_mb": 542
+    },
+    "rss_loaded_mb": 906,
+    "rss_warm_mb": 913,
+    "rss_model_mb": 817,
+    "latency": {
+     "1": {
+      "p50": 1.83,
+      "p95": 2.48,
+      "mean": 1.93
+     },
+     "5": {
+      "p50": 6.29,
+      "p95": 6.99,
+      "mean": 6.35
+     },
+     "10": {
+      "p50": 11.31,
+      "p95": 12.31,
+      "mean": 11.52
+     },
+     "20": {
+      "p50": 26.27,
+      "p95": 29.93,
+      "mean": 26.74
+     },
+     "41": {
+      "p50": 62.3,
+      "p95": 65.32,
+      "mean": 62.68
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 74.19,
+      "p50": 13.69,
+      "p95": 17.37
+     },
+     "concurrent_4": {
+      "rps": 75.07,
+      "p50": 52.81,
+      "p95": 62.2
+     }
+    },
+    "rss_peak_mb": 898,
+    "taskset": "6,7",
+    "round": 1,
+    "loadavg_1m": [
+     9.88,
+     8.68
+    ],
+    "rounds_batch10_p50": [
+     11.44,
+     11.31,
+     11.5
+    ],
+    "rounds_loadavg_1m": [
+     [
+      8.66,
+      9.09
+     ],
+     [
+      9.88,
+      8.68
+     ],
+     [
+      7.17,
+      6.84
+     ]
+    ]
+   },
+   {
+    "model": "me5s",
+    "precision": "int8",
+    "threads": 2,
+    "rss_base_mb": 101,
+    "me5s": {
+     "load_ms": 405.12,
+     "tokenizer_ms": 325.15,
+     "session_ms": 79.85,
+     "first_encode_ms": 6.86,
+     "rss_tokenizer_mb": 281,
+     "rss_session_mb": 156
+    },
+    "rss_loaded_mb": 538,
+    "rss_warm_mb": 530,
+    "rss_model_mb": 429,
+    "latency": {
+     "1": {
+      "p50": 0.67,
+      "p95": 0.94,
+      "mean": 0.7
+     },
+     "5": {
+      "p50": 2.61,
+      "p95": 2.8,
+      "mean": 2.64
+     },
+     "10": {
+      "p50": 4.7,
+      "p95": 5,
+      "mean": 4.76
+     },
+     "20": {
+      "p50": 10.65,
+      "p95": 11.38,
+      "mean": 10.75
+     },
+     "41": {
+      "p50": 24.65,
+      "p95": 27.65,
+      "mean": 25.1
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 176.28,
+      "p50": 5.88,
+      "p95": 7.33
+     },
+     "concurrent_4": {
+      "rps": 179.84,
+      "p50": 21.96,
+      "p95": 25.75
+     }
+    },
+    "rss_peak_mb": 527,
+    "taskset": "2,6",
+    "round": 1,
+    "loadavg_1m": [
+     8.68,
+     8.05
+    ],
+    "rounds_batch10_p50": [
+     5.08,
+     4.7,
+     4.78
+    ],
+    "rounds_loadavg_1m": [
+     [
+      9.09,
+      9.83
+     ],
+     [
+      8.68,
+      8.05
+     ],
+     [
+      6.84,
+      7.22
+     ]
+    ]
+   },
+   {
+    "model": "bge",
+    "precision": "fp32",
+    "threads": 4,
+    "rss_base_mb": 96,
+    "bge": {
+     "load_ms": 320.58,
+     "tokenizer_ms": 26.16,
+     "session_ms": 294.33,
+     "first_encode_ms": 12.49,
+     "rss_tokenizer_mb": 20,
+     "rss_session_mb": 649
+    },
+    "rss_loaded_mb": 765,
+    "rss_warm_mb": 816,
+    "rss_model_mb": 720,
+    "latency": {
+     "1": {
+      "p50": 7.85,
+      "p95": 9.65,
+      "mean": 8.02
+     },
+     "5": {
+      "p50": 22.7,
+      "p95": 25.21,
+      "mean": 23.27
+     },
+     "10": {
+      "p50": 40.73,
+      "p95": 44.1,
+      "mean": 41.29
+     },
+     "20": {
+      "p50": 80.52,
+      "p95": 88.36,
+      "mean": 81.67
+     },
+     "41": {
+      "p50": 161.01,
+      "p95": 190.21,
+      "mean": 163.61
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 27.05,
+      "p50": 36.49,
+      "p95": 47.25
+     },
+     "concurrent_4": {
+      "rps": 26.37,
+      "p50": 149.35,
+      "p95": 183.37
+     }
+    },
+    "rss_peak_mb": 818,
+    "taskset": "2,4,6,7",
+    "round": 1,
+    "loadavg_1m": [
+     7.72,
+     8.5
+    ],
+    "rounds_batch10_p50": [
+     59.02,
+     40.73,
+     42.54
+    ],
+    "rounds_loadavg_1m": [
+     [
+      9.83,
+      10.91
+     ],
+     [
+      7.72,
+      8.5
+     ],
+     [
+      7.22,
+      10.25
+     ]
+    ]
+   },
+   {
+    "model": "bge",
+    "precision": "int8",
+    "threads": 4,
+    "rss_base_mb": 96,
+    "bge": {
+     "load_ms": 129.9,
+     "tokenizer_ms": 27.55,
+     "session_ms": 102.26,
+     "first_encode_ms": 5.18,
+     "rss_tokenizer_mb": 18,
+     "rss_session_mb": 199
+    },
+    "rss_loaded_mb": 313,
+    "rss_warm_mb": 411,
+    "rss_model_mb": 315,
+    "latency": {
+     "1": {
+      "p50": 1.87,
+      "p95": 2.77,
+      "mean": 2.18
+     },
+     "5": {
+      "p50": 8.63,
+      "p95": 9.88,
+      "mean": 8.99
+     },
+     "10": {
+      "p50": 15.43,
+      "p95": 18.73,
+      "mean": 15.91
+     },
+     "20": {
+      "p50": 29.53,
+      "p95": 34.88,
+      "mean": 30.27
+     },
+     "41": {
+      "p50": 59.43,
+      "p95": 66.51,
+      "mean": 60.58
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 77.08,
+      "p50": 12.24,
+      "p95": 16.86
+     },
+     "concurrent_4": {
+      "rps": 76.77,
+      "p50": 51.15,
+      "p95": 62.97
+     }
+    },
+    "rss_peak_mb": 433,
+    "taskset": "4,5,6,7",
+    "round": 1,
+    "loadavg_1m": [
+     8.5,
+     8.38
+    ],
+    "rounds_batch10_p50": [
+     36.9,
+     15.43,
+     21.08
+    ],
+    "rounds_loadavg_1m": [
+     [
+      10.91,
+      15.3
+     ],
+     [
+      8.5,
+      8.38
+     ],
+     [
+      10.25,
+      10.76
+     ]
+    ]
+   },
+   {
+    "model": "me5s",
+    "precision": "fp32",
+    "threads": 4,
+    "rss_base_mb": 97,
+    "me5s": {
+     "load_ms": 452.37,
+     "tokenizer_ms": 267.21,
+     "session_ms": 185.03,
+     "first_encode_ms": 4.5,
+     "rss_tokenizer_mb": 272,
+     "rss_session_mb": 548
+    },
+    "rss_loaded_mb": 916,
+    "rss_warm_mb": 922,
+    "rss_model_mb": 825,
+    "latency": {
+     "1": {
+      "p50": 1.14,
+      "p95": 1.57,
+      "mean": 1.19
+     },
+     "5": {
+      "p50": 3.91,
+      "p95": 4.24,
+      "mean": 3.94
+     },
+     "10": {
+      "p50": 7.19,
+      "p95": 7.58,
+      "mean": 7.24
+     },
+     "20": {
+      "p50": 15.34,
+      "p95": 16.18,
+      "mean": 15.45
+     },
+     "41": {
+      "p50": 35.79,
+      "p95": 38.71,
+      "mean": 36.23
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 116.74,
+      "p50": 8.61,
+      "p95": 11.08
+     },
+     "concurrent_4": {
+      "rps": 115.9,
+      "p50": 33.95,
+      "p95": 40.41
+     }
+    },
+    "rss_peak_mb": 908,
+    "taskset": "2,3,6,7",
+    "round": 2,
+    "loadavg_1m": [
+     10.76,
+     9.84
+    ],
+    "rounds_batch10_p50": [
+     7.53,
+     7.33,
+     7.19
+    ],
+    "rounds_loadavg_1m": [
+     [
+      15.3,
+      14.17
+     ],
+     [
+      8.38,
+      8.84
+     ],
+     [
+      10.76,
+      9.84
+     ]
+    ]
+   },
+   {
+    "model": "me5s",
+    "precision": "int8",
+    "threads": 4,
+    "rss_base_mb": 101,
+    "me5s": {
+     "load_ms": 359.09,
+     "tokenizer_ms": 272.23,
+     "session_ms": 86.72,
+     "first_encode_ms": 4.03,
+     "rss_tokenizer_mb": 254,
+     "rss_session_mb": 168
+    },
+    "rss_loaded_mb": 523,
+    "rss_warm_mb": 532,
+    "rss_model_mb": 431,
+    "latency": {
+     "1": {
+      "p50": 0.63,
+      "p95": 0.92,
+      "mean": 0.67
+     },
+     "5": {
+      "p50": 2.2,
+      "p95": 2.34,
+      "mean": 2.23
+     },
+     "10": {
+      "p50": 3.94,
+      "p95": 4.21,
+      "mean": 3.97
+     },
+     "20": {
+      "p50": 7.66,
+      "p95": 8.02,
+      "mean": 7.72
+     },
+     "41": {
+      "p50": 15.95,
+      "p95": 19.15,
+      "mean": 16.39
+     }
+    },
+    "concurrency": {
+     "request": "10 phrases",
+     "requests": 200,
+     "serial": {
+      "rps": 223.44,
+      "p50": 4.55,
+      "p95": 5.36
+     },
+     "concurrent_4": {
+      "rps": 231.52,
+      "p50": 17.21,
+      "p95": 19.07
+     }
+    },
+    "rss_peak_mb": 536,
+    "taskset": "2,4,5,7",
+    "round": 1,
+    "loadavg_1m": [
+     8.84,
+     8.79
+    ],
+    "rounds_batch10_p50": [
+     7.55,
+     3.94,
+     3.94
+    ],
+    "rounds_loadavg_1m": [
+     [
+      14.17,
+      13.6
+     ],
+     [
+      8.84,
+      8.79
+     ],
+     [
+      9.84,
+      9.65
+     ]
+    ]
+   },
+   {
+    "model": "both",
+    "precision": "fp32",
+    "threads": 4,
+    "rss_base_mb": 100,
+    "bge": {
+     "load_ms": 451.67,
+     "tokenizer_ms": 27.97,
+     "session_ms": 423.6,
+     "first_encode_ms": 13.95,
+     "rss_tokenizer_mb": 21,
+     "rss_session_mb": 641
+    },
+    "me5s": {
+     "load_ms": 875.23,
+     "tokenizer_ms": 442.69,
+     "session_ms": 432.47,
+     "first_encode_ms": 4.98,
+     "rss_tokenizer_mb": 185,
+     "rss_session_mb": 394
+    },
+    "rss_loaded_mb": 1341,
+    "rss_warm_mb": 1439,
+    "rss_model_mb": 1339,
+    "taskset": "3,5,6,7",
+    "round": 0,
+    "loadavg_1m": [
+     13.6,
+     13.43
+    ],
+    "rounds_batch10_p50": [
+     null,
+     null,
+     null
+    ],
+    "rounds_loadavg_1m": [
+     [
+      13.6,
+      13.43
+     ],
+     [
+      8.79,
+      8.74
+     ],
+     [
+      9.65,
+      9.69
+     ]
+    ]
+   },
+   {
+    "model": "both",
+    "precision": "int8",
+    "threads": 4,
+    "rss_base_mb": 91,
+    "bge": {
+     "load_ms": 129.08,
+     "tokenizer_ms": 26.77,
+     "session_ms": 102.22,
+     "first_encode_ms": 4.81,
+     "rss_tokenizer_mb": 23,
+     "rss_session_mb": 190
+    },
+    "me5s": {
+     "load_ms": 356.88,
+     "tokenizer_ms": 291.62,
+     "session_ms": 65.19,
+     "first_encode_ms": 2.37,
+     "rss_tokenizer_mb": 209,
+     "rss_session_mb": 92
+    },
+    "rss_loaded_mb": 605,
+    "rss_warm_mb": 745,
+    "rss_model_mb": 654,
+    "taskset": "2,5,6,7",
+    "round": 1,
+    "loadavg_1m": [
+     8.74,
+     8.76
+    ],
+    "rounds_batch10_p50": [
+     null,
+     null,
+     null
+    ],
+    "rounds_loadavg_1m": [
+     [
+      13,
+      13
+     ],
+     [
+      8.74,
+      8.76
+     ],
+     [
+      9.69,
+      9.64
+     ]
+    ]
+   }
+  ]
+ }
+}

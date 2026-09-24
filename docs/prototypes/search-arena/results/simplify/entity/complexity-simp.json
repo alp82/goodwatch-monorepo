@@ -1,0 +1,2099 @@
+{
+ "ranker": "simp.FINAL['simp']",
+ "splits": [
+  "dev",
+  "holdout",
+  "holdout2",
+  "holdout3",
+  "holdout4"
+ ],
+ "queries": 127,
+ "loc_functions": 1458,
+ "loc_executed": 1413,
+ "per_file": {
+  "blend.py": {
+   "functions": 5,
+   "executed": 5,
+   "module_defs": 1,
+   "data_layer": false
+  },
+  "catalog.py": {
+   "functions": 58,
+   "executed": 41,
+   "module_defs": 27,
+   "data_layer": true
+  },
+  "context.py": {
+   "functions": 0,
+   "executed": 4,
+   "module_defs": 0,
+   "data_layer": true
+  },
+  "cuts.py": {
+   "functions": 93,
+   "executed": 93,
+   "module_defs": 7,
+   "data_layer": false
+  },
+  "qemb.py": {
+   "functions": 18,
+   "executed": 11,
+   "module_defs": 1,
+   "data_layer": true
+  },
+  "simp.py": {
+   "functions": 1240,
+   "executed": 1195,
+   "module_defs": 151,
+   "data_layer": false
+  },
+  "sparse.py": {
+   "functions": 120,
+   "executed": 120,
+   "module_defs": 11,
+   "data_layer": false
+  }
+ },
+ "functions_entered": [
+  "blend.py:normalized",
+  "blend.py:words",
+  "catalog.py:Catalog.eligible",
+  "catalog.py:Catalog.media_type",
+  "catalog.py:embeddings",
+  "catalog.py:load",
+  "catalog.py:point_id",
+  "cuts.py:_directors",
+  "cuts.py:base",
+  "cuts.py:edges",
+  "cuts.py:edges.<locals>.link",
+  "cuts.py:edges.<locals>.share",
+  "cuts.py:fold",
+  "cuts.py:rows_with_prefix",
+  "qemb.py:_path",
+  "qemb.py:embed",
+  "simp.py:_clause_end",
+  "simp.py:_gz_lines",
+  "simp.py:as_list",
+  "simp.py:blend",
+  "simp.py:blend.<locals>.lexical",
+  "simp.py:cached",
+  "simp.py:cap_own",
+  "simp.py:career_scale",
+  "simp.py:centroid_emb",
+  "simp.py:centroid_fp",
+  "simp.py:collocated",
+  "simp.py:collocated.<locals>.build",
+  "simp.py:common_words",
+  "simp.py:common_words.<locals>.build",
+  "simp.py:concrete_words",
+  "simp.py:content_words",
+  "simp.py:correct_word",
+  "simp.py:credits",
+  "simp.py:credits.<locals>.build",
+  "simp.py:credits.<locals>.build.<locals>.put",
+  "simp.py:detect",
+  "simp.py:detect.<locals>.free",
+  "simp.py:detect.<locals>.person",
+  "simp.py:english_from_chips",
+  "simp.py:entity_query",
+  "simp.py:era_filter",
+  "simp.py:era_prior",
+  "simp.py:facet_units",
+  "simp.py:facets",
+  "simp.py:find_reference",
+  "simp.py:fold",
+  "simp.py:franchise_rows",
+  "simp.py:franchise_rows.<locals>.build",
+  "simp.py:fuzzy_title",
+  "simp.py:fuzzy_title.<locals>.build",
+  "simp.py:is_common",
+  "simp.py:looks_foreign",
+  "simp.py:main_rows",
+  "simp.py:mention_scores",
+  "simp.py:mix_z",
+  "simp.py:names_creator",
+  "simp.py:names_creator.<locals>.build",
+  "simp.py:negation_weight",
+  "simp.py:normalized",
+  "simp.py:parse_era",
+  "simp.py:peer_index",
+  "simp.py:peer_index.<locals>.build",
+  "simp.py:peer_scores",
+  "simp.py:person_index",
+  "simp.py:person_index.<locals>.build",
+  "simp.py:person_index.<locals>.build.<locals>.lead",
+  "simp.py:persons",
+  "simp.py:persons.<locals>.build",
+  "simp.py:place_own",
+  "simp.py:prior_terms",
+  "simp.py:rank",
+  "simp.py:rank_filmography",
+  "simp.py:rank_general",
+  "simp.py:rank_style",
+  "simp.py:reference_titles",
+  "simp.py:reference_titles.<locals>.build",
+  "simp.py:run",
+  "simp.py:sparse_top",
+  "simp.py:spell",
+  "simp.py:spell.<locals>.rep",
+  "simp.py:split_negation",
+  "simp.py:studio_index",
+  "simp.py:studio_index.<locals>.build",
+  "simp.py:studio_index.<locals>.build.<locals>.stripped",
+  "simp.py:surname",
+  "simp.py:term_scores",
+  "simp.py:term_scores.<locals>.build",
+  "simp.py:title_match",
+  "simp.py:title_similarity",
+  "simp.py:title_weights",
+  "simp.py:top",
+  "simp.py:weighted_sum",
+  "simp.py:word_freq",
+  "simp.py:word_freq.<locals>.build",
+  "simp.py:words",
+  "simp.py:z",
+  "sparse.py:_build",
+  "sparse.py:_field_spans",
+  "sparse.py:_people",
+  "sparse.py:index",
+  "sparse.py:query_terms",
+  "sparse.py:scores",
+  "sparse.py:stem",
+  "sparse.py:terms",
+  "sparse.py:tokens"
+ ],
+ "regexes": 35,
+ "distinct_patterns": 30,
+ "regex_sites": [
+  {
+   "file": "blend.py",
+   "kind": "compiled",
+   "line": 12,
+   "name": "_WORD",
+   "pattern": "'[^\\\\W_]+'"
+  },
+  {
+   "file": "cuts.py",
+   "kind": "compiled",
+   "line": 26,
+   "name": "_CUT",
+   "pattern": "\"(?:\\\\s*[:\\\\-\u2013(]\\\\s*|\\\\s+)(?:the\\\\s+)?(?:redux|extended(?:\\\\s+(?:edition|cut|version))?|di"
+  },
+  {
+   "file": "cuts.py",
+   "kind": "compiled",
+   "line": 31,
+   "name": "_PART",
+   "pattern": "'^(?:vol(?:ume)?|part|chapter)\\\\s+(?:\\\\d+|i{1,3}|iv|one|two)$'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 242,
+   "name": "_WORD",
+   "pattern": "'[^\\\\W_]+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 286,
+   "name": null,
+   "pattern": "'[^\\\\W\\\\d_]+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 314,
+   "name": null,
+   "pattern": "'^Low\\\\s+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 316,
+   "name": null,
+   "pattern": "'^Not\\\\s+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 336,
+   "name": "_MARKER_RE",
+   "pattern": "'(?<![\\\\w])(' + '|'.join(_MARKERS) + ')(?![\\\\w])'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 337,
+   "name": "_THAN_RE",
+   "pattern": "'\\\\b(?:more|rather)\\\\b[^,.;!?]*?\\\\b(than)\\\\b'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 338,
+   "name": "_CLAUSE_END",
+   "pattern": "'[,.;!?]|\\\\s(?:but|and|aber|und|mais|et|pero|y)\\\\s'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 339,
+   "name": "_DANGLING",
+   "pattern": "'(?:\\\\s|^)(?:but|aber|mais|pero|and|und|et|y|that|which|who|,)\\\\s*$'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 340,
+   "name": "_LESS",
+   "pattern": "'\\\\b(?:less|fewer|not so|not as)\\\\s+([^\\\\W\\\\d_]+(?:\\\\s+[^\\\\W\\\\d_]+)?)'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 374,
+   "name": null,
+   "pattern": "'\\\\s*,\\\\s*,'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 378,
+   "name": null,
+   "pattern": "'\\\\b(?:make it )?more\\\\b\\\\s*'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 392,
+   "name": "_DECADE",
+   "pattern": "\"(?<![\\\\w])(?:(?:19)?([2-9])0|20([0-2])0)(?:'?s|er|\u2019s)(?![\\\\w])\""
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 393,
+   "name": "_DECADE_ROMANCE",
+   "pattern": "'(?:ann\u00e9es|anos|a\u00f1os|anni)\\\\s+(?:19)?([2-9])0'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 394,
+   "name": "_YEAR",
+   "pattern": "'(?<![\\\\w])(19[2-9]\\\\d|20[0-2]\\\\d)(?![\\\\w])'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 395,
+   "name": "_RECENT",
+   "pattern": "'(?<![\\\\w])(recent|new|newer|latest|modern|neu|neue[nrs]?|r\u00e9cent|nouveau|reciente|nueva?)("
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 397,
+   "name": "_OLD",
+   "pattern": "'(?<![\\\\w])(old|older|vintage|golden age)(?![\\\\w])'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 502,
+   "name": "_LIKE",
+   "pattern": "\"(?<![\\\\w\u2019'])(?:similar to|in the vein of|in the style of|reminiscent of|along the lines o"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 504,
+   "name": "_NOT_LIKE",
+   "pattern": "\"(?:feels?|felt|looks?|sounds?|i'?d|would|i|you|we|just|don'?t|didn'?t|not)\\\\s+$\""
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 505,
+   "name": "_BUT",
+   "pattern": "'\\\\s+but\\\\s+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 506,
+   "name": "_MOD_LEAD",
+   "pattern": "'^(?:but|only|except|and|,|;|-|as|a|an|in|with|more|make it|made)\\\\s+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 519,
+   "name": null,
+   "pattern": "'^the '"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 536,
+   "name": null,
+   "pattern": "'(?:not|no|without|never|less)\\\\b'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 540,
+   "name": null,
+   "pattern": "\"[^\\\\W_]+(?:['\u2019][^\\\\W_]+)?\""
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 567,
+   "name": null,
+   "pattern": "'^the '"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 696,
+   "name": "_STYLE_SUFFIX",
+   "pattern": "'^(.{4,}?)(?:esque|ian|like|ish)$'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 713,
+   "name": null,
+   "pattern": "\"['\u2019`]s\\\\b\""
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 715,
+   "name": null,
+   "pattern": "'[^\\\\W_]+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 780,
+   "name": null,
+   "pattern": "'[^\\\\W\\\\d_]+'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 941,
+   "name": null,
+   "pattern": "'(?<=[^\\\\W_])-(?=[^\\\\W_])'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "inline",
+   "line": 1038,
+   "name": null,
+   "pattern": "'\\\\b(?:in the vein of|\u00e0 la|a la)\\\\b'"
+  },
+  {
+   "file": "simp.py",
+   "kind": "compiled",
+   "line": 1464,
+   "name": "_TITLE_HEAD",
+   "pattern": "'\\\\s*(?::| - | \u2013 )\\\\s*'"
+  },
+  {
+   "file": "sparse.py",
+   "kind": "compiled",
+   "line": 22,
+   "name": "_WORD",
+   "pattern": "'[^\\\\W_]+'"
+  }
+ ],
+ "config_total": 81,
+ "config_read": 80,
+ "config": [
+  {
+   "key": "a",
+   "value": 0.4,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1173",
+    "simp.py:652"
+   ]
+  },
+  {
+   "key": "avoid_chips",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:604"
+   ]
+  },
+  {
+   "key": "b",
+   "value": 0.48,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1173",
+    "simp.py:652"
+   ]
+  },
+  {
+   "key": "both_head",
+   "value": 6,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1408"
+   ]
+  },
+  {
+   "key": "c",
+   "value": 0.12,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1174",
+    "simp.py:1175",
+    "simp.py:655",
+    "simp.py:656"
+   ]
+  },
+  {
+   "key": "cap",
+   "value": 0.65,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1546"
+   ]
+  },
+  {
+   "key": "cap_after_blend",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:172"
+   ]
+  },
+  {
+   "key": "cen6_k",
+   "value": 20,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1353"
+   ]
+  },
+  {
+   "key": "cen_k",
+   "value": 20,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1138"
+   ]
+  },
+  {
+   "key": "cen_top",
+   "value": 500,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1150"
+   ]
+  },
+  {
+   "key": "collocations",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:485"
+   ]
+  },
+  {
+   "key": "common_word_guard",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1234",
+    "simp.py:785",
+    "simp.py:790",
+    "simp.py:915"
+   ]
+  },
+  {
+   "key": "cov",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:637",
+    "simp.py:662"
+   ]
+  },
+  {
+   "key": "cov_beta",
+   "value": 0.5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:661"
+   ]
+  },
+  {
+   "key": "cov_concrete",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:640"
+   ]
+  },
+  {
+   "key": "cov_k",
+   "value": 300,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:646",
+    "simp.py:649"
+   ]
+  },
+  {
+   "key": "cov_max_tokens",
+   "value": 5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:637"
+   ]
+  },
+  {
+   "key": "creator_bonus",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1534"
+   ]
+  },
+  {
+   "key": "credit_weights",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1234",
+    "simp.py:745",
+    "simp.py:771",
+    "simp.py:842"
+   ]
+  },
+  {
+   "key": "damp",
+   "value": 0.2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1395"
+   ]
+  },
+  {
+   "key": "early_frac",
+   "value": 0.4,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1118"
+   ]
+  },
+  {
+   "key": "emb",
+   "value": "bgeb-notitle",
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1126",
+    "simp.py:1148",
+    "simp.py:1341",
+    "simp.py:1343",
+    "simp.py:580",
+    "simp.py:602",
+    "simp.py:603",
+    "simp.py:605"
+   ]
+  },
+  {
+   "key": "ent",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:160"
+   ]
+  },
+  {
+   "key": "ent_facet",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1160"
+   ]
+  },
+  {
+   "key": "entity_residual",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1095"
+   ]
+  },
+  {
+   "key": "era",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:422"
+   ]
+  },
+  {
+   "key": "era_off",
+   "value": 0.35,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1119"
+   ]
+  },
+  {
+   "key": "era_w",
+   "value": 0.3,
+   "source": "final",
+   "read": false,
+   "at": []
+  },
+  {
+   "key": "exclude_reference",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:591"
+   ]
+  },
+  {
+   "key": "facet",
+   "value": 0.1,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1160",
+    "simp.py:620",
+    "simp.py:659"
+   ]
+  },
+  {
+   "key": "fil_boost",
+   "value": 4.0,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1187",
+    "simp.py:1407"
+   ]
+  },
+  {
+   "key": "fold_after_blend",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:169"
+   ]
+  },
+  {
+   "key": "fold_before_slots",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1400"
+   ]
+  },
+  {
+   "key": "fuzzy",
+   "value": 0.88,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1560",
+    "simp.py:1561"
+   ]
+  },
+  {
+   "key": "gw",
+   "value": 0.1,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1395"
+   ]
+  },
+  {
+   "key": "intent",
+   "value": "auto",
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1041"
+   ]
+  },
+  {
+   "key": "k_cen",
+   "value": 500,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1363"
+   ]
+  },
+  {
+   "key": "k_emb",
+   "value": 500,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1152",
+    "simp.py:1374",
+    "simp.py:610"
+   ]
+  },
+  {
+   "key": "k_fp",
+   "value": 500,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1150",
+    "simp.py:1364",
+    "simp.py:610"
+   ]
+  },
+  {
+   "key": "k_terms",
+   "value": 300,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1366"
+   ]
+  },
+  {
+   "key": "kind",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1532"
+   ]
+  },
+  {
+   "key": "kind_all",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1544"
+   ]
+  },
+  {
+   "key": "less",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1089",
+    "simp.py:1090"
+   ]
+  },
+  {
+   "key": "less_neg",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1099"
+   ]
+  },
+  {
+   "key": "mix_fil",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1171"
+   ]
+  },
+  {
+   "key": "native_routing",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:159",
+    "simp.py:944"
+   ]
+  },
+  {
+   "key": "neg",
+   "value": 0.1,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1092",
+    "simp.py:1099",
+    "simp.py:1179",
+    "simp.py:1391",
+    "simp.py:583",
+    "simp.py:663",
+    "simp.py:666"
+   ]
+  },
+  {
+   "key": "nonen",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1145",
+    "simp.py:159",
+    "simp.py:599"
+   ]
+  },
+  {
+   "key": "nonen_mix",
+   "value": 0.5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1148",
+    "simp.py:603"
+   ]
+  },
+  {
+   "key": "own_boost",
+   "value": 1.0,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1396"
+   ]
+  },
+  {
+   "key": "own_max",
+   "value": 6,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1412",
+    "simp.py:1414",
+    "simp.py:173"
+   ]
+  },
+  {
+   "key": "own_min",
+   "value": 3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1411",
+    "simp.py:1414"
+   ]
+  },
+  {
+   "key": "own_slots",
+   "value": [
+    0,
+    2,
+    4,
+    6,
+    8
+   ],
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1412",
+    "simp.py:1414"
+   ]
+  },
+  {
+   "key": "own_w",
+   "value": 0.8,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1376",
+    "simp.py:1419"
+   ]
+  },
+  {
+   "key": "peer_k",
+   "value": 15,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1259"
+   ]
+  },
+  {
+   "key": "peer_titles",
+   "value": 8,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1256"
+   ]
+  },
+  {
+   "key": "prior",
+   "value": [
+    0.1,
+    0.1
+   ],
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1182",
+    "simp.py:667"
+   ]
+  },
+  {
+   "key": "ref",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:586"
+   ]
+  },
+  {
+   "key": "ref_agree",
+   "value": 0.2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:653",
+    "simp.py:654"
+   ]
+  },
+  {
+   "key": "ref_facet",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:621"
+   ]
+  },
+  {
+   "key": "ref_mix",
+   "value": 0.2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:608"
+   ]
+  },
+  {
+   "key": "ref_votes",
+   "value": 10000,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:586"
+   ]
+  },
+  {
+   "key": "sparse",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1154",
+    "simp.py:613"
+   ]
+  },
+  {
+   "key": "sparse_bigram",
+   "value": 2.0,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1156",
+    "simp.py:615"
+   ]
+  },
+  {
+   "key": "sparse_body",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1155",
+    "simp.py:614"
+   ]
+  },
+  {
+   "key": "sparse_k",
+   "value": 300,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1156",
+    "simp.py:615",
+    "simp.py:647"
+   ]
+  },
+  {
+   "key": "spell",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1087",
+    "simp.py:582"
+   ]
+  },
+  {
+   "key": "strict",
+   "value": 0.9,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1541",
+    "simp.py:1542"
+   ]
+  },
+  {
+   "key": "studios",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:939"
+   ]
+  },
+  {
+   "key": "style_path",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:164"
+   ]
+  },
+  {
+   "key": "terms_min_df",
+   "value": 2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1279"
+   ]
+  },
+  {
+   "key": "terms_n",
+   "value": 40,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1280"
+   ]
+  },
+  {
+   "key": "title_bonus_on_entity",
+   "value": false,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1532"
+   ]
+  },
+  {
+   "key": "w_agree",
+   "value": 0.2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1357",
+    "simp.py:1382",
+    "simp.py:1383"
+   ]
+  },
+  {
+   "key": "w_emb",
+   "value": 0.6,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1379"
+   ]
+  },
+  {
+   "key": "w_fp",
+   "value": 0.8,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1379"
+   ]
+  },
+  {
+   "key": "w_jev",
+   "value": 0.4,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1388"
+   ]
+  },
+  {
+   "key": "w_mention",
+   "value": 0.1,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1358",
+    "simp.py:1368",
+    "simp.py:1384",
+    "simp.py:1385"
+   ]
+  },
+  {
+   "key": "w_peer",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1359",
+    "simp.py:1371",
+    "simp.py:1386",
+    "simp.py:1387"
+   ]
+  },
+  {
+   "key": "w_res",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1390"
+   ]
+  },
+  {
+   "key": "w_terms",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp.py:1357",
+    "simp.py:1365",
+    "simp.py:1380",
+    "simp.py:1381"
+   ]
+  }
+ ],
+ "numeric_constants": [
+  {
+   "file": "simp.py",
+   "name": "BODY",
+   "leaves": 3
+  },
+  {
+   "file": "simp.py",
+   "name": "COMMON_ANY_DF",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "COMMON_LOWER_DF",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "COMMON_TITLE_DF",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "FUZZY_MAX_WORDS",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "FUZZY_NAME_CUTOFF",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "LIMIT",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "RARE_LOWER_DF",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "STUDIO_MIN_TITLES",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "SURNAME_DOMINANCE",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "SURNAME_VOTES",
+   "leaves": 1
+  },
+  {
+   "file": "simp.py",
+   "name": "TOP",
+   "leaves": 1
+  },
+  {
+   "file": "sparse.py",
+   "name": "K1, B",
+   "leaves": 2
+  },
+  {
+   "file": "sparse.py",
+   "name": "DEFAULT_W",
+   "leaves": 7
+  }
+ ],
+ "numeric_constant_leaves": 23,
+ "wordlists": [
+  {
+   "file": "simp.py",
+   "name": "_EN",
+   "size": 19
+  },
+  {
+   "file": "simp.py",
+   "name": "_ERA_WORDS",
+   "size": 22
+  },
+  {
+   "file": "simp.py",
+   "name": "_FILLER",
+   "size": 72
+  },
+  {
+   "file": "simp.py",
+   "name": "_FILM_WORDS",
+   "size": 43
+  },
+  {
+   "file": "simp.py",
+   "name": "_FOREIGN",
+   "size": 63
+  },
+  {
+   "file": "simp.py",
+   "name": "_GENERIC",
+   "size": 28
+  },
+  {
+   "file": "simp.py",
+   "name": "_MARKERS",
+   "size": 26
+  },
+  {
+   "file": "simp.py",
+   "name": "_NAME_SUFFIX",
+   "size": 5
+  },
+  {
+   "file": "simp.py",
+   "name": "_STYLE_WORDS",
+   "size": 35
+  },
+  {
+   "file": "simp.py",
+   "name": "_SUFFIX",
+   "size": 27
+  },
+  {
+   "file": "simp.py",
+   "name": "_TEAM",
+   "size": 3
+  },
+  {
+   "file": "sparse.py",
+   "name": "FIELDS",
+   "size": 7
+  },
+  {
+   "file": "sparse.py",
+   "name": "STOP",
+   "size": 142
+  }
+ ],
+ "literals": 126,
+ "literal_sites": [
+  {
+   "file": "cuts.py",
+   "line": 86,
+   "value": 3
+  },
+  {
+   "file": "cuts.py",
+   "line": 101,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 266,
+   "value": 20
+  },
+  {
+   "file": "simp.py",
+   "line": 272,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 272,
+   "value": 4
+  },
+  {
+   "file": "simp.py",
+   "line": 274,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 274,
+   "value": 8
+  },
+  {
+   "file": "simp.py",
+   "line": 275,
+   "value": 200
+  },
+  {
+   "file": "simp.py",
+   "line": 303,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 344,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 375,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 405,
+   "value": 10
+  },
+  {
+   "file": "simp.py",
+   "line": 405,
+   "value": 2000
+  },
+  {
+   "file": "simp.py",
+   "line": 407,
+   "value": 10
+  },
+  {
+   "file": "simp.py",
+   "line": 407,
+   "value": 1900
+  },
+  {
+   "file": "simp.py",
+   "line": 408,
+   "value": 9
+  },
+  {
+   "file": "simp.py",
+   "line": 426,
+   "value": 50
+  },
+  {
+   "file": "simp.py",
+   "line": 453,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 487,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 493,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 541,
+   "value": 8
+  },
+  {
+   "file": "simp.py",
+   "line": 544,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 552,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 565,
+   "value": 2000
+  },
+  {
+   "file": "simp.py",
+   "line": 569,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 569,
+   "value": 6
+  },
+  {
+   "file": "simp.py",
+   "line": 624,
+   "value": 200
+  },
+  {
+   "file": "simp.py",
+   "line": 629,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 633,
+   "value": 200
+  },
+  {
+   "file": "simp.py",
+   "line": 659,
+   "value": 0.5
+  },
+  {
+   "file": "simp.py",
+   "line": 720,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 756,
+   "value": 0.5
+  },
+  {
+   "file": "simp.py",
+   "line": 756,
+   "value": 0.8
+  },
+  {
+   "file": "simp.py",
+   "line": 756,
+   "value": 0.9
+  },
+  {
+   "file": "simp.py",
+   "line": 759,
+   "value": 0.8
+  },
+  {
+   "file": "simp.py",
+   "line": 761,
+   "value": 0.6
+  },
+  {
+   "file": "simp.py",
+   "line": 761,
+   "value": 0.9
+  },
+  {
+   "file": "simp.py",
+   "line": 762,
+   "value": 0.5
+  },
+  {
+   "file": "simp.py",
+   "line": 766,
+   "value": 0.4
+  },
+  {
+   "file": "simp.py",
+   "line": 766,
+   "value": 0.6
+  },
+  {
+   "file": "simp.py",
+   "line": 766,
+   "value": 0.85
+  },
+  {
+   "file": "simp.py",
+   "line": 766,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 766,
+   "value": 5
+  },
+  {
+   "file": "simp.py",
+   "line": 766,
+   "value": 8
+  },
+  {
+   "file": "simp.py",
+   "line": 768,
+   "value": 0.5
+  },
+  {
+   "file": "simp.py",
+   "line": 795,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 814,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 815,
+   "value": 0.85
+  },
+  {
+   "file": "simp.py",
+   "line": 820,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 824,
+   "value": 4
+  },
+  {
+   "file": "simp.py",
+   "line": 828,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 835,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 835,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 836,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 837,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 839,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 839,
+   "value": 4
+  },
+  {
+   "file": "simp.py",
+   "line": 856,
+   "value": 0.8
+  },
+  {
+   "file": "simp.py",
+   "line": 890,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 897,
+   "value": 50
+  },
+  {
+   "file": "simp.py",
+   "line": 902,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 955,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 955,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 955,
+   "value": 4
+  },
+  {
+   "file": "simp.py",
+   "line": 967,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 970,
+   "value": 5
+  },
+  {
+   "file": "simp.py",
+   "line": 972,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 972,
+   "value": 5
+  },
+  {
+   "file": "simp.py",
+   "line": 975,
+   "value": 5
+  },
+  {
+   "file": "simp.py",
+   "line": 990,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1009,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 1010,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 1012,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1012,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 1026,
+   "value": 7
+  },
+  {
+   "file": "simp.py",
+   "line": 1075,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 1109,
+   "value": 0.85
+  },
+  {
+   "file": "simp.py",
+   "line": 1114,
+   "value": 10
+  },
+  {
+   "file": "simp.py",
+   "line": 1117,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1164,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1218,
+   "value": 0.85
+  },
+  {
+   "file": "simp.py",
+   "line": 1219,
+   "value": 200000
+  },
+  {
+   "file": "simp.py",
+   "line": 1219,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 1227,
+   "value": 200000
+  },
+  {
+   "file": "simp.py",
+   "line": 1227,
+   "value": 8
+  },
+  {
+   "file": "simp.py",
+   "line": 1275,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1300,
+   "value": 2.0
+  },
+  {
+   "file": "simp.py",
+   "line": 1352,
+   "value": 0.5
+  },
+  {
+   "file": "simp.py",
+   "line": 1369,
+   "value": 100
+  },
+  {
+   "file": "simp.py",
+   "line": 1412,
+   "value": 10
+  },
+  {
+   "file": "simp.py",
+   "line": 1448,
+   "value": 2.0
+  },
+  {
+   "file": "simp.py",
+   "line": 1454,
+   "value": 1.05
+  },
+  {
+   "file": "simp.py",
+   "line": 1456,
+   "value": 0.9
+  },
+  {
+   "file": "simp.py",
+   "line": 1458,
+   "value": 0.65
+  },
+  {
+   "file": "simp.py",
+   "line": 1459,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1460,
+   "value": 0.15
+  },
+  {
+   "file": "simp.py",
+   "line": 1473,
+   "value": 100
+  },
+  {
+   "file": "simp.py",
+   "line": 1483,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1489,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 1489,
+   "value": 4
+  },
+  {
+   "file": "simp.py",
+   "line": 1498,
+   "value": 4
+  },
+  {
+   "file": "simp.py",
+   "line": 1498,
+   "value": 5
+  },
+  {
+   "file": "simp.py",
+   "line": 1515,
+   "value": 100
+  },
+  {
+   "file": "simp.py",
+   "line": 1515,
+   "value": 20
+  },
+  {
+   "file": "simp.py",
+   "line": 1519,
+   "value": 100
+  },
+  {
+   "file": "simp.py",
+   "line": 1541,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1564,
+   "value": 1.05
+  },
+  {
+   "file": "simp.py",
+   "line": 1566,
+   "value": 1.05
+  },
+  {
+   "file": "simp.py",
+   "line": 1577,
+   "value": 10
+  },
+  {
+   "file": "simp.py",
+   "line": 1577,
+   "value": 9
+  },
+  {
+   "file": "simp.py",
+   "line": 1579,
+   "value": 0.1
+  },
+  {
+   "file": "simp.py",
+   "line": 1579,
+   "value": 0.15
+  },
+  {
+   "file": "simp.py",
+   "line": 1579,
+   "value": 0.9
+  },
+  {
+   "file": "simp.py",
+   "line": 1579,
+   "value": 2
+  },
+  {
+   "file": "simp.py",
+   "line": 1579,
+   "value": 3
+  },
+  {
+   "file": "simp.py",
+   "line": 1580,
+   "value": 1000000000000
+  },
+  {
+   "file": "sparse.py",
+   "line": 34,
+   "value": 3
+  },
+  {
+   "file": "sparse.py",
+   "line": 36,
+   "value": 5
+  },
+  {
+   "file": "sparse.py",
+   "line": 36,
+   "value": 6
+  },
+  {
+   "file": "sparse.py",
+   "line": 36,
+   "value": 7
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 4
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 5
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 6
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 7
+  },
+  {
+   "file": "sparse.py",
+   "line": 53,
+   "value": 2
+  },
+  {
+   "file": "sparse.py",
+   "line": 140,
+   "value": 0.5
+  }
+ ],
+ "default_arg_literals": [
+  {
+   "file": "simp.py",
+   "line": 444,
+   "func": "facets",
+   "arg": "min_p",
+   "value": 0.1
+  },
+  {
+   "file": "simp.py",
+   "line": 444,
+   "func": "facets",
+   "arg": "max_n",
+   "value": 4
+  },
+  {
+   "file": "simp.py",
+   "line": 1303,
+   "func": "place_own",
+   "arg": "n_top",
+   "value": 10
+  },
+  {
+   "file": "simp.py",
+   "line": 1071,
+   "func": "main_rows",
+   "arg": "min_w",
+   "value": 0.85
+  },
+  {
+   "file": "simp.py",
+   "line": 460,
+   "func": "collocated",
+   "arg": "ratio",
+   "value": 0.3
+  },
+  {
+   "file": "simp.py",
+   "line": 1422,
+   "func": "cap_own",
+   "arg": "n",
+   "value": 10
+  },
+  {
+   "file": "simp.py",
+   "line": 472,
+   "func": "facet_units",
+   "arg": "min_p",
+   "value": 0.1
+  },
+  {
+   "file": "simp.py",
+   "line": 472,
+   "func": "facet_units",
+   "arg": "max_n",
+   "value": 4
+  }
+ ],
+ "missed_lines": {
+  "simp.py": [
+   411,
+   412,
+   414,
+   416,
+   435,
+   436,
+   437,
+   438,
+   439,
+   532,
+   550,
+   752,
+   786,
+   853,
+   875,
+   973,
+   977,
+   1002,
+   1003,
+   1004,
+   1005,
+   1030,
+   1031,
+   1032,
+   1042,
+   1076,
+   1111,
+   1165,
+   1166,
+   1167,
+   1168,
+   1177,
+   1178,
+   1180,
+   1181,
+   1276,
+   1432,
+   1433,
+   1471,
+   1518,
+   1520,
+   1553,
+   1556,
+   1569,
+   1588
+  ]
+ },
+ "proxy_score": 277
+}

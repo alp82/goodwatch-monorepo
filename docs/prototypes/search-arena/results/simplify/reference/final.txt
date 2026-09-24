@@ -1,0 +1,7 @@
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| r6 | 0.836 | 0.812 | 0.761 | 0.728 | 0.893 | 0.884 | 0.837 | 10/10/17/1/2 = 40 | 0 | 6.00/6.00/6.00 | 6/7 | 156.2 | 294.9 |
+| ref-merge | 0.829 (c0.838 u7) | 0.820 (c0.830 u1) | 0.756 (c0.756 u1) | 0.733 (c0.738 u5) | 0.866 (c0.892 u7) | 0.865 (c0.886 u2) | 0.820 (c0.841 u6) | 9/11/16/1/1 = 38 | 26 | 6.00/6.00/5.78 | 6/7 | 144.4 | 274.3 |
+| ref-slim | 0.830 (c0.838 u6) | 0.831 | 0.758 | 0.732 (c0.739 u5) | 0.860 (c0.892 u8) | 0.862 (c0.877 u2) | 0.803 (c0.848 u10) | 9/11/16/1/1 = 38 | 29 | 6.00/6.00/5.78 | 6/7 | 148.7 | 270.7 |
+| ref-lean | 0.825 (c0.834 u8) | 0.784 (c0.809 u3) | 0.758 | 0.725 (c0.739 u7) | 0.860 (c0.890 u7) | 0.863 (c0.884 u2) | 0.809 (c0.888 u19) | 9/11/16/1/1 = 38 | 41 | 6.00/6.00/5.78 | 6/7 | 145.9 | 277.0 |
+ndcg10 per split (round-6 cut rule); '(c… u…)' = condensed ndcg10 with ungraded titles skipped, and the unjudged count in the top 10, shown only when a split has ungraded titles. Latency: in-process ms per query after the Jev reading, compare only against r6 from the same run.
+127 queries x 4 candidates in 316 s (incl. loading). Lists: /home/alp/dev/projects/goodwatch/goodwatch-monorepo/.claude/worktrees/search-simplify/docs/prototypes/search-arena/results/simplify/lists

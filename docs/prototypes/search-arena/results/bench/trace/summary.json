@@ -1,0 +1,721 @@
+{
+ "ranker": "simp_combo.FINAL['combo-safe-v3']",
+ "queries": 168,
+ "reps": 3,
+ "verification": {
+  "top10_mismatches": [],
+  "top50_mismatches": [],
+  "score_mismatches": [],
+  "filter_verified": true,
+  "unclassified_gathers": 0,
+  "saved_list_comparison": {
+   "file": "results/simplify/lists/combo-safe-v3.json",
+   "queries": 138,
+   "identical_top10": 138
+  }
+ },
+ "groups": {
+  "all": {
+   "queries": 168,
+   "pool_size": {
+    "n": 168,
+    "min": 633,
+    "median": 1364.5,
+    "p95": 2514,
+    "max": 2726,
+    "mean": 1466.61
+   },
+   "store_ops": {
+    "n": 168,
+    "min": 5,
+    "median": 11.0,
+    "p95": 18,
+    "max": 22,
+    "mean": 10.8
+   },
+   "round_trips_batched": {
+    "n": 168,
+    "min": 2,
+    "median": 3.0,
+    "p95": 6,
+    "max": 6,
+    "mean": 3.96
+   },
+   "store_stages": {
+    "2": 111,
+    "3": 57
+   },
+   "store_stages_if_profiles_precomputed": {
+    "2": 168
+   },
+   "ops_by_kind": {
+    "bm25_score_ids": {
+     "n": 168,
+     "min": 0,
+     "median": 0.0,
+     "p95": 2,
+     "max": 2,
+     "mean": 0.63
+    },
+    "bm25_topk": {
+     "n": 168,
+     "min": 0,
+     "median": 2.0,
+     "p95": 4,
+     "max": 5,
+     "mean": 1.83
+    },
+    "dense_mix_topk": {
+     "n": 168,
+     "min": 0,
+     "median": 0.0,
+     "p95": 1,
+     "max": 1,
+     "mean": 0.07
+    },
+    "dense_score_ids": {
+     "n": 168,
+     "min": 1,
+     "median": 2.0,
+     "p95": 6,
+     "max": 11,
+     "mean": 2.51
+    },
+    "dense_topk": {
+     "n": 168,
+     "min": 0,
+     "median": 2.0,
+     "p95": 6,
+     "max": 7,
+     "mean": 2.07
+    },
+    "fetch_terms": {
+     "n": 168,
+     "min": 0,
+     "median": 0.0,
+     "p95": 1,
+     "max": 1,
+     "mean": 0.34
+    },
+    "fetch_vectors": {
+     "n": 168,
+     "min": 0,
+     "median": 0.0,
+     "p95": 2,
+     "max": 2,
+     "mean": 0.68
+    },
+    "fp_score_ids": {
+     "n": 168,
+     "min": 1,
+     "median": 1.0,
+     "p95": 2,
+     "max": 2,
+     "mean": 1.34
+    },
+    "fp_topk": {
+     "n": 168,
+     "min": 1,
+     "median": 1.0,
+     "p95": 2,
+     "max": 2,
+     "mean": 1.34
+    }
+   },
+   "encodes": {
+    "n": 168,
+    "min": 0,
+    "median": 2.0,
+    "p95": 6,
+    "max": 11,
+    "mean": 2.39
+   },
+   "encodes_by_model": {
+    "bgeb-notitle": 336,
+    "me5s": 65
+   },
+   "memory_ms": {
+    "n": 168,
+    "min": 1.451,
+    "median": 3.347,
+    "p95": 18.116,
+    "max": 37.001,
+    "mean": 5.59
+   },
+   "store_emulated_ms": {
+    "n": 168,
+    "min": 17.027,
+    "median": 43.3625,
+    "p95": 97.866,
+    "max": 134.061,
+    "mean": 47.49
+   },
+   "wall_uninstrumented_ms": {
+    "n": 168,
+    "min": 17.745,
+    "median": 51.602000000000004,
+    "p95": 112.255,
+    "max": 174.829,
+    "mean": 54.97
+   },
+   "full_scan_mix_queries": 12,
+   "score_ids_ids": {
+    "n": 752,
+    "min": 633,
+    "median": 1538.0,
+    "p95": 2576,
+    "max": 2726,
+    "mean": 1576.94
+   },
+   "score_ids_outside_own_topk": {
+    "n": 673,
+    "min": 133,
+    "median": 1169,
+    "p95": 2226,
+    "max": 2519,
+    "mean": 1210.63
+   }
+  },
+  "general": {
+   "queries": 101,
+   "pool_size": {
+    "n": 101,
+    "min": 633,
+    "median": 1198,
+    "p95": 2230,
+    "max": 2611,
+    "mean": 1330.91
+   },
+   "store_ops": {
+    "n": 101,
+    "min": 5,
+    "median": 9,
+    "p95": 18,
+    "max": 22,
+    "mean": 8.94
+   },
+   "round_trips_batched": {
+    "n": 101,
+    "min": 3,
+    "median": 3,
+    "p95": 3,
+    "max": 3,
+    "mean": 3.0
+   },
+   "store_stages": {
+    "2": 101
+   },
+   "store_stages_if_profiles_precomputed": {
+    "2": 101
+   },
+   "ops_by_kind": {
+    "bm25_topk": {
+     "n": 101,
+     "min": 1,
+     "median": 1,
+     "p95": 4,
+     "max": 5,
+     "mean": 1.78
+    },
+    "dense_score_ids": {
+     "n": 101,
+     "min": 1,
+     "median": 3,
+     "p95": 6,
+     "max": 8,
+     "mean": 2.66
+    },
+    "dense_topk": {
+     "n": 101,
+     "min": 1,
+     "median": 3,
+     "p95": 6,
+     "max": 7,
+     "mean": 2.5
+    },
+    "fp_score_ids": {
+     "n": 101,
+     "min": 1,
+     "median": 1,
+     "p95": 1,
+     "max": 1,
+     "mean": 1.0
+    },
+    "fp_topk": {
+     "n": 101,
+     "min": 1,
+     "median": 1,
+     "p95": 1,
+     "max": 1,
+     "mean": 1.0
+    }
+   },
+   "encodes": {
+    "n": 101,
+    "min": 1,
+    "median": 3,
+    "p95": 6,
+    "max": 8,
+    "mean": 2.66
+   },
+   "encodes_by_model": {
+    "bgeb-notitle": 269
+   },
+   "memory_ms": {
+    "n": 101,
+    "min": 1.451,
+    "median": 2.698,
+    "p95": 18.116,
+    "max": 37.001,
+    "mean": 4.83
+   },
+   "store_emulated_ms": {
+    "n": 101,
+    "min": 17.027,
+    "median": 46.398,
+    "p95": 104.424,
+    "max": 132.683,
+    "mean": 47.3
+   },
+   "wall_uninstrumented_ms": {
+    "n": 101,
+    "min": 17.745,
+    "median": 51.94,
+    "p95": 118.811,
+    "max": 140.053,
+    "mean": 54.34
+   },
+   "full_scan_mix_queries": 0,
+   "score_ids_ids": {
+    "n": 370,
+    "min": 633,
+    "median": 1343.0,
+    "p95": 2591,
+    "max": 2611,
+    "mean": 1474.5
+   },
+   "score_ids_outside_own_topk": {
+    "n": 348,
+    "min": 133,
+    "median": 958.0,
+    "p95": 2261,
+    "max": 2311,
+    "mean": 1076.14
+   }
+  },
+  "non_english": {
+   "queries": 10,
+   "pool_size": {
+    "n": 10,
+    "min": 896,
+    "median": 1071.0,
+    "p95": 1419,
+    "max": 1419,
+    "mean": 1121.6
+   },
+   "store_ops": {
+    "n": 10,
+    "min": 6,
+    "median": 11.0,
+    "p95": 16,
+    "max": 16,
+    "mean": 10.2
+   },
+   "round_trips_batched": {
+    "n": 10,
+    "min": 2,
+    "median": 2.0,
+    "p95": 2,
+    "max": 2,
+    "mean": 2.0
+   },
+   "store_stages": {
+    "2": 10
+   },
+   "store_stages_if_profiles_precomputed": {
+    "2": 10
+   },
+   "ops_by_kind": {
+    "dense_mix_topk": {
+     "n": 10,
+     "min": 1,
+     "median": 1.0,
+     "p95": 1,
+     "max": 1,
+     "mean": 1.0
+    },
+    "dense_score_ids": {
+     "n": 10,
+     "min": 3,
+     "median": 6.0,
+     "p95": 11,
+     "max": 11,
+     "mean": 6.0
+    },
+    "dense_topk": {
+     "n": 10,
+     "min": 0,
+     "median": 2.0,
+     "p95": 2,
+     "max": 2,
+     "mean": 1.2
+    },
+    "fp_score_ids": {
+     "n": 10,
+     "min": 1,
+     "median": 1.0,
+     "p95": 1,
+     "max": 1,
+     "mean": 1.0
+    },
+    "fp_topk": {
+     "n": 10,
+     "min": 1,
+     "median": 1.0,
+     "p95": 1,
+     "max": 1,
+     "mean": 1.0
+    }
+   },
+   "encodes": {
+    "n": 10,
+    "min": 3,
+    "median": 6.0,
+    "p95": 11,
+    "max": 11,
+    "mean": 6.0
+   },
+   "encodes_by_model": {
+    "me5s": 26,
+    "bgeb-notitle": 34
+   },
+   "memory_ms": {
+    "n": 10,
+    "min": 4.543,
+    "median": 6.415,
+    "p95": 36.948,
+    "max": 36.948,
+    "mean": 10.41
+   },
+   "store_emulated_ms": {
+    "n": 10,
+    "min": 47.671,
+    "median": 80.8295,
+    "p95": 134.061,
+    "max": 134.061,
+    "mean": 79.64
+   },
+   "wall_uninstrumented_ms": {
+    "n": 10,
+    "min": 56.772,
+    "median": 95.7475,
+    "p95": 174.829,
+    "max": 174.829,
+    "mean": 97.35
+   },
+   "full_scan_mix_queries": 10,
+   "score_ids_ids": {
+    "n": 70,
+    "min": 896,
+    "median": 1113.0,
+    "p95": 1419,
+    "max": 1419,
+    "mean": 1135.37
+   },
+   "score_ids_outside_own_topk": {
+    "n": 22,
+    "min": 396,
+    "median": 813.0,
+    "p95": 1119,
+    "max": 1119,
+    "mean": 794.27
+   }
+  },
+  "reference": {
+   "queries": 57,
+   "pool_size": {
+    "n": 57,
+    "min": 880,
+    "median": 1760,
+    "p95": 2550,
+    "max": 2726,
+    "mean": 1767.6
+   },
+   "store_ops": {
+    "n": 57,
+    "min": 13,
+    "median": 13,
+    "p95": 16,
+    "max": 19,
+    "mean": 14.21
+   },
+   "round_trips_batched": {
+    "n": 57,
+    "min": 6,
+    "median": 6,
+    "p95": 6,
+    "max": 6,
+    "mean": 6.0
+   },
+   "store_stages": {
+    "3": 57
+   },
+   "store_stages_if_profiles_precomputed": {
+    "2": 57
+   },
+   "ops_by_kind": {
+    "bm25_score_ids": {
+     "n": 57,
+     "min": 1,
+     "median": 2,
+     "p95": 2,
+     "max": 2,
+     "mean": 1.86
+    },
+    "bm25_topk": {
+     "n": 57,
+     "min": 1,
+     "median": 2,
+     "p95": 3,
+     "max": 3,
+     "mean": 2.25
+    },
+    "dense_mix_topk": {
+     "n": 57,
+     "min": 0,
+     "median": 0,
+     "p95": 0,
+     "max": 1,
+     "mean": 0.04
+    },
+    "dense_score_ids": {
+     "n": 57,
+     "min": 1,
+     "median": 2,
+     "p95": 2,
+     "max": 6,
+     "mean": 1.61
+    },
+    "dense_topk": {
+     "n": 57,
+     "min": 1,
+     "median": 1,
+     "p95": 2,
+     "max": 2,
+     "mean": 1.46
+    },
+    "fetch_terms": {
+     "n": 57,
+     "min": 1,
+     "median": 1,
+     "p95": 1,
+     "max": 1,
+     "mean": 1.0
+    },
+    "fetch_vectors": {
+     "n": 57,
+     "min": 2,
+     "median": 2,
+     "p95": 2,
+     "max": 2,
+     "mean": 2.0
+    },
+    "fp_score_ids": {
+     "n": 57,
+     "min": 2,
+     "median": 2,
+     "p95": 2,
+     "max": 2,
+     "mean": 2.0
+    },
+    "fp_topk": {
+     "n": 57,
+     "min": 2,
+     "median": 2,
+     "p95": 2,
+     "max": 2,
+     "mean": 2.0
+    }
+   },
+   "encodes": {
+    "n": 57,
+    "min": 0,
+    "median": 1,
+    "p95": 2,
+    "max": 5,
+    "mean": 1.26
+   },
+   "encodes_by_model": {
+    "bgeb-notitle": 33,
+    "me5s": 39
+   },
+   "memory_ms": {
+    "n": 57,
+    "min": 2.32,
+    "median": 4.457,
+    "p95": 14.853,
+    "max": 20.559,
+    "mean": 6.09
+   },
+   "store_emulated_ms": {
+    "n": 57,
+    "min": 25.542,
+    "median": 38.053,
+    "p95": 71.651,
+    "max": 92.692,
+    "mean": 42.2
+   },
+   "wall_uninstrumented_ms": {
+    "n": 57,
+    "min": 28.473,
+    "median": 48.202,
+    "p95": 68.883,
+    "max": 102.969,
+    "mean": 48.65
+   },
+   "full_scan_mix_queries": 2,
+   "score_ids_ids": {
+    "n": 312,
+    "min": 880,
+    "median": 1799.0,
+    "p95": 2576,
+    "max": 2726,
+    "mean": 1797.5
+   },
+   "score_ids_outside_own_topk": {
+    "n": 303,
+    "min": 380,
+    "median": 1369,
+    "p95": 2214,
+    "max": 2519,
+    "mean": 1395.31
+   }
+  }
+ },
+ "tables": {
+  "persons": {
+   "python_mb": 73.2,
+   "compact_mb": 14.46,
+   "entries": 104929,
+   "touched_by_queries": 42,
+   "note": ""
+  },
+  "credits": {
+   "python_mb": 131.63,
+   "compact_mb": 10.6,
+   "entries": 266850,
+   "touched_by_queries": 42,
+   "note": ""
+  },
+  "studios": {
+   "python_mb": 20.58,
+   "compact_mb": 1.92,
+   "entries": 35572,
+   "touched_by_queries": 7,
+   "note": ""
+  },
+  "name_index": {
+   "python_mb": 87.1,
+   "compact_mb": 9.44,
+   "entries": 212986,
+   "touched_by_queries": 168,
+   "note": ""
+  },
+  "spell_vocabulary": {
+   "python_mb": 5.14,
+   "compact_mb": 0.78,
+   "entries": 2,
+   "touched_by_queries": 168,
+   "note": ""
+  },
+  "like_title_index": {
+   "python_mb": 7.04,
+   "compact_mb": 1.31,
+   "entries": 61859,
+   "touched_by_queries": 119,
+   "note": ""
+  },
+  "bm25_term_stats": {
+   "python_mb": 115.25,
+   "compact_mb": 26.03,
+   "entries": 3,
+   "touched_by_queries": 114,
+   "note": "891573 BM25 terms (unigrams + bigrams): vocabulary, document frequency, IDF (collocations, term-profile weights)"
+  },
+  "alternate_cuts": {
+   "python_mb": 0.25,
+   "compact_mb": 0.01,
+   "entries": 770,
+   "touched_by_queries": 168,
+   "note": ""
+  },
+  "peer_centroids": {
+   "python_mb": 3.84,
+   "compact_mb": 1.67,
+   "entries": 4,
+   "touched_by_queries": 49,
+   "note": ""
+  },
+  "negation_labels": {
+   "python_mb": 86.63,
+   "compact_mb": 8.69,
+   "entries": 2,
+   "touched_by_queries": 26,
+   "note": ""
+  },
+  "title_names": {
+   "python_mb": 4.97,
+   "compact_mb": 1.6,
+   "entries": 2,
+   "touched_by_queries": 32,
+   "note": ""
+  },
+  "fuzzy_name_keys": {
+   "python_mb": 1.35,
+   "compact_mb": 0.3,
+   "entries": 21163,
+   "touched_by_queries": 15,
+   "note": ""
+  },
+  "franchise_titles": {
+   "python_mb": 11.22,
+   "compact_mb": 2.05,
+   "entries": 50305,
+   "touched_by_queries": 8,
+   "note": ""
+  },
+  "intent_examples": {
+   "python_mb": 0.06,
+   "compact_mb": 0.06,
+   "entries": 2,
+   "touched_by_queries": 39,
+   "note": ""
+  },
+  "title_table": {
+   "python_mb": 8.63,
+   "compact_mb": 2.88,
+   "entries": 9,
+   "touched_by_queries": 168,
+   "note": "50305 eligible titles: id, title, original title, year, votes, GoodWatch score, popularity, media type, IMDb id (seeds, centroid weights, priors, blend, cuts, bounds)"
+  }
+ },
+ "tables_total_mb": {
+  "python": 556.9,
+  "compact": 81.8
+ },
+ "store_side_for_reference": {
+  "bm25_doc_matrix": {
+   "mb": 81.1,
+   "nnz": 9688736,
+   "note": "BM25F doc term weights (body fields): moves to Crate"
+  }
+ },
+ "restructure_precomputed_profiles": {
+  "resolvable_entities": 22146,
+  "like_x_titles": 43206,
+  "entity_centroids_mb": 74.6,
+  "term_profiles_mb": 41.8,
+  "note": "Precomputed reference profiles remove the seed-fetch stage. Entities: the fingerprint_v1 + text_en centroids (entity_centroids_mb, e.g. a side Qdrant collection read with lookup_from, or webapp memory). 'like X' titles (votes >= ref_votes): one seed, so the centroid is the title's own vector (Qdrant query by point id, nothing to store). Both: the top terms_n term profile (term_profiles_mb, about 16 bytes per term). Multi-entity queries still need the seed fetch (seeds come from the combined weights)."
+ },
+ "generated": "2026-09-24T13:07:04"
+}

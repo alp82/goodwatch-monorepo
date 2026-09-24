@@ -1,0 +1,18 @@
+# Local environment and caches
+.venv/
+__pycache__/
+playground/cache/
+# Ad-hoc playground captures (personal test queries)
+data/captures/adhoc/
+# Per-round ranked lists: regenerable from the harness and the local catalog snapshot
+results/round*/lists/
+results/round4/pool1-lists/
+# Simplify loop: regenerable ranker lists, iteration output and local encode caches
+results/simplify/lists/
+results/simplify/*/iter/
+results/simplify/fusion/probe_lists/
+results/simplify/combo/intent-emb-cache.json
+bench/backfill/models/
+bench/backfill/cache/
+results/bench/trace/trace.jsonl
+results/bench/trace/vectors.json

@@ -1,0 +1,15 @@
+# Large local snapshots and embeddings
+*.gz
+*.npy
+*.bin
+*.parquet
+*.jsonl.gz
+*.onnx
+
+# Personal data (owner ratings, watchlist, favorites)
+user-taste.json
+emb-ids.json
+
+# Local caches built by harness/
+*.pkl
+query-emb-*.json

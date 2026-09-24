@@ -1,0 +1,1119 @@
+{
+ "lab-00": {
+  "query": "complete nonsense",
+  "split": "dev",
+  "intent_label": "Deliberately absurd or surreal comedy where nonsense is the point (sketch shows, anti-humor). Generic family animation or merely bad films are wrong.",
+  "det": null
+ },
+ "lab-01": {
+  "query": "tarkovsky",
+  "split": "dev",
+  "intent_label": "Ambiguous: films directed by Andrei Tarkovsky first, then contemplative, poetic, spiritual cinema in his style.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Andrei Tarkovsky"
+    ]
+   ],
+   "intent": "both",
+   "era": null
+  }
+ },
+ "lab-02": {
+  "query": "feel good cooking show",
+  "split": "dev",
+  "intent_label": "Series centered on cooking or food with a warm, upbeat, low-conflict tone. Home renovation or dramas with incidental food are wrong.",
+  "det": null
+ },
+ "lab-03": {
+  "query": "slow burn space horror",
+  "split": "dev",
+  "intent_label": "Horror set in space or off-world with gradual, atmospheric dread rather than nonstop action.",
+  "det": null
+ },
+ "lab-04": {
+  "query": "tense heist thriller, not bleak",
+  "split": "dev",
+  "intent_label": "Suspenseful planned-theft thrillers with a playful or hopeful tone; relentlessly hopeless crime stories violate the exclusion.",
+  "det": null
+ },
+ "lab-05": {
+  "query": "grief after losing a child",
+  "split": "holdout",
+  "intent_label": "Stories centrally about a parent's grief after a child's death and its aftermath. Generic sadness or missing-child thrillers are weak.",
+  "det": null
+ },
+ "lab-06": {
+  "query": "furious",
+  "split": "dev",
+  "intent_label": "Ambiguous mood vs title lookup: rage-driven, ferocious, high-intensity titles; the Fast & Furious franchise is a plausible title reading.",
+  "det": null
+ },
+ "lab-07": {
+  "query": "craty",
+  "split": "dev",
+  "intent_label": "Unresolved typo (probably \"crazy\"); if read as crazy, eccentric or chaotic entertainment. Excluded from decisive scoring.",
+  "det": null
+ },
+ "lab-08": {
+  "query": "melancholy lighthouse keeper mystery",
+  "split": "holdout",
+  "intent_label": "Mysteries where a lighthouse keeper matters to the story, with a wistful or sorrowful tone. A lighthouse as backdrop only is weak.",
+  "det": null
+ },
+ "lab-09": {
+  "query": "scifi with cars",
+  "split": "holdout",
+  "intent_label": "Science fiction where cars, driving or road vehicles are material (post-apocalyptic roads, flying cars, deadly races).",
+  "det": null
+ },
+ "lab-10": {
+  "query": "sunglasses at night",
+  "split": "dev",
+  "intent_label": "Literal clue: sunglasses worn at night are a notable feature (They Live, The Matrix), or cool nocturnal style; generic night imagery is weak.",
+  "det": null
+ },
+ "lab-11": {
+  "query": "fantasy with dragons",
+  "split": "dev",
+  "intent_label": "Fantasy where real dragons appear and matter. \"Dragon\" in a name or martial-arts metaphor is wrong.",
+  "det": null
+ },
+ "lab-12": {
+  "query": "like groundhog day",
+  "split": "dev",
+  "intent_label": "Other time-loop / repeating-day stories, ideally comedic or about personal growth. Groundhog Day itself is a reference hit, not a discovery.",
+  "det": null
+ },
+ "lab-13": {
+  "query": "time travel complex",
+  "split": "dev",
+  "intent_label": "Time travel with intricate causality, paradoxes or interlocking timelines; simple time-travel comedies are partial.",
+  "det": null
+ },
+ "core-01": {
+  "query": "Inception",
+  "split": "dev",
+  "intent_label": "Title lookup: Inception (2010) first.",
+  "det": null
+ },
+ "core-02": {
+  "query": "Breaking Bad",
+  "split": "dev",
+  "intent_label": "Title lookup: Breaking Bad (the series) first.",
+  "det": null
+ },
+ "core-03": {
+  "query": "The Matrix",
+  "split": "dev",
+  "intent_label": "Title lookup: The Matrix (1999) first, sequels after.",
+  "det": null
+ },
+ "core-04": {
+  "query": "Incepton",
+  "split": "dev",
+  "intent_label": "Misspelled title: Inception (2010) first.",
+  "det": null
+ },
+ "core-05": {
+  "query": "Spirited Away",
+  "split": "holdout",
+  "intent_label": "Title lookup: Spirited Away (2001) first.",
+  "det": null
+ },
+ "core-06": {
+  "query": "tense but not bleak",
+  "split": "dev",
+  "intent_label": "Suspenseful titles (thrillers, mysteries, competitions) that do not leave a hopeless aftertaste.",
+  "det": null
+ },
+ "core-07": {
+  "query": "car chases",
+  "split": "dev",
+  "intent_label": "Car chases are central to the experience: pursuit-driven action, getaway and road films.",
+  "det": null
+ },
+ "core-08": {
+  "query": "sunglasses",
+  "split": "dev",
+  "intent_label": "Sunglasses are a notable visual element or plot device (They Live, The Matrix, Men in Black).",
+  "det": null
+ },
+ "core-09": {
+  "query": "unreliable narrator",
+  "split": "holdout",
+  "intent_label": "The narrator or viewpoint character is revealed to be untrustworthy, recontextualizing the story.",
+  "det": null
+ },
+ "core-10": {
+  "query": "dark comedy about rich people",
+  "split": "holdout",
+  "intent_label": "Dark or satirical comedy where wealth and wealthy people are the target.",
+  "det": null
+ },
+ "core-11": {
+  "query": "no anime, gritty crime show",
+  "split": "dev",
+  "intent_label": "Gritty, grounded crime series. Anime and movies are explicit exclusions.",
+  "det": null
+ },
+ "core-12": {
+  "query": "with my parents",
+  "split": "holdout",
+  "intent_label": "Titles that work across generations; no implicit content filter beyond broad appeal.",
+  "det": null
+ },
+ "core-13": {
+  "query": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+  "split": "dev",
+  "intent_label": "Suspense and twists (mysteries, whodunits, clever thrillers) with a satisfying, not miserable, ending.",
+  "det": null
+ },
+ "core-14": {
+  "query": "Rich people being absolutely awful to each other, preferably funny.",
+  "split": "holdout",
+  "intent_label": "Wealthy people behaving badly, comedy preferred (satire, black comedy).",
+  "det": null
+ },
+ "core-15": {
+  "query": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+  "split": "dev",
+  "intent_label": "Grounded, gritty crime series; animation, supernatural detectives and movies are wrong.",
+  "det": null
+ },
+ "core-16": {
+  "query": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+  "split": "holdout",
+  "intent_label": "A revealed unreliable narrator is the core twist.",
+  "det": null
+ },
+ "core-17": {
+  "query": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+  "split": "dev",
+  "intent_label": "Grounded getaway-driver and heist-driving films; superhero destruction spectacles are wrong.",
+  "det": null
+ },
+ "core-18": {
+  "query": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+  "split": "holdout",
+  "intent_label": "Easy, warm comedies with wit, avoiding saccharine sentimentality.",
+  "det": null
+ },
+ "core-19": {
+  "query": "cozy",
+  "split": "dev",
+  "intent_label": "Comforting, gentle, low-stakes titles (warm animation, feel-good comedy).",
+  "det": null
+ },
+ "core-20": {
+  "query": "bleak",
+  "split": "holdout",
+  "intent_label": "Deliberately bleak, despairing or harrowing titles.",
+  "det": null
+ },
+ "core-21": {
+  "query": "funny",
+  "split": "dev",
+  "intent_label": "Strong comedies; broad, so quality and popularity should matter.",
+  "det": null
+ },
+ "core-22": {
+  "query": "time loop",
+  "split": "dev",
+  "intent_label": "Repeating time is the central mechanism.",
+  "det": null
+ },
+ "core-23": {
+  "query": "slow atmospheric science fiction",
+  "split": "dev",
+  "intent_label": "Contemplative, slow-paced, mood-heavy science fiction; loud action sci-fi is wrong.",
+  "det": null
+ },
+ "core-24": {
+  "query": "a hopeful space adventure without horror",
+  "split": "holdout",
+  "intent_label": "Optimistic space adventures; space horror is an explicit exclusion.",
+  "det": null
+ },
+ "core-25": {
+  "query": "something short to watch after work",
+  "split": "dev",
+  "intent_label": "Short, low-commitment viewing (short films, brisk movies, episodic comedy); no exact runtime assumed.",
+  "det": null
+ },
+ "core-26": {
+  "query": "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.",
+  "split": "dev",
+  "intent_label": "German: suspense and puzzles without a miserable finish.",
+  "det": null
+ },
+ "core-27": {
+  "query": "Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.",
+  "split": "dev",
+  "intent_label": "Spanish: grounded gritty crime series; no animation or magic detectives.",
+  "det": null
+ },
+ "core-28": {
+  "query": "Des gens riches qui se comportent horriblement entre eux, de préférence quelque chose de drôle.",
+  "split": "holdout",
+  "intent_label": "French: wealthy people behaving badly, comedy preferred.",
+  "det": null
+ },
+ "core-29": {
+  "query": "Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum.",
+  "split": "holdout",
+  "intent_label": "Turkish: easy warm comedy, not overly sentimental.",
+  "det": null
+ },
+ "core-30": {
+  "query": "spannend aber nicht düster",
+  "split": "dev",
+  "intent_label": "German: tension without darkness.",
+  "det": null
+ },
+ "new-01": {
+  "query": "heist on a train",
+  "split": "holdout",
+  "intent_label": "A robbery or theft carried out on or against a train is central. Trains without a heist, or heists without a train, are weak.",
+  "det": null
+ },
+ "new-02": {
+  "query": "two geniuses in a battle of wits",
+  "split": "dev",
+  "intent_label": "Cat-and-mouse between two brilliant opponents who outthink each other (detective vs criminal, rival magicians). A lone genius without a rival is weak.",
+  "det": null
+ },
+ "new-03": {
+  "query": "satire about politics or big corporations",
+  "split": "holdout",
+  "intent_label": "Comedies that skewer politicians, lobbyists, media or corporations.",
+  "det": null
+ },
+ "new-04": {
+  "query": "quiet and lonely in deep space",
+  "split": "dev",
+  "intent_label": "Contemplative sci-fi about isolation far from Earth: solitary astronauts, long voyages, stations. Loud space opera is wrong.",
+  "det": null
+ },
+ "new-05": {
+  "query": "rainy neon cyberpunk city",
+  "split": "holdout",
+  "intent_label": "Cyberpunk set in dense, rain-soaked, neon-lit cities; tech-noir atmosphere matters.",
+  "det": null
+ },
+ "new-06": {
+  "query": "kung fu comedy",
+  "split": "holdout",
+  "intent_label": "Martial-arts films where comedy is central (Jackie Chan, Stephen Chow). Serious martial-arts dramas are partial at best.",
+  "det": null
+ },
+ "new-07": {
+  "query": "like The Matrix but anime",
+  "split": "dev",
+  "intent_label": "Anime about simulated reality, cyberspace, or AI and identity. The live-action Matrix films themselves are not the answer.",
+  "det": null
+ },
+ "new-08": {
+  "query": "like Breaking Bad but a comedy",
+  "split": "holdout",
+  "intent_label": "Crime series about an ordinary person drifting into crime, played for laughs. Pure dramas like Breaking Bad itself are weak.",
+  "det": null
+ },
+ "new-09": {
+  "query": "80s sci-fi action",
+  "split": "dev",
+  "intent_label": "Science-fiction action released in the 1980s. Modern remakes are wrong on era.",
+  "det": null
+ },
+ "new-10": {
+  "query": "90s crime movies with great dialogue",
+  "split": "holdout",
+  "intent_label": "1990s crime films celebrated for their writing and dialogue.",
+  "det": null
+ },
+ "new-11": {
+  "query": "comedy without romance",
+  "split": "dev",
+  "intent_label": "Comedies where no romance plot drives the story; romantic comedies violate the exclusion.",
+  "det": null
+ },
+ "new-12": {
+  "query": "war movie that isn't about World War II",
+  "split": "holdout",
+  "intent_label": "War films about Vietnam, WWI, Lebanon, modern conflicts, etc. WWII films violate the exclusion.",
+  "det": null
+ },
+ "new-13": {
+  "query": "smart sci-fi for adults",
+  "split": "dev",
+  "intent_label": "Idea-driven science fiction for grown-ups; kid-oriented or pure spectacle sci-fi is wrong.",
+  "det": null
+ },
+ "new-14": {
+  "query": "good first anime for someone who never watched anime",
+  "split": "holdout",
+  "intent_label": "Accessible, widely acclaimed anime that work as an entry point. Niche, fan-service or long-lore-dependent titles are wrong.",
+  "det": null
+ },
+ "new-15": {
+  "query": "nonlinear storytelling",
+  "split": "dev",
+  "intent_label": "The story is told out of chronological order and the structure is part of the experience.",
+  "det": null
+ },
+ "new-16": {
+  "query": "whole movie takes place in one room",
+  "split": "holdout",
+  "intent_label": "Single-location films (one room, apartment, booth) that sustain drama through dialogue or tension.",
+  "det": null
+ },
+ "new-17": {
+  "query": "mindbending",
+  "split": "dev",
+  "intent_label": "Reality-twisting, puzzle-box or surreal films that leave you rethinking what you saw.",
+  "det": null
+ },
+ "new-18": {
+  "query": "wholesome",
+  "split": "holdout",
+  "intent_label": "Kind, warm, uplifting titles without cynicism or cruelty.",
+  "det": null
+ },
+ "new-19": {
+  "query": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.",
+  "split": "dev",
+  "intent_label": "Space-western / ragtag-crew adventures with humor and found family. Grim space horror is wrong.",
+  "det": null
+ },
+ "new-20": {
+  "query": "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it.",
+  "split": "holdout",
+  "intent_label": "Protagonist discovers his reality is constructed (staged show, simulation, manipulated city) and confronts it.",
+  "det": null
+ },
+ "new-21": {
+  "query": "un dessin animé drôle pour toute la famille",
+  "split": "dev",
+  "intent_label": "French: funny animated films for the whole family. Adult animation or animated war dramas are wrong.",
+  "det": null
+ },
+ "new-22": {
+  "query": "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist",
+  "split": "holdout",
+  "intent_label": "German: anti-war films that show the futility of war. Heroic war spectacle is wrong.",
+  "det": null
+ },
+ "new-23": {
+  "query": "psycological thriler with a big twist",
+  "split": "holdout",
+  "intent_label": "Misspelled \"psychological thriller\": mind-game thrillers built around a major twist.",
+  "det": null
+ },
+ "new-24": {
+  "query": "hunter x hunter",
+  "split": "holdout",
+  "intent_label": "Guardrail title lookup: the 2011 Hunter x Hunter series first (1999 series acceptable next).",
+  "det": null
+ },
+ "new-25": {
+  "query": "code geass",
+  "split": "dev",
+  "intent_label": "Guardrail title lookup: Code Geass: Lelouch of the Rebellion first, related films/seasons after.",
+  "det": null
+ },
+ "ho2-01": {
+  "query": "horror on a submarine",
+  "split": "holdout2",
+  "intent_label": "Horror (supernatural or creature) set aboard a submarine or deep-sea vessel. Plain submarine war thrillers without horror are only loosely relevant; horror set elsewhere is wrong.",
+  "det": null
+ },
+ "ho2-02": {
+  "query": "comedy set in a prison",
+  "split": "holdout2",
+  "intent_label": "Comedies whose main setting is a prison or jail. Serious prison dramas are wrong; comedies with only a brief jail scene are loosely relevant.",
+  "det": null
+ },
+ "ho2-03": {
+  "query": "anime about pirates",
+  "split": "holdout2",
+  "intent_label": "Anime (Japanese animation) centered on pirates, on the sea or in space. Live-action pirate films are wrong; anime without pirates is wrong.",
+  "det": null
+ },
+ "ho2-04": {
+  "query": "western with samurai",
+  "split": "holdout2",
+  "intent_label": "Westerns that bring a samurai or Japanese swordsman into the frontier setting, or samurai films styled as westerns. A plain western or a plain samurai film is only loosely relevant.",
+  "det": null
+ },
+ "ho2-05": {
+  "query": "war film about snipers",
+  "split": "holdout2",
+  "intent_label": "War films where a sniper or sniper duel is the central focus. Generic war films are loosely relevant; non-war sniper thrillers only loosely.",
+  "det": null
+ },
+ "ho2-06": {
+  "query": "like Band of Brothers but about Vietnam",
+  "split": "holdout2",
+  "intent_label": "Grounded, soldier-level Vietnam War films or series with the ensemble realism of Band of Brothers. WWII titles are wrong (that is the thing being swapped out).",
+  "det": null
+ },
+ "ho2-07": {
+  "query": "like The Sopranos but in Italy",
+  "split": "holdout2",
+  "intent_label": "Prestige organized-crime drama set in Italy (Camorra, Mafia, Roman crime), serious and character-driven. American mob stories are only loosely relevant.",
+  "det": null
+ },
+ "ho2-08": {
+  "query": "like Amélie",
+  "split": "holdout2",
+  "intent_label": "Whimsical, visually playful European (especially French) films with quirky characters and a fairy-tale tone, in the vein of Amélie and Jeunet. Amélie itself is fine but not required at the top.",
+  "det": null
+ },
+ "ho2-09": {
+  "query": "space opera without aliens",
+  "split": "holdout2",
+  "intent_label": "Space-set adventure or drama with human-only (or robot/AI) antagonists and no alien species. Titles built around alien races contradict the constraint.",
+  "det": null
+ },
+ "ho2-10": {
+  "query": "animated movie that is not for kids",
+  "split": "holdout2",
+  "intent_label": "Animated feature films made for adults: mature themes, violence, or serious subject matter. Family and children's animation contradicts the constraint.",
+  "det": null
+ },
+ "ho2-11": {
+  "query": "claustrophobic thriller in the Arctic",
+  "split": "holdout2",
+  "intent_label": "Tense, confined thrillers or horror set in Arctic or Antarctic isolation (research stations, ice-locked ships). Warm adventure or nature documentaries are wrong.",
+  "det": null
+ },
+ "ho2-12": {
+  "query": "lazy sunny summer on the Italian coast",
+  "split": "holdout2",
+  "intent_label": "Relaxed, sun-drenched stories set during an Italian summer by the sea, with a languid or romantic mood. Mafia crime or thrillers with heavy tension are only loosely relevant.",
+  "det": null
+ },
+ "ho2-13": {
+  "query": "70s paranoid conspiracy thrillers",
+  "split": "holdout2",
+  "intent_label": "Conspiracy and surveillance thrillers from the 1970s with a paranoid mood. Modern conspiracy thrillers are only loosely relevant; 70s thrillers without conspiracy only loosely.",
+  "det": null
+ },
+ "ho2-14": {
+  "query": "2000s British gangster comedies",
+  "split": "holdout2",
+  "intent_label": "British crime comedies about gangsters from the 2000s, fast and funny. 1990s entries like Lock, Stock are close but slightly off-era; serious gangster dramas are loosely relevant.",
+  "det": null
+ },
+ "ho2-15": {
+  "query": "terry gilliam",
+  "split": "holdout2",
+  "intent_label": "Films directed by Terry Gilliam first, then surreal, darkly comic fantasy in his style.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Terry Gilliam"
+    ]
+   ],
+   "intent": "both",
+   "era": null
+  }
+ },
+ "ho2-16": {
+  "query": "jackie chan movies",
+  "split": "holdout2",
+  "intent_label": "Films starring Jackie Chan, especially his stunt-heavy martial-arts action comedies. Other martial-arts stars are loosely relevant.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Jackie Chan"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ho2-17": {
+  "query": "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals.",
+  "split": "holdout2",
+  "intent_label": "Crime stories with dark comedy centered on a small-town police officer facing a murder case and eccentric locals. Grim procedurals without humour are loosely relevant; broad slapstick cop comedies loosely.",
+  "det": null
+ },
+ "ho2-18": {
+  "query": "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet, not an action movie.",
+  "split": "holdout2",
+  "intent_label": "Quiet, character-driven dramas about veterans returning home and struggling to readjust. Combat-heavy action films contradict the request.",
+  "det": null
+ },
+ "ho2-19": {
+  "query": "Una comedia absurda sobre la vida en la oficina, con personajes ridículos.",
+  "split": "holdout2",
+  "intent_label": "Spanish: an absurd comedy about office life with ridiculous characters. Workplace comedies set in offices; non-office comedies are loosely relevant.",
+  "det": null
+ },
+ "ho2-20": {
+  "query": "epic",
+  "split": "holdout2",
+  "intent_label": "Grand-scale films or series with sweeping stories, big battles or journeys (historical, fantasy or sci-fi epics). Small, intimate stories are wrong.",
+  "det": null
+ },
+ "ho2-21": {
+  "query": "dystopain deth game series",
+  "split": "holdout2",
+  "intent_label": "Typo for 'dystopian death game series': shows (series preferred) where people are forced into deadly games in a dystopian or trapped setting. Films of the same kind are good.",
+  "det": null
+ },
+ "ho2-22": {
+  "query": "the expanse",
+  "split": "holdout2",
+  "intent_label": "Guardrail title lookup: The Expanse (2015 series) first.",
+  "det": null
+ },
+ "ppl-01": {
+  "query": "funny brad pitt movies",
+  "split": "dev",
+  "intent_label": "Comedies starring Brad Pitt first (dark or caper comedy counts). His serious dramas are loosely relevant; comedies without him are only loosely relevant.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Brad Pitt"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-02": {
+  "query": "keanu reeves action",
+  "split": "holdout3",
+  "intent_label": "Action films starring Keanu Reeves first. Other action films with a similar feel are loosely relevant; his non-action roles are weak.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Keanu Reeves"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-03": {
+  "query": "bill murray deadpan comedies",
+  "split": "dev",
+  "intent_label": "Comedies where Bill Murray plays his dry, deadpan persona first. Other deadpan comedies without him are loosely relevant.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Bill Murray"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-04": {
+  "query": "tom hanks war movies",
+  "split": "holdout3",
+  "intent_label": "War films and series with Tom Hanks in the cast first. War films without him are loosely relevant; his non-war films are wrong.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Tom Hanks"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-05": {
+  "query": "early spielberg",
+  "split": "dev",
+  "intent_label": "Films directed by Steven Spielberg in the 1970s and 1980s first. His later films are loosely relevant; other directors' films are weak.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Steven Spielberg"
+    ]
+   ],
+   "intent": "filmography",
+   "era": "early"
+  }
+ },
+ "ppl-06": {
+  "query": "leonardo dicapro thrillers",
+  "split": "holdout3",
+  "intent_label": "Typo for Leonardo DiCaprio: thrillers starring him first. His romances and period dramas are weak.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Leonardo DiCaprio"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-07": {
+  "query": "stephen chow's kung fu comedies",
+  "split": "holdout3",
+  "intent_label": "Kung-fu comedies directed by or starring Stephen Chow first. Other kung-fu comedies (e.g. Jackie Chan) are loosely relevant.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Stephen Chow"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-08": {
+  "query": "lustige Filme mit Bud Spencer und Terence Hill",
+  "split": "dev",
+  "intent_label": "German: comedic brawler westerns and action comedies with the Bud Spencer and Terence Hill duo first. Films with only one of them come next.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Bud Spencer"
+    ],
+    [
+     "person",
+     "Terence Hill"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-09": {
+  "query": "tarantino vibes",
+  "split": "dev",
+  "intent_label": "Style query: some Tarantino films welcome, but mostly other films with his feel: stylized violence, pop-culture talk, crime ensembles, nonlinear plots.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Quentin Tarantino"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-10": {
+  "query": "wes anderson style",
+  "split": "holdout3",
+  "intent_label": "Style query: one or two Wes Anderson films welcome, but mostly other whimsical, symmetrical, deadpan and pastel-hued films by others.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Wes Anderson"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-11": {
+  "query": "like david lynch but less weird",
+  "split": "dev",
+  "intent_label": "Style query: Lynch's dreamy small-town darkness and mystery, but accessible and coherent. His most surreal films are wrong; Twin Peaks-like mysteries by others are ideal.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "David Lynch"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-12": {
+  "query": "something in the style of guy ritchie",
+  "split": "holdout3",
+  "intent_label": "Style query: some Guy Ritchie films welcome, but mostly other fast, witty British crime capers with ensembles of crooks.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Guy Ritchie"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-13": {
+  "query": "denis villeneuve atmosphere",
+  "split": "dev",
+  "intent_label": "Style query: some Villeneuve films welcome, but mostly other brooding, slow, visually vast and tense sci-fi or thrillers.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Denis Villeneuve"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-14": {
+  "query": "coen brothers humor",
+  "split": "holdout3",
+  "intent_label": "Style query: some Coen brothers comedies welcome, but mostly other dark, deadpan comedies about hapless people and botched crimes.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Joel Coen & Ethan Coen"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-15": {
+  "query": "miyazaki-like",
+  "split": "dev",
+  "intent_label": "Style query: some Miyazaki films welcome, but mostly other hand-drawn, gentle, nature-loving fantasy animation by others.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Hayao Miyazaki"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-16": {
+  "query": "kubrick-esque",
+  "split": "holdout3",
+  "intent_label": "Style query: some Kubrick films welcome, but mostly other cold, meticulous, unsettling films with striking symmetric imagery.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Stanley Kubrick"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "ppl-17": {
+  "query": "vince gilligan",
+  "split": "dev",
+  "intent_label": "Shows and films created or written by Vince Gilligan first, then tense, morally grey crime dramas in his style.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Vince Gilligan"
+    ]
+   ],
+   "intent": "both",
+   "era": null
+  }
+ },
+ "ppl-18": {
+  "query": "christopher nolan",
+  "split": "holdout3",
+  "intent_label": "Films directed by Christopher Nolan first, then cerebral, puzzle-box blockbusters in his style.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Christopher Nolan"
+    ]
+   ],
+   "intent": "both",
+   "era": null
+  }
+ },
+ "ppl-19": {
+  "query": "jim carrey",
+  "split": "holdout3",
+  "intent_label": "Films starring Jim Carrey first, both rubber-faced comedies and his dramatic turns. Similar comedies without him are loosely relevant.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Jim Carrey"
+    ]
+   ],
+   "intent": "both",
+   "era": null
+  }
+ },
+ "ppl-20": {
+  "query": "edgar wright",
+  "split": "dev",
+  "intent_label": "Films directed by Edgar Wright first, then kinetic, genre-mashing British comedies in his style.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Edgar Wright"
+    ]
+   ],
+   "intent": "both",
+   "era": null
+  }
+ },
+ "ppl-21": {
+  "query": "studio ghibli",
+  "split": "dev",
+  "intent_label": "Studio Ghibli films first. Similar Japanese fantasy animation from other studios is loosely relevant.",
+  "det": {
+   "ents": [
+    [
+     "studio",
+     "Studio Ghibli"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-22": {
+  "query": "a24 horror",
+  "split": "holdout3",
+  "intent_label": "Horror films released by A24 first. Other elevated, slow-burn arthouse horror is relevant; mainstream slasher franchises are weak.",
+  "det": {
+   "ents": [
+    [
+     "studio",
+     "A24"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-23": {
+  "query": "pixar",
+  "split": "dev",
+  "intent_label": "Pixar feature films first. Animated films from other studios (DreamWorks, Blue Sky) are only loosely relevant.",
+  "det": {
+   "ents": [
+    [
+     "studio",
+     "Pixar"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "ppl-24": {
+  "query": "hbo prestige drama",
+  "split": "holdout3",
+  "intent_label": "Acclaimed HBO drama series first. Prestige dramas from other networks in the same vein are relevant but lower.",
+  "det": {
+   "ents": [
+    [
+     "studio",
+     "HBO"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "sty-01": {
+  "query": "feels like a terry gilliam film",
+  "split": "holdout4",
+  "intent_label": "Style query: some Terry Gilliam films welcome, but mostly other dark, surreal, visually baroque fantasies and dystopias with absurd humor.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Terry Gilliam"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-02": {
+  "query": "charlie kaufman-esque",
+  "split": "holdout4",
+  "intent_label": "Style query: some films written or directed by Charlie Kaufman welcome, but mostly other mind-bending, melancholic, meta comedies and dramas about identity and memory.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Charlie Kaufman"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-03": {
+  "query": "nicolas cage energy",
+  "split": "holdout4",
+  "intent_label": "Style query (actor as style): some unhinged Nicolas Cage performances welcome, but mostly other over-the-top, gonzo action and thrillers with manic, scenery-chewing leads. His quiet dramas are weak.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Nicolas Cage"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-04": {
+  "query": "in the vein of mel brooks",
+  "split": "holdout4",
+  "intent_label": "Style query: some Mel Brooks films welcome, but mostly other genre parodies and spoofs with rapid-fire gags and slapstick.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Mel Brooks"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-05": {
+  "query": "aardman humor",
+  "split": "holdout4",
+  "intent_label": "Style query (studio): some Aardman films welcome, but mostly other gentle, dry, very British family comedies and stop-motion with sight gags and whimsy.",
+  "det": {
+   "ents": [
+    [
+     "studio",
+     "Aardman"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-06": {
+  "query": "fincher vibes but a series",
+  "split": "holdout4",
+  "intent_label": "Style query, series only: shows with David Fincher's feel: cold, meticulous, dark procedural crime and psychological tension. His series welcome; films are weak.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "David Fincher"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-07": {
+  "query": "cartoons with matt groening humor",
+  "split": "holdout4",
+  "intent_label": "Animated series created by Matt Groening first, then other satirical adult animated sitcoms in his style.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Matt Groening"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-08": {
+  "query": "un film à la jean-pierre jeunet",
+  "split": "holdout4",
+  "intent_label": "French: style query. Some Jeunet films welcome, but mostly other whimsical, quirky, visually inventive (often French) fantasies and dark fairy tales.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Jean-Pierre Jeunet"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-09": {
+  "query": "something darren aronofsky would direct",
+  "split": "holdout4",
+  "intent_label": "Style query: some Aronofsky films welcome, but mostly other intense, claustrophobic psychological dramas about obsession, addiction and mental unraveling.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Darren Aronofsky"
+    ]
+   ],
+   "intent": "filmography",
+   "era": null
+  }
+ },
+ "sty-10": {
+  "query": "danny boyle movies and stuff like them",
+  "split": "holdout4",
+  "intent_label": "Films directed by Danny Boyle first, then other kinetic, energetic films with pulsing soundtracks and gritty, restless camerawork.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Danny Boyle"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-11": {
+  "query": "jackie chan style stunts and slapstick",
+  "split": "holdout4",
+  "intent_label": "Style query (actor as style): some Jackie Chan films welcome, but mostly other martial-arts action comedies with inventive practical stunts and physical comedy.",
+  "det": {
+   "ents": [
+    [
+     "person",
+     "Jackie Chan"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ },
+ "sty-12": {
+  "query": "blumhouse-type horror",
+  "split": "holdout4",
+  "intent_label": "Horror films produced by Blumhouse first, then other lean, low-budget, high-concept horror (found footage, home invasion, supernatural jump scares).",
+  "det": {
+   "ents": [
+    [
+     "studio",
+     "Blumhouse Productions"
+    ]
+   ],
+   "intent": "style",
+   "era": null
+  }
+ }
+}

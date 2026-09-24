@@ -1,0 +1,1071 @@
+{
+ "ranker": "simp_combo.FINAL['combo-safe-v2-wcred-par']",
+ "splits": [
+  "dev",
+  "holdout",
+  "holdout2",
+  "holdout3",
+  "holdout4"
+ ],
+ "queries": 138,
+ "loc_functions": 1022,
+ "loc_executed": 999,
+ "per_file": {
+  "catalog.py": {
+   "functions": 58,
+   "executed": 41,
+   "module_defs": 27,
+   "data_layer": true
+  },
+  "context.py": {
+   "functions": 0,
+   "executed": 4,
+   "module_defs": 0,
+   "data_layer": true
+  },
+  "cuts.py": {
+   "functions": 10,
+   "executed": 10,
+   "module_defs": 1,
+   "data_layer": false
+  },
+  "qemb.py": {
+   "functions": 22,
+   "executed": 13,
+   "module_defs": 2,
+   "data_layer": true
+  },
+  "simp_combo.py": {
+   "functions": 892,
+   "executed": 869,
+   "module_defs": 122,
+   "data_layer": false
+  },
+  "sparse.py": {
+   "functions": 120,
+   "executed": 120,
+   "module_defs": 11,
+   "data_layer": false
+  }
+ },
+ "functions_entered": [
+  "catalog.py:Catalog.eligible",
+  "catalog.py:Catalog.media_type",
+  "catalog.py:embeddings",
+  "catalog.py:load",
+  "catalog.py:point_id",
+  "cuts.py:_directors",
+  "qemb.py:_path",
+  "qemb.py:embed",
+  "simp_combo.py:_entity_key",
+  "simp_combo.py:_gz_lines",
+  "simp_combo.py:as_list",
+  "simp_combo.py:blend",
+  "simp_combo.py:blend.<locals>.lexical",
+  "simp_combo.py:bound_own",
+  "simp_combo.py:cached",
+  "simp_combo.py:centroid",
+  "simp_combo.py:collocated",
+  "simp_combo.py:collocated.<locals>.build",
+  "simp_combo.py:concrete_words",
+  "simp_combo.py:correct_word",
+  "simp_combo.py:credits",
+  "simp_combo.py:credits.<locals>.build",
+  "simp_combo.py:credits.<locals>.build.<locals>.put",
+  "simp_combo.py:cut_edges",
+  "simp_combo.py:cut_edges.<locals>.build",
+  "simp_combo.py:detect",
+  "simp_combo.py:detect.<locals>.take",
+  "simp_combo.py:eligible_titles",
+  "simp_combo.py:eligible_titles.<locals>.build",
+  "simp_combo.py:embed",
+  "simp_combo.py:english_from_chips",
+  "simp_combo.py:era_filter",
+  "simp_combo.py:facet_units",
+  "simp_combo.py:facets",
+  "simp_combo.py:filled",
+  "simp_combo.py:find_reference",
+  "simp_combo.py:fold",
+  "simp_combo.py:fold_cuts",
+  "simp_combo.py:franchise_rows",
+  "simp_combo.py:franchise_rows.<locals>.build",
+  "simp_combo.py:fuzzy_keys",
+  "simp_combo.py:fuzzy_keys.<locals>.build",
+  "simp_combo.py:fuzzy_title",
+  "simp_combo.py:intent_pool",
+  "simp_combo.py:intent_pool.<locals>.build",
+  "simp_combo.py:intent_vectors",
+  "simp_combo.py:intent_vectors.<locals>.build",
+  "simp_combo.py:looks_foreign",
+  "simp_combo.py:main_rows",
+  "simp_combo.py:mention_scores",
+  "simp_combo.py:mix_z",
+  "simp_combo.py:name_index",
+  "simp_combo.py:name_index.<locals>.build",
+  "simp_combo.py:name_index.<locals>.build.<locals>.mass",
+  "simp_combo.py:nearest_intent",
+  "simp_combo.py:normalized",
+  "simp_combo.py:peer_index",
+  "simp_combo.py:peer_index.<locals>.build",
+  "simp_combo.py:peer_scores",
+  "simp_combo.py:persons",
+  "simp_combo.py:persons.<locals>.build",
+  "simp_combo.py:rank",
+  "simp_combo.py:rank_query",
+  "simp_combo.py:reference_profile",
+  "simp_combo.py:reference_titles",
+  "simp_combo.py:reference_titles.<locals>.build",
+  "simp_combo.py:residual",
+  "simp_combo.py:resolve_key",
+  "simp_combo.py:resolve_reference",
+  "simp_combo.py:resolves",
+  "simp_combo.py:run",
+  "simp_combo.py:searched_phrases",
+  "simp_combo.py:settle",
+  "simp_combo.py:sims",
+  "simp_combo.py:sparse_top",
+  "simp_combo.py:spell",
+  "simp_combo.py:spell.<locals>.rep",
+  "simp_combo.py:split_negation",
+  "simp_combo.py:studios",
+  "simp_combo.py:studios.<locals>.build",
+  "simp_combo.py:term_scores",
+  "simp_combo.py:term_scores.<locals>.build",
+  "simp_combo.py:title_match",
+  "simp_combo.py:title_weights",
+  "simp_combo.py:top",
+  "simp_combo.py:weighted_sum",
+  "simp_combo.py:word_freq",
+  "simp_combo.py:word_freq.<locals>.build",
+  "simp_combo.py:words",
+  "simp_combo.py:z",
+  "sparse.py:_build",
+  "sparse.py:_field_spans",
+  "sparse.py:_people",
+  "sparse.py:index",
+  "sparse.py:query_terms",
+  "sparse.py:scores",
+  "sparse.py:stem",
+  "sparse.py:terms",
+  "sparse.py:tokens"
+ ],
+ "regexes": 6,
+ "distinct_patterns": 5,
+ "regex_sites": [
+  {
+   "file": "simp_combo.py",
+   "kind": "compiled",
+   "line": 251,
+   "name": "_WORD",
+   "pattern": "'[^\\\\W_]+'"
+  },
+  {
+   "file": "simp_combo.py",
+   "kind": "compiled",
+   "line": 361,
+   "name": "_ERA",
+   "pattern": "\"(?<!\\\\w)(?:(19|20)?(\\\\d)0(?:'?s|\u2019s|er)|(19\\\\d\\\\d|20\\\\d\\\\d))(?!\\\\w)\""
+  },
+  {
+   "file": "simp_combo.py",
+   "kind": "compiled",
+   "line": 570,
+   "name": "_STYLE_SUFFIX",
+   "pattern": "'^(.{4,}?)(?:esque|ian|like|ish)$'"
+  },
+  {
+   "file": "simp_combo.py",
+   "kind": "inline",
+   "line": 591,
+   "name": null,
+   "pattern": "\"['\u2019`]s\\\\b\""
+  },
+  {
+   "file": "simp_combo.py",
+   "kind": "compiled",
+   "line": 1150,
+   "name": "_CUT",
+   "pattern": "\"(?:\\\\s*[:\\\\-\u2013(]\\\\s*|\\\\s+)(?:the\\\\s+)?(?:redux|extended(?:\\\\s+(?:edition|cut|version))?|di"
+  },
+  {
+   "file": "sparse.py",
+   "kind": "compiled",
+   "line": 22,
+   "name": "_WORD",
+   "pattern": "'[^\\\\W_]+'"
+  }
+ ],
+ "config_total": 47,
+ "config_read": 47,
+ "config": [
+  {
+   "key": "a",
+   "value": 0.4,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:982"
+   ]
+  },
+  {
+   "key": "b",
+   "value": 0.48,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:980"
+   ]
+  },
+  {
+   "key": "body",
+   "value": {
+    "title": 0.0,
+    "creators": 0.0,
+    "cast": 0.0
+   },
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1046",
+    "simp_combo.py:1050",
+    "simp_combo.py:1078",
+    "simp_combo.py:938",
+    "simp_combo.py:959"
+   ]
+  },
+  {
+   "key": "bound_codirected",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:469"
+   ]
+  },
+  {
+   "key": "bounds",
+   "value": {
+    "like": [
+     0,
+     1
+    ],
+    "style": [
+     3,
+     6
+    ],
+    "both": [
+     6,
+     10
+    ]
+   },
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1128",
+    "simp_combo.py:176"
+   ]
+  },
+  {
+   "key": "cap",
+   "value": 0.65,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1263"
+   ]
+  },
+  {
+   "key": "career_w",
+   "value": 1.0,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1014",
+    "simp_combo.py:800"
+   ]
+  },
+  {
+   "key": "collocations",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:417"
+   ]
+  },
+  {
+   "key": "company_main",
+   "value": 2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:658",
+    "simp_combo.py:664",
+    "simp_combo.py:668"
+   ]
+  },
+  {
+   "key": "cov_beta",
+   "value": 0.5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:988"
+   ]
+  },
+  {
+   "key": "cov_max_tokens",
+   "value": 5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:950"
+   ]
+  },
+  {
+   "key": "credits_file",
+   "value": "credits-v2.jsonl.gz",
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:626",
+    "simp_combo.py:642",
+    "simp_combo.py:668"
+   ]
+  },
+  {
+   "key": "damp",
+   "value": 0.2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1009"
+   ]
+  },
+  {
+   "key": "emb",
+   "value": "bgeb-notitle",
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1023",
+    "simp_combo.py:904",
+    "simp_combo.py:932",
+    "simp_combo.py:933"
+   ]
+  },
+  {
+   "key": "entity_dense",
+   "value": "reuse",
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:918"
+   ]
+  },
+  {
+   "key": "facet_min_n",
+   "value": 2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:389"
+   ]
+  },
+  {
+   "key": "fallback_creator",
+   "value": "main",
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:635",
+    "simp_combo.py:642",
+    "simp_combo.py:669"
+   ]
+  },
+  {
+   "key": "intent_thread",
+   "value": 1,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:804",
+    "simp_combo.py:805"
+   ]
+  },
+  {
+   "key": "k_main",
+   "value": 500,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:913"
+   ]
+  },
+  {
+   "key": "k_part",
+   "value": 300,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:913"
+   ]
+  },
+  {
+   "key": "kind",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1262"
+   ]
+  },
+  {
+   "key": "lead_billing",
+   "value": 3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:639",
+    "simp_combo.py:642",
+    "simp_combo.py:668"
+   ]
+  },
+  {
+   "key": "lead_boost",
+   "value": 4.0,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1007"
+   ]
+  },
+  {
+   "key": "like_first",
+   "value": 1,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1131"
+   ]
+  },
+  {
+   "key": "minor_credit",
+   "value": 0.5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:622",
+    "simp_combo.py:642",
+    "simp_combo.py:658",
+    "simp_combo.py:664",
+    "simp_combo.py:668"
+   ]
+  },
+  {
+   "key": "name_dominance",
+   "value": 3.0,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:726",
+    "simp_combo.py:739"
+   ]
+  },
+  {
+   "key": "name_max_words",
+   "value": 4,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:772",
+    "simp_combo.py:787"
+   ]
+  },
+  {
+   "key": "name_votes",
+   "value": 150000,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:726",
+    "simp_combo.py:739"
+   ]
+  },
+  {
+   "key": "nonen_mix",
+   "value": 0.5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:932"
+   ]
+  },
+  {
+   "key": "own_boost",
+   "value": 1.0,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1007"
+   ]
+  },
+  {
+   "key": "peer_k",
+   "value": 15,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1117"
+   ]
+  },
+  {
+   "key": "peer_titles",
+   "value": 8,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1114"
+   ]
+  },
+  {
+   "key": "ref_k",
+   "value": 20,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:458"
+   ]
+  },
+  {
+   "key": "ref_votes",
+   "value": 10000,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:462"
+   ]
+  },
+  {
+   "key": "secondary",
+   "value": {
+    "bm25": 0.12,
+    "facet": 0.1,
+    "cov": 0.3,
+    "neg": 0.1,
+    "votes": 0.1,
+    "gw": 0.1
+   },
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:913"
+   ]
+  },
+  {
+   "key": "strict",
+   "value": 0.9,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1260",
+    "simp_combo.py:1275"
+   ]
+  },
+  {
+   "key": "style_suffix",
+   "value": true,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:779"
+   ]
+  },
+  {
+   "key": "team_overlap",
+   "value": 0.5,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:668",
+    "simp_combo.py:715"
+   ]
+  },
+  {
+   "key": "terms_min_df",
+   "value": 2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1057"
+   ]
+  },
+  {
+   "key": "terms_n",
+   "value": 40,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1058"
+   ]
+  },
+  {
+   "key": "w_agree",
+   "value": 0.2,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1005",
+    "simp_combo.py:1006"
+   ]
+  },
+  {
+   "key": "w_emb",
+   "value": 0.6,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1025"
+   ]
+  },
+  {
+   "key": "w_fp",
+   "value": 0.8,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1025"
+   ]
+  },
+  {
+   "key": "w_mention",
+   "value": 0.1,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1027",
+    "simp_combo.py:1028"
+   ]
+  },
+  {
+   "key": "w_peer",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1029",
+    "simp_combo.py:1030"
+   ]
+  },
+  {
+   "key": "w_terms",
+   "value": 0.3,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:1026"
+   ]
+  },
+  {
+   "key": "weak",
+   "value": 0.15,
+   "source": "final",
+   "read": true,
+   "at": [
+    "simp_combo.py:998"
+   ]
+  }
+ ],
+ "numeric_constants": [
+  {
+   "file": "simp_combo.py",
+   "name": "BODY",
+   "leaves": 3
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "TOP",
+   "leaves": 1
+  },
+  {
+   "file": "sparse.py",
+   "name": "K1, B",
+   "leaves": 2
+  },
+  {
+   "file": "sparse.py",
+   "name": "DEFAULT_W",
+   "leaves": 7
+  }
+ ],
+ "numeric_constant_leaves": 13,
+ "wordlists": [
+  {
+   "file": "simp_combo.py",
+   "name": "CLAUSE_END",
+   "size": 1
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "INTENT_EXAMPLES",
+   "size": 42
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "NEG_WORDS",
+   "size": 23
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_EN",
+   "size": 19
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_ERA_WORDS",
+   "size": 22
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_FILLER",
+   "size": 108
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_FOREIGN",
+   "size": 63
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_GENERIC",
+   "size": 28
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_NOT_AFTER_BUT",
+   "size": 1
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_NOT_LIKE",
+   "size": 15
+  },
+  {
+   "file": "simp_combo.py",
+   "name": "_emb_path",
+   "size": 4
+  },
+  {
+   "file": "sparse.py",
+   "name": "FIELDS",
+   "size": 7
+  },
+  {
+   "file": "sparse.py",
+   "name": "STOP",
+   "size": 142
+  }
+ ],
+ "literals": 51,
+ "literal_sites": [
+  {
+   "file": "simp_combo.py",
+   "line": 275,
+   "value": 20
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 283,
+   "value": 3
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 283,
+   "value": 4
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 313,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 372,
+   "value": 10
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 372,
+   "value": 100
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 372,
+   "value": 19
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 372,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 372,
+   "value": 20
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 373,
+   "value": 9
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 419,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 425,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 521,
+   "value": 8
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 523,
+   "value": 3
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 538,
+   "value": 2000
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 542,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 542,
+   "value": 6
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1087,
+   "value": 3
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1089,
+   "value": 8
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1092,
+   "value": 200000
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1141,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1204,
+   "value": 2.0
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1210,
+   "value": 1.05
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1212,
+   "value": 0.9
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1214,
+   "value": 0.65
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1215,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1216,
+   "value": 0.15
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1241,
+   "value": 100
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1242,
+   "value": 100
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1260,
+   "value": 100
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1260,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1278,
+   "value": 1.05
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1280,
+   "value": 1.05
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1289,
+   "value": 10
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1289,
+   "value": 9
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1291,
+   "value": 0.1
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1291,
+   "value": 0.15
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1291,
+   "value": 0.9
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1291,
+   "value": 2
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1291,
+   "value": 3
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 1292,
+   "value": 1000000000000
+  },
+  {
+   "file": "sparse.py",
+   "line": 34,
+   "value": 3
+  },
+  {
+   "file": "sparse.py",
+   "line": 36,
+   "value": 5
+  },
+  {
+   "file": "sparse.py",
+   "line": 36,
+   "value": 6
+  },
+  {
+   "file": "sparse.py",
+   "line": 36,
+   "value": 7
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 4
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 5
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 6
+  },
+  {
+   "file": "sparse.py",
+   "line": 37,
+   "value": 7
+  },
+  {
+   "file": "sparse.py",
+   "line": 53,
+   "value": 2
+  },
+  {
+   "file": "sparse.py",
+   "line": 140,
+   "value": 0.5
+  }
+ ],
+ "default_arg_literals": [
+  {
+   "file": "simp_combo.py",
+   "line": 1124,
+   "func": "bound_own",
+   "arg": "n",
+   "value": 10
+  },
+  {
+   "file": "simp_combo.py",
+   "line": 396,
+   "func": "collocated",
+   "arg": "ratio",
+   "value": 0.3
+  }
+ ],
+ "missed_lines": {
+  "simp_combo.py": [
+   343,
+   370,
+   629,
+   655,
+   806,
+   807,
+   851,
+   853,
+   856,
+   857,
+   859,
+   864,
+   865,
+   866,
+   867,
+   868,
+   869,
+   870,
+   871,
+   1054,
+   1202,
+   1270,
+   1300
+  ]
+ },
+ "proxy_score": 130
+}

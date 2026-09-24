@@ -1,0 +1,14 @@
+simp_combo.FINAL['combo'] over 127 queries (dev, holdout, holdout2, holdout3, holdout4)
+LOC (non-comment, non-blank, no docstrings; data layer excluded): functions entered 981, executed statements 957
+  catalog.py         functions   58  executed   41  module defs  27  (data layer, not counted)
+  context.py         functions    0  executed    4  module defs   0  (data layer, not counted)
+  cuts.py            functions   10  executed   10  module defs   1
+  qemb.py            functions   18  executed   11  module defs   1  (data layer, not counted)
+  simp_combo.py      functions  851  executed  827  module defs 114
+  sparse.py          functions  120  executed  120  module defs  11
+regexes: 5 sites, 4 distinct patterns
+config keys: 42 read of 42
+numeric module constants: 4 names, 13 numeric leaves
+word lists: 13 (475 entries)
+numeric literals in executed statements (candidates): 51; default-argument literals of entered functions: 2
+proxy score (config read + constant leaves + literals + regex sites + word lists): 124

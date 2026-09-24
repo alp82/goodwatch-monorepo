@@ -1,0 +1,908 @@
+[
+ {
+  "query_id": "new-15",
+  "query": "nonlinear storytelling",
+  "intent": "The story is told out of chronological order and the structure is part of the experience.",
+  "items": [
+   {
+    "pid": 1000000015059,
+    "title": "The Loss of Sexual Innocence",
+    "year": 1999,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "An experimental and fragmented journey exploring the loss of innocence through the lens of a filmmaker's life. The film weaves together different stages of sexual development with symbolic imagery and dreamlike sequences. It's a reflective, often melancholic, meditation on identity, memory, and the impact of experience. The non-linear narrative structure challenges the viewer to piece together the emotional landscape of the protagonist. This is an artistic and thought-provoking exploration...",
+    "tags": [
+     "Coming-of-Age",
+     "Sexual Identity",
+     "Non-Linear Narrative",
+     "Psychological Drama",
+     "European Arthouse",
+     "Existential Themes",
+     "Artistic",
+     "Experimental Film",
+     "Melancholy",
+     "Symbolic"
+    ]
+   },
+   {
+    "pid": 1000000047620,
+    "title": "Poison",
+    "year": 1991,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Horror",
+     "Science Fiction"
+    ],
+    "essence_text": "A transgressive, experimental film presented as a trio of interweaved, non-linear tales. The film explores taboo subjects and challenges conventional morality with a bleak outlook. It utilizes elements of psychological horror, grotesque imagery, and absurd humor to create an unsettling and thought-provoking experience. With a focus on social commentary, it questions societal norms and power structures. This is a challenging watch that rewards viewers open to unconventional storytelling.",
+    "tags": [
+     "Experimental Cinema",
+     "Transgressive",
+     "Non-Linear Narrative",
+     "Queer Cinema",
+     "Social Commentary",
+     "Psychological Horror",
+     "Grotesque",
+     "Absurdist Humor",
+     "Bleak"
+    ]
+   },
+   {
+    "pid": 2000000090669,
+    "title": "1899",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Drama"
+    ],
+    "essence_text": "A profoundly enigmatic and atmospheric mystery that strands a diverse group of immigrants on a ship headed for a mind-bending revelation. Much like a puzzle box, the series constantly redefines its reality, layering mysteries with psychological depth and existential dread. It\u2019s a visually striking and intellectually demanding journey that thrives on its complex, non-linear narrative and unsettling tone. This show demands full attention, rewarding viewers who enjoy deciphering intricate,...",
+    "tags": [
+     "Mind-Bending Mystery",
+     "Psychological Thriller",
+     "Period Sci-Fi",
+     "Complex Narrative",
+     "Atmospheric & Eerie",
+     "Enigmatic Puzzle Box",
+     "Existential Themes",
+     "Visually Rich",
+     "Non-Linear Storytelling",
+     "High Concept"
+    ]
+   },
+   {
+    "pid": 2000000119934,
+    "title": "Calls",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Drama",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "An unsettling and highly immersive audio-driven series, where interconnected phone conversations gradually unfurl a mysterious and increasingly bizarre narrative. Its strength lies in its unique storytelling structure and masterful sound design, which compels listeners to piece together a complex puzzle. This psychological thriller is rich with intrigue and ambiguity, creating a deeply thought-provoking experience that leaves much to the imagination. It's a testament to the power of sound in...",
+    "tags": [
+     "Audio Drama",
+     "Supernatural Mystery",
+     "Psychological Thriller",
+     "Non-Linear Storytelling",
+     "Existential Dread",
+     "Interconnected Narratives",
+     "Minimalist Visuals",
+     "Sound Design Driven",
+     "Intriguing & Puzzling",
+     "Ambiguous Ending"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-07",
+  "query": "car chases",
+  "intent": "Car chases are central to the experience: pursuit-driven action, getaway and road films.",
+  "items": [
+   {
+    "pid": 1000000035453,
+    "title": "The Last Chase",
+    "year": 1981,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Science Fiction"
+    ],
+    "essence_text": "This is a high-concept sci-fi chase movie straight out of the early 80s, fueled by anxieties about fuel shortages and authoritarian overreach. The experience is centered on a lone rebel's defiant cross-country drive against a conformist, totalitarian state. It's a film about individualism and freedom, told through the lens of a straightforward action narrative. Viewers should expect fast-paced car action, a clear political allegory, and a distinctly retro-futuristic aesthetic.",
+    "tags": [
+     "Dystopian Sci-Fi",
+     "80s Action",
+     "Car Chase Movie",
+     "Anti-Authoritarian",
+     "Lone Rebel",
+     "High-Concept",
+     "Fascist America",
+     "Post-Oil Society"
+    ]
+   },
+   {
+    "pid": 1000000009615,
+    "title": "The Fast and the Furious: Tokyo Drift",
+    "year": 2006,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Drama",
+     "Thriller"
+    ],
+    "essence_text": "An adrenaline-fueled dive into the neon-lit world of Tokyo's underground drift racing scene, offering a pure spectacle of high-speed action and automotive artistry. The film prioritizes thrilling car chases and stylized visuals over deep narrative, delivering a vibrant escape into a subculture built on skill and daring. It's a fun, fast-paced ride perfect for viewers seeking pure escapism and thrilling vehicular stunts.",
+    "tags": [
+     "High-Octane Racing",
+     "Street Culture",
+     "Adrenaline-Fueled Action",
+     "Stylish Visuals",
+     "Youth Rebellion",
+     "Drifting Spectacle",
+     "Global Subcultures",
+     "High-Speed Thrills",
+     "Fast Cars"
+    ]
+   },
+   {
+    "pid": 1000000021241,
+    "title": "Cannonball",
+    "year": 1976,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Comedy"
+    ],
+    "essence_text": "A fast-paced, action-comedy centered around an illegal cross-country road race in the 1970s. The film delivers a high dose of adrenaline with exciting race sequences and stunts. It has a campy tone and relies on physical comedy and an ensemble cast of eccentric characters. A nostalgic throwback to classic car chase movies, perfect for pure escapism and undemanding entertainment.",
+    "tags": [
+     "Road Race",
+     "1970s",
+     "Action Comedy",
+     "Fast-Paced",
+     "Campy",
+     "Sports Movie",
+     "Ensemble Cast",
+     "Nostalgic"
+    ]
+   },
+   {
+    "pid": 1000000000916,
+    "title": "Bullitt",
+    "year": 1968,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Thriller",
+     "Romance",
+     "Drama"
+    ],
+    "essence_text": "A benchmark crime thriller defined by its relentless tension and a legendary, visceral car chase that set new standards. It immerses viewers in a gritty police procedural through the streets of San Francisco, led by a cool and determined protagonist. The film excels in its sharp direction, taut editing, and atmospheric cinematography, creating a truly absorbing experience. It\u2019s an essential watch for fans of classic action cinema and detective stories.",
+    "tags": [
+     "Classic Thriller",
+     "Iconic Car Chase",
+     "Detective Drama",
+     "San Francisco Setting",
+     "Gritty Action",
+     "Cool Protagonist",
+     "Suspenseful Police Procedural",
+     "Mid-Century Cool",
+     "Masterful Direction"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-19",
+  "query": "cozy",
+  "intent": "Comforting, gentle, low-stakes titles (warm animation, feel-good comedy).",
+  "items": [
+   {
+    "pid": 2000000293148,
+    "title": "Cozy First Love",
+    "year": "2023",
+    "media_type": "show",
+    "genres": [],
+    "essence_text": "",
+    "tags": []
+   },
+   {
+    "pid": 2000000062645,
+    "title": "Warm and Cozy",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Romance",
+     "Drama"
+    ],
+    "essence_text": "This K-drama offers a delightful escape to the picturesque Jeju Island, delivering a charming and heartwarming romantic comedy. It centers on the evolving relationship between two contrasting personalities, finding humor and warmth in their daily interactions and the beauty of their surroundings. The series provides a feel-good experience, perfect for those seeking comfort and lighthearted entertainment. With its blend of charming characters, engaging situations, and beautiful...",
+    "tags": [
+     "K-Drama Romance",
+     "Slice-of-Life Comedy",
+     "Idyllic Island Setting",
+     "Character Transformation",
+     "Heartwarming & Uplifting",
+     "Opposites Attract Trope",
+     "Food & Restaurant Theme",
+     "Lighthearted Drama",
+     "Comfort Watch"
+    ]
+   },
+   {
+    "pid": 1000000198838,
+    "title": "A Cozy Cottage",
+    "year": "1963",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": []
+   },
+   {
+    "pid": 2000000201253,
+    "title": "ITZY COZY HOUSE",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Reality"
+    ],
+    "essence_text": "A reality show featuring the K-Pop group ITZY running their own guesthouse on Jeju Island. The show centers around the members interacting with guests, creating memories, and showcasing their personalities in a relaxed setting. Expect light-hearted entertainment, heartwarming moments, and a glimpse into the lives of the idols beyond their performances. This is a feel-good show designed for fans and those seeking a comforting and engaging viewing experience.",
+    "tags": [
+     "K-Pop Group ITZY",
+     "Reality Show",
+     "Guesthouse Setting",
+     "Idol Interaction",
+     "Jeju Island",
+     "Wholesome Entertainment",
+     "Fan Engagement",
+     "Travel & Lifestyle"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-17",
+  "query": "mindbending",
+  "intent": "Reality-twisting, puzzle-box or surreal films that leave you rethinking what you saw.",
+  "items": [
+   {
+    "pid": 2000000000894,
+    "title": "The Prisoner",
+    "year": 1967,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "A groundbreaking and enigmatic series, 'The Prisoner' is a deeply philosophical and psychological thriller wrapped in an allegorical mystery. It continually challenges perceptions of identity, freedom, and control, set within a deceptively idyllic yet bizarre prison. The show's unique blend of surrealism, political commentary, and intellectual intrigue makes it a highly rewatchable and thought-provoking experience, often leaving viewers with more questions than answers.",
+    "tags": [
+     "Cult Classic",
+     "Psychological Thriller",
+     "Allegorical Sci-Fi",
+     "Existential Mystery",
+     "Anti-Establishment",
+     "Surrealist Drama",
+     "Philosophical Exploration",
+     "Iconic Television",
+     "Paranoid Narrative"
+    ]
+   },
+   {
+    "pid": 1000000185789,
+    "title": "Mulholland Dr.",
+    "year": 1999,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "TV Movie",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A dark and twisting neo-noir mystery set against the backdrop of Hollywood. This psychological thriller unravels a dreamlike narrative with an unreliable narrator, pulling the viewer into a world of intrigue and paranoia. Expect to be captivated by its intense atmosphere, surreal imagery, and complex plot. The film's ambiguity and dream logic demand careful attention, rewarding multiple viewings.",
+    "tags": [
+     "Neo-Noir Mystery",
+     "Psychological Thriller",
+     "Dream Logic",
+     "Unreliable Narrator",
+     "Hollywood Intrigue",
+     "Atmospheric",
+     "Intense",
+     "Surreal",
+     "Complex Plot"
+    ]
+   },
+   {
+    "pid": 1000000431242,
+    "title": "InnS\u00e6i",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Documentary"
+    ],
+    "essence_text": "A calming and visually serene journey of soul-searching, blending science, nature, and creativity. It invites viewers to connect with their inner selves amidst the distractions of the modern world. The film emphasizes mindfulness and introspection through a global exploration of diverse perspectives. Its reflective tone and philosophical inquiry make it a thought-provoking experience. It encourages a deeper understanding of ourselves and our place in the world.",
+    "tags": [
+     "Soul-Searching Journey",
+     "Mindfulness & Introspection",
+     "Nature & Creativity",
+     "Global Exploration",
+     "Science & Spirituality",
+     "Calming & Reflective",
+     "Visually Serene",
+     "Philosophical Inquiry"
+    ]
+   },
+   {
+    "pid": 1000000008066,
+    "title": "Stay",
+    "year": 2005,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "Thriller",
+     "Drama"
+    ],
+    "essence_text": "An intensely psychological thriller that delves deep into the unsettling nature of perception and reality. The narrative is deliberately ambiguous and non-linear, creating a disorienting, dreamlike experience. It thrives on tension and mystery, constantly challenging the viewer to piece together its complex puzzle. This film is a visually and audibly stylized journey into the recesses of the mind, leaving a lasting impression and inviting multiple rewatches to unravel its enigmatic layers.",
+    "tags": [
+     "Psychological Thriller",
+     "Mind-Bending Mystery",
+     "Surrealist Drama",
+     "Ambiguous Narrative",
+     "Non-Linear Storytelling",
+     "Visually Disorienting",
+     "Existential Themes",
+     "Intense Atmosphere",
+     "Dreamlike"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-10",
+  "query": "sunglasses at night",
+  "intent": "Literal clue: sunglasses worn at night are a notable feature (They Live, The Matrix), or cool nocturnal style; generic night imagery is weak.",
+  "items": [
+   {
+    "pid": 1000000418078,
+    "title": "It Comes at Night",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Horror",
+     "Mystery"
+    ],
+    "essence_text": "A masterclass in psychological tension, this film immerses viewers in a suffocating atmosphere of dread and paranoia within a desolate, post-apocalyptic world. It cleverly subverts traditional horror tropes, focusing instead on the breakdown of trust and the fragility of human connection under extreme duress. The slow-burn narrative, combined with chilling sound design and ambiguous threats, creates a profoundly unsettling experience. It's a thought-provoking and bleak exploration of...",
+    "tags": [
+     "Psychological Horror",
+     "Post-Apocalyptic Thriller",
+     "Intense Tension",
+     "Human Paranoia",
+     "Family Dynamics",
+     "Bleak & Unsettling",
+     "Ambiguous Threat",
+     "Slow Burn Dread",
+     "Atmospheric"
+    ]
+   },
+   {
+    "pid": 1000000158752,
+    "title": "Escape from Tomorrow",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Fantasy",
+     "Comedy",
+     "Drama",
+     "Science Fiction",
+     "Thriller"
+    ],
+    "essence_text": "A chilling and surreal independent film, shot clandestinely in a beloved theme park, that delves into the psychological unraveling of a man. Its stark black-and-white cinematography heightens the unsettling atmosphere, creating a disorienting blend of family vacation and nightmarish descent. The film explores themes of consumerism, male gaze, and the erosion of sanity, leaving viewers with a deeply disturbing and thought-provoking experience.",
+    "tags": [
+     "Guerilla Filmmaking",
+     "Psychological Horror",
+     "Black & White",
+     "Surrealist",
+     "Dark Satire",
+     "Unsettling",
+     "Adult Themes",
+     "Theme Park Setting",
+     "Existential Crisis",
+     "Experimental Cinema"
+    ]
+   },
+   {
+    "pid": 1000000032569,
+    "title": "X: The Man with the X-Ray Eyes",
+    "year": 1963,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Thriller",
+     "Horror"
+    ],
+    "essence_text": "A cautionary tale exploring the dangerous pursuit of scientific advancement, where a doctor grants himself X-ray vision with disastrous results. The film delves into themes of ambition, control, and the blurred line between science and morality. The increasing disturbing visuals and psychological unraveling make for a bleak and unsettling experience. It's a thought-provoking exploration of hubris and the limits of human knowledge, framed within a classic science fiction narrative.",
+    "tags": [
+     "Sci-Fi Horror",
+     "X-Ray Vision",
+     "Psychological Thriller",
+     "Vision and Reality",
+     "Classic Film",
+     "Moral Dilemma",
+     "Unintended Consequences",
+     "Loss of Control"
+    ]
+   },
+   {
+    "pid": 1000000430214,
+    "title": "Night Is Short, Walk On Girl",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Romance",
+     "Animation",
+     "Fantasy"
+    ],
+    "essence_text": "A visually stunning and surreal anime about a young woman's whimsical night out and a lovestruck senior's increasingly elaborate attempts to encounter her. The film is characterized by its vibrant animation, fast-paced energy, and eccentric characters. It's a fantastical and humorous exploration of romance, chance encounters, and the magic of the night.",
+    "tags": [
+     "Surreal Nightlife Adventure",
+     "Romantic Longing",
+     "Eccentric Characters",
+     "Vibrant Visuals",
+     "Fast-Paced & Whimsical",
+     "University Life",
+     "Japanese Animation",
+     "Magical Realism",
+     "Unconventional Romance"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-12",
+  "query": "like groundhog day",
+  "intent": "Other time-loop / repeating-day stories, ideally comedic or about personal growth. Groundhog Day itself is a reference hit, not a discovery.",
+  "items": [
+   {
+    "pid": 1000000000137,
+    "title": "Groundhog Day",
+    "year": 1993,
+    "media_type": "movie",
+    "genres": [
+     "Romance",
+     "Fantasy",
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "This high-concept romantic comedy masterfully blends humor with profound philosophical introspection, exploring themes of self-improvement and purpose through a unique time-loop premise. The narrative is ingeniously structured, offering both big laughs and heartfelt moments of transformation. It's a remarkably rewatchable film that feels fresh with each viewing, delivering a truly cathartic and hopeful experience. A perfect comfort watch that resonates deeply while remaining endlessly...",
+    "tags": [
+     "Existential Romantic Comedy",
+     "High Concept",
+     "Philosophical Humor",
+     "Character Redemption",
+     "Timeless Classic",
+     "Wholesome & Witty",
+     "Repetitive Structure",
+     "Heartwarming Journey",
+     "Excellent Performance"
+    ]
+   },
+   {
+    "pid": 1000000016355,
+    "title": "Sonic the Hedgehog: The Movie",
+    "year": 1996,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Animation",
+     "Comedy",
+     "Family",
+     "Science Fiction"
+    ],
+    "essence_text": "This anime adaptation delivers a high-octane, fast-paced adventure true to its video game roots. It plunges viewers into a futuristic world filled with thrilling action sequences and the iconic characters fans know and love. The film offers a solid dose of nostalgic escapism, characterized by its vibrant animation and signature speed. It's a straightforward, fun watch for those seeking a classic animated heroic tale.",
+    "tags": [
+     "Anime Adventure",
+     "Video Game Adaptation",
+     "Fast-Paced Action",
+     "Sci-Fi Setting",
+     "Iconic Characters",
+     "Classic Animation",
+     "Heroic Quest",
+     "Nostalgic Appeal",
+     "Good vs Evil"
+    ]
+   },
+   {
+    "pid": 1000000428948,
+    "title": "Infinity Chamber",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Mystery",
+     "Thriller"
+    ],
+    "essence_text": "A mind-bending psychological thriller set in a technological dystopia where a man is trapped in an automated prison. The film's intrigue stems from its existential mystery and the protagonist's struggle against a seemingly unbeatable system. Expect a slow burn as the narrative unfolds, challenging perceptions of reality and raising philosophical questions about freedom and control. It's a thought-provoking and unsettling experience.",
+    "tags": [
+     "Psychological Thriller",
+     "Automated Prison",
+     "Mind-Bending",
+     "Technological Dystopia",
+     "Existential Mystery",
+     "Intriguing Premise",
+     "Slow Burn",
+     "Philosophical"
+    ]
+   },
+   {
+    "pid": 1000000059700,
+    "title": "12 Days of Christmas Eve",
+    "year": 2004,
+    "media_type": "movie",
+    "genres": [
+     "TV Movie",
+     "Family",
+     "Fantasy",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A heartwarming and traditional Christmas story focused on an executive's journey of self-discovery and redemption. It offers a feel-good narrative centered around the importance of family and the true spirit of the holidays. With its familiar 'Groundhog Day' style premise, it's a comforting and rewatchable tale, perfect for intergenerational viewing during the festive season.",
+    "tags": [
+     "Christmas Classic",
+     "Redemption Arc",
+     "Family-Friendly",
+     "Heartwarming",
+     "Magical Realism",
+     "Holiday Spirit",
+     "Feel-Good",
+     "Traditional Values",
+     "Time Loop",
+     "Comfort Watch"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-23",
+  "query": "slow atmospheric science fiction",
+  "intent": "Contemplative, slow-paced, mood-heavy science fiction; loud action sci-fi is wrong.",
+  "items": [
+   {
+    "pid": 2000000096777,
+    "title": "The Silent Sea",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "A gripping sci-fi thriller set on a desolate lunar base, where a team undertakes a perilous mission to retrieve samples from an abandoned research facility. The series masterfully builds tension and intrigue as they uncover unsettling classified secrets. It's a dark, atmospheric journey into the unknown, exploring themes of survival, scientific ethics, and the hidden truths of humanity's future in space.",
+    "tags": [
+     "Sci-Fi Thriller",
+     "Lunar Mission",
+     "Deep Space Mystery",
+     "Survival Drama",
+     "Conspiracy Unraveling",
+     "Suspenseful",
+     "Atmospheric",
+     "Technological Ethics"
+    ]
+   },
+   {
+    "pid": 2000000086449,
+    "title": "World on a Wire",
+    "year": 1973,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "A groundbreaking science fiction masterpiece that plunges into the unsettling depths of virtual reality and simulated realities. This film is a profound, thought-provoking journey questioning the nature of existence and consciousness. Its intricate plot and highly stylized visuals create a distinctly eerie and melancholic atmosphere. The narrative demands full attention, rewarding viewers with a complex exploration of technology's impact on humanity.",
+    "tags": [
+     "Sci-Fi Masterpiece",
+     "Philosophical Thriller",
+     "Virtual Reality Exploration",
+     "Mind-Bending Narrative",
+     "Pioneering Cyberpunk",
+     "Social Commentary",
+     "Existential Dread",
+     "Visually Striking",
+     "Complex Mystery"
+    ]
+   },
+   {
+    "pid": 1000000223485,
+    "title": "Slow West",
+    "year": 2015,
+    "media_type": "movie",
+    "genres": [
+     "Western",
+     "Drama",
+     "Thriller",
+     "Adventure",
+     "Romance"
+    ],
+    "essence_text": "A visually arresting and atmospheric Western that combines a coming-of-age narrative with elements of a thriller. Its slow pace and focus on character development create a melancholic mood, highlighting the harsh realities of survival in the Old West. Stylish cinematography and a haunting score enhance the feeling of desolation and moral ambiguity. The film lingers on themes of innocence lost and the brutal choices people make when pushed to their limits.",
+    "tags": [
+     "Atmospheric Western",
+     "Melancholy Coming-of-Age",
+     "Visually Striking",
+     "Morality & Survival",
+     "Old West Aesthetic",
+     "Slow-Paced",
+     "Character-Driven",
+     "Bleak Realism",
+     "Stylish Violence"
+    ]
+   },
+   {
+    "pid": 1000000010547,
+    "title": "The Arrival",
+    "year": 1996,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Thriller",
+     "Horror"
+    ],
+    "essence_text": "A gripping slow-burn thriller that masterfully blends science fiction with political intrigue. The film creates a pervasive atmosphere of paranoia as it explores the unsettling possibility of alien infiltration. Expect a complex mystery, solid performances, and a thought-provoking meditation on technology and its potential threat to humanity. The deliberate pacing builds tension and suspense effectively.",
+    "tags": [
+     "Sci-Fi Conspiracy",
+     "Alien Invasion",
+     "Techno-Thriller",
+     "Paranoia",
+     "Political Intrigue",
+     "Technological Threat",
+     "Atmospheric",
+     "Slow Burn"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-01",
+  "query": "tarkovsky",
+  "intent": "Ambiguous: films directed by Andrei Tarkovsky first, then contemplative, poetic, spiritual cinema in his style.",
+  "items": [
+   {
+    "pid": 1000000718714,
+    "title": "Andrei Tarkovsky: The Reminiscence",
+    "year": "1996",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": []
+   },
+   {
+    "pid": 1000000454864,
+    "title": "Tarkovsky",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "",
+    "tags": []
+   },
+   {
+    "pid": 1000000054560,
+    "title": "Directed by Andrei Tarkovsky",
+    "year": "1988",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": []
+   },
+   {
+    "pid": 1000000700094,
+    "title": "Tarkovsky: Time Within Time",
+    "year": "2015",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": []
+   }
+  ]
+ },
+ {
+  "query_id": "lab-02",
+  "query": "feel good cooking show",
+  "intent": "Series centered on cooking or food with a warm, upbeat, low-conflict tone. Home renovation or dramas with incidental food are wrong.",
+  "items": [
+   {
+    "pid": 2000000154916,
+    "title": "The Makanai: Cooking for the Maiko House",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A heartwarming and exquisitely gentle slice-of-life series that invites viewers into the unique world of a maiko house in Kyoto. It lovingly portrays the bonds of friendship and found family, centered around a young woman discovering her passion for cooking. The show is a beautiful, slow-paced immersion into Japanese culture, offering a comforting and wholesome viewing experience. It's perfect for those seeking pure escapism and a tender narrative about dreams and belonging.",
+    "tags": [
+     "Wholesome Slice-of-Life",
+     "Japanese Culture",
+     "Friendship Drama",
+     "Coming-of-Age",
+     "Culinary Themes",
+     "Gentle & Comforting",
+     "Kyoto Setting",
+     "Found Family",
+     "Beautifully Shot"
+    ]
+   },
+   {
+    "pid": 2000000062481,
+    "title": "Beat Bobby Flay",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Reality"
+    ],
+    "essence_text": "This fast-paced culinary competition delivers high-stakes excitement as talented chefs vie to outcook the legendary Bobby Flay. Each episode offers a thrilling showdown, showcasing impressive culinary skills and creative dishes under immense time pressure. It\u2019s an engaging watch for food enthusiasts and anyone who enjoys the thrill of competition, offering both educational insights into cooking and the pure escapism of a well-orchestrated gastronomic battle. Perfect for casual viewing or an...",
+    "tags": [
+     "Culinary Competition",
+     "High-Energy",
+     "Foodie Delight",
+     "Skill Showdown",
+     "Celebrity Chef",
+     "Fast-Paced",
+     "Kitchen Drama",
+     "Family Friendly",
+     "Episodic"
+    ]
+   },
+   {
+    "pid": 2000000004381,
+    "title": "Good Eats",
+    "year": 1999,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Documentary"
+    ],
+    "essence_text": "A groundbreaking series that makes food science and culinary techniques incredibly engaging through a unique blend of education and absurdist humor. Alton Brown's eccentric persona and witty dialogue drive each episode, transforming complex topics into digestible and entertaining segments. The show's distinctive visual style, often incorporating playful animation and creative camera work, enhances the learning experience. It's a rewatchable comfort watch that continuously rewards viewers...",
+    "tags": [
+     "Culinary Education",
+     "Food Science",
+     "Informative & Humorous",
+     "Eccentric Host",
+     "Visually Inventive",
+     "Pop Culture References",
+     "Kitchen Wisdom",
+     "Accessible Learning",
+     "Creative Storytelling",
+     "Wholesome Entertainment"
+    ]
+   },
+   {
+    "pid": 2000000109819,
+    "title": "Barbecue Showdown",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Reality"
+    ],
+    "essence_text": "A high-spirited barbecue competition that showcases the culinary skills of talented pitmasters. The show features a series of challenges where contestants vie for the title of American Barbecue Champion, creating an atmosphere of friendly rivalry and excitement. Expect to see innovative grilling techniques and mouth-watering displays of American cuisine. It's a lighthearted and engaging series, perfect for foodies and those who enjoy watching culinary talent in action. Each episode is filled...",
+    "tags": [
+     "BBQ Competition",
+     "Culinary Skills",
+     "American Cuisine",
+     "Backyard Cooking",
+     "Foodie Culture",
+     "Contestants",
+     "Pitmasters",
+     "Grilling",
+     "Friendly Rivalry"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-25",
+  "query": "something short to watch after work",
+  "intent": "Short, low-commitment viewing (short films, brisk movies, episodic comedy); no exact runtime assumed.",
+  "items": [
+   {
+    "pid": 1000000036593,
+    "title": "Naked Gun 33\u2153: The Final Insult",
+    "year": 1994,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A relentless barrage of visual gags and absurd humor, this film epitomizes over-the-top slapstick comedy and sharp parody. It's a truly rewatchable experience due to its rapid-fire jokes and the sheer commitment to its nonsensical premise. The humor ranges from witty wordplay to uproarious physical comedy, making it a comfort watch for those seeking pure, unadulterated comedic escapism. It's an iconic piece of parody cinema that continues to land its jokes with a uniquely irreverent charm.",
+    "tags": [
+     "Slapstick Comedy",
+     "Absurdist Parody",
+     "Irreverent Humor",
+     "Iconic Physical Comedy",
+     "Highly Rewatchable",
+     "Campy & Over-the-Top",
+     "Pop Culture Satire",
+     "Rapid-Fire Gags",
+     "Nonsensical Plot"
+    ]
+   },
+   {
+    "pid": 1000001211262,
+    "title": "Return",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Horror"
+    ],
+    "essence_text": "This horror short is a masterclass in atmospheric tension, relying almost entirely on powerful sound design and evocative visuals to create a deeply unsettling experience. With no dialogue, it invites viewers to immerse themselves completely in its meticulously crafted aural landscape, where every creak and whisper contributes to a creeping sense of dread. It's a psychological horror piece that builds its scares through subtle shifts in perception and an escalating, palpable tension,...",
+    "tags": [
+     "Short Horror",
+     "Atmospheric Horror",
+     "Psychological Horror",
+     "Sound Design Focused",
+     "Minimalist Storytelling",
+     "Visually Driven",
+     "Suspenseful",
+     "Unsettling",
+     "Tense",
+     "Eerie"
+    ]
+   },
+   {
+    "pid": 1000000481439,
+    "title": "An Hour Behind",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "Romance",
+     "TV Movie",
+     "Drama"
+    ],
+    "essence_text": "This film delivers a charming and lighthearted romantic comedy centered on a delightful mistaken identity premise. It\u2019s a feel-good experience, showcasing a sweet romance that develops through a series of endearing misunderstandings. With its contemporary setting and wholesome tone, the movie is an easy-watching escape. It promises a hopeful journey with likeable characters, perfect for those seeking a comforting and undemanding love story.",
+    "tags": [
+     "Charming Romantic Comedy",
+     "Mistaken Identity Plot",
+     "Lighthearted & Wholesome",
+     "Contemporary Romance",
+     "Feel-Good Movie",
+     "Hopeful & Sweet",
+     "Character-Driven",
+     "Easy-Watching",
+     "Daylight Savings Twist"
+    ]
+   },
+   {
+    "pid": 2000000030773,
+    "title": "The Yogi Bear Show",
+    "year": 1961,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family",
+     "Kids"
+    ],
+    "essence_text": "The Yogi Bear Show delivers timeless, wholesome fun with its iconic characters and classic Hanna-Barbera animation style. Centered around Yogi's endless quest for picnic baskets and Ranger Smith's futile attempts to stop him, it's a series built on delightful slapstick and simple, endearing humor. This show is a pure comfort watch, highly rewatchable for its nostalgic charm and family-friendly gags. It creates a warm, escapist world in Jellystone Park that continues to entertain generations.",
+    "tags": [
+     "Classic Cartoon",
+     "Hanna-Barbera",
+     "Slapstick Comedy",
+     "Animal Characters",
+     "Family Friendly",
+     "Nostalgic",
+     "Wholesome Fun",
+     "Iconic Characters",
+     "Light Entertainment"
+    ]
+   }
+  ]
+ }
+]

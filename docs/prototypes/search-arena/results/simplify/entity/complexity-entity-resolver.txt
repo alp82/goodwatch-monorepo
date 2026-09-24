@@ -1,0 +1,15 @@
+simp_entity.FINAL['entity-resolver'] over 127 queries (dev, holdout, holdout2, holdout3, holdout4)
+LOC (non-comment, non-blank, no docstrings; data layer excluded): functions entered 1367, executed statements 1323
+  blend.py           functions    5  executed    5  module defs   1
+  catalog.py         functions   58  executed   41  module defs  27  (data layer, not counted)
+  context.py         functions    0  executed    4  module defs   0  (data layer, not counted)
+  cuts.py            functions   93  executed   93  module defs   7
+  qemb.py            functions   18  executed   11  module defs   1  (data layer, not counted)
+  simp_entity.py     functions 1149  executed 1105  module defs 158
+  sparse.py          functions  120  executed  120  module defs  11
+regexes: 32 sites, 28 distinct patterns
+config keys: 86 read of 87
+numeric module constants: 5 names, 14 numeric leaves
+word lists: 10 (461 entries)
+numeric literals in executed statements (candidates): 80; default-argument literals of entered functions: 7
+proxy score (config read + constant leaves + literals + regex sites + word lists): 222

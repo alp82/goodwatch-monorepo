@@ -1,0 +1,7 @@
+latency, cached query embeddings (ranking only), reps 5, 133 queries
+| candidate | p50 ms | p95 ms | mean ms | max ms | encodes / query (mean, max) | top 10 differs from saved |
+|---|---|---|---|---|---|---|
+| r6 | 67.0 | 128.8 | 72.3 | 190.0 | – | 0 |
+| combo-safe-v2-wcred | 57.1 | 114.6 | 61.5 | 210.9 | – | 0 |
+| combo-safe-v2-wcred-par | 53.4 | 118.2 | 61.8 | 224.0 | – | – |
+| combo-safe-v2-wcred-me5s | 54.2 | 121.8 | 60.0 | 227.2 | – | – |
