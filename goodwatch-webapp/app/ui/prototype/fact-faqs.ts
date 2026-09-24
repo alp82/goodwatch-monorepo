@@ -4,6 +4,7 @@
 
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { list, type Faq } from "~/ui/prototype/fingerprint-text"
+import { seededRandomFromString } from "~/utils/random"
 
 const regionName = (code: string) => {
 	try {
@@ -103,7 +104,100 @@ function sourceAnswer(media: MovieResult | ShowResult) {
 	return null
 }
 
-export type FaqId = "stream" | "worth" | "rated" | "length" | "source"
+export type FaqId = "stream" | "worth" | "rated" | "length" | "source" | "agree" | "boxoffice" | "tropes" | "language" | "countries" | "aired"
+
+const langName = (code: string) => {
+	try {
+		return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code
+	} catch {
+		return code
+	}
+}
+
+// Critics vs audiences on the same 0-100 scale.
+export function agreement(media: MovieResult | ShowResult) {
+	const d = media.details
+	const avg = (xs: (number | null | undefined)[]) => {
+		const v = xs.filter((x): x is number => typeof x === "number" && x > 0)
+		return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null
+	}
+	const critics = avg([d.rotten_tomatoes_tomato_score_original, d.metacritic_meta_score_original])
+	const audience = avg([
+		d.rotten_tomatoes_audience_score_original,
+		d.metacritic_user_score_original ? d.metacritic_user_score_original * 10 : null,
+		d.imdb_user_score_original ? d.imdb_user_score_original * 10 : null,
+	])
+	return { critics, audience }
+}
+
+function agreeAnswer(media: MovieResult | ShowResult) {
+	const { critics, audience } = agreement(media)
+	if (critics == null || audience == null) return null
+	const gap = critics - audience
+	const T = media.details.title
+	if (Math.abs(gap) <= 7) return `Yes. Critics average ${critics} and audiences ${audience} out of 100, so both groups see ${T} much the same way.`
+	return gap > 0
+		? `Not quite. Critics rate ${T} higher (${critics}) than audiences (${audience}). It may be more rewarding than it is crowd-pleasing.`
+		: `Not quite. Audiences rate ${T} higher (${audience}) than critics (${critics}). It's more of a crowd-pleaser than a critics' pick.`
+}
+
+export const money = (n: number) => (n >= 1e9 ? `$${(n / 1e9).toFixed(1)} billion` : n >= 1e6 ? `$${Math.round(n / 1e6)} million` : `$${n.toLocaleString("en-US")}`)
+
+function boxOfficeAnswer(media: MovieResult | ShowResult) {
+	const { budget, revenue } = media.details
+	if (media.mediaType !== "movie" || !budget || !revenue || budget < 10000 || revenue < 10000) return null
+	const x = revenue / budget
+	const verdict = x >= 5 ? "Yes, a big one" : x >= 2 ? "Yes" : x >= 1 ? "Roughly broke even" : "No"
+	return `${verdict}. It cost about ${money(budget)} to make and earned ${money(revenue)} worldwide, ${x >= 1 ? `${x.toFixed(1)} times its budget` : `${Math.round(x * 100)}% of its budget`}.`
+}
+
+// Some titles list their signature tropes first, then the rest A to Z. Keep
+// that leading run and fill up with a stable sample from the alphabetical
+// rest, so the chips don't all start with "A". Seeded, so SSR and client match.
+export function featuredTropes(media: MovieResult | ShowResult, n = 12) {
+	const tropes = media.details.tropes ?? []
+	let start = tropes.length - 1
+	while (start > 0 && tropes[start - 1].localeCompare(tropes[start]) <= 0) start--
+	// A real signature run is short; a long "lead" means the A-to-Z check broke early.
+	if (start > 10) start = 0
+	const lead = tropes.slice(0, start)
+	const rest = tropes
+		.slice(start)
+		.map((tr) => ({ tr, k: seededRandomFromString(`${media.details.tmdb_id}:${tr}`) }))
+		.sort((a, b) => a.k - b.k)
+		.map((x) => x.tr)
+	return [...lead, ...rest].slice(0, n)
+}
+
+function tropesAnswer(media: MovieResult | ShowResult) {
+	const tropes = media.details.tropes ?? []
+	if (tropes.length < 3) return null
+	return `TV Tropes lists ${tropes.length} storytelling tropes for ${media.details.title}, including ${featuredTropes(media, 3).join(", ")}.`
+}
+
+function languageAnswer(media: MovieResult | ShowResult) {
+	const d = media.details
+	if (!d.original_language_code) return null
+	const others = (d.spoken_language_codes ?? []).filter((c) => c !== d.original_language_code).map(langName)
+	const made = (d.production_country_codes ?? []).map(regionName)
+	return `It was made in ${langName(d.original_language_code)}${others.length ? `, with some ${others.join(", ")}` : ""}.${made.length ? ` Produced in ${made.join(", ")}.` : ""}`
+}
+
+function countriesAnswer(media: MovieResult | ShowResult) {
+	const n = media.details.streaming_country_codes?.length ?? 0
+	if (n < 2) return null
+	return `GoodWatch finds legal streaming, rental, or purchase options for ${media.details.title} in ${n} countries. Pick any of them in Where to Watch to see the local services.`
+}
+
+function airedAnswer(media: MovieResult | ShowResult) {
+	if (media.mediaType !== "show") return null
+	const d = media.details as unknown as { first_air_date?: string | number; last_air_date?: string | number; in_production?: boolean }
+	const y = (v?: string | number) => (v ? new Date(v).getUTCFullYear() : null)
+	const from = y(d.first_air_date)
+	const to = y(d.last_air_date)
+	if (!from) return null
+	return d.in_production ? `It started in ${from} and is still in production.` : `It ran from ${from} to ${to ?? from} and has ended.`
+}
 
 export function factFaqs(media: MovieResult | ShowResult, country: string): (Faq & { id: FaqId })[] {
 	const T = media.details.title
@@ -113,6 +207,12 @@ export function factFaqs(media: MovieResult | ShowResult, country: string): (Faq
 		["rated", `What is ${T} rated?`, ageAnswer(media, country)],
 		["length", media.mediaType === "movie" ? `How long is ${T}?` : `How many seasons does ${T} have?`, lengthAnswer(media)],
 		["source", `Is ${T} based on a true story?`, sourceAnswer(media)],
+		["agree", `Do critics and audiences agree on ${T}?`, agreeAnswer(media)],
+		["boxoffice", `Was ${T} a box office hit?`, boxOfficeAnswer(media)],
+		["aired", `When did ${T} air?`, airedAnswer(media)],
+		["language", `What language is ${T} in?`, languageAnswer(media)],
+		["countries", `In how many countries can I watch ${T}?`, countriesAnswer(media)],
+		["tropes", `What tropes does ${T} use?`, tropesAnswer(media)],
 	]
 	return rows.filter((r): r is [FaqId, string, string] => !!r[2]).map(([id, q, a]) => ({ id, q, a }))
 }

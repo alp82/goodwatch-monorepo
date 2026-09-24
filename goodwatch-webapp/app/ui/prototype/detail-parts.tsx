@@ -186,7 +186,7 @@ function useClickOutside(ref: React.RefObject<HTMLElement | null>, onOutside: ()
 
 // --- Actions ---
 
-type ActionStyle = "pill" | "icon" | "block" | "glass"
+type ActionStyle = "pill" | "icon" | "block" | "glass" | "compact"
 
 const ACTIONS = {
 	want: { Icon: BookmarkIcon, short: "Want", on: "Want to See", off: "Want to See", active: "bg-amber-500 text-black", ring: "text-amber-300" },
@@ -202,12 +202,15 @@ function ActionInner({ kind, active, look: variant, ...rest }: { kind: keyof typ
 		pill: `h-9 px-3.5 rounded-full text-sm ${active ? a.active : "bg-white/10 text-gray-100 hover:bg-white/20"}`,
 		icon: `h-9 w-9 rounded-full ${active ? a.active : "bg-white/10 text-gray-100 hover:bg-white/20"}`,
 		block: `h-11 w-full px-2 sm:px-4 rounded-lg text-xs sm:text-sm ${active ? a.active : "bg-white/10 text-gray-100 hover:bg-white/20"}`,
-			glass: `w-full flex-col gap-0.5 py-2 rounded-md text-[11px] leading-none ${active ? a.active : "bg-black/60 backdrop-blur-md text-white hover:bg-black/80"}`,
+			compact: `h-14 flex-1 min-w-0 flex-col !gap-1 rounded-lg px-1 text-xs ${active ? a.active : "bg-white/8 text-gray-100 hover:bg-white/15"}`,
+		glass: `w-full flex-col gap-0.5 py-2 rounded-md text-[11px] leading-none ${active ? a.active : "bg-black/60 backdrop-blur-md text-white hover:bg-black/80"}`,
 	}[variant]
 	return (
 		<button type="button" aria-pressed={active} aria-label={variant === "icon" ? label : undefined} title={label} className={`${base} ${cls}`} {...rest}>
 			<a.Icon className={`h-4 w-4 ${active ? "" : a.ring}`} />
-			{variant === "block" ? (
+			{variant === "compact" ? (
+				<span className="truncate">{active ? a.on : a.short}</span>
+			) : variant === "block" ? (
 				<>
 					<span className="sm:hidden">{active ? a.on : a.short}</span>
 					<span className="hidden sm:inline truncate">{label}</span>
@@ -225,7 +228,7 @@ export function Actions({ media, style, withSkip = true, className = "" }: { med
 	const seen = useIsWatched(mediaType, details.tmdb_id)
 	const skipped = useIsSkipped(mediaType, details.tmdb_id)
 	return (
-		<div className={`flex items-center gap-2 ${style === "block" || style === "glass" ? "[&>*]:flex-1 [&>*]:min-w-0" : ""} ${className}`}>
+		<div className={`flex items-center gap-2 ${style === "block" || style === "glass" || style === "compact" ? "[&>*]:flex-1 [&>*]:min-w-0" : ""} ${className}`}>
 			<ToWatchAction media={media}>
 				<ActionInner kind="want" active={!!want} look={style} />
 			</ToWatchAction>
@@ -431,7 +434,7 @@ export const posterUrl = (media: Media) => `https://www.themoviedb.org/t/p/w300_
 // --- Round 4: fixed-height pieces for the info panel ---
 
 // A clearly clickable Rate button. Shows your score once you rated.
-export function RateButton({ media, look = "solid", className = "" }: { media: Media; look?: "solid" | "outline"; className?: string }) {
+export function RateButton({ media, look = "solid", className = "" }: { media: Media; look?: "solid" | "outline" | "icon"; className?: string }) {
 	const [open, setOpen] = useState(false)
 	const ref = useRef<HTMLDivElement>(null)
 	const score = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
@@ -440,6 +443,8 @@ export function RateButton({ media, look = "solid", className = "" }: { media: M
 		? `bg-vibe-${score * 10} text-white`
 		: look === "solid"
 			? "bg-yellow-400 text-black hover:bg-yellow-300"
+			: look === "icon"
+				? "border border-yellow-400/70 text-yellow-300 hover:bg-yellow-400/10"
 			: "border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-400/10"
 	return (
 		<div ref={ref} className={`relative ${className}`}>
@@ -448,10 +453,13 @@ export function RateButton({ media, look = "solid", className = "" }: { media: M
 				onClick={() => setOpen(!open)}
 				aria-expanded={open}
 				aria-haspopup="dialog"
-				className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-bold shadow-lg shadow-black/30 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${cls}`}
+				aria-label={look === "icon" ? (score ? `Your score: ${score}` : "Rate this") : undefined}
+				className={`inline-flex items-center justify-center gap-2 rounded-lg font-bold cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+					look === "icon" ? "h-14 w-full flex-col !gap-1 px-1 text-xs" : "h-11 w-full px-4 text-base shadow-lg shadow-black/30"
+				} ${cls}`}
 			>
 				<StarIcon className="h-5 w-5" />
-				{score ? `Your score: ${score}` : "Rate this"}
+				{look === "icon" ? (score ? String(score) : "Rate") : score ? `Your score: ${score}` : "Rate this"}
 			</button>
 			{open && (
 				<div
@@ -736,7 +744,7 @@ export function StreamingTiles({
 							Your services
 						</span>
 					) : (
-						<RemixLink to="/settings/streaming" className="hidden sm:inline text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white">
+						<RemixLink to="/settings/streaming" className="hidden md:inline text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white">
 							Set your services
 						</RemixLink>
 					)}

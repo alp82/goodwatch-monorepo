@@ -9,9 +9,21 @@ import React, { useEffect, useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { FP_VARIANTS, type FpVariant } from "~/ui/prototype/FingerprintBlocks"
 import { HERO_VARIANTS, type HeroVariant } from "~/ui/prototype/HeroVariants"
-import { BookOpenIcon, ClockIcon, ShieldCheckIcon, StarIcon, TvIcon } from "@heroicons/react/24/outline"
+import {
+	BanknotesIcon,
+	BookOpenIcon,
+	CalendarDaysIcon,
+	ClockIcon,
+	GlobeAltIcon,
+	LanguageIcon,
+	ScaleIcon,
+	ShieldCheckIcon,
+	SparklesIcon,
+	StarIcon,
+	TvIcon,
+} from "@heroicons/react/24/outline"
 import { ScoreRing, useStreamingLinks } from "~/ui/prototype/detail-parts"
-import { type FaqId, ageInfo, factFaqs } from "~/ui/prototype/fact-faqs"
+import { type FaqId, ageInfo, agreement, factFaqs, featuredTropes, money } from "~/ui/prototype/fact-faqs"
 import * as F from "~/ui/prototype/fingerprint-text"
 
 type Media = MovieResult | ShowResult
@@ -69,9 +81,12 @@ export function FingerprintFaqSection({ media, country }: { media: Media; countr
 			<h2 className="text-2xl font-bold">Questions about {media.details.title}</h2>
 			<p className="mt-1 text-gray-400">Quick answers from GoodWatch data.</p>
 			<div className="mt-6 grid gap-4 md:grid-cols-2">
-				{faqs.map((f) => (
-					<FaqCard key={f.id} media={media} country={country} faq={f} />
-				))}
+				{faqs.map((f, i) => {
+					// An odd card out at the end spans both columns so the grid has no hole.
+					const narrow = faqs.filter((x) => !WIDE.includes(x.id))
+					const lastOdd = narrow.length % 2 === 1 && f.id === narrow[narrow.length - 1].id
+					return <FaqCard key={f.id} media={media} country={country} faq={f} wide={lastOdd} />
+				})}
 			</div>
 			<script
 				type="application/ld+json"
@@ -88,12 +103,20 @@ const FAQ_ICON: Record<FaqId, React.ComponentType<{ className?: string }>> = {
 	rated: ShieldCheckIcon,
 	length: ClockIcon,
 	source: BookOpenIcon,
+	agree: ScaleIcon,
+	boxoffice: BanknotesIcon,
+	aired: CalendarDaysIcon,
+	language: LanguageIcon,
+	countries: GlobeAltIcon,
+	tropes: SparklesIcon,
 }
 
-function FaqCard({ media, country, faq }: { media: Media; country: string; faq: { id: FaqId; q: string; a: string } }) {
+const WIDE: FaqId[] = ["stream", "tropes"]
+
+function FaqCard({ media, country, faq, wide = false }: { media: Media; country: string; faq: { id: FaqId; q: string; a: string }; wide?: boolean }) {
 	const Icon = FAQ_ICON[faq.id]
 	return (
-		<article className={`flex gap-4 rounded-2xl border border-white/8 bg-white/4 p-5 sm:p-6 ${faq.id === "stream" ? "md:col-span-2" : ""}`}>
+		<article className={`flex gap-4 rounded-2xl border border-white/8 bg-white/4 p-5 sm:p-6 ${WIDE.includes(faq.id) || wide ? "md:col-span-2" : ""}`}>
 			<span className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-300/15 text-amber-200">
 				<Icon className="h-5 w-5" />
 			</span>
@@ -151,7 +174,107 @@ function FaqVisual({ media, country, id }: { media: Media; country: string; id: 
 					: null
 		return figure ? <p className="mt-3 text-3xl font-bold tracking-tight">{figure}</p> : null
 	}
+	if (id === "agree") {
+		const { critics, audience } = agreement(media)
+		const bar = (label: string, v: number | null, color: string) => (
+			<div className="grid grid-cols-[5.5rem_1fr_2rem] items-center gap-3 text-sm">
+				<span className="text-gray-300">{label}</span>
+				<span className="h-2.5 rounded-full bg-white/8">
+					<span className="block h-2.5 rounded-full" style={{ width: `${v ?? 0}%`, background: color }} />
+				</span>
+				<span className="text-right font-semibold tabular-nums">{v ?? "–"}</span>
+			</div>
+		)
+		return (
+			<div className="mt-4 space-y-2">
+				{bar("Critics", critics, "#a78bfa")}
+				{bar("Audiences", audience, "#fbbf24")}
+			</div>
+		)
+	}
+	if (id === "boxoffice") {
+		const { budget, revenue } = media.details
+		const max = Math.max(budget ?? 0, revenue ?? 0)
+		const bar = (label: string, v: number, color: string) => (
+			<div className="grid grid-cols-[5.5rem_1fr] items-center gap-3 text-sm">
+				<span className="text-gray-300">{label}</span>
+				<span className="flex items-center gap-2">
+					<span className="h-2.5 rounded-full" style={{ width: `${Math.max(2, (v / max) * 100)}%`, background: color }} />
+					<span className="whitespace-nowrap font-semibold">{money(v)}</span>
+				</span>
+			</div>
+		)
+		return budget && revenue ? (
+			<div className="mt-4 space-y-2">
+				{bar("Budget", budget, "#94a3b8")}
+				{bar("Box office", revenue, "#34d399")}
+			</div>
+		) : null
+	}
+	if (id === "aired" && media.mediaType === "show") {
+		const seasons = (media as unknown as { seasons?: { season_number: number; episode_count: number }[] }).seasons ?? []
+		const real = seasons.filter((x) => x.season_number > 0)
+		const most = Math.max(1, ...real.map((x) => x.episode_count))
+		return real.length ? (
+			<div className="mt-4 flex h-16 items-end gap-1.5" role="img" aria-label={real.map((x) => `Season ${x.season_number}: ${x.episode_count} episodes`).join(", ")}>
+				{real.map((x) => (
+					<span key={x.season_number} className="flex flex-1 flex-col items-center gap-1">
+						<span className="w-full rounded-sm bg-sky-400/70" style={{ height: `${(x.episode_count / most) * 44}px` }} />
+						<span className="text-[10px] text-gray-400">S{x.season_number}</span>
+					</span>
+				))}
+			</div>
+		) : null
+	}
+	if (id === "language") {
+		const d = media.details
+		const langs = [d.original_language_code, ...(d.spoken_language_codes ?? []).filter((c) => c !== d.original_language_code)]
+		return (
+			<div className="mt-4 flex flex-wrap gap-1.5">
+				{langs.map((c, i) => (
+					<span key={c} className={`rounded-full px-2.5 py-1 text-sm ${i === 0 ? "bg-white text-black font-semibold" : "bg-white/10 text-gray-200"}`}>
+						{langLabel(c)}
+					</span>
+				))}
+			</div>
+		)
+	}
+	if (id === "countries") {
+		const codes = media.details.streaming_country_codes ?? []
+		return (
+			<div className="mt-3 flex items-center gap-4">
+				<span className="text-3xl font-bold tabular-nums">{codes.length}</span>
+				<span className="flex flex-wrap gap-1">
+					{codes.slice(0, 14).map((c) => (
+						<img key={c} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${c}.svg`} alt={c} title={c} className="h-3.5 rounded-[2px]" />
+					))}
+					{codes.length > 14 && <span className="text-xs text-gray-400">+{codes.length - 14}</span>}
+				</span>
+			</div>
+		)
+	}
+	if (id === "tropes") {
+		const tropes = media.details.tropes ?? []
+		return (
+			<div className="mt-4 flex flex-wrap gap-1.5">
+				{featuredTropes(media).map((tr) => (
+					<span key={tr} className="rounded-full border border-white/15 px-2.5 py-1 text-sm text-gray-200">
+						{tr}
+					</span>
+				))}
+				{tropes.length > 12 && <span className="px-1 py-1 text-sm text-gray-400">and {tropes.length - 12} more</span>}
+			</div>
+		)
+	}
 	return null
+}
+
+const langLabel = (code: string) => {
+	try {
+		return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code
+	} catch {
+		return code
+	}
 }
 
 // Floating switcher, not part of the design. ← → cycles the hero,

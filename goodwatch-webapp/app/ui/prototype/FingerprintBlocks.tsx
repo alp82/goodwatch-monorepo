@@ -352,9 +352,9 @@ const tint = (p: Pillar, pct = 9) => ({
 function Detail1({ t, p, onBack, onSelect, backRef }: ViewProps) {
 	return (
 		<div className="flex min-h-full flex-col rounded-2xl border border-white/10 p-5 sm:p-8" style={tint(p)}>
-			<div className="flex flex-wrap items-center gap-3">
+			<div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
 				<BackButton onBack={onBack} backRef={backRef} />
-				<div role="tablist" aria-label="Fingerprint areas" className="flex flex-wrap gap-1.5">
+				<div role="tablist" aria-label="Fingerprint areas" className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
 					{PILLARS.map((q) => (
 						<button
 							key={q}
@@ -362,7 +362,7 @@ function Detail1({ t, p, onBack, onSelect, backRef }: ViewProps) {
 							role="tab"
 							aria-selected={q === p}
 							onClick={() => onSelect(q)}
-							className={`h-9 rounded-full px-3.5 text-sm cursor-pointer ${q === p ? "font-semibold text-black" : "bg-white/5 text-gray-300 hover:bg-white/10"}`}
+							className={`h-9 shrink-0 whitespace-nowrap rounded-full px-3.5 text-sm cursor-pointer ${q === p ? "font-semibold text-black" : "bg-white/5 text-gray-300 hover:bg-white/10"}`}
 							style={q === p ? { background: HEX[q] } : undefined}
 						>
 							{PILLAR_CONFIG[q].emoji} {q}
@@ -388,17 +388,23 @@ function Switcher({ t, Detail }: { t: F.TitleInput; Detail: (props: ViewProps) =
 	const backRef = useRef<HTMLButtonElement>(null)
 	const boxRef = useRef<HTMLDivElement>(null)
 	// Move focus into the detail on open and back to the row on close.
+	// On phones the detail replaces the rows in the page flow, so bring its top into view.
 	useEffect(() => {
+		const phone = window.matchMedia("(max-width: 767px)").matches
 		if (open) backRef.current?.focus({ preventScroll: true })
 		else if (last) boxRef.current?.querySelector<HTMLButtonElement>(`[data-pillar-open="${last}"]`)?.focus({ preventScroll: true })
+		if (phone && (open || last)) {
+			const el = open ? boxRef.current : boxRef.current?.querySelector<HTMLElement>(`[data-pillar-open="${last}"]`)?.closest<HTMLElement>(".group")
+			el?.scrollIntoView({ block: "start" })
+		}
 	}, [open, last])
 	const select = (p: Pillar) => {
 		setOpen(p)
 		setLast(p)
 	}
 	return (
-		<div ref={boxRef} className="relative mt-6">
-			<div className={`transition-opacity duration-200 motion-reduce:transition-none ${open ? "invisible opacity-0" : "opacity-100"}`}>
+		<div ref={boxRef} className="relative mt-6 scroll-mt-40">
+			<div className={`transition-opacity duration-200 motion-reduce:transition-none ${open ? "max-md:hidden invisible opacity-0" : "opacity-100"}`}>
 				<Overview t={t} onSelect={select} />
 			</div>
 			{PILLARS.map((p) => (
@@ -406,8 +412,8 @@ function Switcher({ t, Detail }: { t: F.TitleInput; Detail: (props: ViewProps) =
 					key={p}
 					role="region"
 					aria-label={`${p} in detail`}
-					className={`absolute inset-0 overflow-y-auto overflow-x-hidden transition-[opacity,translate] duration-200 motion-reduce:transition-none ${
-						open === p ? "visible opacity-100 translate-y-0" : "invisible opacity-0 translate-y-1"
+					className={`scroll-mt-40 md:absolute md:inset-0 md:overflow-y-auto overflow-x-hidden transition-[opacity,translate] duration-200 motion-reduce:transition-none ${
+						open === p ? "visible opacity-100 translate-y-0" : "max-md:hidden invisible opacity-0 translate-y-1"
 					}`}
 				>
 					<Detail t={t} p={p} onBack={() => setOpen(null)} onSelect={select} backRef={open === p ? backRef : { current: null }} />
