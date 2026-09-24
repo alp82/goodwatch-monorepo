@@ -21,6 +21,7 @@ import {
 import { Link, useLoaderData, useSearchParams } from "@remix-run/react"
 import type React from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
+import type { DiscoverResult } from "~/server/discover.server"
 import {
 	type GridFilters,
 	type PersonCredit,
@@ -29,6 +30,7 @@ import {
 	groupTitles,
 	parseGridFilters,
 } from "~/server/person.server"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { personPath, titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
@@ -191,45 +193,26 @@ function subtitle(c: Credit) {
 	return c.characters[0] ?? ""
 }
 
+/** The shared poster card from discover and explore, plus the person's role in the title. */
 function TitleCard({ c }: { c: Credit }) {
+	// MovieTvCard reads the GoodWatch score from the discover field name. Scores from a
+	// handful of votes are hidden, as everywhere else on this page.
+	const details = {
+		...c,
+		goodwatch_overall_score_normalized_percent: c.votes >= 200 ? c.score : null,
+	} as unknown as DiscoverResult
+	const role = subtitle(c)
 	return (
-		<Link to={titleHref(c)} prefetch="intent" className="group block">
-			<div className="relative aspect-[2/3] overflow-hidden rounded-md bg-gray-800">
-				{c.poster_path ? (
-					<img
-						src={img(c.poster_path)}
-						alt={`Poster for ${c.title}`}
-						loading="lazy"
-						className="h-full w-full object-cover transition group-hover:scale-105"
-					/>
-				) : (
-					<div className="flex h-full items-center justify-center p-2 text-center text-sm text-gray-400">
-						{c.title}
-					</div>
-				)}
-				{c.score != null && c.votes >= 200 && (
-					<span className="absolute top-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-xs font-bold text-amber-300">
-						{Math.round(c.score)}
-					</span>
-				)}
-				{c.media_type === "show" && (
-					<span className="absolute top-1 left-1 rounded bg-sky-700/90 px-1.5 py-0.5 text-[10px] font-bold uppercase">
-						TV
-					</span>
-				)}
-			</div>
-			<div className="mt-1.5 px-0.5">
-				<div
-					className="truncate text-sm font-semibold group-hover:text-amber-300"
-					title={c.title}
-				>
-					{c.title}
-				</div>
-				<div className="truncate text-xs text-gray-400" title={subtitle(c)}>
-					{c.release_year ?? "TBA"} {subtitle(c) && `· ${subtitle(c)}`}
-				</div>
-			</div>
-		</Link>
+		<div>
+			<MovieTvCard details={details} mediaType={c.media_type} />
+			{(role || c.media_type === "show") && (
+				<p className="truncate px-2 text-xs text-gray-400" title={role}>
+					{c.media_type === "show" && "TV show"}
+					{c.media_type === "show" && role && " · "}
+					{role}
+				</p>
+			)}
+		</div>
 	)
 }
 
@@ -985,7 +968,7 @@ function Titles({ data }: { data: Data }) {
 					<details
 						key={g.key}
 						id={`group-${g.key}`}
-						className="group scroll-mt-20"
+						className="group/section scroll-mt-20"
 						open={
 							g.key !== "upcoming" ||
 							data.filters.decade === "upcoming" ||
@@ -1001,7 +984,7 @@ function Titles({ data }: { data: Data }) {
 							}
 						>
 							<ChevronDownIcon
-								className="h-6 w-6 shrink-0 text-gray-400 transition-transform -rotate-90 group-open:rotate-0"
+								className="h-6 w-6 shrink-0 text-gray-400 transition-transform -rotate-90 group-open/section:rotate-0"
 								aria-hidden
 							/>
 							{data.filters.group === "score" ? (
