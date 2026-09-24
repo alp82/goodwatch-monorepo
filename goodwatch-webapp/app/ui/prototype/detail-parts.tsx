@@ -917,3 +917,36 @@ export function PosterTrailer({ media, className = "", compact = false }: { medi
 		</>
 	)
 }
+
+// Backdrop banner as one big trailer button, like the desktop poster.
+export function BackdropTrailer({ media, className = "" }: { media: Media; className?: string }) {
+	const [open, setOpen] = useState(false)
+	const hasTrailer = !!media.videos?.trailers?.[0]?.key
+	const img = <img src={backdropUrl(media)} alt="" className="absolute inset-0 h-full w-full object-cover object-[center_25%]" />
+	const fade = <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-stone-950" />
+	if (!hasTrailer) return <div className={`relative ${className}`}>{img}{fade}</div>
+	return (
+		<>
+			<button
+				type="button"
+				onClick={() => setOpen(true)}
+				aria-label={`Play trailer for ${media.details.title}`}
+				className={`group relative block w-full cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-amber-300 ${className}`}
+			>
+				{img}
+				{fade}
+				<span aria-hidden="true" className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/30 motion-reduce:transition-none" />
+				<span
+					aria-hidden="true"
+					className="absolute left-1/2 top-1/2 inline-flex h-10 -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-white px-4 text-sm font-bold text-black shadow-[0_0_0_1px_rgba(0,0,0,.4),0_8px_24px_rgba(0,0,0,.6)] transition-transform group-hover:scale-105 group-active:scale-95 motion-reduce:transition-none"
+				>
+					<span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white">
+						<PlayIcon className="h-3.5 w-3.5 translate-x-px" />
+					</span>
+					Play trailer
+				</span>
+			</button>
+			<TrailerDialog media={media} open={open} onClose={() => setOpen(false)} />
+		</>
+	)
+}

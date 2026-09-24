@@ -15,7 +15,7 @@ import {
 	RatingChips,
 	ScoreRing,
 	StreamingTiles,
-	TrailerSolid,
+	BackdropTrailer,
 	backdropUrl,
 	useRatings,
 	type Media,
@@ -130,13 +130,7 @@ function Mobile1({ media, country, navigateToSection }: Props) {
 function Mobile2({ media, country, navigateToSection }: Props) {
 	return (
 		<div className={SURFACE}>
-			<div className="relative h-44">
-				<img src={backdropUrl(media)} alt="" className="absolute inset-0 h-full w-full object-cover object-[center_25%]" />
-				<div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-stone-950" />
-				<div className="absolute inset-0 flex items-center justify-center">
-					<TrailerSolid media={media} />
-				</div>
-			</div>
+			<BackdropTrailer media={media} className="h-44" />
 			<div className="relative flex flex-col gap-4 p-4 pt-1">
 				<div className="flex items-center justify-between gap-3">
 					<ScoreRing media={media} size={52} />

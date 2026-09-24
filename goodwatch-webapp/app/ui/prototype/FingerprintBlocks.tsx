@@ -394,12 +394,15 @@ function Switcher({ t, Detail }: { t: F.TitleInput; Detail: (props: ViewProps) =
 		if (open) backRef.current?.focus({ preventScroll: true })
 		else if (last) boxRef.current?.querySelector<HTMLButtonElement>(`[data-pillar-open="${last}"]`)?.focus({ preventScroll: true })
 		if (phone && (open || last)) {
-			const el = open ? boxRef.current : boxRef.current?.querySelector<HTMLElement>(`[data-pillar-open="${last}"]`)?.closest<HTMLElement>(".group")
-			// Land just below the sticky header, whatever its current height.
-			if (el) {
-				const header = document.querySelector("[data-details-header]")?.getBoundingClientRect().bottom ?? 0
-				window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - header - 12 })
-			}
+			// Keep the fingerprint heading in view: land its top just below the
+			// sticky header, whatever the header's current height.
+			const el = boxRef.current?.closest<HTMLElement>("#fingerprint")
+			// Wait a frame so the swapped-in view has its final height.
+			if (el)
+				requestAnimationFrame(() => {
+					const header = document.querySelector("[data-details-header]")?.getBoundingClientRect().bottom ?? 0
+					window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - header - 12, behavior: "instant" })
+				})
 		}
 	}, [open, last])
 	const select = (p: Pillar) => {
@@ -407,7 +410,7 @@ function Switcher({ t, Detail }: { t: F.TitleInput; Detail: (props: ViewProps) =
 		setLast(p)
 	}
 	return (
-		<div ref={boxRef} className="relative mt-6 scroll-mt-40">
+		<div ref={boxRef} className="relative mt-6 scroll-mt-40 [overflow-anchor:none]">
 			<div className={`transition-opacity duration-200 motion-reduce:transition-none ${open ? "max-md:hidden invisible opacity-0" : "opacity-100"}`}>
 				<Overview t={t} onSelect={select} />
 			</div>
