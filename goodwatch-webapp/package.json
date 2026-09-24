@@ -7,7 +7,7 @@
 	"scripts": {
 		"dev": "remix vite:dev",
 		"start": "remix-serve ./build/server/index.js",
-		"build": "remix vite:build",
+		"build": "patch-package && remix vite:build",
 		"typecheck": "tsc",
 		"postinstall": "patch-package"
 	},
