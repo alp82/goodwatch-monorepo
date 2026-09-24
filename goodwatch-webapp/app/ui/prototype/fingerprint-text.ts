@@ -421,3 +421,68 @@ export function pillarSentence(t: TitleInput, pillar: string) {
 	}
 	return ""
 }
+
+// --- Structured pillar text for formatted layouts: a short bold verdict,
+// an optional note, and the traits that drive the pillar ---
+
+export interface PillarBrief {
+	verdict: string
+	note: string
+	drivers: { key: Key; score: number }[]
+}
+
+export function pillarBrief(t: TitleInput, pillar: string): PillarBrief {
+	const s = t.fingerprint.scores
+	const drivers = pillarDrivers(t, pillar)
+	const feel = (keys: Key[], n: number) =>
+		keys
+			.filter((k) => s[k] >= 7 && FEEL[k])
+			.sort((a, b) => s[b] - s[a])
+			.slice(0, n)
+			.map((k) => (s[k] >= 9 ? FEEL[k]!.strong : FEEL[k]!.adj))
+	const pick = (keys: Key[], lex: Partial<Record<Key, string>>, min: number, n: number) =>
+		keys.filter((k) => s[k] >= min && lex[k]).sort((a, b) => s[b] - s[a]).slice(0, n).map((k) => lex[k]!)
+	switch (pillar) {
+		case "Energy": {
+			const a = feel(PILLAR_KEYS.Energy, 2)
+			const note = s.slow_burn >= 7 ? "Builds slowly, so the intensity comes in waves." : s.fast_pace >= 7 ? "Fast from start to finish." : ""
+			return { verdict: a.length ? cap(list(a)) : "Calm and low-key", note, drivers }
+		}
+		case "Heart": {
+			const a = feel(PILLAR_KEYS.Heart, 2)
+			const th = pick(["coming_of_age", "family_dynamics"], THEME, 7, 2)
+			return { verdict: a.length ? cap(list(a)) : "Emotionally reserved", note: th.length ? `Much of it is about ${list(th)}.` : "", drivers }
+		}
+		case "Humor": {
+			const h = humorPhrase(s)
+			const verdict = h.level === "none" ? "Serious throughout" : cap(h.text)
+			return { verdict, note: h.level === "some" || h.level === "light" ? "Not a comedy at heart." : "", drivers }
+		}
+		case "World": {
+			const th = top(s, THEME, 7, 3).map((k) => THEME[k]!)
+			const notes = [s.world_immersion >= 8 ? "Lived-in and easy to get lost in." : "", s.rewatchability >= 8 ? "Holds up on a rewatch." : ""]
+			return { verdict: th.length ? cap(list(th)) : "Kept in the background", note: notes.filter(Boolean).join(" "), drivers }
+		}
+		case "Craft": {
+			const c = pick(["direction", "acting", "narrative_structure", "dialogue_quality", "character_depth"], CRAFT, 8, 3)
+			return {
+				verdict: c.length ? `Standout ${list(c)}` : "Solid, not remarkable",
+				note: s.complexity >= 8 ? "Layered plot that rewards full attention." : "",
+				drivers,
+			}
+		}
+		case "Style": {
+			const c = pick(["cinematography", "editing", "music_composition", "visual_stylization", "sound_centrality"], CRAFT, 8, 3)
+			return {
+				verdict: c.length ? `Standout ${list(c)}` : "Functional look and sound",
+				note: s.visual_stylization >= 8 ? "A distinctive visual signature." : "",
+				drivers,
+			}
+		}
+	}
+	return { verdict: "", note: "", drivers }
+}
+
+export function contextLabels(t: TitleInput) {
+	return t.fingerprint.viewingContext.map((x) => CONTEXT_LABEL[x.id]).filter(Boolean)
+}

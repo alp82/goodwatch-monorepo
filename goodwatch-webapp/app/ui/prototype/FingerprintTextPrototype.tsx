@@ -1,7 +1,7 @@
 // PROTOTYPE - throwaway. Round 3: two independent switches on the detail page.
 // `?hero=0..5` arranges poster, trailer, actions, ratings, and streaming.
 // `?fp=0..5` picks the full-width fingerprint block. `0` is the current page.
-// Round 1 (A-D) is in 8c92bcf4, round 2 (E-H) in f768c72a.
+// Round 1 (A-D) is in 8c92bcf4, round 2 (E-H) in f768c72a, round 3 in b1c85b75.
 
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid"
 import { useLocation, useNavigate } from "@remix-run/react"

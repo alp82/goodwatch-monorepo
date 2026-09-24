@@ -11,7 +11,7 @@ import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { FingerprintBlock } from "~/ui/prototype/FingerprintBlocks"
 import { PrototypeSwitcher, usePrototypeVariants } from "~/ui/prototype/FingerprintTextPrototype"
-import { HeaderDock, HeroSection } from "~/ui/prototype/HeroVariants"
+import { HeroSection } from "~/ui/prototype/HeroVariants"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -53,7 +53,6 @@ export default function Details({ media, country }: DetailsProps) {
 				country={country}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
-				extra={hero === "3" ? <HeaderDock media={media} /> : null}
 			/>
 
 			<DetailsSideNav

@@ -1,10 +1,11 @@
-// PROTOTYPE - throwaway. Five full-width fingerprint blocks (`?fp=1..5`).
-// All show the same text so they're equal for SEO; only the form differs.
+// PROTOTYPE - throwaway. Round 4: five takes on the equalizer block (round 3's
+// fp 2) with round 3's trait bars. Each pillar gets a bold verdict, a quiet
+// note, and the traits behind it. Audience text becomes chips.
+// Round 3's five blocks are in b1c85b75.
 
 import { Link } from "@remix-run/react"
 import React from "react"
 import fingerprintIcon from "~/img/fingerprint.webp"
-import type { CoreScores } from "~/server/utils/fingerprint"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
 import type { Media } from "~/ui/prototype/detail-parts"
@@ -12,15 +13,16 @@ import * as F from "~/ui/prototype/fingerprint-text"
 
 export const FP_VARIANTS = {
 	"0": "Current card",
-	"1": "Radar",
-	"2": "Equalizer columns",
-	"3": "Ranked traits",
-	"4": "Editorial",
-	"5": "Pillar heat grid",
+	"1": "Columns with trait bars",
+	"2": "One row per pillar",
+	"3": "How it feels / how it's made",
+	"4": "Ranked by strength",
+	"5": "Bar chart with trait chips",
 } as const
 export type FpVariant = keyof typeof FP_VARIANTS
 
-const PILLARS = Object.keys(PILLAR_CONFIG) as (keyof typeof PILLAR_CONFIG)[]
+type Pillar = keyof typeof PILLAR_CONFIG
+const PILLARS = Object.keys(PILLAR_CONFIG) as Pillar[]
 const HEX: Record<string, string> = {
 	Energy: "#f59e0b",
 	Heart: "#f43f5e",
@@ -29,308 +31,345 @@ const HEX: Record<string, string> = {
 	Craft: "#8b5cf6",
 	Style: "#0ea5e9",
 }
-const pillarOfKey = (k: string) => PILLARS.find((p) => F.PILLAR_KEYS[p].includes(k as keyof CoreScores))
+const TIER_WORD = ["None", "Low", "Medium", "High", "Very high"]
 
-function Heading({ t }: { t: F.TitleInput }) {
+// --- Shared pieces ---
+
+function Head({ t, children }: { t: F.TitleInput; children?: React.ReactNode }) {
 	return (
-		<h2 className="flex items-center gap-2 text-lg font-semibold text-gray-300">
-			<img src={fingerprintIcon} className="h-6 w-auto p-0.5 bg-amber-950/50 rounded-sm" alt="" />
-			{t.title} fingerprint
-		</h2>
+		<div className="flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<h2 className="flex items-center gap-2 text-lg font-semibold text-gray-300">
+					<img src={fingerprintIcon} className="h-6 w-auto p-0.5 bg-amber-950/50 rounded-sm" alt="" />
+					{t.title} fingerprint
+				</h2>
+				<p className="mt-2 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
+			</div>
+			{children}
+		</div>
 	)
 }
 
-function Meter({ tier, color, vertical = false, size = "md" }: { tier: number; color: string; vertical?: boolean; size?: "sm" | "md" | "lg" }) {
-	const seg = { sm: "h-1.5 w-4", md: "h-2 w-7", lg: "h-2.5 w-10" }[size]
+function PillarName({ p, className = "" }: { p: Pillar; className?: string }) {
+	return (
+		<h3 className={`flex items-center gap-2 font-semibold ${className}`}>
+			<span aria-hidden="true">{PILLAR_CONFIG[p].emoji}</span>
+			{p}
+		</h3>
+	)
+}
+
+function Meter({ tier, p, vertical = false }: { tier: number; p: Pillar; vertical?: boolean }) {
 	return (
 		<span
 			role="img"
-			aria-label={`${tier} of 4`}
+			aria-label={`${p}: ${TIER_WORD[tier].toLowerCase()}, ${tier} of 4`}
 			className={vertical ? "flex h-full w-full flex-col-reverse gap-1" : "inline-flex gap-0.5"}
 		>
 			{[0, 1, 2, 3].map((i) => (
 				<span
 					key={i}
-					className={vertical ? "w-full flex-1 rounded-sm" : `${seg} rounded-sm`}
-					style={{ background: i < tier ? color : "rgba(255,255,255,.1)", opacity: i < tier ? 0.55 + i * 0.15 : 1 }}
+					className={vertical ? "w-full flex-1 rounded-sm" : "h-2 w-5 rounded-sm"}
+					style={{ background: i < tier ? HEX[p] : "rgba(255,255,255,.1)", opacity: i < tier ? 0.55 + i * 0.15 : 1 }}
 				/>
 			))}
 		</span>
 	)
 }
 
-function MoodLinks({ t, style = "chips" }: { t: F.TitleInput; style?: "chips" | "text" }) {
-	const moods = F.matchingMoods(t)
-	if (!moods.length) return null
-	const kind = t.mediaType === "movie" ? "movies" : "shows"
-	const clean = (l: string) => l.replace(/\s*\p{Extended_Pictographic}.*$/u, "")
-	if (style === "text")
-		return (
-			<p className="text-gray-300">
-				More like this:{" "}
-				{moods.map((m, i) => (
-					<React.Fragment key={m.url}>
-						{i > 0 && ", "}
-						<Link to={m.url} className="underline decoration-white/30 underline-offset-4 hover:decoration-white">
-							{clean(m.label).toLowerCase()} {kind}
-						</Link>
-					</React.Fragment>
-				))}
-			</p>
-		)
+function TraitBars({ t, p, compact = false }: { t: F.TitleInput; p: Pillar; compact?: boolean }) {
 	return (
-		<div className="flex flex-wrap gap-2">
-			{moods.map((m) => (
-				<Link key={m.url} to={m.url} className="rounded-full border border-white/15 px-3 py-1 text-sm hover:border-white/50 hover:bg-white/5">
-					{clean(m.label)} {kind}
-				</Link>
+		<ul className={`space-y-1.5 ${compact ? "" : "mt-1"}`}>
+			{F.pillarBrief(t, p).drivers.map((d) => (
+				<li key={d.key} className="grid grid-cols-[1fr_auto] items-center gap-x-2 text-xs">
+					<span className="truncate text-gray-300">{getFingerprintMeta(d.key).label}</span>
+					<span className="tabular-nums text-gray-400">{d.score}</span>
+					<span className="col-span-2 h-1.5 rounded-full bg-white/8">
+						<span className="block h-1.5 rounded-full" style={{ width: `${d.score * 10}%`, background: HEX[p] }} />
+					</span>
+				</li>
+			))}
+		</ul>
+	)
+}
+
+function TraitChips({ t, p }: { t: F.TitleInput; p: Pillar }) {
+	return (
+		<div className="flex flex-wrap gap-1.5">
+			{F.pillarBrief(t, p).drivers.map((d) => (
+				<span
+					key={d.key}
+					className="inline-flex max-w-full items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs whitespace-nowrap"
+					style={{ borderColor: `color-mix(in srgb, ${HEX[p]} 60%, transparent)` }}
+				>
+					<span className="truncate">{getFingerprintMeta(d.key).label}</span>
+					<span className="font-semibold tabular-nums" style={{ color: HEX[p] }}>
+						{d.score}
+					</span>
+				</span>
 			))}
 		</div>
 	)
 }
 
-// `withCraft` is off where the Craft pillar already says what stands out.
-function GuideBlocks({ t, className = "", withCraft = true }: { t: F.TitleInput; className?: string; withCraft?: boolean }) {
-	const skip = F.skipIf(t)
-	const craft = withCraft ? F.craftSentence(t) : ""
+function Verdict({ t, p, size = "base" }: { t: F.TitleInput; p: Pillar; size?: "base" | "lg" | "2xl" }) {
+	const b = F.pillarBrief(t, p)
+	const cls = { base: "text-base", lg: "text-lg", "2xl": "text-2xl tracking-tight" }[size]
 	return (
-		<div className={className}>
-			{craft && (
-				<section>
-					<h3 className="font-semibold">What stands out</h3>
-					<p className="mt-1 text-gray-300 leading-relaxed">{craft}</p>
-				</section>
-			)}
+		<div>
+			<p className={`font-semibold leading-snug text-white ${cls}`}>{b.verdict}</p>
+			{b.note && <p className="mt-1 text-sm text-gray-400 leading-relaxed">{b.note}</p>}
+		</div>
+	)
+}
+
+// Who it's for and Skip it if as chips; mood pages as links.
+function Audience({ t, layout = "row" }: { t: F.TitleInput; layout?: "row" | "stack" }) {
+	const who = t.fingerprint.socialSuitability.map((x) => x.name)
+	const ctx = t.fingerprint.viewingContext.map((x) => x.name)
+	const skip = F.skipIf(t)
+	const moods = F.matchingMoods(t)
+	const kind = t.mediaType === "movie" ? "movies" : "shows"
+	const clean = (l: string) => l.replace(/\s*\p{Extended_Pictographic}.*$/u, "")
+	return (
+		<div className={layout === "row" ? "grid gap-6 md:grid-cols-3" : "flex flex-col gap-6"}>
 			<section>
-				<h3 className="font-semibold">Who it's for</h3>
-				<p className="mt-1 text-gray-300 leading-relaxed">{F.bestForSentence(t)}</p>
+				<h3 className="text-sm font-semibold text-gray-300">Who it's for</h3>
+				<div className="mt-2 flex flex-wrap gap-1.5">
+					{who.map((w) => (
+						<span key={w} className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-sm text-emerald-100">
+							{w}
+						</span>
+					))}
+					{ctx.map((c) => (
+						<span key={c} className="rounded-full bg-sky-400/15 px-2.5 py-1 text-sm text-sky-100">
+							{c}
+						</span>
+					))}
+				</div>
 			</section>
 			{skip.length > 0 && (
 				<section>
-					<h3 className="font-semibold">Skip it if</h3>
-					<ul className="mt-1 space-y-0.5 text-gray-300">
+					<h3 className="text-sm font-semibold text-gray-300">Skip it if</h3>
+					<div className="mt-2 flex flex-wrap gap-1.5">
 						{skip.map((s) => (
-							<li key={s} className="flex gap-2">
-								<span aria-hidden="true" className="text-gray-500">
-									–
-								</span>
-								{s}
-							</li>
+							<span key={s} className="rounded-full bg-rose-400/15 px-2.5 py-1 text-sm text-rose-100">
+								{s.charAt(0).toUpperCase() + s.slice(1)}
+							</span>
 						))}
-					</ul>
+					</div>
+				</section>
+			)}
+			{moods.length > 0 && (
+				<section>
+					<h3 className="text-sm font-semibold text-gray-300">Find more like it</h3>
+					<div className="mt-2 flex flex-wrap gap-1.5">
+						{moods.map((m) => (
+							<Link
+								key={m.url}
+								to={m.url}
+								className="rounded-full border border-white/20 px-2.5 py-1 text-sm hover:border-white/60 hover:bg-white/5"
+							>
+								{clean(m.label)} {kind}
+							</Link>
+						))}
+					</div>
 				</section>
 			)}
 		</div>
 	)
 }
 
-// 1: hexagon radar of the six pillars, text beside it.
-function Radar({ t }: { t: F.TitleInput }) {
-	const size = 320
-	const c = size / 2
-	const R = 112
-	const pt = (i: number, r: number) => {
-		const a = (Math.PI / 3) * i - Math.PI / 2
-		return [c + r * Math.cos(a), c + r * Math.sin(a)]
-	}
-	const poly = (r: (i: number) => number) => PILLARS.map((_, i) => pt(i, r(i)).join(",")).join(" ")
-	const tiers = t.fingerprint.pillars
-	return (
-		<svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-80" role="img" aria-label={PILLARS.map((p) => `${p} ${tiers[p]} of 4`).join(", ")}>
-			{[1, 2, 3, 4].map((ring) => (
-				<polygon key={ring} points={poly(() => (R * ring) / 4)} fill="none" stroke="rgba(255,255,255,.1)" />
-			))}
-			{PILLARS.map((_, i) => {
-				const [x, y] = pt(i, R)
-				return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke="rgba(255,255,255,.08)" />
-			})}
-			<polygon points={poly((i) => (R * Math.max(tiers[PILLARS[i]], 0.3)) / 4)} fill="rgba(252,211,77,.18)" stroke="#fcd34d" strokeWidth={2} strokeLinejoin="round" />
-			{PILLARS.map((p, i) => {
-				const [x, y] = pt(i, (R * Math.max(tiers[p], 0.3)) / 4)
-				return <circle key={p} cx={x} cy={y} r={5} fill={HEX[p]} stroke="#1c1917" strokeWidth={2} />
-			})}
-			{PILLARS.map((p, i) => {
-				const [x, y] = pt(i, R + 26)
-				return (
-					<text key={p} x={x} y={y} textAnchor="middle" dominantBaseline="middle" className="fill-gray-200 text-[13px] font-medium">
-						{PILLAR_CONFIG[p].emoji} {p}
-					</text>
-				)
-			})}
-		</svg>
-	)
-}
+// --- 1: six columns, meter + verdict + trait bars ---
 
 function Fp1({ t }: { t: F.TitleInput }) {
+	const tiers = t.fingerprint.pillars
 	return (
-		<div className="grid gap-8 lg:grid-cols-[20rem_1fr] lg:items-center">
-			<div className="flex justify-center">
-				<Radar t={t} />
+		<div>
+			<Head t={t} />
+			<div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-6">
+				{PILLARS.map((p) => (
+					<div key={p} className="flex flex-col gap-3">
+						<div className="flex h-20 items-end gap-3">
+							<div className="h-full w-8 shrink-0">
+								<Meter tier={tiers[p]} p={p} vertical />
+							</div>
+							<div>
+								<PillarName p={p} />
+								<p className="text-xs text-gray-400">{TIER_WORD[tiers[p]]}</p>
+							</div>
+						</div>
+						<Verdict t={t} p={p} />
+						<TraitBars t={t} p={p} />
+					</div>
+				))}
 			</div>
-			<div>
-				<Heading t={t} />
-				<p className="mt-3 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
-				<p className="mt-3 max-w-3xl text-lg text-gray-200 leading-relaxed">{F.feelParagraph(t)}</p>
-				<GuideBlocks t={t} className="mt-6 grid gap-6 md:grid-cols-3" />
-				<div className="mt-6">
-					<MoodLinks t={t} />
-				</div>
+			<div className="mt-10 border-t border-white/10 pt-6">
+				<Audience t={t} />
 			</div>
 		</div>
 	)
 }
 
-// 2: six vertical meters, each explained by its own sentence.
+// --- 2: one row per pillar, scannable like a spec sheet ---
+
 function Fp2({ t }: { t: F.TitleInput }) {
 	const tiers = t.fingerprint.pillars
 	return (
 		<div>
-			<Heading t={t} />
-			<p className="mt-2 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
-			<div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-6">
+			<Head t={t} />
+			<div className="mt-6 divide-y divide-white/10 border-y border-white/10">
 				{PILLARS.map((p) => (
-					<div key={p} className="flex flex-col">
-						<div className="flex h-28 items-end gap-3">
-							<div className="h-full w-10">
-								<Meter tier={tiers[p]} color={HEX[p]} vertical />
-							</div>
-							<div className="pb-0.5">
-								<div className="text-2xl" aria-hidden="true">
-									{PILLAR_CONFIG[p].emoji}
-								</div>
-								<h3 className="font-semibold">{p}</h3>
+					<div key={p} className="grid gap-3 py-4 md:grid-cols-[11rem_1fr_16rem] md:items-center md:gap-8">
+						<div className="flex items-center justify-between md:block">
+							<PillarName p={p} />
+							<div className="md:mt-2">
+								<Meter tier={tiers[p]} p={p} />
 							</div>
 						</div>
-						<p className="mt-3 text-sm text-gray-300 leading-relaxed">{F.pillarSentence(t, p)}</p>
+						<Verdict t={t} p={p} size="lg" />
+						<TraitBars t={t} p={p} compact />
 					</div>
 				))}
 			</div>
-			<GuideBlocks t={t} withCraft={false} className="mt-10 grid gap-6 border-t border-white/10 pt-6 md:grid-cols-2" />
-			<div className="mt-6">
-				<MoodLinks t={t} />
+			<div className="mt-8">
+				<Audience t={t} />
 			</div>
 		</div>
 	)
 }
 
-// 3: the actual trait scores, ranked, next to the prose.
+// --- 3: feelings get the big type, craft gets the compact treatment ---
+
 function Fp3({ t }: { t: F.TitleInput }) {
-	const s = t.fingerprint.scores
-	const traits = (Object.keys(s) as (keyof CoreScores)[])
-		.sort((a, b) => s[b] - s[a])
-		.slice(0, 12)
+	const tiers = t.fingerprint.pillars
+	const feel: Pillar[] = ["Energy", "Heart", "Humor"]
+	const made: Pillar[] = ["World", "Craft", "Style"]
 	return (
-		<div className="grid gap-10 lg:grid-cols-[1fr_1.1fr]">
-			<div>
-				<Heading t={t} />
-				<p className="mt-3 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
-				<div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-					{PILLARS.map((p) => (
-						<span key={p} className="inline-flex items-center gap-2 text-sm">
-							<span className="text-gray-300">{p}</span>
-							<Meter tier={t.fingerprint.pillars[p]} color={HEX[p]} size="sm" />
-						</span>
-					))}
-				</div>
-				<p className="mt-6 text-lg text-gray-200 leading-relaxed">{F.feelParagraph(t)}</p>
-				<GuideBlocks t={t} className="mt-6 grid gap-6 sm:grid-cols-2" />
-				<div className="mt-6">
-					<MoodLinks t={t} />
-				</div>
+		<div>
+			<Head t={t} />
+			<h3 className="mt-8 text-sm font-semibold text-gray-400">How it feels</h3>
+			<div className="mt-3 grid gap-6 md:grid-cols-3">
+				{feel.map((p) => (
+					<div key={p} className="flex gap-4">
+						<div className="h-32 w-3 shrink-0">
+							<Meter tier={tiers[p]} p={p} vertical />
+						</div>
+						<div className="flex flex-col gap-2">
+							<PillarName p={p} className="text-sm text-gray-300" />
+							<Verdict t={t} p={p} size="2xl" />
+							<TraitChips t={t} p={p} />
+						</div>
+					</div>
+				))}
 			</div>
-			<div>
-				<h3 className="text-sm font-semibold text-gray-400">Strongest traits, scored 0 to 10</h3>
-				<ol className="mt-3 space-y-2.5">
-					{traits.map((k) => {
-						const meta = getFingerprintMeta(k)
-						const p = pillarOfKey(k)
-						return (
-							<li key={k} className="grid grid-cols-[11rem_1fr_2rem] items-center gap-3">
-								<span className="truncate text-sm">
-									<span aria-hidden="true">{meta.emoji}</span> {meta.label}
-								</span>
-								<span className="h-2.5 rounded-full bg-white/8">
-									<span
-										className="block h-2.5 rounded-full"
-										style={{ width: `${s[k] * 10}%`, background: p ? HEX[p] : "#a8a29e" }}
-									/>
-								</span>
-								<span className="text-right text-sm tabular-nums text-gray-300">{s[k]}</span>
-							</li>
-						)
-					})}
-				</ol>
-				<p className="mt-3 text-xs text-gray-500">Bar color shows the pillar a trait belongs to. Gray traits are themes.</p>
+			<h3 className="mt-10 text-sm font-semibold text-gray-400">How it's made</h3>
+			<div className="mt-3 grid gap-6 rounded-xl bg-white/4 p-5 md:grid-cols-3">
+				{made.map((p) => (
+					<div key={p} className="flex flex-col gap-2">
+						<div className="flex items-center justify-between">
+							<PillarName p={p} className="text-sm" />
+							<Meter tier={tiers[p]} p={p} />
+						</div>
+						<Verdict t={t} p={p} />
+						<TraitBars t={t} p={p} />
+					</div>
+				))}
+			</div>
+			<div className="mt-8">
+				<Audience t={t} />
 			</div>
 		</div>
 	)
 }
 
-// 4: type-led. The headline is the design; everything else is quiet.
+// --- 4: strongest pillars get the most room, weak ones collapse to a line ---
+
 function Fp4({ t }: { t: F.TitleInput }) {
 	const tiers = t.fingerprint.pillars
+	const ranked = [...PILLARS].sort((a, b) => tiers[b] - tiers[a])
+	const strong = ranked.filter((p) => tiers[p] >= 3)
+	const mid = ranked.filter((p) => tiers[p] === 2)
+	const weak = ranked.filter((p) => tiers[p] <= 1)
 	return (
-		<div className="max-w-5xl">
-			<Heading t={t} />
-			<p className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05] text-amber-100">{F.pillarLine(t)}.</p>
-			<ul className="mt-6 flex flex-wrap gap-x-6 gap-y-3">
-				{PILLARS.map((p) => (
-					<li key={p} className="flex items-center gap-2 text-sm text-gray-300">
-						{p}
-						<Meter tier={tiers[p]} color={HEX[p]} size="sm" />
-					</li>
+		<div>
+			<Head t={t} />
+			<div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+				{strong.map((p) => (
+					<div
+						key={p}
+						className="flex flex-col gap-3 rounded-xl p-5 lg:col-span-2"
+						style={{ background: `color-mix(in srgb, ${HEX[p]} ${6 + tiers[p] * 4}%, transparent)` }}
+					>
+						<div className="flex items-center justify-between">
+							<PillarName p={p} className="text-lg" />
+							<Meter tier={tiers[p]} p={p} />
+						</div>
+						<Verdict t={t} p={p} size="2xl" />
+						<TraitBars t={t} p={p} />
+					</div>
 				))}
-			</ul>
-			<p className="mt-8 max-w-3xl text-xl text-gray-100 leading-relaxed">{F.feelParagraph(t)}</p>
-			<GuideBlocks
-				t={t}
-				className="mt-10 grid gap-8 md:grid-cols-3 md:gap-0 md:divide-x md:divide-white/10 [&>section]:md:px-6 [&>section:first-child]:md:pl-0"
-			/>
+				{mid.map((p) => (
+					<div key={p} className={`flex flex-col gap-2 rounded-xl bg-white/5 p-4 ${mid.length <= 2 ? "lg:col-span-2" : ""}`}>
+						<div className="flex items-center justify-between">
+							<PillarName p={p} />
+							<Meter tier={tiers[p]} p={p} />
+						</div>
+						<Verdict t={t} p={p} />
+						<TraitChips t={t} p={p} />
+					</div>
+				))}
+			</div>
+			{weak.length > 0 && (
+				<p className="mt-4 text-sm text-gray-400">
+					<span className="font-semibold text-gray-300">Barely there: </span>
+					{weak.map((p, i) => (
+						<React.Fragment key={p}>
+							{i > 0 && ", "}
+							{p} ({F.pillarBrief(t, p).verdict.toLowerCase()})
+						</React.Fragment>
+					))}
+				</p>
+			)}
 			<div className="mt-8">
-				<MoodLinks t={t} style="text" />
+				<Audience t={t} />
 			</div>
 		</div>
 	)
 }
 
-// 5: tiles tinted by pillar strength, each with what drives it.
+// --- 5: one big bar chart, verdicts under the bars, audience beside it ---
+
 function Fp5({ t }: { t: F.TitleInput }) {
 	const tiers = t.fingerprint.pillars
 	return (
-		<div>
-			<div className="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<Heading t={t} />
-					<p className="mt-2 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>
-				</div>
-				<MoodLinks t={t} />
-			</div>
-			<div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-				{PILLARS.map((p) => {
-					const top = F.pillarDrivers(t, p)[0]
-					const meta = getFingerprintMeta(top.key)
-					return (
-						<div
-							key={p}
-							className="rounded-xl p-4"
-							style={{ background: `color-mix(in srgb, ${HEX[p]} ${5 + tiers[p] * 6}%, transparent)` }}
-						>
-							<div className="flex items-center justify-between">
-								<h3 className="flex items-center gap-2 font-semibold">
-									<span aria-hidden="true">{PILLAR_CONFIG[p].emoji}</span>
-									{p}
-								</h3>
-								<Meter tier={tiers[p]} color={HEX[p]} size="sm" />
+		<div className="grid gap-10 xl:grid-cols-[1fr_20rem]">
+			<div>
+				<Head t={t} />
+				<div className="mt-8 grid grid-cols-3 gap-x-4 gap-y-8 lg:grid-cols-6">
+					{PILLARS.map((p) => (
+						<div key={p} className="flex flex-col gap-3">
+							<div className="flex h-36 items-end rounded-lg bg-white/4 p-1.5">
+								<div
+									className="w-full rounded-md"
+									style={{
+										height: `${Math.max(tiers[p], 0.15) * 25}%`,
+										background: `linear-gradient(to top, color-mix(in srgb, ${HEX[p]} 55%, transparent), ${HEX[p]})`,
+									}}
+									role="img"
+									aria-label={`${p}: ${tiers[p]} of 4`}
+								/>
 							</div>
-							<p className="mt-2 text-sm text-gray-100 leading-relaxed">{F.pillarSentence(t, p)}</p>
-							<p className="mt-2 text-xs text-gray-300">
-								Strongest: {meta.label} {top.score}/10
-							</p>
+							<PillarName p={p} className="text-sm" />
+							<Verdict t={t} p={p} />
+							<TraitChips t={t} p={p} />
 						</div>
-					)
-				})}
+					))}
+				</div>
 			</div>
-			<GuideBlocks t={t} withCraft={false} className="mt-8 grid gap-6 md:grid-cols-2" />
+			<aside className="xl:border-l xl:border-white/10 xl:pl-8">
+				<Audience t={t} layout="stack" />
+			</aside>
 		</div>
 	)
 }

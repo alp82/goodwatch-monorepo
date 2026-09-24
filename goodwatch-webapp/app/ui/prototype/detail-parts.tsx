@@ -407,3 +407,143 @@ export function TrailerButton({ media, style = "pill" }: { media: Media; style?:
 export const backdropUrl = (media: Media, size = "w1920_and_h800_multi_faces") =>
 	`https://www.themoviedb.org/t/p/${size}/${media.details.backdrop_path}`
 export const posterUrl = (media: Media) => `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${media.details.poster_path}`
+
+// --- Round 4: fixed-height pieces for the info panel ---
+
+// A clearly clickable Rate button. Shows your score once you rated.
+export function RateButton({ media, look = "solid", className = "" }: { media: Media; look?: "solid" | "outline"; className?: string }) {
+	const [open, setOpen] = useState(false)
+	const ref = useRef<HTMLDivElement>(null)
+	const score = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
+	useClickOutside(ref, () => setOpen(false))
+	const cls = score
+		? `bg-vibe-${score * 10} text-white`
+		: look === "solid"
+			? "bg-yellow-400 text-black hover:bg-yellow-300"
+			: "border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-400/10"
+	return (
+		<div ref={ref} className={`relative ${className}`}>
+			<button
+				type="button"
+				onClick={() => setOpen(!open)}
+				aria-expanded={open}
+				className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-bold shadow-lg shadow-black/30 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${cls}`}
+			>
+				<StarIcon className="h-5 w-5" />
+				{score ? `Your score: ${score}` : "Rate this"}
+			</button>
+			{open && (
+				<div className="hidden md:block absolute z-50 top-full mt-2 right-0 w-[34rem] rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
+					<ScoreSelector media={media} onCancel={() => setOpen(false)} />
+				</div>
+			)}
+			<div className="md:hidden">
+				<Drawer open={open} onClose={() => setOpen(false)}>
+					<ScoreSelector media={media} onCancel={() => setOpen(false)} />
+				</Drawer>
+			</div>
+		</div>
+	)
+}
+
+// Where to watch as one row of named chips. The row never wraps, so switching
+// Stream / Rent / Buy or picking a country can't change the panel height.
+export function StreamingChips({
+	media,
+	country,
+	navigateToSection,
+	max = 3,
+	title = "Where to watch",
+}: {
+	media: Media
+	country: string
+	navigateToSection: (s: Section) => void
+	max?: number
+	title?: string
+}) {
+	const [type, setType] = useState<"flatrate" | "rent" | "buy">("flatrate")
+	const [popover, setPopover] = useState<"none" | "country" | "all">("none")
+	const ref = useRef<HTMLDivElement>(null)
+	useClickOutside(ref, () => setPopover("none"))
+	const links = useStreamingLinks(media, country, type === "flatrate" ? ["flatrate", "flatrate_and_buy", "free", "ads"] : [type])
+	const shown = links.slice(0, max)
+	const flag = country ? `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg` : null
+	const chip = (l: (typeof links)[number]) => (
+		<a
+			key={l.id}
+			href={l.url}
+			target="_blank"
+			rel="noreferrer"
+			title={`${TYPE_LABEL[l.type] ?? "Watch"} on ${l.name}`}
+			className={`flex h-10 shrink-0 items-center gap-2 rounded-full bg-white/10 pl-1 pr-3.5 hover:bg-white/20 ${l.owned ? "ring-2 ring-green-500/70" : ""}`}
+		>
+			<img src={l.logo} alt="" className="h-8 w-8 rounded-full" />
+			<span className="text-sm font-medium whitespace-nowrap">{l.name}</span>
+		</a>
+	)
+
+	return (
+		<div id="streaming" ref={ref} className="relative min-w-0">
+			<div className="flex items-center gap-2">
+				{title && <h2 className="text-sm font-semibold text-gray-200">{title}</h2>}
+				<div role="tablist" aria-label="Offer type" className="flex rounded-full bg-white/8 p-0.5 text-xs">
+					{(["flatrate", "rent", "buy"] as const).map((t) => (
+						<button
+							key={t}
+							type="button"
+							role="tab"
+							aria-selected={type === t}
+							onClick={() => setType(t)}
+							className={`px-2.5 py-1 rounded-full cursor-pointer ${type === t ? "bg-white text-black font-semibold" : "text-gray-300 hover:text-white"}`}
+						>
+							{TYPE_LABEL[t]}
+						</button>
+					))}
+				</div>
+				<button
+					type="button"
+					onClick={() => setPopover(popover === "country" ? "none" : "country")}
+					aria-expanded={popover === "country"}
+					aria-label="Change country"
+					className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs text-gray-300 hover:bg-white/10 cursor-pointer"
+				>
+					{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
+					{country || "Country"}
+					<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
+				</button>
+			</div>
+			<div className="mt-2 flex h-10 items-center gap-2 overflow-hidden">
+				{shown.length === 0 && (
+					<p className="text-sm text-gray-400">
+						No {TYPE_LABEL[type].toLowerCase()} option in {country || "your country"} yet.
+					</p>
+				)}
+				{shown.map(chip)}
+				{links.length > max && (
+					<button
+						type="button"
+						onClick={() => setPopover(popover === "all" ? "none" : "all")}
+						aria-expanded={popover === "all"}
+						className="flex h-10 shrink-0 items-center rounded-full bg-white/10 px-3.5 text-sm font-medium hover:bg-white/20 cursor-pointer"
+					>
+						+{links.length - max}
+					</button>
+				)}
+			</div>
+			{popover !== "none" && (
+				<div className="absolute z-40 top-full mt-2 left-0 right-0 max-w-md rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
+					{popover === "country" ? (
+						<CountrySelector
+							mediaType={media.mediaType}
+							countryCodes={media.details.streaming_country_codes}
+							currentCountryCode={country}
+							navigateToSection={navigateToSection}
+						/>
+					) : (
+						<div className="flex flex-wrap gap-2">{links.map(chip)}</div>
+					)}
+				</div>
+			)}
+		</div>
+	)
+}
