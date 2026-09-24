@@ -204,6 +204,18 @@ Add the new vectors and the profile collection to `f/sync/models/qdrant_schemas.
 in place with `PUT /collections/{name}/vectors/{vector}`. The local test re-indexed every named vector afterwards, which
 took 5 to 10 minutes per collection. Plan the change for a quiet hour.
 
+Done in #139. `f/sync/init/qdrant` applies the schema: it creates missing collections and adds missing vectors and
+payload indexes, and prints the plan unless `apply` is set. What the change showed:
+
+- **Adding an empty vector is instant.** The re-index happens when writers fill it.
+- **A float16 vector added in place needs a Qdrant restart.** In 1.19.1 the existing segments get the wrong storage
+  type for it, so the first segment merge fails ("source is not a half dense storage") and the collection turns red.
+  Searches keep working, but the optimizer stops until a restart reloads the segments.
+- **`fingerprint_v1_raw` has no HNSW graph** (`m: 0`). It's only searched exactly.
+- **`search_reference_profiles` stores `fingerprint_v1` and `text_en_v1` centroids.** The ranker's profile uses the
+  English text vector for every query, so it has no `text_multi_v1` centroid. Its payload is `kind`, `name` and
+  `terms` (the top 40 profile terms).
+
 ### New flow: embed titles
 
 `f/search/embed_titles` embeds titles whose embedding text changed, and writes `text_en_v1`, `text_multi_v1` and
