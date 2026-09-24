@@ -22,6 +22,6 @@ export function detailsPageMeta(media: MovieResult | ShowResult): PageMeta {
 		description: `${name}: ${lead} See where to stream it legally and how critics and audiences rate it.`.replace(/\s+/g, " ").trim(),
 		url: `https://goodwatch.app/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`,
 		image: backdrop ? `https://image.tmdb.org/t/p/w1280${backdrop}` : `https://image.tmdb.org/t/p/w780${details.poster_path}`,
-		alt: backdrop ? `Scene from ${name}` : `Poster for ${name}`,
+		alt: `${name} on GoodWatch: poster and score`,
 	}
 }

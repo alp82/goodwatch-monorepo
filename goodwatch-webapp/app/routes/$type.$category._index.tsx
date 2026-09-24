@@ -38,7 +38,7 @@ export const meta: MetaFunction = ({ data, params }) => {
 		description: `Discover the best ${mainData.label} ${typeLabel} to watch right now. ${mainData.subtitle}: ${mainData.description}`,
 		url: `https://goodwatch.app/${type}/${category}`,
 		image: `https://goodwatch.app/images/heroes/hero-${type}.png`,
-		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
+		alt: `${typeLabel} by ${mainData.label.toLowerCase()} on GoodWatch`,
 	}
 
 	const items: PageItem[] = [

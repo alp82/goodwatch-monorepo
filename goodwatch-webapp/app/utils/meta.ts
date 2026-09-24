@@ -6,11 +6,20 @@ export interface PageMeta {
 	title: string
 	description: string
 	url: string
+	// Only used in JSON-LD: og:image and twitter:image come from ogImageUrl(url).
 	image: string
+	// Describes the Open Graph card.
 	alt: string
 }
 
 export type PageItem = MovieDetails | TVDetails
+
+// The Open Graph image for a page URL, served by the og.$ route.
+export const ogImageUrl = (pageUrl: string) => {
+	const { pathname } = new URL(pageUrl, "https://goodwatch.app")
+	const path = pathname.replace(/\/+$/, "")
+	return `https://goodwatch.app/og${path || "/index"}.png`
+}
 
 export interface MetaOptions {
 	pageMeta: PageMeta
@@ -19,6 +28,7 @@ export interface MetaOptions {
 }
 
 export const buildMeta = (params: MetaOptions) => {
+	const image = ogImageUrl(params.pageMeta.url)
 	let jsonLdContent: Record<string, unknown> = {}
 	if (params.item) {
 		jsonLdContent = buildJsonLdDetail(params.pageMeta, params.item)
@@ -55,7 +65,10 @@ export const buildMeta = (params: MetaOptions) => {
 		{ property: "og:title", content: params.pageMeta.title },
 		{ property: "og:description", content: params.pageMeta.description },
 		{ property: "og:url", content: params.pageMeta.url },
-		{ property: "og:image", content: params.pageMeta.image },
+		{ property: "og:image", content: image },
+		{ property: "og:image:type", content: "image/png" },
+		{ property: "og:image:width", content: "1200" },
+		{ property: "og:image:height", content: "630" },
 		{ property: "og:image:alt", content: params.pageMeta.alt },
 
 		// Twitter Cards
@@ -63,7 +76,8 @@ export const buildMeta = (params: MetaOptions) => {
 		{ name: "twitter:site", content: "@GoodWatchApp" },
 		{ name: "twitter:title", content: params.pageMeta.title },
 		{ name: "twitter:description", content: params.pageMeta.description },
-		{ name: "twitter:image", content: params.pageMeta.image },
+		{ name: "twitter:image", content: image },
+		{ name: "twitter:image:alt", content: params.pageMeta.alt },
 
 		// JSON-LD Schema
 		{ "script:ld+json": jsonLdContent },
