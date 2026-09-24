@@ -329,7 +329,42 @@ function GoodWatchScore({
 	)
 }
 
-/** Titles per year across the career, as a small column chart. */
+/**
+ * The career chart in one sentence, for readers and search engines that skip the chart:
+ * "Active from 1950 to 2019, busiest in 1972 with 5 main titles."
+ */
+function careerSummary(stats: Stats): string | null {
+	const { firstYear: first, lastYear: last, perYear } = stats
+	if (!first || !last || !perYear.length) return null
+	const titles = (n: number) => pluralize(n, "main title")
+	if (first === last)
+		return `Active in ${first} with ${titles(perYear[0].count)}.`
+
+	const max = Math.max(...perYear.map((p) => p.count))
+	const peaks = perYear.filter((p) => p.count === max).map((p) => p.year)
+	const busiest =
+		peaks.length === 1
+			? `busiest in ${peaks[0]} with ${titles(max)}`
+			: peaks.length === 2
+				? `busiest in ${peaks[0]} and ${peaks[1]} with ${titles(max)} each`
+				: `with up to ${titles(max)} a year`
+
+	// The longest stretch without titles, when it lasts at least ten years.
+	let gap: [number, number] | null = null
+	for (let i = 1; i < perYear.length; i++) {
+		const from = perYear[i - 1].year + 1
+		const to = perYear[i].year - 1
+		if (to - from + 1 >= 10 && (!gap || to - from > gap[1] - gap[0]))
+			gap = [from, to]
+	}
+	const pause = gap ? `, with a break from ${gap[0]} to ${gap[1]}` : ""
+	return `Active from ${first} to ${last}${pause}, ${busiest}.`
+}
+
+/**
+ * Titles per year across the career, as a small column chart. It is decoration next to
+ * careerSummary, so it is hidden from assistive tech and carries no text of its own.
+ */
 function CareerSparkline({ stats }: { stats: Stats }) {
 	const first = stats.firstYear
 	if (!first || !stats.lastYear) return null
@@ -347,8 +382,8 @@ function CareerSparkline({ stats }: { stats: Stats }) {
 			viewBox={`0 0 ${years.length * (w + gap)} ${h}`}
 			className="h-7 w-full max-w-48"
 			preserveAspectRatio="none"
-			role="img"
-			aria-label={`Main titles per year from ${stats.firstYear} to ${stats.lastYear}`}
+			aria-hidden="true"
+			focusable="false"
 		>
 			{years.map((y, i) => {
 				const n = counts.get(y) ?? 0
@@ -362,9 +397,7 @@ function CareerSparkline({ stats }: { stats: Stats }) {
 						height={bh}
 						rx={1}
 						fill={n ? AMBER : "#374151"}
-					>
-						<title>{`${y}: ${n} ${n === 1 ? "title" : "titles"}`}</title>
-					</rect>
+					/>
 				)
 			})}
 		</svg>
@@ -404,6 +437,7 @@ function Facts({ data }: { data: Data }) {
 		{ n: s.movies, one: "movie", many: "movies", Icon: FilmIcon },
 		{ n: s.shows, one: "TV show", many: "TV shows", Icon: TvIcon },
 	].filter((k, i) => k.n > 0 || (i === 0 && !s.shows))
+	const career = careerSummary(s)
 	return (
 		<div className="mt-6 grid grid-cols-2 divide-white/10 rounded-xl border border-white/10 bg-gray-900/70 backdrop-blur sm:grid-cols-3 lg:grid-cols-5 lg:divide-x">
 			<Fact label="Titles" href={href({ type: null }, "#titles")}>
@@ -424,10 +458,16 @@ function Facts({ data }: { data: Data }) {
 			</Fact>
 			<Fact label="Career">
 				<CareerSparkline stats={s} />
-				<div className="mt-1 flex justify-between text-xs tabular-nums text-gray-400 max-w-48">
+				<div
+					className="mt-1 flex justify-between text-xs tabular-nums text-gray-400 max-w-48"
+					aria-hidden="true"
+				>
 					<span>{s.firstYear}</span>
 					<span>{s.lastYear}</span>
 				</div>
+				{career && (
+					<p className="mt-1 max-w-48 text-xs text-gray-300">{career}</p>
+				)}
 			</Fact>
 			<Fact
 				label={director ? "Directed" : "Leading roles"}
