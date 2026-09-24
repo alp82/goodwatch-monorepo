@@ -81,7 +81,7 @@ cost by about 59%.
 
 Crate leaves the ranking path. It keeps serving the title lookup and display fields as it does today. It gains:
 
-- **`created_by` for shows.** TMDB's `created_by` is never copied to Crate today. The ranker needs it for show creators.
+- **`created_by` for shows.** The ranker needs it for show creators. It was never copied to Crate before #140.
 - **A blob table, `search_index_files`,** holding the search indexes the webapp loads at startup, one gzipped file per
   index. The stack has no file storage such as S3, and reading millions of rows through SQL at every startup would be
   slow.
@@ -265,6 +265,19 @@ the harness.
 ### Copy `created_by`
 
 Extend `f/sync/copy/tmdb_details.py` to store TMDB's `created_by` for shows in Crate, then backfill existing shows.
+
+Done in #140. How it's stored:
+
+- Each creator is a `person_worked_on` row with `media_type = 'show'`, `job = 'Creator'` and the `created_by` credit id.
+  A creator without a cast or crew credit also gets a `person` row. There's no schema change.
+- About 2,900 older rows also have `job = 'Creator'`. They come from TMDB's aggregate crew, with other credit ids, and
+  name the same people. Read creators as the distinct people with `job = 'Creator'`.
+- Every show crew row, creators included, has `department` NULL, because aggregate credits carry no department per job.
+  For show writers, match the job (`Writer`, `Teleplay`, `Screenplay`, ...) instead of `department = 'Writing'`.
+- After the backfill, 50,824 shows have a creator. The shows without one have an empty `created_by` on TMDB, for
+  example most anime. Those shows need the writer fallback.
+- `goodwatch-flows/scripts/backfill_show_creators.py` reads the stored `created_by` from Mongo, so it makes no TMDB
+  calls. It runs as a Windmill preview job and can run again safely.
 
 ### Deploying Windmill changes
 
