@@ -12,3 +12,7 @@ results/simplify/lists/
 results/simplify/*/iter/
 results/simplify/fusion/probe_lists/
 results/simplify/combo/intent-emb-cache.json
+bench/backfill/models/
+bench/backfill/cache/
+results/bench/trace/trace.jsonl
+results/bench/trace/vectors.json
