@@ -38,6 +38,7 @@ export const meta: MetaFunction = ({ params }) => {
 	const typeLabel = navLabel?.[type]
 	const mainData = mainNavigation?.[category]
 	const pageData = mainHierarchy?.[category]?.[page]
+	if (!pageData) return [{ title: "Page Not Found | GoodWatch" }]
 
 	const pageMeta: PageMeta = {
 		title: `${convertHyphensToWords(page)} | ${convertHyphensToWords(category)} | Best ${typeLabel} to Watch Online | GoodWatch`,
@@ -72,13 +73,14 @@ export const loader: LoaderFunction = async ({
 
 	if (!validUrlParams.type.includes(type)) return redirect("/")
 	if (!validUrlParams.category.includes(category)) return redirect(`/${type}`)
-	// TODO check page
+
+	const pageData = mainHierarchy?.[category]?.[page]
+	if (!pageData) throw new Response("Not Found", { status: 404 })
 
 	const url = new URL(request.url)
 	const watchedType = url.searchParams.get("watchedType") || ""
 
 	// discover call
-	const pageData = mainHierarchy?.[category]?.[page]
 	const requestParams = await buildDiscoverParams(request)
 	const discoverType = type === "tv-shows" ? "show" : type
 	const discoverParamsFull: DiscoverParams = {
