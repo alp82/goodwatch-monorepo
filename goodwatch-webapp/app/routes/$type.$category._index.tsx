@@ -34,7 +34,7 @@ export const meta: MetaFunction = ({ data, params }) => {
 	const mainData = mainNavigation?.[category as keyof typeof mainNavigation]
 
 	const pageMeta: PageMeta = {
-		title: `${convertHyphensToWords(category)} | Best ${typeLabel} to Watch Online | GoodWatch`,
+		title: `${convertHyphensToWords(category)} | Best ${typeLabel} and Where to Stream Them | GoodWatch`,
 		description: `Discover the best ${mainData.label} ${typeLabel} to watch right now. ${mainData.subtitle}: ${mainData.description}`,
 		url: `https://goodwatch.app/${type}/${category}`,
 		image: `https://goodwatch.app/images/heroes/hero-${type}.png`,
