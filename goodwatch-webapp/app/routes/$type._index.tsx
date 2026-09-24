@@ -15,7 +15,7 @@ export const meta: MetaFunction = ({ params }) => {
 	const typeLabel = navLabel[type]
 
 	const pageMeta: PageMeta = {
-		title: `Best ${typeLabel} to Watch Online | GoodWatch`,
+		title: `Best ${typeLabel} and Where to Stream Them | GoodWatch`,
 		description: `Discover the best ${typeLabel} to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find ${typeLabel} by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.`,
 		url: `https://goodwatch.app/${type}`,
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",

@@ -40,7 +40,7 @@ export const meta: MetaFunction = ({ params }) => {
 	const pageData = mainHierarchy?.[category]?.[page]
 
 	const pageMeta: PageMeta = {
-		title: `${convertHyphensToWords(page)} | ${convertHyphensToWords(category)} | Best ${typeLabel} to Watch Online | GoodWatch`,
+		title: `${convertHyphensToWords(page)} ${typeLabel}: Where to Stream Them | ${convertHyphensToWords(category)} | GoodWatch`,
 		description: `Discover the best ${pageData.label} ${typeLabel} to watch right now. ${pageData.subtitle}: ${pageData.description}`,
 		url: `https://goodwatch.app/${type}/${category}/${page}`,
 		image: `https://goodwatch.app/images/heroes/hero-${type}.png`,
