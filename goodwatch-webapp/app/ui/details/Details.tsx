@@ -77,7 +77,7 @@ export default function Details({ media, country }: DetailsProps) {
 				<div className="isolate flex flex-col items-center">
 					<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 						<div className="flex flex-col lg:flex-row gap-8">
-							<div>
+							<div {...sectionProps.fingerprint}>
 								<DetailsFingerprint media={media} />
 							</div>
 							<div className="w-full flex flex-col justify-between">
@@ -110,13 +110,15 @@ export default function Details({ media, country }: DetailsProps) {
 
 			{fp !== "0" && (
 				<div className="isolate">
-					<FingerprintBlock variant={fp} media={media} />
+					<FingerprintBlock variant={fp} media={media} sectionProps={sectionProps.fingerprint} />
 				</div>
 			)}
 
 			{hero !== "0" && fp === "0" && (
 				<div className="isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<DetailsFingerprint media={media} />
+					<div {...sectionProps.fingerprint}>
+						<DetailsFingerprint media={media} />
+					</div>
 				</div>
 			)}
 

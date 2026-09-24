@@ -1,11 +1,12 @@
-// PROTOTYPE - throwaway. Round 5: five designs of round 4's "one row per
-// pillar" block. Every row opens a deep dive: all of the pillar's traits,
-// related traits, what each trait means, and links to more titles like it.
-// Collapsed text stays in the HTML. Round 4's blocks are in 15a4dc8a.
+// PROTOTYPE - throwaway. Round 6: three close variants of round 5's spec
+// sheet (fp 1). Selecting a pillar swaps the whole block for a detailed view
+// of that pillar at exactly the same height, so nothing below moves; Back
+// returns to the overview. Every view stays in the HTML for crawlers.
+// Round 5's blocks are in fe46f1ea.
 
 import { Link } from "@remix-run/react"
-import { ChevronDownIcon } from "@heroicons/react/20/solid"
-import React, { useId, useState } from "react"
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
+import React, { useEffect, useId, useRef, useState } from "react"
 import fingerprintIcon from "~/img/fingerprint.webp"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
@@ -14,11 +15,9 @@ import * as F from "~/ui/prototype/fingerprint-text"
 
 export const FP_VARIANTS = {
 	"0": "Current card",
-	"1": "Spec sheet, deep dive in columns",
-	"2": "Strength-tinted rows",
-	"3": "Dot plot on a 0-10 scale",
-	"4": "Two columns of rows",
-	"5": "Big verdicts, trait meanings",
+	"1": "Detail with pillar tabs",
+	"2": "Detail with previous / next",
+	"3": "Detail with pillar rail",
 } as const
 export type FpVariant = keyof typeof FP_VARIANTS
 
@@ -181,58 +180,7 @@ function Audience({ t, layout = "row" }: { t: F.TitleInput; layout?: "row" | "st
 	)
 }
 
-// --- Expanding rows ---
-
-type Brief = ReturnType<typeof F.pillarBrief>
 type Trait = { key: string; score: number }
-
-function useOpenPillar() {
-	const [open, setOpen] = useState<Pillar | null>(null)
-	return { open, toggle: (p: Pillar) => setOpen((o) => (o === p ? null : p)) }
-}
-
-// Animates height with grid rows; closed content stays in the DOM for crawlers
-// but is invisible to keyboard and screen readers.
-function Expand({ open, id, children }: { open: boolean; id: string; children: React.ReactNode }) {
-	return (
-		<div
-			id={id}
-			role="region"
-			className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
-		>
-			<div className={`min-h-0 overflow-hidden ${open ? "visible" : "invisible"}`}>{children}</div>
-		</div>
-	)
-}
-
-// The whole row is a click target for pointer users; the chevron is the real
-// button for keyboard and screen reader users, so headings keep their meaning.
-function RowButton({ onClick, children, className = "" }: { open: boolean; controls: string; onClick: () => void; children: React.ReactNode; className?: string }) {
-	return (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: the chevron button inside handles keyboard
-		<div onClick={onClick} className={`group w-full cursor-pointer rounded-lg ${className}`}>
-			{children}
-		</div>
-	)
-}
-
-function Chevron({ open, controls, label, onClick }: { open: boolean; controls: string; label: string; onClick: () => void }) {
-	return (
-		<button
-			type="button"
-			aria-expanded={open}
-			aria-controls={controls}
-			aria-label={`${open ? "Hide" : "Show"} all ${label} traits`}
-			onClick={(e) => {
-				e.stopPropagation()
-				onClick()
-			}}
-			className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-white/10 group-hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300"
-		>
-			<ChevronDownIcon aria-hidden="true" className={`h-5 w-5 transition-transform motion-reduce:transition-none ${open ? "rotate-180" : ""}`} />
-		</button>
-	)
-}
 
 function Bars({ traits, color, showMeaning = false }: { traits: Trait[]; color: string; showMeaning?: boolean }) {
 	return (
@@ -280,371 +228,287 @@ function MoreLinks({ t, p }: { t: F.TitleInput; p: Pillar }) {
 	)
 }
 
-// --- 1: round 4's spec sheet, each row opens a three-column deep dive ---
+// --- Overview and detail share one box; the overview sets the height ---
 
-function Fp1({ t }: { t: F.TitleInput }) {
+interface ViewProps {
+	t: F.TitleInput
+	p: Pillar
+	onBack: () => void
+	onSelect: (p: Pillar) => void
+	backRef: React.RefObject<HTMLButtonElement>
+}
+
+function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => void }) {
 	const tiers = t.fingerprint.pillars
-	const { open, toggle } = useOpenPillar()
-	const uid = useId()
 	return (
 		<div>
-			<Head t={t} />
-			<div className="mt-6 divide-y divide-white/10 border-y border-white/10">
-				{PILLARS.map((p) => {
-					const isOpen = open === p
-					const { own, related } = F.pillarTraits(t, p)
-					return (
-						<div key={p}>
-							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid gap-3 py-4 md:grid-cols-[11rem_1fr_16rem_1.5rem] md:items-center md:gap-8 hover:bg-white/3">
-								<div className="flex items-center justify-between md:block">
-									<PillarName p={p} />
-									<div className="md:mt-2">
-										<Meter tier={tiers[p]} p={p} />
-									</div>
-								</div>
-								<Verdict t={t} p={p} size="lg" />
-								<TraitBars t={t} p={p} compact />
-								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
-							</RowButton>
-							<Expand open={isOpen} id={`${uid}-${p}`}>
-								<div className="grid gap-8 pb-6 pt-2 md:grid-cols-[1fr_16rem_16rem] md:pl-[13rem]">
-									<div className="space-y-4">
-										<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
-										<MoreLinks t={t} p={p} />
-									</div>
-									<div>
-										<h4 className="mb-2 text-xs font-semibold text-gray-400">All {p.toLowerCase()} traits</h4>
-										<Bars traits={own} color={HEX[p]} />
-									</div>
-									{related.length > 0 && (
-										<div>
-											<h4 className="mb-2 text-xs font-semibold text-gray-400">Related traits</h4>
-											<Bars traits={related} color="#a8a29e" />
-										</div>
-									)}
-								</div>
-							</Expand>
+			<div className="divide-y divide-white/10 border-y border-white/10">
+				{PILLARS.map((p) => (
+					// biome-ignore lint/a11y/useKeyWithClickEvents: the "See all" button handles keyboard
+					<div
+						key={p}
+						onClick={() => onSelect(p)}
+						className="group grid cursor-pointer gap-3 py-4 md:grid-cols-[11rem_1fr_16rem_2rem] md:items-center md:gap-8 hover:bg-white/3"
+					>
+						<div className="flex items-center justify-between md:block">
+							<PillarName p={p} />
+							<div className="md:mt-2">
+								<Meter tier={tiers[p]} p={p} />
+							</div>
 						</div>
-					)
-				})}
-			</div>
-			<div className="mt-8">
-				<Audience t={t} />
+						<Verdict t={t} p={p} size="lg" />
+						<TraitBars t={t} p={p} compact />
+						<button
+							type="button"
+							data-pillar-open={p}
+							aria-label={`See all ${p} traits`}
+							onClick={(e) => {
+								e.stopPropagation()
+								onSelect(p)
+							}}
+							className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-white/10 group-hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300"
+						>
+							<ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
+						</button>
+					</div>
+				))}
 			</div>
 		</div>
 	)
 }
 
-// --- 2: each row is tinted as far as the pillar reaches; open rows sort traits by strength ---
-
-function Fp2({ t }: { t: F.TitleInput }) {
-	const tiers = t.fingerprint.pillars
-	const { open, toggle } = useOpenPillar()
-	const uid = useId()
-	const band = (xs: Trait[], lo: number, hi: number) => xs.filter((x) => x.score >= lo && x.score <= hi)
+function BackButton({ onBack, backRef }: { onBack: () => void; backRef: ViewProps["backRef"] }) {
 	return (
-		<div>
-			<Head t={t} />
-			<div className="mt-6 flex flex-col gap-1.5">
-				{PILLARS.map((p) => {
-					const isOpen = open === p
-					const { own, related } = F.pillarTraits(t, p)
-					const all = [...own, ...related].sort((a, b) => b.score - a.score)
-					const groups: [string, Trait[]][] = [
-						["Strong", band(all, 7, 10)],
-						["Some", band(all, 4, 6)],
-						["Barely", band(all, 0, 3)],
-					]
-					return (
-						<div key={p} className="overflow-hidden rounded-xl bg-white/3">
-							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="relative block">
-								<span
-									aria-hidden="true"
-									className="absolute inset-y-0 left-0"
-									style={{ width: `${Math.max(tiers[p], 0.3) * 25}%`, background: `linear-gradient(to right, color-mix(in srgb, ${HEX[p]} 28%, transparent), transparent)` }}
-								/>
-								<span className="relative grid items-center gap-3 px-5 py-4 md:grid-cols-[10rem_1fr_auto_1.5rem] md:gap-8">
-									<span className="flex items-center justify-between md:block">
-										<PillarName p={p} />
-										<span className="text-xs text-gray-300 md:mt-1 md:block">{TIER_WORD[tiers[p]]}</span>
-									</span>
-									<Verdict t={t} p={p} size="lg" />
-									<TraitChips t={t} p={p} />
-									<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
-								</span>
-							</RowButton>
-							<Expand open={isOpen} id={`${uid}-${p}`}>
-								<div className="grid gap-6 border-t border-white/10 px-5 py-5 md:grid-cols-[10rem_1fr] md:gap-8">
-									<p className="hidden md:block text-xs text-gray-500">Every {p.toLowerCase()} trait and related trait, by strength.</p>
-									<div className="space-y-5">
-										<div className="grid gap-5 sm:grid-cols-3">
-											{groups.map(([label, xs]) => (
-												<div key={label}>
-													<h4 className="text-xs font-semibold text-gray-400">{label}</h4>
-													<div className="mt-2 flex flex-wrap gap-1.5">
-														{xs.length === 0 && <span className="text-sm text-gray-500">None</span>}
-														{xs.map((x) => (
-															<Link
-																key={x.key}
-																to={F.discoverUrl(t, x.key as never)}
-																title={getFingerprintMeta(x.key).description}
-																className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm hover:bg-white/5"
-																style={{ borderColor: label === "Barely" ? "rgba(255,255,255,.12)" : `color-mix(in srgb, ${HEX[p]} ${label === "Strong" ? 70 : 35}%, transparent)` }}
-															>
-																{getFingerprintMeta(x.key).label}
-																<span className="font-semibold tabular-nums" style={{ color: label === "Barely" ? "#9ca3af" : HEX[p] }}>
-																	{x.score}
-																</span>
-															</Link>
-														))}
-													</div>
-												</div>
-											))}
-										</div>
-										<p className="text-gray-300 leading-relaxed">{F.pillarSentence(t, p)}</p>
-									</div>
-								</div>
-							</Expand>
-						</div>
-					)
-				})}
-			</div>
-			<div className="mt-8">
-				<Audience t={t} />
-			</div>
-		</div>
+		<button
+			ref={backRef}
+			type="button"
+			onClick={onBack}
+			className="inline-flex h-9 items-center gap-1 rounded-full bg-white/10 pl-2 pr-3.5 text-sm font-semibold hover:bg-white/20 cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300"
+		>
+			<ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
+			All pillars
+		</button>
 	)
 }
 
-// --- 3: traits as dots on one 0-10 scale, so strengths line up across rows ---
-
-function DotAxis({ traits, color, labels = false }: { traits: Trait[]; color: string; labels?: boolean }) {
+function BigPillar({ t, p }: { t: F.TitleInput; p: Pillar }) {
+	const tier = t.fingerprint.pillars[p]
+	const b = F.pillarBrief(t, p)
 	return (
-		<div className="relative h-8">
-			<div className="absolute inset-x-0 top-1/2 h-px bg-white/15" />
-			{[0, 5, 10].map((x) => (
-				<span key={x} className="absolute top-1/2 h-2 w-px -translate-y-1/2 bg-white/25" style={{ left: `${x * 10}%` }} />
-			))}
-			{traits.map((d, i) => (
-				<span
-					key={d.key}
-					title={`${getFingerprintMeta(d.key).label} ${d.score}`}
-					className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-stone-950"
-					style={{ left: `${d.score * 10}%`, background: color, opacity: 1 - i * 0.22 }}
-				/>
-			))}
-			{labels && (
-				<span className="absolute -bottom-3 inset-x-0 flex justify-between text-[10px] text-gray-500">
-					<span>0</span>
-					<span>5</span>
-					<span>10</span>
+		<div>
+			<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+				<h3 className="flex items-center gap-3 text-2xl font-bold">
+					<span aria-hidden="true">{PILLAR_CONFIG[p].emoji}</span>
+					{p}
+				</h3>
+				<span className="inline-flex items-center gap-2">
+					<span className="inline-flex gap-1">
+						{[0, 1, 2, 3].map((i) => (
+							<span key={i} className="h-3 w-6 sm:w-8 rounded-sm" style={{ background: i < tier ? HEX[p] : "rgba(255,255,255,.1)", opacity: i < tier ? 0.55 + i * 0.15 : 1 }} />
+						))}
+					</span>
+					<span className="text-sm text-gray-300">{TIER_WORD[tier]}</span>
 				</span>
+			</div>
+			<p className="mt-5 text-4xl font-semibold leading-tight tracking-tight text-white">{b.verdict}</p>
+			{b.note && <p className="mt-2 text-lg text-gray-300">{b.note}</p>}
+		</div>
+	)
+}
+
+function TraitGrid({ t, p, meaning = true }: { t: F.TitleInput; p: Pillar; meaning?: boolean }) {
+	const { own, related } = F.pillarTraits(t, p)
+	return (
+		<div className="space-y-6">
+			<div>
+				<h4 className="mb-3 text-sm font-semibold text-gray-300">All {p.toLowerCase()} traits</h4>
+				<div className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+					<Bars traits={own.slice(0, Math.ceil(own.length / 2))} color={HEX[p]} showMeaning={meaning} />
+					<Bars traits={own.slice(Math.ceil(own.length / 2))} color={HEX[p]} showMeaning={meaning} />
+				</div>
+			</div>
+			{related.length > 0 && (
+				<div>
+					<h4 className="mb-3 text-sm font-semibold text-gray-300">Related traits</h4>
+					<div className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+						<Bars traits={related.slice(0, Math.ceil(related.length / 2))} color="#a8a29e" showMeaning={meaning} />
+						<Bars traits={related.slice(Math.ceil(related.length / 2))} color="#a8a29e" showMeaning={meaning} />
+					</div>
+				</div>
 			)}
 		</div>
 	)
 }
 
-function Fp3({ t }: { t: F.TitleInput }) {
-	const tiers = t.fingerprint.pillars
-	const { open, toggle } = useOpenPillar()
-	const uid = useId()
+const tint = (p: Pillar, pct = 9) => ({
+	background: `linear-gradient(135deg, color-mix(in srgb, ${HEX[p]} ${pct}%, transparent), transparent 60%)`,
+})
+
+// 1: back button and pillar tabs on top; verdict left, all traits right.
+function Detail1({ t, p, onBack, onSelect, backRef }: ViewProps) {
 	return (
-		<div>
-			<Head t={t} />
-			<div className="mt-6 divide-y divide-white/10 border-y border-white/10">
-				{PILLARS.map((p) => {
-					const isOpen = open === p
-					const { own, related } = F.pillarTraits(t, p)
-					const b: Brief = F.pillarBrief(t, p)
-					return (
-						<div key={p}>
-							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid items-center gap-3 py-4 md:grid-cols-[3px_10rem_1fr_18rem_1.5rem] md:gap-6 hover:bg-white/3">
-								<span aria-hidden="true" className="hidden md:block h-12 rounded-full" style={{ background: HEX[p], opacity: 0.35 + tiers[p] * 0.16 }} />
-								<span className="flex items-center justify-between md:block">
-									<PillarName p={p} />
-									<span className="md:mt-2 md:block">
-										<Meter tier={tiers[p]} p={p} />
-									</span>
-								</span>
-								<Verdict t={t} p={p} size="lg" />
-								<span className="block">
-									<DotAxis traits={b.drivers} color={HEX[p]} />
-									<span className="mt-1 block truncate text-xs text-gray-400">
-										{b.drivers.map((d) => `${getFingerprintMeta(d.key).label} ${d.score}`).join(", ")}
-									</span>
-								</span>
-								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
-							</RowButton>
-							<Expand open={isOpen} id={`${uid}-${p}`}>
-								<div className="grid gap-8 pb-8 pt-2 md:grid-cols-[1fr_24rem] md:pl-[calc(3px+10rem+3rem)]">
-									<div className="space-y-4">
-										<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
-										<MoreLinks t={t} p={p} />
-									</div>
-									<div className="space-y-2.5">
-										{[...own, ...related].map((d, i) => (
-											<div key={d.key} className="grid grid-cols-[9rem_1fr_1.5rem] items-center gap-3">
-												<span className={`truncate text-sm ${i < own.length ? "text-gray-200" : "text-gray-400"}`}>{getFingerprintMeta(d.key).label}</span>
-												<DotAxis traits={[d]} color={i < own.length ? HEX[p] : "#a8a29e"} />
-												<span className="text-right text-sm tabular-nums text-gray-400">{d.score}</span>
-											</div>
-										))}
-										{related.length > 0 && <p className="pt-1 text-xs text-gray-500">Gray dots are related traits outside the {p} score.</p>}
-									</div>
-								</div>
-							</Expand>
-						</div>
-					)
-				})}
+		<div className="flex min-h-full flex-col rounded-2xl border border-white/10 p-4 sm:p-6" style={tint(p)}>
+			<div className="flex flex-wrap items-center gap-3">
+				<BackButton onBack={onBack} backRef={backRef} />
+				<div role="tablist" aria-label="Pillars" className="flex flex-wrap gap-1.5">
+					{PILLARS.map((q) => (
+						<button
+							key={q}
+							type="button"
+							role="tab"
+							aria-selected={q === p}
+							onClick={() => onSelect(q)}
+							className={`h-9 rounded-full px-3.5 text-sm cursor-pointer ${q === p ? "font-semibold text-black" : "bg-white/5 text-gray-300 hover:bg-white/10"}`}
+							style={q === p ? { background: HEX[q] } : undefined}
+						>
+							{PILLAR_CONFIG[q].emoji} {q}
+						</button>
+					))}
+				</div>
 			</div>
-			<div className="mt-8">
-				<Audience t={t} />
+			<div className="mt-8 grid min-h-0 content-start gap-10 lg:grid-cols-[5fr_7fr] [&>*]:min-w-0">
+				<div className="space-y-6">
+					<BigPillar t={t} p={p} />
+					<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
+					<MoreLinks t={t} p={p} />
+				</div>
+				<TraitGrid t={t} p={p} />
 			</div>
 		</div>
 	)
 }
 
-// --- 4: denser, two columns of rows; an open row takes the full width ---
-
-function Fp4({ t }: { t: F.TitleInput }) {
-	const tiers = t.fingerprint.pillars
-	const { open, toggle } = useOpenPillar()
-	const uid = useId()
-	return (
-		<div>
-			<Head t={t} />
-			<div className="mt-6 grid grid-flow-row-dense gap-x-10 md:grid-cols-2">
-				{PILLARS.map((p) => {
-					const isOpen = open === p
-					const { own, related } = F.pillarTraits(t, p)
-					return (
-						<div key={p} className={`border-b border-white/10 ${isOpen ? "md:col-span-2" : ""}`}>
-							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid grid-cols-[1fr_auto] items-start gap-4 py-4 hover:bg-white/3">
-								<span className="block space-y-2">
-									<span className="flex items-center gap-3">
-										<PillarName p={p} />
-										<Meter tier={tiers[p]} p={p} />
-									</span>
-									<Verdict t={t} p={p} size="lg" />
-									<TraitChips t={t} p={p} />
-								</span>
-								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
-							</RowButton>
-							<Expand open={isOpen} id={`${uid}-${p}`}>
-								<div className="grid gap-8 pb-6 pt-2 lg:grid-cols-[1fr_1fr_1fr]">
-									<div className="space-y-4">
-										<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
-										<MoreLinks t={t} p={p} />
-									</div>
-									<div>
-										<h4 className="mb-2 text-xs font-semibold text-gray-400">All {p.toLowerCase()} traits</h4>
-										<Bars traits={own} color={HEX[p]} showMeaning />
-									</div>
-									{related.length > 0 && (
-										<div>
-											<h4 className="mb-2 text-xs font-semibold text-gray-400">Related traits</h4>
-											<Bars traits={related} color="#a8a29e" showMeaning />
-										</div>
-									)}
-								</div>
-							</Expand>
-						</div>
-					)
-				})}
+// 2: back and previous / next on top; a trait list with score tiles.
+function Detail2({ t, p, onBack, onSelect, backRef }: ViewProps) {
+	const i = PILLARS.indexOf(p)
+	const prev = PILLARS[(i + PILLARS.length - 1) % PILLARS.length]
+	const next = PILLARS[(i + 1) % PILLARS.length]
+	const { own, related } = F.pillarTraits(t, p)
+	const nav = (q: Pillar, dir: "prev" | "next") => (
+		<button
+			type="button"
+			onClick={() => onSelect(q)}
+			className="inline-flex h-9 items-center gap-1 rounded-full bg-white/5 px-3 text-sm text-gray-300 hover:bg-white/10 cursor-pointer"
+		>
+			{dir === "prev" && <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />}
+			{PILLAR_CONFIG[q].emoji} {q}
+			{dir === "next" && <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />}
+		</button>
+	)
+	const tile = (d: Trait, color: string) => {
+		const meta = getFingerprintMeta(d.key)
+		return (
+			<div key={d.key} className="grid grid-cols-[2.5rem_1fr] items-start gap-3">
+				<span
+					className="flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold tabular-nums"
+					style={{ background: `color-mix(in srgb, ${color} ${10 + d.score * 5}%, transparent)` }}
+				>
+					{d.score}
+				</span>
+				<span>
+					<span className="block font-semibold text-gray-100">{meta.label}</span>
+					<span className="block text-sm text-gray-400">{meta.description}</span>
+				</span>
 			</div>
-			<div className="mt-8">
-				<Audience t={t} />
+		)
+	}
+	return (
+		<div className="flex min-h-full flex-col rounded-2xl border border-white/10 p-4 sm:p-6" style={tint(p, 11)}>
+			<div className="flex items-center gap-3">
+				<BackButton onBack={onBack} backRef={backRef} />
+				<div className="ml-auto flex gap-2">
+					{nav(prev, "prev")}
+					{nav(next, "next")}
+				</div>
+			</div>
+			<div className="mt-8 grid content-start gap-10 lg:grid-cols-[1fr_1.3fr] [&>*]:min-w-0">
+				<div className="space-y-6">
+					<BigPillar t={t} p={p} />
+					<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
+					<MoreLinks t={t} p={p} />
+				</div>
+				<div className="grid content-start gap-4 sm:grid-cols-2">
+					{own.map((d) => tile(d, HEX[p]))}
+					{related.map((d) => tile(d, "#a8a29e"))}
+				</div>
 			</div>
 		</div>
 	)
 }
 
-// --- 5: the verdict is the row; opening it explains each trait in words ---
-
-function Fp5({ t }: { t: F.TitleInput }) {
+// 3: a compact rail of all pillars on the left, the detail beside it.
+function Detail3({ t, p, onBack, onSelect, backRef }: ViewProps) {
 	const tiers = t.fingerprint.pillars
-	const { open, toggle } = useOpenPillar()
-	const uid = useId()
 	return (
-		<div>
-			<Head t={t} />
-			<div className="mt-6 divide-y divide-white/10 border-y border-white/10">
-				{PILLARS.map((p) => {
-					const isOpen = open === p
-					const b = F.pillarBrief(t, p)
-					const { own, related } = F.pillarTraits(t, p)
-					const lows = own.filter((x) => x.score <= 3)
-					return (
-						<div key={p}>
-							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid items-center gap-2 py-5 md:grid-cols-[8rem_1fr_auto_1.5rem] md:gap-6 hover:bg-white/3">
-								<span className="flex items-center gap-3 md:block">
-									<span className="block text-sm font-semibold" style={{ color: HEX[p] }}>
-										{PILLAR_CONFIG[p].emoji} {p}
-									</span>
-									<span className="md:mt-2 md:block">
-										<Meter tier={tiers[p]} p={p} />
-									</span>
-								</span>
-								<span className="block">
-									<span className="block text-2xl font-semibold tracking-tight text-white">{b.verdict}</span>
-									{b.note && <span className="mt-1 block text-sm text-gray-400">{b.note}</span>}
-								</span>
-								<span className="hidden lg:block">
-									<TraitChips t={t} p={p} />
-								</span>
-								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
-							</RowButton>
-							<Expand open={isOpen} id={`${uid}-${p}`}>
-								<div className="grid gap-8 pb-8 md:grid-cols-[1fr_18rem] md:pl-[9.5rem]">
-									<dl className="space-y-3">
-										{[...own.filter((x) => x.score >= 4), ...related].map((d) => {
-											const meta = getFingerprintMeta(d.key)
-											return (
-												<div key={d.key} className="grid grid-cols-[2.25rem_1fr] gap-3">
-													<dd
-														className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold tabular-nums"
-														style={{
-															background: `color-mix(in srgb, ${own.includes(d) ? HEX[p] : "#a8a29e"} ${10 + d.score * 5}%, transparent)`,
-														}}
-													>
-														{d.score}
-													</dd>
-													<dt>
-														<span className="font-semibold text-gray-100">{meta.label}</span>
-														<span className="block text-sm text-gray-400">{meta.description}</span>
-													</dt>
-												</div>
-											)
-										})}
-									</dl>
-									<div className="space-y-5">
-										{lows.length > 0 && (
-											<div>
-												<h4 className="text-xs font-semibold text-gray-400">Barely there</h4>
-												<p className="mt-1 text-sm text-gray-300">
-													{lows.map((x) => `${getFingerprintMeta(x.key).label} ${x.score}`).join(", ")}
-												</p>
-											</div>
-										)}
-										<div>
-											<h4 className="mb-2 text-xs font-semibold text-gray-400">Find more like it</h4>
-											<MoreLinks t={t} p={p} />
-										</div>
-									</div>
-								</div>
-							</Expand>
-						</div>
-					)
-				})}
-			</div>
-			<div className="mt-8">
-				<Audience t={t} />
+		<div className="grid min-h-full content-start gap-6 rounded-2xl border border-white/10 p-4 md:grid-cols-[14rem_1fr]" style={tint(p, 7)}>
+			<nav aria-label="Pillars" className="flex flex-col gap-1 md:border-r md:border-white/10 md:pr-4">
+				<div className="mb-3">
+					<BackButton onBack={onBack} backRef={backRef} />
+				</div>
+				{PILLARS.map((q) => (
+					<button
+						key={q}
+						type="button"
+						aria-current={q === p ? "true" : undefined}
+						onClick={() => onSelect(q)}
+						className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left cursor-pointer ${q === p ? "bg-white/10" : "hover:bg-white/5"}`}
+					>
+						<span className={`flex items-center gap-2 text-sm ${q === p ? "font-semibold text-white" : "text-gray-300"}`}>
+							<span aria-hidden="true">{PILLAR_CONFIG[q].emoji}</span>
+							{q}
+						</span>
+						<Meter tier={tiers[q]} p={q} />
+					</button>
+				))}
+			</nav>
+			<div className="grid min-w-0 content-start gap-8 p-2 lg:grid-cols-[1fr_1.2fr] [&>*]:min-w-0">
+				<div className="space-y-6">
+					<BigPillar t={t} p={p} />
+					<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
+					<MoreLinks t={t} p={p} />
+				</div>
+				<TraitGrid t={t} p={p} />
 			</div>
 		</div>
 	)
 }
 
-export function FingerprintBlock({ variant, media }: { variant: FpVariant; media: Media }) {
+function Switcher({ t, Detail }: { t: F.TitleInput; Detail: (props: ViewProps) => React.ReactElement }) {
+	const [open, setOpen] = useState<Pillar | null>(null)
+	const [last, setLast] = useState<Pillar | null>(null)
+	const backRef = useRef<HTMLButtonElement>(null)
+	const boxRef = useRef<HTMLDivElement>(null)
+	// Move focus into the detail on open and back to the row on close.
+	useEffect(() => {
+		if (open) backRef.current?.focus({ preventScroll: true })
+		else if (last) boxRef.current?.querySelector<HTMLButtonElement>(`[data-pillar-open="${last}"]`)?.focus({ preventScroll: true })
+	}, [open, last])
+	const select = (p: Pillar) => {
+		setOpen(p)
+		setLast(p)
+	}
+	return (
+		<div ref={boxRef} className="relative mt-6">
+			<div className={`transition-opacity duration-200 motion-reduce:transition-none ${open ? "invisible opacity-0" : "opacity-100"}`}>
+				<Overview t={t} onSelect={select} />
+			</div>
+			{PILLARS.map((p) => (
+				<div
+					key={p}
+					role="region"
+					aria-label={`${p} in detail`}
+					className={`absolute inset-0 overflow-y-auto overflow-x-hidden transition-[opacity,translate] duration-200 motion-reduce:transition-none ${
+						open === p ? "visible opacity-100 translate-y-0" : "invisible opacity-0 translate-y-1"
+					}`}
+				>
+					<Detail t={t} p={p} onBack={() => setOpen(null)} onSelect={select} backRef={open === p ? backRef : { current: null }} />
+				</div>
+			))}
+		</div>
+	)
+}
+
+export function FingerprintBlock({ variant, media, sectionProps }: { variant: FpVariant; media: Media; sectionProps?: { id: string; className: string; ref: (el: HTMLDivElement) => void } }) {
 	if (!media.fingerprint || variant === "0") return null
 	const t: F.TitleInput = {
 		title: media.details.title,
@@ -653,13 +517,19 @@ export function FingerprintBlock({ variant, media }: { variant: FpVariant; media
 		genres: media.details.genres,
 		fingerprint: media.fingerprint,
 	}
-	const body = { "1": Fp1, "2": Fp2, "3": Fp3, "4": Fp4, "5": Fp5 }[variant]
+	const Detail = { "1": Detail1, "2": Detail2, "3": Detail3 }[variant]
 	return (
-		<section id="fingerprint" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-			{React.createElement(body, { t })}
-			<p className="mt-8 text-xs text-gray-500">
-				Based on the GoodWatch fingerprint: our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}. Select a row to see all of its traits.
-			</p>
+		<section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+			<div {...sectionProps} id="fingerprint" className={sectionProps?.className}>
+				<Head t={t} />
+				<Switcher t={t} Detail={Detail} />
+				<div className="mt-8">
+					<Audience t={t} />
+				</div>
+				<p className="mt-8 text-xs text-gray-500">
+					Based on the GoodWatch fingerprint: our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}. Select a pillar to see all of its traits.
+				</p>
+			</div>
 		</section>
 	)
 }

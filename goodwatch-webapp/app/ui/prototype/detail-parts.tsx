@@ -743,3 +743,66 @@ export function TrailerSolid({ media, size = "md", className = "" }: { media: Me
 		</>
 	)
 }
+
+// --- Round 6: the whole poster plays the trailer ---
+
+export function TrailerDialog({ media, open, onClose }: { media: Media; open: boolean; onClose: () => void }) {
+	const key = media.videos?.trailers?.[0]?.key
+	if (!key) return null
+	return (
+		<Dialog open={open} onClose={onClose} className="relative z-50">
+			<div className="fixed inset-0 bg-black/80" aria-hidden="true" />
+			<div className="fixed inset-0 flex items-center justify-center p-4">
+				<DialogPanel className="relative w-full max-w-5xl aspect-video">
+					<button
+						type="button"
+						onClick={onClose}
+						aria-label="Close trailer"
+						className="absolute -top-11 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer"
+					>
+						<XMarkIcon className="h-5 w-5" />
+					</button>
+					<ReactPlayer url={`https://www.youtube.com/watch?v=${key}`} width="100%" height="100%" controls config={{ playerVars: { autoplay: 1 } }} />
+				</DialogPanel>
+			</div>
+		</Dialog>
+	)
+}
+
+// Poster as one big trailer button. Without a trailer it is a plain image.
+export function PosterTrailer({ media, className = "" }: { media: Media; className?: string }) {
+	const [open, setOpen] = useState(false)
+	const hasTrailer = !!media.videos?.trailers?.[0]?.key
+	const img = (
+		<img
+			src={posterUrl(media)}
+			alt={`Poster for ${media.details.title}`}
+			className="h-full w-full rounded-xl object-cover bg-white/5"
+			draggable={false}
+		/>
+	)
+	if (!hasTrailer) return <div className={`relative ${className}`}>{img}</div>
+	return (
+		<>
+			<button
+				type="button"
+				onClick={() => setOpen(true)}
+				aria-label={`Play trailer for ${media.details.title}`}
+				className={`group relative block overflow-hidden rounded-xl shadow-2xl shadow-black/60 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300 ${className}`}
+			>
+				{img}
+				<span aria-hidden="true" className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/35 motion-reduce:transition-none" />
+				<span
+					aria-hidden="true"
+					className="absolute left-1/2 top-1/2 inline-flex h-12 -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-white px-5 font-bold text-black shadow-[0_0_0_1px_rgba(0,0,0,.4),0_8px_24px_rgba(0,0,0,.6)] transition-transform group-hover:scale-105 motion-reduce:transition-none"
+				>
+					<span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white">
+						<PlayIcon className="h-3.5 w-3.5 translate-x-px" />
+					</span>
+					Play trailer
+				</span>
+			</button>
+			<TrailerDialog media={media} open={open} onClose={() => setOpen(false)} />
+		</>
+	)
+}

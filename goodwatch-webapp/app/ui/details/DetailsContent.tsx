@@ -68,7 +68,9 @@ export default function DetailsContent({
 			<div {...sectionProps.media}>
 				<Media videos={videos || []} />
 			</div>
-			<FingerprintFaqSection media={media} country={country} />
+			<div {...sectionProps.faq}>
+				<FingerprintFaqSection media={media} country={country} />
+			</div>
 		</div>
 	)
 }
