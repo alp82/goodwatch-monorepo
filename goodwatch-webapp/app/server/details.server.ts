@@ -101,6 +101,10 @@ const _fetchFromDB = async (
 	country: string,
 	language: string,
 ): Promise<QueryResult> => {
+	// mediaId and country are interpolated into the SQL below, so only safe shapes may pass.
+	if (!/^\d+$/.test(mediaId)) throw new Response("Not Found", { status: 404 })
+	const safeCountry = /^[A-Za-z]{2}$/.test(country) ? country : ""
+
 	const mediaTable = mediaType === "movie" ? "movie" : "show"
 	const fields = getFieldsByMediaType(mediaType).join(", ")
 	const mediaFieldAssignments = generateMediaFieldAssignments(mediaType)
@@ -109,7 +113,7 @@ const _fetchFromDB = async (
 		WITH
 				params_media_tmdb_id AS (SELECT ${mediaId} AS val),
 				params_media_type AS (SELECT '${mediaType}' AS val),
-				params_country_code AS (SELECT '${country}' AS val),
+				params_country_code AS (SELECT '${safeCountry}' AS val),
 
 				-- main movie/show entity
 				media_data AS (
@@ -510,6 +514,7 @@ const _fetchFromDB = async (
 		FROM media_data m;
 	`)) as { media: QueryResult }[]
 
+	if (!result[0]) throw new Response("Not Found", { status: 404 })
 	const { media } = result[0]
 	if (!media.details.title) {
 		media.details.title = media.details.original_title

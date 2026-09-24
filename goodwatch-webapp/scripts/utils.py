@@ -1,5 +1,7 @@
 import re
 
-def slugify(text: str) -> str:
-    slug = re.sub(r'[^a-zA-Z0-9]+', '-', text)
-    return slug.lower().strip('-')
+
+def title_to_dashed(title: str) -> str:
+    """Port of titleToDashed in app/utils/helpers.ts. Both must produce the same slug."""
+    slug = re.sub(r"[^A-Za-z0-9_\- ]+", "", title.lower())
+    return re.sub(r" +", "-", slug)

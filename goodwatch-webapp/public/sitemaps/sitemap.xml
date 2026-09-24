@@ -2,18 +2,16 @@
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://goodwatch.app/sitemaps/sitemap_static.xml</loc>
-    <lastmod>2025-10-24</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://goodwatch.app/sitemaps/sitemap_categories.xml</loc>
-    <lastmod>2025-10-24</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://goodwatch.app/sitemaps/sitemap_index_movie_detail.xml</loc>
-    <lastmod>2025-10-24</lastmod>
+    <lastmod>2026-09-24</lastmod>
   </sitemap>
   <sitemap>
     <loc>https://goodwatch.app/sitemaps/sitemap_index_show_detail.xml</loc>
-    <lastmod>2025-10-24</lastmod>
+    <lastmod>2026-09-24</lastmod>
   </sitemap>
 </sitemapindex>
