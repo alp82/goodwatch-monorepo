@@ -1,5 +1,9 @@
 import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
+import {
+	type LoaderFunctionArgs,
+	type MetaFunction,
+	redirect,
+} from "@remix-run/node"
 import {
 	useLoaderData,
 	useLocation,
@@ -21,6 +25,7 @@ import { getCast } from "~/server/cast.server"
 import { getCountries } from "~/server/countries.server"
 import { getCrew } from "~/server/crew.server"
 import { getGenresUnique } from "~/server/genres.server"
+import { getPersonName } from "~/server/person.server"
 import {
 	getStreamingProviders,
 	slimStreamingProviders,
@@ -41,6 +46,7 @@ import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
 import { buildDiscoverParams } from "~/utils/discover"
+import { personPath } from "~/utils/helpers"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -61,6 +67,37 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return buildMeta({ pageMeta, items })
 }
 
+// Title pages used to link cast as /discover/all?withCast=3084, and search engines still
+// know thousands of those URLs. A lookup of one person and nothing else is their page now.
+const IGNORED_FOR_PERSON = new Set([
+	"type",
+	"page",
+	"sortBy",
+	"sortDirection",
+	"withCastCombinationType",
+	"withCrewCombinationType",
+	"country",
+	"language",
+	"fbclid",
+	"gclid",
+])
+
+/** The person id when the URL only asks for one cast or crew member, else null. */
+function singlePersonLookup(params: URLSearchParams): number | null {
+	let personId: number | null = null
+	for (const [key, value] of params) {
+		if (!value || IGNORED_FOR_PERSON.has(key) || key.startsWith("utm_"))
+			continue
+		const isPerson = key === "withCast" || key === "withCrew"
+		if (isPerson && personId === null && /^\d{1,10}$/.test(value)) {
+			personId = Number(value)
+			continue
+		}
+		return null
+	}
+	return personId
+}
+
 interface LoaderData {
 	initialResults: { pages: DiscoverResults[]; pageParams: [number] }
 	initialParams: Omit<DiscoverParams, "page">
@@ -75,6 +112,13 @@ export const loader = async ({
 	// Extract page from URL parameters
 	const url = new URL(request.url)
 	const urlParams = new URLSearchParams(url.search)
+
+	const personId = singlePersonLookup(urlParams)
+	if (personId) {
+		const name = await getPersonName(personId)
+		if (name) return redirect(personPath(personId, name), 301)
+	}
+
 	const requestedPage = Number.parseInt(urlParams.get("page") || "1", 10)
 
 	// Determine how many pages to load initially
@@ -232,7 +276,8 @@ export default function Discover() {
 
 		const queryString = newParams.toString() ? `?${newParams.toString()}` : ""
 		// Use the actual URL path for media type selection
-		const typePath = type === "movie" ? "/movies" : type === "show" ? "/show" : ""
+		const typePath =
+			type === "movie" ? "/movies" : type === "show" ? "/show" : ""
 		navigate(`/discover${typePath}${queryString}`)
 	}
 
