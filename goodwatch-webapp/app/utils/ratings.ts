@@ -79,6 +79,13 @@ export const extractRatings = (
 	}, {}) as AllRatings
 }
 
+// A GoodWatch score (0 to 100) as shown everywhere: whole points, rounded down, so 95.6 reads 95.
+export const goodwatchScoreDisplay = (percent: number): number => Math.floor(percent)
+
+// The step of the bg-vibe-* and text-vibe-* color tokens for a GoodWatch score (0 to 100).
+export const goodwatchVibeIndex = (percent: number): number =>
+	Math.min(100, Math.floor(percent / 10) * 10)
+
 export const scoreLabels = [
 	"What's your score?",
 	"Unwatchable",

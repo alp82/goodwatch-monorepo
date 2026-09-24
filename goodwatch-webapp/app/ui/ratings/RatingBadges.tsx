@@ -5,7 +5,12 @@ import metacriticLogo from "~/img/metacritic-logo-250.png"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png"
 import rottenLogo from "~/img/rotten-logo-250.png"
 import rottenLogoIcon from "~/img/rotten-logo-icon-250.png"
-import { type AllRatings, scoreLabels } from "~/utils/ratings"
+import {
+	type AllRatings,
+	goodwatchScoreDisplay,
+	goodwatchVibeIndex,
+	scoreLabels,
+} from "~/utils/ratings"
 import { useUserScore } from "~/hooks/useUserDataAccessors"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
@@ -27,7 +32,7 @@ export default function RatingBadges({
 	const userScore = userScoreData?.score || null
 
 	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
-		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10
+		? goodwatchVibeIndex(ratings.goodwatch_overall_score_normalized_percent)
 		: null
 
 	const userColorIndex = userScore ? userScore * 10 : null
@@ -49,8 +54,8 @@ export default function RatingBadges({
 								<span
 									className={`text-xl font-semibold ${vibeColorIndex == null ? "text-gray-300" : `text-vibe-${vibeColorIndex}`}`}
 								>
-									{Math.floor(
-										ratings?.goodwatch_overall_score_normalized_percent,
+									{goodwatchScoreDisplay(
+										ratings.goodwatch_overall_score_normalized_percent,
 									)}
 								</span>
 								<span className="text-gray-300 font-normal text-sm">/100</span>

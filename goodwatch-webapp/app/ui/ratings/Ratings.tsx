@@ -4,7 +4,11 @@ import imdbLogo from "~/img/imdb-logo-250.png"
 import metacriticLogo from "~/img/metacritic-logo-250.png"
 import rottenLogo from "~/img/rotten-logo-250.png"
 import InfoBox from "~/ui/InfoBox"
-import type { AllRatings } from "~/utils/ratings"
+import {
+	type AllRatings,
+	goodwatchScoreDisplay,
+	goodwatchVibeIndex,
+} from "~/utils/ratings"
 
 export interface RatingsProps {
 	ratings?: AllRatings
@@ -18,7 +22,7 @@ export default function Ratings({
 	compact = false,
 }: RatingsProps) {
 	const vibeColorIndex = ratings?.goodwatch_overall_score_normalized_percent
-		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10
+		? goodwatchVibeIndex(ratings.goodwatch_overall_score_normalized_percent)
 		: null
 
 	return (
@@ -36,7 +40,7 @@ export default function Ratings({
 						className={`${vibeColorIndex == null ? "text-gray-300" : "text-gray-100"} mt-1 text-5xl font-semibold tracking-tight`}
 					>
 						{ratings?.goodwatch_overall_score_normalized_percent
-							? Math.floor(ratings?.goodwatch_overall_score_normalized_percent)
+							? goodwatchScoreDisplay(ratings.goodwatch_overall_score_normalized_percent)
 							: "--"}
 					</dd>
 					<dt

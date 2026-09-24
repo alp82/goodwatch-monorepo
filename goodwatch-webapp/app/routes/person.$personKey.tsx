@@ -34,6 +34,7 @@ import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { personPath, titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
+import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 
 export { pageHeaders as headers } from "~/utils/headers"
 export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
@@ -163,7 +164,6 @@ const titleHref = (c: { media_type: string; tmdb_id: number; title: string }) =>
 	`/${c.media_type}/${c.tmdb_id}-${titleToDashed(c.title)}`
 const img = (path: string | null, size = "w300_and_h450_bestv2") =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
-const vibe = (score: number) => Math.min(100, Math.floor(score / 10) * 10) // matches the bg-vibe-* and text-vibe-* tokens
 const AMBER = "#fbbf24" // more than the catalog average
 const SKY = "#38bdf8" // less than the catalog average
 const MUTED = "#6b7280"
@@ -296,7 +296,7 @@ function GoodWatchScore({
 	score,
 	size = "md",
 }: { score: number; size?: "sm" | "md" }) {
-	const v = vibe(score)
+	const v = goodwatchVibeIndex(score)
 	return (
 		<span className="inline-flex items-center gap-2">
 			<img
@@ -308,7 +308,7 @@ function GoodWatchScore({
 				<span
 					className={`font-semibold text-vibe-${v} ${size === "sm" ? "text-lg" : "text-2xl"}`}
 				>
-					{Math.round(score)}
+					{goodwatchScoreDisplay(score)}
 				</span>
 				<span className="text-sm text-gray-300">/100</span>
 			</span>
@@ -997,7 +997,7 @@ function Titles({ data }: { data: Data }) {
 								{data.filters.group === "decade" &&
 									g.key !== "upcoming" &&
 									g.avgScore != null &&
-									` · average score ${Math.round(g.avgScore)}`}
+									` · average score ${goodwatchScoreDisplay(g.avgScore)}`}
 							</span>
 						</summary>
 						<div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">

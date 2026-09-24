@@ -1,6 +1,10 @@
 import React from "react"
 import gwLogo from "~/img/goodwatch-logo.png"
-import type { AllRatings } from "~/utils/ratings"
+import {
+	type AllRatings,
+	goodwatchScoreDisplay,
+	goodwatchVibeIndex,
+} from "~/utils/ratings"
 
 export interface RatingsOverlayProps {
 	ratings?: AllRatings
@@ -12,10 +16,10 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 	const hasScore =
 		typeof ratings?.goodwatch_overall_score_normalized_percent === "number"
 	const score = hasScore
-		? Math.floor(ratings.goodwatch_overall_score_normalized_percent)
+		? goodwatchScoreDisplay(ratings.goodwatch_overall_score_normalized_percent)
 		: null
 	const vibeColorIndex = hasScore
-		? Math.floor(ratings.goodwatch_overall_score_normalized_percent / 10) * 10
+		? goodwatchVibeIndex(ratings.goodwatch_overall_score_normalized_percent)
 		: null
 
 	return (
