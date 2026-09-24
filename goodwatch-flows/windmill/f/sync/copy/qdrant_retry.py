@@ -1,7 +1,18 @@
 # extra_requirements:
 # qdrant-client==1.19.1
 
-"""Retry only retained Qdrant upserts while publication ownership remains valid."""
+"""Write Qdrant points without deleting vectors that other writers own.
+
+A plain upsert replaces the whole point, so it would delete every vector the
+write leaves out. Writers instead combine two kinds of operations for the same
+points in one batch request:
+
+- `insert_points` creates missing points and leaves existing points untouched.
+- `update_points` replaces only the writer's own vectors and the payload.
+
+`write_with_retry` sends that batch and retries it while publication ownership
+remains valid. Every operation is idempotent, so a retry repeats the whole batch.
+"""
 
 import json
 import math
@@ -76,10 +87,39 @@ def classify_error(error: Exception) -> tuple[str, bool]:
     return "permanent_error", False
 
 
-def upsert_with_retry(
+def insert_points(points: list[qm.PointStruct]) -> list:
+    """Create the points that don't exist yet; existing points stay unchanged."""
+    if not points:
+        return []
+    return [qm.UpsertOperation(upsert=qm.PointsList(
+        points=points, update_mode=qm.UpdateMode.INSERT_ONLY,
+    ))]
+
+
+def update_points(points: list[qm.PointStruct]) -> list:
+    """Replace the given vectors and, where set, the whole payload of existing points.
+
+    Vectors that a point doesn't name stay as they are. A point with `payload=None`
+    keeps its payload. Updating a point that doesn't exist fails with 404.
+    """
+    if not points:
+        return []
+    operations: list = [qm.UpdateVectorsOperation(update_vectors=qm.UpdateVectors(
+        points=[qm.PointVectors(id=point.id, vector=point.vector) for point in points],
+    ))]
+    operations += [
+        qm.OverwritePayloadOperation(overwrite_payload=qm.SetPayload(
+            payload=point.payload, points=[point.id],
+        ))
+        for point in points if point.payload is not None
+    ]
+    return operations
+
+
+def write_with_retry(
     client: QdrantClient,
     collection_name: str,
-    points: list[qm.PointStruct],
+    operations: list,
     check_owned: Callable[[], None],
     *,
     request_timeout_seconds: float = REQUEST_TIMEOUT_SECONDS,
@@ -91,8 +131,9 @@ def upsert_with_retry(
 ) -> dict:
     """Client transport timeout must match request_timeout_seconds.
 
-    The pinned client's upsert does not support a per-call timeout keyword. Admit an
-    attempt only when its complete configured transport deadline fits the budget.
+    Sends `operations` (from `insert_points` and `update_points`) as one
+    `batch_update_points` request. Admit an attempt only when its complete
+    configured transport deadline fits the budget.
     """
     if (
         not math.isfinite(request_timeout_seconds)
@@ -134,13 +175,15 @@ def upsert_with_retry(
             raise PublicationFailure(summary("budget_exhausted"))
         attempts += 1
         try:
-            result = client.upsert(
-                collection_name=collection_name, points=points, wait=True
+            results = client.batch_update_points(
+                collection_name=collection_name,
+                update_operations=operations,
+                wait=True,
             )
             ensure_owned()
             if clock() - started > total_budget_seconds:
                 raise PublicationFailure(summary("budget_exhausted"))
-            if result.status != qm.UpdateStatus.COMPLETED:
+            if any(result.status != qm.UpdateStatus.COMPLETED for result in results):
                 errors["incomplete_status"] += 1
                 raise PublicationFailure(summary("incomplete_status"))
             return summary("completed")

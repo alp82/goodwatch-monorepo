@@ -114,7 +114,7 @@ class StreamingPublicationTests(unittest.TestCase):
         from unittest.mock import Mock, patch
         sys.path.insert(0, str(ROOT.parent))
         from f.sync.copy import tmdb_details, tmdb_streaming
-        from test_priority_publish import VectorSerializationTests
+        from test_priority_publish import VectorSerializationTests, written_points
 
         class PublishedCrate(Crate):
             def disconnect(self) -> None:
@@ -152,8 +152,8 @@ class StreamingPublicationTests(unittest.TestCase):
         vector.publish()
         self.assertEqual(crate.rows, [child])
         self.assertEqual(crate.media[42]["streaming_availabilities"], ["US_8"])
-        point = vector.qc.client.upsert.call_args.kwargs["points"][0]
-        self.assertEqual(point["payload"]["streaming_availability"], ["8_US"])
+        point = written_points(vector.qc.client)[0]
+        self.assertEqual(point.payload["streaming_availability"], ["8_US"])
 
     def test_pending_provider_without_country_identity_is_explicitly_deferred(self) -> None:
         self.db.tmdb_tv_providers.insert_one({"tmdb_id": 42, "tmdb_watch_url": "https://example/watch"})

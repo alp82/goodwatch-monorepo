@@ -18,16 +18,21 @@ from f.db.cratedb import CrateConnector
 from f.sync.copy.deleted_titles import delete_titles_from_qdrant, find_flagged_tmdb_ids, flagged_among
 from f.sync.copy.tmdb_streaming import publication_lease
 from f.sync.copy.qdrant_retry import (
-    REQUEST_TIMEOUT_SECONDS, upsert_with_retry,
+    REQUEST_TIMEOUT_SECONDS, insert_points, update_points, write_with_retry,
 )
+from f.dna.models import CoreScores
 from f.sync.models.qdrant_schemas import MEDIA_COLLECTION
 from f.sync.models.qdrant_models import QdrantMediaPoint
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 # Tunables
 BATCH_SIZE = 2000  # ids per loop
-UPSERT_BATCH_SIZE = 1000  # qdrant upsert chunk
+UPSERT_BATCH_SIZE = 1000  # points per Qdrant write request
 HOURS_TO_FETCH = 24 * 2  # time window for "recent" updates
+
+# The 74 raw 0-10 scores in the same dimension order as fingerprint_v1, for Dot
+# distance. Written only when the collection has this named vector.
+FINGERPRINT_RAW_VECTOR = "fingerprint_v1_raw"
 
 # ---- Helpers ---------------------------------------------------------------
 
@@ -51,6 +56,20 @@ def _compute_release_decade(year: Optional[int]) -> Optional[int]:
     if year is None:
         return None
     return (year // 10) * 10
+
+
+def _raw_fingerprint(scores: dict) -> Optional[List[float]]:
+    """The raw scores in CoreScores order, the order fingerprint_v1 is built in."""
+    try:
+        validated = CoreScores(**scores)
+    except Exception:
+        return None
+    return [float(getattr(validated, name)) for name in CoreScores.model_fields]
+
+
+def _collection_vector_names(client) -> set:
+    vectors = client.get_collection(MEDIA_COLLECTION).config.params.vectors
+    return set(vectors) if isinstance(vectors, dict) else set()
 
 
 # ---- Mongo fetchers --------------------------------------------------------
@@ -351,6 +370,9 @@ def _build_payload(
         v_fp = dna.get("vector_fingerprint")
         if v_fp:
             vectors["fingerprint_v1"] = v_fp
+            raw = _raw_fingerprint(fp_scores) if isinstance(fp_scores, dict) else None
+            if raw:
+                vectors[FINGERPRINT_RAW_VECTOR] = raw
 
     # --- Tropes (optional tags list for payload filtering)
     if tropes and tropes.get("tropes"):
@@ -389,7 +411,9 @@ def copy_to_qdrant(
 ):
     """
     Combined copy into Qdrant.
-    - only upserts points **with vectors** (to create/refresh fully).
+    - only writes points **with vectors**: creates missing points and, for
+      existing ones, replaces the fingerprint vectors and the payload. Vectors
+      that other writers own stay untouched.
     - qc must use REQUEST_TIMEOUT_SECONDS as its transport timeout. Each retained
       write batch has a bounded retry budget within the publication lease margin.
     """
@@ -414,6 +438,8 @@ def copy_to_qdrant(
 
     # Driver: details (typically largest / frequently updated)
     driver_collection = c_details
+    # fingerprint_v1_raw may not exist in the collection yet; check once per media type.
+    write_raw_fingerprint = FINGERPRINT_RAW_VECTOR in _collection_vector_names(qc.client)
 
     total_upserts = 0
     total_payload_updates = 0
@@ -506,7 +532,10 @@ def copy_to_qdrant(
                     payload["streaming_availability"] = published_streaming[tmdb_id]
                     points.append(qm.PointStruct(
                         id=int(QdrantMediaPoint.make_point_id(media_type, tmdb_id)),
-                        payload=payload, vector={name: values for name, values in vectors.items()},
+                        payload=payload, vector={
+                            name: values for name, values in vectors.items()
+                            if name != FINGERPRINT_RAW_VECTOR or write_raw_fingerprint
+                        },
                     ))
                 if not points:
                     continue
@@ -514,8 +543,10 @@ def copy_to_qdrant(
                     for check_owned in checks:
                         check_owned()
 
-                result = upsert_with_retry(
-                    qc.client, MEDIA_COLLECTION, points, check_publication_owned,
+                result = write_with_retry(
+                    qc.client, MEDIA_COLLECTION,
+                    insert_points(points) + update_points(points),
+                    check_publication_owned,
                 )
                 publication_stats["batches"] += 1
                 for field in ("attempts", "retries"):
