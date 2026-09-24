@@ -2,7 +2,8 @@
 // variants: score badge, rating chips, my score, actions, streaming, trailer.
 
 import { Dialog, DialogPanel } from "@headlessui/react"
-import { BookmarkIcon, StarIcon } from "@heroicons/react/20/solid"
+import { BookmarkIcon, CheckIcon, StarIcon } from "@heroicons/react/20/solid"
+import { Link as RemixLink, useLocation } from "@remix-run/react"
 import { AdjustmentsHorizontalIcon, EyeIcon, ForwardIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import React, { useEffect, useRef, useState } from "react"
 import ReactPlayer from "react-player/youtube"
@@ -545,5 +546,200 @@ export function StreamingChips({
 				</div>
 			)}
 		</div>
+	)
+}
+
+// --- Round 5: rectangular streaming tiles in a fixed number of rows ---
+
+// The prototype-only `?owned=1` switch marks the first service as yours so
+// the badge can be judged without saved services.
+
+export function StreamingTiles({
+	media,
+	country,
+	navigateToSection,
+	rows = 2,
+	named = false,
+	title = "Where to watch",
+}: {
+	media: Media
+	country: string
+	navigateToSection: (s: Section) => void
+	rows?: number
+	named?: boolean
+	title?: string
+}) {
+	const [type, setType] = useState<"flatrate" | "rent" | "buy">("flatrate")
+	const [popover, setPopover] = useState<"none" | "country" | "all">("none")
+	const ref = useRef<HTMLDivElement>(null)
+	const gridRef = useRef<HTMLDivElement>(null)
+	useClickOutside(ref, () => setPopover("none"))
+	const demoOwned = new URLSearchParams(useLocation().search).get("owned") === "1"
+	const raw = useStreamingLinks(media, country, type === "flatrate" ? ["flatrate", "flatrate_and_buy", "free", "ads"] : [type])
+	const links = demoOwned ? raw.map((l, i) => (i === 0 ? { ...l, owned: true } : l)) : raw
+	const anyOwned = links.some((l) => l.owned)
+
+	const tileW = named ? 152 : 48
+	const tileH = 48
+	const gap = 8
+	const [cols, setCols] = useState(named ? 3 : 9)
+	useEffect(() => {
+		const el = gridRef.current
+		if (!el) return
+		const measure = () => setCols(Math.max(1, Math.floor((el.clientWidth + gap) / (tileW + gap))))
+		measure()
+		const ro = new ResizeObserver(measure)
+		ro.observe(el)
+		return () => ro.disconnect()
+	}, [tileW])
+	const capacity = cols * rows
+	const overflow = links.length > capacity
+	const shown = overflow ? links.slice(0, capacity - 1) : links
+	const flag = country ? `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg` : null
+
+	const tile = (l: (typeof links)[number]) => (
+		<a
+			key={l.id}
+			href={l.url}
+			target="_blank"
+			rel="noreferrer"
+			title={l.owned ? `${l.name}: one of your services` : `${TYPE_LABEL[l.type] ?? "Watch"} on ${l.name}`}
+			className={`relative flex shrink-0 items-center gap-2 rounded-lg border-2 hover:brightness-125 ${
+				l.owned ? "border-green-500" : "border-white/15"
+			} ${named ? "w-[152px] bg-white/8 pr-2" : "bg-white/10"}`}
+			style={{ height: tileH }}
+		>
+			<img src={l.logo} alt={named ? "" : l.name} className="h-full aspect-square rounded-md" />
+			{named && <span className="truncate text-sm font-medium">{l.name}</span>}
+			{l.owned && (
+				<span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-black ring-2 ring-stone-950">
+					<CheckIcon className="h-3 w-3" />
+				</span>
+			)}
+		</a>
+	)
+
+	return (
+		<div id="streaming" ref={ref} className="relative min-w-0">
+			<div className="flex items-center gap-2">
+				{title && <h2 className="text-sm font-semibold text-gray-200">{title}</h2>}
+				<div role="tablist" aria-label="Offer type" className="flex rounded-full bg-white/8 p-0.5 text-xs">
+					{(["flatrate", "rent", "buy"] as const).map((t) => (
+						<button
+							key={t}
+							type="button"
+							role="tab"
+							aria-selected={type === t}
+							onClick={() => setType(t)}
+							className={`px-2.5 py-1 rounded-full cursor-pointer ${type === t ? "bg-white text-black font-semibold" : "text-gray-300 hover:text-white"}`}
+						>
+							{TYPE_LABEL[t]}
+						</button>
+					))}
+				</div>
+				<div className="ml-auto flex items-center gap-3 text-xs">
+					{anyOwned ? (
+						<span className="inline-flex items-center gap-1 text-green-300">
+							<span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-black">
+								<CheckIcon className="h-2.5 w-2.5" />
+							</span>
+							Your services
+						</span>
+					) : (
+						<RemixLink to="/settings/streaming" className="hidden sm:inline text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white">
+							Set your services
+						</RemixLink>
+					)}
+					<button
+						type="button"
+						onClick={() => setPopover(popover === "country" ? "none" : "country")}
+						aria-expanded={popover === "country"}
+						aria-label="Change country"
+						className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-gray-300 hover:bg-white/10 cursor-pointer"
+					>
+						{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
+						{country || "Country"}
+						<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
+					</button>
+				</div>
+			</div>
+			<div
+				ref={gridRef}
+				className="mt-2.5 flex flex-wrap content-start overflow-hidden"
+				style={{ gap, height: rows * tileH + (rows - 1) * gap + 4, paddingTop: 4, paddingRight: 4 }}
+			>
+				{shown.length === 0 && (
+					<p className="text-sm text-gray-400">
+						No {TYPE_LABEL[type].toLowerCase()} option in {country || "your country"} yet.
+					</p>
+				)}
+				{shown.map(tile)}
+				{overflow && (
+					<button
+						type="button"
+						onClick={() => setPopover(popover === "all" ? "none" : "all")}
+						aria-expanded={popover === "all"}
+						aria-label={`Show all ${links.length} services`}
+						className="flex shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-white/25 text-sm font-semibold text-gray-200 hover:border-white/60 cursor-pointer"
+						style={{ height: tileH, width: named ? tileW : tileH }}
+					>
+						+{links.length - shown.length}
+					</button>
+				)}
+			</div>
+			{popover !== "none" && (
+				<div className="absolute z-40 top-full mt-2 left-0 right-0 max-w-lg rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
+					{popover === "country" ? (
+						<CountrySelector
+							mediaType={media.mediaType}
+							countryCodes={media.details.streaming_country_codes}
+							currentCountryCode={country}
+							navigateToSection={navigateToSection}
+						/>
+					) : (
+						<div className="flex flex-wrap gap-2 pt-1">{links.map(tile)}</div>
+					)}
+				</div>
+			)}
+		</div>
+	)
+}
+
+// High-contrast trailer button that reads on dark and light images alike.
+export function TrailerSolid({ media, size = "md", className = "" }: { media: Media; size?: "md" | "lg"; className?: string }) {
+	const [open, setOpen] = useState(false)
+	const key = media.videos?.trailers?.[0]?.key
+	if (!key) return null
+	return (
+		<>
+			<button
+				type="button"
+				onClick={() => setOpen(true)}
+				className={`inline-flex items-center justify-center gap-2 rounded-full bg-white font-bold text-black shadow-[0_0_0_1px_rgba(0,0,0,.4),0_8px_24px_rgba(0,0,0,.6)] hover:bg-amber-100 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${
+					size === "lg" ? "h-12 px-6 text-base" : "h-10 px-4 text-sm"
+				} ${className}`}
+			>
+				<span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white">
+					<PlayIcon className="h-3.5 w-3.5 translate-x-px" />
+				</span>
+				Play trailer
+			</button>
+			<Dialog open={open} onClose={() => setOpen(false)} className="relative z-50">
+				<div className="fixed inset-0 bg-black/80" aria-hidden="true" />
+				<div className="fixed inset-0 flex items-center justify-center p-4">
+					<DialogPanel className="relative w-full max-w-5xl aspect-video">
+						<button
+							type="button"
+							onClick={() => setOpen(false)}
+							aria-label="Close trailer"
+							className="absolute -top-11 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer"
+						>
+							<XMarkIcon className="h-5 w-5" />
+						</button>
+						<ReactPlayer url={`https://www.youtube.com/watch?v=${key}`} width="100%" height="100%" controls config={{ playerVars: { autoplay: 1 } }} />
+					</DialogPanel>
+				</div>
+			</Dialog>
+		</>
 	)
 }

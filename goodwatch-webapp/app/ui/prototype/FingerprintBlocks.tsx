@@ -1,10 +1,11 @@
-// PROTOTYPE - throwaway. Round 4: five takes on the equalizer block (round 3's
-// fp 2) with round 3's trait bars. Each pillar gets a bold verdict, a quiet
-// note, and the traits behind it. Audience text becomes chips.
-// Round 3's five blocks are in b1c85b75.
+// PROTOTYPE - throwaway. Round 5: five designs of round 4's "one row per
+// pillar" block. Every row opens a deep dive: all of the pillar's traits,
+// related traits, what each trait means, and links to more titles like it.
+// Collapsed text stays in the HTML. Round 4's blocks are in 15a4dc8a.
 
 import { Link } from "@remix-run/react"
-import React from "react"
+import { ChevronDownIcon } from "@heroicons/react/20/solid"
+import React, { useId, useState } from "react"
 import fingerprintIcon from "~/img/fingerprint.webp"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
@@ -13,11 +14,11 @@ import * as F from "~/ui/prototype/fingerprint-text"
 
 export const FP_VARIANTS = {
 	"0": "Current card",
-	"1": "Columns with trait bars",
-	"2": "One row per pillar",
-	"3": "How it feels / how it's made",
-	"4": "Ranked by strength",
-	"5": "Bar chart with trait chips",
+	"1": "Spec sheet, deep dive in columns",
+	"2": "Strength-tinted rows",
+	"3": "Dot plot on a 0-10 scale",
+	"4": "Two columns of rows",
+	"5": "Big verdicts, trait meanings",
 } as const
 export type FpVariant = keyof typeof FP_VARIANTS
 
@@ -180,57 +181,152 @@ function Audience({ t, layout = "row" }: { t: F.TitleInput; layout?: "row" | "st
 	)
 }
 
-// --- 1: six columns, meter + verdict + trait bars ---
+// --- Expanding rows ---
 
-function Fp1({ t }: { t: F.TitleInput }) {
-	const tiers = t.fingerprint.pillars
+type Brief = ReturnType<typeof F.pillarBrief>
+type Trait = { key: string; score: number }
+
+function useOpenPillar() {
+	const [open, setOpen] = useState<Pillar | null>(null)
+	return { open, toggle: (p: Pillar) => setOpen((o) => (o === p ? null : p)) }
+}
+
+// Animates height with grid rows; closed content stays in the DOM for crawlers
+// but is invisible to keyboard and screen readers.
+function Expand({ open, id, children }: { open: boolean; id: string; children: React.ReactNode }) {
 	return (
-		<div>
-			<Head t={t} />
-			<div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-6">
-				{PILLARS.map((p) => (
-					<div key={p} className="flex flex-col gap-3">
-						<div className="flex h-20 items-end gap-3">
-							<div className="h-full w-8 shrink-0">
-								<Meter tier={tiers[p]} p={p} vertical />
-							</div>
-							<div>
-								<PillarName p={p} />
-								<p className="text-xs text-gray-400">{TIER_WORD[tiers[p]]}</p>
-							</div>
-						</div>
-						<Verdict t={t} p={p} />
-						<TraitBars t={t} p={p} />
-					</div>
-				))}
-			</div>
-			<div className="mt-10 border-t border-white/10 pt-6">
-				<Audience t={t} />
-			</div>
+		<div
+			id={id}
+			role="region"
+			className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+		>
+			<div className={`min-h-0 overflow-hidden ${open ? "visible" : "invisible"}`}>{children}</div>
 		</div>
 	)
 }
 
-// --- 2: one row per pillar, scannable like a spec sheet ---
+// The whole row is a click target for pointer users; the chevron is the real
+// button for keyboard and screen reader users, so headings keep their meaning.
+function RowButton({ onClick, children, className = "" }: { open: boolean; controls: string; onClick: () => void; children: React.ReactNode; className?: string }) {
+	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: the chevron button inside handles keyboard
+		<div onClick={onClick} className={`group w-full cursor-pointer rounded-lg ${className}`}>
+			{children}
+		</div>
+	)
+}
 
-function Fp2({ t }: { t: F.TitleInput }) {
+function Chevron({ open, controls, label, onClick }: { open: boolean; controls: string; label: string; onClick: () => void }) {
+	return (
+		<button
+			type="button"
+			aria-expanded={open}
+			aria-controls={controls}
+			aria-label={`${open ? "Hide" : "Show"} all ${label} traits`}
+			onClick={(e) => {
+				e.stopPropagation()
+				onClick()
+			}}
+			className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-white/10 group-hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300"
+		>
+			<ChevronDownIcon aria-hidden="true" className={`h-5 w-5 transition-transform motion-reduce:transition-none ${open ? "rotate-180" : ""}`} />
+		</button>
+	)
+}
+
+function Bars({ traits, color, showMeaning = false }: { traits: Trait[]; color: string; showMeaning?: boolean }) {
+	return (
+		<ul className="space-y-2">
+			{traits.map((d) => {
+				const meta = getFingerprintMeta(d.key)
+				return (
+					<li key={d.key} className="grid grid-cols-[1fr_auto] items-center gap-x-2 text-sm">
+						<span className="truncate text-gray-200">{meta.label}</span>
+						<span className="tabular-nums text-gray-400">{d.score}</span>
+						<span className="col-span-2 h-1.5 rounded-full bg-white/8">
+							<span className="block h-1.5 rounded-full" style={{ width: `${d.score * 10}%`, background: color }} />
+						</span>
+						{showMeaning && meta.description && <span className="col-span-2 text-xs text-gray-500">{meta.description}</span>}
+					</li>
+				)
+			})}
+		</ul>
+	)
+}
+
+function MoreLinks({ t, p }: { t: F.TitleInput; p: Pillar }) {
+	const { own } = F.pillarTraits(t, p)
+	const moods = F.moodsForKeys(t, [...F.PILLAR_KEYS[p], ...F.RELATED_KEYS[p]])
+	const kind = t.mediaType === "movie" ? "movies" : "shows"
+	const topTrait = own[0]
+	const clean = (l: string) => l.replace(/\s*\p{Extended_Pictographic}.*$/u, "")
+	return (
+		<div className="flex flex-wrap gap-2">
+			{topTrait.score >= 6 && (
+				<Link
+					to={F.discoverUrl(t, topTrait.key)}
+					className="rounded-full px-3 py-1 text-sm font-medium text-black hover:brightness-110"
+					style={{ background: HEX[p] }}
+				>
+					More {kind} high in {getFingerprintMeta(topTrait.key).label.toLowerCase()}
+				</Link>
+			)}
+			{moods.map((m) => (
+				<Link key={m.url} to={m.url} className="rounded-full border border-white/20 px-3 py-1 text-sm hover:border-white/60 hover:bg-white/5">
+					{clean(m.label)} {kind}
+				</Link>
+			))}
+		</div>
+	)
+}
+
+// --- 1: round 4's spec sheet, each row opens a three-column deep dive ---
+
+function Fp1({ t }: { t: F.TitleInput }) {
 	const tiers = t.fingerprint.pillars
+	const { open, toggle } = useOpenPillar()
+	const uid = useId()
 	return (
 		<div>
 			<Head t={t} />
 			<div className="mt-6 divide-y divide-white/10 border-y border-white/10">
-				{PILLARS.map((p) => (
-					<div key={p} className="grid gap-3 py-4 md:grid-cols-[11rem_1fr_16rem] md:items-center md:gap-8">
-						<div className="flex items-center justify-between md:block">
-							<PillarName p={p} />
-							<div className="md:mt-2">
-								<Meter tier={tiers[p]} p={p} />
-							</div>
+				{PILLARS.map((p) => {
+					const isOpen = open === p
+					const { own, related } = F.pillarTraits(t, p)
+					return (
+						<div key={p}>
+							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid gap-3 py-4 md:grid-cols-[11rem_1fr_16rem_1.5rem] md:items-center md:gap-8 hover:bg-white/3">
+								<div className="flex items-center justify-between md:block">
+									<PillarName p={p} />
+									<div className="md:mt-2">
+										<Meter tier={tiers[p]} p={p} />
+									</div>
+								</div>
+								<Verdict t={t} p={p} size="lg" />
+								<TraitBars t={t} p={p} compact />
+								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
+							</RowButton>
+							<Expand open={isOpen} id={`${uid}-${p}`}>
+								<div className="grid gap-8 pb-6 pt-2 md:grid-cols-[1fr_16rem_16rem] md:pl-[13rem]">
+									<div className="space-y-4">
+										<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
+										<MoreLinks t={t} p={p} />
+									</div>
+									<div>
+										<h4 className="mb-2 text-xs font-semibold text-gray-400">All {p.toLowerCase()} traits</h4>
+										<Bars traits={own} color={HEX[p]} />
+									</div>
+									{related.length > 0 && (
+										<div>
+											<h4 className="mb-2 text-xs font-semibold text-gray-400">Related traits</h4>
+											<Bars traits={related} color="#a8a29e" />
+										</div>
+									)}
+								</div>
+							</Expand>
 						</div>
-						<Verdict t={t} p={p} size="lg" />
-						<TraitBars t={t} p={p} compact />
-					</div>
-				))}
+					)
+				})}
 			</div>
 			<div className="mt-8">
 				<Audience t={t} />
@@ -239,42 +335,167 @@ function Fp2({ t }: { t: F.TitleInput }) {
 	)
 }
 
-// --- 3: feelings get the big type, craft gets the compact treatment ---
+// --- 2: each row is tinted as far as the pillar reaches; open rows sort traits by strength ---
+
+function Fp2({ t }: { t: F.TitleInput }) {
+	const tiers = t.fingerprint.pillars
+	const { open, toggle } = useOpenPillar()
+	const uid = useId()
+	const band = (xs: Trait[], lo: number, hi: number) => xs.filter((x) => x.score >= lo && x.score <= hi)
+	return (
+		<div>
+			<Head t={t} />
+			<div className="mt-6 flex flex-col gap-1.5">
+				{PILLARS.map((p) => {
+					const isOpen = open === p
+					const { own, related } = F.pillarTraits(t, p)
+					const all = [...own, ...related].sort((a, b) => b.score - a.score)
+					const groups: [string, Trait[]][] = [
+						["Strong", band(all, 7, 10)],
+						["Some", band(all, 4, 6)],
+						["Barely", band(all, 0, 3)],
+					]
+					return (
+						<div key={p} className="overflow-hidden rounded-xl bg-white/3">
+							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="relative block">
+								<span
+									aria-hidden="true"
+									className="absolute inset-y-0 left-0"
+									style={{ width: `${Math.max(tiers[p], 0.3) * 25}%`, background: `linear-gradient(to right, color-mix(in srgb, ${HEX[p]} 28%, transparent), transparent)` }}
+								/>
+								<span className="relative grid items-center gap-3 px-5 py-4 md:grid-cols-[10rem_1fr_auto_1.5rem] md:gap-8">
+									<span className="flex items-center justify-between md:block">
+										<PillarName p={p} />
+										<span className="text-xs text-gray-300 md:mt-1 md:block">{TIER_WORD[tiers[p]]}</span>
+									</span>
+									<Verdict t={t} p={p} size="lg" />
+									<TraitChips t={t} p={p} />
+									<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
+								</span>
+							</RowButton>
+							<Expand open={isOpen} id={`${uid}-${p}`}>
+								<div className="grid gap-6 border-t border-white/10 px-5 py-5 md:grid-cols-[10rem_1fr] md:gap-8">
+									<p className="hidden md:block text-xs text-gray-500">Every {p.toLowerCase()} trait and related trait, by strength.</p>
+									<div className="space-y-5">
+										<div className="grid gap-5 sm:grid-cols-3">
+											{groups.map(([label, xs]) => (
+												<div key={label}>
+													<h4 className="text-xs font-semibold text-gray-400">{label}</h4>
+													<div className="mt-2 flex flex-wrap gap-1.5">
+														{xs.length === 0 && <span className="text-sm text-gray-500">None</span>}
+														{xs.map((x) => (
+															<Link
+																key={x.key}
+																to={F.discoverUrl(t, x.key as never)}
+																title={getFingerprintMeta(x.key).description}
+																className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm hover:bg-white/5"
+																style={{ borderColor: label === "Barely" ? "rgba(255,255,255,.12)" : `color-mix(in srgb, ${HEX[p]} ${label === "Strong" ? 70 : 35}%, transparent)` }}
+															>
+																{getFingerprintMeta(x.key).label}
+																<span className="font-semibold tabular-nums" style={{ color: label === "Barely" ? "#9ca3af" : HEX[p] }}>
+																	{x.score}
+																</span>
+															</Link>
+														))}
+													</div>
+												</div>
+											))}
+										</div>
+										<p className="text-gray-300 leading-relaxed">{F.pillarSentence(t, p)}</p>
+									</div>
+								</div>
+							</Expand>
+						</div>
+					)
+				})}
+			</div>
+			<div className="mt-8">
+				<Audience t={t} />
+			</div>
+		</div>
+	)
+}
+
+// --- 3: traits as dots on one 0-10 scale, so strengths line up across rows ---
+
+function DotAxis({ traits, color, labels = false }: { traits: Trait[]; color: string; labels?: boolean }) {
+	return (
+		<div className="relative h-8">
+			<div className="absolute inset-x-0 top-1/2 h-px bg-white/15" />
+			{[0, 5, 10].map((x) => (
+				<span key={x} className="absolute top-1/2 h-2 w-px -translate-y-1/2 bg-white/25" style={{ left: `${x * 10}%` }} />
+			))}
+			{traits.map((d, i) => (
+				<span
+					key={d.key}
+					title={`${getFingerprintMeta(d.key).label} ${d.score}`}
+					className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-stone-950"
+					style={{ left: `${d.score * 10}%`, background: color, opacity: 1 - i * 0.22 }}
+				/>
+			))}
+			{labels && (
+				<span className="absolute -bottom-3 inset-x-0 flex justify-between text-[10px] text-gray-500">
+					<span>0</span>
+					<span>5</span>
+					<span>10</span>
+				</span>
+			)}
+		</div>
+	)
+}
 
 function Fp3({ t }: { t: F.TitleInput }) {
 	const tiers = t.fingerprint.pillars
-	const feel: Pillar[] = ["Energy", "Heart", "Humor"]
-	const made: Pillar[] = ["World", "Craft", "Style"]
+	const { open, toggle } = useOpenPillar()
+	const uid = useId()
 	return (
 		<div>
 			<Head t={t} />
-			<h3 className="mt-8 text-sm font-semibold text-gray-400">How it feels</h3>
-			<div className="mt-3 grid gap-6 md:grid-cols-3">
-				{feel.map((p) => (
-					<div key={p} className="flex gap-4">
-						<div className="h-32 w-3 shrink-0">
-							<Meter tier={tiers[p]} p={p} vertical />
+			<div className="mt-6 divide-y divide-white/10 border-y border-white/10">
+				{PILLARS.map((p) => {
+					const isOpen = open === p
+					const { own, related } = F.pillarTraits(t, p)
+					const b: Brief = F.pillarBrief(t, p)
+					return (
+						<div key={p}>
+							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid items-center gap-3 py-4 md:grid-cols-[3px_10rem_1fr_18rem_1.5rem] md:gap-6 hover:bg-white/3">
+								<span aria-hidden="true" className="hidden md:block h-12 rounded-full" style={{ background: HEX[p], opacity: 0.35 + tiers[p] * 0.16 }} />
+								<span className="flex items-center justify-between md:block">
+									<PillarName p={p} />
+									<span className="md:mt-2 md:block">
+										<Meter tier={tiers[p]} p={p} />
+									</span>
+								</span>
+								<Verdict t={t} p={p} size="lg" />
+								<span className="block">
+									<DotAxis traits={b.drivers} color={HEX[p]} />
+									<span className="mt-1 block truncate text-xs text-gray-400">
+										{b.drivers.map((d) => `${getFingerprintMeta(d.key).label} ${d.score}`).join(", ")}
+									</span>
+								</span>
+								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
+							</RowButton>
+							<Expand open={isOpen} id={`${uid}-${p}`}>
+								<div className="grid gap-8 pb-8 pt-2 md:grid-cols-[1fr_24rem] md:pl-[calc(3px+10rem+3rem)]">
+									<div className="space-y-4">
+										<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
+										<MoreLinks t={t} p={p} />
+									</div>
+									<div className="space-y-2.5">
+										{[...own, ...related].map((d, i) => (
+											<div key={d.key} className="grid grid-cols-[9rem_1fr_1.5rem] items-center gap-3">
+												<span className={`truncate text-sm ${i < own.length ? "text-gray-200" : "text-gray-400"}`}>{getFingerprintMeta(d.key).label}</span>
+												<DotAxis traits={[d]} color={i < own.length ? HEX[p] : "#a8a29e"} />
+												<span className="text-right text-sm tabular-nums text-gray-400">{d.score}</span>
+											</div>
+										))}
+										{related.length > 0 && <p className="pt-1 text-xs text-gray-500">Gray dots are related traits outside the {p} score.</p>}
+									</div>
+								</div>
+							</Expand>
 						</div>
-						<div className="flex flex-col gap-2">
-							<PillarName p={p} className="text-sm text-gray-300" />
-							<Verdict t={t} p={p} size="2xl" />
-							<TraitChips t={t} p={p} />
-						</div>
-					</div>
-				))}
-			</div>
-			<h3 className="mt-10 text-sm font-semibold text-gray-400">How it's made</h3>
-			<div className="mt-3 grid gap-6 rounded-xl bg-white/4 p-5 md:grid-cols-3">
-				{made.map((p) => (
-					<div key={p} className="flex flex-col gap-2">
-						<div className="flex items-center justify-between">
-							<PillarName p={p} className="text-sm" />
-							<Meter tier={tiers[p]} p={p} />
-						</div>
-						<Verdict t={t} p={p} />
-						<TraitBars t={t} p={p} />
-					</div>
-				))}
+					)
+				})}
 			</div>
 			<div className="mt-8">
 				<Audience t={t} />
@@ -283,54 +504,54 @@ function Fp3({ t }: { t: F.TitleInput }) {
 	)
 }
 
-// --- 4: strongest pillars get the most room, weak ones collapse to a line ---
+// --- 4: denser, two columns of rows; an open row takes the full width ---
 
 function Fp4({ t }: { t: F.TitleInput }) {
 	const tiers = t.fingerprint.pillars
-	const ranked = [...PILLARS].sort((a, b) => tiers[b] - tiers[a])
-	const strong = ranked.filter((p) => tiers[p] >= 3)
-	const mid = ranked.filter((p) => tiers[p] === 2)
-	const weak = ranked.filter((p) => tiers[p] <= 1)
+	const { open, toggle } = useOpenPillar()
+	const uid = useId()
 	return (
 		<div>
 			<Head t={t} />
-			<div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-				{strong.map((p) => (
-					<div
-						key={p}
-						className="flex flex-col gap-3 rounded-xl p-5 lg:col-span-2"
-						style={{ background: `color-mix(in srgb, ${HEX[p]} ${6 + tiers[p] * 4}%, transparent)` }}
-					>
-						<div className="flex items-center justify-between">
-							<PillarName p={p} className="text-lg" />
-							<Meter tier={tiers[p]} p={p} />
+			<div className="mt-6 grid grid-flow-row-dense gap-x-10 md:grid-cols-2">
+				{PILLARS.map((p) => {
+					const isOpen = open === p
+					const { own, related } = F.pillarTraits(t, p)
+					return (
+						<div key={p} className={`border-b border-white/10 ${isOpen ? "md:col-span-2" : ""}`}>
+							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid grid-cols-[1fr_auto] items-start gap-4 py-4 hover:bg-white/3">
+								<span className="block space-y-2">
+									<span className="flex items-center gap-3">
+										<PillarName p={p} />
+										<Meter tier={tiers[p]} p={p} />
+									</span>
+									<Verdict t={t} p={p} size="lg" />
+									<TraitChips t={t} p={p} />
+								</span>
+								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
+							</RowButton>
+							<Expand open={isOpen} id={`${uid}-${p}`}>
+								<div className="grid gap-8 pb-6 pt-2 lg:grid-cols-[1fr_1fr_1fr]">
+									<div className="space-y-4">
+										<p className="text-gray-200 leading-relaxed">{F.pillarSentence(t, p)}</p>
+										<MoreLinks t={t} p={p} />
+									</div>
+									<div>
+										<h4 className="mb-2 text-xs font-semibold text-gray-400">All {p.toLowerCase()} traits</h4>
+										<Bars traits={own} color={HEX[p]} showMeaning />
+									</div>
+									{related.length > 0 && (
+										<div>
+											<h4 className="mb-2 text-xs font-semibold text-gray-400">Related traits</h4>
+											<Bars traits={related} color="#a8a29e" showMeaning />
+										</div>
+									)}
+								</div>
+							</Expand>
 						</div>
-						<Verdict t={t} p={p} size="2xl" />
-						<TraitBars t={t} p={p} />
-					</div>
-				))}
-				{mid.map((p) => (
-					<div key={p} className={`flex flex-col gap-2 rounded-xl bg-white/5 p-4 ${mid.length <= 2 ? "lg:col-span-2" : ""}`}>
-						<div className="flex items-center justify-between">
-							<PillarName p={p} />
-							<Meter tier={tiers[p]} p={p} />
-						</div>
-						<Verdict t={t} p={p} />
-						<TraitChips t={t} p={p} />
-					</div>
-				))}
+					)
+				})}
 			</div>
-			{weak.length > 0 && (
-				<p className="mt-4 text-sm text-gray-400">
-					<span className="font-semibold text-gray-300">Barely there: </span>
-					{weak.map((p, i) => (
-						<React.Fragment key={p}>
-							{i > 0 && ", "}
-							{p} ({F.pillarBrief(t, p).verdict.toLowerCase()})
-						</React.Fragment>
-					))}
-				</p>
-			)}
 			<div className="mt-8">
 				<Audience t={t} />
 			</div>
@@ -338,38 +559,87 @@ function Fp4({ t }: { t: F.TitleInput }) {
 	)
 }
 
-// --- 5: one big bar chart, verdicts under the bars, audience beside it ---
+// --- 5: the verdict is the row; opening it explains each trait in words ---
 
 function Fp5({ t }: { t: F.TitleInput }) {
 	const tiers = t.fingerprint.pillars
+	const { open, toggle } = useOpenPillar()
+	const uid = useId()
 	return (
-		<div className="grid gap-10 xl:grid-cols-[1fr_20rem]">
-			<div>
-				<Head t={t} />
-				<div className="mt-8 grid grid-cols-3 gap-x-4 gap-y-8 lg:grid-cols-6">
-					{PILLARS.map((p) => (
-						<div key={p} className="flex flex-col gap-3">
-							<div className="flex h-36 items-end rounded-lg bg-white/4 p-1.5">
-								<div
-									className="w-full rounded-md"
-									style={{
-										height: `${Math.max(tiers[p], 0.15) * 25}%`,
-										background: `linear-gradient(to top, color-mix(in srgb, ${HEX[p]} 55%, transparent), ${HEX[p]})`,
-									}}
-									role="img"
-									aria-label={`${p}: ${tiers[p]} of 4`}
-								/>
-							</div>
-							<PillarName p={p} className="text-sm" />
-							<Verdict t={t} p={p} />
-							<TraitChips t={t} p={p} />
+		<div>
+			<Head t={t} />
+			<div className="mt-6 divide-y divide-white/10 border-y border-white/10">
+				{PILLARS.map((p) => {
+					const isOpen = open === p
+					const b = F.pillarBrief(t, p)
+					const { own, related } = F.pillarTraits(t, p)
+					const lows = own.filter((x) => x.score <= 3)
+					return (
+						<div key={p}>
+							<RowButton open={isOpen} controls={`${uid}-${p}`} onClick={() => toggle(p)} className="grid items-center gap-2 py-5 md:grid-cols-[8rem_1fr_auto_1.5rem] md:gap-6 hover:bg-white/3">
+								<span className="flex items-center gap-3 md:block">
+									<span className="block text-sm font-semibold" style={{ color: HEX[p] }}>
+										{PILLAR_CONFIG[p].emoji} {p}
+									</span>
+									<span className="md:mt-2 md:block">
+										<Meter tier={tiers[p]} p={p} />
+									</span>
+								</span>
+								<span className="block">
+									<span className="block text-2xl font-semibold tracking-tight text-white">{b.verdict}</span>
+									{b.note && <span className="mt-1 block text-sm text-gray-400">{b.note}</span>}
+								</span>
+								<span className="hidden lg:block">
+									<TraitChips t={t} p={p} />
+								</span>
+								<Chevron open={isOpen} controls={`${uid}-${p}`} label={p} onClick={() => toggle(p)} />
+							</RowButton>
+							<Expand open={isOpen} id={`${uid}-${p}`}>
+								<div className="grid gap-8 pb-8 md:grid-cols-[1fr_18rem] md:pl-[9.5rem]">
+									<dl className="space-y-3">
+										{[...own.filter((x) => x.score >= 4), ...related].map((d) => {
+											const meta = getFingerprintMeta(d.key)
+											return (
+												<div key={d.key} className="grid grid-cols-[2.25rem_1fr] gap-3">
+													<dd
+														className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold tabular-nums"
+														style={{
+															background: `color-mix(in srgb, ${own.includes(d) ? HEX[p] : "#a8a29e"} ${10 + d.score * 5}%, transparent)`,
+														}}
+													>
+														{d.score}
+													</dd>
+													<dt>
+														<span className="font-semibold text-gray-100">{meta.label}</span>
+														<span className="block text-sm text-gray-400">{meta.description}</span>
+													</dt>
+												</div>
+											)
+										})}
+									</dl>
+									<div className="space-y-5">
+										{lows.length > 0 && (
+											<div>
+												<h4 className="text-xs font-semibold text-gray-400">Barely there</h4>
+												<p className="mt-1 text-sm text-gray-300">
+													{lows.map((x) => `${getFingerprintMeta(x.key).label} ${x.score}`).join(", ")}
+												</p>
+											</div>
+										)}
+										<div>
+											<h4 className="mb-2 text-xs font-semibold text-gray-400">Find more like it</h4>
+											<MoreLinks t={t} p={p} />
+										</div>
+									</div>
+								</div>
+							</Expand>
 						</div>
-					))}
-				</div>
+					)
+				})}
 			</div>
-			<aside className="xl:border-l xl:border-white/10 xl:pl-8">
-				<Audience t={t} layout="stack" />
-			</aside>
+			<div className="mt-8">
+				<Audience t={t} />
+			</div>
 		</div>
 	)
 }
@@ -388,7 +658,7 @@ export function FingerprintBlock({ variant, media }: { variant: FpVariant; media
 		<section id="fingerprint" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 			{React.createElement(body, { t })}
 			<p className="mt-8 text-xs text-gray-500">
-				Based on the GoodWatch fingerprint: our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}.
+				Based on the GoodWatch fingerprint: our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}. Select a row to see all of its traits.
 			</p>
 		</section>
 	)

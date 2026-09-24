@@ -486,3 +486,55 @@ export function pillarBrief(t: TitleInput, pillar: string): PillarBrief {
 export function contextLabels(t: TitleInput) {
 	return t.fingerprint.viewingContext.map((x) => CONTEXT_LABEL[x.id]).filter(Boolean)
 }
+
+// --- Round 5: deep dive into one pillar ---
+
+// Traits outside the pillar's formula that still help explain it.
+export const RELATED_KEYS: Record<string, Key[]> = {
+	Energy: ["slow_burn", "uncanny", "grotesque", "bleakness", "warfare"],
+	Heart: ["bleakness", "spiritual", "philosophical", "character_depth"],
+	Humor: ["camp_and_irony", "eccentricity", "pastiche", "wholesome"],
+	World: [
+		"fantasy", "futuristic", "historical", "contemporary_realism", "crime", "mystery", "warfare", "political",
+		"sports", "biographical", "psychological", "showbiz", "gaming", "pop_culture", "social_commentary",
+		"class_and_capitalism", "technology_and_humanity", "spiritual", "surrealism",
+	],
+	Craft: ["novelty", "homage_and_reference", "philosophical", "educational", "slow_burn", "fast_pace"],
+	Style: ["spectacle", "psychedelic", "grotesque", "camp_and_irony", "pastiche", "dialogue_centrality"],
+}
+
+export function pillarTraits(t: TitleInput, pillar: string) {
+	const s = t.fingerprint.scores
+	const own = [...PILLAR_KEYS[pillar]].sort((a, b) => s[b] - s[a]).map((k) => ({ key: k, score: s[k] }))
+	const related = RELATED_KEYS[pillar]
+		.filter((k) => !PILLAR_KEYS[pillar].includes(k) && s[k] >= 5)
+		.sort((a, b) => s[b] - s[a])
+		.slice(0, 6)
+		.map((k) => ({ key: k, score: s[k] }))
+	return { own, related }
+}
+
+function condFields(c: Cond): string[] {
+	return c.conditions ? c.conditions.flatMap(condFields) : c.field ? [c.field] : []
+}
+
+// Mood pages this title belongs to whose rules use one of these traits.
+export function moodsForKeys(t: TitleInput, keys: string[]) {
+	const s = t.fingerprint.scores
+	const type = t.mediaType === "movie" ? "movies" : "shows"
+	return Object.values(moods)
+		.filter((m) => {
+			const raw = m.discoverParams?.fingerprintConditions
+			if (!raw) return false
+			const conds = JSON.parse(raw as string) as Cond[]
+			return conds.every((c) => evalCond(c, s)) && conds.flatMap(condFields).some((f) => keys.includes(f))
+		})
+		.map((m) => ({ label: m.label, url: `/${type}/moods/${m.path}` }))
+}
+
+// Discover link for titles that share this trait at a similar strength.
+export function discoverUrl(t: TitleInput, key: Key) {
+	const min = Math.max(5, Math.min(8, t.fingerprint.scores[key] - 1))
+	const conditions = JSON.stringify([{ logic: "AND", conditions: [{ field: key, operator: ">=", value: min }] }])
+	return `/discover/${t.mediaType === "movie" ? "movies" : "shows"}?fingerprintConditions=${encodeURIComponent(conditions)}`
+}
