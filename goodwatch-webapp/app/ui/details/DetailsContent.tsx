@@ -12,6 +12,7 @@ import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
 import DetailsRelated from "~/ui/details/DetailsRelated"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { FingerprintTextSection } from "~/ui/prototype/FingerprintTextPrototype"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
@@ -52,6 +53,7 @@ export default function DetailsContent({
 			<div {...sectionProps.about}>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
+			<FingerprintTextSection media={media} />
 			<div {...sectionProps.actors_and_crew}>
 				<Actors actors={actors} />
 			</div>

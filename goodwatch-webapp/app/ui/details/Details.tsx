@@ -9,6 +9,11 @@ import DetailsRatings from "~/ui/details/DetailsRatings"
 import DetailsStreaming from "~/ui/details/DetailsStreaming"
 import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import {
+	PrototypeSwitcher,
+	VariantA,
+	useFingerprintTextVariant,
+} from "~/ui/prototype/FingerprintTextPrototype"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -19,6 +24,7 @@ export default function Details({ media, country }: DetailsProps) {
 	const [headerHeight, setHeaderHeight] = useState(112)
 	const { details } = media
 	const { backdrop_path } = details
+	const variant = useFingerprintTextVariant()
 	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
 
 	// Scroll Sections
@@ -63,7 +69,11 @@ export default function Details({ media, country }: DetailsProps) {
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 					<div className="flex flex-col lg:flex-row gap-8">
 						<div>
-							<DetailsFingerprint media={media} />
+							{variant === "A" && media.fingerprint ? (
+								<VariantA media={media} />
+							) : (
+								<DetailsFingerprint media={media} />
+							)}
 						</div>
 						<div className="w-full flex flex-col justify-between">
 							<DetailsRatings media={media} sectionProps={sectionProps} />
@@ -89,6 +99,7 @@ export default function Details({ media, country }: DetailsProps) {
 					/>
 				</div>
 			</div>
+			<PrototypeSwitcher media={media} />
 		</>
 	)
 	return content

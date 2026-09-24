@@ -17,14 +17,17 @@ import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import useLocale from "~/utils/locale"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { prototypeMetaDescription } from "~/ui/prototype/FingerprintTextPrototype"
 
 export { pageHeaders as headers } from "~/utils/headers"
 export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
 	const pageMeta: PageMeta = {
 		title: `${data.media.details.title} (${data.media.details.release_year}) | Movie | GoodWatch`,
-		description: `Discover '${data.media.details.title}' (${data.media.details.release_year}) and find movies with similar plotlines, cast, genre, or tone. Dive deep into movie details and watch availability.`,
+		description:
+			prototypeMetaDescription(location.search, data.media) ??
+			`Discover '${data.media.details.title}' (${data.media.details.release_year}) and find movies with similar plotlines, cast, genre, or tone. Dive deep into movie details and watch availability.`,
 		url: `https://goodwatch.app/movie/${data.media.details.tmdb_id}-${titleToDashed(data.media.details.title)}`,
 		image: `https://image.tmdb.org/t/p/w1280/${data.media.images.backdrops?.[0]?.file_path}`,
 		alt: `${data.media.details.title} (${data.media.details.release_year}) movie poster`,
