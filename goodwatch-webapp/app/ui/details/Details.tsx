@@ -10,8 +10,8 @@ import DetailsStreaming from "~/ui/details/DetailsStreaming"
 import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import {
+	FingerprintRow,
 	PrototypeSwitcher,
-	VariantA,
 	useFingerprintTextVariant,
 } from "~/ui/prototype/FingerprintTextPrototype"
 
@@ -67,25 +67,39 @@ export default function Details({ media, country }: DetailsProps) {
 
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
-					<div className="flex flex-col lg:flex-row gap-8">
-						<div>
-							{variant === "A" && media.fingerprint ? (
-								<VariantA media={media} />
-							) : (
+					{variant !== "0" && media.fingerprint ? (
+						<FingerprintRow
+							variant={variant}
+							media={media}
+							right={
+								<>
+									<DetailsRatings media={media} sectionProps={sectionProps} />
+									<DetailsStreaming
+										media={media}
+										country={country}
+										sectionProps={sectionProps}
+										navigateToSection={navigateToSection}
+									/>
+								</>
+							}
+						/>
+					) : (
+						<div className="flex flex-col lg:flex-row gap-8">
+							<div>
 								<DetailsFingerprint media={media} />
-							)}
-						</div>
-						<div className="w-full flex flex-col justify-between">
-							<DetailsRatings media={media} sectionProps={sectionProps} />
+							</div>
+							<div className="w-full flex flex-col justify-between">
+								<DetailsRatings media={media} sectionProps={sectionProps} />
 
-							<DetailsStreaming
-								media={media}
-								country={country}
-								sectionProps={sectionProps}
-								navigateToSection={navigateToSection}
-							/>
+								<DetailsStreaming
+									media={media}
+									country={country}
+									sectionProps={sectionProps}
+									navigateToSection={navigateToSection}
+								/>
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 			</div>
 

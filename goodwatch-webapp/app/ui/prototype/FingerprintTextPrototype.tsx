@@ -1,21 +1,23 @@
-// PROTOTYPE - throwaway. Four ways to put the fingerprint into words on the
-// detail page (`?variant=A|B|C|D`, `0` is the current page), switchable with
-// the floating bar or the arrow keys. Text comes from ./fingerprint-text.
+// PROTOTYPE - throwaway. Round 2: the fingerprint card keeps its headline and
+// pillars and opens a viewing guide; fact questions move below Media.
+// `?variant=E|F|G|H`, `0` is the current page. Round 1 (A-D) is in 8c92bcf4.
 
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid"
+import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation, useNavigate } from "@remix-run/react"
 import React, { useEffect, useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import fingerprintIcon from "~/img/fingerprint.webp"
-import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
+import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
+import Pillars, { type PillarName, PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
+import { factFaqs } from "~/ui/prototype/fact-faqs"
 import * as F from "~/ui/prototype/fingerprint-text"
 
 export const FINGERPRINT_TEXT_VARIANTS = {
 	"0": "Current page",
-	A: "Words in the fingerprint card",
-	B: "Viewing guide article",
-	C: "Questions and answers",
-	D: "Scorecard with mood links",
+	E: "Guide overlays ratings",
+	F: "Guide drawer below",
+	G: "Pillar drill-down",
+	H: "Highlights + tabbed guide",
 } as const
 export type FingerprintTextVariant = keyof typeof FINGERPRINT_TEXT_VARIANTS
 
@@ -28,7 +30,9 @@ export function useFingerprintTextVariant() {
 	return variantFromSearch(useLocation().search)
 }
 
-export function toTitleInput(media: MovieResult | ShowResult): F.TitleInput | null {
+type Media = MovieResult | ShowResult
+
+export function toTitleInput(media: Media): F.TitleInput | null {
 	if (!media.fingerprint) return null
 	const { details } = media
 	return {
@@ -41,129 +45,318 @@ export function toTitleInput(media: MovieResult | ShowResult): F.TitleInput | nu
 }
 
 // Meta description for the route's `meta` export. Undefined keeps the current one.
-export function prototypeMetaDescription(search: string, media: MovieResult | ShowResult) {
+export function prototypeMetaDescription(search: string, media: Media) {
 	if (variantFromSearch(search) === "0") return undefined
 	const t = toTitleInput(media)
 	if (!t) return undefined
-	const where = media.streaming_services?.length ? " See where to stream it." : ""
-	return `${media.details.title} (${media.details.release_year}): ${F.summary(t)} ${F.pillarLine(t)}.${where}`
+	return `${media.details.title} (${media.details.release_year}): ${F.summary(t)} ${F.pillarLine(t)}. See where to stream it legally.`
 }
 
-// --- Variant A: words inside the existing fingerprint card ---
+// --- Shared pieces ---
 
-export function VariantA({ media }: { media: MovieResult | ShowResult }) {
-	const t = toTitleInput(media)
-	if (!t) return null
-	const tiers = t.fingerprint.pillars
+function CardHead({ t }: { t: F.TitleInput }) {
 	return (
-		<div className="md:mt-8 lg:max-w-lg space-y-4">
+		<>
 			<h2 className="flex items-center gap-2 text-2xl font-bold">
 				<img src={fingerprintIcon} className="h-7 p-0.5 w-auto bg-amber-950/50" alt="" />
 				{t.title} fingerprint
 			</h2>
 			<p className="text-lg font-semibold text-amber-200">{F.pillarLine(t)}.</p>
-			<ul className="grid grid-cols-1 gap-1">
-				{(Object.keys(PILLAR_CONFIG) as (keyof typeof PILLAR_CONFIG)[]).map((p) => (
-					<li key={p} className="grid grid-cols-[7rem_4rem_1fr] items-center gap-3 px-3 py-1.5">
-						<span className="flex items-center gap-2 font-medium">
-							<span>{PILLAR_CONFIG[p].emoji}</span>
-							{p}
-						</span>
-						<span className="font-mono text-lg">
-							{Array.from({ length: tiers[p] }, (_, i) => (
-								<span key={i} className={`${PILLAR_CONFIG[p].colors[i]} brightness-125`}>
-									█
-								</span>
-							))}
-							<span className="text-gray-600">{"░".repeat(4 - tiers[p])}</span>
-						</span>
-						<span className="text-sm text-gray-300">{F.pillarWord(p, tiers[p])}</span>
-					</li>
+		</>
+	)
+}
+
+function ExpandButton({ open, onClick, label = "Read the full fingerprint" }: { open: boolean; onClick: () => void; label?: string }) {
+	return (
+		<button
+			type="button"
+			aria-expanded={open}
+			onClick={onClick}
+			className="w-full rounded-lg border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-300/20 cursor-pointer"
+		>
+			{open ? "Close" : label} {open ? "↑" : "→"}
+		</button>
+	)
+}
+
+interface GuidePart {
+	id: string
+	title: string
+	body: React.ReactNode
+}
+
+function guideParts(t: F.TitleInput): GuidePart[] {
+	const skip = F.skipIf(t)
+	const moods = F.matchingMoods(t)
+	const kind = t.mediaType === "movie" ? "movies" : "shows"
+	const parts: GuidePart[] = [
+		{ id: "mood", title: "Mood and pace", body: <p>{F.feelParagraph(t)}</p> },
+	]
+	if (F.craftSentence(t)) parts.push({ id: "craft", title: "What stands out", body: <p>{F.craftSentence(t)}</p> })
+	parts.push({ id: "who", title: "Who it's for", body: <p>{F.bestForSentence(t)}</p> })
+	if (skip.length)
+		parts.push({
+			id: "skip",
+			title: "Skip it if",
+			body: (
+				<ul className="list-disc pl-5">
+					{skip.map((s) => (
+						<li key={s}>{s}</li>
+					))}
+				</ul>
+			),
+		})
+	if (moods.length)
+		parts.push({
+			id: "more",
+			title: "Find more like it",
+			body: (
+				<p className="flex flex-wrap gap-2">
+					{moods.map((m) => (
+						<Link
+							key={m.url}
+							to={m.url}
+							className="px-2 py-0.5 rounded-md bg-gray-800 border border-gray-600 hover:border-gray-300 text-sm"
+						>
+							{m.label.replace(/\s*\p{Extended_Pictographic}.*$/u, "")} {kind}
+						</Link>
+					))}
+				</p>
+			),
+		})
+	return parts
+}
+
+function Guide({ t, columns }: { t: F.TitleInput; columns: string }) {
+	return (
+		<div>
+			<p className="text-lg text-amber-200">{F.summary(t)}</p>
+			<div className={`mt-4 grid gap-x-8 gap-y-5 ${columns}`}>
+				{guideParts(t).map((p) => (
+					<section key={p.id}>
+						<h3 className="font-semibold">{p.title}</h3>
+						<div className="mt-1 text-gray-200 leading-relaxed">{p.body}</div>
+					</section>
 				))}
-			</ul>
-			<p className="text-gray-200 leading-relaxed">{F.feelParagraph(t)}</p>
+			</div>
+			<p className="mt-5 text-xs text-gray-500">
+				Based on the GoodWatch fingerprint: our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}.
+			</p>
 		</div>
 	)
 }
 
-// --- Variant B: long-form viewing guide below About ---
-
-export function VariantB({ media }: { media: MovieResult | ShowResult }) {
-	const t = toTitleInput(media)
-	if (!t) return null
-	const skip = F.skipIf(t)
-	const moods = F.matchingMoods(t)
+// The collapsed guide stays in the HTML (hidden with CSS) so crawlers read it.
+function Overlay({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
 	return (
-		<article className="rounded-xl border border-white/5 bg-white/3 p-4 sm:p-8 max-w-3xl">
-			<h2 className="text-2xl font-bold">What watching {t.title} is like</h2>
-			<p className="mt-2 text-lg text-amber-200">{F.summary(t)}</p>
-
-			<h3 className="mt-6 text-lg font-semibold">Mood and pace</h3>
-			<p className="mt-1 text-gray-200 leading-relaxed">{F.feelParagraph(t)}</p>
-
-			{F.craftSentence(t) && (
-				<>
-					<h3 className="mt-6 text-lg font-semibold">What stands out</h3>
-					<p className="mt-1 text-gray-200 leading-relaxed">{F.craftSentence(t)}</p>
-				</>
-			)}
-
-			<h3 className="mt-6 text-lg font-semibold">Who it's for</h3>
-			<p className="mt-1 text-gray-200 leading-relaxed">{F.bestForSentence(t)}</p>
-
-			{skip.length > 0 && (
-				<>
-					<h3 className="mt-6 text-lg font-semibold">Skip it if</h3>
-					<ul className="mt-1 list-disc pl-5 text-gray-200">
-						{skip.map((s) => (
-							<li key={s}>{s}</li>
-						))}
-					</ul>
-				</>
-			)}
-
-			{moods.length > 0 && (
-				<p className="mt-6 text-gray-300">
-					Find more like it:{" "}
-					{moods.map((m, i) => (
-						<React.Fragment key={m.url}>
-							{i > 0 && ", "}
-							<Link to={m.url} className="underline hover:text-white">
-								{m.label.replace(/\s*\p{Extended_Pictographic}.*$/u, "").toLowerCase()} {t.mediaType === "movie" ? "movies" : "shows"}
-							</Link>
-						</React.Fragment>
-					))}
-					.
-				</p>
-			)}
-			<p className="mt-6 text-xs text-gray-500">
-				Based on the GoodWatch fingerprint, our scores for 70+ traits of every {t.mediaType === "movie" ? "movie" : "show"}.
-			</p>
-		</article>
+		<div
+			role="region"
+			aria-label={label}
+			className={`${open ? "lg:block" : "lg:hidden"} hidden lg:absolute lg:inset-0 z-20 overflow-y-auto rounded-xl border border-amber-300/20 bg-stone-950/95 backdrop-blur p-6 shadow-2xl`}
+		>
+			<button
+				type="button"
+				onClick={onClose}
+				aria-label="Close"
+				className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 cursor-pointer"
+			>
+				<XMarkIcon className="h-5 w-5" />
+			</button>
+			{children}
+		</div>
 	)
 }
 
-// --- Variant C: questions people search for, with FAQPage JSON-LD ---
+// Small screens have no ratings column to cover, so the guide opens inline there.
+function MobileInline({ open, children }: { open: boolean; children: React.ReactNode }) {
+	return <div className={`${open ? "block" : "hidden"} lg:hidden mt-4 rounded-xl bg-white/5 p-4`}>{children}</div>
+}
 
-export function VariantC({ media }: { media: MovieResult | ShowResult }) {
+// --- Variant E: guide overlays the ratings and streaming column ---
+
+function RowE({ t, right }: { t: F.TitleInput; right: React.ReactNode }) {
+	const [open, setOpen] = useState(false)
+	return (
+		<div className="flex flex-col lg:flex-row gap-8">
+			<div className="md:mt-8 lg:w-md shrink-0 space-y-4">
+				<CardHead t={t} />
+				<Pillars pillars={t.fingerprint.pillars} />
+				<ExpandButton open={open} onClick={() => setOpen(!open)} />
+				<MobileInline open={open}>
+					<Guide t={t} columns="grid-cols-1" />
+				</MobileInline>
+			</div>
+			<div className="relative w-full flex flex-col justify-between">
+				{right}
+				<Overlay open={open} onClose={() => setOpen(false)} label={`${t.title} viewing guide`}>
+					<Guide t={t} columns="grid-cols-2" />
+				</Overlay>
+			</div>
+		</div>
+	)
+}
+
+// --- Variant F: guide opens as a full-width drawer below the row ---
+
+function RowF({ t, right }: { t: F.TitleInput; right: React.ReactNode }) {
+	const [open, setOpen] = useState(false)
+	return (
+		<div>
+			<div className="flex flex-col lg:flex-row gap-8">
+				<div className="md:mt-8 lg:w-md shrink-0 space-y-4">
+					<CardHead t={t} />
+					<Pillars pillars={t.fingerprint.pillars} />
+					<ExpandButton open={open} onClick={() => setOpen(!open)} />
+				</div>
+				<div className="w-full flex flex-col justify-between">{right}</div>
+			</div>
+			<div className={`${open ? "block" : "hidden"} mt-6 rounded-xl border border-amber-300/20 bg-white/3 p-6`}>
+				<Guide t={t} columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" />
+			</div>
+		</div>
+	)
+}
+
+// --- Variant G: click a pillar to see what drives it ---
+
+function PillarPanel({ t, pillar }: { t: F.TitleInput; pillar: string }) {
+	const cfg = PILLAR_CONFIG[pillar as PillarName]
+	return (
+		<div>
+			<h3 className="text-xl font-bold">
+				{cfg.emoji} {pillar}
+			</h3>
+			<p className="mt-2 text-lg text-gray-100 leading-relaxed">{F.pillarSentence(t, pillar)}</p>
+			<ul className="mt-4 space-y-2 max-w-md">
+				{F.pillarDrivers(t, pillar).map((d) => {
+					const meta = getFingerprintMeta(d.key)
+					return (
+						<li key={d.key} className="grid grid-cols-[12rem_1fr_2.5rem] items-center gap-3 text-sm">
+							<span>
+								{meta.emoji} {meta.label}
+							</span>
+							<span className="h-2 rounded bg-white/10">
+								<span className="block h-2 rounded" style={{ width: `${d.score * 10}%`, background: meta.color }} />
+							</span>
+							<span className="text-right text-gray-400">{d.score}/10</span>
+						</li>
+					)
+				})}
+			</ul>
+		</div>
+	)
+}
+
+function RowG({ t, right }: { t: F.TitleInput; right: React.ReactNode }) {
+	const [selected, setSelected] = useState<string | null>(null)
+	const pillars = Object.keys(PILLAR_CONFIG)
+	const panels = [...pillars, "Guide"]
+	return (
+		<div className="flex flex-col lg:flex-row gap-8">
+			<div className="md:mt-8 lg:w-md shrink-0 space-y-4">
+				<CardHead t={t} />
+				<Pillars
+					pillars={t.fingerprint.pillars}
+					selectedPillar={selected as PillarName | null}
+					onSelect={(p) => setSelected(selected === p ? null : p)}
+				/>
+				<p className="text-xs text-gray-500 px-3">Select a pillar to see what drives it.</p>
+				<ExpandButton open={selected === "Guide"} onClick={() => setSelected(selected === "Guide" ? null : "Guide")} />
+			</div>
+			<div className="relative w-full flex flex-col justify-between">
+				{right}
+				{panels.map((p) => (
+					<Overlay key={p} open={selected === p} onClose={() => setSelected(null)} label={`${p} details`}>
+						{p === "Guide" ? <Guide t={t} columns="grid-cols-2" /> : <PillarPanel t={t} pillar={p} />}
+					</Overlay>
+				))}
+			</div>
+			<MobileInline open={!!selected}>
+				{selected === "Guide" ? <Guide t={t} columns="grid-cols-1" /> : selected ? <PillarPanel t={t} pillar={selected} /> : null}
+			</MobileInline>
+		</div>
+	)
+}
+
+// --- Variant H: highlight chips, guide overlay with tabs ---
+
+function RowH({ t, right }: { t: F.TitleInput; right: React.ReactNode }) {
+	const [open, setOpen] = useState(false)
+	const parts = guideParts(t)
+	const [tab, setTab] = useState(parts[0].id)
+	const s = t.fingerprint.scores
+	const chips = t.fingerprint.highlightKeys.slice(0, 5).map((k) => ({ ...getFingerprintMeta(k), score: s[k as keyof typeof s] }))
+	return (
+		<div className="flex flex-col lg:flex-row gap-8">
+			<div className="md:mt-8 lg:w-md shrink-0 space-y-4">
+				<CardHead t={t} />
+				<div className="flex flex-wrap gap-2">
+					{chips.map((c) => (
+						<span key={c.key} className="px-2 py-1 rounded-md text-sm bg-gray-800 border border-gray-600">
+							{c.emoji} {c.label} <span className="text-gray-400">{c.score}</span>
+						</span>
+					))}
+				</div>
+				<Pillars pillars={t.fingerprint.pillars} />
+				<ExpandButton open={open} onClick={() => setOpen(!open)} />
+			</div>
+			<div className="relative w-full flex flex-col justify-between">
+				{right}
+				<Overlay open={open} onClose={() => setOpen(false)} label={`${t.title} viewing guide`}>
+					<p className="text-lg text-amber-200 pr-8">{F.summary(t)}</p>
+					<div role="tablist" className="mt-4 flex flex-wrap gap-1 border-b border-white/10">
+						{parts.map((p) => (
+							<button
+								key={p.id}
+								type="button"
+								role="tab"
+								aria-selected={tab === p.id}
+								onClick={() => setTab(p.id)}
+								className={`px-3 py-1.5 text-sm rounded-t-md cursor-pointer ${tab === p.id ? "bg-amber-300/20 text-amber-100" : "text-gray-400 hover:text-white"}`}
+							>
+								{p.title}
+							</button>
+						))}
+					</div>
+					{parts.map((p) => (
+						<div key={p.id} role="tabpanel" className={`${tab === p.id ? "block" : "hidden"} mt-4 text-lg text-gray-200 leading-relaxed`}>
+							<h3 className="sr-only">{p.title}</h3>
+							{p.body}
+						</div>
+					))}
+				</Overlay>
+			</div>
+			<MobileInline open={open}>
+				<Guide t={t} columns="grid-cols-1" />
+			</MobileInline>
+		</div>
+	)
+}
+
+export function FingerprintRow({ variant, media, right }: { variant: FingerprintTextVariant; media: Media; right: React.ReactNode }) {
 	const t = toTitleInput(media)
 	if (!t) return null
-	const faqs = F.faqs(t)
+	if (variant === "F") return <RowF t={t} right={right} />
+	if (variant === "G") return <RowG t={t} right={right} />
+	if (variant === "H") return <RowH t={t} right={right} />
+	return <RowE t={t} right={right} />
+}
+
+// --- Fact questions below Media, same for every variant ---
+
+export function FingerprintFaqSection({ media, country }: { media: Media; country: string }) {
+	const variant = useFingerprintTextVariant()
+	if (variant === "0") return null
+	const faqs = factFaqs(media, country)
+	if (!faqs.length) return null
 	const jsonLd = {
 		"@context": "https://schema.org",
 		"@type": "FAQPage",
-		mainEntity: faqs.map((f) => ({
-			"@type": "Question",
-			name: f.q,
-			acceptedAnswer: { "@type": "Answer", text: f.a },
-		})),
+		mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 	}
 	return (
-		<section className="max-w-3xl">
-			<h2 className="text-2xl font-bold">{t.title}: common questions</h2>
-			<p className="mt-2 text-gray-300">
-				{F.pillarLine(t)}. Answers come from the GoodWatch fingerprint scores.
-			</p>
+		<section className="max-w-4xl">
+			<h2 className="text-2xl font-bold">{media.details.title}: questions and answers</h2>
 			<dl className="mt-4 divide-y divide-white/10 border-y border-white/10">
 				{faqs.map((f) => (
 					<div key={f.q} className="py-3 sm:grid sm:grid-cols-[18rem_1fr] sm:gap-6">
@@ -181,85 +374,9 @@ export function VariantC({ media }: { media: MovieResult | ShowResult }) {
 	)
 }
 
-// --- Variant D: scannable scorecard, links to the mood pages it belongs to ---
-
-export function VariantD({ media }: { media: MovieResult | ShowResult }) {
-	const t = toTitleInput(media)
-	if (!t) return null
-	const s = t.fingerprint.scores
-	const moods = F.matchingMoods(t)
-	const best = F.bestFor(t)
-	const skip = F.skipIf(t)
-	const craft = F.standouts(t)
-	const rows: [string, React.ReactNode][] = [
-		["In short", F.pillarLine(t)],
-		["Feels", F.summary(t)],
-		[
-			"Pace",
-			s.slow_burn >= 7
-				? `Slow burn (${s.slow_burn}/10)`
-				: s.fast_pace >= 7
-					? `Fast (${s.fast_pace}/10)`
-					: "Moderate",
-		],
-		["Complexity", `${s.complexity}/10${s.complexity >= 8 ? ", needs full attention" : ""}`],
-		["Scares / violence", `${s.scare}/10 · ${s.violence}/10`],
-		[
-			"Standouts",
-			craft.length ? craft.map((c) => `${c.label} ${c.score}/10`).join(" · ") : "None above 8/10",
-		],
-		["Best for", best.length ? F.list(best, "or") : "No specific setting"],
-		["Skip if", skip.length ? F.list(skip, "or") : "Nothing notable"],
-		[
-			"Moods",
-			moods.length ? (
-				<span className="flex flex-wrap gap-2">
-					{moods.map((m) => (
-						<Link
-							key={m.url}
-							to={m.url}
-							className="px-2 py-0.5 rounded-md bg-gray-800 border border-gray-600 hover:border-gray-300 text-sm"
-						>
-							{m.label}
-						</Link>
-					))}
-				</span>
-			) : (
-				"Doesn't match a mood collection"
-			),
-		],
-	]
-	return (
-		<section>
-			<h2 className="text-2xl font-bold">{t.title} at a glance</h2>
-			<table className="mt-4 w-full max-w-4xl text-left">
-				<tbody>
-					{rows.map(([k, v]) => (
-						<tr key={k} className="border-b border-white/10 align-top">
-							<th scope="row" className="py-2 pr-6 w-44 font-medium text-gray-400 whitespace-nowrap">
-								{k}
-							</th>
-							<td className="py-2 text-gray-100">{v}</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</section>
-	)
-}
-
-// Renders the variant's section below About. Variant A lives in the fingerprint card instead.
-export function FingerprintTextSection({ media }: { media: MovieResult | ShowResult }) {
-	const v = useFingerprintTextVariant()
-	if (v === "B") return <VariantB media={media} />
-	if (v === "C") return <VariantC media={media} />
-	if (v === "D") return <VariantD media={media} />
-	return null
-}
-
 // Floating variant switcher, not part of the design.
 
-export function PrototypeSwitcher({ media }: { media: MovieResult | ShowResult }) {
+export function PrototypeSwitcher({ media }: { media: Media }) {
 	const location = useLocation()
 	const navigate = useNavigate()
 	const current = useFingerprintTextVariant()
@@ -289,10 +406,22 @@ export function PrototypeSwitcher({ media }: { media: MovieResult | ShowResult }
 
 	if (!import.meta.env.DEV) return null
 
-	// Surface the state: the meta description this variant would ship, and
-	// how many GoodWatch-only words it adds to the page.
+	// Surface the state: the meta description this variant ships and how many
+	// GoodWatch-only words land in the HTML (including collapsed text).
 	const meta = prototypeMetaDescription(location.search, media)
-	const addedWords = countWords(current)
+	const t = toTitleInput(media)
+	const words =
+		t && current !== "0"
+			? F.wordCount([
+					F.pillarLine(t),
+					F.summary(t),
+					F.feelParagraph(t),
+					F.craftSentence(t),
+					F.bestForSentence(t),
+					...F.skipIf(t),
+					...(current === "G" ? Object.keys(PILLAR_CONFIG).map((p) => F.pillarSentence(t, p)) : []),
+				]) + F.wordCount(factFaqs(media, new URLSearchParams(location.search).get("country") ?? "").flatMap((f) => [f.q, f.a]))
+			: 0
 
 	return (
 		<div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 max-w-[calc(100vw-2rem)]">
@@ -302,7 +431,7 @@ export function PrototypeSwitcher({ media }: { media: MovieResult | ShowResult }
 						<b>Meta description ({meta?.length ?? 0} chars):</b> {meta ?? "unchanged"}
 					</div>
 					<div>
-						<b>GoodWatch-only words added:</b> {addedWords}
+						<b>GoodWatch-only words in the HTML:</b> {words}
 					</div>
 				</div>
 			)}
@@ -329,14 +458,4 @@ export function PrototypeSwitcher({ media }: { media: MovieResult | ShowResult }
 			</div>
 		</div>
 	)
-
-	function countWords(v: FingerprintTextVariant) {
-		const t = toTitleInput(media)
-		if (!t || v === "0") return 0
-		if (v === "A") return F.wordCount([F.pillarLine(t), F.feelParagraph(t)])
-		if (v === "B")
-			return F.wordCount([F.summary(t), F.feelParagraph(t), F.craftSentence(t), F.bestForSentence(t), ...F.skipIf(t)])
-		if (v === "C") return F.wordCount(F.faqs(t).flatMap((f) => [f.q, f.a]))
-		return F.wordCount([F.pillarLine(t), F.summary(t), ...F.bestFor(t), ...F.skipIf(t)])
-	}
 }

@@ -229,8 +229,6 @@ export function bestForSentence(t: TitleInput) {
 	const parts: string[] = []
 	if (who.length) parts.push(`Good for ${list(who, "or")}.`)
 	if (ctx.length) parts.push(`It ${list(ctx.slice(0, 2))}.`)
-	const ids = t.fingerprint.socialSuitability.map((x) => x.id)
-	if (ids.includes("adults") && !ids.includes("kids") && !ids.includes("family")) parts.push("Not for kids.")
 	return parts.join(" ")
 }
 
@@ -365,4 +363,61 @@ export function matchingMoods(t: TitleInput) {
 // The word count of GoodWatch-only prose a variant adds, shown in the switcher.
 export function wordCount(parts: string[]) {
 	return parts.join(" ").split(/\s+/).filter(Boolean).length
+}
+
+// --- Per-pillar explanations, for the drill-down variant ---
+
+export const PILLAR_KEYS: Record<string, Key[]> = {
+	Energy: ["adrenaline", "tension", "scare", "fast_pace", "spectacle", "violence"],
+	Heart: ["romance", "wholesome", "pathos", "melancholy", "hopefulness", "catharsis", "nostalgia", "coming_of_age", "family_dynamics", "wonder"],
+	Humor: ["situational_comedy", "wit_wordplay", "physical_comedy", "cringe_humor", "absurdist_humor", "satire_parody", "dark_humor"],
+	World: ["world_immersion", "dialogue_centrality", "rewatchability", "ambiguity", "novelty"],
+	Craft: ["direction", "acting", "narrative_structure", "dialogue_quality", "character_depth", "intrigue", "complexity", "non_linear_narrative", "meta_narrative"],
+	Style: ["cinematography", "editing", "music_composition", "visual_stylization", "music_centrality", "sound_centrality"],
+}
+
+export function pillarDrivers(t: TitleInput, pillar: string) {
+	const s = t.fingerprint.scores
+	return [...PILLAR_KEYS[pillar]].sort((a, b) => s[b] - s[a]).slice(0, 3).map((k) => ({ key: k, score: s[k] }))
+}
+
+export function pillarSentence(t: TitleInput, pillar: string) {
+	const s = t.fingerprint.scores
+	const pick = (keys: Key[], lex: Partial<Record<Key, string>>, min = 7) =>
+		keys.filter((k) => s[k] >= min && lex[k]).sort((a, b) => s[b] - s[a]).map((k) => lex[k]!)
+	const feel = (keys: Key[]) =>
+		keys.filter((k) => s[k] >= 7 && FEEL[k]).sort((a, b) => s[b] - s[a]).map((k) => (s[k] >= 9 ? FEEL[k]!.strong : FEEL[k]!.adj))
+	switch (pillar) {
+		case "Energy": {
+			const a = feel(PILLAR_KEYS.Energy)
+			const pace = s.slow_burn >= 7 ? " The story builds slowly, so the intensity comes in waves." : ""
+			return a.length ? `${t.title} is ${list(a.slice(0, 3))}.${pace}` : `${t.title} is calm and low-intensity.${pace}`
+		}
+		case "Heart": {
+			const a = feel(PILLAR_KEYS.Heart)
+			const th = pick(["coming_of_age", "family_dynamics"], THEME)
+			const about = th.length ? ` Much of it is about ${list(th)}.` : ""
+			return a.length ? `Emotionally, it's ${list(a.slice(0, 3))}.${about}` : `It keeps its emotions at a distance.${about}`
+		}
+		case "Humor":
+			return `Expect ${humorPhrase(s).text}.`
+		case "World": {
+			const th = top(s, THEME, 7, 3).map((k) => THEME[k]!)
+			const parts = [th.length ? `Its world is built around ${list(th)}.` : ""]
+			if (s.world_immersion >= 8) parts.push("The setting feels lived-in and easy to get lost in.")
+			if (s.rewatchability >= 8) parts.push("It holds up on a rewatch.")
+			if (s.ambiguity >= 7) parts.push("It leaves some questions open.")
+			return parts.filter(Boolean).join(" ") || "The world stays in the background."
+		}
+		case "Craft": {
+			const c = pick(["direction", "acting", "narrative_structure", "dialogue_quality", "character_depth"], CRAFT, 8)
+			const extra = s.complexity >= 8 ? " The plot is layered and rewards full attention." : ""
+			return c.length ? `The ${list(c.slice(0, 3))} stand out.${extra}` : `The craft is serviceable rather than remarkable.${extra}`
+		}
+		case "Style": {
+			const c = pick(["cinematography", "editing", "music_composition", "visual_stylization", "sound_centrality"], CRAFT, 8)
+			return c.length ? `Look and sound: the ${list(c.slice(0, 3))} stand out.` : "The look and sound stay functional."
+		}
+	}
+	return ""
 }
